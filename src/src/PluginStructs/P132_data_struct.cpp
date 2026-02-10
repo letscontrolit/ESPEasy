@@ -125,7 +125,7 @@ void P132_data_struct::setCalibration_INA3221(struct EventStruct *event) {
   # endif // ifndef BUILD_NO_DEBUG
 
   if (mfgid != 0x5449) {
-    addLogMove(LOG_LEVEL_ERROR, F("INA3221: Invalid Manufacturer ID! (0x5449)"));
+    addLog(LOG_LEVEL_ERROR, F("INA3221: Invalid Manufacturer ID! (0x5449)"));
   }
 
   I2C_write16_reg(_i2c_address, 0x00, static_cast<uint16_t>(config));

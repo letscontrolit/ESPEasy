@@ -2,7 +2,7 @@
 
 #ifdef USES_P036
 
-# include "../ESPEasyCore/ESPEasyNetwork.h"
+# include "../../ESPEasy/net/ESPEasyNetwork.h"
 # include "../Globals/RTC.h"
 # include "../Helpers/ESPEasy_Storage.h"
 # include "../Helpers/Memory.h"
@@ -295,7 +295,7 @@ bool P036_data_struct::init(taskIndex_t      taskIndex,
     prepare_pagescrolling(ScrollSpeed, NrLines);
   }
 
-  bRunning = NetworkConnected();
+  bRunning = ESPEasy::net::NetworkConnected();
 
   return isInitialized();
 }
@@ -785,7 +785,7 @@ String P036_data_struct::create_display_header_text(eHeaderContent iHeaderConten
   switch (iHeaderContent) {
     case eHeaderContent::eSSID:
 
-      if (NetworkConnected()) {
+      if (ESPEasy::net::NetworkConnected()) {
         strHeader       = WiFi.SSID();
         use_newString_f = false;
       }
@@ -1976,7 +1976,7 @@ bool P036_data_struct::display_wifibars() {
     return false;
   }
 
-  const bool connected    = NetworkConnected();
+  const bool connected    = ESPEasy::net::NetworkConnected();
   const int  nbars_filled = (WiFi.RSSI() + 100) / 12; // all bars filled if RSSI better than -46dB
   const int  newState     = connected ? nbars_filled : P36_WIFI_STATE_NOT_CONNECTED;
 
@@ -2001,7 +2001,7 @@ bool P036_data_struct::display_wifibars() {
   display->fillRect(x, y, size_x, size_y);
   display->setColor(WHITE);
 
-  if (NetworkConnected()) {
+  if (ESPEasy::net::NetworkConnected()) {
     for (uint8_t ibar = 0; ibar < nbars; ++ibar) {
       const int16_t height = size_y * (ibar + 1) / nbars;
       const int16_t xpos   = x + ibar * width;
@@ -2220,7 +2220,7 @@ void P036_data_struct::P036_DisplayPage(struct EventStruct *event)
 
     const bool bScrollWithoutWifi = bitRead(PCONFIG_LONG(0), 24); // Bit 24
     const bool bScrollLines       = bitRead(PCONFIG_LONG(0), 17); // Bit 17
-    bRunning           = NetworkConnected() || bScrollWithoutWifi;
+    bRunning           = ESPEasy::net::NetworkConnected() || bScrollWithoutWifi;
     bLineScrollEnabled = ((bScrollLines
                            # if P036_ENABLE_TICKER
                            || bUseTicker

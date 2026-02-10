@@ -1587,8 +1587,10 @@ Basic Math Functions
 * ``round(x)`` Rounds to the nearest integer, but rounds halfway cases away from zero (instead of to the nearest even integer). 
 * ``^`` The caret is used as the exponentiation operator for calculating the value of x to the power of y (x\ :sup:`y`). 
 
-* ``map(value:fromLow:fromHigh:toLow:toHigh)`` Maps value x in the fromLow/fromHigh range to toLow/toHigh values. Similar to the Arduino map() function. See examples below. (Using a colon as an argument separator to not interfere with regular argument processing)
+* ``map(value:fromLow:fromHigh:toLow:toHigh)`` Maps ``value`` in the fromLow/fromHigh range to toLow/toHigh values. Similar to the Arduino map() function. See examples below. (Using a colon as an argument separator to not interfere with regular argument processing)
 * ``mapc(value:fromLow:fromHigh:toLow:toHigh)`` same as map, but constrains the result to the fromLow/fromHigh range.
+
+* ``fmod(x:y)`` Like the modulo operator ``%`` that returns an integer remainder, ``fmod`` returns the floating-point remainder of the division ``x / y``. Added: 2025-12-13 (Not available in limited builds)
 
 
 Rules example:
@@ -1662,6 +1664,7 @@ Radian Angle:
 * ``aSin(x)`` Arc Sine of x (radian)
 * ``aCos(x)`` Arc Cosine of x (radian)
 * ``aTan(x)`` Arc Tangent of x (radian)
+* ``aTan2(x:y)`` Arc Tangent of x / y (radian) Added: 2025-12-13
 
 Degree Angle:
 
@@ -1671,6 +1674,7 @@ Degree Angle:
 * ``aSin_d(x)`` Arc Sine of x (degree)
 * ``aCos_d(x)`` Arc Cosine of x (degree)
 * ``aTan_d(x)`` Arc Tangent of x (degree)
+* ``aTan2_d(x:y)`` Arc Tangent of x / y (degree) Added: 2025-12-13
 
 
 

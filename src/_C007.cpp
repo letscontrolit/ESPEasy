@@ -84,7 +84,7 @@ bool CPlugin_007(CPlugin::Function function, struct EventStruct *event, String& 
       void *ptr               = special_calloc(1, size);
 
       if (ptr != nullptr) {
-        std::unique_ptr<C007_queue_element> element(new (ptr) C007_queue_element(event));
+        UP_C007_queue_element  element(new (ptr) C007_queue_element(event));
         success = C007_DelayHandler->addToQueue(std::move(element));
       }
 

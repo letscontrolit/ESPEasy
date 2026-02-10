@@ -43,8 +43,13 @@ bool CPluginCall(CPlugin::Function Function, struct EventStruct *event, String& 
       // only called from CPluginSetup() directly using protocolIndex
       break;
 
+    case CPlugin::Function::CPLUGIN_GET_PROTOCOL_DISPLAY_NAME:
+      // Only called from _CPlugin_Helper_webform  getControllerParameterName
+      break;
+
     // calls to all active controllers
     case CPlugin::Function::CPLUGIN_INIT_ALL:
+    case CPlugin::Function::CPLUGIN_EXIT_ALL:
     case CPlugin::Function::CPLUGIN_UDP_IN:
     case CPlugin::Function::CPLUGIN_INTERVAL:      // calls to send stats information
     case CPlugin::Function::CPLUGIN_GOT_CONNECTED: // calls to send autodetect information
@@ -59,9 +64,16 @@ bool CPluginCall(CPlugin::Function Function, struct EventStruct *event, String& 
       if (Function == CPlugin::Function::CPLUGIN_INIT_ALL) {
         Function = CPlugin::Function::CPLUGIN_INIT;
       }
+      if (Function == CPlugin::Function::CPLUGIN_EXIT_ALL) {
+        Function = CPlugin::Function::CPLUGIN_EXIT;
+      }
 
       for (controllerIndex_t x = 0; x < CONTROLLER_MAX; x++) {
-        if ((Settings.Protocol[x] != 0) && Settings.ControllerEnabled[x]) {
+        const bool checkedEnabled = 
+          Settings.ControllerEnabled[x] || 
+          Function == CPlugin::Function::CPLUGIN_EXIT;
+
+        if ((Settings.Protocol[x] != 0) && checkedEnabled) {
           event->ControllerIndex = x;
           String command;
 
@@ -69,7 +81,7 @@ bool CPluginCall(CPlugin::Function Function, struct EventStruct *event, String& 
             command = str;
           }
 
-          if (CPluginCall(
+          if (do_CPluginCall(
                 getProtocolIndex_from_ControllerIndex(x),
                 Function,
                 event,
@@ -84,29 +96,37 @@ bool CPluginCall(CPlugin::Function Function, struct EventStruct *event, String& 
       return success;
     }
 
-    // calls to specific controller
+    // calls to specific controller which need to be enabled before calling
     case CPlugin::Function::CPLUGIN_INIT:
-    case CPlugin::Function::CPLUGIN_EXIT:
-    case CPlugin::Function::CPLUGIN_PROTOCOL_TEMPLATE:
     case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
     case CPlugin::Function::CPLUGIN_PROTOCOL_RECV:
+    case CPlugin::Function::CPLUGIN_TASK_CHANGE_NOTIFICATION:
+      if (!validControllerIndex(event->ControllerIndex) 
+       || !Settings.ControllerEnabled[event->ControllerIndex]) 
+       {
+        return false;
+       }
+       // fall through
+
+
+    // calls to specific controller which might not be enabled when calling this function
+    case CPlugin::Function::CPLUGIN_EXIT:
     case CPlugin::Function::CPLUGIN_GET_DEVICENAME:
+    case CPlugin::Function::CPLUGIN_PROTOCOL_TEMPLATE:
     case CPlugin::Function::CPLUGIN_WEBFORM_LOAD:
     case CPlugin::Function::CPLUGIN_WEBFORM_SAVE:
-    case CPlugin::Function::CPLUGIN_GET_PROTOCOL_DISPLAY_NAME:
-    case CPlugin::Function::CPLUGIN_TASK_CHANGE_NOTIFICATION:
     case CPlugin::Function::CPLUGIN_WEBFORM_SHOW_HOST_CONFIG:
     {
       const controllerIndex_t controllerindex = event->ControllerIndex;
       bool success                            = false;
 
       if (validControllerIndex(controllerindex)) {
-        if (Settings.ControllerEnabled[controllerindex] && supportedCPluginID(Settings.Protocol[controllerindex]))
+        if (supportedCPluginID(Settings.Protocol[controllerindex]))
         {
           if (Function == CPlugin::Function::CPLUGIN_PROTOCOL_SEND) {
             checkDeviceVTypeForTask(event);
           }
-          success = CPluginCall(
+          success = do_CPluginCall(
             getProtocolIndex_from_ControllerIndex(controllerindex),
             Function,
             event,
@@ -114,13 +134,13 @@ bool CPluginCall(CPlugin::Function Function, struct EventStruct *event, String& 
         }
         #ifdef ESP32
 
-        if (Function == CPlugin::Function::CPLUGIN_EXIT) {
+        if (success && Function == CPlugin::Function::CPLUGIN_EXIT) {
           Cache.clearControllerSettings(controllerindex);
         }
         #endif // ifdef ESP32
         #if FEATURE_MQTT_DISCOVER
 
-        if (Function == CPlugin::Function::CPLUGIN_EXIT) {
+        if (success && Function == CPlugin::Function::CPLUGIN_EXIT) {
           if (mqttDiscoveryController == controllerindex) {
             mqttDiscoveryController = INVALID_CONTROLLER_INDEX; // Reset
             mqttDiscoverOnlyTask    = INVALID_TASK_INDEX;
@@ -135,7 +155,7 @@ bool CPluginCall(CPlugin::Function Function, struct EventStruct *event, String& 
 
       for (controllerIndex_t x = 0; x < CONTROLLER_MAX; x++) {
         if (Settings.ControllerEnabled[x] && supportedCPluginID(Settings.Protocol[x])) {
-          CPluginCall(
+          do_CPluginCall(
             getProtocolIndex_from_ControllerIndex(x),
             Function,
             event,
@@ -175,7 +195,7 @@ controllerIndex_t findFirstEnabledControllerWithId(cpluginID_t cpluginid) {
 
 bool validProtocolIndex(protocolIndex_t index)
 {
-  return validProtocolIndex_init(index);
+  return do_check_validProtocolIndex(index);
 }
 
 /*
@@ -186,27 +206,27 @@ bool validProtocolIndex(protocolIndex_t index)
  */
 bool validCPluginID(cpluginID_t cpluginID)
 {
-  return getProtocolIndex_from_CPluginID_(cpluginID) != INVALID_PROTOCOL_INDEX;
+  return do_getProtocolIndex_from_CPluginID(cpluginID) != INVALID_PROTOCOL_INDEX;
 }
 
 bool supportedCPluginID(cpluginID_t cpluginID)
 {
-  return validProtocolIndex(getProtocolIndex_from_CPluginID_(cpluginID));
+  return validProtocolIndex(do_getProtocolIndex_from_CPluginID(cpluginID));
 }
 
 protocolIndex_t getProtocolIndex_from_ControllerIndex(controllerIndex_t index) {
   if (validControllerIndex(index)) {
-    return getProtocolIndex_from_CPluginID_(Settings.Protocol[index]);
+    return do_getProtocolIndex_from_CPluginID(Settings.Protocol[index]);
   }
   return INVALID_PROTOCOL_INDEX;
 }
 
 protocolIndex_t getProtocolIndex_from_CPluginID(cpluginID_t cpluginID) {
-  return getProtocolIndex_from_CPluginID_(cpluginID);
+  return do_getProtocolIndex_from_CPluginID(cpluginID);
 }
 
 cpluginID_t getCPluginID_from_ProtocolIndex(protocolIndex_t index) {
-  return getCPluginID_from_ProtocolIndex_(index);
+  return do_getCPluginID_from_ProtocolIndex(index);
 }
 
 cpluginID_t getCPluginID_from_ControllerIndex(controllerIndex_t index) {
@@ -219,13 +239,13 @@ String getCPluginNameFromProtocolIndex(protocolIndex_t ProtocolIndex) {
   String controllerName;
 
   if (validProtocolIndex(ProtocolIndex)) {
-    CPluginCall(ProtocolIndex, CPlugin::Function::CPLUGIN_GET_DEVICENAME, nullptr, controllerName);
+    do_CPluginCall(ProtocolIndex, CPlugin::Function::CPLUGIN_GET_DEVICENAME, nullptr, controllerName);
   }
   return controllerName;
 }
 
 String getCPluginNameFromCPluginID(cpluginID_t cpluginID) {
-  protocolIndex_t protocolIndex = getProtocolIndex_from_CPluginID_(cpluginID);
+  protocolIndex_t protocolIndex = do_getProtocolIndex_from_CPluginID(cpluginID);
 
   if (!validProtocolIndex(protocolIndex)) {
     return strformat(F("CPlugin %d not included in build"), cpluginID);

@@ -32,7 +32,7 @@ void initI2C() {
   #endif // if !FEATURE_I2C_MULTIPLE
   {
     if (Settings.isI2CEnabled(i2cBus)) {
-      #ifndef BUILD_MINIMAL_OTA
+      #ifndef LIMIT_BUILD_SIZE
       #if !FEATURE_I2C_MULTIPLE
       addLog(LOG_LEVEL_INFO, F("INIT : I2C Bus"));
       #else // if !FEATURE_I2C_MULTIPLE

@@ -108,8 +108,7 @@ bool CPlugin_001(CPlugin::Function function, struct EventStruct *event, String& 
           void *ptr               = special_calloc(1, size);
 
           if (ptr != nullptr) {
-            std::unique_ptr<C001_queue_element> element(new (ptr) C001_queue_element(event->ControllerIndex, event->TaskIndex,
-                                                                                     std::move(url)));
+            UP_C001_queue_element element(new (ptr) C001_queue_element(event->ControllerIndex, event->TaskIndex, std::move(url)));
 
             success = C001_DelayHandler->addToQueue(std::move(element));
           }

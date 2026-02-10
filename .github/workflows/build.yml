@@ -37,7 +37,7 @@ jobs:
           make html
           cd ..
           zip -r -qq ESPEasy_docs.zip docs/build/*
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         with:
           name: Documentation
           path: ESPEasy_docs.zip
@@ -88,7 +88,7 @@ jobs:
         uses: Entepotenz/change-string-case-action-min-dependencies@v1
         with:
           string: ${{ matrix.chip }}
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         with:
           # FIXME Workaround to (temporarily) not use # in the artifact name, see https://github.com/actions/upload-artifact/issues/473
           name: Bin-${{ steps.string.outputs.uppercase }}-${{ matrix.env }}-${{ steps.date.outputs.builddate }}_PR_${{ github.event.number }}_${{ github.run_id }} # Sort by ESP type
@@ -110,7 +110,7 @@ jobs:
         run: |
           echo "builddate=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
       - name: Download all artifacts
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           path: artifacts/Binaries/bin/
           pattern: Bin-*
@@ -119,7 +119,7 @@ jobs:
         run: |
           cd artifacts/Binaries/
           ls -R
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v6
         with:
           # FIXME Workaround to (temporarily) not use # in the artifact name, see https://github.com/actions/upload-artifact/issues/473
           name: ESPEasy-all-Binaries-${{ steps.date.outputs.builddate }}_PR_${{ github.event.number }}_${{ github.run_id }}

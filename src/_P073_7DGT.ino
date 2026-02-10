@@ -42,6 +42,9 @@
 //
 
 /** History
+ * 2026-01-17 tonhuisman: Revert to using 'regular' Arduino GPIO functions for TM1637 displays on ESP8266
+ * 2026-01-12 tonhuisman: Fix initialization of number of digits when upgrading to 20260108 build,
+ *                        formatted source with new Uncrustify config
  * 2024-09-28 tonhuisman: Switch to using DIRECT_PIN_IO, to get better timing-accuracy for TM1637 displays
  * 2024-09-27 tonhuisman: Add option to flash dot on second digit instead of the colon for blinking time
  * 2024-08-24 tonhuisman: Add compiletime define P073_USE_74HC595_OVERRIDE that, when, set to 1, allows 74HC595 displays to be included
@@ -96,12 +99,13 @@
 
 # include "src/PluginStructs/P073_data_struct.h"
 
-
 boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) {
   boolean success = false;
 
-  switch (function) {
-    case PLUGIN_DEVICE_ADD: {
+  switch (function)
+  {
+    case PLUGIN_DEVICE_ADD:
+    {
       auto& dev = Device[++deviceCount];
       dev.Number = PLUGIN_ID_073;
       dev.Type   = DEVICE_TYPE_TRIPLE;
@@ -113,13 +117,15 @@ boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) 
       break;
     }
 
-    case PLUGIN_GET_DEVICENAME: {
+    case PLUGIN_GET_DEVICENAME:
+    {
       string = F(PLUGIN_NAME_073);
       break;
     }
 
     # if P073_SCROLL_TEXT || P073_USE_74HC595
-    case PLUGIN_SET_DEFAULTS: {
+    case PLUGIN_SET_DEFAULTS:
+    {
       #  if P073_SCROLL_TEXT
       P073_CFG_SCROLLSPEED = 10; // Default 10 * 0.1 sec scroll speed
       #  endif // if P073_SCROLL_TEXT
@@ -134,7 +140,8 @@ boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) 
     }
     # endif // if P073_SCROLL_TEXT || P073_USE_74HC595
 
-    case PLUGIN_WEBFORM_LOAD: {
+    case PLUGIN_WEBFORM_LOAD:
+    {
       addFormNote(F("TM1637:  1st=CLK-Pin, 2nd=DIO-Pin"));
       addFormNote(F("MAX7219: 1st=DIN-Pin, 2nd=CLK-Pin, 3rd=CS-Pin"));
       # if P073_USE_74HC595
@@ -151,7 +158,7 @@ boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) 
         };
         constexpr size_t optionCount = NR_ELEMENTS(displtype);
         const FormSelectorOptions selector(optionCount, displtype);
-        selector.addFormSelector(F("Display Type"), F("displtype"), PCONFIG(0));
+        selector.addFormSelector(F("Display Type"), F("displtype"), P073_CFG_DISPLAYTYPE);
       }
       # if P073_USE_74HC595
 
@@ -258,7 +265,8 @@ boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) 
       break;
     }
 
-    case PLUGIN_WEBFORM_SAVE: {
+    case PLUGIN_WEBFORM_SAVE:
+    {
       P073_CFG_DISPLAYTYPE = getFormItemInt(F("displtype"));
       P073_CFG_OUTPUTTYPE  = getFormItemInt(F("displout"));
       P073_CFG_BRIGHTNESS  = getFormItemInt(F("brightness"));
@@ -292,12 +300,14 @@ boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) 
       break;
     }
 
-    case PLUGIN_EXIT: {
+    case PLUGIN_EXIT:
+    {
       success = true;
       break;
     }
 
-    case PLUGIN_INIT: {
+    case PLUGIN_INIT:
+    {
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P073_data_struct());
       P073_data_struct *P073_data =
         static_cast<P073_data_struct *>(getPluginTaskData(event->TaskIndex));
@@ -317,7 +327,8 @@ boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) 
       break;
     }
 
-    case PLUGIN_WRITE: {
+    case PLUGIN_WRITE:
+    {
       P073_data_struct *P073_data =
         static_cast<P073_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -327,7 +338,8 @@ boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) 
       break;
     }
 
-    case PLUGIN_ONCE_A_SECOND: {
+    case PLUGIN_ONCE_A_SECOND:
+    {
       P073_data_struct *P073_data =
         static_cast<P073_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -339,7 +351,8 @@ boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) 
     }
 
     # if P073_SCROLL_TEXT
-    case PLUGIN_TEN_PER_SECOND: {
+    case PLUGIN_TEN_PER_SECOND:
+    {
       P073_data_struct *P073_data =
         static_cast<P073_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -353,7 +366,8 @@ boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) 
 
     # if P073_USE_74HC595
 
-    case PLUGIN_TASKTIMER_IN: {
+    case PLUGIN_TASKTIMER_IN:
+    {
       P073_data_struct *P073_data =
         static_cast<P073_data_struct *>(getPluginTaskData(event->TaskIndex));
 

@@ -86,7 +86,7 @@ bool ESPEasy_Scheduler::pause_rules_timer(unsigned long timerIndex) {
   auto it = systemTimers.find(timerID.mixed_id);
 
   if (it == systemTimers.end()) {
-    #ifndef BUILD_MINIMAL_OTA
+    #ifndef LIMIT_BUILD_SIZE
     addLog(LOG_LEVEL_INFO, F("TIMER: no timer set"));
     #endif
     return false;
@@ -96,7 +96,7 @@ bool ESPEasy_Scheduler::pause_rules_timer(unsigned long timerIndex) {
 
   if (msecTimerHandler.getTimerForId(timerID.mixed_id, timer)) {
     if (it->second.isPaused()) {
-      #ifndef BUILD_MINIMAL_OTA
+      #ifndef LIMIT_BUILD_SIZE
       addLog(LOG_LEVEL_INFO, F("TIMER: already paused"));
       #endif
     } else {

@@ -8,11 +8,15 @@ GpioFactorySettingsStruct::GpioFactorySettingsStruct(DeviceModel model)
   i2c_sda(DEFAULT_PIN_I2C_SDA),
   i2c_scl(DEFAULT_PIN_I2C_SCL),
   eth_phyaddr(DEFAULT_ETH_PHY_ADDR),
+#if FEATURE_ETHERNET
   eth_phytype(DEFAULT_ETH_PHY_TYPE),
+#endif
   eth_mdc(DEFAULT_ETH_PIN_MDC),
   eth_mdio(DEFAULT_ETH_PIN_MDIO),
   eth_power(DEFAULT_ETH_PIN_POWER),
+#if FEATURE_ETHERNET
   eth_clock_mode(DEFAULT_ETH_CLOCK_MODE),
+#endif
   network_medium(DEFAULT_NETWORK_MEDIUM)
 
 {
@@ -23,8 +27,9 @@ GpioFactorySettingsStruct::GpioFactorySettingsStruct(DeviceModel model)
 
 #ifndef LIMIT_BUILD_SIZE
 
-  switch (model) {
-#if defined(ESP8266)
+  switch (model)
+  {
+# if defined(ESP8266)
     case DeviceModel::DeviceModel_Sonoff_Basic:
     case DeviceModel::DeviceModel_Sonoff_TH1x:
     case DeviceModel::DeviceModel_Sonoff_S2x:
@@ -65,33 +70,33 @@ GpioFactorySettingsStruct::GpioFactorySettingsStruct(DeviceModel model)
       break;
 
     case DeviceModel::DeviceModel_Sonoff_4ch:
-      button[0]  = 0;             // Button 1
-      button[1]  = 9;             // Button 2
-      button[2]  = 10;            // Button 3
-      button[3]  = 14;            // Button 4
-      relais[0]  = 12;            // Red Led and Relay1 (0 = Off, 1 = On)
-      relais[1]  = 5;             // Red Led and Relay2 (0 = Off, 1 = On)
-      relais[2]  = 4;             // Red Led and Relay3 (0 = Off, 1 = On)
-      relais[3]  = 15;            // Red Led and Relay4 (0 = Off, 1 = On)
-      status_led = 13;            // Blue Led (0 = On, 1 = Off)
-      i2c_sda    = -1;            // GPIO4 conflicts with GPIO_REL3
-      i2c_scl    = -1;            // GPIO5 conflicts with GPIO_REL2
+      button[0]  = 0;  // Button 1
+      button[1]  = 9;  // Button 2
+      button[2]  = 10; // Button 3
+      button[3]  = 14; // Button 4
+      relais[0]  = 12; // Red Led and Relay1 (0 = Off, 1 = On)
+      relais[1]  = 5;  // Red Led and Relay2 (0 = Off, 1 = On)
+      relais[2]  = 4;  // Red Led and Relay3 (0 = Off, 1 = On)
+      relais[3]  = 15; // Red Led and Relay4 (0 = Off, 1 = On)
+      status_led = 13; // Blue Led (0 = On, 1 = Off)
+      i2c_sda    = -1; // GPIO4 conflicts with GPIO_REL3
+      i2c_scl    = -1; // GPIO5 conflicts with GPIO_REL2
       break;
     case DeviceModel::DeviceModel_Shelly1:
-      button[0]  = 5;             // Single Button
-      relais[0]  = 4;             // Red Led and Relay (0 = Off, 1 = On)
-      status_led = 15;            // Blue Led (0 = On, 1 = Off)
-      i2c_sda    = -1;            // GPIO4 conflicts with relay control.
-      i2c_scl    = -1;            // GPIO5 conflicts with SW input
+      button[0]  = 5;  // Single Button
+      relais[0]  = 4;  // Red Led and Relay (0 = Off, 1 = On)
+      status_led = 15; // Blue Led (0 = On, 1 = Off)
+      i2c_sda    = -1; // GPIO4 conflicts with relay control.
+      i2c_scl    = -1; // GPIO5 conflicts with SW input
       break;
     case DeviceModel::DeviceModel_ShellyPLUG_S:
-      button[0]  = 13;            // Single Button
-      relais[0]  = 15;            // Red Led and Relay (0 = Off, 1 = On)
-      status_led = 2;             // Blue Led (0 = On, 1 = Off)
-      i2c_sda    = -1;            // GPIO4 conflicts with relay control.
-      i2c_scl    = -1;            // GPIO5 conflicts with SW input
+      button[0]  = 13; // Single Button
+      relais[0]  = 15; // Red Led and Relay (0 = Off, 1 = On)
+      status_led = 2;  // Blue Led (0 = On, 1 = Off)
+      i2c_sda    = -1; // GPIO4 conflicts with relay control.
+      i2c_scl    = -1; // GPIO5 conflicts with SW input
       break;
-#else
+# else // if defined(ESP8266)
     case DeviceModel::DeviceModel_Sonoff_Basic:
     case DeviceModel::DeviceModel_Sonoff_TH1x:
     case DeviceModel::DeviceModel_Sonoff_S2x:
@@ -104,54 +109,56 @@ GpioFactorySettingsStruct::GpioFactorySettingsStruct(DeviceModel model)
     case DeviceModel::DeviceModel_Shelly1:
     case DeviceModel::DeviceModel_ShellyPLUG_S:
       break;
-#endif
+# endif // if defined(ESP8266)
 
 
-# if CONFIG_ETH_USE_ESP32_EMAC
+# if CONFIG_ETH_USE_ESP32_EMAC && FEATURE_ETHERNET
+#  if CONFIG_IDF_TARGET_ESP32
     case DeviceModel::DeviceModel_Olimex_ESP32_PoE:
-      button[0]             = 34; // BUT1 Button
-      relais[0]             = -1; // No LED's or relays on board
-      status_led            = -1;
-      i2c_sda               = 13;
-      i2c_scl               = 16;
-      eth_phyaddr           = 0;
-      eth_phytype           = EthPhyType_t::LAN8720;
-      eth_mdc               = 23;
-      eth_mdio              = 18;
-      eth_power             = 12;
-      eth_clock_mode        = EthClockMode_t::Int_50MHz_GPIO_17_inv;
-      network_medium = NetworkMedium_t::Ethernet;
+      button[0]      = 34; // BUT1 Button
+      relais[0]      = -1; // No LED's or relays on board
+      status_led     = -1;
+      i2c_sda        = 13;
+      i2c_scl        = 16;
+      eth_phyaddr    = 0;
+      eth_phytype    = ESPEasy::net::EthPhyType_t::LAN8720;
+      eth_mdc        = 23;
+      eth_mdio       = 18;
+      eth_power      = 12;
+      eth_clock_mode = ESPEasy::net::EthClockMode_t::Int_50MHz_GPIO_17_inv;
+      network_medium = ESPEasy::net::NetworkMedium_t::Ethernet;
       break;
     case DeviceModel::DeviceModel_Olimex_ESP32_EVB:
       button[0] = 34; // BUT1 Button
       relais[0] = 32; // LED1 + Relay1 (0 = Off, 1 = On)
       relais[1] = 33; // LED2 + Relay2 (0 = Off, 1 = On)
 
-      status_led            = -1;
-      i2c_sda               = 13;
-      i2c_scl               = 16;
-      eth_phyaddr           = 0;
-      eth_phytype           = EthPhyType_t::LAN8720;
-      eth_mdc               = 23;
-      eth_mdio              = 18;
-      eth_power             = -1; // No Ethernet power pin
-      eth_clock_mode        = EthClockMode_t::Ext_crystal_osc;
-      network_medium = NetworkMedium_t::Ethernet;
+      status_led     = -1;
+      i2c_sda        = 13;
+      i2c_scl        = 16;
+      eth_phyaddr    = 0;
+      eth_phytype    = ESPEasy::net::EthPhyType_t::LAN8720;
+      eth_mdc        = 23;
+      eth_mdio       = 18;
+      eth_power      = -1; // No Ethernet power pin
+      eth_clock_mode = ESPEasy::net::EthClockMode_t::Ext_crystal_osc;
+      network_medium = ESPEasy::net::NetworkMedium_t::Ethernet;
       break;
 
     case DeviceModel::DeviceModel_Olimex_ESP32_GATEWAY:
-      button[0]             = 34; // BUT1 Button
-      relais[0]             = -1; // No LED's or relays on board
-      status_led            = 33;
-      i2c_sda               = -1;
-      i2c_scl               = -1;
-      eth_phyaddr           = 0;
-      eth_phytype           = EthPhyType_t::LAN8720;
-      eth_mdc               = 23;
-      eth_mdio              = 18;
-      eth_power             = 5;
-      eth_clock_mode        = EthClockMode_t::Int_50MHz_GPIO_17_inv;
-      network_medium = NetworkMedium_t::Ethernet;
+      button[0]      = 34; // BUT1 Button
+      relais[0]      = -1; // No LED's or relays on board
+      status_led     = 33;
+      i2c_sda        = -1;
+      i2c_scl        = -1;
+      eth_phyaddr    = 0;
+      eth_phytype    = ESPEasy::net::EthPhyType_t::LAN8720;
+      eth_mdc        = 23;
+      eth_mdio       = 18;
+      eth_power      = 5;
+      eth_clock_mode = ESPEasy::net::EthClockMode_t::Int_50MHz_GPIO_17_inv;
+      network_medium = ESPEasy::net::NetworkMedium_t::Ethernet;
+
       // Rev A to E:
       // GPIO 5, 17 can be used only if Ethernet functionality is not used
       // GPIO 6, 7, 8, 9, 10, 11 used for internal flash and SD card
@@ -174,32 +181,34 @@ GpioFactorySettingsStruct::GpioFactorySettingsStruct(DeviceModel model)
       break;
 
     case DeviceModel::DeviceModel_wESP32:
-      status_led            = -1;
-      i2c_sda               = 15;
-      i2c_scl               = 4;
-      eth_phyaddr           = 0;
-      eth_phytype           = EthPhyType_t::LAN8720;
-      eth_mdc               = 16;
-      eth_mdio              = 17;
-      eth_power             = -1;
-      eth_clock_mode        = EthClockMode_t::Ext_crystal_osc;
-      network_medium = NetworkMedium_t::Ethernet;
+      status_led     = -1;
+      i2c_sda        = 15;
+      i2c_scl        = 4;
+      eth_phyaddr    = 0;
+      eth_phytype    = ESPEasy::net::EthPhyType_t::LAN8720;
+      eth_mdc        = 16;
+      eth_mdio       = 17;
+      eth_power      = -1;
+      eth_clock_mode = ESPEasy::net::EthClockMode_t::Ext_crystal_osc;
+      network_medium = ESPEasy::net::NetworkMedium_t::Ethernet;
       break;
 
     case DeviceModel::DeviceModel_WT32_ETH01:
-      status_led            = -1;
-      i2c_sda               = 21;
-      i2c_scl               = 22;
-      eth_phyaddr           = 1;
-      eth_phytype           = EthPhyType_t::LAN8720;
-      eth_mdc               = 23;
-      eth_mdio              = 18;
-      eth_power             = 12;  // TODO TD-er: Better to use GPIO-16? as shown here: https://letscontrolit.com/forum/viewtopic.php?p=50133#p50133
-      eth_clock_mode        = EthClockMode_t::Ext_crystal_osc;
-      network_medium = NetworkMedium_t::Ethernet;
+      status_led     = -1;
+      i2c_sda        = 21;
+      i2c_scl        = 22;
+      eth_phyaddr    = 1;
+      eth_phytype    = ESPEasy::net::EthPhyType_t::LAN8720;
+      eth_mdc        = 23;
+      eth_mdio       = 18;
+      eth_power      = 12; // TODO TD-er: Better to use GPIO-16? as shown here: https://letscontrolit.com/forum/viewtopic.php?p=50133#p50133
+      eth_clock_mode = ESPEasy::net::EthClockMode_t::Ext_crystal_osc;
+      network_medium = ESPEasy::net::NetworkMedium_t::Ethernet;
       break;
-
-  #endif
+#  else // if CONFIG_IDF_TARGET_ESP32
+    default: break;
+#  endif // if CONFIG_IDF_TARGET_ESP32
+  # endif // if CONFIG_ETH_USE_ESP32_EMAC && FEATURE_ETHERNET
 
     case DeviceModel::DeviceModel_default:
     case DeviceModel::DeviceModel_MAX:
@@ -208,5 +217,5 @@ GpioFactorySettingsStruct::GpioFactorySettingsStruct(DeviceModel model)
       // Do not use default: as this allows the compiler to detect any missing cases.
       // default: break;
   }
-  #endif
+  #endif // ifndef LIMIT_BUILD_SIZE
 }

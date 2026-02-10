@@ -2,8 +2,8 @@
 #include "../WebServer/ESPEasy_WebServer.h"
 #include "../../ESPEasy-Globals.h"
 #include "../Commands/Diagnostic.h"
-#include "../ESPEasyCore/ESPEasyNetwork.h"
-#include "../ESPEasyCore/ESPEasyWifi.h"
+#include "../../ESPEasy/net/ESPEasyNetwork.h"
+#include "../../ESPEasy/net/wifi/ESPEasyWifi.h"
 #include "../../_Plugin_Helper.h"
 #include "../Helpers/ESPEasyStatistics.h"
 #include "../Static/WebStaticData.h"
@@ -137,7 +137,13 @@ void handle_metrics_devices() {
                 addHtml(F("{valueName=\""));
                 addHtml(Cache.getTaskDeviceValueName(x, varNr));
                 addHtml(F("\"} "));
-                addHtml(formatUserVarNoCheck(&TempEvent, varNr));
+                const String value(formatUserVarNoCheck(&TempEvent, varNr));
+
+                if (value.isEmpty()) {
+                  addHtml('0'); // Return 0 for not-set values
+                } else {
+                  addHtml(value);
+                }
                 addHtml('\n');
               }
             }

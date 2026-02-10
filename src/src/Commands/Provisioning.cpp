@@ -60,6 +60,14 @@ String Command_Provisioning_Provision()
   return downloadFileType(FileType::PROVISIONING_DAT);
 }
 
+#if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE
+String Command_Provisioning_DeviceSecurity()
+{
+  return downloadFileType(FileType::DEV_SECURITY_DAT);
+}
+#endif
+
+
 String Command_Provisioning_Rules(struct EventStruct *event)
 {
   if ((event->Par2 <= 0) || (event->Par2 > 4)) {
@@ -102,6 +110,9 @@ String Command_Provisioning_NotificationFallback(struct EventStruct *event, cons
   return Command_Provisioning_Notification();
 }
 
+#  endif // if FEATURE_NOTIFIER
+
+
 String Command_Provisioning_ProvisionFallback(struct EventStruct *event, const char *Line)
 {
   Command_Provisioning_DeprecatedMessage(F("Provision"));
@@ -130,7 +141,6 @@ String Command_Provisioning_FirmwareFallback(struct EventStruct *event, const ch
   return error;
 }
 
-#  endif // if FEATURE_NOTIFIER
 
 # endif // ifdef PLUGIN_BUILD_MAX_ESP32
 

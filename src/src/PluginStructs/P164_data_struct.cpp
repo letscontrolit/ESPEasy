@@ -141,13 +141,13 @@ bool P164_data_struct::begin()
 {
   // Start connecting the device over I2C
   if (!start(i2cAddress)) {
-    addLogMove(LOG_LEVEL_ERROR, F("P164: device initialization FAILED"));
+    addLog(LOG_LEVEL_ERROR, F("P164: device initialization FAILED"));
     return false;
   }
   setMode(ENS160_OPMODE_STD); // For now we only support the standard acquisition mode
 
   #ifdef P164_ENS160_DEBUG
-    addLogMove(LOG_LEVEL_DEBUG, F("P164: begin(): success"));
+    addLog(LOG_LEVEL_DEBUG, F("P164: begin(): success"));
   #endif
   return true;
 }
@@ -730,7 +730,7 @@ bool P164_data_struct::getFirmware() {
   }
   if (! IS_NEWGPR(this->_statusReg)) {                // Check if firmware could be read
     result = false;
-    addLogMove(LOG_LEVEL_ERROR, F("P164: Could not read firmware version"));
+    addLog(LOG_LEVEL_ERROR, F("P164: Could not read firmware version"));
   }
 
   if (result)  {

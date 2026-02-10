@@ -6,7 +6,7 @@
 \*********************************************************************************************/
 #include "../../ESPEasy_common.h"
 
-#include <memory> // For std::shared_ptr
+#include <memory> // For std::unique_ptr
 #include <new>    // for std::nothrow
 
 #include <IPAddress.h>
@@ -48,10 +48,10 @@
 
 // Timeout of the client in msec.
 #ifndef CONTROLLER_CLIENTTIMEOUT_MAX
-# define CONTROLLER_CLIENTTIMEOUT_MAX     4000 // Not sure if this may trigger SW watchdog.
+# define CONTROLLER_CLIENTTIMEOUT_MAX     10000 // Not sure if this may trigger SW watchdog.
 #endif // ifndef CONTROLLER_CLIENTTIMEOUT_MAX
 #ifndef CONTROLLER_CLIENTTIMEOUT_DFLT
-# define CONTROLLER_CLIENTTIMEOUT_DFLT     100
+# define CONTROLLER_CLIENTTIMEOUT_DFLT     DEFAULT_CONTROLLER_TIMEOUT
 #endif // ifndef CONTROLLER_CLIENTTIMEOUT_DFLT
 
 // MQTT Keep Alive Timeout
@@ -125,7 +125,7 @@ struct ControllerSettingsStruct
   };
 
 
-  ControllerSettingsStruct();
+  ControllerSettingsStruct() = default;
 
   void         reset();
 
@@ -202,6 +202,9 @@ struct ControllerSettingsStruct
 #endif // #if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS
   
 
+  uint32_t getSuggestedTimeout(int index) const;
+
+
   bool         UseDNS;
   uint8_t      IP[4];
   uint8_t      UNUSED_1[3];
@@ -268,14 +271,12 @@ private:
 
 #include "../Helpers/Memory.h"
 
-typedef std::shared_ptr<ControllerSettingsStruct> ControllerSettingsStruct_ptr_type;
-/*
-# ifdef USE_SECOND_HEAP
-#define MakeControllerSettings(T) HeapSelectIram ephemeral; ControllerSettingsStruct_ptr_type T(new (std::nothrow)  ControllerSettingsStruct());
-#else
-*/
-#define MakeControllerSettings(T) void * calloc_ptr = special_calloc(1,sizeof(ControllerSettingsStruct)); ControllerSettingsStruct_ptr_type T(new (calloc_ptr)  ControllerSettingsStruct());
-//#endif
+DEF_UP(ControllerSettingsStruct);
+
+UP_ControllerSettingsStruct doMakeControllerSettings();
+
+
+#define MakeControllerSettings(T) UP_ControllerSettingsStruct T = doMakeControllerSettings();
 
 // Check to see if MakeControllerSettings was successful
 #define AllocatedControllerSettings() (ControllerSettings.get() != nullptr)

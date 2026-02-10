@@ -20,8 +20,8 @@
 #include "../Helpers/StringConverter.h"
 
 
-#include <list>
-#include <memory> // For std::shared_ptr
+#include <deque>
+#include <memory> // For std::unique_ptr
 #include <new>    // std::nothrow
 
 #ifndef CONTROLLER_QUEUE_MINIMAL_EXPIRE_TIME
@@ -50,7 +50,7 @@ struct ControllerDelayHandlerStruct {
 
   // Try to add to the queue, if permitted by "delete_oldest"
   // Return true when item was added, or skipped as it was considered a duplicate
-  bool addToQueue(std::unique_ptr<Queue_element_base>element);
+  bool addToQueue(UP_Queue_element_base element);
 
   // Get the next element.
   // Remove front element when max_retries is reached.
@@ -59,35 +59,36 @@ struct ControllerDelayHandlerStruct {
   // Mark as processed and return time to schedule for next process.
   // Return 0 when nothing to process.
   // @param remove_from_queue indicates whether the elements should be removed from the queue.
-  unsigned long markProcessed(bool remove_from_queue);
+  uint32_t markProcessed(bool remove_from_queue);
 
-  unsigned long getNextScheduleTime() const;
+  uint32_t getNextScheduleTime() const;
 
   // Set the "lastSend" to "now" + some additional delay.
   // This will cause the next schedule time to be delayed to
   // msecFromNow + minTimeBetweenMessages
-  void   setAdditionalDelay(unsigned long msecFromNow);
+  void   setAdditionalDelay(uint32_t msecFromNow);
 
   size_t getQueueMemorySize() const;
 
   void   process(
-    cpluginID_t                        cpluginID,
-    do_process_function                func,
-    TimingStatsElements                timerstats_id,
+    cpluginID_t              cpluginID,
+    do_process_function      func,
+    TimingStatsElements      timerstats_id,
     SchedulerIntervalTimer_e timerID);
 
-  std::list<std::unique_ptr<Queue_element_base> >sendQueue;
-  mutable UnitLastMessageCount_map               unitLastMessageCount;
-  unsigned long                                  lastSend               = 0;
-  unsigned int                                   minTimeBetweenMessages = CONTROLLER_DELAY_QUEUE_DELAY_DFLT;
-  unsigned long                                  expire_timeout         = 0;
-  uint8_t                                        max_queue_depth        = CONTROLLER_DELAY_QUEUE_DEPTH_DFLT;
-  uint8_t                                        attempt                = 0;
-  uint8_t                                        max_retries            = CONTROLLER_DELAY_QUEUE_RETRY_DFLT;
-  bool                                           delete_oldest          = false;
-  bool                                           must_check_reply       = false;
-  bool                                           deduplicate            = false;
-  bool                                           useLocalSystemTime     = false;
+  std::deque<UP_Queue_element_base>sendQueue;
+  mutable UnitLastMessageCount_map unitLastMessageCount;
+  uint32_t                         lastSend               = 0;
+  uint32_t                         minTimeBetweenMessages = CONTROLLER_DELAY_QUEUE_DELAY_DFLT;
+  uint32_t                         expire_timeout         = 0;
+  uint8_t                          max_queue_depth        = CONTROLLER_DELAY_QUEUE_DEPTH_DFLT;
+  uint8_t                          attempt                = 0;
+  uint8_t                          max_retries            = CONTROLLER_DELAY_QUEUE_RETRY_DFLT;
+  bool                             delete_oldest          = false;
+  bool                             must_check_reply       = false;
+  bool                             deduplicate            = false;
+  bool                             useLocalSystemTime     = false;
+
 };
 
 

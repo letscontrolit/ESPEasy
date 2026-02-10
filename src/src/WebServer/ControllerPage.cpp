@@ -29,7 +29,6 @@
 # include "../Helpers/_CPlugin_Helper_webform.h"
 # include "../Helpers/_Plugin_SensorTypeHelper.h"
 # include "../Helpers/ESPEasy_Storage.h"
-# include "../Helpers/StringConverter.h"
 
 // ********************************************************************************
 // Web Interface controller page
@@ -45,14 +44,14 @@ void handle_controllers() {
   sendHeadandTail_stdtemplate(_HEAD);
 
   // 'index' value in the URL
-  uint8_t controllerindex  = getFormItemInt(F("index"), 0);
-  boolean controllerNotSet = controllerindex == 0;
+  uint8_t controllerindex       = getFormItemInt(F("index"), 0);
+  const bool controllerIndexSet = controllerindex != 0 && validControllerIndex(controllerindex - 1);
   --controllerindex; // Index in URL is starting from 1, but starting from 0 in the array.
 
   const int protocol_webarg_value = getFormItemInt(F("protocol"), -1);
 
   // submitted data
-  if ((protocol_webarg_value != -1) && !controllerNotSet)
+  if ((protocol_webarg_value != -1) && controllerIndexSet)
   {
     const protocolIndex_t protocolIndex = protocol_webarg_value;
     bool mustInit                       = false;
@@ -124,28 +123,17 @@ void handle_controllers() {
 
     if (mustInit) {
       // Init controller plugin using the new settings.
-      protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(controllerindex);
-
-      if (validProtocolIndex(ProtocolIndex)) {
-        struct EventStruct TempEvent;
-        TempEvent.ControllerIndex = controllerindex;
-        String dummy;
-        CPlugin::Function cfunction =
-          Settings.ControllerEnabled[controllerindex] ? CPlugin::Function::CPLUGIN_INIT : CPlugin::Function::CPLUGIN_EXIT;
-        CPluginCall(ProtocolIndex, cfunction, &TempEvent, dummy);
-      }
+      CPlugin_Exit_Init(controllerindex);
     }
   }
 
   html_add_form();
 
-  if (controllerNotSet)
-  {
-    handle_controllers_ShowAllControllersTable();
-  }
-  else
+  if (controllerIndexSet)
   {
     handle_controllers_ControllerSettingsPage(controllerindex);
+  } else {
+    handle_controllers_ShowAllControllersTable();
   }
 
   sendHeadandTail_stdtemplate(_TAIL);
@@ -176,13 +164,14 @@ void handle_controllers_clearLoadDefaults(uint8_t controllerindex, ControllerSet
 
   // Load some templates from the controller.
   struct EventStruct TempEvent;
+  TempEvent.ControllerIndex = controllerindex;
 
   // Hand over the controller settings in the Data pointer, so the controller can set some defaults.
   TempEvent.Data = (uint8_t *)(&ControllerSettings);
 
   if (proto.usesTemplate) {
     String dummy;
-    CPluginCall(ProtocolIndex, CPlugin::Function::CPLUGIN_PROTOCOL_TEMPLATE, &TempEvent, dummy);
+    CPluginCall(CPlugin::Function::CPLUGIN_PROTOCOL_TEMPLATE, &TempEvent, dummy);
   }
   safe_strncpy(ControllerSettings.Subscribe,            TempEvent.String1.c_str(), sizeof(ControllerSettings.Subscribe));
   safe_strncpy(ControllerSettings.Publish,              TempEvent.String2.c_str(), sizeof(ControllerSettings.Publish));
@@ -221,7 +210,7 @@ void handle_controllers_CopySubmittedSettings_CPluginCall(uint8_t controllerinde
 
     // Call controller plugin to save CustomControllerSettings
     String dummy;
-    CPluginCall(ProtocolIndex, CPlugin::Function::CPLUGIN_WEBFORM_SAVE, &TempEvent, dummy);
+    CPluginCall(CPlugin::Function::CPLUGIN_WEBFORM_SAVE, &TempEvent, dummy);
   }
 }
 
@@ -250,25 +239,7 @@ void handle_controllers_ShowAllControllersTable()
       LoadControllerSettings(x, *ControllerSettings);
       html_TR_TD();
 
-      if (cplugin_set && !supportedCPluginID(Settings.Protocol[x])) {
-        html_add_button_prefix(F("red"), true);
-      } else {
-        html_add_button_prefix();
-      }
-      {
-        addHtml(F("controllers?index="));
-        addHtmlInt(x + 1);
-        addHtml(F("'>"));
-
-        if (cplugin_set) {
-          addHtml(F("Edit"));
-        } else {
-          addHtml(F("Add"));
-        }
-        addHtml(F("</a><TD>"));
-        addHtml(getControllerSymbol(x));
-      }
-      html_TD();
+      addPlugin_Add_Edit_Button(F("controllers"), x, cplugin_set, supportedCPluginID(Settings.Protocol[x]), getControllerSymbol(x));
 
       if (cplugin_set)
       {
@@ -277,10 +248,11 @@ void handle_controllers_ShowAllControllersTable()
         html_TD();
         addHtml(getCPluginNameFromCPluginID(Settings.Protocol[x]));
         html_TD();
-        const protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(x);
         {
           String hostDescription;
-          CPluginCall(ProtocolIndex, CPlugin::Function::CPLUGIN_WEBFORM_SHOW_HOST_CONFIG, 0, hostDescription);
+          EventStruct TempEvent;
+          TempEvent.ControllerIndex = x;
+          CPluginCall(CPlugin::Function::CPLUGIN_WEBFORM_SHOW_HOST_CONFIG, &TempEvent, hostDescription);
 
           if (!hostDescription.isEmpty()) {
             addHtml(hostDescription);
@@ -290,7 +262,8 @@ void handle_controllers_ShowAllControllersTable()
         }
 
         html_TD();
-        const ProtocolStruct& proto = getProtocolStruct(ProtocolIndex);
+        const protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(x);
+        const ProtocolStruct& proto         = getProtocolStruct(ProtocolIndex);
 
         if ((INVALID_PROTOCOL_INDEX == ProtocolIndex) || proto.usesPort) {
           addHtmlInt(13 == Settings.Protocol[x] ? Settings.UDPPort : ControllerSettings->Port); // P2P/C013 exception
@@ -348,6 +321,10 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
 
   if (Settings.Protocol[controllerindex])
   {
+    // Separate enabled checkbox as it doesn't need to use the ControllerSettings.
+    // So ControllerSettings object can be destructed before controller specific settings are loaded.
+    addControllerEnabledForm(controllerindex);
+    addFormSeparator(2);
     {
       MakeControllerSettings(ControllerSettings); // -V522
 
@@ -489,7 +466,8 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
               addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_AUTO_DISCOVERY_TRIGGER);
               addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_AUTO_DISCOVERY_TOPIC);
               addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_AUTO_DISCOVERY_CONFIG);
-              addControllerParameterForm(*ControllerSettings, controllerindex, ControllerSettingsStruct::CONTROLLER_RETAINED_DISCOVERY_OPTION);
+              addControllerParameterForm(*ControllerSettings, controllerindex,
+                                         ControllerSettingsStruct::CONTROLLER_RETAINED_DISCOVERY_OPTION);
             }
             #  endif // if FEATURE_MQTT_DISCOVER
           }
@@ -505,19 +483,31 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
       TempEvent.ControllerIndex = controllerindex;
 
       String webformLoadString;
-      CPluginCall(ProtocolIndex, CPlugin::Function::CPLUGIN_WEBFORM_LOAD, &TempEvent, webformLoadString);
+      CPluginCall(CPlugin::Function::CPLUGIN_WEBFORM_LOAD, &TempEvent, webformLoadString);
 
       if (webformLoadString.length() > 0) {
         addHtmlError(F("Bug in CPlugin::Function::CPLUGIN_WEBFORM_LOAD, should not append to string, use addHtml() instead"));
       }
     }
-    {
+    
 # if FEATURE_MQTT
 
-      if (proto.usesMQTT) {
-        addFormSubHeader(F("Connection Status"));
-        addRowLabel(F("MQTT Client Connected"));
-        addEnabled(MQTTclient_connected);
+    if (proto.usesMQTT && Settings.ControllerEnabled[controllerindex]) {
+      addFormSubHeader(F("Connection Status"));
+      addRowLabel(F("MQTT Client Connected"));
+      addEnabled(MQTTclient_connected);
+
+        if (MQTTclient_connected) {
+          auto conn_duration = MQTTclient_connected_stats.getLastOnDuration_ms();
+
+          if (conn_duration > 0) {
+            addRowLabel(F("Connection Duration"));
+            addHtml(format_msec_duration_HMS(conn_duration));
+            addRowLabel(F("Number of Reconnects"));
+            addHtmlInt(MQTTclient_connected_stats.getCycleCount());
+          }
+
+        }
 
 #  if FEATURE_MQTT_TLS
 
@@ -723,13 +713,9 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
             #   endif // ifdef ESP32
         }
 #  endif // if FEATURE_MQTT_TLS
-      }
-# endif // if FEATURE_MQTT
     }
-
-    // Separate enabled checkbox as it doesn't need to use the ControllerSettings.
-    // So ControllerSettings object can be destructed before controller specific settings are loaded.
-    addControllerEnabledForm(controllerindex);
+# endif // if FEATURE_MQTT
+    
   }
 
   addFormSeparator(2);

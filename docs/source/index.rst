@@ -14,8 +14,9 @@ Welcome to ESP Easy's documentation!
    ESPEasy/ESPchips.rst
    ESPEasy/FunctionBlocks.rst
    Config/Config.rst
-   Controller/_Controller.rst
    Hardware/Hardware.rst
+   Network/_Network.rst
+   Controller/_Controller.rst
    Plugin/_Plugin.rst
    Rules/Rules.rst
    Notify/_Notifications.rst

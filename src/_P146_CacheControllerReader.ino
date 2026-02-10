@@ -52,6 +52,7 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
       dev.SendDataOption    = true;
       dev.OutputDataType    = Output_Data_type_t::Default;
       dev.HideDerivedValues = true;
+      dev.NoDeviceSettings  = true;
       break;
     }
 
@@ -104,14 +105,15 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      // Init the controller cache handler, just in case the cache controller may not be enabled
-      ControllerCache.init();
-
       // Restore the last position from RTC when rebooting.
       ControllerCache.setPeekFilePos(
         P146_TASKVALUE_FILENR,
         P146_TASKVALUE_FILEPOS);
 
+      // Init the controller cache handler, just in case the cache controller may not be enabled
+      ControllerCache.init();
+
+      // Update the position based on actually present cache files.
       int peekFileNr{};
       int peekReadPos = ControllerCache.getPeekFilePos(peekFileNr);
 
@@ -180,6 +182,10 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
       } else {
         // Default to 1 sec
         Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 1000);
+        int readFileNr    = 0;
+        const int readPos = ControllerCache.getPeekFilePos(readFileNr);
+        P146_SET_TASKVALUE_FILENR(readFileNr);
+        P146_SET_TASKVALUE_FILEPOS(readPos);
       }
 
       break;

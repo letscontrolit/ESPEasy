@@ -28,9 +28,10 @@ The ST7735, ST7789 and ST7796 chip families drive color TFT displays in various 
 
 This plugin supports these display models:
 
-* **ST7735** with resolutions 128 x 128, 128 x 160, 80 x 160, 135 x 240, 170 x 320 and 172 x 320 pixels
+* **ST7735** with resolutions 128 x 128, 128 x 160, 80 x 160, 135 x 240 and 172 x 320 pixels
 * **ST7789** with resolutions 240 x 320, 240 x 240, 240 x 280 and 135 x 240 pixels
 * **ST7796** with resolution of 320 x 480 pixels.
+* **ST77xx** (unknown if this is ST7735 or ST7789) with resolution of 170 x 320, 240 x 320, 240 x 280 pixels.
 
 The plugin can be configured to show predefined text, a reservation for up to 24 lines is made, but only the lines that can fit on-screen will be shown, or via commands, sent via http or from rules, text or graphical elements like lines, rectangles, circles, pixels, etc., can be shown.
 
@@ -146,6 +147,8 @@ Available options:
 * *ST7735 135 x 240px*: Added to support a revision of the TTGO T-Display 16MB Flash module, that won't work with the ST7789 driver, the seller is claiming to use, but does work with this specially crafted ST7735 driver.
 * *ST7735 172 x 320px*: Added to support an ESP32-C6 module having a display with this specific resolution.
 * *ST77xx 170 x 320px*: Added to support ST7789v3 / ST7735 displays with this specific resolution.
+* *ST77xx 240 x 320px*: Added to support ST7789v3 / ST7735 displays with this specific resolution.
+* *ST77xx 240 x 280px*: Added to support ST7789v3 / ST7735 displays with this specific resolution.
 * *ST7789 240 x 320px*: Allows 32 lines of text in the smallest font scaling setting. Predefined text only goes to 24, extra lines can be displayed from rules or external commands.
 * *ST7789 240 x 240px*: Allows 24 lines of text in the smallest font scaling setting.
 * *ST7789 240 x 280px*: Allows 28 lines of text in the smallest font scaling setting. Predefined text only goes to 24, extra lines can be displayed from rules or external commands.

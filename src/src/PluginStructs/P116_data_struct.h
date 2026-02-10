@@ -57,12 +57,14 @@
 # define P116_CONFIG_FLAG_TYPE          16              // Flag-offset to store 4 bits for Hardwaretype, uses bits 16, 17, 18 and 19
 # define P116_CONFIG_FLAG_CMD_TRIGGER   20              // Flag-offset to store 4 bits for Command trigger, uses bits 20, 21, 22 and 23
 # define P116_CONFIG_FLAG_BACK_FILL     28              // Flag: Background fill when printing text
+# define P116_CONFIG_FLAG_TYPE2         29              // Flag-offset to store 2 more bits for Hardwaretype, uses bits 29 and 30
 
 // Getters
 # define P116_CONFIG_FLAG_GET_MODE          (get4BitFromUL(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_MODE))
 # define P116_CONFIG_FLAG_GET_ROTATION      (get4BitFromUL(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_ROTATION))
 # define P116_CONFIG_FLAG_GET_FONTSCALE     (get4BitFromUL(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_FONTSCALE))
-# define P116_CONFIG_FLAG_GET_TYPE          (get4BitFromUL(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_TYPE))
+# define P116_CONFIG_FLAG_GET_TYPE          (get4BitFromUL(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_TYPE) \
+                                             + (get2BitFromUL(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_TYPE2) << 4))
 # define P116_CONFIG_FLAG_GET_CMD_TRIGGER   (get4BitFromUL(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_CMD_TRIGGER))
 # define P116_CONFIG_GET_COLOR_FOREGROUND   (P116_CONFIG_COLORS & 0xFFFF)
 # define P116_CONFIG_GET_COLOR_BACKGROUND   ((P116_CONFIG_COLORS >> 16) & 0xFFFF)
@@ -103,6 +105,8 @@ enum class ST77xx_type_e : uint8_t {
   ST7735s_135x240 = 12u,
   ST7735s_172x320 = 13u,
   ST77xxs_170x320 = 14u,
+  ST77xxs_240x320 = 15u,
+  ST77xxs_240x280 = 16u,
   # endif // if P116_EXTRA_ST7735
 };
 

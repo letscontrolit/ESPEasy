@@ -31,7 +31,9 @@ enum class ESPEasy_cmd_e : uint8_t {
   controllerenable,
 
   datetime,
+#ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
   debug,
+#endif
   dec,
   deepsleep,
   delay,
@@ -40,17 +42,12 @@ enum class ESPEasy_cmd_e : uint8_t {
 #endif // #if FEATURE_PLUGIN_PRIORITY
   dns,
   dst,
-
+#if FEATURE_WIFI
   erasesdkwifi,
+#endif
   event,
   executerules,
 #if FEATURE_ETHERNET
-  ethphyadr,
-  ethpinmdc,
-  ethpinmdio,
-  ethpinpower,
-  ethphytype,
-  ethclockmode,
   ethip,
   ethgateway,
   ethsubnet,
@@ -64,7 +61,9 @@ enum class ESPEasy_cmd_e : uint8_t {
   gateway,
   gpio,
   gpiotoggle,
+#if FEATURE_WIFI
   hiddenssid,
+#endif
 
   i2cscanner,
   inc,
@@ -119,6 +118,12 @@ enum class ESPEasy_cmd_e : uint8_t {
 #endif // ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
 
   name,
+  networkdisable,
+  networkenable,
+#if FEATURE_STORE_NETWORK_INTERFACE_SETTINGS
+  networkexportconfig,
+  networkimportconfig,
+#endif
   nosleep,
 #if FEATURE_NOTIFIER
   notify,
@@ -241,6 +246,7 @@ enum class ESPEasy_cmd_e : uint8_t {
   unmonitorrange,
   usentp,
 
+#if FEATURE_WIFI
   wifiallowap,
   wifiapmode,
   wificonnect,
@@ -248,10 +254,14 @@ enum class ESPEasy_cmd_e : uint8_t {
   wifikey,
   wifikey2,
   wifimode,
+#if FEATURE_OTA_FW_UPDATE_ESP_HOSTED_MCU
+  wifiotahostedmcu,
+#endif
   wifiscan,
   wifissid,
   wifissid2,
   wifistamode,
+#endif
 #ifndef LIMIT_BUILD_SIZE
   wdconfig,
   wdread,

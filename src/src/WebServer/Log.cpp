@@ -7,7 +7,8 @@
 #include "../WebServer/Markup.h"
 #include "../WebServer/Markup_Buttons.h"
 
-#include "../DataStructs/LogStruct.h"
+#include "../DataStructs/LogBuffer.h"
+#include "../DataStructs/TimingStats.h"
 
 #include "../Globals/Logging.h"
 #include "../Globals/Settings.h"
@@ -27,8 +28,11 @@ void handle_log() {
 
   #ifdef WEBSERVER_LOG
   addHtml(F("<TR><TH id=\"headline\" align=\"left\">Log"));
+  #ifdef WEBSERVER_GITHUB_COPY
   addCopyButton(F("copyText"), EMPTY_STRING, F("Copy log to clipboard"));
-  addHtml(F("</TR></table><div  id='current_loglevel' style='font-weight: bold;'>Logging: </div><div class='logviewer' id='copyText_1'></div>"));
+  #endif
+  addHtml(F(
+            "</TR></table><div  id='current_loglevel' style='font-weight: bold;'>Logging: </div><div class='logviewer' id='copyText_1'></div>"));
   addHtml(F("Autoscroll: "));
   addCheckBox(F("autoscroll"), true);
   addHtml(F("<BR></body>"));
@@ -48,74 +52,96 @@ void handle_log() {
 void handle_log_JSON() {
   if (!isLoggedIn()) { return; }
   #ifdef WEBSERVER_LOG
+  START_TIMER;
   TXBuffer.startJsonStream();
-  String webrequest = webArg(F("view"));
-  addHtml(F("{\"Log\": {"));
+  {
+    KeyValueWriter_JSON top(true);
+    {
+      String webrequest = webArg(F("view"));
 
-  if (equals(webrequest, F("legend"))) {
-    addHtml(F("\"Legend\": ["));
+      auto mainWriter = top.createChild(F("Log"));
 
-    for (uint8_t i = 0; i < LOG_LEVEL_NRELEMENTS; ++i) {
-      if (i != 0) {
-        addHtml(',');
+      if (mainWriter) {
+
+        if (equals(webrequest, F("legend"))) {
+
+          auto legendWriter = mainWriter->createChildArray(F("Legend"));
+
+          if (legendWriter) {
+            for (uint8_t i = LOG_LEVEL_ERROR; i < LOG_LEVEL_NRELEMENTS(); ++i) {
+              auto loglevelWriter = legendWriter->createChild();
+
+              if (loglevelWriter) {
+                int loglevel;
+                loglevelWriter->write({ F("label"), getLogLevelDisplayStringFromIndex(i, loglevel) });
+                loglevelWriter->write({ F("loglevel"), loglevel });
+              }
+            }
+          }
+        }
+        uint32_t firstTimeStamp = 0;
+        uint32_t lastTimeStamp  = 0;
+        int nrEntries           = 0;
+
+        bool logLinesAvailable = true;
+        {
+          auto entriesWriter = mainWriter->createChildArray(F("Entries"));
+
+          if (entriesWriter) {
+            uint32_t startTime = millis();
+
+            while (logLinesAvailable && timePassedSince(startTime) < 200) {
+              String  message;
+              uint8_t loglevel;
+
+              if (Logging.getNext(LOG_TO_WEBLOG, lastTimeStamp, message, loglevel)) {
+                auto logWriter = entriesWriter->createChild();
+
+                if (logWriter) {
+                  logWriter->write({ F("timestamp"), format_msec_duration(lastTimeStamp) });
+                  logWriter->write({ F("text"),      std::move(message) });
+                  logWriter->write({ F("level"), loglevel });
+
+                  if (nrEntries == 0) {
+                    firstTimeStamp = lastTimeStamp;
+                  }
+                  ++nrEntries;
+                }
+
+                // Do we need to do something here and maybe limit number of lines at once?
+              } else { logLinesAvailable = false; }
+            }
+          }
+        }
+        const uint32_t nrEntriesLeft = Logging.getNrMessages(LOG_TO_WEBLOG);
+        int32_t logTimeSpan       = timeDiff(firstTimeStamp, lastTimeStamp);
+        int32_t refreshSuggestion = (nrEntriesLeft > 0) ? 200 : 1000;
+        int32_t newOptimum        = 1000;
+
+
+        if ((nrEntries > 2) && (logTimeSpan > 1)) {
+          // May need to lower the TTL for refresh when time needed
+          // to fill half the log is lower than current TTL
+          newOptimum = logTimeSpan * (LOG_STRUCT_MESSAGE_LINES / 2);
+          newOptimum = newOptimum / (nrEntries - 1);
+        }
+
+        if (newOptimum < refreshSuggestion) { refreshSuggestion = newOptimum; }
+
+        if (refreshSuggestion < 100) {
+          // Reload times no lower than 100 msec.
+          refreshSuggestion = 100;
+        }
+        mainWriter->write({ F("TTL"),                 refreshSuggestion });
+        mainWriter->write({ F("timeHalfBuffer"),      newOptimum });
+        mainWriter->write({ F("nrEntries"),           nrEntries });
+        mainWriter->write({ F("SettingsWebLogLevel"), Settings.WebLogLevel });
+        mainWriter->write({ F("logTimeSpan"),         logTimeSpan });
       }
-      addHtml('{');
-      int loglevel;
-      stream_next_json_object_value(F("label"), getLogLevelDisplayStringFromIndex(i, loglevel));
-      stream_last_json_object_value(F("loglevel"), loglevel);
     }
-    addHtml(F("],\n"));
   }
-  addHtml(F("\"Entries\": ["));
-  bool logLinesAvailable       = true;
-  int  nrEntries               = 0;
-  unsigned long firstTimeStamp = 0;
-  unsigned long lastTimeStamp  = 0;
-
-  while (logLinesAvailable) {
-    String message;
-    uint8_t loglevel;
-    if (Logging.getNext(logLinesAvailable, lastTimeStamp, message, loglevel)) {
-      addHtml('{');
-      stream_next_json_object_value(F("timestamp"), lastTimeStamp);
-      stream_next_json_object_value(F("text"),  std::move(message));
-      stream_last_json_object_value(F("level"), loglevel);
-      if (logLinesAvailable) {
-        addHtml(',', '\n');
-      }
-      if (nrEntries == 0) {
-        firstTimeStamp = lastTimeStamp;
-      }
-      ++nrEntries;
-    }
-
-    // Do we need to do something here and maybe limit number of lines at once?
-  }
-  addHtml(F("],\n"));
-  long logTimeSpan       = timeDiff(firstTimeStamp, lastTimeStamp);
-  long refreshSuggestion = 1000;
-  long newOptimum        = 1000;
-
-  if ((nrEntries > 2) && (logTimeSpan > 1)) {
-    // May need to lower the TTL for refresh when time needed
-    // to fill half the log is lower than current TTL
-    newOptimum = logTimeSpan * (LOG_STRUCT_MESSAGE_LINES / 2);
-    newOptimum = newOptimum / (nrEntries - 1);
-  }
-
-  if (newOptimum < refreshSuggestion) { refreshSuggestion = newOptimum; }
-
-  if (refreshSuggestion < 100) {
-    // Reload times no lower than 100 msec.
-    refreshSuggestion = 100;
-  }
-  stream_next_json_object_value(F("TTL"),                 refreshSuggestion);
-  stream_next_json_object_value(F("timeHalfBuffer"),      newOptimum);
-  stream_next_json_object_value(F("nrEntries"),           nrEntries);
-  stream_next_json_object_value(F("SettingsWebLogLevel"), Settings.WebLogLevel);
-  stream_last_json_object_value(F("logTimeSpan"),         logTimeSpan);
-  addHtml(F("}\n"));
   TXBuffer.endStream();
+  STOP_TIMER(HANDLE_SERVING_WEBPAGE_JSON);
   updateLogLevelCache();
 
   #else // ifdef WEBSERVER_LOG

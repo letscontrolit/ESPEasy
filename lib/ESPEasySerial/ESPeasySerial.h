@@ -89,6 +89,7 @@ public:
   int    peek(void);
   size_t write(uint8_t val) override;
   int    read(void) override;
+  int    read(uint8_t *buffer, size_t size);
   int    available(void) override;
   int    availableForWrite(void);
   void   flush(void) override;

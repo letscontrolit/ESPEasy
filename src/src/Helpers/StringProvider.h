@@ -3,6 +3,10 @@
 
 #include "../../ESPEasy_common.h"
 
+#include "../DataStructs/KeyValueStruct.h"
+
+struct KeyValueStruct;
+
 struct LabelType {
   enum Enum : uint8_t {
     UNIT_NR,
@@ -28,7 +32,17 @@ struct LabelType {
     WIFI_SENS_MARGIN,    // Margin in dB on top of sensitivity
     WIFI_SEND_AT_MAX_TX_PWR,
 #endif
-    WIFI_NR_EXTRA_SCANS,    
+    WIFI_AP_CHANNEL,
+    WIFI_ENABLE_CAPTIVE_PORTAL,
+    WIFI_START_AP_NO_CREDENTIALS,
+    WIFI_START_AP_ON_CONNECT_FAIL,
+    WIFI_START_AP_ON_NW002_INIT,
+    WIFI_NR_RECONNECT_ATTEMPTS,    
+    WIFI_MAX_UPTIME_AUTO_START_AP,
+    WIFI_AP_MINIMAL_ON_TIME,
+#ifdef ESP32
+    WIFI_AP_ENABLE_NAPT,
+#endif
     WIFI_USE_LAST_CONN_FROM_RTC,
 
     FREE_MEM,            // 9876
@@ -93,6 +107,9 @@ struct LabelType {
     #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
     SHOW_UOM_ON_DEVICES_PAGE,
     #endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+#if CONFIG_SOC_WIFI_SUPPORT_5G
+    WIFI_BAND_MODE,
+#endif
     #if FEATURE_MQTT_CONNECT_BACKGROUND
     MQTT_CONNECT_IN_BACKGROUND,
     #endif // if FEATURE_MQTT_CONNECT_BACKGROUND
@@ -107,8 +124,6 @@ struct LabelType {
     WIFI_CONNECTION,         // 802.11G
     WIFI_RSSI,               // -67
     IP_CONFIG,               // DHCP
-    IP_CONFIG_STATIC,
-    IP_CONFIG_DYNAMIC,
     IP_ADDRESS,              // 192.168.1.123
     IP_SUBNET,               // 255.255.255.0
     IP_ADDRESS_SUBNET,       // 192.168.1.123 / 255.255.255.0
@@ -161,6 +176,7 @@ struct LabelType {
 #endif
 
     BUILD_DESC,
+    BUILD_ORIGIN,
     GIT_BUILD,
     SYSTEM_LIBRARIES,
 #ifdef ESP32
@@ -176,13 +192,17 @@ struct LabelType {
     CONFIGURATION_CODE_LBL,
     #endif // ifdef CONFIGURATION_CODE
 
-
+#if FEATURE_CLEAR_I2C_STUCK
     I2C_BUS_STATE,
     I2C_BUS_CLEARED_COUNT,
-
+#endif
+#if FEATURE_SYSLOG
     SYSLOG_LOG_LEVEL,
+#endif
     SERIAL_LOG_LEVEL,
+# ifdef WEBSERVER_LOG
     WEB_LOG_LEVEL,
+#endif
 #if FEATURE_SD
     SD_LOG_LEVEL,
 #endif // if FEATURE_SD
@@ -212,20 +232,14 @@ struct LabelType {
     FS_SIZE,
     FS_FREE,
     MAX_OTA_SKETCH_SIZE,
+#ifdef ESP8266
     OTA_2STEP,
     OTA_POSSIBLE,
+#endif
     #if FEATURE_INTERNAL_TEMPERATURE
     INTERNAL_TEMPERATURE,
     #endif // if FEATURE_INTERNAL_TEMPERATURE
 #if FEATURE_ETHERNET
-    ETH_IP_ADDRESS,
-    ETH_IP_SUBNET,
-    ETH_IP_ADDRESS_SUBNET,
-    ETH_IP_GATEWAY,
-    ETH_IP_DNS,
-#if FEATURE_USE_IPV6
-    ETH_IP6_LOCAL,
-#endif
     ETH_MAC,
     ETH_DUPLEX,
     ETH_SPEED,
@@ -261,14 +275,25 @@ String getEthSpeed();
 String getEthLinkSpeedState();
 #endif // if FEATURE_ETHERNET
 
+String getInternalLabel(const KeyValueStruct& kv,
+                        char            replaceSpace = '_');
 String getInternalLabel(LabelType::Enum label,
                         char            replaceSpace = '_');
-const __FlashStringHelper * getLabel(LabelType::Enum label);
+
+String getLabel(const KeyValueStruct& kv);
+String getLabel(LabelType::Enum label);
+
+String getValue(const KeyValueStruct& kv);
+int64_t getValue_int(const KeyValueStruct& kv);
+double  getValue_float(const KeyValueStruct& kv);
 String getValue(LabelType::Enum label);
 String getExtendedValue(LabelType::Enum label);
 
 String getFormNote(LabelType::Enum label);
+#if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 String getFormUnit(LabelType::Enum label);
+#endif
+KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue = false);
 
 
 #endif // STRING_PROVIDER_TYPES_H

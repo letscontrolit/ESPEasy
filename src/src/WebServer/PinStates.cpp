@@ -7,6 +7,7 @@
 
 #include "../DataStructs/PinMode.h"
 #include "../Globals/GlobalMapPortStatus.h"
+#include "../Helpers/Hardware_GPIO.h"
 #include "../Helpers/PortStatus.h"
 
 #ifdef ESP32
@@ -23,7 +24,6 @@
 #endif // ifdef ESP32
 
 #ifdef WEBSERVER_NEW_UI
-
 
 // ********************************************************************************
 // Web Interface pin state list
@@ -140,46 +140,25 @@ void handle_pinstates() {
   html_table_header(F("Bus Channel"));
 
   for (int i = 0; i <= MAX_GPIO; ++i) {
-    if (!perimanPinIsValid(i)) {
-      continue; // invalid pin
-    }
-    peripheral_bus_type_t type = perimanGetPinBusType(i);
+    peripheral_bus_type_t bus_type = ESP32_BUS_TYPE_INIT;
+    String gpio_str, typeName;
+    int    bus_number{};
+    int    bus_channel{};
 
-    if (type == ESP32_BUS_TYPE_INIT) {
-      continue; // unused pin
-    }
+    if (!getPeriman_gpio_info(i, bus_type, gpio_str, typeName, bus_number, bus_channel)) { continue; }
 
-
-#  if defined(BOARD_HAS_PIN_REMAP)
-    int dpin = gpioNumberToDigitalPin(i);
-
-    if (dpin < 0) {
-      continue; // pin is not exported
-    } else {
-      html_TR_TD();
-      addHtml(strformat(F("D%-3d|%4u"), dpin, i));
-    }
-#  else // if defined(BOARD_HAS_PIN_REMAP)
     html_TR_TD();
-    addHtml(strformat(F("%4u"), i));
-#  endif // if defined(BOARD_HAS_PIN_REMAP)
-    const char *extra_type = perimanGetPinBusExtraType(i);
-    html_TD();
+    addHtml(gpio_str);
 
-    if (extra_type) {
-      addHtml(strformat(F("%s [%s]"), perimanGetTypeName(type), extra_type));
-    } else {
-      addHtml(strformat(F("%s"), perimanGetTypeName(type)));
-    }
-    int8_t bus_number = perimanGetPinBusNum(i);
     html_TD();
+    addHtml(typeName);
 
+    html_TD();
     if (bus_number != -1) {
       addHtmlInt(bus_number);
     }
-    int8_t bus_channel = perimanGetPinBusChannel(i);
-    html_TD();
 
+    html_TD();
     if (bus_channel != -1) {
       addHtmlInt(bus_channel);
     }
@@ -248,6 +227,7 @@ void handle_pinstates() {
 
       // OutputEn
       html_TD();
+
       // When the IO is used as a simple GPIO output, oe signal can only be controlled by the oe register
       // When the IO is not used as a simple GPIO output, oe signal could be controlled by the peripheral
       if ((io_config.sig_out != SIG_GPIO_OUT_IDX) && io_config.oe_ctrl_by_periph) {
@@ -255,6 +235,7 @@ void handle_pinstates() {
       } else {
         addEnabled(io_config.oe);
       }
+
       if ((io_config.fun_sel == PIN_FUNC_GPIO) && (io_config.oe_inv)) {
         addHtml(F(" (inversed)"));
       }

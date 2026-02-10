@@ -148,10 +148,11 @@ boolean Plugin_063(uint8_t function, struct EventStruct *event, String& string)
 
       int16_t pinSCL = CONFIG_PIN1;
       int16_t pinSDO = CONFIG_PIN2;
-
+#ifndef BUILD_NO_DEBUG
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         addLog(LOG_LEVEL_INFO, strformat(F("Tkey : GPIO: %d %d"), pinSCL, pinSDO));
       }
+#endif
 
       if (validGpio(pinSCL) && validGpio(pinSDO))
       {

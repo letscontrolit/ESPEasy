@@ -25,6 +25,9 @@ const __FlashStringHelper * return_incorrect_source();
 const __FlashStringHelper * return_not_connected();
 
 String return_result(struct EventStruct *event,
+                     const __FlashStringHelper * result);
+
+String return_result(struct EventStruct *event,
                      const String      & result);
 
 const __FlashStringHelper * return_see_serial(struct EventStruct *event);

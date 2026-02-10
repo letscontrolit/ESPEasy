@@ -20,6 +20,8 @@ public:
 
   const String& get() const;
 
+  String&& getMove();
+
 private:
 
   String _str;

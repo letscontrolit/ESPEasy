@@ -4,7 +4,7 @@
 #include "../../ESPEasy_common.h"
 #if FEATURE_ESPEASY_P2P
 
-#include "../DataStructs/MAC_address.h"
+#include "../../ESPEasy/net/DataStructs/MAC_address.h"
 #include "../DataStructs/NodeStruct.h"
 #include "../DataStructs/NTP_candidate.h"
 

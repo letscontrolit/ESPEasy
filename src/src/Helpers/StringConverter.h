@@ -24,6 +24,10 @@ unsigned int count_newlines(const String& str);
 
 String concat(const __FlashStringHelper * str, const String &val);
 String concat(const __FlashStringHelper * str, const __FlashStringHelper *val);
+
+String concat(const __FlashStringHelper * str, const char* val);
+String concat(const String & str, const char* val);
+
 String concat(const char& str, const String &val);
 
 template <typename T>
@@ -93,59 +97,6 @@ bool str2ip(const char *string,
 String  formatIP(const IPAddress& ip, bool includeZone = false);
 
 
-/********************************************************************************************\
-   Handling HEX strings
- \*********************************************************************************************/
-
-// Convert max. 8 hex decimals to unsigned long
-unsigned long hexToUL(const String& input_c,
-                      size_t        nrHexDecimals);
-
-unsigned long hexToUL(const String& input_c);
-
-unsigned long hexToUL(const String& input_c,
-                      size_t        startpos,
-                      size_t        nrHexDecimals);
-
-// Convert max. 16 hex decimals to unsigned long long
-unsigned long long hexToULL(const String& input_c,
-                            size_t        nrHexDecimals); 
-
-unsigned long long hexToULL(const String& input_c);
-
-unsigned long long hexToULL(const String& input_c,
-                            size_t        startpos,
-                            size_t        nrHexDecimals);
-
-void appendHexChar(uint8_t data, String& string);
-
-// Binary data to HEX
-// Returned string length will be twice the size of the data array.
-String formatToHex_array(const uint8_t* data, size_t size);
-String formatToHex_wordarray(const uint16_t* data, size_t size);
-
-String formatToHex(unsigned long value,
-                   const __FlashStringHelper * prefix,
-                   unsigned int minimal_hex_digits);
-
-String formatToHex(unsigned long value,
-                   const __FlashStringHelper * prefix);
-
-String formatToHex(unsigned long value, unsigned int minimal_hex_digits = 0);
-
-String formatToHex_no_prefix(unsigned long value, unsigned int minimal_hex_digits = 0);
-
-String formatHumanReadable(unsigned long value,
-                           unsigned long factor);
-
-String formatHumanReadable(unsigned long value,
-                           unsigned long factor,
-                           int           NrDecimals);
-
-String formatToHex_decimal(unsigned long value);
-
-String formatToHex_decimal(unsigned long value,
-                           unsigned long factor);
 
 const __FlashStringHelper * boolToString(bool value);
 
@@ -224,30 +175,6 @@ String wrapWithQuotesIfContainsParameterSeparatorChar(const String& text);
 /*********************************************************************************************\
    Format an object value pair for use in JSON.
 \*********************************************************************************************/
-String to_json_object_value(const __FlashStringHelper * object,
-                            const __FlashStringHelper * value,
-                            bool wrapInQuotes = false);
-
-String to_json_object_value(const __FlashStringHelper * object,
-                            const String& value,
-                            bool wrapInQuotes = false);
-
-String to_json_object_value(const __FlashStringHelper * object,
-                            String&& value,
-                            bool wrapInQuotes = false);
-
-String to_json_object_value(const String& object,
-                            const String& value,
-                            bool wrapInQuotes = false);
-
-String to_json_object_value(const __FlashStringHelper * object,
-                            int value,
-                            bool wrapInQuotes = false);
-
-String to_json_object_value(const String& object,
-                            int value,
-                            bool wrapInQuotes = false);
-
 String to_json_value(const String& value,
                      bool wrapInQuotes = false);
 

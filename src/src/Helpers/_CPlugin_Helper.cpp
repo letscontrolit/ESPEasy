@@ -13,23 +13,22 @@
 
 #include "../ESPEasyCore/ESPEasy_backgroundtasks.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
-#include "../ESPEasyCore/ESPEasyEth.h"
-#include "../ESPEasyCore/ESPEasyNetwork.h"
-#include "../ESPEasyCore/ESPEasyWifi.h"
+#include "../../ESPEasy/net/eth/ESPEasyEth.h"
+#include "../../ESPEasy/net/ESPEasyNetwork.h"
+#include "../../ESPEasy/net/wifi/ESPEasyWifi.h"
 
 #include "../Globals/Settings.h"
 #include "../Globals/SecuritySettings.h"
-#include "../Globals/ESPEasyWiFiEvent.h"
+#include "../../ESPEasy/net/Globals/ESPEasyWiFiEvent.h"
 
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/Misc.h"
-#include "../Helpers/Network.h"
+#include "../Helpers/NetworkStatusLED.h"
 #include "../Helpers/Networking.h"
 #include "../Helpers/StringConverter.h"
 
 #include <WiFiClient.h>
 #include <WiFiUdp.h>
-
 
 bool safeReadStringUntil(Stream     & input,
                          String     & str,
@@ -45,7 +44,8 @@ bool safeReadStringUntil(Stream     & input,
   // FIXME TD-er: Should this also de-allocate internal buffer?
   str.clear();
 
-  do {
+  do
+  {
     // read character
     if (input.available()) {
       c = input.read();
@@ -83,6 +83,7 @@ bool safeReadStringUntil(Stream     & input,
 }
 
 #ifndef BUILD_NO_DEBUG
+
 void log_connecting_to(const __FlashStringHelper *prefix, cpluginID_t cpluginID, ControllerSettingsStruct& ControllerSettings) {
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     addLogMove(LOG_LEVEL_DEBUG,
@@ -95,43 +96,42 @@ void log_connecting_to(const __FlashStringHelper *prefix, cpluginID_t cpluginID,
 
 #endif // ifndef BUILD_NO_DEBUG
 
-void log_connecting_fail(const __FlashStringHelper *prefix, cpluginID_t cpluginID) {
-  if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-    addLogMove(LOG_LEVEL_ERROR,
-               strformat(F("%s%s connection failed (%d/%d)"),
-                         prefix,
-                         get_formatted_Controller_number(cpluginID).c_str(),
-                         WiFiEventData.connectionFailures,
-                         Settings.ConnectionFailuresThreshold));
-  }
-}
-
 bool count_connection_results(bool success, const __FlashStringHelper *prefix, cpluginID_t cpluginID, uint64_t statisticsTimerStart) {
 #if FEATURE_TIMING_STATS
   const protocolIndex_t protocolIndex = getProtocolIndex_from_CPluginID(cpluginID);
 #endif
+  auto data = ESPEasy::net::getDefaultRoute_NWPluginData_static_runtime();
 
   if (!success)
   {
-    ++WiFiEventData.connectionFailures;
-    log_connecting_fail(prefix, cpluginID);
+    if (data) {
+      data->markConnectionFailed(cpluginID);
+      addLogMove(LOG_LEVEL_ERROR,
+                 strformat(F("%s%s connection failed (%d/%d)"),
+                           FsP(prefix),
+                           get_formatted_Controller_number(cpluginID).c_str(),
+                           data->getConnectionFailures(),
+                           Settings.ConnectionFailuresThreshold));
+    }
+
     STOP_TIMER_CONTROLLER(protocolIndex, CPlugin::Function::CPLUGIN_CONNECT_FAIL);
     return false;
   }
-  WiFiEventData.connectDurations[cpluginID] = usecPassedSince(statisticsTimerStart) / 1000ul;
+
+  if (data) {
+    data->markConnectionSuccess(cpluginID, usecPassedSince(statisticsTimerStart) / 1000ul);
+  }
+
   STOP_TIMER_CONTROLLER(protocolIndex, CPlugin::Function::CPLUGIN_CONNECT_SUCCESS);
   statusLED(true);
 
-  if (WiFiEventData.connectionFailures > 0) {
-    --WiFiEventData.connectionFailures;
-  }
   return true;
 }
 
 bool try_connect_host(cpluginID_t cpluginID, WiFiUDP& client, ControllerSettingsStruct& ControllerSettings) {
   const uint64_t statisticsTimerStart(getMicros64()); // START_TIMER;
 
-  if (!NetworkConnected()) {
+  if (!ESPEasy::net::NetworkConnected()) {
     client.stop();
     return false;
   }
@@ -140,9 +140,7 @@ bool try_connect_host(cpluginID_t cpluginID, WiFiUDP& client, ControllerSettings
   // For example because the server does not give an acknowledgement.
   // This way, we always need the set amount of timeout to handle the request.
   // Thus we should not make the timeout dynamic here if set to ignore ack.
-  const uint32_t timeout = ControllerSettings.MustCheckReply
-    ? WiFiEventData.getSuggestedTimeout(cpluginID, ControllerSettings.ClientTimeout)
-    : ControllerSettings.ClientTimeout;
+  const uint32_t timeout = ControllerSettings.getSuggestedTimeout(cpluginID);
 
   client.setTimeout(timeout); // in msec as it should be!
   delay(0);
@@ -165,6 +163,7 @@ bool try_connect_host(cpluginID_t cpluginID, WiFiUDP& client, ControllerSettings
 }
 
 #if FEATURE_HTTP_CLIENT
+
 bool try_connect_host(cpluginID_t cpluginID, WiFiClient& client, ControllerSettingsStruct& ControllerSettings) {
   return try_connect_host(cpluginID, client, ControllerSettings, F("HTTP : "));
 }
@@ -175,7 +174,7 @@ bool try_connect_host(cpluginID_t                cpluginID,
                       const __FlashStringHelper *loglabel) {
   const uint64_t statisticsTimerStart(getMicros64()); // START_TIMER;
 
-  if (!NetworkConnected()) {
+  if (!ESPEasy::net::NetworkConnected()) {
     client.stop();
     return false;
   }
@@ -187,9 +186,7 @@ bool try_connect_host(cpluginID_t                cpluginID,
   // For example because the server does not give an acknowledgement.
   // This way, we always need the set amount of timeout to handle the request.
   // Thus we should not make the timeout dynamic here if set to ignore ack.
-  const uint32_t timeout = ControllerSettings.MustCheckReply
-    ? WiFiEventData.getSuggestedTimeout(cpluginID, ControllerSettings.ClientTimeout)
-    : ControllerSettings.ClientTimeout;
+  const uint32_t timeout = ControllerSettings.getSuggestedTimeout(cpluginID);
 
   # ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
 
@@ -239,12 +236,10 @@ String send_via_http(int                             cpluginID,
   // For example because the server does not give an acknowledgement.
   // This way, we always need the set amount of timeout to handle the request.
   // Thus we should not make the timeout dynamic here if set to ignore ack.
-  const uint32_t timeout = ControllerSettings.MustCheckReply
-    ? WiFiEventData.getSuggestedTimeout(cpluginID, ControllerSettings.ClientTimeout)
-    : ControllerSettings.ClientTimeout;
+  const uint32_t timeout = ControllerSettings.getSuggestedTimeout(cpluginID);
 
   const uint64_t statisticsTimerStart(getMicros64());
-  const String result                    = send_via_http(
+  const String   result = send_via_http(
     get_formatted_Controller_number(cpluginID),
     timeout,
     getControllerUser(controller_idx, ControllerSettings),
@@ -277,7 +272,6 @@ String send_via_http(int                             cpluginID,
 
 #endif // FEATURE_HTTP_CLIENT
 
-
 String getControllerUser(controllerIndex_t controller_idx, const ControllerSettingsStruct& ControllerSettings, bool doParseTemplate)
 {
   if (!validControllerIndex(controller_idx)) { return EMPTY_STRING; }
@@ -285,6 +279,7 @@ String getControllerUser(controllerIndex_t controller_idx, const ControllerSetti
   String res;
 
   if (ControllerSettings.useExtendedCredentials()) {
+    // FIXME TD-er: Must add checkbox to save credentials in separate file
     res = ExtendedControllerCredentials.getControllerUser(controller_idx);
   } else {
     res = String(SecuritySettings.ControllerUser[controller_idx]);
@@ -302,6 +297,7 @@ String getControllerPass(controllerIndex_t controller_idx, const ControllerSetti
   if (!validControllerIndex(controller_idx)) { return EMPTY_STRING; }
 
   if (ControllerSettings.useExtendedCredentials()) {
+    // FIXME TD-er: Must add checkbox to save credentials in separate file
     return ExtendedControllerCredentials.getControllerPass(controller_idx);
   }
   String res(SecuritySettings.ControllerPassword[controller_idx]);
@@ -315,6 +311,7 @@ void setControllerUser(controllerIndex_t controller_idx, const ControllerSetting
   if (!validControllerIndex(controller_idx)) { return; }
 
   if (ControllerSettings.useExtendedCredentials()) {
+    // FIXME TD-er: Must add checkbox to save credentials in separate file
     ExtendedControllerCredentials.setControllerUser(controller_idx, value);
   } else {
     safe_strncpy(SecuritySettings.ControllerUser[controller_idx], value, sizeof(SecuritySettings.ControllerUser[0]));
@@ -326,6 +323,7 @@ void setControllerPass(controllerIndex_t controller_idx, const ControllerSetting
   if (!validControllerIndex(controller_idx)) { return; }
 
   if (ControllerSettings.useExtendedCredentials()) {
+    // FIXME TD-er: Must add checkbox to save credentials in separate file
     ExtendedControllerCredentials.setControllerPass(controller_idx, value);
   } else {
     safe_strncpy(SecuritySettings.ControllerPassword[controller_idx], value, sizeof(SecuritySettings.ControllerPassword[0]));

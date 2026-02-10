@@ -32,7 +32,7 @@ struct PluginTaskData_base {
   size_t nrSamplesPresent() const;
 
   #if FEATURE_PLUGIN_STATS
-  void   initPluginStats(taskIndex_t taskIndex, taskVarIndex_t taskVarIndex);
+  void   initPluginStats(taskVarIndex_t taskVarIndex);
   void   clearPluginStats(taskVarIndex_t taskVarIndex);
 
   // Update any logged timestamp with this newly set system time.
@@ -64,8 +64,6 @@ struct PluginTaskData_base {
     const __FlashStringHelper    *id,
     const ChartJS_title         & chartTitle,
     const ChartJS_dataset_config& datasetConfig,
-    int                           width,
-    int                           height,
     bool                          showAverage = true,
     const String                & options     = EMPTY_STRING,
     bool                          onlyJSON    = false) const;
@@ -93,6 +91,7 @@ protected:
 protected:
 
   bool _baseClassOnly = false;
+
 };
 
 #endif // ifndef DATASTRUCTS_PLUGINTASKDATA_BASE_H

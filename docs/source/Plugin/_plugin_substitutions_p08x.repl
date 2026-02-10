@@ -93,7 +93,7 @@
 .. |P087_type| replace:: :cyan:`Communication`
 .. |P087_typename| replace:: :cyan:`Communication - SerialProxy`
 .. |P087_porttype| replace:: `Serial`
-.. |P087_status| replace:: :yellow:`COLLECTION C`
+.. |P087_status| replace:: :yellow:`COLLECTION C` :yellow:`ENERGY`
 .. |P087_github| replace:: P087_SerialProxy.ino
 .. _P087_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P087_SerialProxy.ino
 .. |P087_usedby| replace:: `.`

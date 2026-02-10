@@ -7,21 +7,20 @@
 #include "../DataTypes/EventValueSource.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../ESPEasyCore/ESPEasy_backgroundtasks.h"
-#include "../ESPEasyCore/ESPEasyEth.h"
-#include "../ESPEasyCore/ESPEasyNetwork.h"
-#include "../ESPEasyCore/ESPEasyWifi.h"
+#include "../../ESPEasy/net/eth/ESPEasyEth.h"
+#include "../../ESPEasy/net/ESPEasyNetwork.h"
+#include "../../ESPEasy/net/wifi/ESPEasyWifi.h"
 #include "../ESPEasyCore/Serial.h"
-#include "../Globals/ESPEasyEthEvent.h"
-#include "../Globals/ESPEasyWiFiEvent.h"
+#include "../../ESPEasy/net/Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/ESPEasy_Scheduler.h"
 #include "../Globals/ESPEasy_time.h"
 
 #ifdef USES_ESPEASY_NOW
-#include "../Globals/ESPEasy_now_handler.h"
+# include "../Globals/ESPEasy_now_handler.h"
 #endif
 
 #include "../Globals/EventQueue.h"
-#include "../Globals/NetworkState.h"
+#include "../../ESPEasy/net/Globals/NetworkState.h"
 #include "../Globals/Nodes.h"
 #include "../Globals/ResetFactoryDefaultPref.h"
 #include "../Globals/Settings.h"
@@ -29,7 +28,7 @@
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/Hardware.h"
 #include "../Helpers/Misc.h"
-#include "../Helpers/Network.h"
+#include "../Helpers/NetworkStatusLED.h"
 #include "../Helpers/Numerical.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringProvider.h"
@@ -56,18 +55,18 @@
 // SSDP
 //  #if LWIP_VERSION_MAJOR == 2
 #define IPADDR2STR(addr) (uint8_t)((uint32_t)addr &  0xFF), (uint8_t)(((uint32_t)addr >> 8) &  0xFF), \
-  (uint8_t)(((uint32_t)addr >> 16) &  0xFF), (uint8_t)(((uint32_t)addr >> 24) &  0xFF)
+        (uint8_t)(((uint32_t)addr >> 16) &  0xFF), (uint8_t)(((uint32_t)addr >> 24) &  0xFF)
 
 //  #endif
 
 #include <lwip/netif.h>
 
 #ifdef ESP8266
-#include <lwip/opt.h>
-#include <lwip/udp.h>
-#include <lwip/igmp.h>
-#include <include/UdpContext.h>
-#endif
+# include <lwip/opt.h>
+# include <lwip/udp.h>
+# include <lwip/igmp.h>
+# include <include/UdpContext.h>
+#endif // ifdef ESP8266
 
 #ifdef SUPPORT_ARP
 # include <lwip/etharp.h>
@@ -76,13 +75,9 @@
 #  include <lwip/etharp.h>
 #  include <lwip/tcpip.h>
 
-void _etharp_gratuitous_func(struct netif *netif) {
-  etharp_gratuitous(netif);
-}
+void _etharp_gratuitous_func(struct netif *netif) { etharp_gratuitous(netif); }
 
-void etharp_gratuitous_r(struct netif *netif) {
-  tcpip_callback_with_block((tcpip_callback_fn)_etharp_gratuitous_func, netif, 0);
-}
+void etharp_gratuitous_r(struct netif *netif)     { tcpip_callback_with_block((tcpip_callback_fn)_etharp_gratuitous_func, netif, 0); }
 
 # endif // ifdef ESP32
 
@@ -100,66 +95,6 @@ void etharp_gratuitous_r(struct netif *netif) {
 
 #include <vector>
 
-/*********************************************************************************************\
-   Syslog client
-\*********************************************************************************************/
-void sendSyslog(uint8_t logLevel, const String& message)
-{
-  if ((Settings.Syslog_IP[0] != 0) && NetworkConnected())
-  {
-    IPAddress broadcastIP(Settings.Syslog_IP[0], Settings.Syslog_IP[1], Settings.Syslog_IP[2], Settings.Syslog_IP[3]);
-
-    FeedSW_watchdog();
-
-    if (portUDP.beginPacket(broadcastIP, Settings.SyslogPort) == 0) {
-      // problem resolving the hostname or port
-      return;
-    }
-    unsigned int prio = Settings.SyslogFacility * 8;
-
-    if (logLevel == LOG_LEVEL_ERROR) {
-      prio += 3; // syslog error
-    }
-    else if (logLevel == LOG_LEVEL_INFO) {
-      prio += 5; // syslog notice
-    }
-    else {
-      prio += 7;
-    }
-
-    // An RFC3164 compliant message must be formated like :  "<PRIO>[TimeStamp ]Hostname TaskName: Message"
-
-    // Using Settings.Name as the Hostname (Hostname must NOT content space)
-    {
-      String header;
-      header += '<';
-      header += prio;
-      header += '>';
-      header += NetworkCreateRFCCompliantHostname(true);
-      header += F(" EspEasy: ");
-      header.trim();
-      header.replace(' ', '_');
-      
-      #ifdef ESP8266
-      portUDP.write(header.c_str(),                                    header.length());
-      #endif // ifdef ESP8266
-      #ifdef ESP32
-      portUDP.write(reinterpret_cast<const uint8_t *>(header.c_str()), header.length());
-      #endif // ifdef ESP32
-    }
-
-    #ifdef ESP8266
-    portUDP.write(message.c_str(), message.length());
-    #endif // ifdef ESP8266
-    #ifdef ESP32
-    portUDP.write(reinterpret_cast<const uint8_t *>(message.c_str()), message.length());
-    #endif // ifdef ESP32
-
-    portUDP.endPacket();
-    FeedSW_watchdog();
-    delay(0);
-  }
-}
 
 #if FEATURE_ESPEASY_P2P
 
@@ -205,11 +140,11 @@ void sendUDP(uint8_t unit, const uint8_t *data, uint8_t size)
 # ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
-    addLogMove(LOG_LEVEL_DEBUG_MORE,  strformat(
-      F("UDP  : Send UDP message to %d (%s)"), 
-      unit,
-      remoteNodeIP.toString().c_str()
-      ));
+    addLogMove(LOG_LEVEL_DEBUG_MORE, strformat(
+                 F("UDP  : Send UDP message to %d (%s)"),
+                 unit,
+                 remoteNodeIP.toString().c_str()
+                 ));
   }
 # endif // ifndef BUILD_NO_DEBUG
 
@@ -229,30 +164,42 @@ void updateUDPport(bool force)
 {
   static uint16_t lastUsedUDPPort = 0;
 
-  if (!force && Settings.UDPPort == lastUsedUDPPort) {
+  if (!force && (Settings.UDPPort == lastUsedUDPPort)) {
     return;
   }
 
-  if (lastUsedUDPPort != 0) {
-    portUDP.stop();
-    lastUsedUDPPort = 0;
-  }
-
-  if (!NetworkConnected()) {
-    return;
+  // FIXME TD-er: For now, all interfaces that can handle UDP are the same as those that need the webserver to run
+  // May need a separate NWPlugin function for check if default interface can handle UDP p2p packets
+  // Or we may need to look into AsyncUDP as that allows to send to specific interfaces.
+  const bool connected = ESPEasy::net::NWPluginCall(NWPlugin::Function::NWPLUGIN_WEBSERVER_SHOULD_RUN);
+  //const bool connected = ESPEasy::net::NetworkConnected();
+  if (!connected || lastUsedUDPPort != 0) {
+    if (lastUsedUDPPort != 0) {
+      portUDP.stop();
+      lastUsedUDPPort = 0;
+#ifndef BUILD_NO_DEBUG
+      addLogMove(LOG_LEVEL_INFO, concat(F("UDP : Stop listening on port "), Settings.UDPPort));
+#endif
+    }
+    if (!connected) {
+      return;
+    }
   }
 
   if (Settings.UDPPort != 0) {
     if (portUDP.begin(Settings.UDPPort) == 0) {
+#ifndef BUILD_NO_DEBUG
       if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
         addLogMove(LOG_LEVEL_ERROR, concat(F("UDP : Cannot bind to ESPEasy p2p UDP port "), Settings.UDPPort));
       }
+#endif
     } else {
       lastUsedUDPPort = Settings.UDPPort;
-
+#ifndef BUILD_NO_DEBUG
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         addLogMove(LOG_LEVEL_INFO, concat(F("UDP : Start listening on port "), Settings.UDPPort));
       }
+#endif
     }
   }
 }
@@ -261,10 +208,15 @@ void updateUDPport(bool force)
    Check UDP messages (ESPEasy propiertary protocol)
 \*********************************************************************************************/
 boolean runningUPDCheck = false;
+
 void checkUDP()
 {
-  if (!NetworkConnected())
+  if (!ESPEasy::net::NetworkConnected(true)) {
+    portUDP.PR_9453_FLUSH_TO_CLEAR();
+    portUDP.stop();
     return;
+  }
+
   if (Settings.UDPPort == 0) {
     return;
   }
@@ -274,7 +226,7 @@ void checkUDP()
   }
   START_TIMER
 
-  runningUPDCheck = true;
+    runningUPDCheck = true;
 
   // UDP events
   int packetSize = portUDP.parsePacket();
@@ -303,7 +255,7 @@ void checkUDP()
     // and then crash due to memory allocation failures
     if ((packetSize >= 2) && (packetSize < UDP_PACKETSIZE_MAX)) {
       // Allocate buffer to process packet.
-      // Resize it to be 1 byte larger so we can 0-terminate it 
+      // Resize it to be 1 byte larger so we can 0-terminate it
       // in case it is some plain text string
       std::vector<char> packetBuffer;
       packetBuffer.resize(packetSize + 1);
@@ -319,14 +271,14 @@ void checkUDP()
             # ifndef BUILD_NO_DEBUG
 
             if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-              addLogMove(LOG_LEVEL_DEBUG,  
-                strformat(F("UDP  : %s  Command: %s"), 
-                  formatIP(remoteIP, true).c_str(), 
-                  wrapWithQuotesIfContainsParameterSeparatorChar(String(&packetBuffer[0])).c_str()
-                  ));
+              addLogMove(LOG_LEVEL_DEBUG,
+                         strformat(F("UDP  : %s  Command: %s"),
+                                   formatIP(remoteIP, true).c_str(),
+                                   wrapWithQuotesIfContainsParameterSeparatorChar(String(&packetBuffer[0])).c_str()
+                                   ));
             }
-            #endif
-            ExecuteCommand_all({EventValueSource::Enum::VALUE_SOURCE_SYSTEM, &packetBuffer[0]}, true);
+            # endif // ifndef BUILD_NO_DEBUG
+            ExecuteCommand_all({ EventValueSource::Enum::VALUE_SOURCE_UDP, &packetBuffer[0] }, true);
           }
           else
           {
@@ -339,6 +291,7 @@ void checkUDP()
                   break;
                 }
                 int copy_length = sizeof(NodeStruct);
+
                 // Older versions sent 80 bytes, regardless of the size of NodeStruct
                 // Make sure the extra data received is ignored as it was also not initialized
                 if (len == 80) {
@@ -357,16 +310,16 @@ void checkUDP()
 # ifndef BUILD_NO_DEBUG
 
                   if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
-                    addLogMove(LOG_LEVEL_DEBUG_MORE,  
-                      strformat(F("UDP  : %s (%d) %s,%s,%d"), 
-                        formatIP(remoteIP).c_str(), 
-                        received.unit,
-                        received.STA_MAC().toString().c_str(), 
-                        formatIP(received.IP(), true).c_str(), 
-                        received.unit));
+                    addLogMove(LOG_LEVEL_DEBUG_MORE,
+                               strformat(F("UDP  : %s (%d) %s,%s,%d"),
+                                         formatIP(remoteIP).c_str(),
+                                         received.unit,
+                                         received.STA_MAC().toString().c_str(),
+                                         formatIP(received.IP(), true).c_str(),
+                                         received.unit));
                   }
 
-#endif // ifndef BUILD_NO_DEBUG
+# endif // ifndef BUILD_NO_DEBUG
                 }
                 break;
               }
@@ -378,8 +331,9 @@ void checkUDP()
                 TempEvent.Par1 = remoteIP[3];
                 TempEvent.Par2 = len;
                 String dummy;
+
                 // TD-er: Disabled the PLUGIN_UDP_IN call as we don't have any plugin using this.
-                //PluginCall(PLUGIN_UDP_IN, &TempEvent, dummy);
+                // PluginCall(PLUGIN_UDP_IN, &TempEvent, dummy);
                 CPluginCall(CPlugin::Function::CPLUGIN_UDP_IN, &TempEvent);
                 break;
               }
@@ -407,7 +361,8 @@ String formatUnitToIPAddress(uint8_t unit, uint8_t formatCode) {
   IPAddress unitIPAddress = getIPAddressForUnit(unit);
 
   if (unitIPAddress[0] == 0) { // Invalid?
-    switch (formatCode) {
+    switch (formatCode)
+    {
       case 1:                  // Return empty string
       {
         return EMPTY_STRING;
@@ -431,29 +386,29 @@ IPAddress getIPAddressForUnit(uint8_t unit) {
   }
   auto it = Nodes.find(unit);
 
-  if (it == Nodes.end() || it->second.ip[0] == 0) {
+  if ((it == Nodes.end()) || (it->second.ip[0] == 0)) {
     IPAddress ip;
     return ip;
   }
-#if FEATURE_USE_IPV6
-/*
-  // FIXME TD-er: for now do not try to send to IPv6
-  if (it->second.hasIPv6_mac_based_link_local) {
-    return it->second.IPv6_link_local();
-  }
-  if (it->second.hasIPv6_mac_based_link_global) {
-    return it->second.IPv6_global();
-  }
-*/
-#endif
+# if FEATURE_USE_IPV6
+
+  /*
+     // FIXME TD-er: for now do not try to send to IPv6
+     if (it->second.hasIPv6_mac_based_link_local) {
+      return it->second.IPv6_link_local();
+     }
+     if (it->second.hasIPv6_mac_based_link_global) {
+      return it->second.IPv6_global();
+     }
+   */
+# endif // if FEATURE_USE_IPV6
   return it->second.IP();
 }
-
 
 String getNameForUnit(uint8_t unit) {
   auto it = Nodes.find(unit);
 
-  if (it == Nodes.end() || it->second.getNodeName().isEmpty()) {
+  if ((it == Nodes.end()) || it->second.getNodeName().isEmpty()) {
     return EMPTY_STRING;
   }
   return it->second.getNodeName();
@@ -471,7 +426,7 @@ long getAgeForUnit(uint8_t unit) {
 uint16_t getBuildnrForUnit(uint8_t unit) {
   auto it = Nodes.find(unit);
 
-  if (it == Nodes.end() || it->second.build == 0) {
+  if ((it == Nodes.end()) || (it->second.build == 0)) {
     return 0;
   }
   return it->second.build;
@@ -495,11 +450,11 @@ uint8_t getTypeForUnit(uint8_t unit) {
   return it->second.nodeType;
 }
 
-const __FlashStringHelper* getTypeStringForUnit(uint8_t unit) {
+String getTypeStringForUnit(uint8_t unit) {
   auto it = Nodes.find(unit);
 
   if (it == Nodes.end()) {
-    return F("");
+    return EMPTY_STRING;
   }
   return it->second.getNodeTypeDisplayString();
 }
@@ -514,20 +469,22 @@ void refreshNodeList()
 
   Nodes.refreshNodeList(max_age_allowed, max_age);
 
-  #ifdef USES_ESPEASY_NOW
-  #ifdef ESP8266
+  # ifdef USES_ESPEASY_NOW
+  #  ifdef ESP8266
+
   // FIXME TD-er: Do not perform regular scans on ESP32 as long as we cannot scan per channel
   if (!Nodes.isEndpoint()) {
-    WifiScan(true, Nodes.getESPEasyNOW_channel());
+    ESPEasy::net::wifi::WifiScan(true, Nodes.getESPEasyNOW_channel());
   }
-  #endif
-  #endif
+  #  endif // ifdef ESP8266
+  # endif // ifdef USES_ESPEASY_NOW
 
   if (max_age > (0.75 * max_age_allowed)) {
     Scheduler.sendGratuitousARP_now();
   }
   sendSysInfoUDP(1);
-  #ifdef USES_ESPEASY_NOW
+  # ifdef USES_ESPEASY_NOW
+
   if (Nodes.recentlyBecameDistanceZero()) {
     // Send to all channels
     ESPEasy_now_handler.sendDiscoveryAnnounce(-1);
@@ -536,7 +493,7 @@ void refreshNodeList()
   }
   ESPEasy_now_handler.sendNTPquery();
   ESPEasy_now_handler.sendTraceRoute();
-  #endif // ifdef USES_ESPEASY_NOW
+  # endif // ifdef USES_ESPEASY_NOW
 }
 
 /*********************************************************************************************\
@@ -566,7 +523,7 @@ void sendSysInfoUDP(uint8_t repeats)
 
   // Prepare UDP packet to send
   constexpr size_t data_size = sizeof(NodeStruct) + 2;
-  uint8_t data[data_size] = {0};
+  uint8_t data[data_size]    = { 0 };
   data[0] = 255;
   data[1] = 1;
   memcpy(&data[2], thisNode, sizeof(NodeStruct));
@@ -612,42 +569,42 @@ void SSDP_schema() {
             (uint16_t)chipId        & 0xff);
 
   web_server.client().print(F(
-                 "HTTP/1.1 200 OK\r\n"
-                 "Content-Type: text/xml\r\n"
-                 "Connection: close\r\n"
-                 "Access-Control-Allow-Origin: *\r\n"
-                 "\r\n"
-                 "<?xml version=\"1.0\"?>"
-                 "<root xmlns=\"urn:schemas-upnp-org:device-1-0\">"
-                 "<specVersion>"
-                 "<major>1</major>"
-                 "<minor>0</minor>"
-                 "</specVersion>"
-                 "<URLBase>http://"));
+                              "HTTP/1.1 200 OK\r\n"
+                              "Content-Type: text/xml\r\n"
+                              "Connection: close\r\n"
+                              "Access-Control-Allow-Origin: *\r\n"
+                              "\r\n"
+                              "<?xml version=\"1.0\"?>"
+                              "<root xmlns=\"urn:schemas-upnp-org:device-1-0\">"
+                              "<specVersion>"
+                              "<major>1</major>"
+                              "<minor>0</minor>"
+                              "</specVersion>"
+                              "<URLBase>http://"));
 
   web_server.client().print(formatIP(ip));
   web_server.client().print(F(":80/</URLBase>"
-                 "<device>"
-                 "<deviceType>urn:schemas-upnp-org:device:BinaryLight:1</deviceType>"
-                 "<friendlyName>"));
+                              "<device>"
+                              "<deviceType>urn:schemas-upnp-org:device:BinaryLight:1</deviceType>"
+                              "<friendlyName>"));
   web_server.client().print(Settings.getName());
   web_server.client().print(F("</friendlyName>"
-                 "<presentationURL>/</presentationURL>"
-                 "<serialNumber>"));
+                              "<presentationURL>/</presentationURL>"
+                              "<serialNumber>"));
   web_server.client().print(String(ESP.getChipId()));
   web_server.client().print(F("</serialNumber>"
-                 "<modelName>ESP Easy</modelName>"
-                 "<modelNumber>"));
+                              "<modelName>ESP Easy</modelName>"
+                              "<modelNumber>"));
   web_server.client().print(getValue(LabelType::GIT_BUILD));
   web_server.client().print(F("</modelNumber>"
-                 "<modelURL>http://www.letscontrolit.com</modelURL>"
-                 "<manufacturer>http://www.letscontrolit.com</manufacturer>"
-                 "<manufacturerURL>http://www.letscontrolit.com</manufacturerURL>"
-                 "<UDN>uuid:"));
+                              "<modelURL>http://www.letscontrolit.com</modelURL>"
+                              "<manufacturer>http://www.letscontrolit.com</manufacturer>"
+                              "<manufacturerURL>http://www.letscontrolit.com</manufacturerURL>"
+                              "<UDN>uuid:"));
   web_server.client().print(String(uuid));
   web_server.client().print(F("</UDN></device>"
-                 "</root>\r\n"
-                 "\r\n"));
+                              "</root>\r\n"
+                              "\r\n"));
 }
 
 /********************************************************************************************\
@@ -672,7 +629,6 @@ unsigned long  _notify_time;
 #  define SSDP_MULTICAST_TTL 2
 
 static const IPAddress SSDP_MULTICAST_ADDR(239, 255, 255, 250);
-
 
 /********************************************************************************************\
    Launch SSDP listener and send initial notify
@@ -827,10 +783,24 @@ void SSDP_update() {
     _respondToAddr = _server->getRemoteAddress();
     _respondToPort = _server->getRemotePort();
 
-    typedef enum { METHOD, URI, PROTO, KEY, VALUE, ABORT } states;
+    typedef enum {
+      METHOD,
+      URI,
+      PROTO,
+      KEY,
+      VALUE,
+      ABORT
+
+    } states;
     states state = METHOD;
 
-    typedef enum { START, MAN, ST, MX } headers;
+    typedef enum {
+      START,
+      MAN,
+      ST,
+      MX
+
+    } headers;
     headers header = START;
 
     uint8_t cursor = 0;
@@ -843,7 +813,8 @@ void SSDP_update() {
 
       (c == '\r' || c == '\n') ? cr++ : cr = 0;
 
-      switch (state) {
+      switch (state)
+      {
         case METHOD:
 
           if (c == ' ') {
@@ -894,7 +865,8 @@ void SSDP_update() {
         case VALUE:
 
           if (cr == 2) {
-            switch (header) {
+            switch (header)
+            {
               case START:
                 break;
               case MAN:
@@ -936,14 +908,16 @@ void SSDP_update() {
           }
           break;
         case ABORT:
-          _pending = false; _delay = 0;
+          _pending = false;
+          _delay   = 0;
           break;
       }
     }
   }
 
   if (_pending && timeOutReached(_process_time + _delay)) {
-    _pending = false; _delay = 0;
+    _pending = false;
+    _delay   = 0;
     SSDP_send(NONE);
   } else if ((_notify_time == 0) || timeOutReached(_notify_time + (SSDP_INTERVAL * 1000L))) {
     _notify_time = millis();
@@ -960,29 +934,13 @@ void SSDP_update() {
 # endif // if FEATURE_SSDP
 #endif  // if defined(ESP8266)
 
-
 // ********************************************************************************
-// Return subnet range of WiFi.
+// Return subnet range of active network interface.
 // ********************************************************************************
 bool getSubnetRange(IPAddress& low, IPAddress& high)
 {
-  if (!WiFiEventData.WiFiGotIP()) {
-    return false;
-  }
-
-  const IPAddress ip     = NetworkLocalIP();
-  const IPAddress subnet = NetworkSubnetMask();
-
-  low  = ip;
-  high = ip;
-
-  // Compute subnet range.
-  for (uint8_t i = 0; i < 4; ++i) {
-    if (subnet[i] != 255) {
-      low[i]  = low[i] & subnet[i];
-      high[i] = high[i] | ~subnet[i];
-    }
-  }
+  low = ESPEasy::net::NetworkID();
+  high = ESPEasy::net::NetworkBroadcast();
   return true;
 }
 
@@ -993,7 +951,6 @@ bool getSubnetRange(IPAddress& low, IPAddress& high)
 #ifdef CORE_POST_2_5_0
 # include <AddrList.h>
 #endif // ifdef CORE_POST_2_5_0
-
 
 bool hasIPaddr() {
   if (useStaticIP()) { return true; }
@@ -1020,22 +977,24 @@ bool hasIPaddr() {
 
 bool useStaticIP() {
   #if FEATURE_ETHERNET
-  if (active_network_medium == NetworkMedium_t::Ethernet) {
-    return ethUseStaticIP();
+
+  if (active_network_medium == ESPEasy::net::NetworkMedium_t::Ethernet) {
+    return ESPEasy::net::eth::ethUseStaticIP();
   }
-  #endif
-  return WiFiUseStaticIP();
+  #endif // if FEATURE_ETHERNET
+  return ESPEasy::net::wifi::WiFiUseStaticIP();
 }
 
 // Check connection. Maximum timeout 500 msec.
 bool NetworkConnected(uint32_t timeout_ms) {
-  if (NetworkConnected()) return true;
+  if (ESPEasy::net::NetworkConnected()) return true;
 
 #ifdef USES_ESPEASY_NOW
+
   if (isESPEasy_now_only()) {
     return false;
   }
-#endif
+#endif // ifdef USES_ESPEASY_NOW
 
   if (timeout_ms > 500) {
     timeout_ms = 500;
@@ -1050,7 +1009,7 @@ bool NetworkConnected(uint32_t timeout_ms) {
   }
 
   // Apparently something needs network, perform check to see if it is ready now.
-  while (!NetworkConnected()) {
+  while (!ESPEasy::net::NetworkConnected()) {
     if (timeOutReached(timer)) {
       return false;
     }
@@ -1060,7 +1019,7 @@ bool NetworkConnected(uint32_t timeout_ms) {
 }
 
 bool hostReachable(const IPAddress& ip) {
-  if (!NetworkConnected()) { return false; }
+  if (!ESPEasy::net::NetworkConnected()) { return false; }
 
   return true; // Disabled ping as requested here:
   // https://github.com/letscontrolit/ESPEasy/issues/1494#issuecomment-397872538
@@ -1094,6 +1053,7 @@ bool hostReachable(const IPAddress& ip) {
 }
 
 #if FEATURE_HTTP_CLIENT
+
 bool connectClient(WiFiClient& client, const char *hostname, uint16_t port, uint32_t timeout_ms) {
   IPAddress ip;
 
@@ -1107,18 +1067,19 @@ bool connectClient(WiFiClient& client, IPAddress ip, uint16_t port, uint32_t tim
 {
   START_TIMER;
 
-  if (!NetworkConnected()) {
+  if (!ESPEasy::net::NetworkConnected(true)) {
     client.stop();
     return false;
   }
-#ifndef BUILD_NO_DEBUG
+# ifndef BUILD_NO_DEBUG
+
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     addLog(LOG_LEVEL_DEBUG, strformat(
-      F("connectClient: '%s' port: %u"),
-      ip.toString().c_str(),
-      port));
+             F("connectClient: '%s' port: %u"),
+             ip.toString().c_str(),
+             port));
   }
-#endif
+# endif // ifndef BUILD_NO_DEBUG
 
   // In case of domain name resolution error result can be negative.
   // https://github.com/esp8266/Arduino/blob/18f643c7e2d6a0da9d26ff2b14c94e6536ab78c1/libraries/Ethernet/src/Dns.cpp#L44
@@ -1128,96 +1089,106 @@ bool connectClient(WiFiClient& client, IPAddress ip, uint16_t port, uint32_t tim
   delay(0);
 
   if (!connected) {
-#ifndef BUILD_NO_DEBUG
-  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    addLog(LOG_LEVEL_ERROR, strformat(
-      F("connectClient: connect failed to '%s' port: %u"),
-      ip.toString().c_str(),
-      port));
-  }
-#endif
+# ifndef BUILD_NO_DEBUG
+
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+      addLog(LOG_LEVEL_ERROR, strformat(
+               F("connectClient: connect failed to '%s' port: %u"),
+               ip.toString().c_str(),
+               port));
+    }
+# endif // ifndef BUILD_NO_DEBUG
 
     Scheduler.sendGratuitousARP_now();
     client.stop(); // Make sure to start over without some stale connection
   }
   STOP_TIMER(CONNECT_CLIENT_STATS);
-#if defined(ESP32) || defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_0)
-#else
+# if defined(ESP32) || defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_0)
+# else
 
   if (connected) {
     client.keepAlive(); // Use default keep alive values
   }
-#endif // if defined(ESP32) || defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_0)
+# endif // if defined(ESP32) || defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_0)
   return connected;
 }
+
 #endif // FEATURE_HTTP_CLIENT
 
 void scrubDNS() {
+  /*
   #if FEATURE_ETHERNET
-  if (active_network_medium == NetworkMedium_t::Ethernet) {
+
+  if (active_network_medium == ESPEasy::net::NetworkMedium_t::Ethernet) {
     if (EthEventData.EthServicesInitialized()) {
       setDNS(0, EthEventData.dns0_cache);
       setDNS(1, EthEventData.dns1_cache);
     }
     return;
   }
-  #endif
-  if (WiFiEventData.WiFiServicesInitialized()) {
-    setDNS(0, WiFiEventData.dns0_cache);
-    setDNS(1, WiFiEventData.dns1_cache);
-  }
+  #endif // if FEATURE_ETHERNET
+  */
 }
 
 bool valid_DNS_address(const IPAddress& dns) {
-  return (/*dns.v4() != (uint32_t)0x00000000 && */
-          dns != IPAddress((uint32_t)0xFD000000) && 
+  return /*dns.v4() != (uint32_t)0x00000000 && */
+         dns != IPAddress((uint32_t)0xFD000000) &&
 #ifdef ESP32
-          // Bug where IPv6 global prefix is set as DNS
-          // Global IPv6 prefixes currently start with 2xxx::
-          (dns[0] & 0xF0) != 0x20 && 
-#endif
-          dns != INADDR_NONE);
+
+         // Bug where IPv6 global prefix is set as DNS
+         // Global IPv6 prefixes currently start with 2xxx::
+         (dns[0] & 0xF0) != 0x20 &&
+#endif // ifdef ESP32
+         dns != INADDR_NONE;
 }
 
 bool setDNS(int index, const IPAddress& dns) {
-  if (index >= 2) return false;
+  if (index >= 2) { return false; }
   #ifdef ESP8266
-  if(dns.isSet() && dns != WiFi.dnsIP(index)) {
-    dns_setserver(index, dns);
-    #ifndef BUILD_NO_DEBUG
-    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      addLogMove(LOG_LEVEL_INFO, concat(F("IP   : Set DNS: "),  formatIP(dns)));
-    }
-    #endif
-    return true;
-  }
-  #endif
-  #ifdef ESP32
-  ip_addr_t d;
-  d.type = IPADDR_TYPE_V4;
 
-  if (valid_DNS_address(dns) || dns == INADDR_NONE) {
-    // Set DNS0-Server
-    d.u_addr.ip4.addr = static_cast<uint32_t>(dns);
-    const ip_addr_t* cur_dns = dns_getserver(index);
-    if (cur_dns != nullptr && cur_dns->u_addr.ip4.addr == d.u_addr.ip4.addr) {
-      // Still the same as before
-      return false;
-    }
-    dns_setserver(index, &d);
+  if (dns.isSet() && (dns != WiFi.dnsIP(index))) {
+    dns_setserver(index, dns);
+    # ifndef BUILD_NO_DEBUG
+
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      addLogMove(LOG_LEVEL_INFO, concat(F("IP   : Set DNS: "),  formatIP(dns)));
+      addLogMove(LOG_LEVEL_INFO, strformat(F("IP   : Set DNS(%d): %s"), index,  formatIP(dns).c_str()));
+    }
+    # endif // ifndef BUILD_NO_DEBUG
+    return true;
+  }
+  #endif // ifdef ESP8266
+  #ifdef ESP32
+
+  if (valid_DNS_address(dns)) {
+    const ip_addr_t*cur_dns = dns_getserver(index);
+
+    if (cur_dns != nullptr) {
+      const IPAddress cur_dns_IP(cur_dns);
+
+      if (valid_DNS_address(cur_dns_IP) && (cur_dns_IP == dns)) {
+        // Still the same as before
+        return false;
+      }
+    }
+
+    // Set DNS-Server
+    ip_addr_t d;
+    dns.to_ip_addr_t(&d);
+    dns_setserver(index, &d);
+
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      addLogMove(LOG_LEVEL_INFO, strformat(F("IP   : Set DNS(%d): %s"), index,  formatIP(dns).c_str()));
     }
     return true;
   }
-  #endif
+  #endif // ifdef ESP32
   return false;
 }
 
 bool resolveHostByName(const char *aHostname, IPAddress& aResult, uint32_t timeout_ms) {
   START_TIMER;
 
-  if (!NetworkConnected()) {
+  if (!ESPEasy::net::NetworkConnected(true)) {
     return false;
   }
 
@@ -1249,7 +1220,7 @@ bool hostReachable(const String& hostname) {
   }
 
   if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-    addLogMove(LOG_LEVEL_ERROR,  concat(F("Hostname cannot be resolved: "), hostname));
+    addLogMove(LOG_LEVEL_ERROR, concat(F("Hostname cannot be resolved: "), hostname));
   }
   return false;
 }
@@ -1257,7 +1228,7 @@ bool hostReachable(const String& hostname) {
 // Create a random port for the UDP connection.
 // Return true when successful.
 bool beginWiFiUDP_randomPort(WiFiUDP& udp) {
-  if (!NetworkConnected()) {
+  if (!ESPEasy::net::NetworkConnected(true)) {
     return false;
   }
   unsigned int attempts = 3;
@@ -1274,7 +1245,7 @@ bool beginWiFiUDP_randomPort(WiFiUDP& udp) {
 }
 
 void sendGratuitousARP() {
-  if (!NetworkConnected()) {
+  if (!ESPEasy::net::NetworkConnected()) {
     return;
   }
 #ifdef SUPPORT_ARP
@@ -1420,6 +1391,7 @@ String extractParam(const String& authReq, const String& param, const char delim
 }
 
 #if FEATURE_HTTP_CLIENT
+
 String getCNonce(const int len) {
   static const char alphanum[] = "0123456789"
                                  "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
@@ -1469,11 +1441,11 @@ String getDigestAuth(const String& authReq,
   // return authorization
   return strformat(
     F("Digest username=\"%s\""
-    ", realm=\"%s\""
-    ", nonce=\"%s\""
-    ", uri=\"%s\""
-    ", algorithm=\"MD5\", qop=auth, nc=%s, cnonce=\"%s\""
-    ", response=\"%s\""),
+      ", realm=\"%s\""
+      ", nonce=\"%s\""
+      ", uri=\"%s\""
+      ", algorithm=\"MD5\", qop=auth, nc=%s, cnonce=\"%s\""
+      ", response=\"%s\""),
     username.c_str(),
     realm.c_str(),
     nonce.c_str(),
@@ -1483,7 +1455,8 @@ String getDigestAuth(const String& authReq,
     md5.toString().c_str()); // response
 }
 
-#ifndef BUILD_NO_DEBUG
+# ifndef BUILD_NO_DEBUG
+
 void log_http_result(const HTTPClient& http,
                      const String    & logIdentifier,
                      const String    & host,
@@ -1503,8 +1476,8 @@ void log_http_result(const HTTPClient& http,
   }
 
   if (loglevelActiveFor(loglevel)) {
-    String log = strformat(F("HTTP : %s %s %s"), 
-                          logIdentifier.c_str(), host.c_str(), HttpMethod.c_str());
+    String log = strformat(F("HTTP : %s %s %s"),
+                           logIdentifier.c_str(), host.c_str(), HttpMethod.c_str());
 
     if (!success) {
       log += F("failed ");
@@ -1522,7 +1495,8 @@ void log_http_result(const HTTPClient& http,
     addLogMove(loglevel, log);
   }
 }
-#endif
+
+# endif // ifndef BUILD_NO_DEBUG
 
 int http_authenticate(const String& logIdentifier,
                       WiFiClient  & client,
@@ -1554,17 +1528,17 @@ int http_authenticate(const String& logIdentifier,
       postStr,
       must_check_reply);
   }
-  int httpCode = 0;
+  int httpCode              = 0;
   const bool hasCredentials = !user.isEmpty() && !pass.isEmpty();
 
   if (hasCredentials) {
     must_check_reply = true;
     http.setAuthorization(user.c_str(), pass.c_str());
   } else {
-    http.setAuthorization(""); // Clear Basic authorization
-#ifdef ESP32
+    http.setAuthorization("");     // Clear Basic authorization
+# ifdef ESP32
     http.setAuthorizationType(""); // Default type is "Basic"
-#endif
+# endif
   }
   http.setTimeout(timeout);
   http.setUserAgent(get_user_agent_string());
@@ -1574,31 +1548,31 @@ int http_authenticate(const String& logIdentifier,
     http.setRedirectLimit(2);
   }
 
-  #ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+  # ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
 
   // See: https://github.com/espressif/arduino-esp32/pull/6676
   client.setTimeout((timeout + 500) / 1000); // in seconds!!!!
   Client *pClient = &client;
   pClient->setTimeout(timeout);
-  #else // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
-  client.setTimeout(timeout);                // in msec as it should be!
-  #endif // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+  # else // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+  client.setTimeout(timeout); // in msec as it should be!
+  # endif // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
 
   // Add request header as fall back.
   // When adding another "accept" header, it may be interpreted as:
   // "if you have XXX, send it; or failing that, just give me what you've got."
-  http.addHeader(F("Accept"), F("*/*;q=0.1"));
+  http.addHeader(F("Accept"),          F("*/*;q=0.1"));
 
   // Add client IP
-  http.addHeader(F("X-Forwarded-For"), formatIP(NetworkLocalIP()));
+  http.addHeader(F("X-Forwarded-For"), formatIP(ESPEasy::net::NetworkLocalIP()));
 
   delay(0);
   scrubDNS();
-#if defined(CORE_POST_2_6_0) || defined(ESP32)
+# if defined(CORE_POST_2_6_0) || defined(ESP32)
   http.begin(client, host, port, uri, false); // HTTP
-#else // if defined(CORE_POST_2_6_0) || defined(ESP32)
+# else // if defined(CORE_POST_2_6_0) || defined(ESP32)
   http.begin(client, host, port, uri);
-#endif // if defined(CORE_POST_2_6_0) || defined(ESP32)
+# endif // if defined(CORE_POST_2_6_0) || defined(ESP32)
 
   const char *keys[] = { "WWW-Authenticate" };
   http.collectHeaders(keys, 1);
@@ -1608,17 +1582,18 @@ int http_authenticate(const String& logIdentifier,
     String name, value;
 
     while (splitHeaders(headerpos, header, name, value)) {
-      // Disabled the check to exclude "Authorization", due to: 
+      // Disabled the check to exclude "Authorization", due to:
       //   https://github.com/letscontrolit/ESPEasy/issues/4364
       // Check was added for: https://github.com/letscontrolit/ESPEasy/issues/4355
       // However, I doubt this was the actual bug. More likely the supplied credential strings were not entirely empty for whatever reason.
       //
       // Work-around to not add Authorization header since the HTTPClient code
       // only ignores this when base64Authorication is set.
-      
-//      if (!name.equalsIgnoreCase(F("Authorization"))) {
-        http.addHeader(name, value);
-//      }
+
+      //      if (!name.equalsIgnoreCase(F("Authorization"))) {
+      http.addHeader(name, value);
+
+      //      }
     }
   }
 
@@ -1635,22 +1610,24 @@ int http_authenticate(const String& logIdentifier,
 
     if (authReq.indexOf(F("Digest")) != -1) {
       // Use Digest authorization
+#ifndef BUILD_NO_DEBUG
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         addLogMove(LOG_LEVEL_INFO, concat(F("HTTP : Start Digest Authorization for "), host));
       }
-
-      http.setAuthorization(""); // Clear Basic authorization
-#ifdef ESP32
-      http.setAuthorizationType(""); // Default type is "Basic" and "Digest" is already part of the string generated by getDigestAuth()
 #endif
+
+      http.setAuthorization("");     // Clear Basic authorization
+# ifdef ESP32
+      http.setAuthorizationType(""); // Default type is "Basic" and "Digest" is already part of the string generated by getDigestAuth()
+# endif
       const String authorization = getDigestAuth(authReq, user, pass, F("GET"), uri, 1);
 
       http.end();
-#if defined(CORE_POST_2_6_0) || defined(ESP32)
+# if defined(CORE_POST_2_6_0) || defined(ESP32)
       http.begin(client, host, port, uri, false); // HTTP, not HTTPS
-#else // if defined(CORE_POST_2_6_0) || defined(ESP32)
+# else // if defined(CORE_POST_2_6_0) || defined(ESP32)
       http.begin(client, host, port, uri);
-#endif // if defined(CORE_POST_2_6_0) || defined(ESP32)
+# endif // if defined(CORE_POST_2_6_0) || defined(ESP32)
 
       http.addHeader(F("Authorization"), authorization);
 
@@ -1683,9 +1660,9 @@ int http_authenticate(const String& logIdentifier,
   }
 // -----------------------------------------------------------
 
-#ifndef BUILD_NO_DEBUG
+# ifndef BUILD_NO_DEBUG
   log_http_result(http, logIdentifier, host + ':' + port, HttpMethod, httpCode, EMPTY_STRING);
-#endif
+# endif
   return httpCode;
 }
 
@@ -1752,6 +1729,7 @@ String send_via_http(const String& logIdentifier,
   }
   #endif // if FEATURE_HTTP_TLS
   HTTPClient http;
+
   http.setReuse(false);
 
   httpCode = http_authenticate(
@@ -1776,16 +1754,18 @@ String send_via_http(const String& logIdentifier,
 
   if ((httpCode > 0) && must_check_reply) {
     response = http.getString();
-#ifndef BUILD_NO_DEBUG
+# ifndef BUILD_NO_DEBUG
+
     if (!response.isEmpty()) {
       log_http_result(http, logIdentifier, host, HttpMethod, httpCode, response);
     }
-#endif
+# endif // ifndef BUILD_NO_DEBUG
   }
 
   http.end();
+
   // http.end() does not call client.stop() if it is no longer connected.
-  // However the client may still keep its internal state which may prevent 
+  // However the client may still keep its internal state which may prevent
   // future connections to the same host until there has been a connection to another host inbetween.
   client.stop();
 
@@ -1797,6 +1777,7 @@ String send_via_http(const String& logIdentifier,
 
   return response;
 }
+
 #endif // FEATURE_HTTP_CLIENT
 
 #if FEATURE_DOWNLOAD
@@ -1838,7 +1819,7 @@ bool start_downloadFile(WiFiClient  & client,
 # ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    addLogMove(LOG_LEVEL_DEBUG, strformat(F("downloadFile: URL: %s decoded: %s:%d%s"), 
+    addLogMove(LOG_LEVEL_DEBUG, strformat(F("downloadFile: URL: %s decoded: %s:%d%s"),
                                           url.c_str(), host.c_str(), port, uri.c_str()));
   }
 # endif // ifndef BUILD_NO_DEBUG
@@ -1866,7 +1847,7 @@ bool start_downloadFile(WiFiClient  & client,
     );
 
   if (httpCode != HTTP_CODE_OK) {
-    error  = strformat(F("HTTP code: %d %s"), httpCode, url.c_str());
+    error = strformat(F("HTTP code: %d %s"), httpCode, url.c_str());
 
     addLog(LOG_LEVEL_ERROR, error);
     http.end();
@@ -1879,6 +1860,7 @@ bool start_downloadFile(WiFiClient  & client,
 bool downloadFile(const String& url, String file_save, const String& user, const String& pass, String& error) {
   WiFiClient client;
   HTTPClient http;
+
   http.setReuse(false);
 
   if (!start_downloadFile(client, http, url, file_save, user, pass, error)) {
@@ -1886,7 +1868,7 @@ bool downloadFile(const String& url, String file_save, const String& user, const
   }
 
   if (fileExists(file_save)) {
-    error  = concat(F("File exists: "), file_save);
+    error = concat(F("File exists: "), file_save);
     addLog(LOG_LEVEL_ERROR, error);
     http.end();
     client.stop();
@@ -1919,7 +1901,7 @@ bool downloadFile(const String& url, String file_save, const String& user, const
         timeout = millis() + DOWNLOAD_FILE_TIMEOUT;
 
         if (f.write(buff, c) != c) {
-          error  = strformat(F("Error saving file: %s %d Bytes written"), file_save.c_str(), bytesWritten);
+          error = strformat(F("Error saving file: %s %d Bytes written"), file_save.c_str(), bytesWritten);
           addLog(LOG_LEVEL_ERROR, error);
           http.end();
           client.stop();
@@ -1931,7 +1913,7 @@ bool downloadFile(const String& url, String file_save, const String& user, const
       }
 
       if (timeOutReached(timeout)) {
-        error  = concat(F("Timeout: "), file_save);
+        error = concat(F("Timeout: "), file_save);
         addLog(LOG_LEVEL_ERROR, error);
         delay(0);
         http.end();
@@ -1943,15 +1925,16 @@ bool downloadFile(const String& url, String file_save, const String& user, const
     f.close();
     http.end();
     client.stop();
-
+#ifndef BUILD_NO_DEBUG
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       addLog(LOG_LEVEL_INFO, strformat(F("downloadFile: %s Success"), file_save.c_str()));
     }
+#endif
     return true;
   }
   http.end();
   client.stop();
-  error  = concat(F("Failed to open file for writing: "), file_save);
+  error = concat(F("Failed to open file for writing: "), file_save);
   addLog(LOG_LEVEL_ERROR, error);
   return false;
 }
@@ -1959,18 +1942,20 @@ bool downloadFile(const String& url, String file_save, const String& user, const
 bool downloadFirmware(String filename, String& error)
 {
   String baseurl, user, pass;
+
 # if FEATURE_CUSTOM_PROVISIONING
   MakeProvisioningSettings(ProvisioningSettings);
 
   if (ProvisioningSettings.get()) {
     loadProvisioningSettings(*ProvisioningSettings);
+
     if (!ProvisioningSettings->allowedFlags.allowFetchFirmware) {
       error = F("Not Allowed");
       return false;
     }
     baseurl = ProvisioningSettings->url;
-    user = ProvisioningSettings->user;
-    pass = ProvisioningSettings->pass;
+    user    = ProvisioningSettings->user;
+    pass    = ProvisioningSettings->pass;
   }
 # endif // if FEATURE_CUSTOM_PROVISIONING
 
@@ -1983,6 +1968,7 @@ bool downloadFirmware(const String& url, String& file_save, String& user, String
 {
   WiFiClient client;
   HTTPClient http;
+
   error.clear();
 
   if (!start_downloadFile(client, http, url, file_save, user, pass, error)) {
@@ -2013,8 +1999,8 @@ bool downloadFirmware(const String& url, String& file_save, String& user, String
         timeout = millis() + DOWNLOAD_FILE_TIMEOUT;
 
         if (Update.write(buff, c) != c) {
-          error  = strformat(F("Error saving firmware update: %s %d Bytes written"),
-                             file_save.c_str(), bytesWritten);
+          error = strformat(F("Error saving firmware update: %s %d Bytes written"),
+                            file_save.c_str(), bytesWritten);
           break;
         }
         bytesWritten += c;
@@ -2023,7 +2009,7 @@ bool downloadFirmware(const String& url, String& file_save, String& user, String
       }
 
       if (timeOutReached(timeout)) {
-        error  = concat(F("Timeout: "), file_save);
+        error = concat(F("Timeout: "), file_save);
         break;
       }
 
@@ -2036,35 +2022,52 @@ bool downloadFirmware(const String& url, String& file_save, String& user, String
   }
   http.end();
   client.stop();
-
+#ifndef BUILD_NO_DEBUG
   if (error.isEmpty() && loglevelActiveFor(LOG_LEVEL_INFO)) {
     addLog(LOG_LEVEL_INFO, strformat(F("downloadFile: %s Success"), file_save.c_str()));
   }
+#endif
 
   uint8_t errorcode = 0;
+
   if (!Update.end()) {
     errorcode = Update.getError();
-#ifdef ESP32
-    const __FlashStringHelper * err_fstr = F("Unknown");
-    switch (errorcode) {
-      case UPDATE_ERROR_OK:                  err_fstr = F("OK");           break;
-      case UPDATE_ERROR_WRITE:               err_fstr = F("WRITE");        break;
-      case UPDATE_ERROR_ERASE:               err_fstr = F("ERASE");        break;
-      case UPDATE_ERROR_READ:                err_fstr = F("READ");         break;
-      case UPDATE_ERROR_SPACE:               err_fstr = F("SPACE");        break;
-      case UPDATE_ERROR_SIZE:                err_fstr = F("SIZE");         break;
-      case UPDATE_ERROR_STREAM:              err_fstr = F("STREAM");       break;
-      case UPDATE_ERROR_MD5:                 err_fstr = F("MD5");          break;
-      case UPDATE_ERROR_MAGIC_BYTE:          err_fstr = F("MAGIC_BYTE");   break;
-      case UPDATE_ERROR_ACTIVATE:            err_fstr = F("ACTIVATE");     break;
-      case UPDATE_ERROR_NO_PARTITION:        err_fstr = F("NO_PARTITION"); break;
-      case UPDATE_ERROR_BAD_ARGUMENT:        err_fstr = F("BAD_ARGUMENT"); break;
-      case UPDATE_ERROR_ABORT:               err_fstr = F("ABORT");        break;
+# ifdef ESP32
+    const __FlashStringHelper *err_fstr = F("Unknown");
+
+    switch (errorcode)
+    {
+      case UPDATE_ERROR_OK:                  err_fstr = F("OK");
+        break;
+      case UPDATE_ERROR_WRITE:               err_fstr = F("WRITE");
+        break;
+      case UPDATE_ERROR_ERASE:               err_fstr = F("ERASE");
+        break;
+      case UPDATE_ERROR_READ:                err_fstr = F("READ");
+        break;
+      case UPDATE_ERROR_SPACE:               err_fstr = F("SPACE");
+        break;
+      case UPDATE_ERROR_SIZE:                err_fstr = F("SIZE");
+        break;
+      case UPDATE_ERROR_STREAM:              err_fstr = F("STREAM");
+        break;
+      case UPDATE_ERROR_MD5:                 err_fstr = F("MD5");
+        break;
+      case UPDATE_ERROR_MAGIC_BYTE:          err_fstr = F("MAGIC_BYTE");
+        break;
+      case UPDATE_ERROR_ACTIVATE:            err_fstr = F("ACTIVATE");
+        break;
+      case UPDATE_ERROR_NO_PARTITION:        err_fstr = F("NO_PARTITION");
+        break;
+      case UPDATE_ERROR_BAD_ARGUMENT:        err_fstr = F("BAD_ARGUMENT");
+        break;
+      case UPDATE_ERROR_ABORT:               err_fstr = F("ABORT");
+        break;
     }
     error += concat(F(" Error: "), err_fstr);
-#else
+# else // ifdef ESP32
     error += concat(F(" Error: "), errorcode);
-#endif
+# endif // ifdef ESP32
   } else {
     if (Settings.UseRules) {
       eventQueue.addMove(concat(F("ProvisionFirmware#success="), file_save));
@@ -2073,6 +2076,7 @@ bool downloadFirmware(const String& url, String& file_save, String& user, String
   }
 
   backgroundtasks();
+
   if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
     addLog(LOG_LEVEL_ERROR, concat(F("Failed update firmware: "), error));
   }
@@ -2107,4 +2111,3 @@ String joinUrlFilename(const String& url, String& filename)
 }
 
 #endif // if FEATURE_DOWNLOAD
-

@@ -37,26 +37,39 @@ bool C013_SensorDataStruct::prepareForSend()
          validTaskIndex(destTaskIndex);
 }
 
-bool C013_SensorDataStruct::setData(const uint8_t *data, size_t size)
+UP_C013_SensorDataStruct C013_SensorDataStruct::create(const uint8_t *data, size_t size)
 {
-  // First clear entire struct
-  memset(this, 0, sizeof(C013_SensorDataStruct));
+  {
+    UP_C013_SensorDataStruct invalid_res{};
 
-  if (size < 6) {
-    return false;
+    if (size < 6) {
+      return invalid_res;
+    }
+
+    if ((data[0] != 255) || // header
+        (data[1] != 5)) {   // ID
+      return invalid_res;
+    }
+
+    constexpr unsigned len_upto_checksum = offsetof(C013_SensorDataStruct, checksum);
+    const ShortChecksumType tmpChecksum(
+      data,
+      size,
+      len_upto_checksum);
+
+    if (size >= (len_upto_checksum + 4)) {
+      // Data could have checksum, see if it is valid.
+      uint8_t buf[4];
+      memcpy(buf, data + len_upto_checksum, sizeof(buf));
+      const ShortChecksumType checksum_data(buf);
+
+      if (checksum_data.isSet()) {
+        if (!(tmpChecksum == checksum_data)) {
+          return invalid_res;
+        }
+      }
+    }
   }
-
-  if ((data[0] != 255) || // header
-      (data[1] != 5)) {   // ID
-    return false;
-  }
-
-  constexpr unsigned len_upto_checksum = offsetof(C013_SensorDataStruct, checksum);
-  const ShortChecksumType tmpChecksum(
-    data,
-    size,
-    len_upto_checksum);
-
 
   // Need to keep track of different possible versions of data which still need to be supported.
   // Really old versions of ESPEasy might send upto 80 bytes of uninitialized data
@@ -74,25 +87,28 @@ bool C013_SensorDataStruct::setData(const uint8_t *data, size_t size)
     }
   }
 
+  MakeC013_SensorData(res);
+
+  if (!AllocatedC013_SensorData(res)) { return res; }
+
+  memcpy((uint8_t*)res.get(), data, size);
+
+
   if (size <= 24) {
-    deviceNumber = INVALID_PLUGIN_ID;
-    sensorType   = Sensor_VType::SENSOR_TYPE_NONE;
+    res->deviceNumber = INVALID_PLUGIN_ID;
+    res->sensorType   = Sensor_VType::SENSOR_TYPE_NONE;
 
     if (sourceNode != nullptr) {
-      sourceNodeBuild = sourceNode->build;
+      res->sourceNodeBuild = sourceNode->build;
     }
   }
 
-  memcpy(this, data, size);
-
-  if (checksum.isSet()) {
-    if (!(tmpChecksum == checksum)) {
-      return false;
-    }
+  if (!(validTaskIndex(res->sourceTaskIndex) &&
+        validTaskIndex(res->destTaskIndex)))
+  {
+    res.reset();
   }
-
-  return validTaskIndex(sourceTaskIndex) &&
-         validTaskIndex(destTaskIndex);
+  return res;
 }
 
 bool C013_SensorDataStruct::matchesPluginID(pluginID_t pluginID) const

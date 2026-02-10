@@ -2,7 +2,9 @@
 
 #if USES_HWCDC
 
-// #include <USB.h>
+#if !ARDUINO_USB_CDC_ON_BOOT
+ #include <USB.h>
+#endif
 
 volatile bool usbActive = false;
 
@@ -47,18 +49,19 @@ static void hwcdcEventCallback(void *arg, esp_event_base_t event_base, int32_t e
 }
 
 Port_ESPEasySerial_USB_HWCDC_t::Port_ESPEasySerial_USB_HWCDC_t(const ESPEasySerialConfig& config)
-  :
+  
 # if ARDUINO_USB_CDC_ON_BOOT // Serial used for USB CDC
-  _hwcdc_serial(&Serial)
+  : _hwcdc_serial(&Serial)
 # else // if ARDUINO_USB_CDC_ON_BOOT
-  _hwcdc_serial(&USBSerial)
+  : _hwcdc_serial(&myUsbSerial)
 # endif // if ARDUINO_USB_CDC_ON_BOOT
 {
   _config.port = ESPEasySerialPort::usb_hw_cdc;
-
-  //  USB.begin();
+  #if !ARDUINO_USB_CDC_ON_BOOT
+    USB.begin();
+  #endif
   if (_hwcdc_serial != nullptr) {
-    // _hwcdc_serial->end();
+     _hwcdc_serial->end();
 
     //    _config.rxBuffSize = _hwcdc_serial->setRxBufferSize(_config.rxBuffSize);
     //    _config.txBuffSize = _hwcdc_serial->setTxBufferSize(_config.txBuffSize);
@@ -103,24 +106,24 @@ void Port_ESPEasySerial_USB_HWCDC_t::end() {
 
 int Port_ESPEasySerial_USB_HWCDC_t::available(void)
 {
-  if (_hwcdc_serial != nullptr) {
-    return _hwcdc_serial->available();
+  if (_hwcdc_serial != nullptr && _hwcdc_serial->isConnected()) {
+      return _hwcdc_serial->available();
   }
   return 0;
 }
 
 int Port_ESPEasySerial_USB_HWCDC_t::availableForWrite(void)
 {
-  if (_hwcdc_serial != nullptr) {
-    const int res = _hwcdc_serial->availableForWrite();
-    return res > 64 ? 64 : res;
+  if (_hwcdc_serial != nullptr && _hwcdc_serial->isConnected()) {
+      const int res = _hwcdc_serial->availableForWrite();
+      return res > 64 ? 64 : res;
   }
   return 0;
 }
 
 int Port_ESPEasySerial_USB_HWCDC_t::peek(void)
 {
-  if (_hwcdc_serial != nullptr) {
+  if (_hwcdc_serial != nullptr && _hwcdc_serial->isConnected()) {
     return _hwcdc_serial->peek();
   }
   return 0;
@@ -128,7 +131,7 @@ int Port_ESPEasySerial_USB_HWCDC_t::peek(void)
 
 int Port_ESPEasySerial_USB_HWCDC_t::read(void)
 {
-  if (_hwcdc_serial != nullptr) {
+  if (_hwcdc_serial != nullptr && _hwcdc_serial->isConnected()) {
     return _hwcdc_serial->read();
   }
   return 0;
@@ -137,7 +140,7 @@ int Port_ESPEasySerial_USB_HWCDC_t::read(void)
 size_t Port_ESPEasySerial_USB_HWCDC_t::read(uint8_t *buffer,
                                             size_t   size)
 {
-  if (_hwcdc_serial != nullptr) {
+  if (_hwcdc_serial != nullptr && _hwcdc_serial->isConnected()) {
     return _hwcdc_serial->read(buffer, size);
   }
   return 0;
@@ -145,7 +148,7 @@ size_t Port_ESPEasySerial_USB_HWCDC_t::read(uint8_t *buffer,
 
 void Port_ESPEasySerial_USB_HWCDC_t::flush(void)
 {
-  if (_hwcdc_serial != nullptr) {
+  if (_hwcdc_serial != nullptr && _hwcdc_serial->isConnected()) {
     return _hwcdc_serial->flush();
   }
 }
@@ -174,10 +177,9 @@ size_t Port_ESPEasySerial_USB_HWCDC_t::write(const uint8_t *buffer,
 
 Port_ESPEasySerial_USB_HWCDC_t::operator bool() const
 {
-  if (_hwcdc_serial != nullptr) {
+  if (_hwcdc_serial != nullptr && _hwcdc_serial->isConnected()) {
     // return usbActive;
-    const bool connected = (*_hwcdc_serial);
-    return connected;
+    return true;
   }
   return false;
 }

@@ -22,12 +22,16 @@
 #   define SOC_RX0 44
 #  elif CONFIG_IDF_TARGET_ESP32C6
 #   define SOC_RX0 17
+#  elif CONFIG_IDF_TARGET_ESP32C61
+#   define SOC_RX0 17
+#  elif CONFIG_IDF_TARGET_ESP32C5
+#   define SOC_RX0 12
 #  elif CONFIG_IDF_TARGET_ESP32C3
 #   define SOC_RX0 20
 #  elif CONFIG_IDF_TARGET_ESP32C2
 #   define SOC_RX0 19
 #  endif // if CONFIG_IDF_TARGET_ESP32
-# endif  // ifndef SOC_RX0
+# endif // ifndef SOC_RX0
 
 # ifndef SOC_TX0
 #  if CONFIG_IDF_TARGET_ESP32
@@ -36,68 +40,99 @@
 #   define SOC_TX0 43
 #  elif CONFIG_IDF_TARGET_ESP32C6
 #   define SOC_TX0 16
+#  elif CONFIG_IDF_TARGET_ESP32C61
+#   define SOC_TX0 16
+#  elif CONFIG_IDF_TARGET_ESP32C5
+#   define SOC_TX0 11
 #  elif CONFIG_IDF_TARGET_ESP32C3
 #   define SOC_TX0 21
 #  elif CONFIG_IDF_TARGET_ESP32C2
 #   define SOC_TX0 20
 #  endif // if CONFIG_IDF_TARGET_ESP32
-# endif  // ifndef SOC_TX0
+# endif // ifndef SOC_TX0
 
-# if SOC_UART_NUM > 1
+
+# if SOC_UART_HP_NUM > 1
 
 #  ifndef SOC_RX1
-#   if CONFIG_IDF_TARGET_ESP32
-#    define SOC_RX1 13
-#   elif CONFIG_IDF_TARGET_ESP32S2
-#    define SOC_RX1 18
-#   elif CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6
-#    define SOC_RX1 4
-#   elif CONFIG_IDF_TARGET_ESP32S3
-#    define SOC_RX1 15
-#   endif // if CONFIG_IDF_TARGET_ESP32
-#  endif  // ifndef SOC_RX1
+#   ifdef RX1
+#    define SOC_RX1 RX1
+#   else
+#    if CONFIG_IDF_TARGET_ESP32
+#     define SOC_RX1 13
+#    elif CONFIG_IDF_TARGET_ESP32S2
+#     define SOC_RX1 18
+#    elif CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C5 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32C61
+#     define SOC_RX1 4
+#    elif CONFIG_IDF_TARGET_ESP32S3
+#     define SOC_RX1 15
+#    endif // if CONFIG_IDF_TARGET_ESP32
+#   endif // ifdef RX1
+#  endif // ifndef SOC_RX1
 
 #  ifndef SOC_TX1
-#   if CONFIG_IDF_TARGET_ESP32
-#    define SOC_TX1 15
-#   elif CONFIG_IDF_TARGET_ESP32S2
-#    define SOC_TX1 17
-#   elif CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6
-#    define SOC_TX1 5
-#   elif CONFIG_IDF_TARGET_ESP32S3
-#    define SOC_TX1 16
-#   endif // if CONFIG_IDF_TARGET_ESP32
-#  endif  // ifndef SOC_TX1
+#   ifdef TX1
+#    define SOC_TX1 TX1
+#   else
+#    if CONFIG_IDF_TARGET_ESP32
+#     define SOC_TX1 15
+#    elif CONFIG_IDF_TARGET_ESP32S2
+#     define SOC_TX1 17
+#    elif CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C5 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32C61
+#     define SOC_TX1 5
+#    elif CONFIG_IDF_TARGET_ESP32S3
+#     define SOC_TX1 16
+#    endif // if CONFIG_IDF_TARGET_ESP32
+#   endif // ifdef TX1
+#  endif // ifndef SOC_TX1
 
-# endif   // if SOC_UART_NUM > 1
+# endif // if SOC_UART_HP_NUM > 1
 
-# if SOC_UART_NUM > 2
+# if SOC_UART_HP_NUM > 2
 
 #  ifndef SOC_RX2
-#   if CONFIG_IDF_TARGET_ESP32
-#    define SOC_RX2 16
-#   elif CONFIG_IDF_TARGET_ESP32S3
-#    define SOC_RX2 19
-#   elif CONFIG_IDF_TARGET_ESP32C6
-#    define SOC_RX2 6
-#   else // if CONFIG_IDF_TARGET_ESP32
-#    define SOC_RX2 -1
-#   endif // if CONFIG_IDF_TARGET_ESP32
-#  endif  // ifndef SOC_RX2
+#   ifdef RX2
+#    define SOC_RX2 RX2
+#   else
+
+#    if CONFIG_IDF_TARGET_ESP32
+#     define SOC_RX2 16
+#    elif CONFIG_IDF_TARGET_ESP32S3
+#     define SOC_RX2 19
+#    elif CONFIG_IDF_TARGET_ESP32C6
+#     define SOC_RX2 6
+#    elif CONFIG_IDF_TARGET_ESP32C61
+#     define SOC_RX2 6
+#    elif CONFIG_IDF_TARGET_ESP32C5
+#     define SOC_RX2 6
+#    else // if CONFIG_IDF_TARGET_ESP32
+#     define SOC_RX2 -1
+#    endif // if CONFIG_IDF_TARGET_ESP32
+#   endif // ifdef RX2
+#  endif // ifndef SOC_RX2
 
 #  ifndef SOC_TX2
-#   if CONFIG_IDF_TARGET_ESP32
-#    define SOC_TX2 17
-#   elif CONFIG_IDF_TARGET_ESP32S3
-#    define SOC_TX2 20
-#   elif CONFIG_IDF_TARGET_ESP32C6
-#    define SOC_TX2 7
-#   else // if CONFIG_IDF_TARGET_ESP32
-#    define SOC_TX2 -1
-#   endif // if CONFIG_IDF_TARGET_ESP32
-#  endif  // ifndef SOC_TX2
+#   ifdef TX2
+#    define SOC_TX2 TX2
+#   else
 
-# endif   // if SOC_UART_NUM > 2
+#    if CONFIG_IDF_TARGET_ESP32
+#     define SOC_TX2 17
+#    elif CONFIG_IDF_TARGET_ESP32S3
+#     define SOC_TX2 20
+#    elif CONFIG_IDF_TARGET_ESP32C6
+#     define SOC_TX2 7
+#    elif CONFIG_IDF_TARGET_ESP32C61
+#     define SOC_TX2 7
+#    elif CONFIG_IDF_TARGET_ESP32C5
+#     define SOC_TX2 7
+#    else // if CONFIG_IDF_TARGET_ESP32
+#     define SOC_TX2 -1
+#    endif // if CONFIG_IDF_TARGET_ESP32
+#   endif // ifdef TX2
+#  endif // ifndef SOC_TX2
+
+# endif // if SOC_UART_HP_NUM > 2
 
 #endif // ifdef ESP32
 
@@ -109,6 +144,7 @@ struct ESPeasySerialType {
   static ESPEasySerialPort getSerialType(ESPEasySerialPort typeHint,
                                          int               receivePin,
                                          int               transmitPin);
+
 };
 
 

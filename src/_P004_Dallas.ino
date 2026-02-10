@@ -24,7 +24,7 @@
 
 # define PLUGIN_004
 # define PLUGIN_ID_004         4
-# define PLUGIN_NAME_004       "Environment - 1-Wire Temperature"
+# define PLUGIN_NAME_004       "Environment - DS18xxx/MAX31xxx/1-Wire Temperature"
 # define PLUGIN_VALUENAME1_004 "Temperature"
 
 # define P004_ERROR_NAN        0

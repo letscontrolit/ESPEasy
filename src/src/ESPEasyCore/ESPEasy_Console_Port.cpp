@@ -12,8 +12,16 @@
 #include "../Globals/Settings.h"
 
 #include "../Helpers/Memory.h"
+#include "../Helpers/StringConverter.h"
 
 #include <ESPEasySerialPort.h>
+
+
+#ifdef ESP32
+#define CONSOLE_INPUT_BUFFER_SIZE          1280
+#else
+#define CONSOLE_INPUT_BUFFER_SIZE          128
+#endif
 
 
 /*
@@ -21,6 +29,12 @@
  # include "../Helpers/_Plugin_Helper_serial.h"
  #endif // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
  */
+
+EspEasy_Console_Port::EspEasy_Console_Port(LogDestination log_destination)
+: _serialWriteBuffer(log_destination) 
+{
+  InputBuffer_Serial = (char*)calloc(1, CONSOLE_INPUT_BUFFER_SIZE);
+}
 
 EspEasy_Console_Port::~EspEasy_Console_Port()
 {
@@ -30,6 +44,7 @@ EspEasy_Console_Port::~EspEasy_Console_Port()
     _serial = nullptr;
   }
 #endif
+  free(InputBuffer_Serial);
 }
 
 EspEasy_Console_Port::operator bool() const
@@ -96,35 +111,14 @@ void EspEasy_Console_Port::endPort()
   }
 }
 
-void EspEasy_Console_Port::addToSerialBuffer(char c)
-{
-  if (_serial != nullptr) {
-    _serialWriteBuffer.add(c);
-  }
-}
-
-void EspEasy_Console_Port::addToSerialBuffer(const String& line)
-{
-  if (_serial != nullptr) {
-    _serialWriteBuffer.add(line);
-  }
-}
-
-void EspEasy_Console_Port::addNewlineToSerialBuffer()
-{
-  if (_serial != nullptr) {
-    _serialWriteBuffer.addNewline();
-  }
-}
 
 bool EspEasy_Console_Port::process_serialWriteBuffer()
 {
   if (_serial != nullptr) {
-    const int snip = _serial->availableForWrite();
-    
-    if (snip > 0) {
-      return _serialWriteBuffer.write(*_serial, snip) != 0;
-    }
+#ifdef ESP32
+    if (!xPortCanYield()) return false;
+#endif
+    return _serialWriteBuffer.process(_serial, _serial->availableForWrite());
   }
   return false;
 }
@@ -147,10 +141,12 @@ bool EspEasy_Console_Port::process_consoleInput(uint8_t SerialInByte)
     // Ignore empty command
     if (SerialInByteCounter != 0) {
       InputBuffer_Serial[SerialInByteCounter] = 0; // serial data completed
-      addToSerialBuffer('>');
+
       String cmd(InputBuffer_Serial);
-      addToSerialBuffer(cmd);
-      addToSerialBuffer('\n');
+#if !FEATURE_COLORIZE_CONSOLE_LOGS
+      Logging.consolePrintln(concat('>', cmd));
+#endif
+
       ExecuteCommand_all({EventValueSource::Enum::VALUE_SOURCE_SERIAL, std::move(cmd)}, true);
       SerialInByteCounter   = 0;
       InputBuffer_Serial[0] = 0; // serial data processed, clear buffer

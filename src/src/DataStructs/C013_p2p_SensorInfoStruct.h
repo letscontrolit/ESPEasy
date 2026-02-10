@@ -14,13 +14,18 @@
 # include "../DataTypes/PluginID.h"
 
 
+#include "../Helpers/Memory.h"
+
+struct __attribute__((__packed__)) C013_SensorInfoStruct;
+DEF_UP(C013_SensorInfoStruct);
+
 // These structs are sent to other nodes, so make sure not to change order or offset in struct.
 struct __attribute__((__packed__)) C013_SensorInfoStruct
 {
   C013_SensorInfoStruct() = default;
 
-  bool setData(const uint8_t *data,
-               size_t         size);
+
+  static UP_C013_SensorInfoStruct create(const uint8_t *data, size_t size);
 
   bool prepareForSend(size_t& sizeToSend);
 
@@ -58,6 +63,13 @@ struct __attribute__((__packed__)) C013_SensorInfoStruct
   // FIXME TD-er: Sending formula over is not working well on the receiving end.
 //  char TaskDeviceFormula[VARS_PER_TASK][NAME_FORMULA_LENGTH_MAX + 1]{};
 };
+
+
+#define MakeC013_SensorInfo(T) void * calloc_ptr = special_calloc(1,sizeof(C013_SensorInfoStruct)); UP_C013_SensorInfoStruct T(new (calloc_ptr)  C013_SensorInfoStruct());
+
+// Check to see if MakeC013_SensorInfo was successful
+#define AllocatedC013_SensorInfo(T) (T.get() != nullptr)
+
 
 
 #endif // ifdef USES_C013

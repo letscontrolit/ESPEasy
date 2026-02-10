@@ -90,6 +90,18 @@ Statistic data is only visible if the plugin is configured and enabled.
 
 This shows the latest data received and some statistics.
 
+Data options
+^^^^^^^^^^^^
+
+(These options are only available if build is without ``LIMIT_BUILD_SIZE`` set)
+
+* **Receive binary data**: When enabled accepts any character for input. Does not terminate on a CR character received, but on end of data (no more bytes available), or when using the **Fixed length input data** setting.
+
+* **Fixed length input data**: When 0 this feature is disabled. When set > 0 (max. length 255 characters), reading is stopped after this number of characters. Best used for reading binary data.
+
+* **Event with hex. data (no prefix)**: When checked will generate the event with the received data converted to hexadecimal data (length is doubled), without a prefix (often hex data is prefixed with ``0x``). Data is still filtered (when enabled) and proxied *without* conversion!
+
+
 .. include:: DataAcquisition.repl
 
 * **Interval** By default, Interval will be set to 60 sec.
@@ -225,6 +237,8 @@ Change log
 
 .. versionchanged:: 2.0
   ...
+
+  |added| 2025-12-23 Add support for binary data, fixed length input and convert event data to hex.
 
   |added| 2024-02-25 Add support for ``serialproxy_test`` command and retrieving the separate groups from parsed regex.
 

@@ -308,9 +308,9 @@ public:
   bool    rightAlignTempMAX7219 = false;
   bool    suppressLeading0      = false;
   uint8_t fontset               = 0;
-  #if P073_BLINK_DOT
+  # if P073_BLINK_DOT
   bool blinkdot = false;
-  #endif // if P073_BLINK_DOT
+  # endif // if P073_BLINK_DOT
   # if P073_7DBIN_COMMAND
   bool binaryData = false;
   # endif // P073_7DBIN_COMMAND
@@ -404,12 +404,12 @@ private:
   void hc595_ShowBuffer();
   void hc595_ToOutputBuffer();
   void hc595_AdjustBuffer();
-  bool hc595_Sequential() {
-    return P073_HC595_SEQUENTIAL;
-  }
+
+  bool hc595_Sequential() { return P073_HC595_SEQUENTIAL; }
 
   uint8_t outputbuffer[8]{};
   # endif // if P073_USE_74HC595
+
 };
 
 #endif    // ifdef USES_P073
