@@ -4474,24 +4474,28 @@ To create/register a plugin, you have to :
 #endif
 
 #ifndef FEATURE_I2C
-#ifdef ESP32
-  #define FEATURE_I2C  1
-#else
-  // TODO TD-er: Add check for plugins requiring I2C
-  // Checks:  
-  //  FEATURE_I2CMULTIPLEXER
-  //  FEATURE_PLUGIN_PRIORITY
-  //  FEATURE_I2C_MULTIPLE
-  //  FEATURE_CLEAR_I2C_STUCK
-  //  FEATURE_I2C_GET_ADDRESS
-  //  FEATURE_EXT_RTC
-  //   I2C Watchdog???? Settings.WDI2CAddress
-#ifdef PLUGIN_BUILD_MINIMAL_OTA
-  #define FEATURE_I2C  0
-#else
-  #define FEATURE_I2C  1
-#endif
-#endif
+  #ifdef ESP32
+    #define FEATURE_I2C  1
+  #else
+    // TODO TD-er: Add check for plugins requiring I2C
+    // Checks:  
+    //  FEATURE_I2CMULTIPLEXER
+    //  FEATURE_PLUGIN_PRIORITY
+    //  FEATURE_I2C_MULTIPLE
+    //  FEATURE_CLEAR_I2C_STUCK
+    //  FEATURE_I2C_GET_ADDRESS
+    //  FEATURE_EXT_RTC
+    //   I2C Watchdog???? Settings.WDI2CAddress
+    #ifdef PLUGIN_BUILD_MINIMAL_OTA
+      #ifdef USES_P180
+        #define FEATURE_I2C  1
+      #else
+        #define FEATURE_I2C  0
+      #endif
+    #else
+      #define FEATURE_I2C  1
+    #endif
+  #endif
 #endif
 
 #if !FEATURE_I2C
