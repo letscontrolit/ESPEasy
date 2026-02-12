@@ -103,6 +103,7 @@ constexpr uint8_t          getI2CBusCount() {
 #if FEATURE_I2C_MULTIPLE
   // Not querying the supported nr. of I2C busses in hardware, but using software multiplexing
   // Assume/expect IDF 5.x
+  // FIXME TD-er: Maybe we should look at SOC_HP_I2C_NUM ????
   // # if defined(SOC_I2C_SUPPORTED) && SOC_I2C_SUPPORTED
   #  if FEATURE_I2C_INTERFACE_3
   return 3u; // SOC_I2C_NUM; // Let's go for all I2C busses, including LP_I2C (low power, where available)
@@ -117,16 +118,16 @@ constexpr uint8_t          getI2CBusCount() {
 #endif
 }
 
+// Get the number of usable SPI buses
 constexpr uint8_t getSPIBusCount() {
-#if defined(ESP32_CLASSIC) || defined(ESP32S2) || defined(ESP32S3) || defined(ESP32P4)
-  return 2u;
-#elif defined(ESP32C2) || defined(ESP32C3) || defined(ESP32C5) || defined(ESP32C6) || defined(ESP32C61) || defined(ESP32H2)
-  return 1u;
-#elif defined(ESP8266)
-  return 1u;
-#else // if defined(ESP32_CLASSIC) || defined(ESP32S2) || defined(ESP32S3) || defined(ESP32P4)
+#if SOC_SPI_PERIPH_NUM > 3
   static_assert(false, "Implement processor architecture");
-#endif // if defined(ESP32_CLASSIC) || defined(ESP32S2) || defined(ESP32S3) || defined(ESP32P4)
+  return 2u;
+#elif SOC_SPI_PERIPH_NUM > 2
+  return 2u;
+#else
+  return 1u;
+#endif
 }
 
 /********************************************************************************************\

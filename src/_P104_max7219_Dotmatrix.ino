@@ -73,7 +73,9 @@
 //                                the coordinate set.
 //
 
-/** History:
+/** History/Changelog:
+ * 2026-02-04 tonhuisman: Add ASCII font with Cyrillic extension characters
+ *                        Reformat sources with updated Uncrustify settings, use block-comment for History/Changelog
  * 2025-08-12 tonhuisman: Enable use of secondary SPI bus
  * 2025-04-03 tonhuisman: Set character spacing correctly when changing fonts
  * 2023-10-15 tonhuisman: Code improvements, now using NR_ELEMENTS macro instead of multiple #ifdefs and increments
@@ -135,12 +137,13 @@
 
 # include "src/PluginStructs/P104_data_struct.h"
 
-
 boolean Plugin_104(uint8_t function, struct EventStruct *event, String& string) {
   boolean success = false;
 
-  switch (function) {
-    case PLUGIN_DEVICE_ADD: {
+  switch (function)
+  {
+    case PLUGIN_DEVICE_ADD:
+    {
       auto& dev = Device[++deviceCount];
       dev.Number             = PLUGIN_ID_104;
       dev.Type               = DEVICE_TYPE_SPI;
@@ -150,23 +153,27 @@ boolean Plugin_104(uint8_t function, struct EventStruct *event, String& string) 
       break;
     }
 
-    case PLUGIN_SET_DEFAULTS: {
+    case PLUGIN_SET_DEFAULTS:
+    {
       CONFIG_PORT              = -1;
       P104_CONFIG_HARDWARETYPE = static_cast<int>(MD_MAX72XX::moduleType_t::FC16_HW);
       break;
     }
 
-    case PLUGIN_GET_DEVICENAME: {
+    case PLUGIN_GET_DEVICENAME:
+    {
       string = F(PLUGIN_NAME_104);
       break;
     }
 
-    case PLUGIN_GET_DEVICEGPIONAMES: {
+    case PLUGIN_GET_DEVICEGPIONAMES:
+    {
       event->String1 = formatGpioName_output(F("CS"));
       break;
     }
 
-    case PLUGIN_WEBFORM_LOAD: {
+    case PLUGIN_WEBFORM_LOAD:
+    {
       int8_t spi_pins[3];
       Settings.getSPI_pins(spi_pins);
       int    pinnr = -1;
@@ -217,7 +224,8 @@ boolean Plugin_104(uint8_t function, struct EventStruct *event, String& string) 
       break;
     }
 
-    case PLUGIN_WEBFORM_SAVE: {
+    case PLUGIN_WEBFORM_SAVE:
+    {
       P104_data_struct *P104_data = static_cast<P104_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       P104_CONFIG_ZONE_COUNT = getFormItemInt(F("zonecount"));
@@ -248,7 +256,8 @@ boolean Plugin_104(uint8_t function, struct EventStruct *event, String& string) 
       break;
     }
 
-    case PLUGIN_INIT: {
+    case PLUGIN_INIT:
+    {
       uint8_t numDevices = P104_CONFIG_TOTAL_UNITS;
 
       if (numDevices == 0) { // fallback value
@@ -287,7 +296,8 @@ boolean Plugin_104(uint8_t function, struct EventStruct *event, String& string) 
       break;
     }
 
-    case PLUGIN_EXIT: {
+    case PLUGIN_EXIT:
+    {
       P104_data_struct *P104_data = static_cast<P104_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if ((nullptr == P104_data) || (nullptr == P104_data->P)) {
@@ -302,7 +312,8 @@ boolean Plugin_104(uint8_t function, struct EventStruct *event, String& string) 
       break;
     }
 
-    case PLUGIN_WRITE: {
+    case PLUGIN_WRITE:
+    {
       P104_data_struct *P104_data = static_cast<P104_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P104_data) {
@@ -312,7 +323,8 @@ boolean Plugin_104(uint8_t function, struct EventStruct *event, String& string) 
       break;
     }
 
-    case PLUGIN_TEN_PER_SECOND: {
+    case PLUGIN_TEN_PER_SECOND:
+    {
       P104_data_struct *P104_data = static_cast<P104_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if ((nullptr != P104_data) && (nullptr != P104_data->P)) {
@@ -323,7 +335,8 @@ boolean Plugin_104(uint8_t function, struct EventStruct *event, String& string) 
       break;
     }
 
-    case PLUGIN_ONCE_A_SECOND: {
+    case PLUGIN_ONCE_A_SECOND:
+    {
       P104_data_struct *P104_data = static_cast<P104_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if ((nullptr != P104_data) && (nullptr != P104_data->P)) {

@@ -14,7 +14,7 @@ public:
 
 private:
 
-  size_t write_skipping(Stream& stream) override;
+  size_t write_skipping(Print& stream) override;
 
   void prepare_prefix() override;
 

@@ -9,8 +9,8 @@ name: Release
 
 on:
   push:
-    branches-ignore: '**'
-    tags: 'mega-*'
+    branches-ignore: ['**']
+    tags: ['mega-*']
 
 permissions:
   contents: read

@@ -103,6 +103,9 @@ To create/register a plugin, you have to :
     #ifndef WEBSERVER_HARDWARE
         #define WEBSERVER_HARDWARE
     #endif
+    #ifndef WEBSERVER_INTERFACES
+        #define WEBSERVER_INTERFACES
+    #endif
     #ifndef WEBSERVER_PINSTATES
         #define WEBSERVER_PINSTATES
     #endif
@@ -2177,6 +2180,10 @@ To create/register a plugin, you have to :
 #ifdef PLUGIN_CLIMATE_A_COLLECTION
   #ifndef PLUGIN_DESCR
     #define PLUGIN_DESCR  "Climate A"
+  #endif
+
+  #ifndef BUILD_NO_DEBUG
+  #define BUILD_NO_DEBUG
   #endif
 
   // Features and plugins cherry picked from stable set

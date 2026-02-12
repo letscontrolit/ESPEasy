@@ -67,7 +67,7 @@
 .. |P167_type| replace:: :cyan:`Environment`
 .. |P167_typename| replace:: :cyan:`Environment - Sensirion SEN5x (IKEA Vindstyrka)`
 .. |P167_porttype| replace:: `.`
-.. |P167_status| replace:: :yellow:`CLIMATE B`
+.. |P167_status| replace:: :yellow:`CLIMATE A`
 .. |P167_github| replace:: P167_Vindstyrka.ino
 .. _P167_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P167_Vindstyrka.ino
 .. |P167_usedby| replace:: `.`

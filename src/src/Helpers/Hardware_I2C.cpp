@@ -13,14 +13,7 @@
 
 void initI2C() {
   // configure hardware pins according to eeprom settings.
-  if (!Settings.isI2CEnabled(0)
-      #if FEATURE_I2C_MULTIPLE
-      && !Settings.isI2CEnabled(1)
-      # if FEATURE_I2C_INTERFACE_3
-      && !Settings.isI2CEnabled(2)
-      # endif // if FEATURE_I2C_INTERFACE_3
-      #endif // if FEATURE_I2C_MULTIPLE
-      )
+  if (Settings.getNrConfiguredI2C_buses() == 0)
   {
     return;
   }

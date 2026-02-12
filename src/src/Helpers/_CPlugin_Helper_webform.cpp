@@ -12,6 +12,8 @@
 #include "../WebServer/ESPEasy_WebServer.h"
 #include "../WebServer/Markup.h"
 #include "../WebServer/Markup_Forms.h"
+#include "../ESPEasyCore/Controller.h"
+#include "../DataStructs/ControllerSettingsStruct.h"
 
 /*********************************************************************************************\
 * Functions to load and store controller settings on the web page.

@@ -266,7 +266,8 @@ uint32_t getFlashChipSpeed() {
     // spi_clk is equal to system clock
     return getApbFrequency();
   }
-  return spiClockDivToFrequency(spi_clock);
+  // TODO TD-er: For P4 a pointer to the SPI bus is needed.
+  return spiClockDivToFrequency(nullptr, spi_clock);
 #endif
 # endif // if ESP_IDF_STILL_NEEDS_SPI_REGISTERS_FIXED
   #endif // ifdef ESP8266

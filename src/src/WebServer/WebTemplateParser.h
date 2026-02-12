@@ -12,13 +12,14 @@
 #define MENU_INDEX_MAIN          0
 #define MENU_INDEX_CONFIG        1
 #define MENU_INDEX_HARDWARE      2
-#define MENU_INDEX_NETWORK       3
-#define MENU_INDEX_CONTROLLERS   4
-#define MENU_INDEX_BUSES         5
-#define MENU_INDEX_DEVICES       6
-#define MENU_INDEX_RULES         7
-#define MENU_INDEX_NOTIFICATIONS 8
-#define MENU_INDEX_TOOLS         9
+#define MENU_INDEX_INTERFACES    3
+#define MENU_INDEX_NETWORK       4
+#define MENU_INDEX_CONTROLLERS   5
+#define MENU_INDEX_BUSES         6
+#define MENU_INDEX_DEVICES       7
+#define MENU_INDEX_RULES         8
+#define MENU_INDEX_NOTIFICATIONS 9
+#define MENU_INDEX_TOOLS         10
 #define MENU_INDEX_SETUP         254
 #define MENU_INDEX_CUSTOM_PAGE   255
 

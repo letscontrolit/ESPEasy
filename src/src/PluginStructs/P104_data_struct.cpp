@@ -123,6 +123,7 @@ bool P104_data_struct::begin() {
    - ...
    - Max. allowed total custom settings size = 4096
  */
+
 /**************************************
  * loadSettings
  *************************************/
@@ -343,57 +344,73 @@ void P104_data_struct::configureZones() {
 
       P->setCharSpacing(currentZone, P104_NORMAL_CHAR_SPACING); // Set default font spacing
 
-      switch (it->font) {
+      switch (it->font)
+      {
         # ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
-        case P104_DOUBLE_HEIGHT_FONT_ID: {
+        case P104_DOUBLE_HEIGHT_FONT_ID:
+        {
           P->setFont(currentZone, numeric7SegDouble);
           P->setCharSpacing(currentZone, P104_DOUBLE_CHAR_SPACING); // double spacing as well
           break;
         }
         # endif // ifdef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
         # ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
-        case P104_FULL_DOUBLEHEIGHT_FONT_ID: {
+        case P104_FULL_DOUBLEHEIGHT_FONT_ID:
+        {
           P->setFont(currentZone, BigFont);
           P->setCharSpacing(currentZone, P104_DOUBLE_CHAR_SPACING); // double spacing as well
           break;
         }
         # endif // ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
         # ifdef P104_USE_VERTICAL_FONT
-        case P104_VERTICAL_FONT_ID: {
+        case P104_VERTICAL_FONT_ID:
+        {
           P->setFont(currentZone, _fontVertical);
           break;
         }
         # endif // ifdef P104_USE_VERTICAL_FONT
         # ifdef P104_USE_EXT_ASCII_FONT
-        case P104_EXT_ASCII_FONT_ID: {
+        case P104_EXT_ASCII_FONT_ID:
+        {
           P->setFont(currentZone, ExtASCII);
           break;
         }
         # endif // ifdef P104_USE_EXT_ASCII_FONT
         # ifdef P104_USE_ARABIC_FONT
-        case P104_ARABIC_FONT_ID: {
+        case P104_ARABIC_FONT_ID:
+        {
           P->setFont(currentZone, fontArabic);
           break;
         }
         # endif // ifdef P104_USE_ARABIC_FONT
         # ifdef P104_USE_GREEK_FONT
-        case P104_GREEK_FONT_ID: {
+        case P104_GREEK_FONT_ID:
+        {
           P->setFont(currentZone, fontGreek);
           break;
         }
         # endif // ifdef P104_USE_GREEK_FONT
         # ifdef P104_USE_KATAKANA_FONT
-        case P104_KATAKANA_FONT_ID: {
+        case P104_KATAKANA_FONT_ID:
+        {
           P->setFont(currentZone, fontKatakana);
           break;
         }
         # endif // ifdef P104_USE_KATAKANA_FONT
+        # ifdef P104_USE_CYRILLIC_EXT_FONT
+        case P104_CYRILLIC_EXT_FONT_ID:
+        {
+          P->setFont(currentZone, font_cyr_ext);
+          break;
+        }
+        # endif // ifdef P104_USE_CYRILLIC_EXT_FONT
 
         // Extend above this comment with more fonts if/when available,
         // case P104_DEFAULT_FONT_ID: and default: clauses should be the last options.
         // This should also make sure the default font is set if a no longer available font was selected
         case P104_DEFAULT_FONT_ID:
-        default: {
+        default:
+        {
           P->setFont(currentZone, nullptr); // default font
           break;
         }
@@ -795,6 +812,7 @@ void P104_data_struct::displayBarGraph(uint8_t                 zone,
 # endif // ifdef P104_USE_BAR_GRAPH
 
 # ifdef P104_USE_DOT_SET
+
 void P104_data_struct::displayDots(uint8_t                 zone,
                                    const P104_zone_struct& zstruct,
                                    const String          & dots) {
@@ -847,7 +865,8 @@ void P104_data_struct::displayDots(uint8_t                 zone,
 bool isAnimationAvailable(uint8_t animation, bool noneIsAllowed = false) {
   textEffect_t selection = static_cast<textEffect_t>(animation);
 
-  switch (selection) {
+  switch (selection)
+  {
     case PA_NO_EFFECT:
     {
       return noneIsAllowed;
@@ -994,6 +1013,7 @@ enum class p104_subcommands_e {
   specialeffect, // subcommand: specialeffect,<zone>,<effect> (0..3)
   speed,         // subcommand: speed,<zone>,<speed_ms> (0..P104_MAX_SPEED_PAUSE_VALUE)
 # endif // ifdef P104_USE_COMMANDS
+
 };
 
 /*******************************************************
@@ -1044,7 +1064,8 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
         // subcommands are processed in the same order as they are presented in the UI
         for (auto it = zones.begin(); it != zones.end() && !success; ++it) {
           if ((it->zone == zoneIndex)) { // This zone
-            switch (subcommands_e) {
+            switch (subcommands_e)
+            {
               case p104_subcommands_e::clear:
                 // subcommand: clear,<zone>
               {
@@ -1192,6 +1213,9 @@ bool P104_data_struct::handlePluginWrite(taskIndex_t   taskIndex,
                 #  ifdef P104_USE_KATAKANA_FONT
                   || (value4 == P104_KATAKANA_FONT_ID)
                 #  endif // ifdef P104_USE_KATAKANA_FONT
+                #  ifdef P104_USE_CYRILLIC_EXT_FONT
+                  || (value4 == P104_CYRILLIC_EXT_FONT_ID)
+                #  endif // ifdef P104_USE_CYRILLIC_EXT_FONT
                   )
                 {
                   reconfigure = (it->font != value4);
@@ -1413,7 +1437,8 @@ void P104_data_struct::getDate(char           *psz,
   # ifdef P104_USE_DATETIME_OPTIONS
 
   if (showYear) {
-    switch (dateFmt) {
+    switch (dateFmt)
+    {
       case P104_DATE_FORMAT_US:
         d = node_time.month();
         m = node_time.day();
@@ -1480,7 +1505,8 @@ uint8_t P104_data_struct::getDateTime(char           *psz,
 
   # ifdef P104_USE_DATETIME_OPTIONS
 
-  switch (dateFmt) {
+  switch (dateFmt)
+  {
     case P104_DATE_FORMAT_US:
       d = node_time.month();
       m = node_time.day();
@@ -1506,6 +1532,7 @@ uint8_t P104_data_struct::getDateTime(char           *psz,
 }
 
 # if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) || defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
+
 void P104_data_struct::createHString(String& string) {
   const uint16_t stringLen = string.length();
 
@@ -1551,7 +1578,8 @@ bool P104_data_struct::handlePluginOncePerSecond(struct EventStruct *event) {
     redisplay = false;
 
     if (P->getZoneStatus(it->zone - 1)) { // Animations done?
-      switch (it->content) {
+      switch (it->content)
+      {
         case P104_CONTENT_TIME:           // time
         case P104_CONTENT_TIME_SEC:       // time sec
         {
@@ -1988,10 +2016,7 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
     };
     const int    orderOptions[] = { 0, 1 };
     FormSelectorOptions selector_zoneordering(2, orderTypes, orderOptions);
-    selector.reloadonchange = true;
-    #  ifdef P104_USE_TOOLTIPS
-    selector.tooltip = zonetip;
-    #  endif // ifdef P104_USE_TOOLTIPS
+    selector_zoneordering.reloadonchange = true;
     selector_zoneordering.addFormSelector(F("Zone order"), F("zoneorder"),
                                           bitRead(P104_CONFIG_FLAGS, P104_CONFIG_FLAG_ZONE_ORDER) ? 1 : 0);
     selector_zoneordering.reloadonchange = true;
@@ -2137,6 +2162,9 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
     # ifdef P104_USE_KATAKANA_FONT
       , F("Katakana (7)")
     # endif // ifdef P104_USE_KATAKANA_FONT
+    # ifdef P104_USE_CYRILLIC_EXT_FONT
+      , F("Cyrillic ext. (8)")
+    # endif // ifdef P104_USE_CYRILLIC_EXT_FONT
     };
     const int fontOptions[] = {
       P104_DEFAULT_FONT_ID
@@ -2161,6 +2189,9 @@ bool P104_data_struct::webform_load(struct EventStruct *event) {
     # ifdef P104_USE_KATAKANA_FONT
       , P104_KATAKANA_FONT_ID
     # endif // ifdef P104_USE_KATAKANA_FONT
+    # ifdef P104_USE_CYRILLIC_EXT_FONT
+      , P104_CYRILLIC_EXT_FONT_ID
+    # endif // ifdef P104_USE_CYRILLIC_EXT_FONT
     };
     constexpr int fontCount = NR_ELEMENTS(fontTypes);
 
@@ -2564,25 +2595,39 @@ bool P104_data_struct::webform_save(struct EventStruct *event) {
 P104_zone_struct::P104_zone_struct(uint8_t _zone)
   :  text(F("\"\"")), zone(_zone) {}
 
-
 bool P104_zone_struct::getIntValue(uint8_t offset, int32_t& value) const
 {
-  switch (offset) {
-    case P104_OFFSET_SIZE:          value = size;           break;
+  switch (offset)
+  {
+    case P104_OFFSET_SIZE:          value = size;
+      break;
     case P104_OFFSET_TEXT:          return false;
-    case P104_OFFSET_CONTENT:       value = content;        break;
-    case P104_OFFSET_ALIGNMENT:     value = alignment;      break;
-    case P104_OFFSET_ANIM_IN:       value = animationIn;    break;
-    case P104_OFFSET_SPEED:         value = speed;          break;
-    case P104_OFFSET_ANIM_OUT:      value = animationOut;   break;
-    case P104_OFFSET_PAUSE:         value = pause;          break;
-    case P104_OFFSET_FONT:          value = font;           break;
-    case P104_OFFSET_LAYOUT:        value = layout;         break;
-    case P104_OFFSET_SPEC_EFFECT:   value = specialEffect;  break;
-    case P104_OFFSET_OFFSET:        value = offset;         break;
-    case P104_OFFSET_BRIGHTNESS:    value = brightness;     break;
-    case P104_OFFSET_REPEATDELAY:   value = repeatDelay;    break;
-    case P104_OFFSET_INVERTED:      value = inverted;       break;
+    case P104_OFFSET_CONTENT:       value = content;
+      break;
+    case P104_OFFSET_ALIGNMENT:     value = alignment;
+      break;
+    case P104_OFFSET_ANIM_IN:       value = animationIn;
+      break;
+    case P104_OFFSET_SPEED:         value = speed;
+      break;
+    case P104_OFFSET_ANIM_OUT:      value = animationOut;
+      break;
+    case P104_OFFSET_PAUSE:         value = pause;
+      break;
+    case P104_OFFSET_FONT:          value = font;
+      break;
+    case P104_OFFSET_LAYOUT:        value = layout;
+      break;
+    case P104_OFFSET_SPEC_EFFECT:   value = specialEffect;
+      break;
+    case P104_OFFSET_OFFSET:        value = offset;
+      break;
+    case P104_OFFSET_BRIGHTNESS:    value = brightness;
+      break;
+    case P104_OFFSET_REPEATDELAY:   value = repeatDelay;
+      break;
+    case P104_OFFSET_INVERTED:      value = inverted;
+      break;
 
     default:
       return false;
@@ -2592,22 +2637,37 @@ bool P104_zone_struct::getIntValue(uint8_t offset, int32_t& value) const
 
 bool P104_zone_struct::setIntValue(uint8_t offset, int32_t value)
 {
-  switch (offset) {
-    case P104_OFFSET_SIZE:          size = value; break;
+  switch (offset)
+  {
+    case P104_OFFSET_SIZE:          size = value;
+      break;
     case P104_OFFSET_TEXT:          return false;
-    case P104_OFFSET_CONTENT:       content       = value; break;
-    case P104_OFFSET_ALIGNMENT:     alignment     = value; break;
-    case P104_OFFSET_ANIM_IN:       animationIn   = value; break;
-    case P104_OFFSET_SPEED:         speed         = value; break;
-    case P104_OFFSET_ANIM_OUT:      animationOut  = value; break;
-    case P104_OFFSET_PAUSE:         pause         = value; break;
-    case P104_OFFSET_FONT:          font          = value; break;
-    case P104_OFFSET_LAYOUT:        layout        = value; break;
-    case P104_OFFSET_SPEC_EFFECT:   specialEffect = value; break;
-    case P104_OFFSET_OFFSET:        offset        = value; break;
-    case P104_OFFSET_BRIGHTNESS:    brightness    = value; break;
-    case P104_OFFSET_REPEATDELAY:   repeatDelay   = value; break;
-    case P104_OFFSET_INVERTED:      inverted      = value; break;
+    case P104_OFFSET_CONTENT:       content = value;
+      break;
+    case P104_OFFSET_ALIGNMENT:     alignment = value;
+      break;
+    case P104_OFFSET_ANIM_IN:       animationIn = value;
+      break;
+    case P104_OFFSET_SPEED:         speed = value;
+      break;
+    case P104_OFFSET_ANIM_OUT:      animationOut = value;
+      break;
+    case P104_OFFSET_PAUSE:         pause = value;
+      break;
+    case P104_OFFSET_FONT:          font = value;
+      break;
+    case P104_OFFSET_LAYOUT:        layout = value;
+      break;
+    case P104_OFFSET_SPEC_EFFECT:   specialEffect = value;
+      break;
+    case P104_OFFSET_OFFSET:        offset = value;
+      break;
+    case P104_OFFSET_BRIGHTNESS:    brightness = value;
+      break;
+    case P104_OFFSET_REPEATDELAY:   repeatDelay = value;
+      break;
+    case P104_OFFSET_INVERTED:      inverted = value;
+      break;
 
     default:
       return false;

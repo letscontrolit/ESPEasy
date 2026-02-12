@@ -247,6 +247,7 @@ void handle_json()
             LabelType::FLASH_CHIP_SPEED,
             LabelType::FLASH_IDE_MODE,
             LabelType::FS_SIZE,
+            LabelType::FS_FREE,
 
             LabelType::SUNRISE,
             LabelType::SUNSET,

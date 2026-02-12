@@ -55,6 +55,14 @@
 #endif
 #endif // ifndef MENU_INDEX_HARDWARE_VISIBLE
 
+#ifndef MENU_INDEX_INTERFACES_VISIBLE
+#ifdef WEBSERVER_INTERFACES
+  # define MENU_INDEX_INTERFACES_VISIBLE true
+#else
+  # define MENU_INDEX_INTERFACES_VISIBLE false
+#endif
+#endif
+
 #ifndef MENU_INDEX_DEVICES_VISIBLE
 #ifdef WEBSERVER_DEVICES
   # define MENU_INDEX_DEVICES_VISIBLE true
@@ -107,6 +115,7 @@ const __FlashStringHelper* getGpMenuIcon(uint8_t index) {
     case MENU_INDEX_NETWORK:       return ICON("&#127760;"); // Alternative &#128423; (not working on Apple) 
     case MENU_INDEX_CONTROLLERS:   return ICON("&#9990;");
     case MENU_INDEX_HARDWARE:      return ICON("&#9783;");
+    case MENU_INDEX_INTERFACES:    return ICON("&#10057;");
     case MENU_INDEX_DEVICES:       return ICON("&#10070;");
     case MENU_INDEX_RULES:         return ICON("&#10740;");
     case MENU_INDEX_NOTIFICATIONS: return ICON("&#9993;");
@@ -122,6 +131,7 @@ const __FlashStringHelper* getGpMenuLabel(uint8_t index) {
     case MENU_INDEX_NETWORK: return F("Network");
     case MENU_INDEX_CONTROLLERS: return F("Controllers");
     case MENU_INDEX_HARDWARE: return F("Hardware");
+    case MENU_INDEX_INTERFACES:return F("Interfaces");
     case MENU_INDEX_DEVICES: return F("Devices");
     case MENU_INDEX_RULES: return F("Rules");
     case MENU_INDEX_NOTIFICATIONS: return F("Notifications");
@@ -137,6 +147,7 @@ const __FlashStringHelper* getGpMenuURL(uint8_t index) {
     case MENU_INDEX_NETWORK: return F("/network");
     case MENU_INDEX_CONTROLLERS: return F("/controllers");
     case MENU_INDEX_HARDWARE: return F("/hardware");
+    case MENU_INDEX_INTERFACES: return F("/interfaces");
     case MENU_INDEX_DEVICES: return F("/devices");
     case MENU_INDEX_RULES: return F("/rules");
     case MENU_INDEX_NOTIFICATIONS: return F("/notifications");
@@ -152,6 +163,7 @@ bool GpMenuVisible(uint8_t index) {
     case MENU_INDEX_NETWORK: return MENU_INDEX_NETWORK_VISIBLE;
     case MENU_INDEX_CONTROLLERS: return MENU_INDEX_CONTROLLERS_VISIBLE;
     case MENU_INDEX_HARDWARE: return MENU_INDEX_HARDWARE_VISIBLE;
+    case MENU_INDEX_INTERFACES: return MENU_INDEX_INTERFACES_VISIBLE;
     case MENU_INDEX_DEVICES: return MENU_INDEX_DEVICES_VISIBLE;
     case MENU_INDEX_RULES: return MENU_INDEX_RULES_VISIBLE;
     case MENU_INDEX_NOTIFICATIONS: return MENU_INDEX_NOTIFICATIONS_VISIBLE;

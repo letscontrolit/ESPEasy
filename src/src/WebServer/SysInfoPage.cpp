@@ -640,6 +640,7 @@ void handle_sysinfo_Storage() {
     LabelType::OTA_2STEP,
 #   endif // ifdef ESP8266
     LabelType::FS_SIZE,
+    LabelType::FS_FREE,
 
     LabelType::MAX_LABEL
   };

@@ -101,13 +101,13 @@ bool checkNrArguments(const char *cmd, const String& Line, int nrArguments) {
                 log += F(" ExtraArg");
               }
               log += i;
-              log += '=';
+              log += ':';
               log += parameter;
             }
             ++i;
           }
         }
-        log += F(" lineLength=");
+        log += F(" lineLength:");
         log += Line.length();
         addLogMove(LOG_LEVEL_ERROR, log);
       }
