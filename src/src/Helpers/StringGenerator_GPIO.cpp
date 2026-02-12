@@ -424,6 +424,7 @@ String getConflictingUse_fromPeriman(int gpio, PinSelectPurpose purpose, bool ig
   {
     switch (purpose)
     {
+#if FEATURE_I2C
       case PinSelectPurpose::I2C:
 # if FEATURE_I2C_MULTIPLE
       case PinSelectPurpose::I2C_2:
@@ -438,6 +439,8 @@ String getConflictingUse_fromPeriman(int gpio, PinSelectPurpose purpose, bool ig
             (bus_type == ESP32_BUS_TYPE_I2C_SLAVE_SCL))
         { return conflict; }
         break;
+#endif
+#if FEATURE_SPI
       case PinSelectPurpose::SPI:
       case PinSelectPurpose::SPI_MISO:
 
@@ -447,6 +450,7 @@ String getConflictingUse_fromPeriman(int gpio, PinSelectPurpose purpose, bool ig
             (bus_type == ESP32_BUS_TYPE_SPI_MASTER_SS))
         { return conflict; }
         break;
+#endif
       case PinSelectPurpose::Serial_input:
       case PinSelectPurpose::Serial_output:
 
