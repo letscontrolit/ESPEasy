@@ -598,10 +598,18 @@ void addGpioHtml(int8_t pin) {
   if (pin == -1) { return; }
   addHtml(formatGpioLabel(pin, false));
 
-  if (Settings.isSPI_pin(pin) ||
+  if (
+#if FEATURE_SPI
+    Settings.isSPI_pin(pin) ||
+#endif
+#if FEATURE_I2C
       Settings.isI2C_pin(pin) ||
+#endif
+#if FEATURE_ETHERNET
       Settings.isEthernetPin(pin) ||
-      Settings.isEthernetPinOptional(pin)) {
+      Settings.isEthernetPinOptional(pin)||
+#endif
+    false) {
     addHtml(' ');
     addHtml(F(HTML_SYMBOL_WARNING));
   }

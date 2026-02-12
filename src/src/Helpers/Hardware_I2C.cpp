@@ -7,6 +7,7 @@
 #include "../Helpers/I2C_access.h"
 #include "../Helpers/StringConverter.h"
 
+#if FEATURE_I2C
 
 #include <Wire.h>
 
@@ -319,4 +320,5 @@ bool I2CMultiplexerPortSelectedForTask(taskIndex_t taskIndex) {
          || (bitRead(Settings.I2C_SPI_bus_Flags[taskIndex], I2C_FLAGS_MUX_MULTICHANNEL) && Settings.I2C_Multiplexer_Channel[taskIndex] !=  0);
 }
 
-#endif // if FEATURE_I2CMULTIPLEXER
+#endif
+#endif

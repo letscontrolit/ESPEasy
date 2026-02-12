@@ -497,7 +497,7 @@ void addFormPinSelect(const String& label, const String & id, int choice)
   addPinSelect(PinSelectPurpose::Generic, id, choice);
 }
 */
-
+#if FEATURE_I2C
 void addFormPinSelectI2C(const String& label, const String& id, uint8_t i2cBus, int choice)
 {
   addRowLabel_tr_id(label, id);
@@ -535,7 +535,7 @@ void addFormSelectorI2C(const String& id,
   }
   addSelector_Foot();
 }
-
+#endif
 void addFormSelector_YesNo(const __FlashStringHelper * label,
                            const __FlashStringHelper * id,
                            int           selectedIndex,
@@ -569,10 +569,12 @@ void addFormPinStateSelect(int gpio, int choice)
     // do not add the pin state select for these pins.
     enabled = false;
   }
+#if FEATURE_ETHERNET
   if (Settings.isEthernetPin(gpio)) {
     // do not add the pin state select for non-optional Ethernet pins
     enabled = false;
   }
+#endif
   int  pinnr = -1;
   bool input, output, warning;
 

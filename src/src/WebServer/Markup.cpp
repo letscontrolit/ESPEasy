@@ -115,8 +115,12 @@ void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int
     bool input, output, warning;
 
     if (getGpioInfo(gpio, pinnr, input, output, warning)) {
+#if FEATURE_I2C
       bool includeI2C = true;
+#endif
+#if FEATURE_SPI
       bool includeSPI = true;
+#endif
       bool includeSerial = true;
       #if FEATURE_ETHERNET
       bool includeEthernet = true;
@@ -128,6 +132,7 @@ void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int
       // bool includeResetPin = true;
 
       switch (purpose) {
+#if FEATURE_SPI
         case PinSelectPurpose::SPI:
         case PinSelectPurpose::SPI_MISO:
           includeSPI = false;
@@ -135,6 +140,7 @@ void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int
             return;
           }
           break;
+#endif
 #if FEATURE_ETHERNET
         case PinSelectPurpose::Ethernet:
           includeEthernet = false;
@@ -161,7 +167,7 @@ void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int
             return;
           }
           break;
-
+#if FEATURE_I2C
         case PinSelectPurpose::I2C:
 #if FEATURE_I2C_MULTIPLE
         case PinSelectPurpose::I2C_2:
@@ -170,6 +176,7 @@ void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int
 #endif
 #endif
           includeI2C = false;
+#endif
           // fallthrough
         case PinSelectPurpose::Generic_bidir:
 
@@ -218,19 +225,20 @@ void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int
           break;
   
       }
-
+#if FEATURE_I2C
       if (includeI2C && Settings.isI2C_pin(gpio)) {
         disabled = true;
       }
+#endif
 
       if (includeSerial && isSerialConsolePin(gpio)) {
         disabled = true;
       }
-
+#if FEATURE_SPI
       if (includeSPI && Settings.isSPI_pin(gpio)) {
         disabled = true;
       }
-
+#endif
       // Not blocking these GPIO pins, as they may already be in dual-purpose use, just a place-holder
       // if (includeStatusLed && (Settings.Pin_status_led == gpio)) {
       //   disabled = true;

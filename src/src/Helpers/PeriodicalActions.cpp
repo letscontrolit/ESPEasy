@@ -212,6 +212,7 @@ void runOncePerSecond()
 #endif
 
   // I2C Watchdog feed
+#if FEATURE_I2C
   if (Settings.WDI2CAddress != 0)
   {
     #if FEATURE_I2C_MULTIPLE
@@ -219,6 +220,7 @@ void runOncePerSecond()
     #endif // if FEATURE_I2C_MULTIPLE
     I2C_write8(Settings.WDI2CAddress, 0xA5);
   }
+#endif
 
   #if FEATURE_MDNS
   #ifdef ESP8266

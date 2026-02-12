@@ -17,12 +17,16 @@
 #define DEVICE_TYPE_DUAL                    2 // connected through 2 datapins
 #define DEVICE_TYPE_TRIPLE                  3 // connected through 3 datapins
 #define DEVICE_TYPE_ANALOG                 10 // AIN/tout pin
+#if FEATURE_I2C
 #define DEVICE_TYPE_I2C                    20 // connected through I2C
+#endif
 #define DEVICE_TYPE_SERIAL                 21 // connected through UART/Serial
 #define DEVICE_TYPE_SERIAL_PLUS1           22 // connected through UART/Serial + 1 extra signal pin
+#if FEATURE_SPI
 #define DEVICE_TYPE_SPI                    23 // connected through SPI
 #define DEVICE_TYPE_SPI2                   24 // connected through SPI, 2 GPIOs
 #define DEVICE_TYPE_SPI3                   25 // connected through SPI, 3 GPIOs
+#endif
 #define DEVICE_TYPE_CUSTOM0                30 // Custom labels, Not using TaskDevicePin1 ... TaskDevicePin3
 #define DEVICE_TYPE_CUSTOM1                31 // Custom labels, 1 GPIO
 #define DEVICE_TYPE_CUSTOM2                32 // Custom labels, 2 GPIOs
@@ -73,8 +77,9 @@ struct DeviceStruct
   }
 
   bool isSerial() const;
-
+#if FEATURE_SPI
   bool isSPI() const;
+#endif
 
   bool isCustom() const;
 
