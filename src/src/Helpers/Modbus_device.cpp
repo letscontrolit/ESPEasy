@@ -113,7 +113,7 @@ uint16_t ModbusDEVICE_struct::getModbusTimeout() const
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool ModbusDEVICE_struct::readHoldingRegister(uint16_t             address,
                                               uint16_t            *valuePtr,
-                                              ModbusResultState_t *statePtr) {
+                                              ModbusResultState *statePtr) {
   return readModuleHoldingRegister(_modbus_address, address, valuePtr, statePtr);
 }
 
@@ -126,7 +126,7 @@ bool ModbusDEVICE_struct::readHoldingRegister(uint16_t             address,
 bool ModbusDEVICE_struct::readModuleHoldingRegister(uint8_t              busAddress,
                                                     uint16_t             registerAddress,
                                                     uint16_t            *valuePtr,
-                                                    ModbusResultState_t *statePtr)
+                                                    ModbusResultState *statePtr)
 {
   if (_modbus_link == nullptr) {
     return false;
@@ -149,7 +149,7 @@ bool ModbusDEVICE_struct::readModuleHoldingRegister(uint8_t              busAddr
   request->_rcvframe_length  = 7;             // Expect 8 bytes in response
   ////dump_buffer(request->_sendframe, request->_sendframe_length);
   uint16_t queueID = _modbus_link->queueTransaction(request);
-  *statePtr = ModbusResultState::BUSY;
+  *statePtr = ModbusResultState::Busy;
 
   // Don't touch *valueptr here, it might contain a previous valid result still to be handled.
   return true;
@@ -161,7 +161,7 @@ bool ModbusDEVICE_struct::readModuleHoldingRegister(uint8_t              busAddr
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool ModbusDEVICE_struct::writeSingleRegister(uint16_t             address,
                                               uint16_t             value,
-                                              ModbusResultState_t *statePtr)
+                                              ModbusResultState *statePtr)
 {
   if (_modbus_link == nullptr) {
     return false;
@@ -184,7 +184,7 @@ bool ModbusDEVICE_struct::writeSingleRegister(uint16_t             address,
   request->_rcvframe_length  = 8;             // Expect 8 bytes in response
   ////dump_buffer(request->_sendframe, request->_sendframe_length);
   uint16_t queueID = _modbus_link->queueTransaction(request);
-  *statePtr = ModbusResultState::BUSY;
+  *statePtr = ModbusResultState::Busy;
 
   return true;
 }
@@ -205,7 +205,7 @@ void ModbusDEVICE_struct::processCommand() {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void ModbusDEVICE_struct::linkCallback(Modbus_RequestQueueElement *req)
 {
-  ModbusResultState_t resultState = ModbusResultState::ERROR; // Default to error unless proven otherwise
+  ModbusResultState resultState = ModbusResultState::Error; // Default to error unless proven otherwise
 
   if (req == nullptr) {
     addLogMove(LOG_LEVEL_INFO, F("Modbus: ERROR, Null pointer passed in callback"));
@@ -236,7 +236,7 @@ void ModbusDEVICE_struct::linkCallback(Modbus_RequestQueueElement *req)
             // Valid response
             if (req->_userData != nullptr) {
               *(static_cast<uint16_t *>(req->_userData)) = (req->_rcvframe[3] << 8) | req->_rcvframe[4]; // Combine high and low byte
-              resultState                                = ModbusResultState::SUCCESS;
+              resultState                                = ModbusResultState::Success;
             }
           }
         }
@@ -249,7 +249,7 @@ void ModbusDEVICE_struct::linkCallback(Modbus_RequestQueueElement *req)
           uint16_t crc = CalculateCRC(req->_rcvframe, 5);
 
           if ((req->_rcvframe[5] == lowByte(crc)) && (req->_rcvframe[6] == highByte(crc))) {
-            resultState = ModbusResultState::SUCCESS;
+            resultState = ModbusResultState::Success;
           }
         }
         break;
@@ -275,11 +275,11 @@ void ModbusDEVICE_struct::linkCallback(Modbus_RequestQueueElement *req)
     }
   }
 
-  *(static_cast<ModbusResultState_t *>(req->_userState)) = resultState;
+  *(static_cast<ModbusResultState *>(req->_userState)) = resultState;
   _modbus_link->freeTransaction(req);
   # ifdef MODBUS_DEBUG
   log += F(", Result = ");
-  log += (resultState == ModbusResultState::SUCCESS) ? F("SUCCESS") : F("ERROR");
+  log += (resultState == ModbusResultState::Success) ? F("SUCCESS") : F("ERROR");
   addLogMove(LOG_LEVEL_INFO, log);
   # endif // MODBUS_DEBUG
 }

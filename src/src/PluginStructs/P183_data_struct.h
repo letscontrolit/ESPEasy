@@ -76,8 +76,8 @@ private:
   taskIndex_t                 _taskIndex         = INVALID_TASK_INDEX;
   struct ModbusDEVICE_struct *_modbusDevice      = nullptr;
   uint16_t                    _registerValues[4] = {}; // Modus register values retrieved for output values
-  ModbusResultState_t         _queueStates[4]    = {}; // State of read hloding register transactions
-  ModbusResultState_t         _lastActionState   = ModbusResultState::BUSY;
+  ModbusResultState           _queueStates[4]    = {}; // State of read hloding register transactions
+  ModbusResultState           _lastActionState   = ModbusResultState::Busy;
 };
 
 #endif // ifdef USES_P183

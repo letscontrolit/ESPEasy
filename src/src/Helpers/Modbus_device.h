@@ -13,12 +13,11 @@
 # endif // ifndef MODBUS_BROADCAST_ADDRESS
 
 // States for the Modbus queue elements
-typedef enum class ModbusResultState {
-  BUSY    = 0, // Transaction is not completed
-  SUCCESS = 1, // Transaction successfully completed
-  ERROR   = 2, // Transaction completed with an error
-} ModbusResultState_t;
-
+enum class ModbusResultState {
+  Busy    = 0, // Transaction is not completed
+  Success = 1, // Transaction successfully completed
+  Error   = 2, // Transaction completed with an error
+};
 
 // ModbusDEVICE structure representing a MODBUS Device
 // This is a single device that may share it's Modbus link with multiple other devices.
@@ -64,16 +63,16 @@ public:
   // The state variable will signal the processing state of the request.
   bool readHoldingRegister(uint16_t             address,
                            uint16_t            *valueptr,
-                           ModbusResultState_t *stateptr);
+                           ModbusResultState *stateptr);
 
   bool writeSingleRegister(uint16_t             address,
                            uint16_t             value,
-                           ModbusResultState_t *stateptr);
+                           ModbusResultState *stateptr);
                            
   bool readModuleHoldingRegister(uint8_t              busAddress,
                                  uint16_t             registerAddress,
                                  uint16_t            *valuePtr,
-                                 ModbusResultState_t *statePtr);
+                                 ModbusResultState *statePtr);
 
 private:
 
