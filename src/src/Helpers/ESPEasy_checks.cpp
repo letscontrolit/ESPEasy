@@ -168,7 +168,7 @@ void run_compiletime_checks() {
     #endif
   }
 
-  constexpr size_t offset_WireClockStretchLimit = offsetof(SettingsStruct, WireClockStretchLimit);
+//  constexpr size_t offset_WireClockStretchLimit = offsetof(SettingsStruct, WireClockStretchLimit);
   constexpr size_t offset_ConnectionFailuresThreshold = offsetof(SettingsStruct, ConnectionFailuresThreshold);
   static_assert(184 == offset_ConnectionFailuresThreshold, "");
 

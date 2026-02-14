@@ -107,7 +107,7 @@ bool checkNrArguments(const char *cmd, const String& Line, int nrArguments) {
             ++i;
           }
         }
-        log += F(" lineLength=");
+        log += F(" lineLength:");
         log += Line.length();
         addLogMove(LOG_LEVEL_ERROR, log);
       }

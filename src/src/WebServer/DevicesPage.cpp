@@ -1409,11 +1409,11 @@ void devicePage_show_serial_config(taskIndex_t taskIndex)
 void devicePage_show_SPI_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex)
 {
   if (Device[DeviceIndex].isSPI()
-      && !(Settings.isSPI_valid(0u) || (getSPIBusCount() > 1 && Settings.isSPI_valid(1u)))) {
+      && Settings.getNrConfiguredSPI_buses() == 0) {
     addFormNote(F("SPI Bus not configured yet (Hardware page)."));
   }
   #ifdef ESP32
-  if (Device[DeviceIndex].SpiBusSelect && getSPIBusCount() > 1 && (Settings.isSPI_valid(0u) || Settings.isSPI_valid(1u))) {
+  if (Device[DeviceIndex].SpiBusSelect && getSPIBusCount() > 1 && (Settings.getNrConfiguredSPI_buses() != 0)) {
     uint8_t spiBus = Settings.getSPIBusForTask(taskIndex);
     SPIInterfaceSelector(F("SPI Bus"),
                         F("pspibus"),
@@ -1428,14 +1428,7 @@ void devicePage_show_I2C_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
 
   addFormSubHeader(F("I2C options"));
 
-  if (!Settings.isI2CEnabled(0)
-     # if FEATURE_I2C_MULTIPLE
-      && (getI2CBusCount() > 1 && !Settings.isI2CEnabled(1))
-     #  if FEATURE_I2C_INTERFACE_3
-      && (getI2CBusCount() > 2 && !Settings.isI2CEnabled(2))
-     #  endif // if FEATURE_I2C_INTERFACE_3
-     # endif // if FEATURE_I2C_MULTIPLE
-      ) {
+  if (Settings.getNrConfiguredI2C_buses() == 0) {
     addFormNote(F("I2C Bus is not configured yet (Hardware page)."));
   }
 

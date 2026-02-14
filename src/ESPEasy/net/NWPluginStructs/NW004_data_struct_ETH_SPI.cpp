@@ -229,13 +229,15 @@ void NW004_data_struct_ETH_SPI::webform_load(EventStruct *event)
     addFormNote(F("I&sup2;C-address of Ethernet PHY"));
   }
   {
-    if ((getSPIBusCount() > 1) && (Settings.isSPI_valid(0u) || Settings.isSPI_valid(1u))) {
+    if (Settings.getNrConfiguredSPI_buses()) {
       const int key        = NW004_KEY_SPI_BUS;
       const uint8_t spiBus = _kvs->getValueAsInt(key);
       KVS_StorageType::Enum storageType;
       SPIInterfaceSelector(getLabelString(key, true, storageType),
                            getLabelString(key, false, storageType),
                            spiBus);
+    } else {
+      // TODO TD-er: Add error message as we need a SPI bus
     }
 
     const int gpio_keys[] = {
@@ -446,7 +448,7 @@ bool NW004_data_struct_ETH_SPI::ETHConnectRelaxed() {
 
       // FIXME TD-er: Fallback for ETH01-EVO board
       SPI_host              = spi_host_device_t::SPI2_HOST;
-      Settings.InitSPI      = static_cast<int>(SPI_Options_e::UserDefined);
+      Settings.InitSPI      = static_cast<int>(SPI_Options_e::UserDefined_VSPI);
       Settings.SPI_SCLK_pin = 7;
       Settings.SPI_MISO_pin = 3;
       Settings.SPI_MOSI_pin = 10;
@@ -454,7 +456,8 @@ bool NW004_data_struct_ETH_SPI::ETHConnectRelaxed() {
     }
 
     // else
-    {
+    if (SPI_host != spi_host_device_t::SPI_HOST_MAX) {
+      // TODO TD-er: Do we need to include the CLK, MISO, MOSI pins in the call or do we need to start the SPI bus first?
 # if ETH_SPI_SUPPORTS_CUSTOM
       success = iface->begin(
         to_ESP_phy_type(phyType),

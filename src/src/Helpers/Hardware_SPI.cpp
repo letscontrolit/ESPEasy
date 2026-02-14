@@ -36,11 +36,7 @@ void initializeSPIBuses() {
   #endif // if FEATURE_ETHERNET
 
 
-  if (Settings.isSPI_valid(0u)
-      #ifdef ESP32
-      || Settings.isSPI_valid(1u)
-      #endif // ifdef ESP32
-      )
+  if (Settings.getNrConfiguredSPI_buses())
   {
     #ifdef ESP32
 

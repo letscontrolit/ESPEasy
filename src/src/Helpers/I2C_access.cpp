@@ -509,13 +509,7 @@ void I2CInterfaceSelector(String  label,
                           String  id,
                           uint8_t choice,
                           bool    reloadWhenNeeded) {
-  const uint8_t i2cMaxBusCount = (getI2CBusCount() > 1
-                                  ? ((Settings.isI2CEnabled(1) ? 1 : 0)
-                                    # if FEATURE_I2C_INTERFACE_3
-                                     + (Settings.isI2CEnabled(2) ? 1 : 0)
-                                    # endif // if FEATURE_I2C_INTERFACE_3
-                                     )
-                                  : 0) + (Settings.isI2CEnabled(0) ? 1 : 0);
+  const uint8_t i2cMaxBusCount = Settings.getNrConfiguredI2C_buses();
 
   if (i2cMaxBusCount > 1) {
     static uint8_t i2cBusCount = 0;
