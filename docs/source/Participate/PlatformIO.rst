@@ -3,14 +3,14 @@
 PlatformIO
 **********
 
-ESP easy can be built using the Arduino IDE or PlatformIO (PIO).
-Arduino IDE is not being used during development, so it may take some more effort to get it setup for building ESPeasy.
+ESP easy can be built using the PlatformIO/pioarduino IDE (PIO).
+Arduino IDE is no longer supported for development though it's technically possible to be used. It may take considerable effort to get it setup for building ESPeasy.
 
-We *strongly* advise to use PlatformIO as build environment.
+We *strongly* advise to use PIO as build environment.
 
-PlatformIO is just the build, test and upload environment for many micro controllers like the ESP8266 and ESP32 we use.
+PIO is just the build, test and upload environment for many micro controllers like the ESP8266 and ESP32 we use.
 
-On top of that you need to use an editor, or so called IDE in which PlatformIO will be used.
+On top of that you need to use an editor, or so called IDE in which PIO will be used.
 
 The current choice is:
 
@@ -21,10 +21,10 @@ VSCode is free to use and available for Windows, MacOS and Linux.
 Apart from VSCode, there are more available, like Eclipse, MS Visual Studio (IDE) and probably more.
 
 
-PlatformIO Prerequisites
-========================
+PlatformIO/pioarduino Prerequisites
+===================================
 
-PlatformIO does need at least the following:
+PIO does need at least the following:
 
 * Python
 * Git command line tools (`download <https://git-scm.com/downloads>`_)
@@ -58,17 +58,18 @@ install Pyton in Windows for PlatformIO.
 
 These steps have been explained in this Youtube video: https://youtu.be/ArqwMcYSMsU though you might want to use the latest version of both the Git tools and Python.
 
-PlatformIO with VSCode
-======================
+PlatformIO/pioarduino with VSCode
+=================================
 
 Install
 -------
 
-For development of ESPEasy, a number of extensions has to be installed in VS-Code:
+For development of ESPEasy, a number of extensions have to be installed in VS-Code:
 
-* PlatformIO IDE (by PlatformIO)
-* C/C++ IntelliSense (by Microsoft)
+* pioarduino IDE (by pioarduino)
+* C/C++ (by Microsoft)
 * C/C++ Extension Pack (by Microsoft)
+* C/C++ Themes (by Microsoft)
 * Uncrustify (by Zachary Flower, originally by Laurent Tréguier)
 
 Optional, but highly recommended:
@@ -79,6 +80,7 @@ Optional, but highly recommended:
 * All Autocomplete (by Atishay Jain)
 * Excel Viewer (by GrapeCity)
 * Esbonio - An extension for editing sphinx projects (by Swyddfa)
+* reStructuredText (by LeXtudio)
 * reStructuredText Syntax highlighting (by Trond Snekvik)
 * Extension pack for reStructuredText (by LeXtudio Inc.)
 * Markdown All in One (by Yu Zhang)
@@ -109,17 +111,19 @@ After setting it as the default formatter, the hotkey Alt-Shift-F (Cmd-Shift-F o
 
   There used to be a reference to the Atom editor, but both Atom, and the PlatformIO plugin for Atom, are no longer maintained by their owners, so it was removed from this documentation.
 
-Load a project using PlatformIO
--------------------------------
+Load a project using PlatformIO/pioarduino
+------------------------------------------
+
+.. note:: PlatformIO has been superceded by the Community-supported **pioarduino** initiative. For simplicity, in most places the abbreviation PIO is throughout this section of the documentation.
 
 If you have PIO installed and the source tree cloned to your hard drive, then you can open the main dir of the repository.
 The main directory of the repository is the level with the file platformio.ini in it.
 
-Then in a few moments after opening the directory, on the left there will appear an alien logo, the logo of PlatformIO.
+Then in a few moments after opening the directory, on the left there will appear an chip-package logo, the logo of pioarduino.
 If you click that one, you will get a tree with lots and lots of project tasks and environments.
 
-It is important  to note that PlatformIO does everything based on environments, which are defined in the platformio.ini file.
-In the PlatformIO menu (on the left) everything is grouped per environment.
+It is important  to note that PIO does everything based on environments, which are defined in the platformio.ini file.
+In the PIO menu (on the left) everything is grouped per environment.
 
 An environment entry has several tasks, like:
 
@@ -130,8 +134,9 @@ An environment entry has several tasks, like:
 * Clean
 * ... many more.
 
-Some of these options only are available when you have registered with PlatformIO and some are only for paid subscriptions.
-At least the basic ones used for almost any user are available with the free account.
+.. .. Some of these options only are available when you have registered with PlatformIO and some are only for paid subscriptions.
+
+.. .. At least the basic ones used for almost any user are available with the free account.
 
 The environment definitions all have at least the used micro controller in the name and the amount of flash memory used.
 
@@ -144,8 +149,8 @@ For example:
 * ..._ESP32_16M8M_LittleFS -> ESP32 with 16 MB flash and a 4 MB partition for the sketch. (8MB LittleFS)
 * ..._ESP32_16M1M_ETH -> ESP32 with 16 MB flash and a 4 MB partition for the sketch. (1MB SPIFFS, Wired ethernet support)
 
-Make a custom build using PlatformIO
-------------------------------------
+Make a custom build using PIO
+-----------------------------
 
 The easiest is to go for the environment ``custom_ESP8266_4M1M`` and unfold that one.
 Then select ``Build`` to see if it will start building.
@@ -213,7 +218,7 @@ Now that Linux is installed, it's strongly advised to get it up to date with the
 
 NB: The ``sudo`` command will ask for your current account password once, (and maybe later again after some time has passed). When asked for confirmation, confirm the installation of any needed updates, or add the ``-y`` parameter to the ``upgrade`` command to continue without questions.
 
-Additionally some tools need to be installed so PlatformIO can be properly installed later, and we can use the Uncrustify plugin in VS-Code to format the code nicely:
+Additionally some tools need to be installed so PIO can be properly installed later, and we can use the Uncrustify plugin in VS-Code to format the code nicely:
 
 .. highlight::sh
 
@@ -307,7 +312,7 @@ Upload to ESP
 Linux
 -----
 
-For Linux, you may need to install 99-platformio-udev.rules to make PlatformIO upload tools work in vscode.
+For Linux, you may need to install 99-platformio-udev.rules to make PIO upload tools work in vscode.
 
 
 .. highlight::sh
@@ -317,12 +322,12 @@ Starter guide for (local) development on ESPEasy
 
 For those with less development experience, or less experience in using Github, this chapter is intended as a **How To** guide to get started with development on ESPEasy.
 
-It tries to help setting up Visual Studio Code (VSCode) with the PlatformIO development environment and additional VSCode plugins that aid in easier working on code and documentation.
+It tries to help setting up Visual Studio Code (VSCode) with the PIO development environment and additional VSCode plugins that aid in easier working on code and documentation.
 
 The global steps described here are:
 
 - Creating a private copy on Github
-- Getting VSCode and PlatformIO set up
+- Getting VSCode and PIO set up
 - Getting the source code from Github onto your system
 - Compiling the source code
 - Creating a branch to make your changes
@@ -366,12 +371,12 @@ After this completes, you can view the fork in your Github dashboard at https://
 
 (You have to replace [your_github_handle] with the name you selected during the Github sign-up procedure)
 
-Install VSCode and PlatformIO
+Install VSCode and PIO
 ------------------------------
 
-Earlier on this page, a complete description has been given on how to install **PlatformIO with VSCode** with the required and advised optional extensions and the git command-line tools.
+Earlier on this page, a complete description has been given on how to install **PlatformIO/pioarduino with VSCode** with the required and advised optional extensions and the git command-line tools.
 
-NB: PlatformIO is often shortened to PIO.
+NB: PlatformIO/pioarduino is shortened to PIO.
 
 Clone your forked repository to your computer
 ---------------------------------------------
@@ -422,7 +427,7 @@ Depending on your usual workflow, the current VSCode environment can be saved as
 Compile an ESPEasy PIO environment
 ----------------------------------
 
-ESPEasy supports several different configurations of ESP units, ESP8266, ESP8285 and ESP32, and also some predefined hardware configurations and sets of plugins & controllers. This has been turned into several different PlatformIO environments, to make managing the different builds as easy as possible.
+ESPEasy supports several different configurations of ESP units, ESP8266, ESP8285 and ESP32, and also some predefined hardware configurations and sets of plugins & controllers. This has been turned into several different PIO environments, to make managing the different builds as easy as possible.
 
 To compile such 'environment' (PIO terminology), select the PIO button (it looks like an alien) in VSCode:
 
@@ -492,10 +497,10 @@ Especially for new plugins, it is highly recommended to write documentation, as 
 
 
 Using external libraries
-~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. note:: 
-    Since November 2022, the PlatformIO configuration for ESPEasy was changed to *require* all libraries to be locally available, to a) prevent unexpected 'surprises' when an external library is updated, and b) greatly improve build output stability and quality.
+    Since November 2022, the PIO configuration for ESPEasy was changed to *require* all libraries to be locally available, to a) prevent unexpected 'surprises' when an external library is updated, and b) greatly improve build output stability and quality.
 
 While developing a plugin or some other feature, often you use an existing library to re-use that (assumably) proven and tested functionality. To include such library, there is a prerequisite, and some generic steps to take:
 
@@ -516,7 +521,7 @@ Writing documentation
 
 Updating, or adding if it does not yet exist, the documentation is a useful activity that should be part of changing or adding to the ESPEasy code. Some of the optional VSCode extensions are specifically aimed at that task.
 
-The documentation is created in the reStructuredText format, using mostly a ``.rst`` extension, and can be built locally by installing the sphinx tool. This can be installed manually by opening a PlatformIO Terminal window in VSCode (an already open PIO Terminal can also be used, when using WSL2 a PlatformIO Terminal is *required* to execute in the correct Python Virtual Environment (venv)) and issuing these commands:
+The documentation is created in the reStructuredText format, using mostly a ``.rst`` extension, and can be built locally by installing the sphinx tool. This can be installed manually by opening a PIO Terminal window in VSCode (an already open PIO Terminal can also be used, when using WSL2 a PIO Terminal is *required* to execute in the correct Python Virtual Environment (venv)) and issuing these commands:
 
 .. code-block::
 
