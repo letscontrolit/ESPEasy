@@ -121,7 +121,7 @@ boolean Plugin_135(uint8_t function, struct EventStruct *event, String& string)
         selector.reloadonchange = true;
         selector.addFormSelector(F("Sensor model"), F("ptype"), P135_SENSOR_TYPE);
         # ifndef LIMIT_BUILD_SIZE
-        addFormNote(F("Page will reload on change."));
+        // addFormNote(F("Page will reload on change."));
         # endif // ifndef LIMIT_BUILD_SIZE
       }
 

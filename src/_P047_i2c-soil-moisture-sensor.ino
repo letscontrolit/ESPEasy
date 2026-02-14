@@ -170,7 +170,7 @@ boolean Plugin_047(uint8_t function, struct EventStruct *event, String& string)
         selector.default_index = static_cast<int>(P047_MODEL_CATNIP);
         selector.reloadonchange = true;
         selector.addFormSelector(F("Sensor model"), F("model"), P047_MODEL);
-        addFormNote(F("Changing the Sensor model will reload the page."));
+        // addFormNote(F("Changing the Sensor model will reload the page."));
       }
 
       if ((P047_MODEL_CATNIP == static_cast<P047_SensorModels>(P047_MODEL))

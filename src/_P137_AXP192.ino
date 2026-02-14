@@ -207,9 +207,9 @@ boolean Plugin_137(uint8_t function, struct EventStruct *event, String& string)
         selector.reloadonchange = !Settings.isPowerManagerTask(event->TaskIndex);
         selector.addFormSelector(F("Predefined device configuration"), F("predef"), 0);
 
-        if (!Settings.isPowerManagerTask(event->TaskIndex)) {
-          addFormNote(F("Page will reload when selection is changed."));
-        }
+        // if (!Settings.isPowerManagerTask(event->TaskIndex)) {
+        //   addFormNote(F("Page will reload when selection is changed."));
+        // }
 
         const P137_PredefinedDevices_e current_ = static_cast<P137_PredefinedDevices_e>(P137_CURRENT_PREDEFINED);
 
