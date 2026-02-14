@@ -1,6 +1,8 @@
 #ifndef HELPERS_I2C_ACCESS_H
 #define HELPERS_I2C_ACCESS_H
 
+#include "../../ESPEasy_common.h"
+#if FEATURE_I2C
 #include "../DataStructs/I2CTypes.h"
 
 #include "../DataTypes/TaskIndex.h"
@@ -201,4 +203,5 @@ void I2CInterfaceSelector(String  label,
                           bool    reloadWhenNeeded);
 #endif // if FEATURE_I2C_MULTIPLE
 
+#endif
 #endif // HELPERS_I2C_ACCESS_H

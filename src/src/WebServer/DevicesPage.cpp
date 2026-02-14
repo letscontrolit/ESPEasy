@@ -156,6 +156,7 @@ void handle_devices() {
     {
       // change of device: cleanup old device and reset default settings
       setTaskDevice_to_TaskIndex(taskdevicenumber, taskIndex);
+#if FEATURE_I2C
       const deviceIndex_t DeviceIndex = getDeviceIndex(taskdevicenumber);
 
       if (validDeviceIndex(DeviceIndex)) {
@@ -165,6 +166,7 @@ void handle_devices() {
           bitWrite(Settings.I2C_SPI_bus_Flags[taskIndex], I2C_FLAGS_SLOW_SPEED, 1); // Then: Enable Force Slow I2C speed checkbox by default
         }
       }
+#endif
     }
     else if (taskdevicenumber != INVALID_PLUGIN_ID) // save settings
     {
@@ -283,11 +285,13 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
   Settings.TaskDeviceNumber[taskIndex] = taskdevicenumber.value;
 
   #ifdef ESP32
+  #if FEATURE_SPI
   if (device.isSPI()) {
     Settings.setSPIBusForTask(taskIndex, getFormItemInt(F("pspibus"), 0));
   }
+  #endif
   #endif // ifdef ESP32
-
+#if FEATURE_I2C
   if (device.Type == DEVICE_TYPE_I2C) {
     uint8_t flags = 0;
     bitWrite(flags, I2C_FLAGS_SLOW_SPEED, isFormItemChecked(F("taskdeviceflags0")));
@@ -331,6 +335,7 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
 
     Settings.I2C_SPI_bus_Flags[taskIndex] = flags;
   }
+#endif
 
   // Must load from file system to make sure all caches and checksums match.
   ExtraTaskSettings.clear();
@@ -624,7 +629,9 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
     if (pluginID_set)
     {
       // LoadTaskSettings(x);
+#if FEATURE_SPI
       int8_t spi_gpios[3] { -1, -1, -1 };
+#endif
       struct EventStruct TempEvent(x);
       addEnabled(Settings.TaskDeviceEnabled[x]  && validDeviceIndex(DeviceIndex));
 
@@ -649,12 +656,17 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
             addHtml(portDescr);
           } else {
             const DeviceStruct& device = Device[DeviceIndex];
-
+#if FEATURE_I2C
             if (device.Type == DEVICE_TYPE_I2C) {
               format_I2C_port_description(x);
-            } else if (device.isSPI()) {
+            } else 
+#endif
+#if FEATURE_SPI
+            if (device.isSPI()) {
               format_SPI_port_description(spi_gpios, Settings.getSPIBusForTask(x));
-            } else if (device.isSerial()) {
+            } else 
+#endif
+            if (device.isSerial()) {
                 # ifdef PLUGIN_USES_SERIAL
               addHtml(serialHelper_getSerialTypeLabel(&TempEvent));
                 # else // ifdef PLUGIN_USES_SERIAL
@@ -723,12 +735,15 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
 
           switch (device.Type)
           {
+#if FEATURE_I2C
             case DEVICE_TYPE_I2C:
             {
               format_I2C_pin_description(x);
               html_BR();
               break;
             }
+#endif
+#if FEATURE_SPI
             case DEVICE_TYPE_SPI3:
               showpin3 = !pluginHasGPIODescription;
 
@@ -740,6 +755,7 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
             case DEVICE_TYPE_SPI:
               format_SPI_pin_description(spi_gpios, x, !pluginHasGPIODescription);
               break;
+#endif
             case DEVICE_TYPE_ANALOG:
             {
               # ifdef ESP8266
@@ -978,6 +994,7 @@ void format_originating_node(uint8_t remoteUnit) {
 
 # endif // if FEATURE_ESPEASY_P2P
 
+#if FEATURE_I2C
 void format_I2C_port_description(taskIndex_t x)
 {
   addHtml(F("I2C"));
@@ -1024,7 +1041,9 @@ void format_I2C_port_description(taskIndex_t x)
   }
   # endif // if FEATURE_I2CMULTIPLEXER
 }
+#endif
 
+#if FEATURE_SPI
 void format_SPI_port_description(int8_t spi_gpios[3], uint8_t spi_bus)
 {
   if (!Settings.getSPI_pins(spi_gpios, spi_bus)) {
@@ -1038,7 +1057,9 @@ void format_SPI_port_description(int8_t spi_gpios[3], uint8_t spi_bus)
   addHtml(F("SPI"));
   # endif // ifdef ESP8266
 }
+#endif
 
+#if FEATURE_I2C
 void format_I2C_pin_description(taskIndex_t x)
 {
   # if FEATURE_I2C_MULTIPLE
@@ -1053,7 +1074,9 @@ void format_I2C_pin_description(taskIndex_t x)
     Label_Gpio_toHtml(F("SCL"), formatGpioLabel(Settings.getI2CSclPin(i2cBus), false));
   }
 }
+#endif
 
+#if FEATURE_SPI
 void format_SPI_pin_description(int8_t spi_gpios[3], taskIndex_t x, bool showCSpin)
 {
   const uint8_t spi_bus = Settings.getSPIBusForTask(x);
@@ -1074,6 +1097,7 @@ void format_SPI_pin_description(int8_t spi_gpios[3], taskIndex_t x, bool showCSp
     }
   }
 }
+#endif
 
 // ********************************************************************************
 // Show the task settings page
@@ -1203,7 +1227,11 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
       addPinConfig = true;
     }
 
-    if (addPinConfig || (device.Type == DEVICE_TYPE_I2C)) {
+    if (addPinConfig 
+#if FEATURE_I2C
+      || (device.Type == DEVICE_TYPE_I2C)
+#endif
+    ) {
       if (device.isSerial()) {
         # ifdef PLUGIN_USES_SERIAL
         devicePage_show_serial_config(taskIndex);
@@ -1215,15 +1243,18 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
         addPinConfig = false;
 
         html_add_script(F("document.getElementById('serPort').onchange();"), false);
-      } else if (device.Type == DEVICE_TYPE_I2C) {
+      } else 
+#if FEATURE_I2C
+      if (device.Type == DEVICE_TYPE_I2C) {
         devicePage_show_pin_config(taskIndex, DeviceIndex);
         addPinConfig = false;
-
+#if FEATURE_I2C
         if (Settings.TaskDeviceDataFeed[taskIndex] == 0) {
           devicePage_show_I2C_config(taskIndex, DeviceIndex);
         }
+#endif
       }
-
+#endif
       if (addPinConfig) {
         devicePage_show_pin_config(taskIndex, DeviceIndex);
       }
@@ -1329,9 +1360,11 @@ void devicePage_show_pin_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
     addFormNote(F("Will go into effect on next input change."));
   }
 
+#if FEATURE_SPI
   if (device.isSPI()) {
     devicePage_show_SPI_config(taskIndex, DeviceIndex);
   }
+#endif
 
   if (device.connectedToGPIOpins()) {
     // get descriptive GPIO-names from plugin
@@ -1350,11 +1383,14 @@ void devicePage_show_pin_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
       {
         // Pin1 = GPIO <--- TX
         purpose = PinSelectPurpose::Serial_input;
-      } else if (device.isSPI())
+      } 
+#if FEATURE_SPI
+      else if (device.isSPI())
       {
         // All selectable SPI pins are output only
         purpose = PinSelectPurpose::Generic_output;
       }
+#endif
 
       addFormPinSelect(purpose, TempEvent.String1, F("taskdevicepin1"), Settings.TaskDevicePin1[taskIndex]);
     }
@@ -1367,23 +1403,25 @@ void devicePage_show_pin_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
         // Serial Pin2 = GPIO ---> RX
         purpose = PinSelectPurpose::Serial_output;
       }
-
+#if FEATURE_SPI
       if (device.isSPI())
       {
         // SPI only needs output pins
         purpose = PinSelectPurpose::Generic_output;
       }
+#endif
       addFormPinSelect(purpose, TempEvent.String2, F("taskdevicepin2"), Settings.TaskDevicePin2[taskIndex]);
     }
 
     if (device.usesTaskDevicePin(3)) {
       PinSelectPurpose purpose = device.getPinSelectPurpose(3); // PinSelectPurpose::Generic;
-
+#if FEATURE_SPI
       if (device.isSPI())
       {
         // SPI only needs output pins
         purpose = PinSelectPurpose::Generic_output;
       }
+#endif
       addFormPinSelect(purpose, TempEvent.String3, F("taskdevicepin3"), Settings.TaskDevicePin3[taskIndex]);
     }
   }
@@ -1406,6 +1444,7 @@ void devicePage_show_serial_config(taskIndex_t taskIndex)
 
 # endif // ifdef PLUGIN_USES_SERIAL
 
+#if FEATURE_SPI
 void devicePage_show_SPI_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex)
 {
   if (Device[DeviceIndex].isSPI()
@@ -1421,7 +1460,9 @@ void devicePage_show_SPI_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
   }
   #endif // ifdef ESP32
 }
+#endif
 
+#if FEATURE_I2C
 void devicePage_show_I2C_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex)
 {
   struct EventStruct TempEvent(taskIndex);
@@ -1525,6 +1566,7 @@ void devicePage_show_I2C_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
   }
   # endif // if FEATURE_I2CMULTIPLEXER
 }
+#endif
 
 void devicePage_show_output_data_type(taskIndex_t taskIndex, deviceIndex_t DeviceIndex)
 {

@@ -232,11 +232,14 @@ const __FlashStringHelper* getConflictingUse_flashstr(int gpio, PinSelectPurpose
   static_assert(false, "Implement processor architecture");
 
 #endif // ifdef ESP32S2
-
+#if FEATURE_I2C
   bool includeI2C = true;
+#endif
+#if FEATURE_SPI
   bool includeSPI = true;
 #if FEATURE_SD
   bool includeSDCard = true;
+#endif
 #endif
   bool includeSerial    = Settings.UseSerial; // Only need to check if Serial Port Console is enabled
   bool includeStatusLed = true;
@@ -244,6 +247,7 @@ const __FlashStringHelper* getConflictingUse_flashstr(int gpio, PinSelectPurpose
 
   switch (purpose)
   {
+#if FEATURE_I2C
     case PinSelectPurpose::I2C:
 #if FEATURE_I2C_MULTIPLE
     case PinSelectPurpose::I2C_2:
@@ -253,10 +257,13 @@ const __FlashStringHelper* getConflictingUse_flashstr(int gpio, PinSelectPurpose
 #endif // if FEATURE_I2C_MULTIPLE
       includeI2C = false;
       break;
+#endif
+#if FEATURE_SPI
     case PinSelectPurpose::SPI:
     case PinSelectPurpose::SPI_MISO:
       includeSPI = false;
       break;
+#endif
     case PinSelectPurpose::Serial_input:
     case PinSelectPurpose::Serial_output:
       includeSerial = false;
@@ -282,7 +289,7 @@ const __FlashStringHelper* getConflictingUse_flashstr(int gpio, PinSelectPurpose
       includeResetPin = false;
       break;
   }
-
+#if FEATURE_I2C
   if (includeI2C && Settings.isI2C_pin(gpio)) {
     for (uint8_t i2cBus = 0; i2cBus < getI2CBusCount(); ++i2cBus)
     {
@@ -319,7 +326,9 @@ const __FlashStringHelper* getConflictingUse_flashstr(int gpio, PinSelectPurpose
       }
     }
   }
+  #endif
 
+  #if FEATURE_SPI
   #ifdef ESP32
   if (includeSPI) {
     if (Settings.isSPI_pin(gpio, 0u)) {
@@ -331,10 +340,11 @@ const __FlashStringHelper* getConflictingUse_flashstr(int gpio, PinSelectPurpose
   }
   #endif // ifdef ESP32
   #ifdef ESP8266
-  if (includeSPI && Settings.isSPI_pin(gpio)) {
+    if (includeSPI && Settings.isSPI_pin(gpio)) {
     return F("SPI");
   }
-  #endif // ifdef ESP8266
+  #endif
+  #endif
 
   if (includeStatusLed && (Settings.Pin_status_led == gpio) && (-1 != gpio)) {
     return F("Wifi Status LED");
@@ -414,6 +424,7 @@ String getConflictingUse_fromPeriman(int gpio, PinSelectPurpose purpose, bool ig
   {
     switch (purpose)
     {
+#if FEATURE_I2C
       case PinSelectPurpose::I2C:
 # if FEATURE_I2C_MULTIPLE
       case PinSelectPurpose::I2C_2:
@@ -428,6 +439,8 @@ String getConflictingUse_fromPeriman(int gpio, PinSelectPurpose purpose, bool ig
             (bus_type == ESP32_BUS_TYPE_I2C_SLAVE_SCL))
         { return conflict; }
         break;
+#endif
+#if FEATURE_SPI
       case PinSelectPurpose::SPI:
       case PinSelectPurpose::SPI_MISO:
 
@@ -437,6 +450,7 @@ String getConflictingUse_fromPeriman(int gpio, PinSelectPurpose purpose, bool ig
             (bus_type == ESP32_BUS_TYPE_SPI_MASTER_SS))
         { return conflict; }
         break;
+#endif
       case PinSelectPurpose::Serial_input:
       case PinSelectPurpose::Serial_output:
 

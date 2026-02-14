@@ -1,5 +1,7 @@
 #include "../Helpers/I2C_access.h"
 
+#if FEATURE_I2C
+
 #include "../DataStructs/TimingStats.h"
 #include "../Globals/I2Cdev.h"
 #include "../Globals/Settings.h"
@@ -557,3 +559,4 @@ void I2CInterfaceSelector(String  label,
 }
 
 #endif // if FEATURE_I2C_MULTIPLE
+#endif

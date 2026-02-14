@@ -159,15 +159,19 @@ void hardwareInit()
   }
 
   // Initialize I2C buses
+#if FEATURE_I2C
   initI2C();
+#endif
 
   #if FEATURE_PLUGIN_PRIORITY
   String dummy;
   PluginCall(PLUGIN_PRIORITY_INIT_ALL, nullptr, dummy);
   #endif // if FEATURE_PLUGIN_PRIORITY
 
+#if FEATURE_SPI
   // Initialize SPI buses, also initializes SD-card when available in build and configured
   initializeSPIBuses();
+#endif
 }
 
 void checkResetFactoryPin() {

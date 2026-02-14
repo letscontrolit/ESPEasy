@@ -986,7 +986,7 @@ void SettingsStruct_tmpl<N_TASKS>::setPinBootState(int8_t gpio_pin, PinBootState
   }
 # endif // ifdef ESP32
 }
-
+#if FEATURE_SPI
 template<uint32_t N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::isSPI_enabled(uint8_t spi_bus) const {
   const SPI_Options_e SPI_selection = static_cast<SPI_Options_e>(0 == spi_bus ? InitSPI : InitSPI1);
@@ -1190,7 +1190,8 @@ bool SettingsStruct_tmpl<N_TASKS>::isSPI_valid(uint8_t spi_bus) const {
   #endif // ifdef ESP32
   return result;
 }
-
+#endif
+#if FEATURE_I2C
 template<uint32_t N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::isI2C_pin(int8_t pin) const {
   if (pin < 0) { return false; }
@@ -1232,7 +1233,8 @@ uint8_t SettingsStruct_tmpl<N_TASKS>::getNrConfiguredI2C_buses() const
   return isI2CEnabled(0) ? 1 : 0;
 #endif
 }
-
+#endif
+#if FEATURE_SPI
 // stored in I2C_SPI_bus_Flags per Task
 template<uint32_t N_TASKS>
 uint8_t SettingsStruct_tmpl<N_TASKS>::getSPIBusForTask(taskIndex_t TaskIndex) const {
@@ -1256,7 +1258,9 @@ void SettingsStruct_tmpl<N_TASKS>::setSPIBusForSDCard(uint8_t spi_bus) {
   set2BitToUL(I2C_SPI_bus_Flags[0], SPI_FLAGS_SDCARD_BUS_NUMBER, spi_bus);
 }
 #endif // if FEATURE_SD
+#endif
 
+#if FEATURE_I2C
 template<uint32_t N_TASKS>
 uint8_t SettingsStruct_tmpl<N_TASKS>::getI2CInterface(taskIndex_t TaskIndex) const {
   return get3BitFromUL(I2C_SPI_bus_Flags[TaskIndex], I2C_FLAGS_BUS_NUMBER);
@@ -1400,7 +1404,8 @@ int8_t SettingsStruct_tmpl<N_TASKS>::getI2CMultiplexerResetPin(uint8_t i2cBus) c
   return -1;
 }
 #endif // if FEATURE_I2CMULTIPLEXER
-
+#endif
+#if FEATURE_ETHERNET
 template<uint32_t N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::isEthernetPin(int8_t pin) const {
   #if FEATURE_ETHERNET
@@ -1455,6 +1460,7 @@ bool SettingsStruct_tmpl<N_TASKS>::isEthernetPinOptional(int8_t pin) const {
   #endif // if FEATURE_ETHERNET
   return false;
 }
+#endif
 
 template<uint32_t N_TASKS>
 int8_t SettingsStruct_tmpl<N_TASKS>::getTaskDevicePin(taskIndex_t taskIndex, uint8_t pinnr) const {

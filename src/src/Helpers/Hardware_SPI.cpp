@@ -3,6 +3,7 @@
 #include "../Helpers/Hardware_SPI.h"
 #include "../Globals/Settings.h"
 
+#if FEATURE_SPI
 #if FEATURE_SD
 # include <SD.h>
 #endif // if FEATURE_SD
@@ -138,3 +139,4 @@ bool initSDcard() {
 }
 
 #endif // if FEATURE_SD
+#endif

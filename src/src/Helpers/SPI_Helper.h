@@ -8,7 +8,9 @@
 
 #include "../WebServer/Markup_Forms.h"
 
+#if FEATURE_SPI
 void SPIInterfaceSelector(String  label,
                           String  id,
                           uint8_t choice,
                           bool    disabled = false);
+#endif

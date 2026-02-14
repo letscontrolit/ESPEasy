@@ -366,6 +366,7 @@ public:
   PinBootState getPinBootState(int8_t gpio_pin) const;
   void setPinBootState(int8_t gpio_pin, PinBootState state);
 
+#if FEATURE_SPI
   bool getSPI_pins(int8_t  spi_gpios[3],
                    uint8_t spi_bus = 0,
                    bool    noCheck = false) const;
@@ -383,9 +384,6 @@ public:
   // Return true when SPI enabled and opt. user defined pins valid.
   bool isSPI_valid(uint8_t spi_bus) const;
 
-  // Return true when pin is one of the configured I2C pins.
-  bool isI2C_pin(int8_t pin) const;
-
   uint8_t getSPIBusForTask(taskIndex_t TaskIndex) const;
   void    setSPIBusForTask(taskIndex_t TaskIndex, uint8_t spi_bus);
 
@@ -393,6 +391,11 @@ public:
   uint8_t getSPIBusForSDCard() const;
   void    setSPIBusForSDCard(uint8_t spi_bus);
   #endif // if FEATURE_SD
+#endif
+
+#if FEATURE_I2C
+  // Return true when pin is one of the configured I2C pins.
+  bool isI2C_pin(int8_t pin) const;
 
   // Return true if I2C settings are correct
   bool isI2CEnabled(uint8_t i2cBus) const;
@@ -417,13 +420,14 @@ public:
   int8_t getI2CMultiplexerAddr(uint8_t i2cBus) const;
   int8_t getI2CMultiplexerResetPin(uint8_t i2cBus) const;
   #endif // if FEATURE_I2CMULTIPLEXER
-
+#endif
+#if FEATURE_ETHERNET
   // Return true when pin is one of the fixed Ethernet pins and Ethernet is enabled
   bool isEthernetPin(int8_t pin) const;
 
   // Return true when pin is one of the optional Ethernet pins and Ethernet is enabled
   bool isEthernetPinOptional(int8_t pin) const;
-
+#endif
   // Access to TaskDevicePin1 ... TaskDevicePin3
   // @param pinnr 1 = TaskDevicePin1, ..., 3 = TaskDevicePin3
   int8_t getTaskDevicePin(taskIndex_t taskIndex, uint8_t pinnr) const;
