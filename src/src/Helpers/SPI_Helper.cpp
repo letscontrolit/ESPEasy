@@ -1,5 +1,6 @@
 #include "../Helpers/SPI_Helper.h"
 
+#if FEATURE_SPI
 void SPIInterfaceSelector(String  label,
                           String  id,
                           uint8_t choice,
@@ -39,3 +40,4 @@ void SPIInterfaceSelector(String  label,
     selector.addFormSelector(label, id, choice);
   }
 }
+#endif

@@ -274,7 +274,7 @@ void addFormPinSelect(PinSelectPurpose purpose, const String& label, const __Fla
 void addFormPinSelect(PinSelectPurpose purpose, const String& label, const String& id, int choice);
 
 void addFormPinSelect(PinSelectPurpose purpose, const __FlashStringHelper * label, const __FlashStringHelper * id, int choice);
-
+#if FEATURE_I2C
 void addFormPinSelectI2C(const String& label,
                          const String& id,
                          uint8_t       i2cBus,
@@ -290,6 +290,7 @@ void addFormSelectorI2C(const String& id,
                         const String& tooltip = EMPTY_STRING
                         #endif
                         );
+#endif
 
 void addFormSelector_YesNo(const __FlashStringHelper * label,
                            const __FlashStringHelper * id,

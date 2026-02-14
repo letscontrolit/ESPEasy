@@ -27,11 +27,84 @@
 #  include "../Helpers/Hardware_device_info.h"
 # endif // if FEATURE_I2C_MULTIPLE
 
+// ********************************************************************************
+// Web Interface hardware page
+// ********************************************************************************
+void handle_interfaces() {
+# ifndef BUILD_NO_RAM_TRACKER
+  checkRAM(F("handle_interfaces"));
+# endif
+
+  if (!isLoggedIn()) { return; }
+  navMenuIndex = MENU_INDEX_INTERFACES;
+  TXBuffer.startStream();
+  sendHeadandTail_stdtemplate(_HEAD);
+
+  save_interfaces();
+
+
+  addHtml(F("<form  method='post'>"));
+  html_table_class_normal();
+  addFormHeader(F("Interfaces Settings"), F(""), F("Interfaces/Interfaces.html"));
+
+  #if FEATURE_I2C
+  interfaces_show_I2C();
+  #endif
+  #if FEATURE_SPI
+  interfaces_show_SPI();
+  #endif
+
+
+  addFormSeparator(2);
+
+  html_TR_TD();
+  html_TD();
+  addSubmitButton();
+  html_TR_TD();
+  html_end_table();
+  html_end_form();
+
+  sendHeadandTail_stdtemplate(_TAIL);
+  TXBuffer.endStream();
+}
 
 void save_interfaces() {
-    
+
   String error;
   bool   updated{};
+
+  #if FEATURE_I2C
+
+  if (save_I2C(error)) { updated = true; }
+  #endif
+
+  #if FEATURE_SPI
+  if (save_SPI(error)) { updated = true; }
+  #endif
+
+  if (updated) {
+    error += SaveSettings();
+    addHtmlError(error);
+
+    if (error.isEmpty()) {
+#if FEATURE_I2C
+      // Apply I2C settings.
+      initI2C();
+#endif
+
+#if FEATURE_SPI
+      // Apply SPI settings
+      initializeSPIBuses();
+#endif
+    }
+  }
+}
+
+#if FEATURE_I2C
+
+bool save_I2C(String& error) {
+  bool updated{};
+
 
   if (isFormItem(F("pi2csp0"))) {
     updated = true;
@@ -117,79 +190,54 @@ void save_interfaces() {
   }
 # endif // if FEATURE_I2C_MULTIPLE
 
-  {
-# ifdef ESP32
-    bool SPI_updated{};
-
-    if (update_whenset_FormItemInt(F("initspi0"), Settings.InitSPI)) {
-      SPI_updated = true;
-
-      // User-defined SPI bus 0 GPIO pins
-      Settings.SPI_SCLK_pin = getFormItemInt(F("spipinsclk0"), -1);
-      Settings.SPI_MISO_pin = getFormItemInt(F("spipinmiso0"), -1);
-      Settings.SPI_MOSI_pin = getFormItemInt(F("spipinmosi0"), -1);
-    }
-
-    if (update_whenset_FormItemInt(F("initspi1"), Settings.InitSPI1)) {
-      SPI_updated = true;
-
-      // User-defined SPI bus 1 GPIO pins
-      Settings.SPI1_SCLK_pin = getFormItemInt(F("spipinsclk1"), -1);
-      Settings.SPI1_MISO_pin = getFormItemInt(F("spipinmiso1"), -1);
-      Settings.SPI1_MOSI_pin = getFormItemInt(F("spipinmosi1"), -1);
-    }
-
-    if (SPI_updated) {
-      updated = true;
-
-      for (uint8_t spi_bus = 0; spi_bus < getSPIBusCount(); ++spi_bus) {
-        if (Settings.isSPI_enabled(spi_bus) && !Settings.isSPI_valid(spi_bus)) { // Checks
-          error += strformat(F("SPI bus %u pins not configured correctly!<BR>"), spi_bus);
-        }
-      }
-    }
-# else // for ESP8266 we keep the old UI
-    Settings.InitSPI = isFormItemChecked(F("initspi")); // SPI Init
-    updated          = true;
-# endif // ifdef ESP32
-  }
-
-  if (updated) {
-    error += SaveSettings();
-    addHtmlError(error);
-
-    if (error.isEmpty()) {
-      // Apply I2C settings.
-      initI2C();
-
-      // Apply SPI settings
-      initializeSPIBuses();
-    }
-  }
+  return updated;
 }
 
-
-// ********************************************************************************
-// Web Interface hardware page
-// ********************************************************************************
-void handle_interfaces() {
-# ifndef BUILD_NO_RAM_TRACKER
-  checkRAM(F("handle_interfaces"));
-# endif
-
-  if (!isLoggedIn()) { return; }
-  navMenuIndex = MENU_INDEX_INTERFACES;
-  TXBuffer.startStream();
-  sendHeadandTail_stdtemplate(_HEAD);
-
-  save_interfaces();
+#endif
 
 
-  addHtml(F("<form  method='post'>"));
-  html_table_class_normal();
-  addFormHeader(F("Interfaces Settings"), F(""), F("Interfaces/Interfaces.html"));
+#if FEATURE_SPI
+bool save_SPI(String& error) {
+# ifdef ESP32
+  bool SPI_updated{};
 
+  if (update_whenset_FormItemInt(F("initspi0"), Settings.InitSPI)) {
+    SPI_updated = true;
 
+    // User-defined SPI bus 0 GPIO pins
+    Settings.SPI_SCLK_pin = getFormItemInt(F("spipinsclk0"), -1);
+    Settings.SPI_MISO_pin = getFormItemInt(F("spipinmiso0"), -1);
+    Settings.SPI_MOSI_pin = getFormItemInt(F("spipinmosi0"), -1);
+  }
+
+  if (update_whenset_FormItemInt(F("initspi1"), Settings.InitSPI1)) {
+    SPI_updated = true;
+
+    // User-defined SPI bus 1 GPIO pins
+    Settings.SPI1_SCLK_pin = getFormItemInt(F("spipinsclk1"), -1);
+    Settings.SPI1_MISO_pin = getFormItemInt(F("spipinmiso1"), -1);
+    Settings.SPI1_MOSI_pin = getFormItemInt(F("spipinmosi1"), -1);
+  }
+
+  if (SPI_updated) {
+    for (uint8_t spi_bus = 0; spi_bus < getSPIBusCount(); ++spi_bus) {
+      if (Settings.isSPI_enabled(spi_bus) && !Settings.isSPI_valid(spi_bus)) { // Checks
+        error += strformat(F("SPI bus %u pins not configured correctly!<BR>"), spi_bus);
+      }
+    }
+  }
+  return SPI_updated;
+# else // for ESP8266 we keep the old UI
+  const auto old_initSPI = Settings.InitSPI;
+  Settings.InitSPI = isFormItemChecked(F("initspi")); // SPI Init
+  return old_initSPI != Settings.InitSPI;
+# endif // ifdef ESP32
+}
+
+#endif
+
+#if FEATURE_I2C
+void interfaces_show_I2C() {
 # if FEATURE_I2CMULTIPLEXER
   const __FlashStringHelper *i2c_muxtype_options[] = {
     F("- None -"),
@@ -306,6 +354,11 @@ void handle_interfaces() {
 
   }
 # endif // if FEATURE_I2C_MULTIPLE
+}
+#endif
+
+#if FEATURE_SPI
+void interfaces_show_SPI() {
 
 # ifdef ESP32
 
@@ -369,20 +422,10 @@ void handle_interfaces() {
   addFormNote(F("CLK=GPIO-14 (D5), MISO=GPIO-12 (D6), MOSI=GPIO-13 (D7)"));
   addFormNote(F("Chip Select (CS) config must be done in the plugin"));
 # endif // ifdef ESP32
-
-  addFormSeparator(2);
-
-  html_TR_TD();
-  html_TD();
-  addSubmitButton();
-  html_TR_TD();
-  html_end_table();
-  html_end_form();
-
-  sendHeadandTail_stdtemplate(_TAIL);
-  TXBuffer.endStream();
 }
+#endif
 
+#if FEATURE_I2C
 # if FEATURE_PLUGIN_PRIORITY
 
 bool isI2CPriorityTaskActive(uint8_t i2cBus) {
@@ -408,5 +451,6 @@ void I2CShowSdaSclReadonly(int8_t i2c_sda, int8_t i2c_scl, uint8_t i2cBus) {
 }
 
 # endif // if FEATURE_PLUGIN_PRIORITY
+#endif
 
 #endif // ifdef WEBSERVER_INTERFACES

@@ -22,6 +22,7 @@ enum class PinSelectPurpose : uint8_t {
   Generic_input,
   Generic_output,
   Generic_bidir,
+#if FEATURE_I2C
   I2C,
   #if FEATURE_I2C_MULTIPLE
   I2C_2,
@@ -29,8 +30,11 @@ enum class PinSelectPurpose : uint8_t {
   I2C_3,
   #endif
   #endif
+#endif
+#if FEATURE_SPI
   SPI,
   SPI_MISO,
+#endif
 #if FEATURE_ETHERNET
   Ethernet,
 #endif

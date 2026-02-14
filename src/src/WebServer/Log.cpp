@@ -1,5 +1,7 @@
 #include "../WebServer/Log.h"
 
+#ifdef WEBSERVER_LOG
+
 #include "../WebServer/ESPEasy_WebServer.h"
 #include "../WebServer/404.h"
 #include "../WebServer/HTML_wrappers.h"
@@ -150,3 +152,4 @@ void handle_log_JSON() {
   handleNotFound();
   #endif // ifdef WEBSERVER_LOG
 }
+#endif
