@@ -549,7 +549,7 @@
     :green:`Rules`","
     Like ``PostToHTTP`` but using a TLS connection, by default on port 443
 
-    NB: No certificate validation is done!
+    NB: No certificate validation is done!"
     "
     Provision,Config","
     :red:`Internal`","
@@ -668,7 +668,7 @@
     :green:`Rules`","
     Like ``PutToHTTP`` but using a TLS connection, by default on port 443
 
-    NB: No certificate validation is done!
+    NB: No certificate validation is done!"
     "
     Reboot","
     :red:`Internal`","
@@ -748,7 +748,7 @@
     :green:`Rules`","
     Like ``SendToHTTP`` but using a TLS connection, by default on port 443
 
-    NB: No certificate validation is done!
+    NB: No certificate validation is done!"
     "
     SendToUDP","
     :green:`Rules`","
