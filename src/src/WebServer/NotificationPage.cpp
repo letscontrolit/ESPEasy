@@ -90,6 +90,9 @@ void handle_notifications() {
                                      sizeof(NotificationSettingsStruct));
             NotificationSettings->validate();
             NotificationSettings->Port = getFormItemInt(F("port"), 0);
+# if FEATURE_EMAIL_TLS
+            NotificationSettings->EncryptionSelector = getFormItemInt(F("enctype"), 0);
+#endif
 
             NotificationSettings->Timeout_ms                = getFormItemInt(F("timeout"), NPLUGIN_001_DEF_TM);
             NotificationSettings->Pin1                      = getFormItemInt(F("pin1"), -1);
@@ -257,9 +260,20 @@ void handle_notifications() {
               65535);
 # if FEATURE_EMAIL_TLS
             addFormNote(F("default port SSL: 465"));
+            {
+              const __FlashStringHelper *options[] = { 
+                F("Auto"), 
+                F("No Encryption") };
+              const int optionValues[] = { 
+                static_cast<int>(NotificationSettingsStruct::EncryptionType::Auto),
+                static_cast<int>(NotificationSettingsStruct::EncryptionType::NoEncryption) };
+              FormSelectorOptions selector(NR_ELEMENTS(options), options, optionValues);
+              selector.addFormSelector(F("Encryption"), F("enctype"), NotificationSettings->EncryptionSelector);
+            }
 # else // if FEATURE_EMAIL_TLS
             addFormNote(F("default port: 25, SSL/TLS servers NOT supported!"));
 # endif // if FEATURE_EMAIL_TLS
+
 
             if ((NotificationSettings->Timeout_ms < NPLUGIN_001_MIN_TM) ||
                 (NotificationSettings->Timeout_ms > NPLUGIN_001_MAX_TM))

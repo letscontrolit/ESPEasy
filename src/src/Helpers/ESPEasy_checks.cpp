@@ -98,6 +98,11 @@ void run_compiletime_checks() {
   #if FEATURE_NOTIFIER
   check_size<NotificationSettingsStruct,            1000u>();
   check_max_size<NotificationSettingsStruct,        DAT_NOTIFICATION_SIZE>();
+  constexpr size_t NSS_Port_offset = offsetof(NotificationSettingsStruct, Port);
+  constexpr size_t NSS_Timeout_offset = offsetof(NotificationSettingsStruct, Timeout_ms);
+  static_assert(NSS_Port_offset == 68u, "NotificationSettingsStruct Port offset changed");
+  static_assert(NSS_Timeout_offset == 996u, "NotificationSettingsStruct Timeout offset changed");
+
   #endif // if FEATURE_NOTIFIER
   check_size<ExtraTaskSettingsStruct,               536u>();
   check_max_size<ExtraTaskSettingsStruct,           DAT_TASKS_SIZE>();

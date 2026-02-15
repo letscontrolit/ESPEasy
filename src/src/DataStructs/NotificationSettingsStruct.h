@@ -16,11 +16,29 @@
 \*********************************************************************************************/
 struct NotificationSettingsStruct
 {
+# if FEATURE_EMAIL_TLS
+  // Will be stored
+  enum class EncryptionType {
+    Auto = 0,
+    NoEncryption = 1,
+//    SSL = 2,
+//    TLS = 3,
+
+    MAX_ENCRYPTION_TYPE // Keep as last
+  };
+
+  static const __FlashStringHelper* toString(EncryptionType encType);
+#endif
+
+
+
   NotificationSettingsStruct();
 
   void validate();
 
   char          Server[65];
+  uint8_t       EncryptionSelector;
+  uint8_t       unused1[2];
   unsigned int  Port;
   char          Domain[65];
   char          Sender[65];
@@ -31,6 +49,7 @@ struct NotificationSettingsStruct
   int8_t        Pin2;
   char          User[49];
   char          Pass[33];
+  uint8_t       unused2[3];
   unsigned int  Timeout_ms;
   //its safe to extend this struct, up to 4096 bytes, default values in config are 0
 };
