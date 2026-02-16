@@ -57,17 +57,23 @@ void DeviceStruct::clear() {
 bool DeviceStruct::connectedToGPIOpins() const {
   switch(Type) {
     case DEVICE_TYPE_SINGLE:  // Single GPIO
+#if FEATURE_SPI
     case DEVICE_TYPE_SPI:
+#endif
     case DEVICE_TYPE_CUSTOM1:
 
     case DEVICE_TYPE_DUAL:    // Dual GPIOs
     case DEVICE_TYPE_SERIAL:
+#if FEATURE_SPI
     case DEVICE_TYPE_SPI2:
+#endif
     case DEVICE_TYPE_CUSTOM2:
 
     case DEVICE_TYPE_TRIPLE:  // Triple GPIOs
     case DEVICE_TYPE_SERIAL_PLUS1:
+#if FEATURE_SPI
     case DEVICE_TYPE_SPI3:
+#endif
     case DEVICE_TYPE_CUSTOM3:    
       return true;
     default:
@@ -81,12 +87,16 @@ bool DeviceStruct::usesTaskDevicePin(int pin) const {
   if (pin == 2)
       return connectedToGPIOpins() && 
             !(Type == DEVICE_TYPE_SINGLE  ||
+#if FEATURE_SPI
               Type == DEVICE_TYPE_SPI ||
+#endif
               Type == DEVICE_TYPE_CUSTOM1);
   if (pin == 3)
       return Type == DEVICE_TYPE_TRIPLE || 
              Type == DEVICE_TYPE_SERIAL_PLUS1 || 
+#if FEATURE_SPI
              Type == DEVICE_TYPE_SPI3 ||
+#endif
              Type == DEVICE_TYPE_CUSTOM3;
   return false;
 }
@@ -95,12 +105,13 @@ bool DeviceStruct::isSerial() const {
   return (Type == DEVICE_TYPE_SERIAL) || 
          (Type == DEVICE_TYPE_SERIAL_PLUS1);
 }
-
+#if FEATURE_SPI
 bool DeviceStruct::isSPI() const {
   return (Type == DEVICE_TYPE_SPI) || 
          (Type == DEVICE_TYPE_SPI2) || 
          (Type == DEVICE_TYPE_SPI3);
 }
+#endif
 
 bool DeviceStruct::isCustom() const {
   return (Type == DEVICE_TYPE_CUSTOM0) || 

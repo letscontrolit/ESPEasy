@@ -108,6 +108,7 @@ void ESPEasy_loop()
   setWebserverRunning(ESPEasy::net::NWPluginCall(NWPlugin::Function::NWPLUGIN_WEBSERVER_SHOULD_RUN));
   // ESPEasy::net::processNetworkEvents();
 
+#if FEATURE_I2C
 #if FEATURE_CLEAR_I2C_STUCK
   if (Settings.EnableClearHangingI2Cbus())
   {
@@ -142,6 +143,7 @@ void ESPEasy_loop()
         break;
     }
   }
+#endif
 #endif
 
 

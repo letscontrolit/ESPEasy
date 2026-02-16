@@ -7,6 +7,7 @@
  * outputToHtml = false: no html output is generated
  * Outputs an error message and returns false if not correct
  **********************************************************************/
+#if FEATURE_I2C
 bool checkI2CConfigValid_toHtml(taskIndex_t taskIndex,
                                 bool        outputToHtml) {
   #if FEATURE_I2C_MULTIPLE
@@ -28,3 +29,4 @@ bool checkI2CConfigValid_toHtml(taskIndex_t taskIndex,
   #endif // if FEATURE_I2CMULTIPLEXER
   return true;
 }
+#endif
