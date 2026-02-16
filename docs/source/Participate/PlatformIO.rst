@@ -64,7 +64,7 @@ PlatformIO/pioarduino with VSCode
 Install
 -------
 
-For development of ESPEasy, a number of extensions have to be installed in VS-Code:
+For development of ESPEasy, a number of extensions has to be installed in VS-Code:
 
 * pioarduino IDE (by pioarduino)
 * C/C++ (by Microsoft)
