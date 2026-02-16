@@ -135,13 +135,13 @@ boolean Plugin_147(uint8_t function, struct EventStruct *event, String& string)
         selector.reloadonchange = true;
         selector.addFormSelector(F("Sensor model"), F("ptype"), P147_SENSOR_TYPE);
         # ifndef BUILD_NO_DEBUG
-        addFormNote(F("Page will reload on change."));
+        // addFormNote(F("Page will reload on change."));
         # endif // ifndef BUILD_NO_DEBUG
       }
 
       addFormSelector_YesNo(F("Use Compensation"), F("comp"), P147_GET_USE_COMPENSATION, true);
       # ifndef BUILD_NO_DEBUG
-      addFormNote(F("Page will reload on change."));
+      // addFormNote(F("Page will reload on change."));
       # endif // ifndef BUILD_NO_DEBUG
 
       if (P147_GET_USE_COMPENSATION) {
