@@ -241,15 +241,16 @@ bool NWPlugin_001(NWPlugin::Function function, EventStruct *event, String& strin
       break;
     }
 
-# ifdef ESP8266
     case NWPlugin::Function::NWPLUGIN_WEBFORM_SHOW_NAME:
     {
       if (event->kvWriter) {
-        event->kvWriter->write({ F("Name"), F("sta") });
+        event->kvWriter->write({ F("Name"), F("WiFi") });
         success = true;
       }
       break;
     }
+
+# ifdef ESP8266
 
     case NWPlugin::Function::NWPLUGIN_WEBFORM_SHOW_HOSTNAME:
     {

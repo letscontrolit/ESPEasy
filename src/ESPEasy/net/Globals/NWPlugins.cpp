@@ -84,9 +84,31 @@ bool NWPluginCall(NWPlugin::Function Function, EventStruct *event, String& str)
 
         if (Settings.getNWPluginID_for_network(x) && checkedEnabled) {
           if (Function == NWPlugin::Function::NWPLUGIN_INIT_ALL) {
-            Scheduler.setNetworkInitTimer(Settings.getNetworkInterfaceStartupDelayAtBoot(x), x);
-          } else {
+            if (!Settings.getNetworkInterface_isFallback(x)) {
+              Scheduler.setNetworkInitTimer(Settings.getNetworkInterfaceStartupDelay(x), x);
+            }
+          }
+          else {
             event->NetworkIndex = x;
+
+#ifdef ESP32
+
+            if ((Function == NWPlugin::Function::NWPLUGIN_PRIORITY_ROUTE_CHANGED) &&
+                Settings.getNetworkInterface_isFallback(x))
+            {
+              NetworkInterface *currentDefaultInterface = Network.getDefaultInterface();
+
+              if (!currentDefaultInterface) {
+                // No current default interface, thus we need to start this one.
+                Scheduler.setNetworkInitTimer(Settings.getNetworkInterfaceStartupDelay(x), x);
+              } else {
+                if (currentDefaultInterface->getRoutePrio() > Settings.getRoutePrio_for_network(x)) {
+                  // There is some network active with higher route priority, so this one is no longer needed
+                  Scheduler.setNetworkExitTimer(10, x);
+                }
+              }
+            }
+#endif // ifdef ESP32
             String command;
 
             if (Function == NWPlugin::Function::NWPLUGIN_WRITE) {
@@ -109,10 +131,11 @@ bool NWPluginCall(NWPlugin::Function Function, EventStruct *event, String& str)
         }
       }
 #ifdef ESP32
+
       if (Function == NWPlugin::Function::NWPLUGIN_PRIORITY_ROUTE_CHANGED) {
         CheckRunningServices();
       }
-#endif
+#endif // ifdef ESP32
       return success;
     }
 
@@ -221,7 +244,7 @@ bool NWPluginCall(NWPlugin::Function Function, EventStruct *event, String& str)
 
             if (runtime_data && runtime_data->_connectedStats.isSet()) {
               const bool connected = runtime_data->_connectedStats.isOn();
-              auto duration = connected 
+              auto duration        = connected
               ? runtime_data->_connectedStats.getLastOnDuration_ms()
               : runtime_data->_connectedStats.getLastOffDuration_ms();
 
@@ -230,9 +253,9 @@ bool NWPluginCall(NWPlugin::Function Function, EventStruct *event, String& str)
                 event->Par64_2 = runtime_data->_connectedStats.getCycleCount();
 
                 if (event->kvWriter) {
-                  event->kvWriter->write({ 
-                    connected ? F("Connection Duration") : F("Disconnected Duration"), 
-                    format_msec_duration_HMS(duration) });
+                  event->kvWriter->write({
+                        connected ? F("Connection Duration") : F("Disconnected Duration"),
+                        format_msec_duration_HMS(duration) });
 
                   if (!event->kvWriter->summaryValueOnly()) {
                     event->kvWriter->write({ F("Number of Reconnects"), event->Par64_2 });
@@ -305,105 +328,118 @@ bool NWPluginCall(NWPlugin::Function Function, EventStruct *event, String& str)
           if (!success && NWPlugin::canQueryViaNetworkInterface(Function)) {
             String dummy_str;
 
-            if (do_NWPluginCall(
+            if (!do_NWPluginCall(
                   networkDriverIndex,
                   NWPlugin::Function::NWPLUGIN_GET_INTERFACE,
                   event,
                   dummy_str)) {
-              if (event->networkInterface != nullptr) {
-                switch (Function)
-                {
-                  case NWPlugin::Function::NWPLUGIN_WEBFORM_SHOW_ROUTE_PRIO:
-# if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 2)
+              if (Function == NWPlugin::Function::NWPLUGIN_WEBFORM_SHOW_ROUTE_PRIO) {
+                if (Settings.getNetworkInterface_isFallback(networkIndex)) {
+                  // Show route prio for fallback network interfaces as it is useful for determining which might be the fallback device.
+                  event->Par1 = Settings.getRoutePrio_for_network(networkIndex);
+                  event->Par3 = Settings.getNetworkInterfaceStartupDelay(networkIndex);
 
-                    // TODO TD-er: Must also add option to set route prio
-                    // See: https://github.com/espressif/arduino-esp32/pull/11617
-                    event->Par1 = event->networkInterface->getRoutePrio();
-# else // if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 0)
-                    event->Par1 = event->networkInterface->route_prio();
-# endif // if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 0)
-                    event->Par2 = event->networkInterface->isDefault();
-                    success     = true;
-                    break;
-
-                  case NWPlugin::Function::NWPLUGIN_WEBFORM_SHOW_ACTIVE:
-                  {
-                    success = event->networkInterface->started();
-                    break;
-                  }                    
-
-                  case NWPlugin::Function::NWPLUGIN_WEBFORM_SHOW_NAME:
-
-                    if (event->kvWriter) {
-                      event->kvWriter->write({ F("Name"), event->networkInterface->desc() });
-                      success = true;
-                    }
-                    break;
-
-                  case NWPlugin::Function::NWPLUGIN_WEBFORM_SHOW_HOSTNAME:
-
-                    if (event->kvWriter) {
-                      event->kvWriter->write({ F("Hostname"), event->networkInterface->getHostname() });
-                      success = true;
-                    }
-                    break;
-
-                  case NWPlugin::Function::NWPLUGIN_WEBFORM_SHOW_HW_ADDRESS:
-
-                    if (event->kvWriter) {
-                      if (event->kvWriter->summaryValueOnly()) {
-                        event->kvWriter->write({
-                            EMPTY_STRING,
-                            concat(F("MAC: "), event->networkInterface->macAddress()) });
-                      }
-                      else {
-                        event->kvWriter->write({
-                            F("MAC"),
-                            event->networkInterface->macAddress(),
-                            KeyValueStruct::Format::PreFormatted
-                          });
-                      }
-                      success = true;
-                    }
-                    break;
-
-                  case NWPlugin::Function::NWPLUGIN_WEBFORM_SHOW_IP:
-                  {
-                    if (event->kvWriter) {
-                      PrintToString prstr;
-                      success = NWPlugin::print_IP_address(
-                        static_cast<NWPlugin::IP_type>(event->Par1),
-                        event->networkInterface,
-                        prstr);
-                      event->kvWriter->write({ F("ip"), prstr.getMove() });
-                      success = true;
-                    }
-                    break;
-                  }
-
-                  case NWPlugin::Function::NWPLUGIN_CLIENT_IP_WEB_ACCESS_ALLOWED:
-                  {
-                    IPAddress client_ip;
-                    client_ip.fromString(str);
-
-                    if ((SecuritySettings.IPblockLevel == LOCAL_SUBNET_ALLOWED) &&
-                        !Settings.getNetworkInterfaceSubnetBlockClientIP(event->NetworkIndex)) {
-                      success = NWPlugin::IP_in_subnet(client_ip, event->networkInterface);
-                    } else if (SecuritySettings.IPblockLevel == ONLY_IP_RANGE_ALLOWED) {
-                      const IPAddress low(SecuritySettings.AllowedIPrangeLow);
-                      const IPAddress high(SecuritySettings.AllowedIPrangeHigh);
-                      success = NWPlugin::ipInRange(client_ip, low, high) &&
-                                NWPlugin::IP_in_subnet(low,  event->networkInterface) &&
-                                NWPlugin::IP_in_subnet(high, event->networkInterface);
-                    } else {
-                      success = true;
-                    }
-                    break;
-                  }
-
-                  default: break;
+                  success = true;
                 }
               }
+            } else if (event->networkInterface != nullptr) {
+              switch (Function)
+              {
+                case NWPlugin::Function::NWPLUGIN_WEBFORM_SHOW_ROUTE_PRIO:
+# if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 2)
+
+                  // TODO TD-er: Must also add option to set route prio
+                  // See: https://github.com/espressif/arduino-esp32/pull/11617
+                  event->Par1 = event->networkInterface->getRoutePrio();
+# else // if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 0)
+                  event->Par1 = event->networkInterface->route_prio();
+# endif // if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 0)
+                  event->Par2 = event->networkInterface->isDefault();
+
+                  if (Settings.getNetworkInterface_isFallback(networkIndex)) {
+                    event->Par3 = Settings.getNetworkInterfaceStartupDelay(networkIndex);
+                  }
+                  success = true;
+                  break;
+
+                case NWPlugin::Function::NWPLUGIN_WEBFORM_SHOW_ACTIVE:
+                {
+                  success = event->networkInterface->started();
+                  break;
+                }
+
+                case NWPlugin::Function::NWPLUGIN_WEBFORM_SHOW_NAME:
+
+                  if (event->kvWriter) {
+                    event->kvWriter->write({ F("Name"), event->networkInterface->desc() });
+                    success = true;
+                  }
+                  break;
+
+                case NWPlugin::Function::NWPLUGIN_WEBFORM_SHOW_HOSTNAME:
+
+                  if (event->kvWriter) {
+                    event->kvWriter->write({ F("Hostname"), event->networkInterface->getHostname() });
+                    success = true;
+                  }
+                  break;
+
+                case NWPlugin::Function::NWPLUGIN_WEBFORM_SHOW_HW_ADDRESS:
+
+                  if (event->kvWriter) {
+                    if (event->kvWriter->summaryValueOnly()) {
+                      event->kvWriter->write({
+                          EMPTY_STRING,
+                          concat(F("MAC: "), event->networkInterface->macAddress()) });
+                    }
+                    else {
+                      event->kvWriter->write({
+                          F("MAC"),
+                          event->networkInterface->macAddress(),
+                          KeyValueStruct::Format::PreFormatted
+                        });
+                    }
+                    success = true;
+                  }
+                  break;
+
+                case NWPlugin::Function::NWPLUGIN_WEBFORM_SHOW_IP:
+                {
+                  if (event->kvWriter) {
+                    PrintToString prstr;
+                    success = NWPlugin::print_IP_address(
+                      static_cast<NWPlugin::IP_type>(event->Par1),
+                      event->networkInterface,
+                      prstr);
+                    event->kvWriter->write({ F("ip"), prstr.getMove() });
+                    success = true;
+                  }
+                  break;
+                }
+
+                case NWPlugin::Function::NWPLUGIN_CLIENT_IP_WEB_ACCESS_ALLOWED:
+                {
+                  IPAddress client_ip;
+                  client_ip.fromString(str);
+
+                  if ((SecuritySettings.IPblockLevel == LOCAL_SUBNET_ALLOWED) &&
+                      !Settings.getNetworkInterfaceSubnetBlockClientIP(event->NetworkIndex)) {
+                    success = NWPlugin::IP_in_subnet(client_ip, event->networkInterface);
+                  } else if (SecuritySettings.IPblockLevel == ONLY_IP_RANGE_ALLOWED) {
+                    const IPAddress low(SecuritySettings.AllowedIPrangeLow);
+                    const IPAddress high(SecuritySettings.AllowedIPrangeHigh);
+                    success = NWPlugin::ipInRange(client_ip, low, high) &&
+                              NWPlugin::IP_in_subnet(low,  event->networkInterface) &&
+                              NWPlugin::IP_in_subnet(high, event->networkInterface);
+                  } else {
+                    success = true;
+                  }
+                  break;
+                }
+
+                default: break;
+              }
+
             }
           }
 #endif // ifdef ESP32
@@ -533,6 +569,7 @@ const NWPluginData_static_runtime* getDefaultRoute_NWPluginData_static_runtime()
 
     if (NW_data) {
       const int route_prio = NW_data->_routePrio;
+
       if (route_prio > highest_prio) {
         index_highest_prio = i;
         highest_prio       = route_prio;

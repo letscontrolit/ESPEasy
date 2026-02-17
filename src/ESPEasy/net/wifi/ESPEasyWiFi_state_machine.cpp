@@ -145,6 +145,7 @@ void ESPEasyWiFi_t::loop()
 
             //            WiFiEventData.warnedNoValidWiFiSettings = true;
           }
+          wifi_STA_data->mark_connect_failed();
 
           wifi_STA_data->_establishConnectStats.clear();
 
@@ -258,6 +259,7 @@ void ESPEasyWiFi_t::loop()
         if (_state == WiFiState_e::STA_Connecting) {
           setState(WiFiState_e::STA_Reconnecting, WIFI_STATE_MACHINE_STA_CONNECTING_TIMEOUT);
         } else {
+          wifi_STA_data->mark_connect_failed();
           setState(WiFiState_e::WiFiOFF);
         }
       }

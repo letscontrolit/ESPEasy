@@ -115,6 +115,11 @@ void NWPluginData_static_runtime::log_disconnected()
 # endif // ifndef BUILD_NO_DEBUG
 }
 
+void NWPluginData_static_runtime::mark_connect_failed()
+{
+  networkConnectionFailed = true;
+}
+
 } // namespace net
 } // namespace ESPEasy
 
