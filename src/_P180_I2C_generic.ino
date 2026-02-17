@@ -6,6 +6,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2026-02-14 tonhuisman: Set default Cache-name when empty, for improved plugin runtime performance.
  * 2025-12-06 tonhuisman: Enable CustomVTypeVar and MQTTStateClass device options, as any type of sensor can be connected
  * 2025-06-04 tonhuisman: Add [<taskname>#log] to Get Config to fetch the current Parsing and execution log setting
  * 2025-06-03 tonhuisman: Restore PLUGIN_GET_CONFIG_VALUE support, to allow I2C operations to be executed and return a value without
@@ -251,7 +252,12 @@ boolean Plugin_180(uint8_t function, struct EventStruct *event, String& string)
         sensorTypeHelper_webformLoad(event, P180_VALUE_OFFSET + i, singleOptions.size(), &singleOptions[0], false, i + 1);
 
         // Name
-        addFormTextBox(strformat(F("Cache-Name %d (optional)"), i + 1),
+        const String cacheName = concat(F("c"), i + 1);
+
+        if (strings[P180_BUFFER_START_CACHE + i].isEmpty()) {
+          strings[P180_BUFFER_START_CACHE + i] = cacheName;
+        }
+        addFormTextBox(strformat(F("Cache-Name %d"), i + 1),
                        getPluginCustomArgName(20 + i),
                        strings[P180_BUFFER_START_CACHE + i],
                        P180_MAX_NAME_LENGTH);
@@ -272,8 +278,6 @@ boolean Plugin_180(uint8_t function, struct EventStruct *event, String& string)
     {
       const String addr = webArg(F("i2c_addr"));
       P180_I2C_ADDRESS = (uint8_t)strtol(addr.c_str(), 0, 16);
-      P180_ENABLE_PIN  = getFormItemInt(F("taskdevicepin1"));
-      P180_RST_PIN     = getFormItemInt(F("taskdevicepin2"));
       P180_LOG_DEBUG   = isFormItemChecked(F("plog")) ? 1 : 0;
       pconfig_webformSave(event, P180_SENSOR_TYPE_INDEX);
 
@@ -285,7 +289,11 @@ boolean Plugin_180(uint8_t function, struct EventStruct *event, String& string)
         String strings[P180_CUSTOM_BUFFER_SIZE];
 
         for (uint8_t varNr = 0; varNr < VARS_PER_TASK; varNr++) {
-          strings[P180_BUFFER_START_CACHE + varNr]    = webArg(getPluginCustomArgName(20 + varNr)); // Name
+          strings[P180_BUFFER_START_CACHE + varNr] = webArg(getPluginCustomArgName(20 + varNr));    // Name
+
+          if (strings[P180_BUFFER_START_CACHE + varNr].isEmpty()) {
+            strings[P180_BUFFER_START_CACHE + varNr] = concat(F("c"), varNr + 1);                   // Default cache-name
+          }
           strings[P180_BUFFER_START_COMMANDS + varNr] = webArg(getPluginCustomArgName(30 + varNr)); // Commands
         }
         strings[P180_BUFFER_ENTRY_INIT] = webArg(getPluginCustomArgName(40));                       // INIT Commands
