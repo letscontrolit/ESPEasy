@@ -9,7 +9,7 @@
     "f_flash": "80000000L",
     "boot": "opi",
     "flash_mode": "qio",
-    "extra_flags": "-DARDUINO_TASMOTA -DBOARD_HAS_PSRAM -DARDUINO_USB_MODE=1 -DUSE_USB_CDC_CONSOLE -DESP32_16M -DESP32S3 -DARDUINO_USB_CDC_ON_BOOT=1",
+    "extra_flags": "-DARDUINO_TASMOTA -DBOARD_HAS_PSRAM -DARDUINO_USB_MODE=1 -DUSE_USB_CDC_CONSOLE -DESP32_16M -DESP32S3 -DARDUINO_USB_CDC_ON_BOOT=0",
     "hwids": [
       [
         "0x303A",
