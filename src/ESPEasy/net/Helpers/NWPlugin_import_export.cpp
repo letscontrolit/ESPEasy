@@ -223,7 +223,7 @@ String NWPlugin_import_export::importConfig(
             break;
           case 2: Settings.setNetworkInterfaceSubnetBlockClientIP(networkIndex, bool_val);
             break;
-          case 3: Settings.setNetworkInterfaceStartupDelayAtBoot(networkIndex, value.toInt());
+          case 3: Settings.setNetworkInterfaceStartupDelay(networkIndex, value.toInt());
             break;
 # if FEATURE_USE_IPV6
           case 4: Settings.setNetworkEnabled_IPv6(networkIndex, bool_val);

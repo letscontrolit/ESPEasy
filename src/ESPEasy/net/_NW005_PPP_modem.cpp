@@ -55,7 +55,7 @@ bool NWPlugin_005(NWPlugin::Function function, EventStruct *event, String& strin
     {
       Settings.setRoutePrio_for_network(event->NetworkIndex, 20);
       Settings.setNetworkInterfaceSubnetBlockClientIP(event->NetworkIndex, true);
-      Settings.setNetworkInterfaceStartupDelayAtBoot(event->NetworkIndex, 500 * event->NetworkIndex);
+      Settings.setNetworkInterfaceStartupDelay(event->NetworkIndex, 500 * event->NetworkIndex);
       break;
     }
 
@@ -81,6 +81,12 @@ bool NWPlugin_005(NWPlugin::Function function, EventStruct *event, String& strin
     {
       // Webserver should not be accessed from PPP modem
       success = false;
+      break;
+    }
+
+    case NWPlugin::Function::NWPLUGIN_FALLBACK_INTERFACE_SHOULD_START:
+    {
+      success = true;
       break;
     }
 

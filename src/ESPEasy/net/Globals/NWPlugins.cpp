@@ -88,7 +88,12 @@ bool NWPluginCall(NWPlugin::Function Function, EventStruct *event, String& str)
               Scheduler.setNetworkInitTimer(Settings.getNetworkInterfaceStartupDelay(x), x);
             }
           }
-          else {
+          
+          if (Function == NWPlugin::Function::NWPLUGIN_WEBSERVER_SHOULD_RUN &&
+              Settings.getNetworkInterfaceSubnetBlockClientIP(x)) 
+          {
+            // Skip check for this network interface as access to the web UI should be blocked anyway
+          } else {
             event->NetworkIndex = x;
 
 #ifdef ESP32
@@ -96,15 +101,36 @@ bool NWPluginCall(NWPlugin::Function Function, EventStruct *event, String& str)
             if ((Function == NWPlugin::Function::NWPLUGIN_PRIORITY_ROUTE_CHANGED) &&
                 Settings.getNetworkInterface_isFallback(x))
             {
+              // Deal with the fallback interface(s)
+              // TODO TD-er: What to do with the WiFi-AP as that's a special case of a fallback interface.
               NetworkInterface *currentDefaultInterface = Network.getDefaultInterface();
 
               if (!currentDefaultInterface) {
-                // No current default interface, thus we need to start this one.
-                Scheduler.setNetworkInitTimer(Settings.getNetworkInterfaceStartupDelay(x), x);
+                String dummy;
+                if (do_NWPluginCall(
+                  getNetworkDriverIndex_from_NetworkIndex(x),
+                  NWPlugin::Function::NWPLUGIN_FALLBACK_INTERFACE_SHOULD_START,
+                  event,
+                  dummy))
+                {
+                  // No current default interface, thus we need to start this one.
+                  Scheduler.setNetworkInitTimer(Settings.getNetworkInterfaceStartupDelay(x), x);
+                }
               } else {
                 if (currentDefaultInterface->getRoutePrio() > Settings.getRoutePrio_for_network(x)) {
                   // There is some network active with higher route priority, so this one is no longer needed
                   Scheduler.setNetworkExitTimer(10, x);
+                } else {
+                  // Check for the special case where there are multiple  fallback interfaces with the same route prio.
+                  // Then only stop the fallback interfaces which are not the default route.
+                  auto *NW_data = ESPEasy::net::getNWPluginData(x);
+
+                  if (NW_data) {
+                    if (!NW_data->isDefaultRoute() &&
+                        (currentDefaultInterface->getRoutePrio() == Settings.getRoutePrio_for_network(x))) {
+                      Scheduler.setNetworkExitTimer(10, x);
+                    }
+                  }
                 }
               }
             }
@@ -289,6 +315,7 @@ bool NWPluginCall(NWPlugin::Function Function, EventStruct *event, String& str)
     case NWPlugin::Function::NWPLUGIN_WEBFORM_SHOW_HOSTNAME:
     case NWPlugin::Function::NWPLUGIN_WEBFORM_SHOW_NAME:
     case NWPlugin::Function::NWPLUGIN_CLIENT_IP_WEB_ACCESS_ALLOWED:
+    case NWPlugin::Function::NWPLUGIN_FALLBACK_INTERFACE_SHOULD_START:
 
 #ifdef ESP32
     case NWPlugin::Function::NWPLUGIN_GET_INTERFACE:

@@ -114,3 +114,4 @@ Enable IPv6
 
 (ESP32 only)
 
+Checking this checkbox, will allow the network device to use IPv6.

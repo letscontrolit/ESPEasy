@@ -59,6 +59,17 @@ NWPluginData_base::~NWPluginData_base()
 #endif // if FEATURE_STORE_NETWORK_INTERFACE_SETTINGS
 }
 
+#ifdef ESP32
+bool NWPluginData_base::isDefaultRoute() const {
+  if (_netif) {
+    return _netif->isDefault();
+  }
+  return false;
+}
+
+#endif
+
+
 bool NWPluginData_base::hasPluginStats() const {
 #if FEATURE_NETWORK_STATS
 

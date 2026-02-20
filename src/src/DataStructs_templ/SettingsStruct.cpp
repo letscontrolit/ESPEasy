@@ -1610,16 +1610,16 @@ template<uint32_t N_TASKS>
 uint32_t SettingsStruct_tmpl<N_TASKS>::getNetworkInterfaceStartupDelay(ESPEasy::net::networkIndex_t index) const
 {
   if (validNetworkIndex(index)) {
-    return static_cast<uint32_t>(NetworkInterfaceStartupDelayAtBoot[index]) * 10ul;
+    return static_cast<uint32_t>(NetworkInterfaceStartupDelay[index]) * 10ul;
   }
   return 0;
 }
 
 template<uint32_t N_TASKS>
-void SettingsStruct_tmpl<N_TASKS>::setNetworkInterfaceStartupDelayAtBoot(ESPEasy::net::networkIndex_t index, uint32_t delay_ms)
+void SettingsStruct_tmpl<N_TASKS>::setNetworkInterfaceStartupDelay(ESPEasy::net::networkIndex_t index, uint32_t delay_ms)
 {
   if (validNetworkIndex(index)) {
-    NetworkInterfaceStartupDelayAtBoot[index] = delay_ms/10ul;
+    NetworkInterfaceStartupDelay[index] = delay_ms/10ul;
   }
 }
 

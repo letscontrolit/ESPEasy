@@ -93,9 +93,7 @@ bool NW002_data_struct_WiFi_AP::init(EventStruct *event)
   nw002_enable_NAPT = Settings.WiFi_AP_enable_NAPT();
 # endif
 
-  if (Settings.StartAP_on_NW002_init()) {
-    ESPEasy::net::wifi::setAPinternal(true);
-  }
+  ESPEasy::net::wifi::setAPinternal(true);
 # ifdef ESP32
   NW002_update_NAPT();
 # endif

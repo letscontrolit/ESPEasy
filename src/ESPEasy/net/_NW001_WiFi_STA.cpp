@@ -78,7 +78,7 @@ bool NWPlugin_001(NWPlugin::Function function, EventStruct *event, String& strin
       Settings.setRoutePrio_for_network(event->NetworkIndex, 100);
 # endif // ifdef ESP32
       Settings.setNetworkInterfaceSubnetBlockClientIP(event->NetworkIndex, false);
-      Settings.setNetworkInterfaceStartupDelayAtBoot(event->NetworkIndex, 1000);
+      Settings.setNetworkInterfaceStartupDelay(event->NetworkIndex, 1000);
 
       Settings.ConnectFailRetryCount = 1;
       break;
@@ -105,6 +105,12 @@ bool NWPlugin_001(NWPlugin::Function function, EventStruct *event, String& strin
 # else // ifdef ESP32
       success = WiFi.isConnected();
 # endif // ifdef ESP32
+      break;
+    }
+
+    case NWPlugin::Function::NWPLUGIN_FALLBACK_INTERFACE_SHOULD_START:
+    {
+      success = true;
       break;
     }
 

@@ -171,6 +171,10 @@ void exitWiFi() { ESPEasyWiFi.disable(); }
 
 void loopWiFi() { ESPEasyWiFi.loop(); }
 
+bool shouldStartAP_fallback() { 
+  return ESPEasyWiFi.shouldStartAP_fallback(); 
+}
+
 # ifdef BOARD_HAS_SDIO_ESP_HOSTED
 
 // ********************************************************************************

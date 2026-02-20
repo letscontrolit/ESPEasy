@@ -186,6 +186,7 @@ void ESPEasyWiFi_t::loop()
         if (WiFi_AP_Candidates.hasCandidates()) {
           setState(WiFiState_e::WiFiOFF, 100);
         } else {
+          // FIXME TD-er: This might not be a responsibility of this state machine....
           if (shouldStartAP_fallback()) {
             setState(WiFiState_e::AP_Fallback, Settings.APfallback_minimal_on_time_sec() * 1000);
             // TODO TD-er: Must keep track of whether the user has forced AP to be autostarted.
