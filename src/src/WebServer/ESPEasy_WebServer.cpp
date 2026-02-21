@@ -275,7 +275,25 @@ void WebServerInit()
   #endif // ifdef WEBSERVER_HARDWARE
   #ifdef WEBSERVER_INTERFACES
   web_server.on(F("/interfaces"),      handle_interfaces);
-  #endif 
+#if FEATURE_I2C
+  web_server.on(F("/interfaces_i2c"),  handle_interfaces_i2c);
+#endif // if FEATURE_I2C
+#if FEATURE_SPI
+  web_server.on(F("/interfaces_spi"),  handle_interfaces_spi);
+#endif // if FEATURE_SPI
+#if FEATURE_MODBUS
+  web_server.on(F("/interfaces_modbus"),  handle_interfaces_modbus);
+#endif // if FEATURE_MODBUS
+#if FEATURE_CAN
+  web_server.on(F("/interfaces_can"),  handle_interfaces_can);
+#endif // if FEATURE_CAN
+#if FEATURE_WRMBUS
+  web_server.on(F("/interfaces_wrmbus"),  handle_interfaces_wrmbus);
+#endif // if FEATURE_WRMBUS
+#if FEATURE_WIMBUS
+  web_server.on(F("/interfaces_wimbus"),  handle_interfaces_wimbus);
+#endif // if FEATURE_WIMBUS
+  #endif // ifdef WEBSERVER_INTERFACES
   #ifdef WEBSERVER_I2C_SCANNER
   web_server.on(F("/i2cscanner"),      handle_i2cscanner);
   #endif // ifdef WEBSERVER_I2C_SCANNER
@@ -498,7 +516,7 @@ void getWebPageTemplateDefault(const String& tmplName, WebTemplateParser& parser
     getWebPageTemplateDefaultHead(parser, addMeta, addJS);
 
     if (!parser.isTail()) {
-      parser.process(F("<body class='bodymenu'"));
+      parser.process(strformat(F("<body class='bodymenu%c'"), isGpMenuSecondLevel(navMenuIndex) ? '2' : ' '));
       #if FEATURE_AUTO_DARK_MODE
 
       if (0 == Settings.getCssMode()) {
@@ -537,7 +555,7 @@ void getWebPageTemplateDefaultHeader(WebTemplateParser& parser, const __FlashStr
   {
     if (parser.isTail()) { return; }
   #ifndef WEBPAGE_TEMPLATE_DEFAULT_HEADER
-    parser.process(F("<header class='headermenu'><h1>ESP Easy Mega: "));
+    parser.process(strformat(F("<header class='headermenu%c'><h1>ESP Easy Mega: "), isGpMenuSecondLevel(navMenuIndex) ? '2' : ' '));
     parser.process(title);
     # if BUILD_IN_WEBHEADER
     parser.process(F(

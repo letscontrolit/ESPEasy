@@ -170,6 +170,9 @@ void addFormHeader(const __FlashStringHelper *header,
 void addFormHeader(const __FlashStringHelper *header,
                    const __FlashStringHelper *helpButton,
                    const __FlashStringHelper *rtdHelpButton);
+void addFormHeader(const String&              header,
+                   const __FlashStringHelper *helpButton,
+                   const __FlashStringHelper *rtdHelpButton);
 
 /*
    void addFormHeader(const String& header,

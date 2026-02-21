@@ -539,6 +539,15 @@ void addFormHeader(const __FlashStringHelper *header,
   html_table_header(F(""));
 }
 
+void addFormHeader(const String&              header,
+                   const __FlashStringHelper *helpButton,
+                   const __FlashStringHelper *rtdHelpButton)
+{
+  html_TR();
+  html_table_header(header, helpButton, rtdHelpButton, 300);
+  html_table_header(F(""));
+}
+
 /*
 void addFormHeader(const String& header, const String& helpButton) {
   addFormHeader(header, helpButton, EMPTY_STRING);

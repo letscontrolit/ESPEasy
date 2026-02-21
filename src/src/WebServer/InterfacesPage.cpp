@@ -30,13 +30,71 @@
 // ********************************************************************************
 // Web Interface hardware page
 // ********************************************************************************
+#if FEATURE_I2C
+void handle_interfaces_i2c() {
+  navMenuIndex = MENU_INDEX_INTERFACES_I2C;
+  handle_interfaces();
+}
+#endif // if FEATURE_I2C
+
+#if FEATURE_SPI
+void handle_interfaces_spi() {
+  navMenuIndex = MENU_INDEX_INTERFACES_SPI;
+  handle_interfaces();
+}
+#endif // if FEATURE_SPI
+
+#if FEATURE_MODBUS
+void handle_interfaces_modbus() {
+  navMenuIndex = MENU_INDEX_INTERFACES_MODBUS;
+  handle_interfaces();
+}
+#endif // if FEATURE_MODBUS
+
+#if FEATURE_CAN
+void handle_interfaces_can() {
+  navMenuIndex = MENU_INDEX_INTERFACES_CAN;
+  handle_interfaces();
+}
+#endif // if FEATURE_CAN
+
+#if FEATURE_WRMBUS
+void handle_interfaces_wrmbus() {
+  navMenuIndex = MENU_INDEX_INTERFACES_WRMBUS;
+  handle_interfaces();
+}
+#endif // if FEATURE_WRMBUS
+
+#if FEATURE_WIMBUS
+void handle_interfaces_wimbus() {
+  navMenuIndex = MENU_INDEX_INTERFACES_WIMBUS;
+  handle_interfaces();
+}
+#endif // if FEATURE_WIMBUS
+
 void handle_interfaces() {
 # ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_interfaces"));
 # endif
 
   if (!isLoggedIn()) { return; }
-  navMenuIndex = MENU_INDEX_INTERFACES;
+  if ((navMenuIndex != MENU_INDEX_INTERFACES) && (navMenuIndex <= MENU_MAX_INDEX_SHOWN)) {
+#if FEATURE_I2C
+    navMenuIndex = MENU_INDEX_INTERFACES_I2C;
+#elif FEATURE_SPI
+    navMenuIndex = MENU_INDEX_INTERFACES_SPI;
+#elif FEATURE_MODBUS
+    navMenuIndex = MENU_INDEX_INTERFACES_MODBUS;
+#elif FEATURE_CAN
+    navMenuIndex = MENU_INDEX_INTERFACES_CAN;
+#elif FEATURE_WRMBUS
+    navMenuIndex = MENU_INDEX_INTERFACES_WRMBUS;
+#elif FEATURE_WIMBUS
+    navMenuIndex = MENU_INDEX_INTERFACES_WIMBUS;
+#else
+    navMenuIndex = MENU_INDEX_INTERFACES;
+#endif
+  }
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate(_HEAD);
 
@@ -45,15 +103,43 @@ void handle_interfaces() {
 
   addHtml(F("<form  method='post'>"));
   html_table_class_normal();
-  addFormHeader(F("Interfaces Settings"), F(""), F("Interfaces/Interfaces.html"));
+  addFormHeader(strformat(F("%s Interfaces Settings"), FsP(getGpMenuIcon(navMenuIndex))), F(""), F("Interfaces/Interfaces.html"));
 
   #if FEATURE_I2C
-  interfaces_show_I2C();
+  if (navMenuIndex == MENU_INDEX_INTERFACES_I2C) {
+    interfaces_show_I2C();
+  }
   #endif
+  
   #if FEATURE_SPI
-  interfaces_show_SPI();
+  if (navMenuIndex == MENU_INDEX_INTERFACES_SPI) {
+    interfaces_show_SPI();
+  }
   #endif
 
+  #if FEATURE_MODBUS
+  if (navMenuIndex == MENU_INDEX_INTERFACES_MODBUS) {
+    interfaces_show_MODBUS();
+  }
+  #endif // if FEATURE_MODBUS
+  
+  #if FEATURE_CAN
+  if (navMenuIndex == MENU_INDEX_INTERFACES_CAN) {
+    interfaces_show_CAN();
+  }
+  #endif // if FEATURE_CAN
+  
+  #if FEATURE_WRMBUS
+  if (navMenuIndex == MENU_INDEX_INTERFACES_WRMBUS) {
+    interfaces_show_WRMBUS();
+  }
+  #endif // if FEATURE_WRMBUS
+
+  #if FEATURE_WIMBUS
+  if (navMenuIndex == MENU_INDEX_INTERFACES_WIMBUS) {
+    interfaces_show_WIMBUS();
+  }
+  #endif // if FEATURE_WIMBUS
 
   addFormSeparator(2);
 
@@ -75,12 +161,28 @@ void save_interfaces() {
 
   #if FEATURE_I2C
 
-  if (save_I2C(error)) { updated = true; }
+  if ((navMenuIndex == MENU_INDEX_INTERFACES_I2C) && save_I2C(error)) { updated = true; }
   #endif
 
   #if FEATURE_SPI
-  if (save_SPI(error)) { updated = true; }
+  if ((navMenuIndex == MENU_INDEX_INTERFACES_SPI) && save_SPI(error)) { updated = true; }
   #endif
+
+  #if FEATURE_MODBUS
+  if ((navMenuIndex == MENU_INDEX_INTERFACES_MODBUS) && save_MODBUS(error)) { updated = true; }
+  #endif // if FEATURE_MODBUS
+
+  #if FEATURE_CAN
+  if ((navMenuIndex == MENU_INDEX_INTERFACES_CAN) && save_CAN(error)) { updated = true; }
+  #endif // if FEATURE_CAN
+
+  #if FEATURE_WRMBUS
+  if ((navMenuIndex == MENU_INDEX_INTERFACES_WRMBUS) && save_WRMBUS(error)) { updated = true; }
+  #endif // if FEATURE_WRMBUS
+
+  #if FEATURE_WIMBUS
+  if ((navMenuIndex == MENU_INDEX_INTERFACES_WIMBUS) && save_WIMBUS(error)) { updated = true; }
+  #endif // if FEATURE_WIMBUS
 
   if (updated) {
     error += SaveSettings();
@@ -184,10 +286,6 @@ bool save_I2C(String& error) {
   }
 #  endif // if FEATURE_I2C_INTERFACE_3
 
-  if (isFormItem(F("pi2cbuspcf"))) {
-    updated = true;
-    set3BitToUL(Settings.I2C_peripheral_bus, I2C_PERIPHERAL_BUS_PCFMCP, getFormItemInt(F("pi2cbuspcf")));
-  }
 # endif // if FEATURE_I2C_MULTIPLE
 
   return updated;
@@ -235,6 +333,30 @@ bool save_SPI(String& error) {
 }
 
 #endif
+
+#if FEATURE_MODBUS
+bool save_MODBUS(String& error) {
+  return false; // TODO
+}
+#endif // if FEATURE_MODBUS
+
+#if FEATURE_CAN
+bool save_CAN(String& error) {
+  return false; // TODO
+}
+#endif // if FEATURE_CAN
+
+#if FEATURE_WRMBUS
+bool save_WRMBUS(String& error) {
+  return false; // TODO
+}
+#endif // if FEATURE_WRMBUS
+
+#if FEATURE_WIMBUS
+bool save_WIMBUS(String& error) {
+  return false; // TODO
+}
+#endif // if FEATURE_WIMBUS
 
 #if FEATURE_I2C
 void interfaces_show_I2C() {
@@ -341,19 +463,6 @@ void interfaces_show_I2C() {
     }
 # endif // if FEATURE_I2CMULTIPLEXER
   }
-# if FEATURE_I2C_MULTIPLE
-  const uint8_t i2cMaxBusCount = Settings.getNrConfiguredI2C_buses();
-
-  if (i2cMaxBusCount > 1) {
-    addFormSubHeader(F("PCF &amp; MCP Direct I/O"));
-    const uint8_t i2cBus = Settings.getI2CInterfacePCFMCP();
-    I2CInterfaceSelector(F("I2C Bus"),
-                         F("pi2cbuspcf"),
-                         i2cBus,
-                         false);
-
-  }
-# endif // if FEATURE_I2C_MULTIPLE
 }
 #endif
 
@@ -371,7 +480,7 @@ void interfaces_show_SPI() {
       // 'none';document.getElementById('tr_spipinsclk').style.display = spipinstyle;document.getElementById('tr_spipinmiso').style.display
       // = spipinstyle;document.getElementById('tr_spipinmosi').style.display = spipinstyle;}"),
       // Minified:
-      html_add_script(strformat(F("function spi%uOptionChanged(e){var i=9==e.value?'':'none';"
+      html_add_script(strformat(F("function spi%uOptionChanged(e){var i=9<=e.value?'':'none';"
                                   "document.getElementById('tr_spipinsclk%u').style.display=i,"
                                   "document.getElementById('tr_spipinmiso%u').style.display=i,"
                                   "document.getElementById('tr_spipinmosi%u').style.display=i"
@@ -424,6 +533,30 @@ void interfaces_show_SPI() {
 # endif // ifdef ESP32
 }
 #endif
+
+#if FEATURE_MODBUS
+void interfaces_show_MODBUS() {
+  addRowLabel(F("TODO")); // TODO
+}
+#endif // if FEATURE_MODBUS
+
+#if FEATURE_CAN
+void interfaces_show_CAN() {
+  addRowLabel(F("TODO")); // TODO
+}
+#endif // if FEATURE_CAN
+
+#if FEATURE_WRMBUS
+void interfaces_show_WRMBUS() {
+  addRowLabel(F("TODO")); // TODO
+}
+#endif // if FEATURE_WRMBUS
+
+#if FEATURE_WIMBUS
+void interfaces_show_WIMBUS() {
+  addRowLabel(F("TODO")); // TODO
+}
+#endif // if FEATURE_WIMBUS
 
 #if FEATURE_I2C
 # if FEATURE_PLUGIN_PRIORITY

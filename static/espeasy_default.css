@@ -19,6 +19,7 @@
 	--c6: #fff;
 	--ro: 0deg;
 	--iv: 0;
+	--tpm2: 140px;
 }
 
 [data-theme="dark"] {
@@ -429,7 +430,8 @@ textarea,
 }
 
 .apheader,
-.headermenu {
+.headermenu,
+.headermenu2 {
 	padding: 8px 12px;
 	width: 100vw
 }
@@ -439,13 +441,21 @@ textarea,
 	font-style: italic
 }
 
-.headermenu {
+.headermenu,
+.headermenu2 {
 	background-color: var(--bg11);
 	border-bottom: .1px solid #444;
-	height: 100px;
 	position: fixed;
 	top: 0;
 	z-index: 1
+}
+
+.headermenu {
+	height: 100px;
+}
+
+.headermenu2 {
+	height: var(--tpm2);
 }
 
 .bodymenu {
@@ -453,17 +463,30 @@ textarea,
 	padding-top: 100px
 }
 
-.menubar {
+.bodymenu2 {
+	height: 100vh;
+	padding-top: var(--tpm2)
+}
+
+.menubar,
+.menubar2 {
 	display: flex;
 	position: inherit;
-	top: 54px;
 	max-width: 1180px;
+}
+
+.menubar {
+	top: 54px;
+}
+
+.menubar2 {
+	top: 95px;
 }
 
 a.menu {
 	align-items: center;
 	display: flex;
-	height: 46px;
+	height: 2.5rem;
 	justify-content: center;
 	gap: 2px;
 	width: 100%
@@ -579,7 +602,7 @@ canvas {
 	filter: invert(var(--iv)) hue-rotate(var(--ro));
 }
 
-@media screen and (max-width:960px) {
+@media screen and (max-width:975px) {
 	.showmenulabel {
 		display: none
 	}
