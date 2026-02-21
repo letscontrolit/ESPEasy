@@ -21,29 +21,29 @@ bool save_SPI(String& error);
 void interfaces_show_SPI();
 #endif
 
-#if defined(FEATURE_MODBUS) && FEATURE_MODBUS
+#if FEATURE_MODBUS
 void handle_interfaces_modbus();
 bool save_MODBUS(String& error);
 void interfaces_show_MODBUS();
-#endif // if defined(FEATURE_MODBUS) && FEATURE_MODBUS
+#endif // if FEATURE_MODBUS
 
-#if defined(FEATURE_CAN) && FEATURE_CAN
+#if FEATURE_CAN
 void handle_interfaces_can();
 bool save_CAN(String& error);
 void interfaces_show_CAN();
-#endif // if defined(FEATURE_CAN) && FEATURE_CAN
+#endif // if FEATURE_CAN
 
-#if defined(FEATURE_WRMBUS) && FEATURE_WRMBUS
+#if FEATURE_WRMBUS
 void handle_interfaces_wrmbus();
 bool save_WRMBUS(String& error);
 void interfaces_show_WRMBUS();
-#endif // if defined(FEATURE_WRMBUS) && FEATURE_WRMBUS
+#endif // if FEATURE_WRMBUS
 
-#if defined(FEATURE_WIMBUS) && FEATURE_WIMBUS
+#if FEATURE_WIMBUS
 void handle_interfaces_wimbus();
 bool save_WIMBUS(String& error);
 void interfaces_show_WIMBUS();
-#endif // if defined(FEATURE_WIMBUS) && FEATURE_WIMBUS
+#endif // if FEATURE_WIMBUS
 
 
 #if FEATURE_I2C
