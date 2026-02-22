@@ -1653,13 +1653,13 @@ bool P073_data_struct::plugin_write_7dbin(const String& text) {
 # ifdef ESP32
 #  define CLK_HIGH() DIRECT_pinWrite(this->pin1, HIGH)
 #  define CLK_LOW() DIRECT_pinWrite(this->pin1, LOW)
-#  define DIO_HIGH() DIRECT_PINMODE_INPUT(this->pin2)
-#  define DIO_LOW() DIRECT_PINMODE_OUTPUT(this->pin2) // ; DIRECT_pinWrite(this->pin2, LOW)
+#  define DIO_HIGH() DIRECT_pinWrite(this->pin2, HIGH)
+#  define DIO_LOW() DIRECT_pinWrite(this->pin2, LOW) // ; DIRECT_pinWrite(this->pin2, LOW)
 # else // ifdef ESP32
 #  define CLK_HIGH() digitalWrite(this->pin1, HIGH)
 #  define CLK_LOW() digitalWrite(this->pin1, LOW)
-#  define DIO_HIGH() pinMode(this->pin2, INPUT)
-#  define DIO_LOW() pinMode(this->pin2, OUTPUT)
+#  define DIO_HIGH() digitalWrite(this->pin2, HIGH)
+#  define DIO_LOW() digitalWrite(this->pin2, LOW)
 # endif // ifdef ESP32
 
 void P073_data_struct::tm1637_i2cStart() {
@@ -1685,29 +1685,26 @@ void P073_data_struct::tm1637_i2cStop() {
   DIO_HIGH();
 }
 
-void P073_data_struct::tm1637_i2cAck() {
+bool P073_data_struct::tm1637_i2cAck() {
   CLK_LOW();
+  # ifdef ESP32
+  DIRECT_PINMODE_INPUT(this->pin2);
+  # else // ifdef ESP32
   pinMode(this->pin2, INPUT_PULLUP);
+  # endif // ifdef ESP32
 
   // DIO_HIGH();
-  delayMicroseconds(TM1637_CLOCKDELAY);
+  delayMicroseconds(TM1637_CLOCKDELAY >> 1);
 
-  // while(digitalRead(dio_pin));
-  # ifdef P073_DEBUG
-  const bool dummyAck =
-  # endif // ifdef P073_DEBUG
-  # ifdef ESP32
-  DIRECT_pinRead(this->pin2);
-  # else
-  digitalRead(this->pin2);
-  # endif // ifdef ESP32
+  const bool acknowledged = -1 !=
+  DIRECT_measureWaitForPinState_ISR(this->pin2, micros(), TM1637_CLOCKDELAY, 0);
 
   # ifdef P073_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log = F("7DGT : Comm ACK=");
 
-    if (dummyAck == 0) {
+    if (acknowledged) {
       log += F("TRUE");
     } else {
       log += F("FALSE");
@@ -1718,7 +1715,14 @@ void P073_data_struct::tm1637_i2cAck() {
   CLK_HIGH();
   delayMicroseconds(TM1637_CLOCKDELAY);
   CLK_LOW();
+  # ifdef ESP32
+  DIRECT_PINMODE_OUTPUT(this->pin2);
+  # else // ifdef ESP32
+  pinMode(this->pin2, OUTPUT);
+  # endif // ifdef ESP32
+
   DIO_LOW();
+  return acknowledged;
 }
 
 void P073_data_struct::tm1637_i2cWrite_ack(uint8_t bytesToPrint[],

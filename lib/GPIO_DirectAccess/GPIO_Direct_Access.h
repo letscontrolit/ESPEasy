@@ -292,6 +292,8 @@ void  DIRECT_pinWrite_ISR(IO_REG_TYPE pin, bool pinstate);
 void  DIRECT_PINMODE_OUTPUT_ISR(IO_REG_TYPE pin);
 void  DIRECT_PINMODE_INPUT_ISR(IO_REG_TYPE pin);
 
+int32_t  DIRECT_measureWaitForPinState_ISR(uint32_t gpio_pin_rx, uint32_t start_usec, int32_t timeout_usec, bool newState);
+
 /*
 // https://github.com/PaulStoffregen/OneWire/pull/47
 // https://github.com/stickbreaker/OneWire/commit/6eb7fc1c11a15b6ac8c60e5671cf36eb6829f82c
