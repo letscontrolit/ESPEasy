@@ -562,6 +562,41 @@ void addFormHeader(const String& header, const String& helpButton, const String&
 */
 
 // ********************************************************************************
+// Add a detail wrapper start & end, terminates the page-table, and starts a new page table
+// ********************************************************************************
+#ifndef BUILD_MINIMAL_OTA
+void addFormDetailsStart(const bool initialOpen) {
+  addFormDetailsStart(F("Details..."), initialOpen);
+}
+
+void addFormDetailsStart(const __FlashStringHelper *caption, const bool initialOpen)
+{
+  html_end_table();
+  addHtml(strformat(F("<details %s>"), FsP(initialOpen ? F("open") : F(""))));
+  addHtml(F("<summary>"));
+  addHtml(caption);
+  addHtml(F("</summary>"));
+  html_table_class_normal();
+  addFormFixedFirstColumn();
+}
+
+void addFormDetailsEnd()
+{
+  html_end_table();
+  addHtml(F("</details>"));
+  html_table_class_normal();
+  addFormFixedFirstColumn();
+}
+
+// Fix first table column at 25vw (view width %) via css class 'tc1', as we work with multiple tables that should be vertically aligned
+// This must be added as the first element in a table definition
+void addFormFixedFirstColumn()
+{
+  addHtml(F("<colgroup><col span=\"1\" class=\"tc1\"/></colgroup>"));
+}
+#endif // ifndef BUILD_MINIMAL_OTA
+
+// ********************************************************************************
 // Add a sub header
 // ********************************************************************************
 void addFormSubHeader(const __FlashStringHelper *header) {
