@@ -125,7 +125,7 @@ void  IRAM_ATTR DIRECT_PINMODE_INPUT_ISR(IO_REG_TYPE pin)
 }
 
 int32_t IRAM_ATTR DIRECT_measureWaitForPinState_ISR(
-  uint32_t gpio_pin_rx, 
+  IO_REG_TYPE gpio_pin_rx, 
   uint32_t start_usec, 
   int32_t timeout_usec, 
   bool newState)
