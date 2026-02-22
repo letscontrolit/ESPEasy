@@ -602,6 +602,16 @@ canvas {
 	filter: invert(var(--iv)) hue-rotate(var(--ro));
 }
 
+.tc1 {
+	width: 15vw;
+}
+
+@media screen and (max-width:1280px) {
+	.tc1 {
+		width: 25vw;
+	}
+}
+
 @media screen and (max-width:975px) {
 	.showmenulabel {
 		display: none
