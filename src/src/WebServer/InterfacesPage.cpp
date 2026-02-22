@@ -103,6 +103,7 @@ void handle_interfaces() {
 
   addHtml(F("<form  method='post'>"));
   html_table_class_normal();
+  addFormFixedFirstColumn(); // This must be added as the first element in a table definition
   addFormHeader(strformat(F("%s Interfaces Settings"), FsP(getGpMenuIcon(navMenuIndex))), F(""), F("Interfaces/Interfaces.html"));
 
   #if FEATURE_I2C
@@ -414,6 +415,7 @@ void interfaces_show_I2C() {
 # else
     addFormSubHeader(strformat(F("I2C Bus %u"), i2cBus));
 # endif // if !FEATURE_I2C_MULTIPLE
+    addFormDetailsStart((0 == i2cBus) || Settings.isI2CEnabled(i2cBus));
 # if FEATURE_PLUGIN_PRIORITY
 
     if (isI2CPriorityTaskActive(i2cBus)) {
@@ -448,6 +450,7 @@ void interfaces_show_I2C() {
     addFormSubHeader(strformat(F("I2C Multiplexer %u"), i2cBus));
 #  endif // if !FEATURE_I2C_MULTIPLE
 
+    addFormDetailsStart(Settings.getI2CMultiplexerType(i2cBus) != I2C_MULTIPLEXER_NONE);
     // Select the type of multiplexer to use
     {
       muxSelector.addFormSelector(F("I2C Multiplexer type"), strformat(F("pi2cmuxtype%u"), i2cBus), Settings.getI2CMultiplexerType(i2cBus));
@@ -461,7 +464,9 @@ void interfaces_show_I2C() {
       addPinSelect(PinSelectPurpose::Generic_output, id, Settings.getI2CMultiplexerResetPin(i2cBus));
       addFormNote(F("Will be pulled low to force a reset. Reset is not available on PCA9540."));
     }
+    addFormDetailsEnd();
 # endif // if FEATURE_I2CMULTIPLEXER
+  addFormDetailsEnd();
   }
 }
 #endif
@@ -475,6 +480,7 @@ void interfaces_show_SPI() {
     // SPI Init
     addFormSubHeader(concat(F("SPI Bus "), spi_bus));
     {
+      addFormDetailsStart(0 == spi_bus || ((0 != spi_bus) && (static_cast<SPI_Options_e>(Settings.InitSPI1) != SPI_Options_e::None)));
       // Script to show GPIO pins for User-defined SPI GPIOs
       // html_add_script(F("function spiOptionChanged(elem) {var spipinstyle = elem.value == 9 ? '' :
       // 'none';document.getElementById('tr_spipinsclk').style.display = spipinstyle;document.getElementById('tr_spipinmiso').style.display
@@ -523,6 +529,7 @@ void interfaces_show_SPI() {
       html_add_script(strformat(F("document.getElementById('initspi%u').onchange();"), spi_bus), false); // Initial trigger onchange script
       // addFormNote(F("Changing SPI settings requires to press the hardware-reset button or power off-on!"));
       addFormNote(F("Chip Select (CS) config must be done in the plugin"));
+      addFormDetailsEnd();
     }
   }
 # else // for ESP8266 we keep the existing UI
