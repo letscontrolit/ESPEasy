@@ -150,7 +150,7 @@ bool do_process_c009_delay_queue(cpluginID_t cpluginID, const Queue_element_base
 
               // embed IP, important if there is NAT/PAT
               // char ipStr[20];
-              // IPAddress ip = NetworkLocalIP();
+              // IPAddress ip = ESPEasy::net::NetworkLocalIP();
               // sprintf_P(ipStr, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]});
               esp->write({F("ip"), formatIP(ESPEasy::net::NetworkLocalIP())});
             }
