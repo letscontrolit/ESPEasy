@@ -24,7 +24,7 @@ bool WiFi_pre_setup() {
 
   doSetSTA_AP(false, false);
   delay(100);
-  WiFi.setHostname(NetworkCreateRFCCompliantHostname().c_str());
+  WiFi.hostname(NetworkCreateRFCCompliantHostname().c_str());
   return true;
 }
 
