@@ -72,7 +72,7 @@ IPAddress NetworkLocalIP()   { return WiFi.localIP(); }
 IPAddress NetworkID()
 {
   const IPAddress subnet = NetworkSubnetMask();
-  IPAddress networkID    = NetworkLocalIP();
+  IPAddress networkID    = ESPEasy::net::NetworkLocalIP();
 
   for (uint8_t i = 0; i < 4; ++i) {
     networkID[i] &= subnet[i];
@@ -83,7 +83,7 @@ IPAddress NetworkID()
 IPAddress NetworkBroadcast()
 {
   const IPAddress subnet = NetworkSubnetMask();
-  IPAddress broadcast    = NetworkLocalIP();
+  IPAddress broadcast    = ESPEasy::net::NetworkLocalIP();
 
   for (uint8_t i = 0; i < 4; ++i) {
     broadcast[i] |= ~subnet[i];
