@@ -1682,6 +1682,7 @@ void P073_data_struct::tm1637_i2cStop() {
 
 bool P073_data_struct::tm1637_i2cAck() {
   CLK_LOW();
+  DIO_LOW();
   # ifdef ESP32
   DIRECT_PINMODE_INPUT(this->pin2);
   # else // ifdef ESP32
@@ -1694,7 +1695,6 @@ bool P073_data_struct::tm1637_i2cAck() {
 
   const bool acknowledged = -1 !=
   DIRECT_measureWaitForPinState_ISR(this->pin2, start_wait, TM1637_CLOCKDELAY, 0);
-  DIO_LOW();
   # ifdef ESP32
   DIRECT_PINMODE_OUTPUT(this->pin2);
   # else // ifdef ESP32
