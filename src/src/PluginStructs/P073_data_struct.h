@@ -365,7 +365,7 @@ private:
   bool    tm1637_i2cAck();
   void    tm1637_i2cWrite_ack(uint8_t bytesToPrint[],
                               uint8_t length);
-  void    tm1637_i2cWrite_ack(uint8_t bytetoprint);
+  void    tm1637_i2cWriteByte_ack(uint8_t bytetoprint);
   void    tm1637_i2cWrite(uint8_t bytetoprint);
   void    tm1637_ClearDisplay();
   void    tm1637_SetPowerBrightness(uint8_t brightlvl,

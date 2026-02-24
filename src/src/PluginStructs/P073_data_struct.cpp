@@ -1687,17 +1687,24 @@ bool P073_data_struct::tm1637_i2cAck() {
   # else // ifdef ESP32
   pinMode(this->pin2, INPUT_PULLUP);
   # endif // ifdef ESP32
-
-  delayMicroseconds(TM1637_CLOCKDELAY >> 1);
+  // Add 9th clock tick while keeping DIO low.
+  delayMicroseconds(TM1637_CLOCKDELAY);
+  CLK_HIGH();
+  const uint32_t start_wait = micros();
 
   const bool acknowledged = -1 !=
-  DIRECT_measureWaitForPinState_ISR(this->pin2, micros(), TM1637_CLOCKDELAY, 0);
+  DIRECT_measureWaitForPinState_ISR(this->pin2, start_wait, TM1637_CLOCKDELAY, 0);
+  DIO_LOW();
   # ifdef ESP32
   DIRECT_PINMODE_OUTPUT(this->pin2);
   # else // ifdef ESP32
   pinMode(this->pin2, OUTPUT);
   # endif // ifdef ESP32
   DIO_LOW();
+  const int32_t timePassed = usecPassedSince_fast(start_wait);
+  if (timePassed < TM1637_CLOCKDELAY) {
+    delayMicroseconds(TM1637_CLOCKDELAY - timePassed);
+  }
 
   # ifdef P073_DEBUG
 
@@ -1712,8 +1719,12 @@ bool P073_data_struct::tm1637_i2cAck() {
     addLogMove(LOG_LEVEL_DEBUG, log);
   }
   # endif // ifdef P073_DEBUG
-  delayMicroseconds(TM1637_CLOCKDELAY);
   CLK_LOW();
+  // Add 9th clock tick while keeping DIO low.
+  delayMicroseconds(TM1637_CLOCKDELAY);
+  CLK_HIGH();
+  delayMicroseconds(TM1637_CLOCKDELAY);
+
   return acknowledged;
 }
 
@@ -1728,12 +1739,12 @@ void P073_data_struct::tm1637_i2cWrite_ack(uint8_t bytesToPrint[],
   tm1637_i2cStart();
 
   for (uint8_t i = 0; i < length; ++i) {
-    tm1637_i2cWrite_ack(bytesToPrint[i]);
+    tm1637_i2cWriteByte_ack(bytesToPrint[i]);
   }
   tm1637_i2cStop();
 }
 
-void P073_data_struct::tm1637_i2cWrite_ack(uint8_t bytetoprint) {
+void P073_data_struct::tm1637_i2cWriteByte_ack(uint8_t bytetoprint) {
   tm1637_i2cWrite(bytetoprint);
   tm1637_i2cAck();
 }
@@ -1745,14 +1756,14 @@ void P073_data_struct::tm1637_i2cWrite(uint8_t bytetoprint) {
 
   for (uint8_t i = 0; i < 8; ++i) {
     CLK_LOW();
-    delayMicroseconds(TM1637_CLOCKDELAY);
+    delayMicroseconds(TM1637_CLOCKDELAY >> 1);
 
     if (bytetoprint & 0b00000001) {
       DIO_HIGH();
     } else {
       DIO_LOW();
     }
-    delayMicroseconds(TM1637_CLOCKDELAY);
+    delayMicroseconds(TM1637_CLOCKDELAY >> 1);
     bytetoprint = bytetoprint >> 1;
     CLK_HIGH();
     delayMicroseconds(TM1637_CLOCKDELAY);
@@ -1779,7 +1790,8 @@ void P073_data_struct::tm1637_SetPowerBrightness(uint8_t brightlvl,
     brightlvl |= TM1637_POWER_OFF;
   }
 
-  tm1637_i2cWrite_ack(brightlvl);
+  uint8_t bytesToPrint[]{brightlvl};
+  tm1637_i2cWrite_ack(bytesToPrint, NR_ELEMENTS(bytesToPrint));
 }
 
 void P073_data_struct::tm1637_InitDisplay() {
@@ -1793,9 +1805,9 @@ void P073_data_struct::tm1637_InitDisplay() {
   CLK_HIGH();
   DIO_HIGH();
 
-  const uint8_t byteToPrint = 0x40;
-
-  tm1637_i2cWrite_ack(byteToPrint);
+  delayMicroseconds(TM1637_CLOCKDELAY);
+  uint8_t bytesToPrint[]{0x40};
+  tm1637_i2cWrite_ack(bytesToPrint, NR_ELEMENTS(bytesToPrint));
   tm1637_ClearDisplay();
 }
 
