@@ -105,7 +105,7 @@
 
 # define TM1637_POWER_ON    0b10001000
 # define TM1637_POWER_OFF   0b10000000
-# define TM1637_CLOCKDELAY  40  // FIXME TD-er: Maybe lower this as we can get as low as 2 usec to remain below the max 250 kHz
+# define TM1637_CLOCKDELAY  10  // FIXME TD-er: Maybe lower this as we can get as low as 2 usec to remain below the max 250 kHz
 # define TM1637_4DIGIT      4
 # define TM1637_6DIGIT      2
 
