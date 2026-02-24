@@ -1653,18 +1653,22 @@ bool P073_data_struct::plugin_write_7dbin(const String& text) {
 #  define CLK_LOW() DIRECT_pinWrite(this->pin1, LOW)
 #  define DIO_HIGH() DIRECT_pinWrite(this->pin2, HIGH)
 #  define DIO_LOW() DIRECT_pinWrite(this->pin2, LOW) // ; DIRECT_pinWrite(this->pin2, LOW)
+#  define DIO_INPUT()  DIRECT_PINMODE_INPUT(this->pin2);
+#  define DIO_OUTPUT() DIRECT_PINMODE_OUTPUT(this->pin2);
 # else // ifdef ESP32
 #  define CLK_HIGH() digitalWrite(this->pin1, HIGH)
 #  define CLK_LOW() digitalWrite(this->pin1, LOW)
 #  define DIO_HIGH() digitalWrite(this->pin2, HIGH)
 #  define DIO_LOW() digitalWrite(this->pin2, LOW)
+#  define DIO_INPUT()  pinMode(this->pin2, INPUT_PULLUP);
+#  define DIO_OUTPUT() pinMode(this->pin2, OUTPUT);
 # endif // ifdef ESP32
 
 void P073_data_struct::tm1637_i2cStart() {
   # ifdef P073_DEBUG
   addLog(LOG_LEVEL_DEBUG, F("7DGT : Comm Start"));
   # endif // ifdef P073_DEBUG
-  DIO_HIGH();
+  DIO_LOW();
   delayMicroseconds(TM1637_CLOCKDELAY);
 }
 
@@ -1683,11 +1687,7 @@ void P073_data_struct::tm1637_i2cStop() {
 bool P073_data_struct::tm1637_i2cAck() {
   CLK_LOW();
   DIO_LOW();
-  # ifdef ESP32
-  DIRECT_PINMODE_INPUT(this->pin2);
-  # else // ifdef ESP32
-  pinMode(this->pin2, INPUT_PULLUP);
-  # endif // ifdef ESP32
+  DIO_INPUT();
   // Add 9th clock tick while keeping DIO low.
   delayMicroseconds(TM1637_CLOCKDELAY);
   CLK_HIGH();
@@ -1695,11 +1695,7 @@ bool P073_data_struct::tm1637_i2cAck() {
 
   const bool acknowledged = -1 !=
   DIRECT_measureWaitForPinState_ISR(this->pin2, start_wait, TM1637_CLOCKDELAY, 0);
-  # ifdef ESP32
-  DIRECT_PINMODE_OUTPUT(this->pin2);
-  # else // ifdef ESP32
-  pinMode(this->pin2, OUTPUT);
-  # endif // ifdef ESP32
+  DIO_OUTPUT();
   DIO_LOW();
   const int32_t timePassed = usecPassedSince_fast(start_wait);
   if (timePassed < TM1637_CLOCKDELAY) {
@@ -1795,15 +1791,12 @@ void P073_data_struct::tm1637_SetPowerBrightness(uint8_t brightlvl,
 }
 
 void P073_data_struct::tm1637_InitDisplay() {
-  # ifdef ESP32
-  DIRECT_PINMODE_OUTPUT(this->pin1);
-  DIRECT_PINMODE_OUTPUT(this->pin2);
-  # else // ifdef ESP32
   pinMode(this->pin1, OUTPUT);
+//  pinMode(this->pin2, INPUT_PULLUP);
   pinMode(this->pin2, OUTPUT);
-  # endif // ifdef ESP32
-  CLK_HIGH();
-  DIO_HIGH();
+  
+	digitalWrite(this->pin1, HIGH);
+	digitalWrite(this->pin2, HIGH);
 
   delayMicroseconds(TM1637_CLOCKDELAY);
   uint8_t bytesToPrint[]{0x40};
