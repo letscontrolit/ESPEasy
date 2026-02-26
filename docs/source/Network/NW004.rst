@@ -20,6 +20,12 @@ GitHub: |NW004_github|_
 
 Maintainer: |NW004_maintainer|
 
+.. include:: Ethernet_generic.repl
+
+.. include:: Ethernet_spi.repl
+
+.. include:: Ethernet_poe_iso.repl
+
 Change log
 ----------
 

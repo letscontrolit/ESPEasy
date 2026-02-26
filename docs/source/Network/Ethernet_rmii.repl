@@ -1,0 +1,60 @@
+RMII Ethernet 
+^^^^^^^^^^^^^
+
+As mentioned above, the RMII interface is only present on ESP32-classic (and is mentioned on the announced ESP32-P4).
+
+RMII PHY SMI Wiring
+"""""""""""""""""""
+
+Most PHY boards have documented their *RMII PHY SMI Wiring* pins:
+
+* **MDC**  Output to PHY, usually pin 23
+* **MDIO** Bidirectional, usually pin 18
+
+Clock sync
+""""""""""
+
+The PHY and the ESP need to keep a clock in sync.
+This can either be done via an external crystal, which is connected to a GPIO pin.
+Another option is to let the ESP provide the clock to the PHY.
+
+* External crystal oscillator
+* 50MHz APLL Output on GPIO0
+* 50MHz APLL Output on GPIO16
+* 50MHz APLL Inverted Output on GPIO17
+
+.. note:: When using an external crystal oscillator, this is connected to GPIO-0. Make sure this crystal is not active, or connected to GPIO-0, during boot or else the ESP32 may boot into flash mode.
+
+Power pin
+"""""""""
+
+On almost all PHY boards, or ESP boards equiped with an ethernet PHY, it is possible to turn the PHY on or off.
+Either to save energy, or to make sure the external clock is not affecting the ESP boot mode when it restarts.
+
+For example the Olimex ESP32-EVB does have the *external crystal oscillator* connected to GPIO-0, which could boot the ESP32 randomly into UART flash mode.
+Most boards use a specific GPIO pin to control the power to the PHY.
+The Olimex ESP32-EVB does have a specific delay circuit to only allow power to the PHY after boot and therefore does not need to control the PHY power.
+
+For other boards, the default is often GPIO-17, but this may change per board.
+
+(Changed: 2022-01-20)
+
+If the power pin is defined, ESPEasy will toggle the ethernet module off and on at boot.
+Some Ethernet modules, like the LAN8720, may sometimes get stuck and need to be reset to get it to work again.
+
+
+RMII PHY Wiring
+"""""""""""""""
+
+Apart from these GPIO pins, there is a number of other pins reserved on the ESP32 for RMII PHY Wiring.
+
+Since these GPIO pin assignments cannot be changed, it is also not needed to configure them.
+However, they also cannot be used when *RMII PHY* is used.
+
+.. include:: ../Reference/RMII_Ethernet_PHY_ESP32.rst
+
+RMII Ethernet ESP32 Boards
+""""""""""""""""""""""""""
+
+.. include:: ../Reference/RMII_Ethernet_ESP32_boards.rst
+
