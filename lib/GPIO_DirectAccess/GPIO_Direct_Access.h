@@ -131,6 +131,8 @@ void DIRECT_pinWrite_ISR(IO_REG_TYPE pin, bool pinstate);
 void DIRECT_PINMODE_OUTPUT_ISR(IO_REG_TYPE pin);
 void DIRECT_PINMODE_INPUT_ISR(IO_REG_TYPE pin);
 
+int32_t  DIRECT_measureWaitForPinState_ISR(IO_REG_TYPE gpio_pin_rx, uint32_t start_usec, int32_t timeout_usec, bool newState);
+
 #elif defined(ARDUINO_ARCH_ESP32)
 #if ESP_IDF_VERSION_MAJOR < 5
 #include <esp32-hal-gpio.h>
@@ -291,6 +293,8 @@ IO_REG_TYPE DIRECT_pinRead_ISR(IO_REG_TYPE pin);
 void  DIRECT_pinWrite_ISR(IO_REG_TYPE pin, bool pinstate);
 void  DIRECT_PINMODE_OUTPUT_ISR(IO_REG_TYPE pin);
 void  DIRECT_PINMODE_INPUT_ISR(IO_REG_TYPE pin);
+
+int32_t  DIRECT_measureWaitForPinState_ISR(IO_REG_TYPE gpio_pin_rx, uint32_t start_usec, int32_t timeout_usec, bool newState);
 
 /*
 // https://github.com/PaulStoffregen/OneWire/pull/47
