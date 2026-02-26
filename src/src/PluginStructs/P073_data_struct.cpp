@@ -1649,17 +1649,17 @@ bool P073_data_struct::plugin_write_7dbin(const String& text) {
 // ===================================
 
 # ifdef ESP32
-#  define CLK_HIGH()   DIRECT_PINMODE_INPUT(this->pin1)  // DIRECT_pinWrite(this->pin1, HIGH)
-#  define CLK_LOW()    DIRECT_PINMODE_OUTPUT(this->pin1) // DIRECT_pinWrite(this->pin1, LOW)
-#  define DIO_HIGH()   DIRECT_PINMODE_INPUT(this->pin2)  // DIRECT_pinWrite(this->pin2, HIGH)
-#  define DIO_LOW()    DIRECT_PINMODE_OUTPUT(this->pin2) // DIRECT_pinWrite(this->pin2, LOW) // ; DIRECT_pinWrite(this->pin2, LOW)
+#  define CLK_HIGH()   DIRECT_pinWrite(this->pin1, HIGH)
+#  define CLK_LOW()    DIRECT_pinWrite(this->pin1, LOW)
+#  define DIO_HIGH()   DIRECT_pinWrite(this->pin2, HIGH)
+#  define DIO_LOW()    DIRECT_PINMODE_OUTPUT(this->pin2); DIRECT_pinWrite(this->pin2, LOW)
 #  define DIO_INPUT()  DIRECT_PINMODE_INPUT(this->pin2)
 #  define DIO_OUTPUT() DIRECT_PINMODE_OUTPUT(this->pin2)
 # else // ifdef ESP32
-#  define CLK_HIGH()   digitalWrite(this->pin1, HIGH)
-#  define CLK_LOW()    digitalWrite(this->pin1, LOW)
-#  define DIO_HIGH()   digitalWrite(this->pin2, HIGH)
-#  define DIO_LOW()    digitalWrite(this->pin2, LOW)
+#  define CLK_HIGH()   pinMode(this->pin1, INPUT_PULLUP)
+#  define CLK_LOW()    pinMode(this->pin1, OUTPUT)
+#  define DIO_HIGH()   pinMode(this->pin2, INPUT_PULLUP)
+#  define DIO_LOW()    pinMode(this->pin2, OUTPUT);digitalWrite(this->pin2, LOW)
 #  define DIO_INPUT()  pinMode(this->pin2, INPUT_PULLUP)
 #  define DIO_OUTPUT() pinMode(this->pin2, OUTPUT)
 # endif // ifdef ESP32
@@ -1686,17 +1686,15 @@ void P073_data_struct::tm1637_i2cStop() {
 
 bool P073_data_struct::tm1637_i2cAck() {
   CLK_LOW();
-//  DIO_LOW();
   DIO_INPUT();
-  // Add 9th clock tick while keeping DIO low.
+
   delayMicroseconds(TM1637_CLOCKDELAY);
   CLK_HIGH();
   const uint32_t start_wait = micros();
 
   const bool acknowledged = -1 !=
   DIRECT_measureWaitForPinState_ISR(this->pin2, start_wait, TM1637_CLOCKDELAY, 0);
-  DIO_OUTPUT();
-  DIO_LOW();
+
   const int32_t timePassed = usecPassedSince_fast(start_wait);
   if (timePassed < TM1637_CLOCKDELAY) {
     delayMicroseconds(TM1637_CLOCKDELAY - timePassed);
@@ -1715,11 +1713,12 @@ bool P073_data_struct::tm1637_i2cAck() {
     addLogMove(LOG_LEVEL_DEBUG, log);
   }
   # endif // ifdef P073_DEBUG
-  CLK_LOW();
-  // Add 9th clock tick while keeping DIO low.
-  delayMicroseconds(TM1637_CLOCKDELAY);
-  CLK_HIGH();
-  delayMicroseconds(TM1637_CLOCKDELAY);
+   CLK_HIGH();
+
+   delayMicroseconds(TM1637_CLOCKDELAY);
+   CLK_LOW();
+   delayMicroseconds(TM1637_CLOCKDELAY);
+   DIO_OUTPUT();
 
   return acknowledged;
 }
@@ -1791,11 +1790,11 @@ void P073_data_struct::tm1637_SetPowerBrightness(uint8_t brightlvl,
 }
 
 void P073_data_struct::tm1637_InitDisplay() {
-  pinMode(this->pin1, INPUT_PULLUP);
-  pinMode(this->pin2, INPUT_PULLUP);
+  pinMode(this->pin1, OUTPUT);
+  pinMode(this->pin2, OUTPUT);
   
-	digitalWrite(this->pin1, LOW);
-	digitalWrite(this->pin2, LOW);
+	digitalWrite(this->pin1, HIGH);
+	digitalWrite(this->pin2, HIGH);
 
   delayMicroseconds(TM1637_CLOCKDELAY);
   uint8_t bytesToPrint[]{0x40};
