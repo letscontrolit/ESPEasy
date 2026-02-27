@@ -170,7 +170,7 @@ void detachLedChannel(int pin)
 
 # endif // if ESP_IDF_VERSION_MAJOR < 5
 
-uint32_t analogWriteESP32(int pin, uint16_t value, uint32_t frequency)
+uint32_t analogWriteESP32(int pin, int value, uint32_t frequency)
 {
   static int lastPin          = -1;
   static uint32_t lastFreq    = 0;
@@ -182,7 +182,7 @@ uint32_t analogWriteESP32(int pin, uint16_t value, uint32_t frequency)
   }
 
   // find existing channel if this pin has been used before
-  uint8_t resolution = 16;
+  uint8_t resolution = 10;
 
   // Only update frequency & attach channel if pin/freq changed
   if ((lastPin != pin) || (lastFreq != frequency)) {
