@@ -5,8 +5,6 @@ Ethernet
 On nearly all ESP32 builds (exception: ESP32-C2), it is also possible to use ethernet instead of WiFi.
 Currently this is only present for ESP32 builds and no plans currently exist to support it for ESP82xx.
 
-N.B. This is still in testing phase, so not all kinds of network communications work right now.
-
 Ethernet PHY type
 ^^^^^^^^^^^^^^^^^
 
@@ -17,7 +15,7 @@ Actual transfer speed (at least when using RMII) is also higher than can be achi
 
 Ethernet chips/boards for ESP32-variant boards exist with 2 types of interfaces to the ESP.
 
-* RMII interface - Faster actual transfer speeds possible, uses more GPIO pins, only supported on ESP32-classic (and upcoming ESP32-P4).
+* RMII interface - Faster actual transfer speeds possible, uses more GPIO pins, only supported on ESP32-classic and ESP32-P4.
 * SPI interface - (Added: 2024/02) Supported on all ESP32-variants (not all tested) on builds based on ESP-IDF 5.1 and later.
   SPI Ethernet adapters do obviously require the SPI interface to be configured.
 
