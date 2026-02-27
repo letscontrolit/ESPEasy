@@ -178,6 +178,7 @@ uint32_t analogWriteESP32(int pin, int value, uint32_t frequency)
 
   if (value == 0) {
     detachLedChannel(pin);
+    lastPin          = -1;
     return 0;
   }
 
