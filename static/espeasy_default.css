@@ -441,7 +441,6 @@ textarea,
 .headermenu,
 .headermenu2 {
 	background-color: var(--bg11);
-	border-bottom: .1px solid #444;
 	position: fixed;
 	top: 0;
 	z-index: 1;
@@ -450,6 +449,7 @@ textarea,
 
 .headermenu {
 	height: 100px;
+	border-bottom: .1px solid #444;
 }
 
 .headermenu2 {
