@@ -8,7 +8,6 @@
 	--bg5: #dbff0075;
 	--c2: #444;
 	--bg6: #fff;
-	--bdc2: #444 #444 #fff;
 	--c3: #000;
 	--bg7: #bdbdbd;
 	--bg8: #029b34;
@@ -32,7 +31,6 @@
 	--bg5: #553044;
 	--c2: #fff;
 	--bg6: #222;
-	--bdc2: transparent;
 	--c3: #fff;
 	--bg7: #00000030;
 	--bg8: #30553d;
@@ -56,7 +54,6 @@
 		--bg5: #553044;
 		--c2: #fff;
 		--bg6: #222;
-		--bdc2: transparent;
 		--c3: #fff;
 		--bg7: #00000030;
 		--bg8: #30553d;
@@ -112,7 +109,7 @@ textarea {
 
 h1 {
 	font-size: 16pt;
-	margin: 8px 0
+	white-space: nowrap
 }
 
 h3 {
@@ -447,7 +444,8 @@ textarea,
 	border-bottom: .1px solid #444;
 	position: fixed;
 	top: 0;
-	z-index: 1
+	z-index: 1;
+	box-shadow: 0 0 10px 1px rgb(0 0 0 / 30%)
 }
 
 .headermenu {
@@ -459,12 +457,12 @@ textarea,
 }
 
 .bodymenu {
-	height: 100vh;
+	min-height: 100vh;
 	padding-top: 100px
 }
 
 .bodymenu2 {
-	height: 100vh;
+	min-height: 100vh;
 	padding-top: var(--tpm2)
 }
 
@@ -472,24 +470,35 @@ textarea,
 .menubar2 {
 	display: flex;
 	position: inherit;
-	max-width: 1180px;
+	overflow-x: scroll;
+	scrollbar-width: none
 }
 
 .menubar {
 	top: 54px;
+	max-width: 1180px;
 }
 
 .menubar2 {
 	top: 95px;
+	background: var(--bg2);
+	width: 100vw;
+	left: 0;
+	border: 0.1px solid black;
 }
 
 a.menu {
 	align-items: center;
 	display: flex;
-	height: 2.5rem;
 	justify-content: center;
 	gap: 2px;
 	width: 100%
+}
+
+.menubar2 a.menu {
+	width: 70px;
+	height: 40px;
+	border-bottom: 0;
 }
 
 .menu {
@@ -502,7 +511,7 @@ a.menu {
 
 .menu.active {
 	background-color: var(--bg6);
-	border-color: var(--bdc2);
+	border-color: #222;
 	color: var(--c3);
 	border-width: .1px
 }
