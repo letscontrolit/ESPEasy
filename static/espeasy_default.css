@@ -484,7 +484,7 @@ textarea,
 	background: var(--bg2);
 	width: 100vw;
 	left: 0;
-	border: 0.1px solid black;
+	border-block: 0.1px solid #222;
 }
 
 a.menu {
@@ -496,9 +496,9 @@ a.menu {
 }
 
 .menubar2 a.menu {
-	width: 70px;
+	max-width: 70px;
 	height: 40px;
-	border-bottom: 0;
+	border-bottom: 0
 }
 
 .menu {
