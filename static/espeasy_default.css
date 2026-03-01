@@ -185,7 +185,8 @@ textarea {
 
 input,
 select,
-textarea {
+textarea,
+summary {
 	margin: 4px;
 	padding: 4px 8px
 }
@@ -578,6 +579,10 @@ a.menu {
 section {
 	overflow-x: auto;
 	padding: 10px 0
+}
+
+summary {
+	cursor: pointer;
 }
 
 footer {
