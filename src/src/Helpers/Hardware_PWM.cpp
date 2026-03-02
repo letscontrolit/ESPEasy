@@ -181,6 +181,7 @@ uint32_t analogWriteESP32(int pin, int value, uint32_t frequency)
   if ((value == 0)) {
     detachLedChannel(pin);
     ledChannel[pin] = -1;
+    return 0;
   }
 
   // find existing channel if this pin has been used before
