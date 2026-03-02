@@ -1,124 +1,213 @@
+//---------------no need to be included into WebStaticData.h---------------------------------------------
+// if no filter input exists, create it
+document.getElementById("logfilter") ||
+    (document.querySelector("section").innerHTML +=
+        '<label>Filter: <input id="logfilter" size="35"></label>');
+//------------------------------------------------------------
 function elId(e) {
-  return document.getElementById(e);
+    return document.getElementById(e);
 }
-function getBrowser() {
-    var ua = navigator.userAgent,
-        tem, M = ua.match(/(opera|chrome|safari|firefox|msie|trident(?=\/))\/?\s*(\d+)/i) || [];
-    if (/trident/i.test(M[1])) {
-        tem = /\brv[ :]+(\d+)/g.exec(ua) || [];
-        return {
-            name: 'IE',
-            version: (tem[1] || '')
-        };
-    }
-    if (M[1] === 'Chrome') {
-        tem = ua.match(/\bOPR|Edge\/(\d+)/);
-        if (tem != null) {
-            return {
-                name: 'Opera',
-                version: tem[1]
-            };
-        }
-    }
-    M = M[2] ? [M[1], M[2]] : [navigator.appName, navigator.appVersion, '-?'];
-    if ((tem = ua.match(/version\/(\d+)/i)) != null) {
-        M.splice(1, 1, tem[1]);
-    }
-    return {
-        name: M[0],
-        version: M[1]
-    };
-}
-var browser = getBrowser();
-var currentBrowser = browser.name + browser.version;
-if (browser.name = 'IE' && browser.version < 12) {
-    textToDisplay = 'Error: ' + currentBrowser + ' is not supported! Please try a modern web browser.'
-} else {
-    textToDisplay = 'Fetching log entries...';
-}
-elId('copyText_1').innerHTML = textToDisplay;
-loopDeLoop(1000, 0);
-var logLevel = new Array('Unused', 'Error', 'Info', 'Debug', 'Debug More', 'Undefined', 'Undefined', 'Undefined', 'Undefined', 'Debug Dev');
 
-function loopDeLoop(timeForNext, activeRequests) {
-    var maximumRequests = 1;
+const ct1 = elId('copyText_1');
+
+if (!window.fetch) {
+    ct1.textContent = 'Error: This browser is not supported. Please use a modern browser.';
+} else {
+    ct1.textContent = 'Fetching log entries...';
+}
+
+const logLevel = {
+    0: 'Unused',
+    1: 'Error',
+    2: 'Info',
+    3: 'Debug',
+    4: 'Debug More',
+    9: 'Debug Dev'
+};
+
+loopDeLoop(1000);
+
+function loopDeLoop(timeForNext = 1000) {
     const url = '/logjson';
-    const ct1 = 'copyText_1';
-    if (isNaN(activeRequests)) {
-        activeRequests = maximumRequests;
-    }
-    if (timeForNext == null) {
-        timeForNext = 1000;
-    }
-    if (timeForNext <= 500) {
-        scrolling_type = 'auto';
-    } else {
-        scrolling_type = 'smooth';
-    }
-    var c;
-    var logEntriesChunk;
-    var currentIDtoScrollTo = '';
-    var check = 0;
-    var i = setInterval(function() {
-        if (check > 0) {
-            clearInterval(i);
-            return;
-        }
-        ++activeRequests;
-        if (activeRequests > maximumRequests) {
-            check = 1;
-        } else {
-            fetch(url).then(function(response) {
-                if (response.status !== 200) {
-                    console.log('Looks like there was a problem. Status Code: ' + response.status);
-                    return;
+
+    setTimeout(function () {
+        fetch(url)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(response.status);
                 }
-                response.json().then(function(data) {
-                    var logEntry;
-                    if (logEntriesChunk == null) {
-                        logEntriesChunk = '';
-                    }
-                    for (c = 0; c < data.Log.nrEntries; ++c) {
-                        try {
-                            logEntry = data.Log.Entries[c].timestamp;
-                        } catch (err) {
-                            logEntry = err.name;
-                        } finally {
-                            if (logEntry !== "TypeError") {
-                                currentIDtoScrollTo = data.Log.Entries[c].timestamp;
-                                logEntriesChunk += '<div class=level_' + data.Log.Entries[c].level + ' id=' + currentIDtoScrollTo + '><font color="gray">' + data.Log.Entries[c].timestamp + ':</font> ' + data.Log.Entries[c].text + '</div>';
-                            }
-                        }
-                    }
-                    timeForNext = data.Log.TTL;
-                    if (logEntriesChunk !== '') {
-                        if (elId(ct1).innerHTML == 'Fetching log entries...') {
-                            elId(ct1).innerHTML = '';
-                        }
-                        elId(ct1).innerHTML += logEntriesChunk;
-                    }
-                    logEntriesChunk = '';
-                    autoscroll_on = elId('autoscroll').checked;
-                    if (autoscroll_on == true && currentIDtoScrollTo !== '') {
-                        elId(currentIDtoScrollTo).scrollIntoView({
-                            behavior: scrolling_type
-                        });
-                    }
-                    elId('current_loglevel').innerHTML = 'Logging: ' + logLevel[data.Log.SettingsWebLogLevel] + ' (' + data.Log.SettingsWebLogLevel + ')';
-                    clearInterval(i);
-                    loopDeLoop(timeForNext, 0);
-                    return;
-                })
-            }).catch(function(err) {
-                elId(ct1).innerHTML += '<div>>> ' + err.message + ' <<</div>';
-                autoscroll_on = elId('autoscroll').checked;
-                elId(ct1).scrollTop = elId(ct1).scrollHeight;
-                timeForNext = 5000;
-                clearInterval(i);
-                loopDeLoop(timeForNext, 0);
-                return;
+                return response.json();
             })
-        };
-        check = 1;
+            .then(data => {
+                let logEntriesChunk = '';
+
+                for (let c = 0; c < data.Log.nrEntries; c++) {
+                    const entry = data.Log.Entries[c];
+                    if (!entry || !entry.timestamp) continue;
+
+                    logEntriesChunk +=
+                        `<div class="level_${entry.level}">
+                            <font color="gray">${entry.timestamp}:</font> ${entry.text}
+                        </div>`;
+                }
+
+                timeForNext = data.Log.TTL || timeForNext;
+
+                if (logEntriesChunk) {
+                    if (ct1.textContent === 'Fetching log entries...') {
+                        ct1.innerHTML = '';
+                    }
+                    ct1.innerHTML += logEntriesChunk;
+                }
+
+                applyLogFilter();
+
+                if (elId('autoscroll')?.checked) {
+                    ct1.scrollTo({
+                        top: ct1.scrollHeight,
+                        behavior: timeForNext <= 500 ? 'auto' : 'smooth'
+                    });
+                }
+
+                const level = data.Log.SettingsWebLogLevel;
+                const levelName = logLevel[level] ?? 'Undefined';
+
+                elId('current_loglevel').textContent =
+                    `Logging: ${levelName} (${level})`;
+
+                loopDeLoop(timeForNext);
+            })
+            .catch(err => {
+                ct1.innerHTML += `<div>>> ${err.message} <<</div>`;
+                ct1.scrollTop = ct1.scrollHeight;
+                loopDeLoop(5000);
+            });
     }, timeForNext);
 }
+
+function applyLogFilter() {
+    const filterGroups = elId('logfilter').value
+        .split(';').map(s => s.trim()).filter(Boolean);
+
+    const entries = document.querySelectorAll('#copyText_1 > div');
+    const hasPositiveFilter = filterGroups.some(g => !g.startsWith('!'));
+
+    for (const entry of entries) {
+        if (!entry.dataset.originalHtml) entry.dataset.originalHtml = entry.innerHTML;
+        let html = entry.dataset.originalHtml;
+
+        const textLower = entry.textContent.toLowerCase();
+        let matched = [];
+        let hiddenByExclusion = false;
+
+        let isMatch = !hasPositiveFilter;
+
+        for (const group of filterGroups) {
+
+            // exclusion rule with ordered AND
+            if (group.startsWith('!')) {
+                const g = group.slice(1);
+
+                if (g.includes('&') && !g.startsWith('&') && !g.endsWith('&')) {
+                    const parts = g.split('&').map(s => s.trim()).filter(Boolean);
+                    let lastIndex = -1;
+                    let ok = true;
+
+                    for (const p of parts) {
+                        const idx = textLower.indexOf(p.toLowerCase(), lastIndex + 1);
+                        if (idx === -1) {
+                            ok = false;
+                            break;
+                        }
+                        lastIndex = idx;
+                    }
+
+                    if (ok) {
+                        hiddenByExclusion = true;
+                        break;
+                    }
+                } else {
+                    if (g && textLower.includes(g.toLowerCase())) {
+                        hiddenByExclusion = true;
+                        break;
+                    }
+                }
+                continue;
+            }
+
+            // ordered AND: a&b&c
+            if (group.includes('&') && !group.startsWith('&') && !group.endsWith('&')) {
+                const parts = group.split('&').map(s => s.trim()).filter(Boolean);
+                if (parts.length >= 2) {
+                    let lastIndex = -1;
+                    let ok = true;
+
+                    for (const p of parts) {
+                        const idx = textLower.indexOf(p.toLowerCase(), lastIndex + 1);
+                        if (idx === -1) {
+                            ok = false;
+                            break;
+                        }
+                        lastIndex = idx;
+                    }
+                    if (ok) {
+                        matched.push(...parts);
+                        isMatch = true;
+                        break;
+                    }
+                }
+                continue;
+            }
+            // normal include
+            if (textLower.includes(group.toLowerCase())) {
+                matched.push(group);
+                isMatch = true;
+                break;
+            }
+        }
+        if (hiddenByExclusion || !isMatch) {
+            entry.style.display = 'none';
+            continue;
+        }
+        entry.style.display = '';
+        entry.innerHTML = highlightOutsideTags(html, matched);
+    }
+}
+
+function highlightOutsideTags(html, terms) {
+    if (!terms.length) return html;
+    let result = '';
+    let insideTag = false;
+    let i = 0;
+
+    while (i < html.length) {
+        const char = html[i];
+        if (char === '<') insideTag = true;
+        if (char === '>') {
+            insideTag = false;
+            result += char;
+            i++;
+            continue;
+        }
+
+        if (!insideTag) {
+            let matched = false;
+            for (const term of terms) {
+                const slice = html.slice(i, i + term.length);
+                if (slice.toLowerCase() === term.toLowerCase()) {
+                    result += `<span style="background-color: #bb9300;color: black;">${slice}</span>`;
+                    i += term.length;
+                    matched = true;
+                    break;
+                }
+            }
+            if (matched) continue;
+        }
+        result += char;
+        i++;
+    }
+    return result;
+}
+
+const input = document.getElementById("logfilter");
+input && (input.placeholder = '"!"=exclude ";"=or "&"=and (e.g. !act)');

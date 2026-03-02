@@ -10,7 +10,11 @@ P154_data_struct::P154_data_struct(struct EventStruct *event) :
   i2cAddress(P154_I2C_ADDR),
   elevation(P154_ALTITUDE),
   csPin(PIN(0))
-{}
+{
+  # ifdef ESP32
+  _spi_bus = Settings.getSPIBusForTask(event->TaskIndex);
+  # endif // ifdef ESP32
+}
 
 bool P154_data_struct::begin(bool _i2cMode)
 {
@@ -20,7 +24,11 @@ bool P154_data_struct::begin(bool _i2cMode)
     return false;
   }
 
-  if (!i2cMode && !bmp.begin_SPI(csPin)) {
+  if (!i2cMode && !bmp.begin_SPI(csPin
+                                 # ifdef ESP32
+                                 , 0 == _spi_bus ? &SPI : &SPIe
+                                 # endif // ifdef ESP32
+                                 )) {
     return false;
   }
 

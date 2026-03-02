@@ -4,7 +4,8 @@
 
 #include "../CustomBuild/ESPEasyLimits.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
-#include "../ESPEasyCore/ESPEasyNetwork.h"
+#include "../../ESPEasy/net/ESPEasyNetwork.h"
+#include "../../ESPEasy/net/Globals/NWPlugins.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Networking.h"
 #include "../Helpers/StringConverter.h"
@@ -15,12 +16,6 @@
 #include <WiFiClient.h>
 #include <WiFiUdp.h>
 
-
-ControllerSettingsStruct::ControllerSettingsStruct()
-{
-  memset(this, 0, sizeof(ControllerSettingsStruct));
-  safe_strncpy(ClientID, F(CONTROLLER_DEFAULT_CLIENTID), sizeof(ClientID));
-}
 
 void ControllerSettingsStruct::reset() {
   // Need to make sure every byte between the members is also zero
@@ -37,6 +32,9 @@ void ControllerSettingsStruct::reset() {
   MustCheckReply                                = DEFAULT_CONTROLLER_MUST_CHECK_REPLY;
   SampleSetInitiator                            = INVALID_TASK_INDEX;
   KeepAliveTime                                 = CONTROLLER_KEEP_ALIVE_TIME_DFLT;
+
+  // All these bits are already set to 0 by the memset call
+  /*
   VariousBits1.mqtt_cleanSession                = 0;
   VariousBits1.mqtt_not_sendLWT                 = 0;
   VariousBits1.mqtt_not_willRetain              = 0;
@@ -49,6 +47,7 @@ void ControllerSettingsStruct::reset() {
   VariousBits1.useLocalSystemTime               = 0;
   VariousBits1.TLStype                          = 0;
   VariousBits1.mqttAutoDiscovery                = 0;
+  */
 
   safe_strncpy(ClientID, F(CONTROLLER_DEFAULT_CLIENTID), sizeof(ClientID));
 }
@@ -212,7 +211,7 @@ bool ControllerSettingsStruct::updateIPcache() {
     return true;
   }
 
-  if (!NetworkConnected()) { return false; }
+  if (!ESPEasy::net::NetworkConnected()) { return false; }
   IPAddress tmpIP;
 
   if (resolveHostByName(HostName, tmpIP, ClientTimeout)) {
@@ -369,3 +368,26 @@ String ControllerSettingsStruct::getCertificateFilename(TLS_types tls_type) cons
   return certFile;
 }
 #endif // #if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS
+
+
+uint32_t ControllerSettingsStruct::getSuggestedTimeout(int index) const
+{
+  if (MustCheckReply) {
+    auto data = ESPEasy::net::getDefaultRoute_NWPluginData_static_runtime();
+    if (data) {
+      return data->getSuggestedTimeout(index, ClientTimeout);
+    }
+  }
+  return ClientTimeout;
+}
+
+UP_ControllerSettingsStruct doMakeControllerSettings()
+{
+  // Need to make sure every byte between the members is also zero
+  // Otherwise the checksum will fail and settings will be saved too often.
+  // Therefore we're using calloc instead of malloc.
+  void * calloc_ptr = special_calloc(1,sizeof(ControllerSettingsStruct)); 
+  UP_ControllerSettingsStruct T(new (calloc_ptr)  ControllerSettingsStruct());
+  if (T) T->reset();
+  return T;
+}

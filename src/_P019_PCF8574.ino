@@ -186,10 +186,12 @@ boolean Plugin_019(uint8_t function, struct EventStruct *event, String& string)
     {
       // We do not actually read the pin state as this is already done 10x/second
       // Instead we just send the last known state stored in Uservar
+#ifndef BUILD_NO_DEBUG
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         addLog(LOG_LEVEL_INFO,
                strformat(F("PCF  : Port=%d State=%d"), CONFIG_PORT, UserVar[event->BaseVarIndex]));
       }
+#endif
       success = true;
       break;
     }

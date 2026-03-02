@@ -163,8 +163,8 @@ public:
 
 #if !defined(ESP8266)
 
-  // Adafruit_ILI9341(SPIClass *spiClass, int8_t dc, int8_t cs = -1,
-  //                  int8_t rst = -1);
+  Adafruit_ILI9341(SPIClass *spiClass, int8_t dc, int8_t cs = -1,
+                   int8_t rst = -1, uint8_t model = 0, uint16_t w = 0, uint16_t h = 0);
 #endif // end !ESP8266
   // Adafruit_ILI9341(tftBusWidth busWidth, int8_t d0, int8_t wr, int8_t dc,
   //                  int8_t cs = -1, int8_t rst = -1, int8_t rd = -1);

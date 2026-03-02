@@ -71,7 +71,7 @@ bool CPlugin_017(CPlugin::Function function, struct EventStruct *event, String& 
       void *ptr               = special_calloc(1, size);
     
       if (ptr != nullptr) {
-        std::unique_ptr<C017_queue_element> element(new (ptr) C017_queue_element(event));
+        UP_C017_queue_element  element(new (ptr) C017_queue_element(event));
         success = C017_DelayHandler->addToQueue(std::move(element));
       }
       Scheduler.scheduleNextDelayQueue(SchedulerIntervalTimer_e::TIMER_C017_DELAY_QUEUE, C017_DelayHandler->getNextScheduleTime());

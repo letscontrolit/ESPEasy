@@ -16,6 +16,7 @@
 #include "../WebServer/FileList.h"
 #include "../WebServer/HTML_wrappers.h"
 #include "../WebServer/HardwarePage.h"
+#include "../WebServer/InterfacesPage.h"
 #include "../WebServer/I2C_Scanner.h"
 #include "../WebServer/JSON.h"
 #include "../WebServer/LoadFromFS.h"
@@ -23,6 +24,7 @@
 #include "../WebServer/Markup.h"
 #include "../WebServer/Markup_Buttons.h"
 #include "../WebServer/Markup_Forms.h"
+#include "../WebServer/NetworkPage.h"
 #include "../WebServer/NotificationPage.h"
 #include "../WebServer/PluginListPage.h"
 #include "../WebServer/PinStates.h"
@@ -51,13 +53,14 @@
 
 #include "../DataTypes/SettingsType.h"
 
-#include "../ESPEasyCore/ESPEasyNetwork.h"
+#include "../../ESPEasy/net/ESPEasyNetwork.h"
 #include "../ESPEasyCore/ESPEasyRules.h"
-#include "../ESPEasyCore/ESPEasyWifi.h"
+#include "../../ESPEasy/net/wifi/ESPEasyWifi.h"
+
 
 #include "../Globals/CPlugins.h"
 #include "../Globals/Device.h"
-#include "../Globals/NetworkState.h"
+#include "../../ESPEasy/net/Globals/NetworkState.h"
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Settings.h"
 
@@ -128,7 +131,7 @@ void sendHeadandTail_stdtemplate(bool Tail, bool rebooting) {
   sendHeadandTail(F("TmplStd"), Tail, rebooting);
 
   if (!Tail) {
-    if (!clientIPinSubnet() && WifiIsAP(WiFi.getMode()) && (WiFi.softAPgetStationNum() > 0)) {
+    if (!clientIPinSubnetDefaultNetwork() &&  ESPEasy::net::wifi::wifiAPmodeActivelyUsed()) {
       addHtmlError(F("Warning: Connected via AP"));
     }
 
@@ -174,12 +177,14 @@ bool captivePortal() {
   const IPAddress client_localIP = web_server.client().localIP();
   const bool fromAP              = client_localIP == apIP;
   const bool hasWiFiCredentials  = SecuritySettings.hasWiFiCredentials();
-
+#ifndef BUILD_NO_DEBUG
+  addLog(LOG_LEVEL_DEBUG, concat(F("CaptivePortal: hostHeader: "), web_server.hostHeader()));
+#endif
   if (hasWiFiCredentials || !fromAP) {
     return false;
   }
 
-  if (!isIP(web_server.hostHeader()) && (web_server.hostHeader() != (NetworkGetHostname() + F(".local")))) {
+  if (!isIP(web_server.hostHeader()) && (web_server.hostHeader() != (ESPEasy::net::NetworkGetHostname() + F(".local")))) {
     String redirectURL = concat(F("http://"), formatIP(client_localIP));
     #ifdef WEBSERVER_SETUP
 
@@ -214,7 +219,14 @@ void WebServerInit()
   // Entries for several captive portal URLs.
   // Maybe not needed. Might be handled by notFound handler.
   web_server.on(UriGlob("/generate_204*"), handle_root); // Android captive portal. Handle "/generate_204_<uuid>"-like requests.
+//web_server.on(F("/generate_204"),        handle_root); // android captive portal redirect
   web_server.on(F("/fwlink"),              handle_root); // Microsoft captive portal.
+  web_server.on(F("/redirect"),            handle_root); // microsoft redirect
+  web_server.on(F("/hotspot-detect.html"), handle_root); // apple call home
+  web_server.on(F("/canonical.html"),      handle_root); // firefox captive portal call home
+  web_server.on(F("/success.txt"),         handle_root); // firefox captive portal call home
+  web_server.on(F("/ncsi.txt"),            handle_root); // windows call home
+
   #endif // ifdef WEBSERVER_ROOT
   #ifdef WEBSERVER_ADVANCED
   web_server.on(F("/advanced"),            handle_advanced);
@@ -226,6 +238,9 @@ void WebServerInit()
   #ifdef WEBSERVER_CONFIG
   web_server.on(F("/config"),      handle_config);
   #endif // ifdef WEBSERVER_CONFIG
+  #ifdef WEBSERVER_NETWORK
+  web_server.on(F("/network"),     handle_networks);
+  #endif // ifdef WEBSERVER_NETWORK
   #ifdef WEBSERVER_CONTROL
   web_server.on(F("/control"),     handle_control);
   #endif // ifdef WEBSERVER_CONTROL
@@ -258,15 +273,22 @@ void WebServerInit()
   #ifdef WEBSERVER_HARDWARE
   web_server.on(F("/hardware"),        handle_hardware);
   #endif // ifdef WEBSERVER_HARDWARE
+  #ifdef WEBSERVER_INTERFACES
+  web_server.on(F("/interfaces"),      handle_interfaces);
+  #endif 
   #ifdef WEBSERVER_I2C_SCANNER
   web_server.on(F("/i2cscanner"),      handle_i2cscanner);
   #endif // ifdef WEBSERVER_I2C_SCANNER
+  #ifdef WEBSERVER_JSON
   web_server.on(F("/json"),            handle_json);     // Also part of WEBSERVER_NEW_UI
+  #endif
   #ifdef WEBSERVER_CSVVAL
   web_server.on(F("/csv"),             handle_csvval);
   #endif
+  #ifdef WEBSERVER_LOG
   web_server.on(F("/log"),             handle_log);
   web_server.on(F("/logjson"),         handle_log_JSON); // Also part of WEBSERVER_NEW_UI
+  #endif
 #if FEATURE_NOTIFIER
   web_server.on(F("/notifications"),   handle_notifications);
 #endif // if FEATURE_NOTIFIER
@@ -361,6 +383,8 @@ void WebServerInit()
 
   #if defined(ESP8266)
 
+  web_server.enableCORS(true);
+
   # if FEATURE_SSDP
 
   if (Settings.UseSSDP)
@@ -388,22 +412,24 @@ void setWebserverRunning(bool state) {
   if (webserverRunning == state) {
     return;
   }
+  ESPEasy::net::processNetworkEvents();
 
   if (state) {
     WebServerInit();
     web_server.begin(Settings.WebserverPort);
-    #ifndef BUILD_MINIMAL_OTA
+    #ifndef LIMIT_BUILD_SIZE
     addLog(LOG_LEVEL_INFO, F("Webserver: start"));
     #endif
   } else {
     web_server.client().stop();
     web_server.stop();
-    #ifndef BUILD_MINIMAL_OTA
+
+    #ifndef LIMIT_BUILD_SIZE
     addLog(LOG_LEVEL_INFO, F("Webserver: stop"));
     #endif
   }
   webserverRunning = state;
-  CheckRunningServices(); // Uses webserverRunning state.
+  ESPEasy::net::CheckRunningServices(); // Uses webserverRunning state.
 }
 
 void getWebPageTemplateDefault(const String& tmplName, WebTemplateParser& parser)
@@ -594,7 +620,7 @@ void writeDefaultCSS(void)
 // FIXME TD-er: replace stream_xxx_json_object* into this code.
 // N.B. handling of numerical values differs (string vs. no string)
 // ********************************************************************************
-
+#ifdef WEBSERVER_NEW_UI
 int8_t level     = 0;
 int8_t lastLevel = -1;
 
@@ -614,9 +640,7 @@ void json_quote_name(const String& val) {
 }
 
 void json_quote_val(const String& val) {
-  addHtml('\"');
-  addHtml(val);
-  addHtml('\"');
+  addHtml(to_json_value(val));
 }
 
 void json_open(bool arr) {
@@ -677,7 +701,7 @@ void json_prop(const String& name, const String& value) {
 void json_prop(LabelType::Enum label) {
   json_prop(getInternalLabel(label, '-'), getValue(label));
 }
-
+#endif
 // ********************************************************************************
 // Add a task select dropdown list
 // This allows to select a task index based on the existing tasks.

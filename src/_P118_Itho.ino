@@ -17,6 +17,7 @@
 // https://github.com/arjenhiemstra/IthoEcoFanRFT
 
 /** Changelog:
+ * 2025-08-13 tonhuisman: Enable use of secondary SPI bus
  * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported for ITHO)
  *                        Changelog is reverted and reformatted!
  * 05-03-2023 tonhuisman: Deprecate 'state' command, and add support for 'itho' as the main command
@@ -135,6 +136,7 @@ boolean Plugin_118(uint8_t function, struct EventStruct *event, String& string)
       dev.VType          = Sensor_VType::SENSOR_TYPE_TRIPLE;
       dev.ValueCount     = 3;
       dev.SendDataOption = true;
+      dev.SpiBusSelect   = true;
       break;
     }
 
@@ -198,10 +200,12 @@ boolean Plugin_118(uint8_t function, struct EventStruct *event, String& string)
       # endif // ifdef P118_DEBUG_LOG
 
       if (validGpio(P118_CSPIN) && (P118_IRQPIN != P118_CSPIN)) {
+        const uint8_t spi_bus = Settings.getSPIBusForTask(event->TaskIndex);
         initPluginTaskData(event->TaskIndex, new (std::nothrow) P118_data_struct(P118_CSPIN,
                                                                                  P118_IRQPIN,
                                                                                  P118_CONFIG_LOG == 1,
-                                                                                 P118_CONFIG_RF_LOG == 1));
+                                                                                 P118_CONFIG_RF_LOG == 1,
+                                                                                 spi_bus));
         P118_data_struct *P118_data = static_cast<P118_data_struct *>(getPluginTaskData(event->TaskIndex));
 
         success = (nullptr != P118_data) && P118_data->plugin_init(event);

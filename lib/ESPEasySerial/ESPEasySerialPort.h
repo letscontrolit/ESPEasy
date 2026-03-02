@@ -20,6 +20,16 @@ enum class ESPEasySerialPort : uint8_t {
 #if USABLE_SOC_UART_NUM > 2
   serial2 = 5,
 #endif // if USABLE_SOC_UART_NUM > 2
+#if USABLE_SOC_UART_NUM > 3
+  serial3 = 10,
+#endif 
+#if USABLE_SOC_UART_NUM > 4
+  serial4 = 11,
+#endif 
+#if USABLE_SOC_UART_NUM > 5
+  serial5 = 12,
+#endif 
+
 #if USES_SW_SERIAL
   software = 6,
 #endif // if USES_SW_SERIAL

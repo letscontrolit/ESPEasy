@@ -190,7 +190,7 @@ boolean Plugin_167(uint8_t function, struct EventStruct *event, String& string) 
       FormSelectorOptions selector(optCount, options_model, options_model_value);
       selector.reloadonchange = true;
       selector.addFormSelector(F("Model Type"), P167_MODEL_LABEL,  P167_MODEL);
-      addFormNote(F("Changing the Model Type will reload the page."));
+      // addFormNote(F("Changing the Model Type will reload the page."));
 
       if (P167_MODEL == P167_MODEL_VINDSTYRKA) {
         addFormPinSelect(PinSelectPurpose::Generic_input, F("MonPin SCL"), F("taskdevicepin3"), P167_MON_SCL_PIN);

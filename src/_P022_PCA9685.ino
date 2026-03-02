@@ -335,10 +335,11 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
             P022_data->Plugin_022_Frequency(address, freq);
           }
           P022_data->Plugin_022_writeRegister(address, PCA9685_MODE2, event->Par1);
-
+#ifndef BUILD_NO_DEBUG
           addLog(LOG_LEVEL_INFO, strformat(F("%s%s"),
                                            P022_data_struct::P022_logPrefix(address, F("MODE2 0x")).c_str(),
                                            formatToHex(event->Par1, 2).c_str()));
+#endif
         }
         else {
           addLog(LOG_LEVEL_ERROR,

@@ -6,6 +6,8 @@
 # include "../Globals/Settings.h"
 # include "../Helpers/Hardware_device_info.h"
 
+#include <pins_arduino.h>
+
 // ********************************************************************************
 // Get info of a specific GPIO pin
 // ********************************************************************************
@@ -24,33 +26,46 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
 # if FEATURE_ETHERNET
 
   // Check pins used for RMII Ethernet PHY
-  if (NetworkMedium_t::Ethernet == Settings.NetworkMedium) {
-    switch (gpio) {
-      case 28: // RMII_RXDV
-      case 29: // RMII_RXD0
-      case 30: // RMII_RXD1
-      case 34: // RMII_TXD0
-      case 35: // RMII_TXD1
-      case 49: // RMII_TXEN
-      case 50: // RMII_CLK
-      case 51: // PHY_RSTN
-      case 52: // MDIO
-        warning = true;
-        break;
-    }
-
-
-    // FIXME TD-er: Must we also check for pins used for MDC/MDIO and Eth PHY power?
+  if (Settings.isEthernetPin(gpio) || Settings.isEthernetPinOptional(gpio))
+  {
+    warning = true;
   }
 # endif // if FEATURE_ETHERNET
+
+#ifdef BOARD_HAS_SDIO_ESP_HOSTED
+    // TODO TD-er: Make this configurable as we can set this via WiFi.setPins
+    switch (gpio) {
+      case BOARD_SDIO_ESP_HOSTED_CLK   : 
+      case BOARD_SDIO_ESP_HOSTED_CMD   : 
+      case BOARD_SDIO_ESP_HOSTED_D0    : 
+      case BOARD_SDIO_ESP_HOSTED_D1    : 
+      case BOARD_SDIO_ESP_HOSTED_D2    : 
+      case BOARD_SDIO_ESP_HOSTED_D3    : 
+      case BOARD_SDIO_ESP_HOSTED_RESET : 
+      {
+        warning = true;
+//        if (gpio != BOARD_SDIO_ESP_HOSTED_RESET) { return false; }
+        break;
+      }
+    }
+#endif
 
   return (input || output);
 }
 
+bool isBootModePin(int gpio)
+{
+  return gpio == 35; 
+}
+
+
 bool isBootStrapPin(int gpio)
 {
-
-  return false;
+  //  Boot mode           | GPIO35 | GPIO36 | GPIO37 | GPIO38
+  //  
+  //  SPI Boot            |    1   |   Any  |   Any  |   Any
+  //  Joint Download Boot |    0   |    1   |   Any  |   Any
+  return gpio >= 35 && gpio <= 38;
 }
 
 bool getGpioPullResistor(int gpio, bool& hasPullUp, bool& hasPullDown) {
@@ -97,20 +112,20 @@ bool getADC_gpio_info(int gpio_pin, int& adc, int& ch, int& t)
   t   = -1;
 
   switch (gpio_pin) {
-    case 16: adc = 1; ch = 0; break;
-    case 17: adc = 1; ch = 1; break;
-    case 18: adc = 1; ch = 2; break;
-    case 19: adc = 1; ch = 3; break;
-    case 20: adc = 1; ch = 4; break;
-    case 21: adc = 1; ch = 5; break;
-    case 22: adc = 1; ch = 6; break;
-    case 23: adc = 1; ch = 7; break;
-    case 49: adc = 2; ch = 0; break;
-    case 50: adc = 2; ch = 1; break;
-    case 51: adc = 2; ch = 2; break;
-    case 52: adc = 2; ch = 3; break;
-    case 53: adc = 2; ch = 4; break;
-    case 54: adc = 2; ch = 5; break;
+    case A0:  adc = 1; ch = 0; break;
+    case A1:  adc = 1; ch = 1; break;
+    case A2:  adc = 1; ch = 2; break;
+    case A3:  adc = 1; ch = 3; break;
+    case A4:  adc = 1; ch = 4; break;
+    case A5:  adc = 1; ch = 5; break;
+    case A6:  adc = 1; ch = 6; break;
+    case A7:  adc = 1; ch = 7; break;
+    case A8:  adc = 2; ch = 0; break;
+    case A9:  adc = 2; ch = 1; break;
+    case A10: adc = 2; ch = 2; break;
+    case A11: adc = 2; ch = 3; break;
+    case A12: adc = 2; ch = 4; break;
+    case A13: adc = 2; ch = 5; break;
     default:
       return false;
   }

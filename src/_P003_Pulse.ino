@@ -168,7 +168,7 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
     {
       addFormNumericBox(F("Debounce Time"), F("debounce")
                         , PCONFIG(P003_IDX_DEBOUNCETIME));
-      addUnit(F("mSec"));
+      addUnit(F("ms"));
 
       {
         const uint8_t choice                 = PCONFIG(P003_IDX_COUNTERTYPE);

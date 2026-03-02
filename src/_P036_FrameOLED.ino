@@ -223,7 +223,7 @@
 # ifdef P036_CHECK_HEAP
 #  include "src/Helpers/Memory.h"
 # endif // ifdef P036_CHECK_HEAP
-# include "src/ESPEasyCore/ESPEasyNetwork.h"
+# include "ESPEasy/net/ESPEasyNetwork.h"
 
 # define PLUGIN_036
 # define PLUGIN_ID_036         36
@@ -968,7 +968,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       if (P036_DisplayIsOn) {
         // Display is on.
 
-        if (!P036_data->bRunning && NetworkConnected() && (P036_data->ScrollingPages.Scrolling == 0)) {
+        if (!P036_data->bRunning && ESPEasy::net::NetworkConnected() && (P036_data->ScrollingPages.Scrolling == 0)) {
           // start page updates after network has connected
           P036_data->P036_DisplayPage(event);
         }

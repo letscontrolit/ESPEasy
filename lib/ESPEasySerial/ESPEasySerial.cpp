@@ -182,6 +182,14 @@ int ESPeasySerial::read(void)
   return _serialPort->read();
 }
 
+int ESPeasySerial::read(uint8_t *buffer, size_t size)
+{
+  if (!isValid()) {
+    return -1;
+  }
+  return _serialPort->read(buffer, size);
+}
+
 int ESPeasySerial::available(void)
 {
   if (!isValid()) {

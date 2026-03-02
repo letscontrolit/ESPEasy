@@ -56,7 +56,8 @@ size_t PluginTaskData_base::nrSamplesPresent() const {
 }
 
 #if FEATURE_PLUGIN_STATS
-void PluginTaskData_base::initPluginStats(taskIndex_t taskIndex, taskVarIndex_t taskVarIndex)
+
+void PluginTaskData_base::initPluginStats(taskVarIndex_t taskVarIndex)
 {
   if (taskVarIndex < VARS_PER_TASK) {
     if (_plugin_stats_array == nullptr) {
@@ -69,7 +70,7 @@ void PluginTaskData_base::initPluginStats(taskIndex_t taskIndex, taskVarIndex_t 
     }
 
     if (_plugin_stats_array != nullptr) {
-      _plugin_stats_array->initPluginStats(taskIndex, taskVarIndex);
+      _plugin_stats_array->initPluginStats(taskVarIndex);
     }
   }
 }
@@ -132,6 +133,7 @@ bool PluginTaskData_base::plugin_write_base(struct EventStruct *event,
 }
 
 #if FEATURE_PLUGIN_STATS
+
 bool PluginTaskData_base::webformLoad_show_stats(struct EventStruct *event) const
 {
   if (_plugin_stats_array != nullptr) {
@@ -141,6 +143,7 @@ bool PluginTaskData_base::webformLoad_show_stats(struct EventStruct *event) cons
 }
 
 # if FEATURE_CHART_JS
+
 void PluginTaskData_base::plot_ChartJS(bool onlyJSON) const
 {
   if (_plugin_stats_array != nullptr) {
@@ -154,8 +157,6 @@ void PluginTaskData_base::plot_ChartJS_scatter(
   const __FlashStringHelper    *id,
   const ChartJS_title         & chartTitle,
   const ChartJS_dataset_config& datasetConfig,
-  int                           width,
-  int                           height,
   bool                          showAverage,
   const String                & options,
   bool                          onlyJSON) const
@@ -167,8 +168,6 @@ void PluginTaskData_base::plot_ChartJS_scatter(
       id,
       chartTitle,
       datasetConfig,
-      width,
-      height,
       showAverage,
       options,
       onlyJSON);
@@ -176,7 +175,6 @@ void PluginTaskData_base::plot_ChartJS_scatter(
 }
 
 # endif // if FEATURE_CHART_JS
-
 
 PluginStats * PluginTaskData_base::getPluginStats(taskVarIndex_t taskVarIndex) const
 {

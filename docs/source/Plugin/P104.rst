@@ -227,9 +227,9 @@ Available options:
 .. image:: P104_ZoneFontOptions.png
    :alt: Zone font options
 
-All available fonts have been taken from the example code of the used Parola library.
+Most available fonts have been taken from the example code of the used Parola library, and the Cyrillic font from a post in the arduino.ru forum.
 
-The Arabic, Greek and Katakana fonts have all their characters in the 'high-ascii' range (> 128 ascii values), so they can (and should) **not** be used to 'translate' normal text to Arabic, Greek or Katakana.
+The Arabic, Greek, Katakana and Cyrillic fonts have all their characters in the 'high-ascii' range (> 128 ascii values), so they can (and should) **not** be used to 'translate' normal text to Arabic, Greek or Katakana.
 
 On 'bin-size-challenged' builds the *Full, double height* font is replaced by the *Numeric, double height* font, to limit the bin-size a bit more. This font can display only numeric (actually hexadecimal, 0..9 and A..F) and date/time content.
 
@@ -244,6 +244,7 @@ Font overview:
 * :ref:`P104-Font-Arabic_page`
 * :ref:`P104-Font-Greek_page`
 * :ref:`P104-Font-Katakana_page`
+* :ref:`P104-Font-Cyrillic-ext_page`
 
 .. spacer
 

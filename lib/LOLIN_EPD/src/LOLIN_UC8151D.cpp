@@ -21,7 +21,7 @@
     @param BUSY the busy pin to use
 */
 /**************************************************************************/
-LOLIN_UC8151D::LOLIN_UC8151D(int width, int height, int8_t SID, int8_t SCLK, int8_t DC, int8_t RST, int8_t CS, int8_t BUSY) : LOLIN_EPD(width, height, SID, SCLK, DC, RST, CS, BUSY)
+LOLIN_UC8151D::LOLIN_UC8151D(int width, int height, int8_t SID, int8_t SCLK, int8_t DC, int8_t RST, int8_t CS, int8_t BUSY, SPIClass& spi) : LOLIN_EPD(width, height, SID, SCLK, DC, RST, CS, BUSY, spi)
 {
 
     if ((height % 8) > 0)
@@ -39,7 +39,7 @@ LOLIN_UC8151D::LOLIN_UC8151D(int width, int height, int8_t SID, int8_t SCLK, int
     red_bufsize = bw_bufsize;
 }
 
-LOLIN_UC8151D::LOLIN_UC8151D(int width, int height, int8_t DC, int8_t RST, int8_t CS, int8_t BUSY) : LOLIN_EPD(width, height, DC, RST, CS, BUSY)
+LOLIN_UC8151D::LOLIN_UC8151D(int width, int height, int8_t DC, int8_t RST, int8_t CS, int8_t BUSY, SPIClass& spi) : LOLIN_EPD(width, height, DC, RST, CS, BUSY, spi)
 {
 
     if ((height % 8) > 0)

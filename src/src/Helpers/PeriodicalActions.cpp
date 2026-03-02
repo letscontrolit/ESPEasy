@@ -10,25 +10,19 @@
 #include "../ESPEasyCore/Controller.h"
 #include "../ESPEasyCore/ESPEasyGPIO.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
-#include "../ESPEasyCore/ESPEasyNetwork.h"
-#include "../ESPEasyCore/ESPEasyWifi.h"
+#include "../../ESPEasy/net/ESPEasyNetwork.h"
 #include "../ESPEasyCore/ESPEasyRules.h"
 #include "../ESPEasyCore/Serial.h"
-#include "../Globals/ESPEasyWiFiEvent.h"
-#if FEATURE_ETHERNET
-#include "../Globals/ESPEasyEthEvent.h"
-#endif
 #include "../Globals/ESPEasy_Scheduler.h"
 #include "../Globals/ESPEasy_time.h"
 #include "../Globals/EventQueue.h"
 #include "../Globals/MainLoopCommand.h"
 #include "../Globals/MQTT.h"
-#include "../Globals/NetworkState.h"
 #include "../Globals/RTC.h"
 #include "../Globals/Services.h"
 #include "../Globals/Settings.h"
 #include "../Globals/Statistics.h"
-#include "../Globals/WiFi_AP_Candidates.h"
+#include "../../ESPEasy/net/Globals/WiFi_AP_Candidates.h"
 #include "../Helpers/ESPEasyRTC.h"
 #include "../Helpers/FS_Helper.h"
 #include "../Helpers/Hardware_temperature_sensor.h"
@@ -38,6 +32,14 @@
 #include "../Helpers/StringGenerator_System.h"
 #include "../Helpers/StringGenerator_WiFi.h"
 #include "../Helpers/StringProvider.h"
+
+#include "../../ESPEasy/net/wifi/ESPEasyWifi.h"
+#include "../../ESPEasy/net/Globals/ESPEasyWiFi.h"
+#include "../../ESPEasy/net/Globals/ESPEasyWiFiEvent.h"
+#include "../../ESPEasy/net/Globals/NetworkState.h"
+#include "../../ESPEasy/net/Globals/NWPlugins.h"
+#include "../../ESPEasy/net/wifi/WiFi_State.h"
+
 
 #ifdef USES_C015
 #include "../../ESPEasy_fdwdecl.h"
@@ -55,6 +57,26 @@
 void run50TimesPerSecond() {
   String dummy;
   {
+    // Do network calls first, so any needed checks or updates are done 
+    // before any controller may need to use the network
+#ifdef ESP32
+    static const NetworkInterface *lastDefaultInterface = nullptr;
+    NetworkInterface * currentDefaultInterface = Network.getDefaultInterface();
+    if (nonDefaultNetworkInterface_gotIP || lastDefaultInterface != currentDefaultInterface) {
+      nonDefaultNetworkInterface_gotIP = false;
+      ESPEasy::net::NWPluginCall(NWPlugin::Function::NWPLUGIN_PRIORITY_ROUTE_CHANGED, 0, dummy);
+      lastDefaultInterface = currentDefaultInterface;
+    }
+#endif
+
+    START_TIMER;
+    ESPEasy::net::NWPluginCall(NWPlugin::Function::NWPLUGIN_FIFTY_PER_SECOND, 0, dummy);
+    STOP_TIMER(NWPLUGIN_CALL_50PS);
+  }
+  {
+    ESPEasy::net::processNetworkEvents();
+  }
+  {
     START_TIMER;
     PluginCall(PLUGIN_FIFTY_PER_SECOND, 0, dummy);
     STOP_TIMER(PLUGIN_CALL_50PS);
@@ -64,6 +86,7 @@ void run50TimesPerSecond() {
     CPluginCall(CPlugin::Function::CPLUGIN_FIFTY_PER_SECOND, 0, dummy);
     STOP_TIMER(CPLUGIN_CALL_50PS);
   }
+
   processNextEvent();
 }
 
@@ -77,6 +100,11 @@ void run10TimesPerSecond() {
     START_TIMER;
     GPIO_Monitor10xSec();
     STOP_TIMER(PLUGIN_CALL_10PSU);
+  }
+  {
+    START_TIMER;
+    ESPEasy::net::NWPluginCall(NWPlugin::Function::NWPLUGIN_TEN_PER_SECOND, 0, dummy);
+    STOP_TIMER(NWPLUGIN_CALL_10PS);
   }
   {
     START_TIMER;
@@ -96,11 +124,13 @@ void run10TimesPerSecond() {
   }
   
   #ifdef USES_C015
-  if (NetworkConnected()) {
+  if (ESPEasy::net::NetworkConnected()) {
     Blynk_Run_c015();
   }
   #endif
-  if (!UseRTOSMultitasking) {
+  if (!UseRTOSMultitasking && 
+    (ESPEasy::net::NetworkConnected() || ESPEasy::net::wifi::wifiAPmodeActivelyUsed())) {
+    // FIXME TD-er: What about client connected via AP?
     START_TIMER
     web_server.handleClient();
     STOP_TIMER(WEBSERVER_HANDLE_CLIENT);
@@ -121,22 +151,23 @@ void runOncePerSecond()
     RTC.flashDayCounter=0;
     saveToRTC();
     dailyResetCounter=0;
-    #ifndef BUILD_MINIMAL_OTA
+    #ifndef LIMIT_BUILD_SIZE
     addLog(LOG_LEVEL_INFO, F("SYS  : Reset 24h counters"));
     #endif
   }
 
-  if (Settings.ConnectionFailuresThreshold)
-    if (WiFiEventData.connectionFailures > Settings.ConnectionFailuresThreshold)
+  if (Settings.ConnectionFailuresThreshold) {
+    auto data = ESPEasy::net::getDefaultRoute_NWPluginData_static_runtime();
+    if (data && data->getConnectionFailures() > Settings.ConnectionFailuresThreshold)
       delayedReboot(60, IntendedRebootReason_e::DelayedReboot);
-
+  }
   if (cmd_within_mainloop != 0)
   {
     switch (cmd_within_mainloop)
     {
       case CMD_WIFI_DISCONNECT:
         {
-          WifiDisconnect();
+          ESPEasy::net::wifi::WifiDisconnect();
           break;
         }
       case CMD_REBOOT:
@@ -170,8 +201,18 @@ void runOncePerSecond()
   PluginCall(PLUGIN_ONCE_A_SECOND, 0, dummy);
 //  unsigned long elapsed = micros() - start;
 
+#if FEATURE_NETWORK_STATS
+  for (ESPEasy::net::networkIndex_t x = 0; x < NETWORK_MAX; x++) {
+    if (Settings.getNetworkEnabled(x)) {
+      EventStruct tempEvent;
+      tempEvent.NetworkIndex = x;
+      ESPEasy::net::NWPluginCall(NWPlugin::Function::NWPLUGIN_RECORD_STATS, &tempEvent);
+    }
+  }
+#endif
 
   // I2C Watchdog feed
+#if FEATURE_I2C
   if (Settings.WDI2CAddress != 0)
   {
     #if FEATURE_I2C_MULTIPLE
@@ -179,11 +220,12 @@ void runOncePerSecond()
     #endif // if FEATURE_I2C_MULTIPLE
     I2C_write8(Settings.WDI2CAddress, 0xA5);
   }
+#endif
 
   #if FEATURE_MDNS
   #ifdef ESP8266
   // Allow MDNS processing
-  if (NetworkConnected()) {
+  if (ESPEasy::net::NetworkConnected()) {
     MDNS.announce();
   }
   #endif
@@ -206,36 +248,45 @@ void runEach30Seconds()
   checkRAMtoLog();
   #endif
   wdcounter++;
-  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = strformat(
-      F("WD   : Uptime %d  ConnectFailures %u FreeMem %u"),
-      getUptimeMinutes(),
-      WiFiEventData.connectionFailures,
-      FreeMem());
-    bool logWiFiStatus = true;
-    #if FEATURE_ETHERNET
-    if(active_network_medium == NetworkMedium_t::Ethernet) {
-      logWiFiStatus = false;
-      log += F( " EthSpeedState ");
-      log += getValue(LabelType::ETH_SPEED_STATE);
-      log += F(" ETH status: ");
-      log += EthEventData.ESPEasyEthStatusToString();
-    }
-    #endif // if FEATURE_ETHERNET
-    if (logWiFiStatus) {
-      log += strformat(
-        F(" WiFiStatus: %s ESPeasy internal wifi status: %s"),
-        ArduinoWifiStatusToString(WiFi.status()).c_str(),
-        WiFiEventData.ESPeasyWifiStatusToString().c_str());
-    }
-//    log += F(" ListenInterval ");
-//    log += WiFi.getListenInterval();
-    addLogMove(LOG_LEVEL_INFO, log);
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {  
+    auto data = ESPEasy::net::getDefaultRoute_NWPluginData_static_runtime();
+    if (!data) {
+      addLogMove(LOG_LEVEL_INFO, strformat(
+        F("WD   : Uptime %d  FreeMem %u"),
+        getUptimeMinutes(),
+        FreeMem()));
+    } else {
+      String log = strformat(
+        F("WD   : Uptime %d  ConnectFailures %u FreeMem %u"),
+        getUptimeMinutes(),
+        data->getConnectionFailures(),
+        FreeMem());
+      bool logWiFiStatus = true;
+      #if FEATURE_ETHERNET
+      if(active_network_medium == ESPEasy::net::NetworkMedium_t::Ethernet) {
+        logWiFiStatus = false;
+        log += F( " EthSpeedState ");
+        log += getValue(LabelType::ETH_SPEED_STATE);
+//        log += F(" ETH status: ");
+//        log += EthEventData.ESPEasyEthStatusToString();
+      }
+      #endif // if FEATURE_ETHERNET
+      if (logWiFiStatus) {
+        log += strformat(
+          F(" WiFiStatus: %s ESPeasy internal wifi status: %s (%s)"),
+          ArduinoWifiStatusToString(WiFi.status()).c_str(),
+          FsP(ESPEasy::net::wifi::toString(ESPEasyWiFi.getState())),
+          data->statusToString().c_str());
+      }
+  //    log += F(" ListenInterval ");
+  //    log += WiFi.getListenInterval();
+      addLogMove(LOG_LEVEL_INFO, log);
 #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
-//    addLogMove(LOG_LEVEL_INFO,  ESPEASY_SERIAL_CONSOLE_PORT.getLogString());
+  //    addLogMove(LOG_LEVEL_INFO,  ESPEASY_SERIAL_CONSOLE_PORT.getLogString());
 #endif
+    }
   }
-  WiFi_AP_Candidates.purge_expired();
+  ESPEasy::net::wifi::WiFi_AP_Candidates.purge_expired();
   #if FEATURE_ESPEASY_P2P
   sendSysInfoUDP(1);
   refreshNodeList();
@@ -252,9 +303,9 @@ void runEach30Seconds()
   #endif // if FEATURE_SSDP
   #endif
 #if FEATURE_ADC_VCC
-  if (!WiFiEventData.wifiConnectInProgress) {
+//  if (!WiFiEventData.wifiConnectInProgress) {
     vcc = ESP.getVcc() / 1000.0f;
-  }
+//  }
 #endif
 
   #if FEATURE_REPORTING
@@ -273,10 +324,6 @@ void scheduleNextMQTTdelayQueue() {
 }
 
 void schedule_all_MQTTimport_tasks() {
-  controllerIndex_t ControllerIndex = firstEnabledMQTT_ControllerIndex();
-
-  if (!validControllerIndex(ControllerIndex)) { return; }
-
   constexpr pluginID_t PLUGIN_MQTT_IMPORT(PLUGIN_ID_MQTT_IMPORT);
 
   deviceIndex_t DeviceIndex = getDeviceIndex(PLUGIN_MQTT_IMPORT); // Check if P037_MQTTimport is present in the build
@@ -287,7 +334,10 @@ void schedule_all_MQTTimport_tasks() {
         // Schedule a call to each enabled MQTT import plugin to notify the broker connection state
         EventStruct event(task);
         event.Par1 = MQTTclient_connected ? 1 : 0;
-        Scheduler.schedule_plugin_task_event_timer(DeviceIndex, PLUGIN_MQTT_CONNECTION_STATE, std::move(event));
+        Scheduler.schedule_plugin_task_event_timer(
+          task,
+          PLUGIN_MQTT_CONNECTION_STATE, 
+          std::move(event));
       }
     }
   }
@@ -326,8 +376,9 @@ void processMQTTdelayQueue() {
   } else
   if (!handled) {
     if (MQTTclient.publish(element->_topic.c_str(), element->_payload.c_str(), element->_retained)) {
-      if (WiFiEventData.connectionFailures > 0) {
-        --WiFiEventData.connectionFailures;
+      auto data = ESPEasy::net::getDefaultRoute_NWPluginData_static_runtime();
+      if (data) {
+        data->markPublishSuccess();
       }
       MQTTDelayHandler->markProcessed(true);
     } else {
@@ -349,18 +400,24 @@ void processMQTTdelayQueue() {
 }
 
 void updateMQTTclient_connected() {
-  if (MQTTclient_connected != MQTTclient.connected()) {
-    MQTTclient_connected = !MQTTclient_connected;
+  const bool actual_MQTTclient_connected = MQTTclient.connected();
+  if (MQTTclient_connected != actual_MQTTclient_connected) {
+    MQTTclient_connected = actual_MQTTclient_connected;
+    MQTTclient_connected_stats.set(actual_MQTTclient_connected);
     if (!MQTTclient_connected) {
       if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
         String connectionError = F("MQTT : Connection lost, state: ");
         connectionError += getMQTT_state();
+#ifndef BUILD_NO_DEBUG
+        auto duration_ms = MQTTclient_connected_stats.getLastOnDuration_ms();
+        if (duration_ms > 0) {
+          connectionError += concat(F(" Connected duration: "), format_msec_duration_HMS(duration_ms));
+          connectionError += concat(F(" (successful) Reconnect Count: "), MQTTclient_connected_stats.getCycleCount());
+        }
+#endif
         addLogMove(LOG_LEVEL_ERROR, connectionError);
       }
       MQTTclient_must_send_LWT_connected = false;
-    } else {
-      // Now schedule all tasks using the MQTT controller.
-      schedule_all_MQTTimport_tasks();
     }
     if (Settings.UseRules) {
       if (MQTTclient_connected) {
@@ -369,6 +426,8 @@ void updateMQTTclient_connected() {
         eventQueue.add(F("MQTT#Disconnected"));
       }
     }
+    // Now schedule all tasks using the MQTT Import plugin.
+    schedule_all_MQTTimport_tasks();
   }
   if (!MQTTclient_connected) {
     // As suggested here: https://github.com/letscontrolit/ESPEasy/issues/1356
@@ -386,6 +445,7 @@ void updateMQTTclient_connected() {
 }
 
 void runPeriodicalMQTT() {
+  START_TIMER
   // MQTT_KEEPALIVE = 15 seconds.
   if (!NetworkConnected(10)) {
     updateMQTTclient_connected();
@@ -413,6 +473,7 @@ void runPeriodicalMQTT() {
       updateMQTTclient_connected();
     }
   }
+  STOP_TIMER(PERIODICAL_MQTT);
 }
 
 
@@ -505,14 +566,16 @@ void flushAndDisconnectAllClients() {
 
 void prepareShutdown(IntendedRebootReason_e reason)
 {
-  WiFiEventData.intent_to_reboot = true;
+//  WiFiEventData.intent_to_reboot = true;
 #if FEATURE_MQTT
   runPeriodicalMQTT(); // Flush outstanding MQTT messages
 #endif // if FEATURE_MQTT
   process_serialWriteBuffer();
   flushAndDisconnectAllClients();
   saveUserVarToRTC();
-  setWifiMode(WIFI_OFF);
+  CPluginCall(CPlugin::Function::CPLUGIN_EXIT_ALL, 0);
+  ESPEasy::net::NWPluginCall(NWPlugin::Function::NWPLUGIN_EXIT_ALL, 0);
+//  ESPEasy::net::wifi::setWifiMode(WIFI_OFF);
   ESPEASY_FS.end();
   process_serialWriteBuffer();
   delay(100); // give the node time to flush all before reboot or sleep

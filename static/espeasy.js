@@ -6,7 +6,7 @@ var commonAtoms = ["And", "Or"];
 var commonKeywords = ["If", "Else", "Elseif", "Endif"];
 var commonCommands = ["AccessInfo", "Background", "Build", "ClearAccessBlock", "ClearRTCam", "Config", "ControllerDisable",
   "ControllerEnable", "DateTime", "Debug", "Dec", "DeepSleep", "DisablePriorityTask", "DNS", "DST", "EraseSDKWiFi", "ExecuteRules", "FactoryReset", "Gateway", "I2Cscanner", "Inc",
-  "IP", "Latitude", "Let", "LetStr", "Load", "LogEntry", "LogPortStatus", "Longitude", "LoopTimerSet", "LoopTimerSet_ms", "LoopTimerSetAndRun", "LoopTimerSetAndRun_ms", "MemInfo", "MemInfoDetail", "Name", "Password", "PostToHTTP", "PostToHTTPS", "Publish", "PublishR",
+  "IP", "Latitude", "Let", "LetStr", "Load", "LogEntry", "LogPortStatus", "Longitude", "LoopTimerSet", "LoopTimerSet_ms", "LoopTimerSetAndRun", "LoopTimerSetAndRun_ms", "MemInfo", "MemInfoDetail", "Name", "NetworkDisable", "NetworkEnable", "Password", "PostToHTTP", "PostToHTTPS", "Publish", "PublishR",
   "PutToHTTP", "PutToHTTPS", "Reboot", "Save", "SendTo", "SendToHTTP", "SendToHTTPS", "SendToUDP", "SendToUDPMix", "Settings", "Subnet", "Subscribe", "TaskClear", "TaskClearAll",
   "TaskDisable", "TaskEnable", "TaskRun", "TaskValueSet", "TaskValueSetAndRun", "TaskValueSetDerived", "TaskValueSetPresentation", "TimerPause", "TimerResume", "TimerSet", "TimerSet_ms", "TimeZone",
   "UdpPort", "UdpTest", "Unit", "UseNTP", "WdConfig", "WdRead", "WiFi", "WiFiAllowAP", "WiFiAPMode", "WiFiConnect", "WiFiDisconnect", "WiFiKey",

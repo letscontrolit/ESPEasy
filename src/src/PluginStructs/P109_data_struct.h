@@ -4,7 +4,8 @@
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P109
 
-# include "../Globals/ESPEasyWiFiEvent.h"
+
+# include "../../ESPEasy/net/Globals/ESPEasyWiFiEvent.h"
 # include "../Helpers/OLed_helper.h"
 
 # include "SSD1306.h"

@@ -3,12 +3,14 @@
 
 #if USES_USBCDC
 
-# if !ARDUINO_USB_CDC_ON_BOOT
+#include <USB.h>
+
+# if !USB_SERIAL_IS_DEFINED
 USBCDC ESPEasySerial_USBCDC_port0(0);
 
 // USBCDC ESPEasySerial_USBCDC_port1(1);
-# endif // if !ARDUINO_USB_CDC_ON_BOOT
-
+# endif 
+/*
 volatile bool usbActive = false;
 
 volatile int32_t eventidTriggered = ESP_EVENT_ANY_ID;
@@ -59,15 +61,15 @@ static void usbcdcEventCallback(void *arg, esp_event_base_t event_base, int32_t 
         usbActive = true;
         break;
       case ARDUINO_USB_CDC_RX_EVENT:
-        /*
-           Serial.printf("CDC RX EVENT [%u]: ", data->rx.len);
-           {
-            uint8_t buf[data->rx.len];
-            size_t len = Serial.read(buf, data->rx.len);
-            Serial.write(buf, len);
-           }
-           Serial.println();
-         */
+        
+//           Serial.printf("CDC RX EVENT [%u]: ", data->rx.len);
+//           {
+//            uint8_t buf[data->rx.len];
+//            size_t len = Serial.read(buf, data->rx.len);
+//            Serial.write(buf, len);
+//           }
+//           Serial.println();
+         
         usbActive = true;
         break;
       case ARDUINO_USB_CDC_TX_EVENT:
@@ -83,12 +85,14 @@ static void usbcdcEventCallback(void *arg, esp_event_base_t event_base, int32_t 
     }
   }
 }
+*/
 
 Port_ESPEasySerial_USBCDC_t::Port_ESPEasySerial_USBCDC_t(const ESPEasySerialConfig& config)
 {
-  # if ARDUINO_USB_CDC_ON_BOOT
+  # if USB_SERIAL_IS_DEFINED
+  _serial = &USBSerial;
 
-  # else // if ARDUINO_USB_CDC_ON_BOOT
+  # else 
   _serial = nullptr;
 
   if (config.port == ESPEasySerialPort::usb_cdc_0) {
@@ -100,10 +104,11 @@ Port_ESPEasySerial_USBCDC_t::Port_ESPEasySerial_USBCDC_t(const ESPEasySerialConf
      _serial = &ESPEasySerial_USBCDC_port1;
      }
    */
-  # endif // if ARDUINO_USB_CDC_ON_BOOT
+  # endif 
 
   if (_serial != nullptr) {
     _config.port = config.port;
+//    _serial->end();
 
     //    USB.onEvent(usbcdcEventCallback);
     //    _serial->onEvent(usbcdcEventCallback);
@@ -115,7 +120,7 @@ Port_ESPEasySerial_USBCDC_t::Port_ESPEasySerial_USBCDC_t(const ESPEasySerialConf
     _serial->begin();
 
     //    _serial->onEvent(usbcdcEventCallback);
-    //    USB.begin();
+//    USB.begin();
     delay(1);
   }
 }

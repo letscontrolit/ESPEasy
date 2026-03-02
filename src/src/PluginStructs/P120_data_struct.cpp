@@ -4,6 +4,7 @@
 
 # define P120_RAD_TO_DEG        57.295779f // 180.0/M_PI
 
+# include "../Globals/SPIe.h"
 
 P120_data_struct::P120_data_struct(uint8_t aSize)
   : _aSize(aSize)
@@ -235,7 +236,14 @@ bool P120_data_struct::init_sensor(struct EventStruct *event) {
   if (i2c_mode) {
     adxl345 = new (std::nothrow) ADXL345(_i2c_addr); // Init using I2C
   } else {
-    adxl345 = new (std::nothrow) ADXL345(_cs_pin);   // Init using SPI
+    # ifdef ESP32
+    const uint8_t spi_bus = Settings.getSPIBusForTask(event->TaskIndex);
+    # endif // ifdef ESP32
+    adxl345 = new (std::nothrow) ADXL345(_cs_pin
+                                         # ifdef ESP32
+                                         , 0 == spi_bus ? SPI : SPIe
+                                         # endif // ifdef ESP32
+                                         ); // Init using SPI
   }
 
   if (initialized()) {
@@ -537,7 +545,7 @@ bool P120_data_struct::plugin_webform_load(struct EventStruct *event) {
     FormSelectorOptions selector(4, rangeOptions, rangeValues);
     selector.default_index = P120_RANGE_16G;
     selector.addFormSelector(F("Range"), F("range"),
-      get2BitFromUL(P120_CONFIG_FLAGS1, P120_FLAGS1_RANGE));
+                             get2BitFromUL(P120_CONFIG_FLAGS1, P120_FLAGS1_RANGE));
     addUnit('g');
   }
 
@@ -631,7 +639,7 @@ bool P120_data_struct::plugin_webform_load(struct EventStruct *event) {
       F("10"),
       F("50") };
     int frequencyValues[] = { P120_FREQUENCY_10, P120_FREQUENCY_50 };
-    const FormSelectorOptions selector( 2, frequencyOptions, frequencyValues);
+    const FormSelectorOptions selector(2, frequencyOptions, frequencyValues);
     selector.addFormSelector(F("Measuring frequency"), F("frequency"), P120_FREQUENCY);
     addUnit(F("Hz"));
     addFormNote(F("Values X/Y/Z are updated 1x per second, Controller updates &amp; Value-events are based on 'Interval' setting."));

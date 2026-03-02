@@ -7,20 +7,14 @@
 #include "../Helpers/I2C_access.h"
 #include "../Helpers/StringConverter.h"
 
+#if FEATURE_I2C
 
 #include <Wire.h>
 
 
 void initI2C() {
   // configure hardware pins according to eeprom settings.
-  if (!Settings.isI2CEnabled(0)
-      #if FEATURE_I2C_MULTIPLE
-      && !Settings.isI2CEnabled(1)
-      # if FEATURE_I2C_INTERFACE_3
-      && !Settings.isI2CEnabled(2)
-      # endif // if FEATURE_I2C_INTERFACE_3
-      #endif // if FEATURE_I2C_MULTIPLE
-      )
+  if (Settings.getNrConfiguredI2C_buses() == 0)
   {
     return;
   }
@@ -32,7 +26,7 @@ void initI2C() {
   #endif // if !FEATURE_I2C_MULTIPLE
   {
     if (Settings.isI2CEnabled(i2cBus)) {
-      #ifndef BUILD_MINIMAL_OTA
+      #ifndef LIMIT_BUILD_SIZE
       #if !FEATURE_I2C_MULTIPLE
       addLog(LOG_LEVEL_INFO, F("INIT : I2C Bus"));
       #else // if !FEATURE_I2C_MULTIPLE
@@ -263,7 +257,7 @@ void I2CMultiplexerSelectByTaskIndex(taskIndex_t taskIndex) {
   const uint8_t i2cBus = 0;
   # endif // if FEATURE_I2C_MULTIPLE
 
-  if (!bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_MUX_MULTICHANNEL)) {
+  if (!bitRead(Settings.I2C_SPI_bus_Flags[taskIndex], I2C_FLAGS_MUX_MULTICHANNEL)) {
     uint8_t i = Settings.I2C_Multiplexer_Channel[taskIndex];
 
     if (i > 7) { return; }
@@ -322,8 +316,9 @@ bool I2CMultiplexerPortSelectedForTask(taskIndex_t taskIndex) {
   # endif // if FEATURE_I2C_MULTIPLE
 
   if (!isI2CMultiplexerEnabled(i2cBus)) { return false; }
-  return (!bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_MUX_MULTICHANNEL) && Settings.I2C_Multiplexer_Channel[taskIndex] != -1)
-         || (bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_MUX_MULTICHANNEL) && Settings.I2C_Multiplexer_Channel[taskIndex] !=  0);
+  return (!bitRead(Settings.I2C_SPI_bus_Flags[taskIndex], I2C_FLAGS_MUX_MULTICHANNEL) && Settings.I2C_Multiplexer_Channel[taskIndex] != -1)
+         || (bitRead(Settings.I2C_SPI_bus_Flags[taskIndex], I2C_FLAGS_MUX_MULTICHANNEL) && Settings.I2C_Multiplexer_Channel[taskIndex] !=  0);
 }
 
-#endif // if FEATURE_I2CMULTIPLEXER
+#endif
+#endif

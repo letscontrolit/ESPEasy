@@ -166,6 +166,10 @@ void handle_sysvars() {
   {
     const SystemVariables::Enum vars[] = {
       SystemVariables::ISWIFI,
+      SystemVariables::ISWIFIAP,
+#ifdef USES_NW005
+      SystemVariables::ISPPP,
+#endif
       SystemVariables::ISNTP,
 # if FEATURE_MQTT
       SystemVariables::ISMQTT,
@@ -518,10 +522,8 @@ void addSysVar_html(String input, bool isSpecialChar) {
   // Make deepcopy for replacement, so parameter is a copy, not a const reference
 
   html_TR_TD();
-  addHtml(F("<pre>")); // Make monospaced (<tt> tag?)
-  addHtml(input);
-  addHtml(F("</pre>"));
-
+  addHtml_pre(input);
+  
   if (isSpecialChar) {
     parseSpecialCharacters(input, false);
     html_TD();

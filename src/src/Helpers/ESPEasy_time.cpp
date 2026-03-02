@@ -12,10 +12,13 @@
 #include "../DataTypes/TimeSource.h"
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
-#include "../ESPEasyCore/ESPEasyNetwork.h"
+#include "../../ESPEasy/net/ESPEasyNetwork.h"
 
 #include "../Globals/EventQueue.h"
-#include "../Globals/NetworkState.h"
+#include "../../ESPEasy/net/Globals/NetworkState.h"
+#include "../../ESPEasy/net/DataTypes/NetworkIndex.h"
+#include "../../ESPEasy/net/_NWPlugin_Helper.h"
+
 #include "../Globals/Nodes.h"
 #include "../Globals/RTC.h"
 #include "../Globals/Settings.h"
@@ -203,6 +206,21 @@ uint32_t ESPEasy_time::systemMicros_to_Localtime(const int64_t& systemMicros, ui
   return time_zone.toLocal(systemMicros_to_Unixtime(systemMicros, unix_time_frac));
 }
 
+int64_t ESPEasy_time::internalTimestamp_to_systemMicros(const uint32_t& internalTimestamp, uint32_t internal_to_micros_ratio) const
+{
+  const uint64_t cur_micros    = getMicros64();
+  const uint64_t overflow_step = 4294967296ull * internal_to_micros_ratio;
+
+  uint64_t sysMicros = static_cast<uint64_t>(internalTimestamp) * internal_to_micros_ratio;
+
+  // Try to get in the range of the current system micros
+  while ((sysMicros + overflow_step) < cur_micros) {
+    sysMicros += overflow_step;
+  }
+  return sysMicros;
+
+}
+
 void ESPEasy_time::initTime()
 {
   nextSyncTime = 0;
@@ -337,6 +355,17 @@ unsigned long ESPEasy_time::now_() {
               taskData->processTimeSet(externalUnixTime_offset_usec / 1000000.0);
             }
           }
+#if FEATURE_NETWORK_STATS
+          // Process for network interfaces too
+          for (ESPEasy::net::networkIndex_t networkIndex = 0; networkIndex < NETWORK_MAX; networkIndex++)
+          {
+            ESPEasy::net::NWPluginData_base *NWdata = ESPEasy::net::getNWPluginData(networkIndex);
+
+            if (NWdata != nullptr) {
+              NWdata->processTimeSet(externalUnixTime_offset_usec / 1000000.0);
+            }
+          }
+#endif
         }
       }
 
@@ -375,7 +404,7 @@ unsigned long ESPEasy_time::now_() {
           syncInterval = 3600;
         }
       }
-
+#ifndef BUILD_NO_DEBUG
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log = F("Time set to ");
         #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
@@ -394,7 +423,7 @@ unsigned long ESPEasy_time::now_() {
         }
         addLogMove(LOG_LEVEL_INFO, log);
       }
-
+#endif
       time_zone.applyTimeZone(unixTime_d);
       lastSyncTime_ms = millis();
       nextSyncTime    = getUptime_in_sec() + syncInterval;
@@ -415,13 +444,13 @@ unsigned long ESPEasy_time::now_() {
   calcSunRiseAndSet(timeSynced);
 
   if (timeSynced) {
-    #ifndef BUILD_MINIMAL_OTA
+#ifndef BUILD_NO_DEBUG
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       addLog(LOG_LEVEL_INFO, strformat(
                F("Local time: %s"),
                getDateTimeString('-', ':', ' ').c_str()));
     }
-    #endif
+#endif
     {
       // Notify plugins the time has been set.
       String dummy;
@@ -480,7 +509,7 @@ bool ESPEasy_time::systemTimePresent() const {
 
 bool ESPEasy_time::getNtpTime(double& unixTime_d)
 {
-  if (!Settings.UseNTP() || !NetworkConnected(10)) {
+  if (!Settings.UseNTP() || !ESPEasy::net::NetworkConnected()) {
     return false;
   }
 
@@ -497,7 +526,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
   bool useNTPpool = false;
 
   if (Settings.NTPHost[0] != 0) {
-    resolveHostByName(Settings.NTPHost, timeServerIP);
+    if (!resolveHostByName(Settings.NTPHost, timeServerIP)) return false;
     log += Settings.NTPHost;
 
     // When single set host fails, retry again in 20 seconds
@@ -506,7 +535,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
     // Have to do a lookup each time, since the NTP pool always returns another IP
     const String ntpServerName = strformat(
       F("%d.pool.ntp.org"), HwRandom(0, 3));
-    resolveHostByName(ntpServerName.c_str(), timeServerIP);
+    if (!resolveHostByName(ntpServerName.c_str(), timeServerIP)) return false;
     log += ntpServerName;
 
     // When pool host fails, retry can be much sooner
@@ -668,7 +697,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
                      ));
 #endif // ifndef BUILD_NO_DEBUG
       }
-      CheckRunningServices(); // FIXME TD-er: Sometimes services can only be started after NTP is successful
+      ESPEasy::net::CheckRunningServices(); // FIXME TD-er: Sometimes services can only be started after NTP is successful
       STOP_TIMER(NTP_SUCCESS);
       return true;
     }

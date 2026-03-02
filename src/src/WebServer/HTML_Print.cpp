@@ -4,6 +4,17 @@
 
 size_t HTML_Print::write(uint8_t c)
 {
+  if (c == '\n') {
+    TXBuffer += F("<br>");
+  } else {
+    TXBuffer += (char)c;
+  }
+  return 1;
+}
+
+
+size_t PrintToWebServer::write(uint8_t c)
+{
   TXBuffer += (char)c;
   return 1;
 }

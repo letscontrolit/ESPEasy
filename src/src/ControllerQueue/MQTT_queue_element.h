@@ -55,6 +55,8 @@ public:
   bool _retained = false; 
 };
 
+DEF_UP(MQTT_queue_element);
+
 #endif // if FEATURE_MQTT
 
 #endif // CONTROLLERQUEUE_MQTT_QUEUE_ELEMENT_H

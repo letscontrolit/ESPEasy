@@ -78,10 +78,11 @@ private:
 
 public:
 
-  IthoCC1101(int8_t  CSpin     = PIN_SPI_SS,
-             int8_t  MISOpin   = MISO,
-             uint8_t counter   = 0,
-             uint8_t sendTries = 3); // set initial counter value
+  IthoCC1101(int8_t    CSpin     = PIN_SPI_SS,
+             int8_t    MISOpin   = MISO,
+             SPIClass& spi       = SPI,
+             uint8_t   counter   = 0,
+             uint8_t   sendTries = 3); // set initial counter value
   ~IthoCC1101();
 
   // init
@@ -90,7 +91,8 @@ public:
     initReceive();
   } // init,reset CC1101
 
-  void    initReceive();
+  void initReceive();
+
   // uint8_t getLastCounter() const {
   //   return outIthoPacket.counter;
   // } // counter is increased before sending a command
@@ -104,7 +106,7 @@ public:
   }
 
   // receive
-  bool       checkForNewPacket(); // check RX fifo for new data
+  bool checkForNewPacket(); // check RX fifo for new data
   // IthoPacket getLastPacket() const {
   //   return inIthoPacket;
   // }                               // retrieve last received/parsed packet from remote
@@ -120,14 +122,15 @@ public:
   // uint8_t ReadRSSI();
   // bool    checkID(const uint8_t *id) const;
   // int*    getLastID();
-  String  getLastIDstr(bool ashex      = true);
+  String getLastIDstr(bool ashex = true);
+
   // String  getLastMessagestr(bool ashex = true);
   // String  LastMessageDecoded() const;
 
   // send
-  void    sendCommand(IthoCommand command,
-                      uint8_t     srcId[3]  = 0,
-                      uint8_t     destId[3] = 0);
+  void sendCommand(IthoCommand command,
+                   uint8_t     srcId[3]  = 0,
+                   uint8_t     destId[3] = 0);
 
   void enableOrcon(bool state);
 

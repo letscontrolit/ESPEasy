@@ -10,11 +10,12 @@
 # define PLUGIN_NAME_095       "Display - TFT ILI934x/ILI948x"
 # define PLUGIN_VALUENAME1_095 "CursorX"
 # define PLUGIN_VALUENAME2_095 "CursorY"
-# define PLUGIN_095_MAX_DISPLAY 1
 
 
 /**
  * Changelog:
+ * 2025-08-29 tonhuisman: Fix GPIO pin display on Devices page, no default GPIO pins for ESP32
+ * 2025-08-12 tonhuisman: Enable use of secondary SPI bus
  * 2024-07-07 tonhuisman: Remove explicit support for ILI9486 as all ILI9486 displays tested so far work with the ILI9488 driver,
  *                        sometimes with Invert display setting enabled (or they are actually ILI9488 displays...)
  * 2024-06-23 tonhuisman: Add support for ILI9488 displays by implementing an adapted library (jaretburkett/ILI9488)
@@ -153,6 +154,7 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
       dev.ValueCount    = 2;
       dev.TimerOption   = true;
       dev.TimerOptional = true;
+      dev.SpiBusSelect  = true;
       break;
     }
 
@@ -179,20 +181,34 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # ifndef LIMIT_BUILD_SIZE
+    case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
+    {
+      const char *separator = event->String1.c_str(); // contains the NewLine sequence
+      string = strformat(
+        F("%sCS: %s%sDC: %s%s RES: %s%sBtn: %s%sBckl: : %s"),
+        separator,
+        formatGpioLabel(PIN(0),                    false).c_str(),
+        separator,
+        formatGpioLabel(PIN(1),                    false).c_str(),
+        separator,
+        formatGpioLabel(PIN(2),                    false).c_str(),
+        separator,
+        formatGpioLabel(P095_CONFIG_BUTTON_PIN,    false).c_str(),
+        separator,
+        formatGpioLabel(P095_CONFIG_BACKLIGHT_PIN, false).c_str());
+      success = true;
+      break;
+    }
+    # endif // ifndef LIMIT_BUILD_SIZE
+
     case PLUGIN_SET_DEFAULTS:
     {
-      # ifdef ESP32
-
-      if (Settings.InitSPI == 2) { // When using ESP32 H(ardware-)SPI
-        PIN(0) = P095_TFT_CS_HSPI;
-      } else {
-        PIN(0) = P095_TFT_CS;
-      }
-      # else // ifdef ESP32
+      # ifdef ESP8266
       PIN(0) = P095_TFT_CS;
-      # endif // ifdef ESP32
-      PIN(1)                        = P095_TFT_DC;
-      PIN(2)                        = P095_TFT_RST;
+      PIN(1) = P095_TFT_DC;
+      PIN(2) = P095_TFT_RST;
+      # endif // ifdef ESP8266
       P095_CONFIG_BUTTON_PIN        = -1;  // No button connected
       P095_CONFIG_BACKLIGHT_PIN     = P095_BACKLIGHT_PIN;
       P095_CONFIG_BACKLIGHT_PERCENT = 100; // Percentage backlight
@@ -451,7 +467,9 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      if (Settings.InitSPI != 0) {
+      const uint8_t spi_bus = Settings.getSPIBusForTask(event->TaskIndex);
+
+      if (Settings.isSPI_valid(spi_bus)) {
         # if P095_ENABLE_ILI948X
 
         if (10 == P095_CONFIG_FLAG_GET_TYPE) { // If ILI9486 was selected, reset to ILI9488
@@ -470,7 +488,8 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
                                                                                               P095_CONFIG_FLAG_GET_CMD_TRIGGER)),
                                                                P095_CONFIG_GET_COLOR_FOREGROUND,
                                                                P095_CONFIG_GET_COLOR_BACKGROUND,
-                                                               bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_BACK_FILL) == 0
+                                                               bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_BACK_FILL) == 0,
+                                                               spi_bus
                                                                # if ADAGFX_FONTS_INCLUDED
                                                                ,
                                                                P095_CONFIG_DEFAULT_FONT

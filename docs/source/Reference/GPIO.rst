@@ -614,6 +614,21 @@ ESP32-C2 (ESP8684)
 The strapping combination of GPIO-8 = 0 and GPIO-9 = 0 is invalid and will trigger unexpected behavior.
 
 
+ESP32-C5
+~~~~~~~~
+
+* GPIO-26 ... 28: "Select Bootloader Mode" pin
+* GPIO-27: Enable or disable ROM messages printing
+* GPIO-7: JTAG signal source
+* GPIO-2: MTMS, used to select crystal frequency in non-standard boot mode
+
+
+GPIO-2 is only used when the crystal frequency isn't explicitly set via efuses (which should not happen).
+
+GPIO-25 and -3 are used to set SDIO sampling and driving clock edge.
+However this is also never used as SDIO mode means no flash and the chip is connected to a CPU and used as WiFi card.
+
+
 ESP32-C6
 ~~~~~~~~
 

@@ -11,7 +11,16 @@ function setGithubClipboard() {
             if (i % 2 == 0) {
                 separatorSymbol += '\n'
             }
-            clipboard += test.innerHTML.replace(/<[Bb][Rr]\s*\/?>/gim, '\n') + separatorSymbol;
+            // collect only visible log entry divs
+            const visibleLines = Array.from(test.children)
+                .filter(div => div.offsetParent !== null) // visible only
+                .map(div => div.innerHTML);
+
+            if (visibleLines.length > 0) {
+                clipboard +=
+                    visibleLines.join('\n').replace(/<[Bb][Rr]\s*\/?>/gim, '\n') +
+                    separatorSymbol;
+            }
         }
     }
     clipboard = clipboard.replace(/<\/[Dd][Ii][Vv]\s*\/?>/gim, '\n');

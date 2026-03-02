@@ -5,7 +5,7 @@
 
 #if FEATURE_ESPEASY_P2P
 #include "../Helpers/ESPEasy_time.h"
-#include "../DataStructs/MAC_address.h"
+#include "../../ESPEasy/net/DataStructs/MAC_address.h"
 
 #include <IPAddress.h>
 #include <map>
@@ -29,7 +29,7 @@ struct __attribute__((__packed__)) NodeStruct
   // - lower load (TODO TD-er)
   bool operator<(const NodeStruct &other) const;
 
-  const __FlashStringHelper * getNodeTypeDisplayString() const;
+  String getNodeTypeDisplayString() const;
 
   String        getNodeName() const;
 
@@ -46,7 +46,7 @@ struct __attribute__((__packed__)) NodeStruct
 
   MAC_address   ESPEasy_Now_MAC() const;
 
-  unsigned long getAge() const;
+  uint32_t getAge() const;
 
   bool          isExpired() const;
 
@@ -102,7 +102,7 @@ struct __attribute__((__packed__)) NodeStruct
 
   // When sending system info, this value contains the time since last time sync.
   // When kept as node info, this is the last time stamp the node info was updated.
-  unsigned long lastUpdated = (1 << 30);
+  uint32_t lastUpdated = (1 << 30);
   uint8_t       version     = 1;
   #if FEATURE_USE_IPV6
   uint8_t hasIPv4                       : 1;

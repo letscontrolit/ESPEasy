@@ -569,7 +569,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                   #  if !defined(P037_LIMIT_BUILD_SIZE) || defined(P037_OVERRIDE)
 
                   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                    String log = strformat(F("IMPT : MQTT fetched json attribute: %s payload: "),
+                    String log = strformat(F("IMPT : MQTT fetched json attribute: %s payload: %s"),
                                            key.c_str(),
                                            Payload.c_str());
 

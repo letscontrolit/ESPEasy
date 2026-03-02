@@ -234,23 +234,26 @@ boolean Plugin_049(uint8_t function, struct EventStruct *event, String& string)
             P049_data->ABC_MustApply = false;
           }
         }
-
+#ifndef BUILD_NO_DEBUG
         if (mustLog) {
           // Log values in all cases
           addLog(LOG_LEVEL_INFO,
                  strformat(F("PPM value: %d Temp/S/U values: %d/%d/%.2f"),
                            ppm, temp, s, u));
         }
+#endif
         break;
 
         // #ifdef ENABLE_DETECTION_RANGE_COMMANDS
         // Sensor responds with 0x99 whenever we send it a measurement range adjustment
       } else if (P049_data->receivedCommandAcknowledgement(expectReset))  {
+#ifndef BUILD_NO_DEBUG
         addLog(LOG_LEVEL_INFO, F("MHZ19: Received command acknowledgment! "));
 
         if (expectReset) {
           addLog(LOG_LEVEL_INFO, F("Expecting sensor reset..."));
         }
+#endif
         success = false;
         break;
 
@@ -258,10 +261,12 @@ boolean Plugin_049(uint8_t function, struct EventStruct *event, String& string)
 
         // log verbosely anything else that the sensor reports
       } else {
+#ifndef BUILD_NO_DEBUG
         if (mustLog) {
           addLog(LOG_LEVEL_INFO,
                  concat(F("MHZ19: Unknown response:"), P049_data->getBufferHexDump()));
         }
+#endif
 
         // Check for stable reads and allow unstable reads the first 3 minutes after reset.
         if ((P049_data->nrUnknownResponses > 10) && P049_data->initTimePassed) {

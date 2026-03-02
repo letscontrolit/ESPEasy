@@ -40,6 +40,7 @@
 #include "src/Helpers/Misc.h"
 #include "src/Helpers/Numerical.h"
 #include "src/Helpers/PortStatus.h"
+#include "src/Helpers/PrintToString.h"
 #include "src/Helpers/StringConverter.h"
 #include "src/Helpers/StringGenerator_GPIO.h"
 #include "src/Helpers/StringGenerator_Plugin.h"

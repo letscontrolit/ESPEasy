@@ -350,7 +350,9 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
 
       // P044 Settings to convert?
       if (P020_Emulate_P044 && P020_ConvertP044Settings(event)) {
+#ifndef BUILD_NO_DEBUG
         addLog(LOG_LEVEL_INFO, F("P1   : Automatic settings conversion, please save settings manually."));
+#endif
         bitSet(P020_FLAGS, P020_FLAG_P044_MODE_SAVED); // Set to P044 configuration done on next save
       }
       # endif // ifdef USES_P044

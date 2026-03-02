@@ -187,7 +187,7 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
           F("Number of chips (Q7 &rarr; DS)"), F("chipcnt"), P129_CONFIG_CHIP_COUNT);
         addUnit(concat(F("Daisychained 1.."), P129_MAX_CHIP_COUNT));
         # ifndef LIMIT_BUILD_SIZE
-        addFormNote(F("Changing the number of chips will reload the page and update the Event configuration."));
+        // addFormNote(F("Changing the number of chips will reload the page and update the Event configuration."));
         # endif // ifndef LIMIT_BUILD_SIZE
       }
 

@@ -18,7 +18,7 @@ char lastPayload[1024];
 size_t lastLength;
 
 // function declarations
-void callback(char* topic, uint8_t* payload, size_t length);
+void callback(char* topic, uint8_t* payload, size_t plength);
 void reset_callback();
 int test_receive_callback();
 int test_receive_stream();
@@ -36,12 +36,12 @@ void reset_callback() {
     lastLength = 0;
 }
 
-void callback(char* topic, uint8_t* payload, size_t length) {
-    TRACE("Callback received topic=[" << topic << "] length=" << length << "\n")
+void callback(char* topic, uint8_t* payload, size_t plength) {
+    TRACE("Callback received topic=[" << topic << "] plength=" << plength << "\n")
     callback_called = true;
     strcpy(lastTopic, topic);
-    memcpy(lastPayload, payload, length);
-    lastLength = length;
+    memcpy(lastPayload, payload, plength);
+    lastLength = plength;
 }
 
 int test_receive_callback() {

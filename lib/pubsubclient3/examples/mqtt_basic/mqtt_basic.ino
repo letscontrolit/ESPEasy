@@ -21,11 +21,11 @@ byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0xFE, 0xED};
 IPAddress ip(172, 16, 0, 100);
 IPAddress server(172, 16, 0, 2);
 
-void callback(char* topic, uint8_t* payload, size_t length) {
+void callback(char* topic, uint8_t* payload, size_t plength) {
     Serial.print("Message arrived [");
     Serial.print(topic);
     Serial.print("] ");
-    for (size_t i = 0; i < length; i++) {
+    for (size_t i = 0; i < plength; i++) {
         Serial.print((char)payload[i]);
     }
     Serial.println();

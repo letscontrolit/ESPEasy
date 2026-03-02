@@ -24,10 +24,10 @@
 #define WS2IN7_DATA_STOP                            0x11
 #define WS2IN7_DISPLAY_REFRESH                      0x12
 #define WS2IN7_DATA_START_TRANSMISSION_2            0x13
-#define WS2IN7_PARTIAL_DATA_START_TRANSMISSION_1    0x14 
-#define WS2IN7_PARTIAL_DATA_START_TRANSMISSION_2    0x15 
+#define WS2IN7_PARTIAL_DATA_START_TRANSMISSION_1    0x14
+#define WS2IN7_PARTIAL_DATA_START_TRANSMISSION_2    0x15
 #define WS2IN7_PARTIAL_DISPLAY_REFRESH              0x16
-#define WS2IN7_LUT_FOR_VCOM                         0x20 
+#define WS2IN7_LUT_FOR_VCOM                         0x20
 #define WS2IN7_LUT_WHITE_TO_WHITE                   0x21
 #define WS2IN7_LUT_BLACK_TO_WHITE                   0x22
 #define WS2IN7_LUT_WHITE_TO_BLACK                   0x23
@@ -67,12 +67,13 @@ extern const unsigned char lut_wb[];
 class Waveshare_2in7 : public LOLIN_EPD {
 public:
 
-  Waveshare_2in7(int    width,
-                 int    height,
-                 int8_t DC,
-                 int8_t RST,
-                 int8_t CS,
-                 int8_t BUSY = -1);
+  Waveshare_2in7(int       width,
+                 int       height,
+                 int8_t    DC,
+                 int8_t    RST,
+                 int8_t    CS,
+                 int8_t    BUSY = -1,
+                 SPIClass& spi  = SPI);
 
   void begin(bool reset = true);
 

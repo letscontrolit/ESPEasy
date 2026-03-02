@@ -407,7 +407,7 @@ int Plugin_QueryVType_Weight(uint8_t value_nr) {
 }
 
 String makeHomeAssistantCompliantName(const String& name) {
-  return makeRFCCompliantName(name, '_', '_', 0);
+  return ESPEasy::net::makeRFCCompliantName(name, '_', '_', 0);
 }
 
 #  if FEATURE_MQTT_DEVICECLASS

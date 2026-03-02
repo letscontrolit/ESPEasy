@@ -1,9 +1,12 @@
-/*
-  PubSubClient.h - A simple client for MQTT.
-  Nick O'Leary, Holger Mueller
-  http://knolleary.net
-  https://github.com/hmueller01/pubsubclient3
-*/
+/**
+ * @file PubSubClient.h
+ * @brief A simple client for MQTT.
+ * @author Nicholas O'Leary - http://knolleary.net
+ * @author Holger Mueller - https://github.com/hmueller01/pubsubclient3
+ * @copyright MIT License 2008-2025
+ *
+ * This file is part of the PubSubClient library.
+ */
 
 #ifndef PubSubClient_h
 #define PubSubClient_h
@@ -14,20 +17,22 @@
 #include "IPAddress.h"
 #include "Stream.h"
 
-#define MQTT_VERSION_3_1   3
-#define MQTT_VERSION_3_1_1 4
+#define MQTT_VERSION_3_1   3  ///< Defines MQTT 3.1 protocol version, see #MQTT_VERSION
+#define MQTT_VERSION_3_1_1 4  ///< Defines MQTT 3.1.1 protocol version, see #MQTT_VERSION
 
 //< @note The following #define directives can be used to configure the library.
 
 /**
- * @brief Sets the version of the MQTT protocol to use.
- * @note Default value is MQTT_VERSION_3_1_1 for MQTT 3.1.1.
+ * @brief Sets the version of the MQTT protocol to use (3.1 or 3.1.1). [#MQTT_VERSION_3_1, #MQTT_VERSION_3_1_1].
+ * @note Default value is #MQTT_VERSION_3_1_1 for MQTT 3.1.1.
  */
 #ifndef MQTT_VERSION
 #define MQTT_VERSION MQTT_VERSION_3_1_1
 #endif
 
-// MQTT_MAX_POSSIBLE_PACKET_SIZE : Maximum packet size defined by MQTT protocol.
+/**
+ * @brief Maximum packet size defined by MQTT protocol.
+ */
 #ifndef MQTT_MAX_POSSIBLE_PACKET_SIZE
 #define MQTT_MAX_POSSIBLE_PACKET_SIZE 268435455
 #endif
@@ -65,23 +70,32 @@
 /**
  * @brief Sets the maximum number of bytes passed to the network client in each write call.
  * Some hardware has a limit to how much data can be passed to them in one go,
- * such as the Arduino Wifi Shield.
+ * such as the Arduino Wifi Shield e.g. use 80.
  * @note Defaults to undefined, which passes the entire packet in each write call.
  */
-// #define MQTT_MAX_TRANSFER_SIZE 80
+#ifndef MQTT_MAX_TRANSFER_SIZE  // just a hack that it gets shown in Doxygen
+#define MQTT_MAX_TRANSFER_SIZE 80
+#undef MQTT_MAX_TRANSFER_SIZE
+#endif
 
-// Possible values for client.state()
-#define MQTT_CONNECTION_TIMEOUT      -4
-#define MQTT_CONNECTION_LOST         -3
-#define MQTT_CONNECT_FAILED          -2
-#define MQTT_DISCONNECTED            -1
-#define MQTT_CONNECTED               0
-#define MQTT_CONNECT_BAD_PROTOCOL    1
-#define MQTT_CONNECT_BAD_CLIENT_ID   2
-#define MQTT_CONNECT_UNAVAILABLE     3
-#define MQTT_CONNECT_BAD_CREDENTIALS 4
-#define MQTT_CONNECT_UNAUTHORIZED    5
+/**
+ * @defgroup group_state state() result
+ * @brief These values indicate the current PubSubClient::state() of the client.
+ * @{
+ */
+#define MQTT_CONNECTION_TIMEOUT      -4  ///< The network connection timed out or server didn't respond within the keepalive time.
+#define MQTT_CONNECTION_LOST         -3  ///< The network connection was lost/broken.
+#define MQTT_CONNECT_FAILED          -2  ///< The network connection failed.
+#define MQTT_DISCONNECTED            -1  ///< The client is disconnected cleanly.
+#define MQTT_CONNECTED               0   ///< The client is connected.
+#define MQTT_CONNECT_BAD_PROTOCOL    1   ///< The server does not support the requested MQTT version.
+#define MQTT_CONNECT_BAD_CLIENT_ID   2   ///< The server rejected the client identifier.
+#define MQTT_CONNECT_UNAVAILABLE     3   ///< The server was unable to accept the connection.
+#define MQTT_CONNECT_BAD_CREDENTIALS 4   ///< The username or password is not valid.
+#define MQTT_CONNECT_UNAUTHORIZED    5   ///< The client is not authorized to connect to the server.
+/** @} */
 
+/// \cond
 #define MQTTRETAINED    1        // Retained flag in the header
 #define MQTTCONNECT     1 << 4   // Client request to connect to Server
 #define MQTTCONNACK     2 << 4   // Connect Acknowledgment
@@ -98,31 +112,41 @@
 #define MQTTPINGRESP    13 << 4  // PING Response
 #define MQTTDISCONNECT  14 << 4  // Client is Disconnecting
 #define MQTTRESERVED    15 << 4  // Reserved
+/// \endcond
 
-#define MQTTQOS0 (0 << 1)
-#define MQTTQOS1 (1 << 1)
-#define MQTTQOS2 (2 << 1)
+/**
+ * @defgroup group_qos QoS levels
+ * @brief Quality of Service (QoS) levels for MQTT messages.
+ * @{
+ */
+#define MQTT_QOS0 ((uint8_t)0)  ///< Quality of Service 0: At most once
+#define MQTT_QOS1 ((uint8_t)1)  ///< Quality of Service 1: At least once
+#define MQTT_QOS2 ((uint8_t)2)  ///< Quality of Service 2: Exactly once
+/// \cond
+#define MQTT_QOS_GET_HDR(qos) (((qos) & 0x03) << 1) // Get QoS header bits from QoS value
+#define MQTT_HDR_GET_QOS(header) (((header) & 0x06 ) >> 1) // Get QoS value from MQTT header
+/// \endcond
+/** @} */
 
-// Maximum size of fixed header and variable length size header
+/// \cond Maximum size of fixed header and variable length size header
 #define MQTT_MAX_HEADER_SIZE 5
+/// \endcond
 
-#if defined(__has_include) && __has_include(<functional>) && !defined(NOFUNCTIONAL)
-#include <functional>
+/// \anchor callback
 /**
  * @brief Define the signature required by any callback function.
- * @note The parameters are TOPIC, PAYLOAD, and LENGTH, respectively.
+ * @param topic The topic of the message.
+ * @param payload The payload of the message.
+ * @param plength The length of the payload.
  */
-#define MQTT_CALLBACK_SIGNATURE std::function<void(char*, uint8_t*, size_t)> callback
+#if defined(__has_include) && __has_include(<functional>) && !defined(NOFUNCTIONAL)
+#include <functional>
+#define MQTT_CALLBACK_SIGNATURE std::function<void(char* topic, uint8_t* payload, size_t plength)> callback
 #else
-#define MQTT_CALLBACK_SIGNATURE void (*callback)(char*, uint8_t*, size_t)
+#define MQTT_CALLBACK_SIGNATURE void (*callback)(char* topic, uint8_t* payload, size_t plength)
 #endif
 
-#define CHECK_STRING_LENGTH(l, s)                                  \
-    if ((!s) || (l + 2 + strnlen(s, this->bufferSize) > this->bufferSize)) { \
-        _client->stop();                                           \
-        return false;                                              \
-    }
-
+/// \cond
 #ifdef DEBUG_ESP_PORT
 #ifdef DEBUG_PUBSUBCLIENT
 #define DEBUG_PSC_PRINTF(fmt, ...) DEBUG_ESP_PORT.printf(("PubSubClient: " fmt), ##__VA_ARGS__)
@@ -143,6 +167,7 @@
 #define ERROR_PSC_PRINTF_P(fmt, ...)
 #endif
 #endif
+/// \endcond
 
 /**
  * @class PubSubClient
@@ -166,6 +191,7 @@ class PubSubClient : public Print {
     Stream* stream{};
     int _state{MQTT_DISCONNECTED};
     size_t _bufferWritePos{};
+    uint8_t _qos{MQTT_QOS0};
 
     size_t readPacket(uint8_t* hdrLen);
     bool handlePacket(uint8_t hdrLen, size_t len);
@@ -173,8 +199,9 @@ class PubSubClient : public Print {
     bool readByte(uint8_t* result, size_t* pos);
     uint8_t buildHeader(uint8_t header, uint8_t* buf, size_t length);
     bool write(uint8_t header, uint8_t* buf, size_t length);
-    size_t writeString(const char* string, uint8_t* buf, size_t pos);
     size_t writeString(const char* string, uint8_t* buf, size_t pos, size_t size);
+    size_t writeNextMsgId(uint8_t* buf, size_t pos, size_t size);
+
 
     // Add to buffer and flush if full (only to be used with beginPublish/endPublish)Add commentMore actions
     size_t appendBuffer(uint8_t data);
@@ -184,26 +211,100 @@ class PubSubClient : public Print {
    public:
     /**
      * @brief Creates an uninitialised client instance.
-     * @note Before it can be used,
-     * it must be configured using the property setters setClient and setServer.
+     * @note Before it can be used, it must be configured using the property setters setClient() and setServer().
      */
     PubSubClient();
 
     /**
      * @brief Creates a partially initialised client instance.
      * @param client The network client to use, for example WiFiClient.
-     * @note Before it can be used,
-     * it must be configured with the property setter setServer.
+     * @note Before it can be used, it must be configured with the property setter setServer().
      */
     PubSubClient(Client& client);
 
     /**
      * @brief Creates a fully configured client instance.
+     * @param addr The address of the server.
+     * @param port The port to connect to.
+     * @param client The network client to use, for example WiFiClient.
+     */
+    PubSubClient(IPAddress addr, uint16_t port, Client& client);
+
+    /**
+     * @brief Creates a fully configured client instance.
+     * @param addr The address of the server.
+     * @param port The port to connect to.
+     * @param client The network client to use, for example WiFiClient.
+     * @param stream A stream to write received messages to.
+     */
+    PubSubClient(IPAddress addr, uint16_t port, Client& client, Stream& stream);
+
+    /**
+     * @brief Creates a fully configured client instance.
+     * @param addr The address of the server.
+     * @param port The port to connect to.
+     * @param callback Pointer to a message \ref callback function.
+     * Called when a message arrives for a subscription created by this client.
+     * @param client The network client to use, for example WiFiClient.
+     */
+    PubSubClient(IPAddress addr, uint16_t port, MQTT_CALLBACK_SIGNATURE, Client& client);
+
+    /**
+     * @brief Creates a fully configured client instance.
+     * @param addr The address of the server.
+     * @param port The port to connect to.
+     * @param callback Pointer to a message \ref callback function.
+     * Called when a message arrives for a subscription created by this client.
+     * @param client The network client to use, for example WiFiClient.
+     * @param stream A stream to write received messages to.
+     */
+    PubSubClient(IPAddress addr, uint16_t port, MQTT_CALLBACK_SIGNATURE, Client& client, Stream& stream);
+
+    /**
+     * @brief Creates a fully configured client instance.
+     * @param ip The address of the server.
+     * @param port The port to connect to.
+     * @param client The network client to use, for example WiFiClient.
+     */
+    PubSubClient(uint8_t* ip, uint16_t port, Client& client);
+
+    /**
+     * @brief Creates a fully configured client instance.
+     * @param ip The address of the server.
+     * @param port The port to connect to.
+     * @param client The network client to use, for example WiFiClient.
+     * @param stream A stream to write received messages to.
+     */
+    PubSubClient(uint8_t* ip, uint16_t port, Client& client, Stream& stream);
+
+    /**
+     * @brief Creates a fully configured client instance.
+     * @param ip The address of the server.
+     * @param port The port to connect to.
+     * @param callback Pointer to a message \ref callback function.
+     * Called when a message arrives for a subscription created by this client.
+     * @param client The network client to use, for example WiFiClient.
+     */
+    PubSubClient(uint8_t* ip, uint16_t port, MQTT_CALLBACK_SIGNATURE, Client& client);
+
+    /**
+     * @brief Creates a fully configured client instance.
+     * @param ip The address of the server.
+     * @param port The port to connect to.
+     * @param callback Pointer to a message \ref callback function.
+     * Called when a message arrives for a subscription created by this client.
+     * @param client The network client to use, for example WiFiClient.
+     * @param stream A stream to write received messages to.
+     */
+    PubSubClient(uint8_t* ip, uint16_t port, MQTT_CALLBACK_SIGNATURE, Client& client, Stream& stream);
+
+    /**
+     * @brief Creates a fully configured client instance.
      * @param domain The address of the server.
      * @param port The port to connect to.
      * @param client The network client to use, for example WiFiClient.
      */
-    PubSubClient(IPAddress, uint16_t, Client& client);
+    PubSubClient(const char* domain, uint16_t port, Client& client);
 
     /**
      * @brief Creates a fully configured client instance.
@@ -212,104 +313,28 @@ class PubSubClient : public Print {
      * @param client The network client to use, for example WiFiClient.
      * @param stream A stream to write received messages to.
      */
-    PubSubClient(IPAddress, uint16_t, Client& client, Stream&);
+    PubSubClient(const char* domain, uint16_t port, Client& client, Stream& stream);
 
     /**
      * @brief Creates a fully configured client instance.
      * @param domain The address of the server.
      * @param port The port to connect to.
-     * @param callback Pointer to a message callback function.
+     * @param callback Pointer to a message \ref callback function.
      * Called when a message arrives for a subscription created by this client.
      * @param client The network client to use, for example WiFiClient.
      */
-    PubSubClient(IPAddress, uint16_t, MQTT_CALLBACK_SIGNATURE, Client& client);
+    PubSubClient(const char* domain, uint16_t port, MQTT_CALLBACK_SIGNATURE, Client& client);
 
     /**
      * @brief Creates a fully configured client instance.
      * @param domain The address of the server.
      * @param port The port to connect to.
-     * @param callback Pointer to a message callback function.
-     * Called when a message arrives for a subscription created by this client.
-     * @param client The network client to use, for example WiFiClient.
-     * @param stream A stream to write received messages to.
-     */
-    PubSubClient(IPAddress, uint16_t, MQTT_CALLBACK_SIGNATURE, Client& client, Stream&);
-
-    /**
-     * @brief Creates a fully configured client instance.
-     * @param domain The address of the server.
-     * @param port The port to connect to.
-     * @param client The network client to use, for example WiFiClient.
-     */
-    PubSubClient(uint8_t*, uint16_t, Client& client);
-
-    /**
-     * @brief Creates a fully configured client instance.
-     * @param domain The address of the server.
-     * @param port The port to connect to.
-     * @param client The network client to use, for example WiFiClient.
-     * @param stream A stream to write received messages to.
-     */
-    PubSubClient(uint8_t*, uint16_t, Client& client, Stream&);
-
-    /**
-     * @brief Creates a fully configured client instance.
-     * @param domain The address of the server.
-     * @param port The port to connect to.
-     * @param callback Pointer to a message callback function.
-     * Called when a message arrives for a subscription created by this client.
-     * @param client The network client to use, for example WiFiClient.
-     */
-    PubSubClient(uint8_t*, uint16_t, MQTT_CALLBACK_SIGNATURE, Client& client);
-
-    /**
-     * @brief Creates a fully configured client instance.
-     * @param domain The address of the server.
-     * @param port The port to connect to.
-     * @param callback Pointer to a message callback function.
+     * @param callback Pointer to a message \ref callback function.
      * Called when a message arrives for a subscription created by this client.
      * @param client The network client to use, for example WiFiClient.
      * @param stream A stream to write received messages to.
      */
-    PubSubClient(uint8_t*, uint16_t, MQTT_CALLBACK_SIGNATURE, Client& client, Stream&);
-
-    /**
-     * @brief Creates a fully configured client instance.
-     * @param domain The address of the server.
-     * @param port The port to connect to.
-     * @param client The network client to use, for example WiFiClient.
-     */
-    PubSubClient(const char*, uint16_t, Client& client);
-
-    /**
-     * @brief Creates a fully configured client instance.
-     * @param domain The address of the server.
-     * @param port The port to connect to.
-     * @param client The network client to use, for example WiFiClient.
-     * @param stream A stream to write received messages to.
-     */
-    PubSubClient(const char*, uint16_t, Client& client, Stream&);
-
-    /**
-     * @brief Creates a fully configured client instance.
-     * @param domain The address of the server.
-     * @param port The port to connect to.
-     * @param callback Pointer to a message callback function.
-     * Called when a message arrives for a subscription created by this client.
-     * @param client The network client to use, for example WiFiClient.
-     */
-    PubSubClient(const char*, uint16_t, MQTT_CALLBACK_SIGNATURE, Client& client);
-
-    /**
-     * @brief Creates a fully configured client instance.
-     * @param domain The address of the server.
-     * @param port The port to connect to.
-     * @param callback Pointer to a message callback function.
-     * Called when a message arrives for a subscription created by this client.
-     * @param client The network client to use, for example WiFiClient.
-     * @param stream A stream to write received messages to.
-     */
-    PubSubClient(const char*, uint16_t, MQTT_CALLBACK_SIGNATURE, Client& client, Stream&);
+    PubSubClient(const char* domain, uint16_t port, MQTT_CALLBACK_SIGNATURE, Client& client, Stream& stream);
 
     /**
      * @brief Destructor for the PubSubClient class.
@@ -319,7 +344,7 @@ class PubSubClient : public Print {
     /**
      * @brief Sets the server details.
      * @param ip The address of the server.
-     * @param port  The port to connect to.
+     * @param port The port to connect to.
      * @return The client instance, allowing the function to be chained.
      */
     PubSubClient& setServer(IPAddress ip, uint16_t port);
@@ -327,22 +352,22 @@ class PubSubClient : public Print {
     /**
      * @brief Sets the server details.
      * @param ip The address of the server.
-     * @param port  The port to connect to.
+     * @param port The port to connect to.
      * @return The client instance, allowing the function to be chained.
      */
     PubSubClient& setServer(uint8_t* ip, uint16_t port);
 
     /**
      * @brief Sets the server details.
-     * @param ip The address of the server.
-     * @param port  The port to connect to.
+     * @param domain The address of the server.
+     * @param port The port to connect to.
      * @return The client instance, allowing the function to be chained.
      */
     PubSubClient& setServer(const char* domain, uint16_t port);
 
     /**
      * @brief Sets the message callback function.
-     * @param callback Pointer to a message callback function.
+     * @param callback Pointer to a message \ref callback function.
      * Called when a message arrives for a subscription created by this client.
      * @return The client instance, allowing the function to be chained.
      */
@@ -398,7 +423,7 @@ class PubSubClient : public Print {
     size_t getBufferSize();
 
     /**
-     * @brief Connects the client.
+     * @brief Connects the client using a clean session without username and password.
      * @param id The client ID to use when connecting to the server.
      * @return true If client succeeded in establishing a connection to the broker.
      * false If client failed to establish a connection to the broker.
@@ -406,48 +431,60 @@ class PubSubClient : public Print {
     bool connect(const char* id);
 
     /**
-     * @brief Connects the client.
+     * @brief Connects the client using a clean session with username and password.
      * @param id The client ID to use when connecting to the server.
-     * @param user The username to use. If NULL, no username or password is used.
-     * @param pass The password to use. If NULL, no password is used.
+     * @param user The username to use.
+     * @param pass The password to use.
+     * @note If **user** is NULL, no username or password is used.
+     * @note If **pass** is NULL, no password is used.
      * @return true If client succeeded in establishing a connection to the broker.
      * false If client failed to establish a connection to the broker.
      */
     bool connect(const char* id, const char* user, const char* pass);
 
     /**
-     * @brief Connects the client.
+     * @brief Connects the client using a clean session and will.
      * @param id The client ID to use when connecting to the server.
      * @param willTopic The topic to be used by the will message.
      * @param willQos The quality of service to be used by the will message. [0, 1, 2].
      * @param willRetain Publish the will message with the retain flag.
+     * @param willMessage The message to be used by the will message.
+     * @note If **willTopic** is NULL, no will message is sent.
      * @return true If client succeeded in establishing a connection to the broker.
      * false If client failed to establish a connection to the broker.
      */
     bool connect(const char* id, const char* willTopic, uint8_t willQos, bool willRetain, const char* willMessage);
 
     /**
-     * @brief Connects the client.
+     * @brief Connects the client using a clean session with username, password and will.
      * @param id The client ID to use when connecting to the server.
-     * @param user The username to use. If NULL, no username or password is used.
-     * @param pass The password to use. If NULL, no password is used.
+     * @param user The username to use.
+     * @param pass The password to use.
      * @param willTopic The topic to be used by the will message.
      * @param willQos The quality of service to be used by the will message. [0, 1, 2].
      * @param willRetain Publish the will message with the retain flag.
+     * @param willMessage The message to be used by the will message.
+     * @note If **user** is NULL, no username or password is used.
+     * @note If **pass** is NULL, no password is used.
+     * @note If **willTopic** is NULL, no will message is sent.
      * @return true If client succeeded in establishing a connection to the broker.
      * false If client failed to establish a connection to the broker.
      */
     bool connect(const char* id, const char* user, const char* pass, const char* willTopic, uint8_t willQos, bool willRetain, const char* willMessage);
 
     /**
-     * @brief Connects the client.
+     * @brief Connects the client with all possible parameters (user, password, will and session).
      * @param id The client ID to use when connecting to the server.
-     * @param user The username to use. If NULL, no username or password is used.
-     * @param pass The password to use. If NULL, no password is used.
+     * @param user The username to use.
+     * @param pass The password to use.
      * @param willTopic The topic to be used by the will message.
      * @param willQos The quality of service to be used by the will message. [0, 1, 2].
      * @param willRetain Publish the will message with the retain flag.
-     * @param cleanSession Connect with a clean session.
+     * @param willMessage The message to be used by the will message.
+     * @param cleanSession True to connect with a clean session.
+     * @note If **user** is NULL, no username or password is used.
+     * @note If **pass** is NULL, no password is used.
+     * @note If **willTopic** is NULL, no will message is sent.
      * @return true If client succeeded in establishing a connection to the broker.
      * false If client failed to establish a connection to the broker.
      */
@@ -460,7 +497,7 @@ class PubSubClient : public Print {
     void disconnect();
 
     /**
-     * @brief Publishes a non retained message to the specified topic.
+     * @brief Publishes a non retained message to the specified topic using QoS 0.
      * @param topic The topic to publish to.
      * @param payload The message to publish.
      * @return true If the publish succeeded.
@@ -469,7 +506,7 @@ class PubSubClient : public Print {
     bool publish(const char* topic, const char* payload);
 
     /**
-     * @brief Publishes a message to the specified topic.
+     * @brief Publishes a message to the specified topic using QoS 0.
      * @param topic The topic to publish to.
      * @param payload The message to publish.
      * @param retained Publish the message with the retain flag.
@@ -479,7 +516,18 @@ class PubSubClient : public Print {
     bool publish(const char* topic, const char* payload, bool retained);
 
     /**
-     * @brief Publishes a non retained message to the specified topic.
+     * @brief Publishes a message to the specified topic.
+     * @param topic The topic to publish to.
+     * @param payload The message to publish.
+     * @param qos The quality of service (\ref group_qos) to publish at. [0, 1, 2].
+     * @param retained Publish the message with the retain flag.
+     * @return true If the publish succeeded.
+     * false If the publish failed, either connection lost or message too large.
+     */
+    bool publish(const char* topic, const char* payload, uint8_t qos, bool retained);
+
+    /**
+     * @brief Publishes a non retained message to the specified topic using QoS 0.
      * @param topic The topic to publish to.
      * @param payload The message to publish.
      * @param plength The length of the payload.
@@ -489,7 +537,7 @@ class PubSubClient : public Print {
     bool publish(const char* topic, const uint8_t* payload, size_t plength);
 
     /**
-     * @brief Publishes a message to the specified topic.
+     * @brief Publishes a message to the specified topic using QoS 0.
      * @param topic The topic to publish to.
      * @param payload The message to publish.
      * @param plength The length of the payload.
@@ -500,7 +548,19 @@ class PubSubClient : public Print {
     bool publish(const char* topic, const uint8_t* payload, size_t plength, bool retained);
 
     /**
-     * @brief Publishes a message stored in PROGMEM to the specified topic.
+     * @brief Publishes a message to the specified topic.
+     * @param topic The topic to publish to.
+     * @param payload The message to publish.
+     * @param plength The length of the payload.
+     * @param qos The quality of service (\ref group_qos) to publish at. [0, 1, 2].
+     * @param retained Publish the message with the retain flag.
+     * @return true If the publish succeeded.
+     * false If the publish failed, either connection lost or message too large.
+     */
+    bool publish(const char* topic, const uint8_t* payload, size_t plength, uint8_t qos, bool retained);
+
+    /**
+     * @brief Publishes a message stored in PROGMEM to the specified topic using QoS 0.
      * @param topic The topic to publish to.
      * @param payload The message to publish.
      * @param retained Publish the message with the retain flag.
@@ -513,6 +573,17 @@ class PubSubClient : public Print {
      * @brief Publishes a message stored in PROGMEM to the specified topic.
      * @param topic The topic to publish to.
      * @param payload The message to publish.
+     * @param qos The quality of service (\ref group_qos) to publish at. [0, 1, 2].
+     * @param retained Publish the message with the retain flag.
+     * @return true If the publish succeeded.
+     * false If the publish failed, either connection lost or message too large.
+     */
+    bool publish_P(const char* topic, const char* payload, uint8_t qos, bool retained);
+
+    /**
+     * @brief Publishes a message stored in PROGMEM to the specified topic using QoS 0.
+     * @param topic The topic to publish to.
+     * @param payload The message to publish.
      * @param plength The length of the payload.
      * @param retained Publish the message with the retain flag.
      * @return true If the publish succeeded.
@@ -521,7 +592,19 @@ class PubSubClient : public Print {
     bool publish_P(const char* topic, const uint8_t* payload, size_t plength, bool retained);
 
     /**
-     * @brief Start to publish a message.
+     * @brief Publishes a message stored in PROGMEM to the specified topic.
+     * @param topic The topic to publish to.
+     * @param payload The message to publish.
+     * @param plength The length of the payload.
+     * @param qos The quality of service (\ref group_qos) to publish at. [0, 1, 2].
+     * @param retained Publish the message with the retain flag.
+     * @return true If the publish succeeded.
+     * false If the publish failed, either connection lost or message too large.
+     */
+    bool publish_P(const char* topic, const uint8_t* payload, size_t plength, uint8_t qos, bool retained);
+
+    /**
+     * @brief Start to publish a message using QoS 0.
      * This API:
      *   beginPublish(...)
      *   one or more calls to write(...)
@@ -537,6 +620,23 @@ class PubSubClient : public Print {
     bool beginPublish(const char* topic, size_t plength, bool retained);
 
     /**
+     * @brief Start to publish a message.
+     * This API:
+     *   beginPublish(...)
+     *   one or more calls to write(...)
+     *   endPublish()
+     * Allows for arbitrarily large payloads to be sent without them having to be copied into
+     * a new buffer and held in memory at one time.
+     * @param topic The topic to publish to.
+     * @param plength The length of the payload.
+     * @param qos The quality of service (\ref group_qos) to publish at. [0, 1, 2].
+     * @param retained Publish the message with the retain flag.
+     * @return true If the publish succeeded.
+     * false If the publish failed, either connection lost or message too large.
+     */
+    bool beginPublish(const char* topic, size_t plength, uint8_t qos, bool retained);
+
+    /**
      * @brief Finish sending a message that was started with a call to beginPublish.
      * @return true If the publish succeeded.
      * false If the publish failed, either connection lost or message too large.
@@ -547,23 +647,22 @@ class PubSubClient : public Print {
      * @brief Writes a single byte as a component of a publish started with a call to beginPublish.
      *        For performance reasons, this will be appended to the internal buffer, 
      *        which will be flushed when full or on a call to endPublish().
-     * @param byte A byte to write to the publish payload.
+     * @param data A byte to write to the publish payload.
      * @return The number of bytes written.
      */
-    virtual size_t write(uint8_t);
+    virtual size_t write(uint8_t data);
 
     /**
      * @brief Writes an array of bytes as a component of a publish started with a call to beginPublish.
      *        For performance reasons, this will be appended to the internal buffer, 
-     *        which will be flushed when full or on a call to endPublish().
-     * @param buffer The bytes to write.
+     *        which will be flushed when full or on a call to endPublish().     * @param buffer The bytes to write.
      * @param size The length of the payload to be sent.
      * @return The number of bytes written.
      */
     virtual size_t write(const uint8_t* buffer, size_t size);
 
     /**
-     * @brief Subscribes to messages published to the specified topic.
+     * @brief Subscribes to messages published to the specified topic using QoS 0.
      * @param topic The topic to subscribe to.
      * @return true If sending the subscribe succeeded.
      * false If sending the subscribe failed, either connection lost or message too large.
@@ -605,16 +704,7 @@ class PubSubClient : public Print {
      * @brief Returns the current state of the client.
      * If a connection attempt fails, this can be used to get more information about the failure.
      * @note All of the values have corresponding constants defined in PubSubClient.h.
-     * @return -4 : MQTT_CONNECTION_TIMEOUT - The server didn't respond within the keepalive time.
-     * -3 : MQTT_CONNECTION_LOST - The network connection was broken.
-     * -2 : MQTT_CONNECT_FAILED - The network connection failed.
-     * -1 : MQTT_DISCONNECTED - The client is disconnected cleanly.
-     * 0 : MQTT_CONNECTED - The client is connected.
-     * 1 : MQTT_CONNECT_BAD_PROTOCOL - The server doesn't support the requested version of MQTT.
-     * 2 : MQTT_CONNECT_BAD_CLIENT_ID - The server rejected the client identifier.
-     * 3 : MQTT_CONNECT_UNAVAILABLE - The server was unable to accept the connection.
-     * 4 : MQTT_CONNECT_BAD_CREDENTIALS - The username/password were rejected.
-     * 5 : MQTT_CONNECT_UNAUTHORIZED - The client was not authorized to connect.
+     * @return See \ref group_state
      */
     int state();
 };

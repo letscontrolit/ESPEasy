@@ -189,7 +189,7 @@ boolean Plugin_046(uint8_t function, struct EventStruct *event, String& string)
         FormSelectorOptions selector(NR_ELEMENTS(options),  options);
         selector.reloadonchange = true;
         selector.addFormSelector(F("Plugin function"), F("p046"), choice);
-        addFormNote(F("Changing the function will reload this page."));
+        // addFormNote(F("Changing the function will reload this page."));
       }
 
       if (choice == 0) {

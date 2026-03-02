@@ -153,6 +153,12 @@ uint8_t disableAllNotifications(uint8_t bootFailedCount);
  \*********************************************************************************************/
 uint8_t disableRules(uint8_t bootFailedCount);
 
+/********************************************************************************************\
+   Disable Network Interfaces, based on bootFailedCount
+ \*********************************************************************************************/
+uint8_t disableNetwork(uint8_t bootFailedCount);
+uint8_t disableAllNetworkss(uint8_t bootFailedCount);
+
 
 bool getAndLogSettingsParameters(bool read, SettingsType::Enum settingsType, int index, int& offset, int& max_size);
 
@@ -392,6 +398,8 @@ bool validateUploadConfigDat(const uint8_t *buf);
  \*********************************************************************************************/
 #if FEATURE_DOWNLOAD
 String downloadFileType(const String& url, const String& user, const String& pass, FileType::Enum filetype, unsigned int filenr = 0);
+
+void deleteBakFiles();
 
 #endif // if FEATURE_DOWNLOAD
 #if FEATURE_CUSTOM_PROVISIONING

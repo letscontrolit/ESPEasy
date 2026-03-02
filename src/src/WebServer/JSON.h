@@ -4,6 +4,7 @@
 
 #include "../WebServer/common.h"
 
+#include "../Helpers/KeyValueWriter_JSON.h"
 
 // ********************************************************************************
 // Web Interface get CSV value from task
@@ -12,19 +13,20 @@
 void handle_csvval();
 #endif
 
+#ifdef WEBSERVER_JSON
 // ********************************************************************************
 // Web Interface JSON page (no password!)
 // ********************************************************************************
 void handle_json();
 
-void handle_json_stream_task_value_data(uint16_t       valueNumber,
+void handle_json_stream_task_value_data(KeyValueWriter* parent,
+                                        uint16_t       valueNumber,
                                         const String & valueName,
                                         uint8_t        nrDecimals,
                                         const String & value,
                                         const String & presentation,
-                                        const String & uom,
-                                        bool           appendComma);
-
+                                        const String & uom);
+#endif
 // ********************************************************************************
 // JSON formatted timing statistics
 // ********************************************************************************
@@ -46,14 +48,15 @@ void handle_buildinfo();
 /*********************************************************************************************\
    Streaming versions directly to TXBuffer
 \*********************************************************************************************/
+#if FEATURE_CHART_JS || defined(WEBSERVER_NEW_UI)
 void stream_to_json_object_value(const __FlashStringHelper *  object, const String& value);
 void stream_to_json_object_value(const String& object, const String& value);
 void stream_to_json_object_value(const __FlashStringHelper *  object, int value);
 void stream_to_json_object_value(const String& object, int value);
-
+#endif
 
 String jsonBool(bool value);
-
+#ifdef WEBSERVER_NEW_UI
 // Add JSON formatted data directly to the TXbuffer, including a trailing comma.
 void stream_next_json_object_value(const __FlashStringHelper * object, const String& value);
 void stream_next_json_object_value(const __FlashStringHelper * object, String&& value);
@@ -67,12 +70,12 @@ void stream_last_json_object_value(const __FlashStringHelper * object, String&& 
 void stream_last_json_object_value(const String& object, const String& value);
 void stream_last_json_object_value(const __FlashStringHelper * object, int value);
 
-void stream_json_object_values(const LabelType::Enum labels[]);
+//void stream_json_object_values(const LabelType::Enum labels[]);
 
 void stream_next_json_object_value(LabelType::Enum label);
 
 void stream_last_json_object_value(LabelType::Enum label);
-
+#endif
 
 
 

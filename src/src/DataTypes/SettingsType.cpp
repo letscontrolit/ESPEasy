@@ -27,6 +27,13 @@ const __FlashStringHelper * SettingsType::getSettingsTypeString(Enum settingsTyp
     #if FEATURE_ALTERNATIVE_CDN_URL
     case Enum::CdnSettings_Type:               return F("CDN_url");
     #endif
+#if FEATURE_STORE_NETWORK_INTERFACE_SETTINGS
+    case Enum::NetworkInterfaceSettings_Type:  return F("NetworkInterface");
+#endif
+#if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE
+    case Enum::DeviceSpecificCredentials_type: return F("DeviceSpecificCredentials");
+#endif   
+
 
     case Enum::SettingsType_MAX: break;
   }
@@ -118,6 +125,18 @@ bool SettingsType::getSettingsParameters(Enum settingsType, int index, int& max_
       struct_size = 0;
       break;
     }
+#if FEATURE_STORE_NETWORK_INTERFACE_SETTINGS
+    case Enum::NetworkInterfaceSettings_Type:
+    {
+      max_index = NETWORK_MAX;
+      offset    = DAT_NETWORK_INTERFACES_OFFSET + index * (DAT_NETWORK_INTERFACE_SIZE);
+      max_size  = DAT_NETWORK_INTERFACE_SIZE;
+
+      // struct_size may differ.
+      struct_size = 0;
+      break;
+    }
+#endif
 #if FEATURE_ALTERNATIVE_CDN_URL
     case Enum::CdnSettings_Type:
     {
@@ -130,6 +149,19 @@ bool SettingsType::getSettingsParameters(Enum settingsType, int index, int& max_
     }
     break;
 #endif
+#if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE
+    case Enum::DeviceSpecificCredentials_type:
+    {
+      max_index   = 1;
+      offset      = DAT_OFFSET_DEV_CREDENTIALS;
+      max_size    = DAT_DEV_CREDENTIALS_SIZE;
+
+      // struct_size may differ.
+      struct_size = 0;
+    }
+    break;
+#endif   
+
 
     case Enum::SettingsType_MAX:
     {
@@ -180,7 +212,7 @@ int SettingsType::getFileSize(Enum settingsType) {
   return max_file_pos;
 }
 
-#ifndef BUILD_MINIMAL_OTA
+#ifndef BUILD_NO_DEBUG
 unsigned int SettingsType::getSVGcolor(Enum settingsType) {
   switch (settingsType) {
     case Enum::BasicSettings_Type:
@@ -195,10 +227,17 @@ unsigned int SettingsType::getSVGcolor(Enum settingsType) {
       return 0xFAC05E;
     case Enum::NotificationSettings_Type:
       return 0xF79D84;
+#if FEATURE_STORE_NETWORK_INTERFACE_SETTINGS
+    case Enum::NetworkInterfaceSettings_Type:
+      return 0x84F79D;
+#endif
 
     case Enum::SecuritySettings_Type:
       return 0xff00a2;
     case Enum::ExtdControllerCredentials_Type:
+#if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE
+    case Enum::DeviceSpecificCredentials_type:
+#endif   
       return 0xc300ff;
 #if FEATURE_ALTERNATIVE_CDN_URL
     case Enum::CdnSettings_Type:
@@ -223,12 +262,19 @@ SettingsType::SettingsFileEnum SettingsType::getSettingsFile(Enum settingsType)
 #if FEATURE_ALTERNATIVE_CDN_URL
     case Enum::CdnSettings_Type:
 #endif
+#if FEATURE_STORE_NETWORK_INTERFACE_SETTINGS
+    case Enum::NetworkInterfaceSettings_Type:
+#endif
       return SettingsFileEnum::FILE_CONFIG_type;
     case Enum::NotificationSettings_Type:
       return SettingsFileEnum::FILE_NOTIFICATION_type;
     case Enum::SecuritySettings_Type:
     case Enum::ExtdControllerCredentials_Type:
       return SettingsFileEnum::FILE_SECURITY_type;
+#if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE
+    case Enum::DeviceSpecificCredentials_type:
+      return SettingsFileEnum::FILE_DEVICE_SECURITY_type;
+#endif   
 
     case Enum::SettingsType_MAX:
       break;
@@ -250,6 +296,9 @@ const __FlashStringHelper * SettingsType::getSettingsFileName(SettingsType::Sett
     case SettingsFileEnum::FILE_CONFIG_type:        return getFileName(FileType::CONFIG_DAT);
     case SettingsFileEnum::FILE_NOTIFICATION_type:  return getFileName(FileType::NOTIFICATION_DAT);
     case SettingsFileEnum::FILE_SECURITY_type:      return getFileName(FileType::SECURITY_DAT);
+#if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE
+    case SettingsFileEnum::FILE_DEVICE_SECURITY_type: return getFileName(FileType::DEV_SECURITY_DAT);
+#endif
     case SettingsFileEnum::FILE_UNKNOWN_type:       break;
   }
   return F("");
@@ -260,6 +309,9 @@ size_t SettingsType::getInitFileSize(SettingsType::SettingsFileEnum file_type) {
     case SettingsFileEnum::FILE_CONFIG_type:        return CONFIG_FILE_SIZE;
     case SettingsFileEnum::FILE_NOTIFICATION_type:  return 4096;
     case SettingsFileEnum::FILE_SECURITY_type:      return 4096;
+#if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE
+    case SettingsFileEnum::FILE_DEVICE_SECURITY_type: return DAT_DEV_CREDENTIALS_SIZE;
+#endif
     case SettingsFileEnum::FILE_UNKNOWN_type:       break;
   }
   return 0;

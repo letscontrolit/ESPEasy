@@ -9,6 +9,7 @@
 
 std::map<int, TimingStats> pluginStats;
 std::map<int, TimingStats> controllerStats;
+std::map<int, TimingStats> networkStats;
 std::map<TimingStatsElements, TimingStats> miscStats;
 unsigned long timingstats_last_reset(0);
 
@@ -154,7 +155,6 @@ const __FlashStringHelper* getCPluginCFunctionName(CPlugin::Function function) {
     case CPlugin::Function::CPLUGIN_FLUSH:                     return F("CPLUGIN_FLUSH");
     case CPlugin::Function::CPLUGIN_TEN_PER_SECOND:            return F("CPLUGIN_TEN_PER_SECOND");
     case CPlugin::Function::CPLUGIN_FIFTY_PER_SECOND:          return F("CPLUGIN_FIFTY_PER_SECOND");
-    case CPlugin::Function::CPLUGIN_INIT_ALL:                  return F("CPLUGIN_INIT_ALL");
     case CPlugin::Function::CPLUGIN_EXIT:                      return F("CPLUGIN_EXIT");
     case CPlugin::Function::CPLUGIN_WRITE:                     return F("CPLUGIN_WRITE");
 
@@ -163,6 +163,9 @@ const __FlashStringHelper* getCPluginCFunctionName(CPlugin::Function function) {
     case CPlugin::Function::CPLUGIN_INTERVAL:
     case CPlugin::Function::CPLUGIN_ACKNOWLEDGE:
     case CPlugin::Function::CPLUGIN_WEBFORM_SHOW_HOST_CONFIG:
+    case CPlugin::Function::CPLUGIN_INIT_ALL:
+    case CPlugin::Function::CPLUGIN_EXIT_ALL:
+
       break;
   }
   return F("Unknown");
@@ -181,14 +184,12 @@ bool mustLogCFunction(CPlugin::Function function) {
     case CPlugin::Function::CPLUGIN_GET_DEVICENAME:            return false;
     case CPlugin::Function::CPLUGIN_WEBFORM_SAVE:              return false;
     case CPlugin::Function::CPLUGIN_WEBFORM_LOAD:              return false;
-    case CPlugin::Function::CPLUGIN_GET_PROTOCOL_DISPLAY_NAME: return false;
     case CPlugin::Function::CPLUGIN_TASK_CHANGE_NOTIFICATION:  return false;
     case CPlugin::Function::CPLUGIN_INIT:                      return false;
     case CPlugin::Function::CPLUGIN_UDP_IN:                    return true;
     case CPlugin::Function::CPLUGIN_FLUSH:                     return false;
     case CPlugin::Function::CPLUGIN_TEN_PER_SECOND:            return true;
     case CPlugin::Function::CPLUGIN_FIFTY_PER_SECOND:          return true;
-    case CPlugin::Function::CPLUGIN_INIT_ALL:                  return false;
     case CPlugin::Function::CPLUGIN_EXIT:                      return false;
     case CPlugin::Function::CPLUGIN_WRITE:                     return true;
 
@@ -197,10 +198,21 @@ bool mustLogCFunction(CPlugin::Function function) {
     case CPlugin::Function::CPLUGIN_INTERVAL:
     case CPlugin::Function::CPLUGIN_ACKNOWLEDGE:
     case CPlugin::Function::CPLUGIN_WEBFORM_SHOW_HOST_CONFIG:
+    case CPlugin::Function::CPLUGIN_GET_PROTOCOL_DISPLAY_NAME:
+    case CPlugin::Function::CPLUGIN_INIT_ALL:
+    case CPlugin::Function::CPLUGIN_EXIT_ALL:
       break;
   }
   return false;
 }
+
+bool mustLogNWFunction(NWPlugin::Function function)
+{
+  if (!Settings.EnableTimingStats()) { return false; }
+
+  return true;
+}
+
 
 // Return flash string type to reduce bin size
 const __FlashStringHelper* getMiscStatsName_F(TimingStatsElements stat) {
@@ -214,6 +226,9 @@ const __FlashStringHelper* getMiscStatsName_F(TimingStatsElements stat) {
     case TimingStatsElements::PLUGIN_CALL_1PS:            return F("Plugin call  1 p/s");
     case TimingStatsElements::CPLUGIN_CALL_50PS:          return F("CPlugin call 50 p/s");
     case TimingStatsElements::CPLUGIN_CALL_10PS:          return F("CPlugin call 10 p/s");
+    case TimingStatsElements::NWPLUGIN_CALL_50PS:         return F("NWPlugin call 50 p/s");
+    case TimingStatsElements::NWPLUGIN_CALL_10PS:         return F("NWPlugin call 10 p/s");
+    case TimingStatsElements::NWPLUGIN_PROCESS_NETWORK_EVENTS: return F("NWPlugin process events");
     case TimingStatsElements::SENSOR_SEND_TASK:           return F("SensorSendTask()");
     case TimingStatsElements::COMMAND_EXEC_INTERNAL:      return F("Exec Internal Command");
     case TimingStatsElements::COMMAND_DECODE_INTERNAL:    return F("Decode Internal Command");
@@ -260,6 +275,9 @@ const __FlashStringHelper* getMiscStatsName_F(TimingStatsElements stat) {
     case TimingStatsElements::IS_NUMERICAL:               return F("isNumerical()");
     case TimingStatsElements::HANDLE_SCHEDULER_IDLE:      return F("handle_schedule() idle");
     case TimingStatsElements::HANDLE_SCHEDULER_TASK:      return F("handle_schedule() task");
+#if FEATURE_MQTT
+    case TimingStatsElements::PERIODICAL_MQTT:            return F("Periodical MQTT");
+#endif
     case TimingStatsElements::PARSE_TEMPLATE_PADDED:      return F("parseTemplate_padded()");
     case TimingStatsElements::PARSE_SYSVAR:               return F("parseSystemVariables()");
     case TimingStatsElements::PARSE_SYSVAR_NOCHANGE:      return F("parseSystemVariables() No change");
@@ -271,6 +289,7 @@ const __FlashStringHelper* getMiscStatsName_F(TimingStatsElements stat) {
     case TimingStatsElements::NTP_FAIL:                   return F("NTP Fail");
     case TimingStatsElements::SYSTIME_UPDATED:            return F("Systime Set");
     case TimingStatsElements::C018_AIR_TIME:              return F("C018 LoRa TTN - Air Time");
+    case TimingStatsElements::C023_AIR_TIME:              return F("C023 LoRa TTN - Air Time");
 #ifdef LIMIT_BUILD_SIZE
     default: break;
 #else
@@ -326,6 +345,12 @@ void stopTimerController(protocolIndex_t T, CPlugin::Function F, uint32_t statis
 {
   if (mustLogCFunction(F)) { controllerStats[static_cast<int>(T) * 256 + static_cast<int>(F)].add(usecPassedSince_fast(statisticsTimerStart)); }
 }
+
+void stopTimerNetwork(ESPEasy::net::networkDriverIndex_t T, NWPlugin::Function F, uint32_t statisticsTimerStart)
+{
+  if (mustLogNWFunction(F)) { networkStats[static_cast<int>(T.value) * 256 + static_cast<int>(F)].add(usecPassedSince_fast(statisticsTimerStart)); }
+}
+
 
 void stopTimer(TimingStatsElements L, uint32_t statisticsTimerStart)
 {

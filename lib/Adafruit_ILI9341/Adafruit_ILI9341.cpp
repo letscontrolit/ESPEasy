@@ -111,6 +111,9 @@
     @param  cs   Chip select pin # (OK to pass -1 if CS tied to GND).
     @param  dc   Data/Command pin # (required).
     @param  rst  Reset pin # (optional, pass -1 if unused).
+    @param  model     The display model to initiailize.
+    @param  w         Widht of the display in pixels.
+    @param  h         Height of the display in pixels.
  */
 
 /**************************************************************************/
@@ -133,14 +136,20 @@ Adafruit_ILI9341::Adafruit_ILI9341(int8_t cs, int8_t dc, int8_t rst, uint8_t mod
     @param  cs        Chip select pin # (optional, pass -1 if unused and
                       CS is tied to GND).
     @param  rst       Reset pin # (optional, pass -1 if unused).
+    @param  model     The display model to initiailize.
+    @param  w         Widht of the display in pixels.
+    @param  h         Height of the display in pixels.
  */
 
 /**************************************************************************/
 
-// Adafruit_ILI9341::Adafruit_ILI9341(SPIClass *spiClass, int8_t dc, int8_t cs,
-//                                    int8_t rst)
-//     : Adafruit_SPITFT(ILI9341_TFTWIDTH, ILI9341_TFTHEIGHT, spiClass, cs, dc,
-//                       rst) {}
+Adafruit_ILI9341::Adafruit_ILI9341(SPIClass *spiClass, int8_t dc, int8_t cs,
+                                   int8_t rst, uint8_t model, uint16_t w, uint16_t h)
+    : Adafruit_SPITFT(w, h, spiClass, cs, dc, rst) {
+  _model = model;
+  _w     = w;
+  _h     = h;
+}
 #endif // end !ESP8266
 
 /**************************************************************************/

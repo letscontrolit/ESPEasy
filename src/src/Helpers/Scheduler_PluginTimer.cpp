@@ -66,7 +66,7 @@ void ESPEasy_Scheduler::process_plugin_timer(SchedulerTimerID id) {
 
   if (validDeviceIndex(deviceIndex)) {
     String dummy;
-    PluginCall(deviceIndex, PLUGIN_DEVICETIMER_IN, &TempEvent, dummy);
+    do_PluginCall(deviceIndex, PLUGIN_DEVICETIMER_IN, &TempEvent, dummy);
   }
   STOP_TIMER(PLUGIN_CALL_DEVICETIMER_IN);
 }
