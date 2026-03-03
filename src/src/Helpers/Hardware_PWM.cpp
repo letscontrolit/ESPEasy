@@ -163,7 +163,7 @@ int8_t attachLedChannel(int pin, uint32_t frequency, uint8_t resolution)
     ledcDetach(pin); // See: https://github.com/espressif/arduino-esp32/issues/9212
     return ledcAttach(pin, frequency, resolution) ? 0 : -1;
   }
-  else { return 0; }
+  return 0;
 }
 
 void detachLedChannel(int pin) { ledcDetach(pin); }
