@@ -1,0 +1,42 @@
+########################################################################
+# This section defines which file types are associated with which      #
+# linguist-documentation language types. Initially this was set so that#
+# the "Arduino" language was chosen, but that is no longer considered  #
+# a language so everything has been reverted to "c++"                  #
+#                                                                      #
+# Date       Author     Comments                                       #
+# ========== ========== ============================================== #
+# 2018-06-24 SV-Zanshin Changed file                                   #
+#                                                                      #
+########################################################################
+examples/ linguist-documentation=false
+*.c		linguist-language=c++
+*.ino	linguist-language=c++
+*.pde	linguist-language=c++
+*.c		linguist-language=c++
+*.h		linguist-language=c++
+*.cpp	linguist-language=c++
+
+########################################################################
+# Auto detect text files and perform LF normalization                  #
+########################################################################
+* text=auto
+
+########################################################################
+# Custom setting for Visual Studio/Atmel Studio files                  #
+########################################################################
+*.cs	diff=csharp
+
+########################################################################
+# Standard to msysgit                                                  #
+########################################################################
+*.doc	diff=astextplain
+*.DOC	diff=astextplain
+*.docx	diff=astextplain
+*.DOCX	diff=astextplain
+*.dot	diff=astextplain
+*.DOT	diff=astextplain
+*.pdf	diff=astextplain
+*.PDF	diff=astextplain
+*.rtf	diff=astextplain
+*.RTF	diff=astextplain
