@@ -16,7 +16,6 @@
 	--bg10: #07d;
 	--bg11: #f8f8f8;
 	--c6: #fff;
-	--bc1: #222;
 	--ro: 0deg;
 	--iv: 0;
 	--tpm2: 140px;
@@ -39,7 +38,6 @@
 	--c5: #c3c3c3;
 	--bg10: #44607a;
 	--bg11: #44607a;
-	--bc1: #bbb;
 	--c6: #c3c3c3;
 	--ro: 180deg;
 	--iv: 1;
@@ -64,7 +62,6 @@
 		--c5: #c3c3c3;
 		--bg10: #44607a;
 		--bg11: #44607a;
-		--bc1: #bbb;
 		--c6: #c3c3c3;
 		--ro: 180deg;
 		--iv: 1;
@@ -488,7 +485,7 @@ textarea,
 	background: var(--bg2);
 	width: 100vw;
 	left: 0;
-	border-block: 0.1px solid var(--bc1);
+	border-block: 0.1px solid #222;
 }
 
 a.menu {
@@ -515,7 +512,7 @@ a.menu {
 
 .menu.active {
 	background-color: var(--bg6);
-	border-color: var(--bc1);
+	border-color: #222;
 	color: var(--c3);
 	border-width: .1px
 }
