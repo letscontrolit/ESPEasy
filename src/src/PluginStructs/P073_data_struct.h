@@ -105,7 +105,7 @@
 
 # define TM1637_POWER_ON    0b10001000
 # define TM1637_POWER_OFF   0b10000000
-# define TM1637_CLOCKDELAY  40
+# define TM1637_CLOCKDELAY  10  // FIXME TD-er: Maybe lower this as we can get as low as 2 usec to remain below the max 250 kHz
 # define TM1637_4DIGIT      4
 # define TM1637_6DIGIT      2
 
@@ -362,10 +362,10 @@ private:
   // ---- TM1637 specific functions ----
   void    tm1637_i2cStart();
   void    tm1637_i2cStop();
-  void    tm1637_i2cAck();
+  bool    tm1637_i2cAck();
   void    tm1637_i2cWrite_ack(uint8_t bytesToPrint[],
                               uint8_t length);
-  void    tm1637_i2cWrite_ack(uint8_t bytetoprint);
+  void    tm1637_i2cWriteByte_ack(uint8_t bytetoprint);
   void    tm1637_i2cWrite(uint8_t bytetoprint);
   void    tm1637_ClearDisplay();
   void    tm1637_SetPowerBrightness(uint8_t brightlvl,

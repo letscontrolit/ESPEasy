@@ -3,7 +3,7 @@
 Network
 *******
 
-A Network plugin is compable with a 'driver' for a network adapter.
+A Network plugin is comparable with a 'driver' for a network adapter.
 
 The first 2 entries will be the same for every ESPEasy setup and these cannot be removed.
 
