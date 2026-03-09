@@ -18,7 +18,7 @@
 	--c6: #fff;
 	--ro: 0deg;
 	--iv: 0;
-	--tpm2: 140px;
+	--tpm2: 130px;
 }
 
 [data-theme="dark"] {
@@ -449,7 +449,7 @@ textarea,
 }
 
 .headermenu {
-	height: 100px;
+	height: 96px;
 	border-bottom: .1px solid #444;
 }
 
@@ -459,7 +459,7 @@ textarea,
 
 .bodymenu {
 	min-height: 100vh;
-	padding-top: 100px
+	padding-top: 90px
 }
 
 .bodymenu2 {
@@ -481,7 +481,7 @@ textarea,
 }
 
 .menubar2 {
-	top: 95px;
+	top: 94px;
 	background: var(--bg2);
 	width: 100vw;
 	left: 0;
