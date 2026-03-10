@@ -18,7 +18,7 @@
 	--c6: #fff;
 	--ro: 0deg;
 	--iv: 0;
-	--tpm2: 130px;
+	--tpm2: 140px;
 }
 
 [data-theme="dark"] {
@@ -449,7 +449,7 @@ textarea,
 }
 
 .headermenu {
-	height: 96px;
+	height: 100px;
 	border-bottom: .1px solid #444;
 }
 
@@ -459,7 +459,7 @@ textarea,
 
 .bodymenu {
 	min-height: 100vh;
-	padding-top: 90px
+	padding-top: 100px
 }
 
 .bodymenu2 {
@@ -481,16 +481,17 @@ textarea,
 }
 
 .menubar2 {
-	top: 94px;
+	top: 99px;
 	background: var(--bg2);
 	width: 100vw;
 	left: 0;
-	border-block: 0.1px solid #222;
+  border-block: .1px solid #222
 }
 
 a.menu {
 	align-items: center;
 	display: flex;
+	height: 46px;
 	justify-content: center;
 	gap: 2px;
 	width: 100%
@@ -498,7 +499,7 @@ a.menu {
 
 .menubar2 a.menu {
 	max-width: 70px;
-	height: 40px;
+	height: 41px;
 	border-bottom: 0
 }
 
@@ -512,7 +513,7 @@ a.menu {
 
 .menu.active {
 	background-color: var(--bg6);
-	border-color: #222;
+  border-color: #222;
 	color: var(--c3);
 	border-width: .1px
 }
