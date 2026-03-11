@@ -475,6 +475,10 @@ textarea,
 	scrollbar-width: none
 }
 
+[class^="menubar"]::-webkit-scrollbar {
+  display: none;
+}
+
 .menubar {
 	top: 54px;
 	max-width: 1180px;
