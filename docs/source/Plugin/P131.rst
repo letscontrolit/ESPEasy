@@ -13,7 +13,9 @@ Type: |P131_type|
 
 Name: |P131_name|
 
-Status: |P131_status|
+Status ESP32: |P131_status|
+
+Status ESP8266: |P131_status_lb|
 
 GitHub: |P131_github|_
 

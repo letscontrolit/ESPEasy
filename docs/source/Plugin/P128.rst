@@ -13,7 +13,9 @@ Type: |P128_type|
 
 Name: |P128_name|
 
-Status: |P128_status|
+Status ESP32: |P128_status|
+
+Status ESP8266: |P128_status_lb|
 
 GitHub: |P128_github|_
 

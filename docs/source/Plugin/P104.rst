@@ -13,7 +13,9 @@ Type: |P104_type|
 
 Name: |P104_name|
 
-Status: |P104_status|
+Status ESP32: |P104_status|
+
+Status ESP8266: |P104_status_lb|
 
 GitHub: |P104_github|_
 

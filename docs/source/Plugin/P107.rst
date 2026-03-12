@@ -13,7 +13,9 @@ Type: |P107_type|
 
 Name: |P107_name|
 
-Status: |P107_status|
+Status ESP32: |P107_status|
+
+Status ESP8266: |P107_status_lb|
 
 GitHub: |P107_github|_
 

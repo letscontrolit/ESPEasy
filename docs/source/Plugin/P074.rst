@@ -15,7 +15,9 @@ Port Type: |P074_porttype|
 
 Name: |P074_name|
 
-Status: |P074_status|
+Status ESP32: |P074_status|
+
+Status ESP8266: |P074_status_lb|
 
 GitHub: |P074_github|_
 

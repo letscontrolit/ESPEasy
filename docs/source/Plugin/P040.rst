@@ -13,7 +13,9 @@ Type: |P040_type|
 
 Name: |P040_name|
 
-Status: |P040_status|
+Status ESP32: |P040_status|
+
+Status ESP8266: |P040_status_lb|
 
 GitHub: |P040_github|_
 

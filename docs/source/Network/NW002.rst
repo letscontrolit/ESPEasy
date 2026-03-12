@@ -14,7 +14,9 @@ Type: |NW002_type|
 
 Name: |NW002_name|
 
-Status: |NW002_status|
+Status ESP32: |NW002_status|
+
+Status ESP8266: |NW002_status_lb|
 
 GitHub: |NW002_github|_
 

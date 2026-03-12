@@ -13,7 +13,9 @@ Type: |P154_type|
 
 Name: |P154_name|
 
-Status: |P154_status|
+Status ESP32: |P154_status|
+
+Status ESP8266: |P154_status_lb|
 
 GitHub: |P154_github|_
 

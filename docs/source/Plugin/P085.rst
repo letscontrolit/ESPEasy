@@ -15,7 +15,9 @@ Port Type: |P085_porttype|
 
 Name: |P085_name|
 
-Status: |P085_status|
+Status ESP32: |P085_status|
+
+Status ESP8266: |P085_status_lb|
 
 GitHub: |P085_github|_
 

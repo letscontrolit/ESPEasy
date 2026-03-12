@@ -13,7 +13,9 @@ Type: |P108_type|
 
 Name: |P108_name|
 
-Status: |P108_status|
+Status ESP32: |P108_status|
+
+Status ESP8266: |P108_status_lb|
 
 GitHub: |P108_github|_
 

@@ -13,7 +13,9 @@ Type: |P164_type|
 
 Name: |P164_name|
 
-Status: |P164_status|
+Status ESP32: |P164_status|
+
+Status ESP8266: |P164_status_lb|
 
 GitHub: |P164_github|_
 

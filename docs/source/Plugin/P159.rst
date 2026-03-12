@@ -13,7 +13,9 @@ Type: |P159_type|
 
 Name: |P159_name|
 
-Status: |P159_status|
+Status ESP32: |P159_status|
+
+Status ESP8266: |P159_status_lb|
 
 GitHub: |P159_github|_
 

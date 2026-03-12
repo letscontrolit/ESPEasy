@@ -15,7 +15,9 @@ Port Type: |P078_porttype|
 
 Name: |P078_name|
 
-Status: |P078_status|
+Status ESP32: |P078_status|
+
+Status ESP8266: |P078_status_lb|
 
 GitHub: |P078_github|_
 
