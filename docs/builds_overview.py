@@ -4,14 +4,15 @@
 #
 #############################################################################################################
 # This script parses all documentation substitution files to determine in what builds a plugin is available
-# Collection A..G, Display, Energy and Neopixel, IR and IRext get Normal plugins injected
-# Collection, Notify and Network plugins are also injected into Collection A..G
+# Collection A..H, Display A..B, Climate A..B, Energy and Neopixel, IR and IRext get Normal plugins injected
+# Collection, Notify and Network plugins are also injected into Collection A..H
 # All plugins get injected into MAX build set
 # Some build sets have exceptions for plugins not available
 # The output generation order is determined by how they are ordered in list 'buildColors'
 # When adding or removing a build set, this script may need adjustments!
 
 # Changelog:
+# 2026-03-12 tonhuisman: Separate status for ESP32 and ESP8266 (_lb suffix)
 # 2025-10-05 tonhuisman: Adjustments for Display A and Display B split
 # 2025-10-01 tonhuisman: Include Notify and Network plugins, ignore not available files, parse NWxxx also
 # 2024-05-04 tonhuisman: Working and documented
@@ -26,6 +27,7 @@ basePath = "source/_templates/"
 
 # Gather data
 allBuilds = {}
+allBuilds_lb = {}
 
 # Not mentioned as a build in documentation, implicit
 appendBuilds = {'MAX'}
@@ -75,13 +77,17 @@ buildColors = {
 }
 
 # Add/update a single plugin in the list
-def addOnePlugin(build, plugin, pluginName):
+def addOnePlugin(build, plugin, pluginName, with_lb = False):
   if not build in allBuilds:
     allBuilds[build] = {}
   allBuilds[build].update({plugin: pluginName})
+  if not build in allBuilds_lb:
+    allBuilds_lb[build] = {}
+  if with_lb:
+    allBuilds_lb[build].update({plugin: pluginName})
 
 # Add a plugin to all builds it should go in
-def addToAllBuilds(plugin, pluginName, builds:dict):
+def addToAllBuilds(plugin, pluginName, builds:dict, builds_lb:dict):
   for b in appendBuilds:
     if not b in builds:
       builds += {b}
@@ -96,7 +102,7 @@ def addToAllBuilds(plugin, pluginName, builds:dict):
         if plugin in excludePlugins[b]:
           includeIt = False
       if includeIt:
-        addOnePlugin(b, plugin, pluginName)
+        addOnePlugin(b, plugin, pluginName, b in builds_lb)
         # Add in other builds too?
         if b in appendAlso:
           for n in appendAlso[b]:
@@ -105,7 +111,7 @@ def addToAllBuilds(plugin, pluginName, builds:dict):
                 includeIt = False
             # Except when not to be included
             if includeIt:
-              addOnePlugin(n, plugin, pluginName)
+              addOnePlugin(n, plugin, pluginName, b in builds_lb)
 
 # Parse a single substitution file
 def parseSingleSubstitutionFile(fileName):
@@ -118,25 +124,28 @@ def parseSingleSubstitutionFile(fileName):
   plugin = ""
   pluginName = ""
   builds = []
+  builds_lb = []
   while True:
     line = pfile.readline()
     if not line:
       break
-    # Parse into label, plugin ID, description and up to 4 separate builds (current max.),
+    # Parse into label, plugin ID, description and up to 5 separate builds (current max.),
     # append "(?:[^`]+`([^`]+)`)?" to regex for an extra build, if needed
-    m = re.search(r"[^|]\|((?:NW|[PCN])(\d{3}))([^\|]+)\|[^`]+`([^`]+)`(?:[^`]+`([^`]+)`)?(?:[^`]+`([^`]+)`)?(?:[^`]+`([^`]+)`)?", line)
+    m = re.search(r"[^|]\|((?:NW|[PCN])(\d{3}))([^\|]+)\|[^`]+`([^`]+)`(?:[^`]+`([^`]+)`)?(?:[^`]+`([^`]+)`)?(?:[^`]+`([^`]+)`)?(?:[^`]+`([^`]+)`)?", line)
     if m:
       if m.group(3) == "_typename": # the typename substitution should be before _status...
         if plugin != "" and plugin != m.group(1): # Changed plugin ID, store current
-          addToAllBuilds(plugin, pluginName, builds)
+          addToAllBuilds(plugin, pluginName, builds, builds_lb)
         plugin = m.group(1)
         pluginName = m.group(4)        
 
       if m.group(3) == "_status":
-        builds = [m.group(4), m.group(5), m.group(6), m.group(7)]
+        builds = [m.group(4), m.group(5), m.group(6), m.group(7), m.group(8)]
+      if m.group(3) == "_status_lb":
+        builds_lb = [m.group(4), m.group(5), m.group(6), m.group(7), m.group(8)]
   pfile.close()
   if plugin != "": # Store last one too
-    addToAllBuilds(plugin, pluginName, builds)
+    addToAllBuilds(plugin, pluginName, builds, builds_lb)
     
 # Parse all .. include :: files
 def parseSubstitutionFiles(rootFile):
@@ -175,11 +184,11 @@ def generateBuildOverview(fileName):
       output.write('.. collapse:: Details...\n')
       output.write('\n')
       output.write('   .. csv-table::\n')
-      output.write('      :header: "Plugin name", "Plugin number"\n')
-      output.write('      :widths: 10, 5\n')
+      output.write('      :header: "Plugin name", "ESP32", "ESP8266", "Plugin number"\n')
+      output.write('      :widths: 10, 3, 3, 3\n')
       output.write('\n')
       for p in sorted(allBuilds[b], key=sortPluginsBeforeControllers):
-        output.write('      ":ref:`' + p + '_page`","' + p + '"\n')
+        output.write('      ":ref:`' + p + '_page`", "✓", "' + ('✓' if p in allBuilds_lb[b] else '') + '", "' + p + '"\n')
       output.write('\n')
   output.close()
 
