@@ -28,6 +28,7 @@ else:
     "-DUSES_P002",  # ADC
     "-DUSES_P003",  # Generic pulse counter
     "-DUSES_P004",  # Dallas DS18b20
+    "-DUSES_P010",  # Light/Lux - BH1750
     "-DUSES_P026",  # System info
     "-DUSES_P027",  # INA219
     "-DUSES_P028",  # BME280
@@ -40,6 +41,7 @@ else:
     "-DUSES_P052",  # SenseAir
     "-DUSES_P056",  # SDS011-Dust
     "-DUSES_P059",  # Encoder
+    "-DUSES_P070",  # Neopixel Clock
     "-DUSES_P080",  # Dallas iButton
     "-DUSES_P081",  # Cron
     "-DUSES_P082",  # GPS

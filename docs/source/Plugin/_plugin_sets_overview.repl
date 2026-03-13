@@ -73,6 +73,11 @@ Build set:  :green:`NORMAL`
       ":ref:`C013_page`","C013"
       ":ref:`N001_page`","N001"
       ":ref:`N002_page`","N002"
+      ":ref:`NW001_page`","NW001"
+      ":ref:`NW002_page`","NW002"
+      ":ref:`NW003_page`","NW003"
+      ":ref:`NW004_page`","NW004"
+      ":ref:`NW005_page`","NW005"
 
 Build set:  :yellow:`COLLECTION A`
 ---------------------------------------------
@@ -118,6 +123,7 @@ Build set:  :yellow:`COLLECTION A`
       ":ref:`P034_page`","P034"
       ":ref:`P036_page`","P036"
       ":ref:`P037_page`","P037"
+      ":ref:`P038_page`","P038"
       ":ref:`P039_page`","P039"
       ":ref:`P040_page`","P040"
       ":ref:`P043_page`","P043"
@@ -190,6 +196,11 @@ Build set:  :yellow:`COLLECTION A`
       ":ref:`C018_page`","C018"
       ":ref:`N001_page`","N001"
       ":ref:`N002_page`","N002"
+      ":ref:`NW001_page`","NW001"
+      ":ref:`NW002_page`","NW002"
+      ":ref:`NW003_page`","NW003"
+      ":ref:`NW004_page`","NW004"
+      ":ref:`NW005_page`","NW005"
 
 Build set:  :yellow:`COLLECTION B`
 ---------------------------------------------
@@ -302,6 +313,11 @@ Build set:  :yellow:`COLLECTION B`
       ":ref:`C018_page`","C018"
       ":ref:`N001_page`","N001"
       ":ref:`N002_page`","N002"
+      ":ref:`NW001_page`","NW001"
+      ":ref:`NW002_page`","NW002"
+      ":ref:`NW003_page`","NW003"
+      ":ref:`NW004_page`","NW004"
+      ":ref:`NW005_page`","NW005"
 
 Build set:  :yellow:`COLLECTION C`
 ---------------------------------------------
@@ -347,6 +363,7 @@ Build set:  :yellow:`COLLECTION C`
       ":ref:`P034_page`","P034"
       ":ref:`P036_page`","P036"
       ":ref:`P037_page`","P037"
+      ":ref:`P038_page`","P038"
       ":ref:`P039_page`","P039"
       ":ref:`P040_page`","P040"
       ":ref:`P043_page`","P043"
@@ -410,6 +427,11 @@ Build set:  :yellow:`COLLECTION C`
       ":ref:`C018_page`","C018"
       ":ref:`N001_page`","N001"
       ":ref:`N002_page`","N002"
+      ":ref:`NW001_page`","NW001"
+      ":ref:`NW002_page`","NW002"
+      ":ref:`NW003_page`","NW003"
+      ":ref:`NW004_page`","NW004"
+      ":ref:`NW005_page`","NW005"
 
 Build set:  :yellow:`COLLECTION D`
 ---------------------------------------------
@@ -455,6 +477,7 @@ Build set:  :yellow:`COLLECTION D`
       ":ref:`P034_page`","P034"
       ":ref:`P036_page`","P036"
       ":ref:`P037_page`","P037"
+      ":ref:`P038_page`","P038"
       ":ref:`P039_page`","P039"
       ":ref:`P040_page`","P040"
       ":ref:`P043_page`","P043"
@@ -518,6 +541,11 @@ Build set:  :yellow:`COLLECTION D`
       ":ref:`C018_page`","C018"
       ":ref:`N001_page`","N001"
       ":ref:`N002_page`","N002"
+      ":ref:`NW001_page`","NW001"
+      ":ref:`NW002_page`","NW002"
+      ":ref:`NW003_page`","NW003"
+      ":ref:`NW004_page`","NW004"
+      ":ref:`NW005_page`","NW005"
 
 Build set:  :yellow:`COLLECTION E`
 ---------------------------------------------
@@ -630,6 +658,11 @@ Build set:  :yellow:`COLLECTION E`
       ":ref:`C018_page`","C018"
       ":ref:`N001_page`","N001"
       ":ref:`N002_page`","N002"
+      ":ref:`NW001_page`","NW001"
+      ":ref:`NW002_page`","NW002"
+      ":ref:`NW003_page`","NW003"
+      ":ref:`NW004_page`","NW004"
+      ":ref:`NW005_page`","NW005"
 
 Build set:  :yellow:`COLLECTION F`
 ---------------------------------------------
@@ -675,6 +708,7 @@ Build set:  :yellow:`COLLECTION F`
       ":ref:`P034_page`","P034"
       ":ref:`P036_page`","P036"
       ":ref:`P037_page`","P037"
+      ":ref:`P038_page`","P038"
       ":ref:`P039_page`","P039"
       ":ref:`P040_page`","P040"
       ":ref:`P043_page`","P043"
@@ -740,6 +774,11 @@ Build set:  :yellow:`COLLECTION F`
       ":ref:`C018_page`","C018"
       ":ref:`N001_page`","N001"
       ":ref:`N002_page`","N002"
+      ":ref:`NW001_page`","NW001"
+      ":ref:`NW002_page`","NW002"
+      ":ref:`NW003_page`","NW003"
+      ":ref:`NW004_page`","NW004"
+      ":ref:`NW005_page`","NW005"
 
 Build set:  :yellow:`COLLECTION G`
 ---------------------------------------------
@@ -785,6 +824,7 @@ Build set:  :yellow:`COLLECTION G`
       ":ref:`P034_page`","P034"
       ":ref:`P036_page`","P036"
       ":ref:`P037_page`","P037"
+      ":ref:`P038_page`","P038"
       ":ref:`P039_page`","P039"
       ":ref:`P040_page`","P040"
       ":ref:`P043_page`","P043"
@@ -834,9 +874,6 @@ Build set:  :yellow:`COLLECTION G`
       ":ref:`P168_page`","P168"
       ":ref:`P170_page`","P170"
       ":ref:`P172_page`","P172"
-      ":ref:`P173_page`","P173"
-      ":ref:`P177_page`","P177"
-      ":ref:`P178_page`","P178"
       ":ref:`P180_page`","P180"
       ":ref:`C001_page`","C001"
       ":ref:`C002_page`","C002"
@@ -856,6 +893,11 @@ Build set:  :yellow:`COLLECTION G`
       ":ref:`C018_page`","C018"
       ":ref:`N001_page`","N001"
       ":ref:`N002_page`","N002"
+      ":ref:`NW001_page`","NW001"
+      ":ref:`NW002_page`","NW002"
+      ":ref:`NW003_page`","NW003"
+      ":ref:`NW004_page`","NW004"
+      ":ref:`NW005_page`","NW005"
 
 Build set:  :yellow:`COLLECTION H`
 ---------------------------------------------
@@ -901,6 +943,7 @@ Build set:  :yellow:`COLLECTION H`
       ":ref:`P034_page`","P034"
       ":ref:`P036_page`","P036"
       ":ref:`P037_page`","P037"
+      ":ref:`P038_page`","P038"
       ":ref:`P039_page`","P039"
       ":ref:`P040_page`","P040"
       ":ref:`P043_page`","P043"
@@ -939,6 +982,9 @@ Build set:  :yellow:`COLLECTION H`
       ":ref:`P139_page`","P139"
       ":ref:`P146_page`","P146"
       ":ref:`P152_page`","P152"
+      ":ref:`P173_page`","P173"
+      ":ref:`P177_page`","P177"
+      ":ref:`P178_page`","P178"
       ":ref:`P180_page`","P180"
       ":ref:`C001_page`","C001"
       ":ref:`C002_page`","C002"
@@ -958,6 +1004,11 @@ Build set:  :yellow:`COLLECTION H`
       ":ref:`C018_page`","C018"
       ":ref:`N001_page`","N001"
       ":ref:`N002_page`","N002"
+      ":ref:`NW001_page`","NW001"
+      ":ref:`NW002_page`","NW002"
+      ":ref:`NW003_page`","NW003"
+      ":ref:`NW004_page`","NW004"
+      ":ref:`NW005_page`","NW005"
 
 Build set:  :yellow:`CLIMATE A`
 ---------------------------------------------
@@ -1030,6 +1081,7 @@ Build set:  :yellow:`CLIMATE A`
       ":ref:`P153_page`","P153"
       ":ref:`P154_page`","P154"
       ":ref:`P164_page`","P164"
+      ":ref:`P167_page`","P167"
       ":ref:`P180_page`","P180"
       ":ref:`C011_page`","C011"
       ":ref:`N001_page`","N001"
@@ -1106,7 +1158,6 @@ Build set:  :yellow:`CLIMATE B`
       ":ref:`P153_page`","P153"
       ":ref:`P154_page`","P154"
       ":ref:`P164_page`","P164"
-      ":ref:`P167_page`","P167"
       ":ref:`P168_page`","P168"
       ":ref:`P169_page`","P169"
       ":ref:`P172_page`","P172"
@@ -1199,6 +1250,11 @@ Build set:  :yellow:`DISPLAY A`
       ":ref:`C013_page`","C013"
       ":ref:`N001_page`","N001"
       ":ref:`N002_page`","N002"
+      ":ref:`NW001_page`","NW001"
+      ":ref:`NW002_page`","NW002"
+      ":ref:`NW003_page`","NW003"
+      ":ref:`NW004_page`","NW004"
+      ":ref:`NW005_page`","NW005"
 
 Build set:  :yellow:`DISPLAY B`
 ---------------------------------------------
@@ -1283,6 +1339,11 @@ Build set:  :yellow:`DISPLAY B`
       ":ref:`C013_page`","C013"
       ":ref:`N001_page`","N001"
       ":ref:`N002_page`","N002"
+      ":ref:`NW001_page`","NW001"
+      ":ref:`NW002_page`","NW002"
+      ":ref:`NW003_page`","NW003"
+      ":ref:`NW004_page`","NW004"
+      ":ref:`NW005_page`","NW005"
 
 Build set:  :yellow:`ENERGY`
 ---------------------------------------------
@@ -1344,6 +1405,7 @@ Build set:  :yellow:`ENERGY`
       ":ref:`P078_page`","P078"
       ":ref:`P079_page`","P079"
       ":ref:`P085_page`","P085"
+      ":ref:`P087_page`","P087"
       ":ref:`P089_page`","P089"
       ":ref:`P093_page`","P093"
       ":ref:`P102_page`","P102"
@@ -1371,6 +1433,11 @@ Build set:  :yellow:`ENERGY`
       ":ref:`C013_page`","C013"
       ":ref:`N001_page`","N001"
       ":ref:`N002_page`","N002"
+      ":ref:`NW001_page`","NW001"
+      ":ref:`NW002_page`","NW002"
+      ":ref:`NW003_page`","NW003"
+      ":ref:`NW004_page`","NW004"
+      ":ref:`NW005_page`","NW005"
 
 Build set:  :yellow:`IR`
 ---------------------------------------------
@@ -1418,6 +1485,7 @@ Build set:  :yellow:`IR`
       ":ref:`P035_page`","P035"
       ":ref:`P036_page`","P036"
       ":ref:`P037_page`","P037"
+      ":ref:`P038_page`","P038"
       ":ref:`P039_page`","P039"
       ":ref:`P040_page`","P040"
       ":ref:`P043_page`","P043"
@@ -1445,6 +1513,11 @@ Build set:  :yellow:`IR`
       ":ref:`C013_page`","C013"
       ":ref:`N001_page`","N001"
       ":ref:`N002_page`","N002"
+      ":ref:`NW001_page`","NW001"
+      ":ref:`NW002_page`","NW002"
+      ":ref:`NW003_page`","NW003"
+      ":ref:`NW004_page`","NW004"
+      ":ref:`NW005_page`","NW005"
 
 Build set:  :yellow:`IRext`
 ---------------------------------------------
@@ -1490,7 +1563,6 @@ Build set:  :yellow:`IRext`
       ":ref:`P034_page`","P034"
       ":ref:`P036_page`","P036"
       ":ref:`P037_page`","P037"
-      ":ref:`P038_page`","P038"
       ":ref:`P039_page`","P039"
       ":ref:`P040_page`","P040"
       ":ref:`P043_page`","P043"
@@ -1519,6 +1591,11 @@ Build set:  :yellow:`IRext`
       ":ref:`C013_page`","C013"
       ":ref:`N001_page`","N001"
       ":ref:`N002_page`","N002"
+      ":ref:`NW001_page`","NW001"
+      ":ref:`NW002_page`","NW002"
+      ":ref:`NW003_page`","NW003"
+      ":ref:`NW004_page`","NW004"
+      ":ref:`NW005_page`","NW005"
 
 Build set:  :yellow:`NEOPIXEL`
 ---------------------------------------------
@@ -1602,6 +1679,11 @@ Build set:  :yellow:`NEOPIXEL`
       ":ref:`C013_page`","C013"
       ":ref:`N001_page`","N001"
       ":ref:`N002_page`","N002"
+      ":ref:`NW001_page`","NW001"
+      ":ref:`NW002_page`","NW002"
+      ":ref:`NW003_page`","NW003"
+      ":ref:`NW004_page`","NW004"
+      ":ref:`NW005_page`","NW005"
 
 Build set:  :yellow:`MAX`
 ---------------------------------------------
@@ -1799,4 +1881,9 @@ Build set:  :yellow:`MAX`
       ":ref:`C018_page`","C018"
       ":ref:`N001_page`","N001"
       ":ref:`N002_page`","N002"
+      ":ref:`NW001_page`","NW001"
+      ":ref:`NW002_page`","NW002"
+      ":ref:`NW003_page`","NW003"
+      ":ref:`NW004_page`","NW004"
+      ":ref:`NW005_page`","NW005"
 
