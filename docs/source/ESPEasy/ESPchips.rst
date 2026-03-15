@@ -133,7 +133,7 @@ ESPEasy does support a number of variants of the processors manufactured by Espr
       - 2024
       - 2021
       - 2023
-   *  - Status (2024/12)
+   *  - Status (2026/03)
       - End-Of-Life
       - Mass Production (solo1: NRND)
       - NRND
