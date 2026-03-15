@@ -34,10 +34,14 @@ ESPEasy does support a number of variants of the processors manufactured by Espr
 * **ESP32-S3** Support added: 2023-05-03
 * **ESP32-C2 / ESP8684** Support added: 2023-11-10
 * **ESP32-C3 / ESP8685** Support added: 2023-05-03
-* **ESP32-C5** Not yet supported
+* **ESP32-C5** Preliminary support added: 2026-01-09
 * **ESP32-C6** Support added: 2023-11-10
+* **ESP32-C61** Preliminary support added: 2026-01-09
+* **ESP32-E22** Not yet supported
 * **ESP32-H2** Not yet supported
-* **ESP32-P4** Not yet supported
+* **ESP32-H21** Not yet supported
+* **ESP32-H4** Not yet supported
+* **ESP32-P4** Support added: 2026-01-08
 
 
 .. list-table:: Espressif platforms
@@ -92,7 +96,7 @@ ESPEasy does support a number of variants of the processors manufactured by Espr
       - 160
       - 120
       - 96
-      - 400
+      - 360 (v1.x) / 400 (v3.x)
    *  - Voltage (V)
       - 2.5 ~ 3.6
       - 3.0 ~ 3.6
@@ -115,8 +119,8 @@ ESPEasy does support a number of variants of the processors manufactured by Espr
       - 
       - Nov-23
       - 
-      - 
-      - 
+      - n/a
+      - Jan-26
    *  - Introduction
       - 2014
       - 2016
@@ -124,11 +128,11 @@ ESPEasy does support a number of variants of the processors manufactured by Espr
       - 2021
       - 2022
       - 2020
-      - 
+      - 2022
       - 2021
-      - 
+      - 2024
       - 2021
-      - 
+      - 2023
    *  - Status (2024/12)
       - End-Of-Life
       - Mass Production (solo1: NRND)
@@ -136,11 +140,11 @@ ESPEasy does support a number of variants of the processors manufactured by Espr
       - Mass Production
       - Mass Production
       - Mass Production
-      - Sample
       - Mass Production
-      - Sample
       - Mass Production
-      - Sample
+      - Mass Production
+      - Mass Production
+      - Mass Production
    *  - Wi-Fi
       - IEEE 802.11 b/g/n; 2.4 GHz; HT20; up to 72 Mbps
       - IEEE 802.11 b/g/n; 2.4 GHz; HT20/40; up to 150 Mbps
