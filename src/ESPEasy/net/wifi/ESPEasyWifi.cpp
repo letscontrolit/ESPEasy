@@ -232,9 +232,13 @@ String GetHostedFwVersion(EspHostTypes hostType)
 String GetHostedMCU()
 {
   // Function is not yet implemented in Arduino Core so emulate it here
+#if defined(CONFIG_ESP_HOSTED_CP_TARGET_ESP32C6) && CONFIG_ESP_HOSTED_CP_TARGET_ESP32C6==1
+  return String("ESP32-C6");
+#else
   if (equals(F(CONFIG_ESP_HOSTED_IDF_SLAVE_TARGET), F("esp32c6"))) {
     return String("ESP32-C6");
   }
+#endif
   return String("Unknown");
 }
 
