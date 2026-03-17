@@ -504,7 +504,9 @@ bool NW003_data_struct_ETH_RMII::ETHConnectRelaxed() {
   if (!(data && iface)) { return false; }
 
   if (data->started() && data->connected()) {
-    return EthLinkUp();
+    if (EthLinkUp()) return true;
+    data->mark_connect_failed();
+    return false;
   }
   ethPrintSettings();
 
@@ -512,6 +514,7 @@ bool NW003_data_struct_ETH_RMII::ETHConnectRelaxed() {
   {
     addLog(LOG_LEVEL_ERROR, F("ETH: Settings not correct!!!"));
     data->mark_stop();
+    data->mark_connect_failed();
     return false;
   }
 
@@ -565,8 +568,11 @@ bool NW003_data_struct_ETH_RMII::ETHConnectRelaxed() {
     if (EthLinkUp()) {
       // We might miss the connected event, since we are already connected.
       data->mark_connected();
+    } else {
+      data->mark_connect_failed();
     }
   } else {
+    data->mark_connect_failed();
     addLog(LOG_LEVEL_ERROR, F("ETH  : Failed to initialize ETH"));
   }
   return success;

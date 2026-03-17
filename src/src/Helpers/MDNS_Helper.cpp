@@ -31,8 +31,8 @@ void update_mDNS() {
   if (webserverRunning) {
     if (!mDNS_init) {
       addLog(LOG_LEVEL_INFO, F("mDNS : Starting mDNS..."));
-      mDNS_init = MDNS.begin(NetworkGetHostname().c_str());
-      MDNS.setInstanceName(NetworkGetHostname()); // Needed for when the hostname has changed.
+      mDNS_init = MDNS.begin(ESPEasy::net::NetworkGetHostname().c_str());
+      MDNS.setInstanceName(ESPEasy::net::NetworkGetHostname()); // Needed for when the hostname has changed.
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log = F("mDNS : ");

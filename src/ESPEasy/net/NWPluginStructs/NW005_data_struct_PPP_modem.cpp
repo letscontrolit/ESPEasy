@@ -865,7 +865,7 @@ void NW005_begin_modem_task(void *parameter)
       {
         delay(100);
       }
-      while (timePassedSince(start) < 5000 && !NW_PLUGIN_INTERFACE.attached());
+      while (timePassedSince(start) < 10000 && !NW_PLUGIN_INTERFACE.attached());
 
       NW_PLUGIN_INTERFACE.mode(ESP_MODEM_MODE_CMUX);
       modem_task_data->AT_CPSI = NW_PLUGIN_INTERFACE.cmd(F("AT+CPSI?"), 3000);
@@ -874,6 +874,9 @@ void NW005_begin_modem_task(void *parameter)
         NW_PLUGIN_INTERFACE.cmd(F("AT&D1"), 9000);
         digitalWrite(modem_task_data->dtrPin, HIGH);
       }
+      if (!NW_PLUGIN_INTERFACE.attached()) modem_task_data->modem_init_failed = true;
+    } else {
+      modem_task_data->modem_init_failed = true;
     }
     modem_task_data->modem_initialized = res;
   }
@@ -1035,6 +1038,20 @@ bool NW005_data_struct_PPP_modem::handle_nwplugin_write(EventStruct *event, Stri
     }
   }
   return success;
+}
+
+bool NW005_data_struct_PPP_modem::check_connect_failed()
+{
+  if (_modem_task_data.modem_init_failed)
+  {
+    _modem_task_data.modem_init_failed = false;
+    auto stats = getNWPluginData_static_runtime();
+    if (stats) {
+      stats->mark_connect_failed();
+    }
+    return true;
+  }
+  return false;
 }
 
 # if FEATURE_NETWORK_STATS

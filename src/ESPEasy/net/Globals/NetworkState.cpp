@@ -28,4 +28,4 @@ WiFiUDP portUDP;
 #ifdef ESP32
 bool nonDefaultNetworkInterface_gotIP{};
 #endif
-
+bool networkConnectionFailed{};
