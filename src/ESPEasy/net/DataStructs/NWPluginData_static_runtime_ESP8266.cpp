@@ -3,6 +3,8 @@
 #ifdef ESP8266
 
 # include "../../../src/Helpers/StringConverter.h"
+# include "../Globals/NetworkState.h"
+# include "../ESPEasyNetwork.h"
 
 namespace ESPEasy {
 namespace net {
@@ -71,6 +73,9 @@ void NWPluginData_static_runtime::mark_begin_establish_connection()
   _establishConnectStats.forceSet(true);
   _connectedStats.setOff();
   _operationalStats.setOff();
+  const String hostname = NetworkCreateRFCCompliantHostname();
+  wifi_station_set_hostname(hostname.c_str());
+  WiFi.hostname(hostname.c_str());
 }
 
 void NWPluginData_static_runtime::mark_connected()
@@ -113,6 +118,11 @@ void NWPluginData_static_runtime::log_disconnected()
              format_msec_duration_HMS(_connectedStats.getLastOnDuration_ms())));
   }
 # endif // ifndef BUILD_NO_DEBUG
+}
+
+void NWPluginData_static_runtime::mark_connect_failed()
+{
+  networkConnectionFailed = true;
 }
 
 } // namespace net

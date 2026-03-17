@@ -73,7 +73,11 @@ private:
 
   STA_connected_state getSTA_connected_state() const;
 
+public:
+
   bool shouldStartAP_fallback() const;
+
+private:
 
   //  WiFi_AP_Candidate _active_sta;
   //  WiFi_AP_Candidate _AP_conf;
