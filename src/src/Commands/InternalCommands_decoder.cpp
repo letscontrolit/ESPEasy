@@ -89,7 +89,9 @@ const char Internal_commands_fghij[] PROGMEM =
 #if FEATURE_WIFI
   "hiddenssid|"
 #endif
+#if FEATURE_I2C
   "i2cscanner|"
+#endif
   "inc|"
   "ip|"
 #if FEATURE_USE_IPV6
