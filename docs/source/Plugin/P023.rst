@@ -13,7 +13,9 @@ Type: |P023_type|
 
 Name: |P023_name|
 
-Status: |P023_status|
+Status ESP32: |P023_status|
+
+Status ESP8266: |P023_status_lb|
 
 GitHub: |P023_github|_
 

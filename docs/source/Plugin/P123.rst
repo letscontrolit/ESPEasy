@@ -13,7 +13,9 @@ Type: |P123_type|
 
 Name: |P123_name|
 
-Status: |P123_status|
+Status ESP32: |P123_status|
+
+Status ESP8266: |P123_status_lb|
 
 GitHub: |P123_github|_
 

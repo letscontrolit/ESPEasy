@@ -13,7 +13,9 @@ Type: |P124_type|
 
 Name: |P124_name|
 
-Status: |P124_status|
+Status ESP32: |P124_status|
+
+Status ESP8266: |P124_status_lb|
 
 GitHub: |P124_github|_
 

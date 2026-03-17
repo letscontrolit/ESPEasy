@@ -13,7 +13,9 @@ Type: |P116_type|
 
 Name: |P116_name|
 
-Status: |P116_status|
+Status ESP32: |P116_status|
+
+Status ESP8266: |P116_status_lb|
 
 GitHub: |P116_github|_
 

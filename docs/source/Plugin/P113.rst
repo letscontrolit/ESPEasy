@@ -13,7 +13,9 @@ Type: |P113_type|
 
 Name: |P113_name|
 
-Status: |P113_status|
+Status ESP32: |P113_status|
+
+Status ESP8266: |P113_status_lb|
 
 GitHub: |P113_github|_
 

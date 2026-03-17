@@ -13,7 +13,9 @@ Type: |P141_type|
 
 Name: |P141_name|
 
-Status: |P141_status|
+Status ESP32: |P141_status|
+
+Status ESP8266: |P141_status_lb|
 
 GitHub: |P141_github|_
 

@@ -28,14 +28,14 @@ Network Plugins
    For ESP8266 we only have support for WiFi and no other network interfaces will be added for ESP8266.
 
 .. csv-table::
-   :header: "Plugin name", "Plugin status", "Plugin number"
-   :widths: 10, 8, 5
+   :header: "Plugin name", "ESP32 Plugin status", "ESP8266 Plugin status", "Plugin number"
+   :widths: 9, 6, 6, 3
 
-   ":ref:`NW001_page`","|NW001_status|","NW001"
-   ":ref:`NW002_page`","|NW002_status|","NW002"
-   ":ref:`NW003_page`","|NW003_status|","NW003"
-   ":ref:`NW004_page`","|NW004_status|","NW004"
-   ":ref:`NW005_page`","|NW005_status|","NW005"
+   ":ref:`NW001_page`","|NW001_status|","|NW001_status_lb|","NW001"
+   ":ref:`NW002_page`","|NW002_status|","|NW002_status_lb|","NW002"
+   ":ref:`NW003_page`","|NW003_status|","|NW003_status_lb|","NW003"
+   ":ref:`NW004_page`","|NW004_status|","|NW004_status_lb|","NW004"
+   ":ref:`NW005_page`","|NW005_status|","|NW005_status_lb|","NW005"
 
 Network Parameters
 ==================
