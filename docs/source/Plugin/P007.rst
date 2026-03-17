@@ -13,7 +13,9 @@ Type: |P007_type|
 
 Name: |P007_name|
 
-Status: |P007_status|
+Status ESP32: |P007_status|
+
+Status ESP8266: |P007_status_lb|
 
 GitHub: |P007_github|_
 

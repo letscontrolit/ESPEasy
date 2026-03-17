@@ -13,7 +13,9 @@ Type: |P114_type|
 
 Name: |P114_name|
 
-Status: |P114_status|
+Status ESP32: |P114_status|
+
+Status ESP8266: |P114_status_lb|
 
 GitHub: |P114_github|_
 

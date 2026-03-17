@@ -13,7 +13,9 @@ Type: |P169_type|
 
 Name: |P169_name|
 
-Status: |P169_status|
+Status ESP32: |P169_status|
+
+Status ESP8266: |P169_status_lb|
 
 GitHub: |P169_github|_
 

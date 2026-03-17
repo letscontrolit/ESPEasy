@@ -14,7 +14,9 @@ Type: |C008_type|
 
 Name: |C008_name|
 
-Status: |C008_status|
+Status ESP32: |C008_status|
+
+Status ESP8266: |C008_status_lb|
 
 GitHub: |C008_github|_
 

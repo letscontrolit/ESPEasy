@@ -13,7 +13,9 @@ Type: |P120_type|
 
 Name: |P120_name|
 
-Status: |P120_status|
+Status ESP32: |P120_status|
+
+Status ESP8266: |P120_status_lb|
 
 GitHub: |P120_github|_
 

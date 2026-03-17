@@ -5,6 +5,7 @@
 .. |C001_type| replace:: :cyan:`Controller`
 .. |C001_typename| replace:: :cyan:`Controller - Domoticz HTTP`
 .. |C001_status| replace:: :green:`NORMAL`
+.. |C001_status_lb| replace:: :green:`NORMAL`
 .. |C001_github| replace:: C001.cpp
 .. _C001_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_C001.cpp
 .. |C001_usedby| replace:: `.`
@@ -16,6 +17,7 @@
 .. |C002_type| replace:: :cyan:`Controller`
 .. |C002_typename| replace:: :cyan:`Controller - Domoticz MQTT`
 .. |C002_status| replace:: :green:`NORMAL`
+.. |C002_status_lb| replace:: :green:`NORMAL`
 .. |C002_github| replace:: C002.cpp
 .. _C002_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_C002.cpp
 .. |C002_usedby| replace:: `.`
@@ -27,6 +29,7 @@
 .. |C003_type| replace:: :cyan:`Controller`
 .. |C003_typename| replace:: :cyan:`Controller - Nodo Telnet`
 .. |C003_status| replace:: :green:`NORMAL`
+.. |C003_status_lb| replace:: :green:`NORMAL`
 .. |C003_github| replace:: C003.cpp
 .. _C003_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_C003.cpp
 .. |C003_usedby| replace:: `.`
@@ -38,6 +41,7 @@
 .. |C004_type| replace:: :cyan:`Controller`
 .. |C004_typename| replace:: :cyan:`Controller - ThingSpeak`
 .. |C004_status| replace:: :green:`NORMAL`
+.. |C004_status_lb| replace:: :green:`NORMAL`
 .. |C004_github| replace:: C004.cpp
 .. _C004_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_C004.cpp
 .. |C004_usedby| replace:: `.`
@@ -49,6 +53,7 @@
 .. |C005_type| replace:: :cyan:`Controller`
 .. |C005_typename| replace:: :cyan:`Controller - Home Assistant (openHAB) MQTT`
 .. |C005_status| replace:: :green:`NORMAL`
+.. |C005_status_lb| replace:: :green:`NORMAL`
 .. |C005_github| replace:: C005.cpp
 .. _C005_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_C005.cpp
 .. |C005_usedby| replace:: `.`
@@ -60,6 +65,7 @@
 .. |C006_type| replace:: :cyan:`Controller`
 .. |C006_typename| replace:: :cyan:`Controller - PiDome MQTT`
 .. |C006_status| replace:: :green:`NORMAL`
+.. |C006_status_lb| replace:: :green:`NORMAL`
 .. |C006_github| replace:: C006.cpp
 .. _C006_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_C006.cpp
 .. |C006_usedby| replace:: `.`
@@ -71,6 +77,7 @@
 .. |C007_type| replace:: :cyan:`Controller`
 .. |C007_typename| replace:: :cyan:`Controller - Emoncms`
 .. |C007_status| replace:: :green:`NORMAL`
+.. |C007_status_lb| replace:: :green:`NORMAL`
 .. |C007_github| replace:: C007.cpp
 .. _C007_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_C007.cpp
 .. |C007_usedby| replace:: `.`
@@ -82,6 +89,7 @@
 .. |C008_type| replace:: :cyan:`Controller`
 .. |C008_typename| replace:: :cyan:`Controller - Generic HTTP`
 .. |C008_status| replace:: :green:`NORMAL`
+.. |C008_status_lb| replace:: :green:`NORMAL`
 .. |C008_github| replace:: C008.cpp
 .. _C008_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_C008.cpp
 .. |C008_usedby| replace:: `.`
@@ -93,6 +101,7 @@
 .. |C009_type| replace:: :cyan:`Controller`
 .. |C009_typename| replace:: :cyan:`Controller - FHEM HTTP`
 .. |C009_status| replace:: :green:`NORMAL`
+.. |C009_status_lb| replace:: :green:`NORMAL`
 .. |C009_github| replace:: C009.cpp
 .. _C009_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_C009.cpp
 .. |C009_usedby| replace:: `.`
@@ -104,6 +113,7 @@
 .. |C010_type| replace:: :cyan:`Controller`
 .. |C010_typename| replace:: :cyan:`Controller - Generic UDP`
 .. |C010_status| replace:: :green:`NORMAL`
+.. |C010_status_lb| replace:: :green:`NORMAL`
 .. |C010_github| replace:: C010.cpp
 .. _C010_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_C010.cpp
 .. |C010_usedby| replace:: `.`
@@ -115,6 +125,7 @@
 .. |C011_type| replace:: :cyan:`Controller`
 .. |C011_typename| replace:: :cyan:`Controller - Generic HTTP Advanced`
 .. |C011_status| replace:: :yellow:`COLLECTION` :yellow:`CLIMATE`
+.. |C011_status_lb| replace:: :yellow:`COLLECTION` :yellow:`CLIMATE`
 .. |C011_github| replace:: C011.cpp
 .. _C011_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_C011.cpp
 .. |C011_usedby| replace:: `.`
@@ -126,6 +137,7 @@
 .. |C012_type| replace:: :cyan:`Controller`
 .. |C012_typename| replace:: :cyan:`Controller - Blynk`
 .. |C012_status| replace:: :yellow:`COLLECTION`
+.. |C012_status_lb| replace:: :yellow:`COLLECTION`
 .. |C012_github| replace:: C012.cpp
 .. _C012_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_C012.cpp
 .. |C012_usedby| replace:: `.`
@@ -137,6 +149,7 @@
 .. |C013_type| replace:: :cyan:`Controller`
 .. |C013_typename| replace:: :cyan:`Controller - ESPEasy P2P Networking`
 .. |C013_status| replace:: :green:`NORMAL`
+.. |C013_status_lb| replace:: :green:`NORMAL`
 .. |C013_github| replace:: C013.cpp
 .. _C013_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_C013.cpp
 .. |C013_usedby| replace:: `.`
@@ -148,6 +161,7 @@
 .. |C014_type| replace:: :cyan:`Controller`
 .. |C014_typename| replace:: :cyan:`Controller - Homie MQTT convention`
 .. |C014_status| replace:: :yellow:`COLLECTION`
+.. |C014_status_lb| replace:: :yellow:`COLLECTION`
 .. |C014_github| replace:: C014.cpp
 .. _C014_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_C014.cpp
 .. |C014_usedby| replace:: `.`
@@ -158,7 +172,8 @@
 .. |C016_name| replace:: :cyan:`Cache`
 .. |C016_type| replace:: :cyan:`Controller`
 .. |C016_typename| replace:: :cyan:`Controller - Cache`
-.. |C016_status| replace:: :red:`DEVELOPMENT`
+.. |C016_status| replace:: :yellow:`MAX`
+.. |C016_status_lb| replace:: `.`
 .. |C016_github| replace:: C016.cpp
 .. _C016_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_C016.cpp
 .. |C016_usedby| replace:: `.`
@@ -170,6 +185,7 @@
 .. |C017_type| replace:: :cyan:`Controller`
 .. |C017_typename| replace:: :cyan:`Controller - Zabbix`
 .. |C017_status| replace:: :yellow:`COLLECTION`
+.. |C017_status_lb| replace:: :yellow:`COLLECTION`
 .. |C017_github| replace:: C017.cpp
 .. _C017_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_C017.cpp
 .. |C017_usedby| replace:: `.`
@@ -181,6 +197,7 @@
 .. |C018_type| replace:: :cyan:`Controller`
 .. |C018_typename| replace:: :cyan:`Controller - LoRa TTN - RN2483/RN2903`
 .. |C018_status| replace:: :yellow:`COLLECTION`
+.. |C018_status_lb| replace:: :yellow:`COLLECTION`
 .. |C018_github| replace:: C018.cpp
 .. _C018_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_C018.cpp
 .. |C018_usedby| replace:: `.`

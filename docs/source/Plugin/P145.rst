@@ -13,7 +13,9 @@ Type: |P145_type|
 
 Name: |P145_name|
 
-Status: |P145_status|
+Status ESP32: |P145_status|
+
+Status ESP8266: |P145_status_lb|
 
 GitHub: |P145_github|_
 
