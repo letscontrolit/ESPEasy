@@ -21,7 +21,7 @@ bool save_SPI(String& error);
 void interfaces_show_SPI();
 #endif
 
-#if FEATURE_MODBUS
+#if FEATURE_MODBUS && FEATURE_MODBUS_INTERFACES_TAB
 void handle_interfaces_modbus();
 bool save_MODBUS(String& error);
 void interfaces_show_MODBUS();

@@ -281,7 +281,7 @@ void WebServerInit()
 #if FEATURE_SPI
   web_server.on(F("/interfaces_spi"),  handle_interfaces_spi);
 #endif // if FEATURE_SPI
-#if FEATURE_MODBUS
+#if FEATURE_MODBUS && FEATURE_MODBUS_INTERFACES_TAB
   web_server.on(F("/interfaces_modbus"),  handle_interfaces_modbus);
 #endif // if FEATURE_MODBUS
 #if FEATURE_CAN

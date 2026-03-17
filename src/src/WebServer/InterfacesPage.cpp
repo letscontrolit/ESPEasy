@@ -44,7 +44,7 @@ void handle_interfaces_spi() {
 }
 #endif // if FEATURE_SPI
 
-#if FEATURE_MODBUS
+#if FEATURE_MODBUS && FEATURE_MODBUS_INTERFACES_TAB
 void handle_interfaces_modbus() {
   navMenuIndex = MENU_INDEX_INTERFACES_MODBUS;
   handle_interfaces();
@@ -83,7 +83,7 @@ void handle_interfaces() {
     navMenuIndex = MENU_INDEX_INTERFACES_I2C;
 #elif FEATURE_SPI
     navMenuIndex = MENU_INDEX_INTERFACES_SPI;
-#elif FEATURE_MODBUS
+#elif FEATURE_MODBUS && FEATURE_MODBUS_INTERFACES_TAB
     navMenuIndex = MENU_INDEX_INTERFACES_MODBUS;
 #elif FEATURE_CAN
     navMenuIndex = MENU_INDEX_INTERFACES_CAN;
@@ -118,7 +118,7 @@ void handle_interfaces() {
   }
   #endif
 
-  #if FEATURE_MODBUS
+  #if FEATURE_MODBUS && FEATURE_MODBUS_INTERFACES_TAB
   if (navMenuIndex == MENU_INDEX_INTERFACES_MODBUS) {
     interfaces_show_MODBUS();
   }
@@ -169,7 +169,7 @@ void save_interfaces() {
   if ((navMenuIndex == MENU_INDEX_INTERFACES_SPI) && save_SPI(error)) { updated = true; }
   #endif
 
-  #if FEATURE_MODBUS
+  #if FEATURE_MODBUS && FEATURE_MODBUS_INTERFACES_TAB
   if ((navMenuIndex == MENU_INDEX_INTERFACES_MODBUS) && save_MODBUS(error)) { updated = true; }
   #endif // if FEATURE_MODBUS
 
@@ -335,7 +335,7 @@ bool save_SPI(String& error) {
 
 #endif
 
-#if FEATURE_MODBUS
+#if FEATURE_MODBUS && FEATURE_MODBUS_INTERFACES_TAB
 bool save_MODBUS(String& error) {
   return false; // TODO
 }
@@ -541,7 +541,7 @@ void interfaces_show_SPI() {
 }
 #endif
 
-#if FEATURE_MODBUS
+#if FEATURE_MODBUS && FEATURE_MODBUS_INTERFACES_TAB
 void interfaces_show_MODBUS() {
   addRowLabel(F("TODO")); // TODO
 }
