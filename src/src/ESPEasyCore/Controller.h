@@ -77,15 +77,16 @@ bool MQTTpublish(controllerIndex_t controller_idx, taskIndex_t taskIndex,  Strin
 * Send status info back to channel where request came from
 \*********************************************************************************************/
 void MQTTStatus(struct EventStruct *event, const String& status);
+#endif //if FEATURE_MQTT
 
-#if FEATURE_MQTT_TLS
+# if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS
 bool GetTLSfingerprint(String& fp);
 
 bool GetTLS_Certificate(String& cert, bool caRoot);
 
 #endif
 
-#endif //if FEATURE_MQTT
+
 
 
 /*********************************************************************************************\
