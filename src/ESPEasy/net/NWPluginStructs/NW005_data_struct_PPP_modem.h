@@ -18,6 +18,7 @@ struct NW005_modem_task_data {
   int               baud_rate = 115200;
   bool              initializing{};
   bool              modem_initialized{};
+  bool              modem_init_failed{};
   int               dtrPin = -1;
   String            logString;
   String            AT_CPSI; // Result from "AT+CPSI?"
@@ -65,6 +66,8 @@ static int32_t getNextKey_noCredentials(int32_t key);
 
   bool   handle_nwplugin_write(EventStruct *event,
                                String     & str) override;
+
+  bool   check_connect_failed();
 
   String write_AT_cmd(const String& cmd,
                       int           timeout = 1000);

@@ -4,6 +4,8 @@
 
 #include "../Globals/Settings.h"
 
+#include "../../ESPEasy/net/_NWPlugin_Helper.h"
+
 /*********************************************************************************************\
 * Network Adapter Timer  (NWPLUGIN_TASKTIMER_IN)
 * Can be scheduled per combo networkIndex & Par1 (20 least significant bits)
@@ -11,12 +13,22 @@
 void ESPEasy_Scheduler::setNetworkInitTimer(unsigned long                msecFromNow,
                                             ESPEasy::net::networkIndex_t networkIndex)
 {
-  setNetworkTimer(msecFromNow, networkIndex, NWPlugin::Function::NWPLUGIN_INIT);
+  if (ESPEasy::net::getNWPluginData(networkIndex) == nullptr) {
+    // Only init when not yet started
+    setNetworkTimer(msecFromNow, networkIndex, NWPlugin::Function::NWPLUGIN_INIT);
+  }
 }
 
 void ESPEasy_Scheduler::setNetworkExitTimer(unsigned long                msecFromNow,
                                             ESPEasy::net::networkIndex_t networkIndex)
 {
+  // First check if there are any pending INIT timers
+  const NWPluginTimerID timerID(networkIndex, 0, NWPlugin::Function::NWPLUGIN_INIT);
+  auto it = systemTimers.find(timerID.mixed_id);
+  if (it != systemTimers.end()) {
+    systemTimers.erase(it);
+  }
+
   setNetworkTimer(msecFromNow, networkIndex, NWPlugin::Function::NWPLUGIN_EXIT);
 }
 
@@ -35,11 +47,14 @@ void ESPEasy_Scheduler::setNetworkTimer(unsigned long                msecFromNow
 
   const NWPluginTimerID timerID(networkIndex, Par1, function);
 
-  systemTimerStruct timer_data;
+  if (systemTimers.find(timerID.mixed_id) == systemTimers.end()) {
+    // Only set timer if not already set.
+    systemTimerStruct timer_data;
 
-  timer_data.fromEvent(networkIndex, Par1, Par2, Par3, Par4, Par5);
-  systemTimers[timerID.mixed_id] = timer_data;
-  setNewTimerAt(timerID, millis() + msecFromNow);
+    timer_data.fromEvent(networkIndex, Par1, Par2, Par3, Par4, Par5);
+    systemTimers[timerID.mixed_id] = timer_data;
+    setNewTimerAt(timerID, millis() + msecFromNow);
+  }
 }
 
 void ESPEasy_Scheduler::process_network_timer(SchedulerTimerID id)

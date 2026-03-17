@@ -220,10 +220,6 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
     {
       return KeyValueStruct(F("Start AP on Connect Fail"), !Settings.DoNotStartAPfallback_ConnectFail());
     }
-    case LabelType::WIFI_START_AP_ON_NW002_INIT:
-    {
-      return KeyValueStruct(F("Auto Start AP"), Settings.StartAP_on_NW002_init());
-    }
     case LabelType::WIFI_NR_RECONNECT_ATTEMPTS:
     {
       return KeyValueStruct(F("Connect Retry Attempts"), Settings.ConnectFailRetryCount);
@@ -1382,10 +1378,6 @@ String getFormNote(LabelType::Enum label)
       break;
 
 #endif
-    case LabelType::WIFI_START_AP_ON_NW002_INIT:
-      flash_str = F("Always start AP mode when this network interface is enabled");
-      break;
-
 #endif // ifndef MINIMAL_OTA
 
 #if FEATURE_SET_WIFI_TX_PWR
