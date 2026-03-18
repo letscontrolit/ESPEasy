@@ -13,7 +13,9 @@ Type: |P167_type|
 
 Name: |P167_name|
 
-Status: |P167_status|
+Status ESP32: |P167_status|
+
+Status ESP8266: |P167_status_lb|
 
 GitHub: |P167_github|_
 

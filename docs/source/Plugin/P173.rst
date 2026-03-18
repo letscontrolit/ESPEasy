@@ -13,7 +13,9 @@ Type: |P173_type|
 
 Name: |P173_name|
 
-Status: |P173_status|
+Status ESP32: |P173_status|
+
+Status ESP8266: |P173_status_lb|
 
 GitHub: |P173_github|_
 

@@ -124,4 +124,29 @@ void  IRAM_ATTR DIRECT_PINMODE_INPUT_ISR(IO_REG_TYPE pin)
   DIRECT_MODE_INPUT(reg, PIN_TO_BITMASK(pin));
 }
 
+int32_t IRAM_ATTR DIRECT_measureWaitForPinState_ISR(
+  IO_REG_TYPE gpio_pin_rx, 
+  uint32_t start_usec, 
+  int32_t timeout_usec, 
+  bool newState)
+{
+  int32_t passed{};
+
+  do {
+    passed = (int32_t) ((uint32_t)micros() - start_usec);
+  } while (passed < timeout_usec &&
+           (!DIRECT_pinRead_ISR(gpio_pin_rx) == newState)); // Using '!' to do a quick cast to bool
+
+  if ((passed > timeout_usec) ||
+      (!DIRECT_pinRead_ISR(gpio_pin_rx) == newState)) {
+    return -1;
+  }
+
+  // N.B. we allow the situation where passed == timeout_usec
+  // and pin might have reached the state we're waiting for.
+  // This way we don't need to average for time before reading pin state and after.
+  return passed;
+
+}
+
 #endif // if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_ESP32)

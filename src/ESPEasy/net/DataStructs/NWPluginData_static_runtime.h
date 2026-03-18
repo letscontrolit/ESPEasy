@@ -103,6 +103,8 @@ struct NWPluginData_static_runtime {
   void mark_disconnected();
   void log_disconnected();
 
+  void mark_connect_failed();
+
   // =============================================
   // Keep track of connection durations
   // per host/interface

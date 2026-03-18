@@ -13,7 +13,9 @@ Type: |P148_type|
 
 Name: |P148_name|
 
-Status: |P148_status|
+Status ESP32: |P148_status|
+
+Status ESP8266: |P148_status_lb|
 
 GitHub: |P148_github|_
 

@@ -1344,6 +1344,23 @@ public:
   {}
 
   /**
+   * Class constructor - SPI hardware interface.
+   *
+   * Instantiate a new instance of the class. The parameters passed are used to
+   * connect the software to the hardware using the MD_MAX72XX class.
+   *
+   * See documentation for the MD_MAX72XX library for detailed explanation of parameters.
+   *
+   * \param mod       the hardware module type used in the application. One of the MD_MAX72XX::moduleType_t values.
+   * \param spi       the SPI interface to use
+   * \param csPin   output for selecting the device.
+   * \param numDevices  number of devices connected. Default is 1 if not supplied.
+   */
+  MD_Parola(MD_MAX72XX::moduleType_t mod, SPIClass &spi, uint8_t csPin, uint8_t numDevices = 1) :
+    _D(mod, spi, csPin, numDevices), _numModules(numDevices)
+  {}
+
+  /**
    * Initialize the object.
    *
    * Initialize the object data. This needs to be called during setup() to initialize new

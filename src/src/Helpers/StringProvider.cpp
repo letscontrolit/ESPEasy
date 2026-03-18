@@ -220,10 +220,6 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
     {
       return KeyValueStruct(F("Start AP on Connect Fail"), !Settings.DoNotStartAPfallback_ConnectFail());
     }
-    case LabelType::WIFI_START_AP_ON_NW002_INIT:
-    {
-      return KeyValueStruct(F("Auto Start AP"), Settings.StartAP_on_NW002_init());
-    }
     case LabelType::WIFI_NR_RECONNECT_ATTEMPTS:
     {
       return KeyValueStruct(F("Connect Retry Attempts"), Settings.ConnectFailRetryCount);
@@ -480,13 +476,13 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
     {
       return KeyValueStruct(F("Show Unit of Measure"), Settings.ShowUnitOfMeasureOnDevicesPage());
     }
-    #endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
-    #if FEATURE_MQTT_CONNECT_BACKGROUND
+#endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+#if FEATURE_MQTT_CONNECT_BACKGROUND
     case LabelType::MQTT_CONNECT_IN_BACKGROUND:
     {
       return KeyValueStruct(F("MQTT Connect in background"), Settings.MQTTConnectInBackground());
     }
-    #endif // if FEATURE_MQTT_CONNECT_BACKGROUND
+#endif // if FEATURE_MQTT_CONNECT_BACKGROUND
 
 #if CONFIG_SOC_WIFI_SUPPORT_5G
     case LabelType::WIFI_BAND_MODE:
@@ -544,7 +540,9 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
         }
         KeyValueStruct kv(F("RSSI"), WiFi.RSSI());
 #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
-        KV_SETUNIT(UOM_dBm);
+        if (!extendedValue) {
+          KV_SETUNIT(UOM_dBm);
+        }
 #endif
         return kv;
       }
@@ -619,7 +617,7 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
     #if FEATURE_MDNS
     case LabelType::M_DNS:
     {
-      const String url = NetworkGetHostname() + F(".local");
+      const String url = ESPEasy::net::NetworkGetHostname() + F(".local");
 
       if (extendedValue) {
         return KeyValueStruct(F("mDNS"),
@@ -1025,11 +1023,11 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
       KeyValueStruct kv(F("Sketch Size"), str);
       KV_SETID(F("sketch_size"));
 
-      if (!extendedValue) {
 #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+      if (!extendedValue) {
         KV_SETUNIT(UOM_kB);
-#endif
       }
+#endif
       return kv;
     }
     case LabelType::SKETCH_FREE:
@@ -1043,18 +1041,6 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
     }
     case LabelType::FS_SIZE:
     {
-      String size;
-
-      if (extendedValue) {
-        size = strformat(
-          F("%d [kB] (%d kB free)"),
-          SpiffsTotalBytes() / 1024,
-          SpiffsFreeSpace() / 1024);
-      }
-      else {
-        size = (SpiffsTotalBytes() >> 10);
-      }
-
       KeyValueStruct kv(
         #ifdef USE_LITTLEFS
         F("Little FS Size"),
@@ -1063,15 +1049,10 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
         #endif // ifdef USE_LITTLEFS
         SpiffsTotalBytes() >> 10);
       KV_SETID(F("fs_size"));
+
 #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
       KV_SETUNIT(UOM_kB);
 #endif
-
-      if (!extendedValue) {
-#if FEATURE_TASKVALUE_UNIT_OF_MEASURE
-        KV_SETUNIT(UOM_kB);
-#endif
-      }
       return kv;
     }
     case LabelType::FS_FREE:
@@ -1397,10 +1378,6 @@ String getFormNote(LabelType::Enum label)
       break;
 
 #endif
-    case LabelType::WIFI_START_AP_ON_NW002_INIT:
-      flash_str = F("Always start AP mode when this network interface is enabled");
-      break;
-
 #endif // ifndef MINIMAL_OTA
 
 #if FEATURE_SET_WIFI_TX_PWR

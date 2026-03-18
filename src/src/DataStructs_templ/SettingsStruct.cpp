@@ -986,16 +986,33 @@ void SettingsStruct_tmpl<N_TASKS>::setPinBootState(int8_t gpio_pin, PinBootState
   }
 # endif // ifdef ESP32
 }
+#if FEATURE_SPI
+template<uint32_t N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::isSPI_enabled(uint8_t spi_bus) const {
+  const SPI_Options_e SPI_selection = static_cast<SPI_Options_e>(0 == spi_bus ? InitSPI : InitSPI1);
+  return SPI_Options_e::None != SPI_selection;
+}
 
 template<uint32_t N_TASKS>
-bool SettingsStruct_tmpl<N_TASKS>::getSPI_pins(int8_t spi_gpios[3]) const {
+uint8_t SettingsStruct_tmpl<N_TASKS>::getNrConfiguredSPI_buses() const
+{
+  uint8_t res{};
+  if (isSPI_valid(0u)) ++res;
+  #ifdef ESP32
+  if (getSPIBusCount() > 1 && isSPI_valid(1u)) ++res;
+  #endif
+  return res;
+}
+
+template<uint32_t N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::getSPI_pins(int8_t spi_gpios[3], uint8_t spi_bus, bool noCheck) const {
   spi_gpios[0] = -1;
   spi_gpios[1] = -1;
   spi_gpios[2] = -1;
 
-  if (isSPI_valid()) {
+  if (noCheck || isSPI_valid(spi_bus)) {
     # ifdef ESP32
-    const SPI_Options_e SPI_selection = static_cast<SPI_Options_e>(InitSPI);
+    const SPI_Options_e SPI_selection = static_cast<SPI_Options_e>(0 == spi_bus ? InitSPI : InitSPI1);
 
     switch (SPI_selection) {
       case SPI_Options_e::Vspi_Fspi:
@@ -1014,11 +1031,26 @@ bool SettingsStruct_tmpl<N_TASKS>::getSPI_pins(int8_t spi_gpios[3]) const {
         break;
       }
 #endif
-      case SPI_Options_e::UserDefined:
+      case SPI_Options_e::UserDefined_VSPI:
+#if SOC_SPI_PERIPH_NUM > 2
+      case SPI_Options_e::UserDefined_HSPI:
+#endif
       {
-        spi_gpios[0] = SPI_SCLK_pin;
-        spi_gpios[1] = SPI_MISO_pin;
-        spi_gpios[2] = SPI_MOSI_pin;
+        #ifdef ESP32
+        if (0 == spi_bus)
+        #endif // ifdef ESP32
+        {
+          spi_gpios[0] = SPI_SCLK_pin;
+          spi_gpios[1] = SPI_MISO_pin;
+          spi_gpios[2] = SPI_MOSI_pin;
+        }
+        #ifdef ESP32
+        else if (1 == spi_bus) {
+          spi_gpios[0] = SPI1_SCLK_pin;
+          spi_gpios[1] = SPI1_MISO_pin;
+          spi_gpios[2] = SPI1_MOSI_pin;
+        }
+        #endif // ifdef ESP32
         break;
       }
       case SPI_Options_e::None:
@@ -1035,12 +1067,13 @@ bool SettingsStruct_tmpl<N_TASKS>::getSPI_pins(int8_t spi_gpios[3]) const {
 
 #ifdef ESP32
 template<uint32_t N_TASKS>
-spi_host_device_t SettingsStruct_tmpl<N_TASKS>::getSPI_host() const
+spi_host_device_t SettingsStruct_tmpl<N_TASKS>::getSPI_host(uint8_t spi_bus) const
 {
-  if (isSPI_valid()) {
-    const SPI_Options_e SPI_selection = static_cast<SPI_Options_e>(InitSPI);
+  if (isSPI_valid(spi_bus)) {
+    const SPI_Options_e SPI_selection = static_cast<SPI_Options_e>(0 == spi_bus ? InitSPI : InitSPI1);
     switch (SPI_selection) {
       case SPI_Options_e::Vspi_Fspi:
+      case SPI_Options_e::UserDefined_VSPI:
       {
         #if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
         return static_cast<spi_host_device_t>(FSPI_HOST);
@@ -1054,14 +1087,12 @@ spi_host_device_t SettingsStruct_tmpl<N_TASKS>::getSPI_host() const
         return static_cast<spi_host_device_t>(HSPI_HOST);
       }
 #endif
-      case SPI_Options_e::UserDefined:
+#if SOC_SPI_PERIPH_NUM > 2
+      case SPI_Options_e::UserDefined_HSPI:
       {
-        #if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
-        return static_cast<spi_host_device_t>(FSPI_HOST);
-        #else
-        return static_cast<spi_host_device_t>(VSPI_HOST);
-        #endif
+        return static_cast<spi_host_device_t>(HSPI_HOST);
       }
+#endif
       case SPI_Options_e::None:
         break;
     }
@@ -1081,33 +1112,86 @@ spi_host_device_t SettingsStruct_tmpl<N_TASKS>::getSPI_host() const
 
 
 template<uint32_t N_TASKS>
-bool SettingsStruct_tmpl<N_TASKS>::isSPI_pin(int8_t pin) const {
+bool SettingsStruct_tmpl<N_TASKS>::isSPI_pin(int8_t pin, uint8_t spi_bus) const {
   if (pin < 0) { return false; }
   int8_t spi_gpios[3];
 
-  if (getSPI_pins(spi_gpios)) {
+  if (getSPI_pins(spi_gpios, 0u) && ((0xFF == spi_bus) || (0u == spi_bus))) {
     for (uint8_t i = 0; i < 3; ++i) {
       if (spi_gpios[i] == pin) { return true; }
     }
   }
+  #ifdef ESP32
+  if ((getSPIBusCount() > 1u) && getSPI_pins(spi_gpios, 1u) && ((0xFF == spi_bus) || (1u == spi_bus))) {
+    for (uint8_t i = 0; i < 3; ++i) {
+      if (spi_gpios[i] == pin) { return true; }
+    }
+  }
+  #endif // ifdef ESP32
   return false;
 }
 
 template<uint32_t N_TASKS>
-bool SettingsStruct_tmpl<N_TASKS>::isSPI_valid() const {
-  if (InitSPI == static_cast<uint8_t>(SPI_Options_e::None)) { return false; }
+bool SettingsStruct_tmpl<N_TASKS>::isSPI_valid(uint8_t spi_bus) const {
+  int8_t spi0_pins[3];
+  bool result = false;
+  getSPI_pins(spi0_pins, 0u, true);
 
-  if (InitSPI == static_cast<uint8_t>(SPI_Options_e::UserDefined)) {
-    return !((SPI_SCLK_pin == -1) ||
-             (SPI_MISO_pin == -1) ||
-             (SPI_MOSI_pin == -1) ||
-             (SPI_SCLK_pin == SPI_MISO_pin) ||
-             (SPI_MISO_pin == SPI_MOSI_pin) ||
-             (SPI_MOSI_pin == SPI_SCLK_pin));
+  #ifdef ESP32
+  if (0 == spi_bus)
+  #endif // ifdef ESP32
+  {
+    if (InitSPI == static_cast<uint8_t>(SPI_Options_e::None)) { return false; }
+
+    result = !((spi0_pins[0] == -1) ||
+               (spi0_pins[1] == -1) ||
+               (spi0_pins[2] == -1) ||
+               (spi0_pins[0] == spi0_pins[1]) ||
+               (spi0_pins[1] == spi0_pins[2]) ||
+               (spi0_pins[2] == spi0_pins[0]));
+    #ifdef ESP32
+    if (result && (getSPIBusCount() > 1)) { // Cross-check pins with other bus
+      int8_t spi1_pins[3];
+      getSPI_pins(spi1_pins, 1u, true);
+
+      for (uint8_t i = 0; (i < 3) && result; ++i) {
+        for (uint8_t j = 0; (j < 3) && result; ++j) {
+          if (spi0_pins[i] == spi1_pins[j]) {
+            result = false;
+          }
+        }
+      }
+    }
+    #endif // ifdef ESP32
   }
-  return true;
-}
+  #ifdef ESP32
+  else if ((1 == spi_bus) && (getSPIBusCount() > 1)) {
+    if (InitSPI1 == static_cast<uint8_t>(SPI_Options_e::None)) { return false; }
+    int8_t spi1_pins[3];
+    getSPI_pins(spi1_pins, 1u, true);
 
+    result = !((spi1_pins[0] == -1) ||
+               (spi1_pins[1] == -1) ||
+               (spi1_pins[2] == -1) ||
+               (spi1_pins[0] == spi1_pins[1]) ||
+               (spi1_pins[1] == spi1_pins[2]) ||
+               (spi1_pins[2] == spi1_pins[0]));
+
+    if (result) { // Cross-check pins
+      for (uint8_t i = 0; (i < 3) && result; ++i) {
+        for (uint8_t j = 0; (j < 3) && result; ++j) {
+          if (spi0_pins[i] == spi1_pins[j]) {
+            result = false;
+          }
+        }
+      }
+    }
+  }
+  #endif // ifdef ESP32
+  return result;
+}
+#endif
+#if FEATURE_I2C
 template<uint32_t N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::isI2C_pin(int8_t pin) const {
   if (pin < 0) { return false; }
@@ -1133,8 +1217,53 @@ bool SettingsStruct_tmpl<N_TASKS>::isI2CEnabled(uint8_t i2cBus) const {
 }
 
 template<uint32_t N_TASKS>
+uint8_t SettingsStruct_tmpl<N_TASKS>::getNrConfiguredI2C_buses() const
+{
+#ifdef ESP32
+  uint8_t res{};
+  if (isI2CEnabled(0)) ++res;
+  if (getI2CBusCount() > 1) {
+    if (isI2CEnabled(1)) ++res;
+#if FEATURE_I2C_INTERFACE_3
+    if (isI2CEnabled(2)) ++res;
+#endif
+  }
+  return res;
+#else
+  return isI2CEnabled(0) ? 1 : 0;
+#endif
+}
+#endif
+#if FEATURE_SPI
+// stored in I2C_SPI_bus_Flags per Task
+template<uint32_t N_TASKS>
+uint8_t SettingsStruct_tmpl<N_TASKS>::getSPIBusForTask(taskIndex_t TaskIndex) const {
+  return get2BitFromUL(I2C_SPI_bus_Flags[TaskIndex], SPI_FLAGS_TASK_BUS_NUMBER);
+}
+
+template<uint32_t N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::setSPIBusForTask(taskIndex_t TaskIndex, uint8_t spi_bus) {
+  set2BitToUL(I2C_SPI_bus_Flags[TaskIndex], SPI_FLAGS_TASK_BUS_NUMBER, spi_bus);
+}
+
+#if FEATURE_SD
+// stored in I2C_SPI_bus_Flags for Task 1 (index 0)
+template<uint32_t N_TASKS>
+uint8_t SettingsStruct_tmpl<N_TASKS>::getSPIBusForSDCard() const {
+  return get2BitFromUL(I2C_SPI_bus_Flags[0], SPI_FLAGS_SDCARD_BUS_NUMBER);
+}
+
+template<uint32_t N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::setSPIBusForSDCard(uint8_t spi_bus) {
+  set2BitToUL(I2C_SPI_bus_Flags[0], SPI_FLAGS_SDCARD_BUS_NUMBER, spi_bus);
+}
+#endif // if FEATURE_SD
+#endif
+
+#if FEATURE_I2C
+template<uint32_t N_TASKS>
 uint8_t SettingsStruct_tmpl<N_TASKS>::getI2CInterface(taskIndex_t TaskIndex) const {
-  return get3BitFromUL(I2C_Flags[TaskIndex], I2C_FLAGS_BUS_NUMBER);
+  return get3BitFromUL(I2C_SPI_bus_Flags[TaskIndex], I2C_FLAGS_BUS_NUMBER);
 }
 
 template<uint32_t N_TASKS>
@@ -1275,7 +1404,8 @@ int8_t SettingsStruct_tmpl<N_TASKS>::getI2CMultiplexerResetPin(uint8_t i2cBus) c
   return -1;
 }
 #endif // if FEATURE_I2CMULTIPLEXER
-
+#endif
+#if FEATURE_ETHERNET
 template<uint32_t N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::isEthernetPin(int8_t pin) const {
   #if FEATURE_ETHERNET
@@ -1330,6 +1460,7 @@ bool SettingsStruct_tmpl<N_TASKS>::isEthernetPinOptional(int8_t pin) const {
   #endif // if FEATURE_ETHERNET
   return false;
 }
+#endif
 
 template<uint32_t N_TASKS>
 int8_t SettingsStruct_tmpl<N_TASKS>::getTaskDevicePin(taskIndex_t taskIndex, uint8_t pinnr) const {
@@ -1411,6 +1542,22 @@ void SettingsStruct_tmpl<N_TASKS>::setNetworkEnabled(ESPEasy::net::networkIndex_
 }
 
 template<uint32_t N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::getNetworkInterface_isFallback(ESPEasy::net::networkIndex_t index) const
+{
+  if (validNetworkIndex(index)) return bitRead(NetworkInterface_isFallback_bits, index);
+  return false;
+}
+
+template<uint32_t N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::setNetworkInterface_isFallback(ESPEasy::net::networkIndex_t index, bool enabled)
+{
+  if (validNetworkIndex(index)) {
+    bitWrite(NetworkInterface_isFallback_bits, index, enabled);
+  }
+}
+
+
+template<uint32_t N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::getNetworkInterfaceSubnetBlockClientIP(ESPEasy::net::networkIndex_t index) const {
   if (validNetworkIndex(index)) return bitRead(NetworkInterfaceSubnetBlockClientIP_bits, index);
   return false;
@@ -1460,19 +1607,19 @@ void SettingsStruct_tmpl<N_TASKS>::setRoutePrio_for_network(ESPEasy::net::networ
 #endif
 
 template<uint32_t N_TASKS>
-uint32_t SettingsStruct_tmpl<N_TASKS>::getNetworkInterfaceStartupDelayAtBoot(ESPEasy::net::networkIndex_t index) const
+uint32_t SettingsStruct_tmpl<N_TASKS>::getNetworkInterfaceStartupDelay(ESPEasy::net::networkIndex_t index) const
 {
   if (validNetworkIndex(index)) {
-    return static_cast<uint32_t>(NetworkInterfaceStartupDelayAtBoot[index]) * 10ul;
+    return static_cast<uint32_t>(NetworkInterfaceStartupDelay[index]) * 10ul;
   }
   return 0;
 }
 
 template<uint32_t N_TASKS>
-void SettingsStruct_tmpl<N_TASKS>::setNetworkInterfaceStartupDelayAtBoot(ESPEasy::net::networkIndex_t index, uint32_t delay_ms)
+void SettingsStruct_tmpl<N_TASKS>::setNetworkInterfaceStartupDelay(ESPEasy::net::networkIndex_t index, uint32_t delay_ms)
 {
   if (validNetworkIndex(index)) {
-    NetworkInterfaceStartupDelayAtBoot[index] = delay_ms/10ul;
+    NetworkInterfaceStartupDelay[index] = delay_ms/10ul;
   }
 }
 

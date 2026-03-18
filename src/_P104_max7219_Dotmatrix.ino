@@ -72,56 +72,61 @@
 //                                Display of the selected zone is suspended until all provided dots are drawn. No quotes are needed around
 //                                the coordinate set.
 //
-// History:
-// 2025-04-03 tonhuisman: Set character spacing correctly when changing fonts
-// 2023-10-15 tonhuisman: Code improvements, now using NR_ELEMENTS macro instead of multiple #ifdefs and increments
-//                        Re-enable use of settings-version V3 after some more testing
-// 2023-10-08 tonhuisman: Disable use of settings-version V3 for backward compatibility
-// 2023-08-15 tonhuisman: Implement Extended CustomTaskSettings, and use that to significantly improve saving the settings on LittleFS by
-//                        a) only storing the settings-version (V3) in regular CustomTaskSettings file, and the rest in the Extended
-//                           CustomTaskSettings file, by using the offset as a starting location for the data elements
-//                        b) Combine storing the size and the data-block in a single save action
-//                        Apply toStringNoZero() converter to reduce the settings-data to be saved
-// 2023-08-13 tonhuisman: Add Dot subcommand for pixel-drawing in a zone. Can be applied on any type of zone (so can be overwritten by the
-//                        original content when that's updated...)
-//                        Set default Hardware type to FC16, as that's the most used for modules found on Aliexpress
-// 2023-03-07 tonhuisman: Parse text to display without trimming off leading and trailing spaces
-// 2022-08-12 tonhuisman: Remove [DEVELOPMENT] tag
-// 2021-10-03 tonhuisman: Add Inverted option per zone
-// 2021-09    tonhuisman: Minor improvements, attempts to fix stack failures
-// 2021-08-08 tonhuisman: Reworked loading & saving the settings from A huge fixed size pre-allocated block to dynamic allocation
-//                        and saving/loading per zone. That should sove the numerous stack related crashes.
-// 2021-08-07 tonhuisman: Review feedback: several small improvements and corrections
-// 2021-07-18 tonhuisman: Small optimizations and improvements
-// 2021-07-14 tonhuisman: Fix some bugs in font selection, add Text reverse content type to improve usability of Vertical font
-// 2021-07-12 tonhuisman: Reduce number of reconfiguration during command handling, will be applied the next time content is displayed
-//                        update/correct some documentation
-// 2021-07-08 tonhuisman: Several bugfixes: settings defaults, fix brightness to enable 0 value, simplify storing the zone settings
-// 2021-06-29-2021-07-03: Add Actions column to insert before/after zone or delete a zone, order the zones either in numeric order
-//            tonhuisman: or in display order ('upside-down'), fixed many bugs, refactored bar-graph method, other improvements
-//                        All optional at compile-time by P104_USE_ZONE_ACTIONS and P104_USE_ZONE_ORDERING
-//                        Disabled P104_DEBUG_DEV by default
-// 2021-06-28 tonhuisman: Bugfixes during testing, re-enable subcommands for ESP8266 display build
-// 2021-06-27 tonhuisman: Implement 'barType' option for Bar-graph, bugfixes, bugfixes, bugfixes
-// 2021-06-26 tonhuisman: Implement 'direction' option for Bar-graph, bugfixes
-// 2021-06-26 tonhuisman: Add update command for updating one or all zones, restart repeat timer if content is updated by command, bugfixes
-// 2021-06-24 tonhuisman: Add min/max range with negative minimal value support and zero-point indication if possible
-// 2021-06-23 tonhuisman: Add Bar-graph option and bar command (initial feature, options to implement) guarded with P104_USE_BAR_GRAPH
-// 2021-06-22 tonhuisman: Add Bar-graph initial code-infrastructure
-// 2021-06-21 tonhuisman: Add options for 'formatting' time & date, will be disabled on memory-tight configs guarded by
-//                        P104_USE_DATETIME_OPTIONS
-//                        Introduced guard P104_ADD_SETTINGS_NOTES to disable some addFormNotes() to further reduce code size
-// 2021-06-19 tonhuisman: Implement repeat delay, add settxt command, add command reference (above), bug fixing, some source reorganization
-//                        Webform_Load now works on current settings if the plugin is active, instead of last stored settings
-//                        Disabled most commands a some fonts to make the build fit in the ESP8266 display configuration
-// 2021-06-18 tonhuisman: Implement PLUGIN_WRITE commands
-//                        Implement several fonts extracted from MD_Parola examples (Vertical, Extended ASCII, Full Double Height, Arabic,
-//                        Greek, Katakana) (NB: Vertical isn't working as expected yet) Will be disabled when flash memory is tight
-// 2021-06-16 tonhuisman: Implement Clock and Date (once per second)
-// 2021-06-13 tonhuisman: First working version, many improvemnts to make, like command handling, repeat timer implementaation
-// 2021-05 tonhuisman: Store and retrieve settings for max 8 (ESP82xx) or 16 (ESP32) zones
-// 2021-04 tonhuisman: Pickup and rework to get it working with ESPEasy
-// 2021-03 rixtyan : Initial plugin setup, partially based on P073 MAX7219 LED display
+
+/** History/Changelog:
+ * 2026-02-04 tonhuisman: Add ASCII font with Cyrillic extension characters
+ *                        Reformat sources with updated Uncrustify settings, use block-comment for History/Changelog
+ * 2025-08-12 tonhuisman: Enable use of secondary SPI bus
+ * 2025-04-03 tonhuisman: Set character spacing correctly when changing fonts
+ * 2023-10-15 tonhuisman: Code improvements, now using NR_ELEMENTS macro instead of multiple #ifdefs and increments
+ *                        Re-enable use of settings-version V3 after some more testing
+ * 2023-10-08 tonhuisman: Disable use of settings-version V3 for backward compatibility
+ * 2023-08-15 tonhuisman: Implement Extended CustomTaskSettings, and use that to significantly improve saving the settings on LittleFS by
+ *                        a) only storing the settings-version (V3) in regular CustomTaskSettings file, and the rest in the Extended
+ *                           CustomTaskSettings file, by using the offset as a starting location for the data elements
+ *                        b) Combine storing the size and the data-block in a single save action
+ *                        Apply toStringNoZero() converter to reduce the settings-data to be saved
+ * 2023-08-13 tonhuisman: Add Dot subcommand for pixel-drawing in a zone. Can be applied on any type of zone (so can be overwritten by the
+ *                        original content when that's updated...)
+ *                        Set default Hardware type to FC16, as that's the most used for modules found on Aliexpress
+ * 2023-03-07 tonhuisman: Parse text to display without trimming off leading and trailing spaces
+ * 2022-08-12 tonhuisman: Remove [DEVELOPMENT] tag
+ * 2021-10-03 tonhuisman: Add Inverted option per zone
+ * 2021-09    tonhuisman: Minor improvements, attempts to fix stack failures
+ * 2021-08-08 tonhuisman: Reworked loading & saving the settings from A huge fixed size pre-allocated block to dynamic allocation
+ *                        and saving/loading per zone. That should sove the numerous stack related crashes.
+ * 2021-08-07 tonhuisman: Review feedback: several small improvements and corrections
+ * 2021-07-18 tonhuisman: Small optimizations and improvements
+ * 2021-07-14 tonhuisman: Fix some bugs in font selection, add Text reverse content type to improve usability of Vertical font
+ * 2021-07-12 tonhuisman: Reduce number of reconfiguration during command handling, will be applied the next time content is displayed
+ *                        update/correct some documentation
+ * 2021-07-08 tonhuisman: Several bugfixes: settings defaults, fix brightness to enable 0 value, simplify storing the zone settings
+ * 2021-06-29-2021-07-03: Add Actions column to insert before/after zone or delete a zone, order the zones either in numeric order
+ *            tonhuisman: or in display order ('upside-down'), fixed many bugs, refactored bar-graph method, other improvements
+ *                        All optional at compile-time by P104_USE_ZONE_ACTIONS and P104_USE_ZONE_ORDERING
+ *                        Disabled P104_DEBUG_DEV by default
+ * 2021-06-28 tonhuisman: Bugfixes during testing, re-enable subcommands for ESP8266 display build
+ * 2021-06-27 tonhuisman: Implement 'barType' option for Bar-graph, bugfixes, bugfixes, bugfixes
+ * 2021-06-26 tonhuisman: Implement 'direction' option for Bar-graph, bugfixes
+ * 2021-06-26 tonhuisman: Add update command for updating one or all zones, restart repeat timer if content is updated by command, bugfixes
+ * 2021-06-24 tonhuisman: Add min/max range with negative minimal value support and zero-point indication if possible
+ * 2021-06-23 tonhuisman: Add Bar-graph option and bar command (initial feature, options to implement) guarded with P104_USE_BAR_GRAPH
+ * 2021-06-22 tonhuisman: Add Bar-graph initial code-infrastructure
+ * 2021-06-21 tonhuisman: Add options for 'formatting' time & date, will be disabled on memory-tight configs guarded by
+ *                        P104_USE_DATETIME_OPTIONS
+ *                        Introduced guard P104_ADD_SETTINGS_NOTES to disable some addFormNotes() to further reduce code size
+ * 2021-06-19 tonhuisman: Implement repeat delay, add settxt command, add command reference (above), bug fixing, some source reorganization
+ *                        Webform_Load now works on current settings if the plugin is active, instead of last stored settings
+ *                        Disabled most commands a some fonts to make the build fit in the ESP8266 display configuration
+ * 2021-06-18 tonhuisman: Implement PLUGIN_WRITE commands
+ *                        Implement several fonts extracted from MD_Parola examples (Vertical, Extended ASCII, Full Double Height, Arabic,
+ *                        Greek, Katakana) (NB: Vertical isn't working as expected yet) Will be disabled when flash memory is tight
+ * 2021-06-16 tonhuisman: Implement Clock and Date (once per second)
+ * 2021-06-13 tonhuisman: First working version, many improvemnts to make, like command handling, repeat timer implementaation
+ * 2021-05 tonhuisman: Store and retrieve settings for max 8 (ESP82xx) or 16 (ESP32) zones
+ * 2021-04 tonhuisman: Pickup and rework to get it working with ESPEasy
+ * 2021-03 rixtyan : Initial plugin setup, partially based on P073 MAX7219 LED display
+ */
 
 # define PLUGIN_104
 # define PLUGIN_ID_104           104
@@ -132,37 +137,43 @@
 
 # include "src/PluginStructs/P104_data_struct.h"
 
-
 boolean Plugin_104(uint8_t function, struct EventStruct *event, String& string) {
   boolean success = false;
 
-  switch (function) {
-    case PLUGIN_DEVICE_ADD: {
+  switch (function)
+  {
+    case PLUGIN_DEVICE_ADD:
+    {
       auto& dev = Device[++deviceCount];
       dev.Number             = PLUGIN_ID_104;
       dev.Type               = DEVICE_TYPE_SPI;
       dev.VType              = Sensor_VType::SENSOR_TYPE_NONE;
       dev.ExitTaskBeforeSave = false;
+      dev.SpiBusSelect       = true;
       break;
     }
 
-    case PLUGIN_SET_DEFAULTS: {
+    case PLUGIN_SET_DEFAULTS:
+    {
       CONFIG_PORT              = -1;
       P104_CONFIG_HARDWARETYPE = static_cast<int>(MD_MAX72XX::moduleType_t::FC16_HW);
       break;
     }
 
-    case PLUGIN_GET_DEVICENAME: {
+    case PLUGIN_GET_DEVICENAME:
+    {
       string = F(PLUGIN_NAME_104);
       break;
     }
 
-    case PLUGIN_GET_DEVICEGPIONAMES: {
+    case PLUGIN_GET_DEVICEGPIONAMES:
+    {
       event->String1 = formatGpioName_output(F("CS"));
       break;
     }
 
-    case PLUGIN_WEBFORM_LOAD: {
+    case PLUGIN_WEBFORM_LOAD:
+    {
       int8_t spi_pins[3];
       Settings.getSPI_pins(spi_pins);
       int    pinnr = -1;
@@ -213,7 +224,8 @@ boolean Plugin_104(uint8_t function, struct EventStruct *event, String& string) 
       break;
     }
 
-    case PLUGIN_WEBFORM_SAVE: {
+    case PLUGIN_WEBFORM_SAVE:
+    {
       P104_data_struct *P104_data = static_cast<P104_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       P104_CONFIG_ZONE_COUNT = getFormItemInt(F("zonecount"));
@@ -244,7 +256,8 @@ boolean Plugin_104(uint8_t function, struct EventStruct *event, String& string) 
       break;
     }
 
-    case PLUGIN_INIT: {
+    case PLUGIN_INIT:
+    {
       uint8_t numDevices = P104_CONFIG_TOTAL_UNITS;
 
       if (numDevices == 0) { // fallback value
@@ -283,7 +296,8 @@ boolean Plugin_104(uint8_t function, struct EventStruct *event, String& string) 
       break;
     }
 
-    case PLUGIN_EXIT: {
+    case PLUGIN_EXIT:
+    {
       P104_data_struct *P104_data = static_cast<P104_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if ((nullptr == P104_data) || (nullptr == P104_data->P)) {
@@ -298,7 +312,8 @@ boolean Plugin_104(uint8_t function, struct EventStruct *event, String& string) 
       break;
     }
 
-    case PLUGIN_WRITE: {
+    case PLUGIN_WRITE:
+    {
       P104_data_struct *P104_data = static_cast<P104_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P104_data) {
@@ -308,7 +323,8 @@ boolean Plugin_104(uint8_t function, struct EventStruct *event, String& string) 
       break;
     }
 
-    case PLUGIN_TEN_PER_SECOND: {
+    case PLUGIN_TEN_PER_SECOND:
+    {
       P104_data_struct *P104_data = static_cast<P104_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if ((nullptr != P104_data) && (nullptr != P104_data->P)) {
@@ -319,7 +335,8 @@ boolean Plugin_104(uint8_t function, struct EventStruct *event, String& string) 
       break;
     }
 
-    case PLUGIN_ONCE_A_SECOND: {
+    case PLUGIN_ONCE_A_SECOND:
+    {
       P104_data_struct *P104_data = static_cast<P104_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if ((nullptr != P104_data) && (nullptr != P104_data->P)) {

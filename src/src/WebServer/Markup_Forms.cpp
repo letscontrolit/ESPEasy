@@ -8,6 +8,7 @@
 #include "../Globals/Settings.h"
 
 #include "../Helpers/Hardware_GPIO.h"
+#include "../Helpers/Hardware_device_info.h"
 #include "../Helpers/Numerical.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_GPIO.h"
@@ -464,6 +465,11 @@ void addFormPinSelect(PinSelectPurpose purpose, const String& label, const __Fla
   addPinSelect(purpose, id, choice);
 }
 
+void addFormPinSelect(PinSelectPurpose purpose, const String& label, const String& id, int choice) {
+  addRowLabel_tr_id(label, id);
+  addPinSelect(purpose, id, choice);
+}
+
 void addFormPinSelect(PinSelectPurpose purpose, const __FlashStringHelper * label, const __FlashStringHelper * id, int choice)
 {
   addRowLabel_tr_id(label, id);
@@ -491,7 +497,7 @@ void addFormPinSelect(const String& label, const String & id, int choice)
   addPinSelect(PinSelectPurpose::Generic, id, choice);
 }
 */
-
+#if FEATURE_I2C
 void addFormPinSelectI2C(const String& label, const String& id, uint8_t i2cBus, int choice)
 {
   addRowLabel_tr_id(label, id);
@@ -529,7 +535,7 @@ void addFormSelectorI2C(const String& id,
   }
   addSelector_Foot();
 }
-
+#endif
 void addFormSelector_YesNo(const __FlashStringHelper * label,
                            const __FlashStringHelper * id,
                            int           selectedIndex,
@@ -563,10 +569,12 @@ void addFormPinStateSelect(int gpio, int choice)
     // do not add the pin state select for these pins.
     enabled = false;
   }
+#if FEATURE_ETHERNET
   if (Settings.isEthernetPin(gpio)) {
     // do not add the pin state select for non-optional Ethernet pins
     enabled = false;
   }
+#endif
   int  pinnr = -1;
   bool input, output, warning;
 
@@ -654,6 +662,16 @@ bool getCheckWebserverArg_int(const String& key, int& value) {
   return res;
 }
 
+bool getCheckWebserverArg_int(const String& key,
+                              uint32_t      & value) {
+  const String valueStr = webArg(key);
+  if (valueStr.isEmpty()) return false;
+  uint32_t tmp{};
+  const bool res = validUIntFromString(valueStr, tmp);
+  value = tmp;
+  return res;
+}
+
 bool update_whenset_FormItemInt(const __FlashStringHelper * key,
                                 int         & value) 
 {
@@ -669,6 +687,25 @@ bool update_whenset_FormItemInt(const String& key, int& value) {
   }
   return false;
 }
+
+bool update_whenset_FormItemInt(const __FlashStringHelper * key,
+                                uint32_t    & value) 
+{
+  return update_whenset_FormItemInt(String(key), value);
+}
+
+bool update_whenset_FormItemInt(const String& key,
+                                uint32_t    & value)
+{
+  uint32_t tmpVal;
+
+  if (getCheckWebserverArg_int(key, tmpVal)) {
+    value = tmpVal;
+    return true;
+  }
+  return false;
+}
+
 
 bool update_whenset_FormItemInt(const __FlashStringHelper * key,
                                 int8_t& value) 

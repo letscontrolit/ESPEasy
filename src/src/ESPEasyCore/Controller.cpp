@@ -34,6 +34,11 @@
 #include "../Helpers/PeriodicalActions.h"
 #include "../Helpers/PortStatus.h"
 
+# if FEATURE_MQTT_TLS
+  #  include <WiFiClientSecureLightBearSSL.h>
+  #  include "../CustomBuild/Certificate_CA.h"
+# endif // if FEATURE_MQTT_TLS
+
 
 constexpr pluginID_t PLUGIN_ID_MQTT_IMPORT(37);
 
@@ -1192,11 +1197,15 @@ void MQTTStatus(struct EventStruct *event, const String& status)
   }
 }
 
-# if FEATURE_MQTT_TLS
+#endif
+
+# if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS
 
 bool GetTLSfingerprint(String& fp)
 {
 #  ifdef ESP32
+# if FEATURE_MQTT_TLS
+// FIXME TD-er: We need to have a closer look at this as currently FEATURE_HTTP_TLS really needs FEATURE_MQTT_TLS
 
   if (MQTTclient_connected && (mqtt_tls != nullptr)) {
     const uint8_t *recv_fingerprint = mqtt_tls->getRecvPubKeyFingerprint();
@@ -1223,6 +1232,7 @@ bool GetTLSfingerprint(String& fp)
       return true;
     }
   }
+#endif
 #  endif // ifdef ESP32
   return false;
 }
@@ -1248,8 +1258,6 @@ bool GetTLS_Certificate(String& cert, bool caRoot)
 }
 
 # endif // if FEATURE_MQTT_TLS
-
-#endif  // if FEATURE_MQTT
 
 /*********************************************************************************************\
 * send specific sensor task data, effectively calling PluginCall(PLUGIN_READ...)

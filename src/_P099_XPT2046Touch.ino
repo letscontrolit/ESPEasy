@@ -6,6 +6,7 @@
 
 /**
  * Changelog:
+ * 2025-08-13 tonhuisman: Enable use of secondary SPI bus
  * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported for Touch)
  * 2020-11-01 tonhuisman: Solved previous strange rotation settings to be compatible with TFT ILI9341
  * 2020-11-01 tonhuisman: Add option to flip rotation by 180 deg, and command touch,flip,<0|1>
@@ -52,10 +53,11 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_DEVICE_ADD:
     {
       auto& dev = Device[++deviceCount];
-      dev.Number     = PLUGIN_ID_099;
-      dev.Type       = DEVICE_TYPE_SPI;
-      dev.VType      = Sensor_VType::SENSOR_TYPE_TRIPLE;
-      dev.ValueCount = 3;
+      dev.Number       = PLUGIN_ID_099;
+      dev.Type         = DEVICE_TYPE_SPI;
+      dev.VType        = Sensor_VType::SENSOR_TYPE_TRIPLE;
+      dev.ValueCount   = 3;
+      dev.SpiBusSelect = true;
       break;
     }
 
@@ -81,14 +83,14 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-    # if FEATURE_MQTT_DISCOVER
+    #if FEATURE_MQTT_DISCOVER
     case PLUGIN_GET_DISCOVERY_VTYPES:
     {
       event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_NONE); // Not yet supported
       success     = true;
       break;
     }
-    # endif // if FEATURE_MQTT_DISCOVER
+    #endif // if FEATURE_MQTT_DISCOVER
 
     case PLUGIN_SET_DEFAULTS:
     {
@@ -362,6 +364,7 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
+      const uint8_t spi_bus = Settings.getSPIBusForTask(event->TaskIndex);
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P099_data_struct());
       P099_data_struct *P099_data = static_cast<P099_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -374,7 +377,8 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
                                                           bitRead(P099_CONFIG_FLAGS, P099_FLAGS_SEND_Z),
                                                           bitRead(P099_CONFIG_FLAGS, P099_FLAGS_USE_CALIBRATION),
                                                           P099_CONFIG_X_RES,
-                                                          P099_CONFIG_Y_RES);
+                                                          P099_CONFIG_Y_RES,
+                                                          spi_bus);
 
       break;
     }

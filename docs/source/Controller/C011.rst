@@ -14,7 +14,9 @@ Type: |C011_type|
 
 Name: |C011_name|
 
-Status: |C011_status|
+Status ESP32: |C011_status|
+
+Status ESP8266: |C011_status_lb|
 
 GitHub: |C011_github|_
 

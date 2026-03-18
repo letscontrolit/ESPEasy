@@ -12,6 +12,8 @@
 #include "../WebServer/ESPEasy_WebServer.h"
 #include "../WebServer/Markup.h"
 #include "../WebServer/Markup_Forms.h"
+#include "../ESPEasyCore/Controller.h"
+#include "../DataStructs/ControllerSettingsStruct.h"
 
 /*********************************************************************************************\
 * Functions to load and store controller settings on the web page.
@@ -139,7 +141,7 @@ void addControllerEnabledForm(controllerIndex_t controllerindex) {
   addFormCheckBox(displayName, internalName, Settings.ControllerEnabled[controllerindex]);
 }
 
-#if FEATURE_MQTT_TLS
+#if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS
 void addCertificateFileNote(const ControllerSettingsStruct& ControllerSettings, const String& description, TLS_types tls_type) {
   const String certFile = ControllerSettings.getCertificateFilename(tls_type);
 

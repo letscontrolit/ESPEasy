@@ -13,7 +13,9 @@ Type: |P080_type|
 
 Name: |P080_name|
 
-Status: |P080_status|
+Status ESP32: |P080_status|
+
+Status ESP8266: |P080_status_lb|
 
 GitHub: |P080_github|_
 

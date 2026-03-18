@@ -73,7 +73,7 @@ public:
 
 private:
 
-  void writeValue(const ValueStruct& value);
+  void writeValue(const ValueStruct& value, bool forceString);
 
 #ifdef USE_KWH_JSON_PRETTY_PRINT
 

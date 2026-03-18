@@ -205,7 +205,7 @@ uint8_t getTaskI2CAddress(taskIndex_t taskIndex) {
 // Functions to assist changing I2C multiplexer port or clock speed
 // when addressing a task
 // ********************************************************************************
-
+#if FEATURE_I2C
 bool prepare_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex) {
   if (!validTaskIndex(taskIndex) || !validDeviceIndex(DeviceIndex)) {
     return false;
@@ -229,7 +229,7 @@ bool prepare_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex) 
   const uint8_t i2cBus = 0;
   #endif // if FEATURE_I2C_MULTIPLE
 
-  if (bitRead(Settings.I2C_Flags[taskIndex], I2C_FLAGS_SLOW_SPEED)) {
+  if (bitRead(Settings.I2C_SPI_bus_Flags[taskIndex], I2C_FLAGS_SLOW_SPEED)) {
     I2CSelectLowClockSpeed(i2cBus);  // Set to slow, also switch the bus
   } else {
     I2CSelectHighClockSpeed(i2cBus); // Set to normal, also switch the bus
@@ -264,6 +264,7 @@ void post_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex) {
 
   I2CSelectHighClockSpeed(i2cBus); // Reset, stay on current bus
 }
+#endif
 
 // Add an event to the event queue.
 // event value 1 = taskIndex (first task = 1)
@@ -362,10 +363,11 @@ bool PluginCallForTask(taskIndex_t taskIndex, uint8_t Function, EventStruct *Tem
           if (event != nullptr) {
             TempEvent->OriginTaskIndex = event->TaskIndex;
           }
-
+#if FEATURE_I2C
           if (!prepare_I2C_by_taskIndex(taskIndex, DeviceIndex)) {
             return false;
           }
+#endif
           #ifndef BUILD_NO_RAM_TRACKER
 
           if (Settings.EnableRAMTracking()) {
@@ -456,8 +458,9 @@ bool PluginCallForTask(taskIndex_t taskIndex, uint8_t Function, EventStruct *Tem
           #if FEATURE_I2C_DEVICE_CHECK
         }
           #endif // if FEATURE_I2C_DEVICE_CHECK
-
+#if FEATURE_I2C
           post_I2C_by_taskIndex(taskIndex, DeviceIndex);
+#endif
           delay(0); // SMY: call delay(0) unconditionally
         } else {
           #if FEATURE_PLUGIN_STATS
@@ -833,10 +836,11 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
         #ifndef BUILD_NO_RAM_TRACKER
         checkRAM_PluginCall_task(event->TaskIndex, Function);
         #endif // ifndef BUILD_NO_RAM_TRACKER
-
+#if FEATURE_I2C
         if (!prepare_I2C_by_taskIndex(event->TaskIndex, DeviceIndex)) {
           return false;
         }
+#endif
         bool retval                  = false;
         const bool performPluginCall =
           (Function != PLUGIN_READ && Function != PLUGIN_INIT) ||
@@ -976,7 +980,9 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
         #if FEATURE_I2C_DEVICE_CHECK
       }
         #endif // if FEATURE_I2C_DEVICE_CHECK
+#if FEATURE_I2C
         post_I2C_by_taskIndex(event->TaskIndex, DeviceIndex);
+#endif
         delay(0); // SMY: call delay(0) unconditionally
 
         return retval;

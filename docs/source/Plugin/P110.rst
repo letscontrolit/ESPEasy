@@ -13,7 +13,9 @@ Type: |P110_type|
 
 Name: |P110_name|
 
-Status: |P110_status|
+Status ESP32: |P110_status|
+
+Status ESP8266: |P110_status_lb|
 
 GitHub: |P110_github|_
 

@@ -55,7 +55,7 @@ bool NWPlugin_005(NWPlugin::Function function, EventStruct *event, String& strin
     {
       Settings.setRoutePrio_for_network(event->NetworkIndex, 20);
       Settings.setNetworkInterfaceSubnetBlockClientIP(event->NetworkIndex, true);
-      Settings.setNetworkInterfaceStartupDelayAtBoot(event->NetworkIndex, 500 * event->NetworkIndex);
+      Settings.setNetworkInterfaceStartupDelay(event->NetworkIndex, 500 * event->NetworkIndex);
       break;
     }
 
@@ -81,6 +81,12 @@ bool NWPlugin_005(NWPlugin::Function function, EventStruct *event, String& strin
     {
       // Webserver should not be accessed from PPP modem
       success = false;
+      break;
+    }
+
+    case NWPlugin::Function::NWPLUGIN_FALLBACK_INTERFACE_SHOULD_START:
+    {
+      success = true;
       break;
     }
 
@@ -229,6 +235,16 @@ bool NWPlugin_005(NWPlugin::Function function, EventStruct *event, String& strin
       break;
     }
 
+    case NWPlugin::Function::NWPLUGIN_TEN_PER_SECOND:
+    {
+      ESPEasy::net::ppp::NW005_data_struct_PPP_modem *NW_data =
+        static_cast<ESPEasy::net::ppp::NW005_data_struct_PPP_modem *>(getNWPluginData(event->NetworkIndex));
+
+      if (NW_data) {
+        NW_data->check_connect_failed();
+      }
+      break;
+    }
 
     case NWPlugin::Function::NWPLUGIN_FIFTY_PER_SECOND:
     {

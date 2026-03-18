@@ -101,13 +101,13 @@ bool checkNrArguments(const char *cmd, const String& Line, int nrArguments) {
                 log += F(" ExtraArg");
               }
               log += i;
-              log += '=';
+              log += ':';
               log += parameter;
             }
             ++i;
           }
         }
-        log += F(" lineLength=");
+        log += F(" lineLength:");
         log += Line.length();
         addLogMove(LOG_LEVEL_ERROR, log);
       }
@@ -326,7 +326,9 @@ bool InternalCommands::executeInternalCommand()
 #if FEATURE_WIFI
     case ESPEasy_cmd_e::hiddenssid:                 COMMAND_CASE_R(Command_Wifi_HiddenSSID, 1);              // wifi.h
 #endif
+#if FEATURE_I2C
     case ESPEasy_cmd_e::i2cscanner:                 COMMAND_CASE_R(Command_i2c_Scanner, -1);                 // i2c.h
+#endif
     case ESPEasy_cmd_e::inc:                        COMMAND_CASE_A(Command_Rules_Inc,   -1);                 // Rules.h
     case ESPEasy_cmd_e::ip:                         COMMAND_CASE_R(Command_IP,           1);                 // Network Command
 #if FEATURE_USE_IPV6
@@ -412,18 +414,6 @@ bool InternalCommands::executeInternalCommand()
 #endif // if FEATURE_POST_TO_HTTP
 #if FEATURE_CUSTOM_PROVISIONING
     case ESPEasy_cmd_e::provision:                  COMMAND_CASE_A(Command_Provisioning_Dispatcher, -1);     // Provisioning.h
-# ifdef PLUGIN_BUILD_MAX_ESP32
-
-    // FIXME DEPRECATED: Fallback for temporary backward compatibility
-    case ESPEasy_cmd_e::provisionconfig:            COMMAND_CASE_A(Command_Provisioning_ConfigFallback,       0); // Provisioning.h
-    case ESPEasy_cmd_e::provisionsecurity:          COMMAND_CASE_A(Command_Provisioning_SecurityFallback,     0); // Provisioning.h
-#  if FEATURE_NOTIFIER
-    case ESPEasy_cmd_e::provisionnotification:      COMMAND_CASE_A(Command_Provisioning_NotificationFallback, 0); // Provisioning.h
-#  endif // if FEATURE_NOTIFIER
-    case ESPEasy_cmd_e::provisionprovision:         COMMAND_CASE_A(Command_Provisioning_ProvisionFallback,    0); // Provisioning.h
-    case ESPEasy_cmd_e::provisionrules:             COMMAND_CASE_A(Command_Provisioning_RulesFallback,        1); // Provisioning.h
-    case ESPEasy_cmd_e::provisionfirmware:          COMMAND_CASE_A(Command_Provisioning_FirmwareFallback,     1); // Provisioning.h
-# endif // ifdef PLUGIN_BUILD_MAX_ESP32
 #endif // if FEATURE_CUSTOM_PROVISIONING
     case ESPEasy_cmd_e::pulse:                      COMMAND_CASE_A(Command_GPIO_Pulse,        3);                 // GPIO.h
 #if FEATURE_MQTT

@@ -559,7 +559,7 @@ void SSDP_schema() {
     return;
   }
 
-  const IPAddress ip     = NetworkLocalIP();
+  const IPAddress ip     = ESPEasy::net::NetworkLocalIP();
   const uint32_t  chipId = ESP.getChipId();
   char uuid[64];
 
@@ -658,7 +658,7 @@ bool SSDP_begin() {
 
   ip_addr_t ifaddr;
 
-  ifaddr.addr = NetworkLocalIP();
+  ifaddr.addr = ESPEasy::net::NetworkLocalIP();
   ip_addr_t multicast_addr;
 
   multicast_addr.addr = (uint32_t)SSDP_MULTICAST_ADDR;
@@ -705,7 +705,7 @@ bool SSDP_begin() {
    Send SSDP messages (notify & responses)
  \*********************************************************************************************/
 void SSDP_send(uint8_t method) {
-  uint32_t ip = NetworkLocalIP();
+  uint32_t ip = ESPEasy::net::NetworkLocalIP();
 
   // FIXME TD-er: Why create String objects of these flashstrings?
   String _ssdp_response_template = F(

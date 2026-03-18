@@ -121,6 +121,8 @@ void KeyValueWriter_JSON::write(const KeyValueStruct& kv)
 
   const size_t nrValues = kv._values.size();
 
+  const bool forceString = kv._format == KeyValueStruct::Format::PreFormatted;
+
   if (!kv._isArray) {
     // Either 1 value or empty value
     if (nrValues == 0) {
@@ -129,7 +131,7 @@ void KeyValueWriter_JSON::write(const KeyValueStruct& kv)
       pr.write('"');
     }
     else {
-      writeValue(kv._values[0]);
+      writeValue(kv._values[0], forceString);
     }
   } else {
     // Multiple values, so we must wrap it in []
@@ -153,7 +155,7 @@ void KeyValueWriter_JSON::write(const KeyValueStruct& kv)
       pr.write('\t');
 #endif // ifdef USE_KWH_JSON_PRETTY_PRINT
 
-      writeValue(kv._values[i]);
+      writeValue(kv._values[i], forceString);
     }
     getPrint().write(']');
 #ifndef USE_KWH_JSON_PRETTY_PRINT
@@ -162,7 +164,7 @@ void KeyValueWriter_JSON::write(const KeyValueStruct& kv)
   }
 }
 
-void KeyValueWriter_JSON::writeValue(const ValueStruct& val)
+void KeyValueWriter_JSON::writeValue(const ValueStruct& val, bool forceString)
 {
   if (!val.isSet()) { return; }
   auto& pr = getPrint();
@@ -196,6 +198,14 @@ void KeyValueWriter_JSON::writeValue(const ValueStruct& val)
     case ValueStruct::ValueType::Unset:
     case ValueStruct::ValueType::String:
     case ValueStruct::ValueType::FlashString:
+      if (forceString) {
+        String tmp(to_json_value(str));
+        if (!isWrappedWithQuotes(tmp)) {
+          tmp = wrap_String(tmp, '"');
+        }
+        pr.print(tmp);
+        return;
+      }
       break;
   }
   pr.print(to_json_value(str));

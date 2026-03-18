@@ -1,11 +1,14 @@
 #include "../WebServer/Log.h"
 
+#ifdef WEBSERVER_LOG
+
 #include "../WebServer/ESPEasy_WebServer.h"
 #include "../WebServer/404.h"
 #include "../WebServer/HTML_wrappers.h"
 #include "../WebServer/JSON.h"
 #include "../WebServer/Markup.h"
 #include "../WebServer/Markup_Buttons.h"
+#include "../WebServer/Markup_Forms.h"
 
 #include "../DataStructs/LogBuffer.h"
 #include "../DataStructs/TimingStats.h"
@@ -35,6 +38,7 @@ void handle_log() {
             "</TR></table><div  id='current_loglevel' style='font-weight: bold;'>Logging: </div><div class='logviewer' id='copyText_1'></div>"));
   addHtml(F("Autoscroll: "));
   addCheckBox(F("autoscroll"), true);
+  addFormTextBox(F("Filter"), F("logfilter"), "", 30);
   addHtml(F("<BR></body>"));
 
   serve_JS(JSfiles_e::FetchAndParseLog);
@@ -148,3 +152,4 @@ void handle_log_JSON() {
   handleNotFound();
   #endif // ifdef WEBSERVER_LOG
 }
+#endif

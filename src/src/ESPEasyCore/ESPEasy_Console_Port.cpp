@@ -18,10 +18,10 @@
 
 
 #ifdef ESP32
-#define CONSOLE_INPUT_BUFFER_SIZE          1280
+# define CONSOLE_INPUT_BUFFER_SIZE          1280
 #else
-#define CONSOLE_INPUT_BUFFER_SIZE          128
-#endif
+# define CONSOLE_INPUT_BUFFER_SIZE          128
+#endif // ifdef ESP32
 
 
 /*
@@ -31,19 +31,20 @@
  */
 
 EspEasy_Console_Port::EspEasy_Console_Port(LogDestination log_destination)
-: _serialWriteBuffer(log_destination) 
+  : _serialWriteBuffer(log_destination)
 {
-  InputBuffer_Serial = (char*)calloc(1, CONSOLE_INPUT_BUFFER_SIZE);
+  InputBuffer_Serial = (char *)calloc(1, CONSOLE_INPUT_BUFFER_SIZE);
 }
 
 EspEasy_Console_Port::~EspEasy_Console_Port()
 {
 #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+
   if (_serial != nullptr) {
     delete _serial;
     _serial = nullptr;
   }
-#endif
+#endif // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
   free(InputBuffer_Serial);
 }
 
@@ -111,14 +112,36 @@ void EspEasy_Console_Port::endPort()
   }
 }
 
-
 bool EspEasy_Console_Port::process_serialWriteBuffer()
 {
   if (_serial != nullptr) {
 #ifdef ESP32
-    if (!xPortCanYield()) return false;
-#endif
-    return _serialWriteBuffer.process(_serial, _serial->availableForWrite());
+
+    if (!xPortCanYield()) { return false; }
+#endif // ifdef ESP32
+    size_t availableForWrite = _serial->availableForWrite();
+
+    if (availableForWrite == 0) { return false; }
+
+    if (availableForWrite == 1) {
+      // For only a single byte, just write it directly
+      return _serialWriteBuffer.process(_serial, availableForWrite);
+    }
+
+    if (availableForWrite > 64) {
+      // Set to max. of 64 bytes as this is the optimum 'chunk size' for most
+      // serial ports, like the CDC ports and I2C to UART.
+      // Also it is relatively fast to allocate.
+      availableForWrite = 64;
+    }
+
+    PrintToString str;
+    str.reserve(availableForWrite);
+
+    if (_serialWriteBuffer.process(&str, availableForWrite)) {
+      _serial->write(str.get().c_str(), str.length());
+      return true;
+    }
   }
   return false;
 }
@@ -147,7 +170,7 @@ bool EspEasy_Console_Port::process_consoleInput(uint8_t SerialInByte)
       Logging.consolePrintln(concat('>', cmd));
 #endif
 
-      ExecuteCommand_all({EventValueSource::Enum::VALUE_SOURCE_SERIAL, std::move(cmd)}, true);
+      ExecuteCommand_all({ EventValueSource::Enum::VALUE_SOURCE_SERIAL, std::move(cmd) }, true);
       SerialInByteCounter   = 0;
       InputBuffer_Serial[0] = 0; // serial data processed, clear buffer
       return true;

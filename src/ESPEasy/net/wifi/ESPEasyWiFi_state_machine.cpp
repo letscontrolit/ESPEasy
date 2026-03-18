@@ -145,6 +145,7 @@ void ESPEasyWiFi_t::loop()
 
             //            WiFiEventData.warnedNoValidWiFiSettings = true;
           }
+          wifi_STA_data->mark_connect_failed();
 
           wifi_STA_data->_establishConnectStats.clear();
 
@@ -185,6 +186,7 @@ void ESPEasyWiFi_t::loop()
         if (WiFi_AP_Candidates.hasCandidates()) {
           setState(WiFiState_e::WiFiOFF, 100);
         } else {
+          // FIXME TD-er: This might not be a responsibility of this state machine....
           if (shouldStartAP_fallback()) {
             setState(WiFiState_e::AP_Fallback, Settings.APfallback_minimal_on_time_sec() * 1000);
             // TODO TD-er: Must keep track of whether the user has forced AP to be autostarted.
@@ -258,6 +260,7 @@ void ESPEasyWiFi_t::loop()
         if (_state == WiFiState_e::STA_Connecting) {
           setState(WiFiState_e::STA_Reconnecting, WIFI_STATE_MACHINE_STA_CONNECTING_TIMEOUT);
         } else {
+          wifi_STA_data->mark_connect_failed();
           setState(WiFiState_e::WiFiOFF);
         }
       }

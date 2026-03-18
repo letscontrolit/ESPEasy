@@ -13,7 +13,9 @@ Type: |P048_type|
 
 Name: |P048_name|
 
-Status: |P048_status|
+Status ESP32: |P048_status|
+
+Status ESP8266: |P048_status_lb|
 
 GitHub: |P048_github|_
 

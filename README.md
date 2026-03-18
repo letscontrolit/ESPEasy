@@ -4,6 +4,20 @@
 
 For ways to *support* us, see [this announcement on the forum](https://www.letscontrolit.com/forum/viewtopic.php?f=14&t=5787), or have a look at the [Patreon](https://www.patreon.com/GrovkillenTDer), [Ko-Fi](https://ko-fi.com/grovkillentder) or [PayPal](https://www.paypal.me/espeasy) links above.
 
+
+# ESPEasy, Automate (using) Common Sense, No AI.
+
+The main objective for ESPEasy is to make people realize they can easily control appliances and act on sensor data.
+
+Anyone can use it and you don't need AI. 
+Only requirement is common sense and appreciate the satisfaction of seeing things just work.
+
+If you can't build it yourself, you don't 'own' it.  
+So let's make sure YOU control it.
+
+We are more than willing to assist via our [forum](https://www.letscontrolit.com/forum).
+
+
 # ESPEasy (development branch)
 
 

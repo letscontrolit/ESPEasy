@@ -6,6 +6,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2025-08-12 tonhuisman: Enable use of secondary SPI bus
  * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery
  *                        Use all relevant code from P154 (I2C variant of the same sensor)
  * 2024-06-30 tonhuisman: Start SPI plugin, based on P154, re-using most code (dependency checked in define_plugin_sets.h)
@@ -36,6 +37,7 @@ boolean Plugin_172(uint8_t function, struct EventStruct *event, String& string)
       dev.SendDataOption = true;
       dev.TimerOption    = true;
       dev.PluginStats    = true;
+      dev.SpiBusSelect   = true;
       break;
     }
 

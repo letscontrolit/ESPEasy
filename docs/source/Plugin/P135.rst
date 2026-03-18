@@ -13,7 +13,9 @@ Type: |P135_type|
 
 Name: |P135_name|
 
-Status: |P135_status|
+Status ESP32: |P135_status|
+
+Status ESP8266: |P135_status_lb|
 
 GitHub: |P135_github|_
 

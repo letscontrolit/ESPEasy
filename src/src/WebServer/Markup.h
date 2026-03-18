@@ -170,6 +170,9 @@ void addFormHeader(const __FlashStringHelper *header,
 void addFormHeader(const __FlashStringHelper *header,
                    const __FlashStringHelper *helpButton,
                    const __FlashStringHelper *rtdHelpButton);
+void addFormHeader(const String&              header,
+                   const __FlashStringHelper *helpButton,
+                   const __FlashStringHelper *rtdHelpButton);
 
 /*
    void addFormHeader(const String& header,
@@ -178,6 +181,21 @@ void addFormHeader(const __FlashStringHelper *header,
                    const String& helpButton,
                    const String& rtdHelpButton);
  */
+
+// ********************************************************************************
+// Add a detail wrapper start & end, terminates the page-table, and starts a new page table
+// Feature disabled in MIMNIMAL_OTA builds for reduced bin size
+// ********************************************************************************
+#ifndef BUILD_MINIMAL_OTA
+void addFormDetailsStart(const bool initialOpen);
+void addFormDetailsStart(const __FlashStringHelper *caption, const bool initialOpen);
+void addFormDetailsEnd();
+void addFormFixedFirstColumn();
+#else // ifndef BUILD_MINIMAL_OTA
+#define addFormDetailsStart(...)
+#define addFormDetailsEnd()
+#define addFormFixedFirstColumn()
+#endif // ifndef BUILD_MINIMAL_OTA
 
 // ********************************************************************************
 // Add a sub header

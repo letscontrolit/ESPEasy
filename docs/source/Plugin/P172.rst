@@ -13,7 +13,9 @@ Type: |P172_type|
 
 Name: |P172_name|
 
-Status: |P172_status|
+Status ESP32: |P172_status|
+
+Status ESP8266: |P172_status_lb|
 
 GitHub: |P172_github|_
 

@@ -466,7 +466,7 @@ bool BuildFixes()
   }
 
   if (Settings.Build < 20115) {
-    if (Settings.InitSPI != static_cast<int>(SPI_Options_e::UserDefined)) { // User-defined SPI pins set to None
+    if (Settings.InitSPI != static_cast<int>(SPI_Options_e::UserDefined_VSPI)) { // User-defined SPI pins set to None
       Settings.SPI_SCLK_pin = -1;
       Settings.SPI_MISO_pin = -1;
       Settings.SPI_MOSI_pin = -1;
@@ -547,6 +547,17 @@ bool BuildFixes()
       Settings.I2C3_Multiplexer_Type = I2C_MULTIPLEXER_NONE;
       Settings.I2C3_Multiplexer_Addr = -1;
       Settings.I2C3_Multiplexer_ResetPin = -1;
+    }
+  }
+
+  if (Settings.Build <= 21303) { // 2025-08-25
+    // Add second SPI bus
+    if ((Settings.SPI1_SCLK_pin == 0) &&
+        (Settings.SPI1_MISO_pin == 0) &&
+        (Settings.SPI1_MOSI_pin == 0) ){
+      Settings.SPI1_SCLK_pin = -1;
+      Settings.SPI1_MISO_pin = -1;
+      Settings.SPI1_MOSI_pin = -1;
     }
   }
 

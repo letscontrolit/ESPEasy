@@ -13,7 +13,9 @@ Type: |P118_type|
 
 Name: |P118_name|
 
-Status: |P118_status|
+Status ESP32: |P118_status|
+
+Status ESP8266: |P118_status_lb|
 
 GitHub: |P118_github|_
 

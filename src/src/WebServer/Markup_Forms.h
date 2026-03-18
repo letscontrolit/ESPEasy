@@ -271,9 +271,10 @@ void addFormPinSelect(const __FlashStringHelper * label,
                       int           choice);
 */
 void addFormPinSelect(PinSelectPurpose purpose, const String& label, const __FlashStringHelper * id, int choice);
+void addFormPinSelect(PinSelectPurpose purpose, const String& label, const String& id, int choice);
 
 void addFormPinSelect(PinSelectPurpose purpose, const __FlashStringHelper * label, const __FlashStringHelper * id, int choice);
-
+#if FEATURE_I2C
 void addFormPinSelectI2C(const String& label,
                          const String& id,
                          uint8_t       i2cBus,
@@ -289,6 +290,7 @@ void addFormSelectorI2C(const String& id,
                         const String& tooltip = EMPTY_STRING
                         #endif
                         );
+#endif
 
 void addFormSelector_YesNo(const __FlashStringHelper * label,
                            const __FlashStringHelper * id,
@@ -317,11 +319,20 @@ int getFormItemInt(const String& key, int defaultValue);
 bool getCheckWebserverArg_int(const String& key,
                               int         & value);
 
+bool getCheckWebserverArg_int(const String& key,
+                              uint32_t      & value);
+
 bool update_whenset_FormItemInt(const __FlashStringHelper * key,
                                 int         & value);
 
 bool update_whenset_FormItemInt(const String& key,
                                 int         & value);
+
+bool update_whenset_FormItemInt(const __FlashStringHelper * key,
+                                uint32_t    & value);
+
+bool update_whenset_FormItemInt(const String& key,
+                                uint32_t    & value);
 
 bool update_whenset_FormItemInt(const __FlashStringHelper * key,
                                 int8_t      & value);

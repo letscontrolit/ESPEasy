@@ -13,7 +13,9 @@ Type: |P137_type|
 
 Name: |P137_name|
 
-Status: |P137_status|
+Status ESP32: |P137_status|
+
+Status ESP8266: |P137_status_lb|
 
 GitHub: |P137_github|_
 
