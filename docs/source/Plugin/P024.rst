@@ -13,7 +13,9 @@ Type: |P024_type|
 
 Name: |P024_name|
 
-Status: |P024_status|
+Status ESP32: |P024_status|
+
+Status ESP8266: |P024_status_lb|
 
 GitHub: |P024_github|_
 

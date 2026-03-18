@@ -16,6 +16,7 @@
 
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Hardware_GPIO.h"
+#include "../Helpers/I2C_access.h"
 #include "../Helpers/SPI_Helper.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_GPIO.h"
@@ -39,6 +40,11 @@ void handle_hardware() {
     Settings.Pin_status_led           = getFormItemInt(F("pled"));
     Settings.Pin_status_led_Inversed  = isFormItemChecked(F("pledi"));
     Settings.Pin_Reset                = getFormItemInt(F("pres"));
+    #if FEATURE_I2C_MULTIPLE
+    if (isFormItem(F("pi2cbuspcf"))) {
+      set3BitToUL(Settings.I2C_peripheral_bus, I2C_PERIPHERAL_BUS_PCFMCP, getFormItemInt(F("pi2cbuspcf")));
+    }
+    #endif // if FEATURE_I2C_MULTIPLE
     #if defined(ESP32) && FEATURE_SD
     Settings.setSPIBusForSDCard(getFormItemInt(F("sdspibus"), 0));
     #endif // if defined(ESP32) && FEATURE_SD
@@ -77,6 +83,20 @@ void handle_hardware() {
   addFormSubHeader(F("Reset Pin"));
   addFormPinSelect(PinSelectPurpose::Reset_pin, formatGpioName_input(F("Switch")), F("pres"), Settings.Pin_Reset);
   addFormNote(F("Press about 10s for factory reset"));
+
+# if FEATURE_I2C_MULTIPLE
+  const uint8_t i2cMaxBusCount = Settings.getNrConfiguredI2C_buses();
+
+  if (i2cMaxBusCount > 1) {
+    addFormSubHeader(F("PCF &amp; MCP Direct I/O"));
+    const uint8_t i2cBus = Settings.getI2CInterfacePCFMCP();
+    I2CInterfaceSelector(F("I2C Bus"),
+                         F("pi2cbuspcf"),
+                         i2cBus,
+                         false);
+
+  }
+# endif // if FEATURE_I2C_MULTIPLE
 
 #if FEATURE_SD
   addFormSubHeader(F("SD Card"));

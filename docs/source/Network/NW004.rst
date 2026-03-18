@@ -14,11 +14,19 @@ Type: |NW004_type|
 
 Name: |NW004_name|
 
-Status: |NW004_status|
+Status ESP32: |NW004_status|
+
+Status ESP8266: |NW004_status_lb|
 
 GitHub: |NW004_github|_
 
 Maintainer: |NW004_maintainer|
+
+.. include:: Ethernet_generic.repl
+
+.. include:: Ethernet_spi.repl
+
+.. include:: Ethernet_poe_iso.repl
 
 Change log
 ----------

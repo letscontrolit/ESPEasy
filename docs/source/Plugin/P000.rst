@@ -13,7 +13,9 @@ Type: |P000_type|
 
 Name: |P000_name|
 
-Status: |P000_status|
+Status ESP32: |P000_status|
+
+Status ESP8266: |P000_status_lb|
 
 GitHub: |P000_github|_
 

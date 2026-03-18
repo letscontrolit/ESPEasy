@@ -13,7 +13,9 @@ Type: |P086_type|
 
 Name: |P086_name|
 
-Status: |P086_status|
+Status ESP32: |P086_status|
+
+Status ESP8266: |P086_status_lb|
 
 GitHub: |P086_github|_
 

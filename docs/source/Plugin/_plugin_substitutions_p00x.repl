@@ -5,6 +5,7 @@
 .. |P000_typename| replace:: :cyan:`Internal GPIO handling`
 .. |P000_porttype| replace:: `.`
 .. |P000_status| replace:: :green:`NORMAL` :yellow:`CLIMATE`
+.. |P000_status_lb| replace:: :green:`NORMAL` :yellow:`CLIMATE`
 .. |P000_github| replace:: P001_Switch.ino
 .. _P000_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P001_Switch.ino
 .. |P000_usedby_GPIO| replace:: :ref:`P000_Relay_page`, :ref:`P000_Servo_motor_page`
@@ -22,6 +23,7 @@
 .. |P001_porttype| replace:: `.`
 .. |P001_typename| replace:: :cyan:`Switch Input - Switch`
 .. |P001_status| replace:: :green:`NORMAL` :yellow:`CLIMATE`
+.. |P001_status_lb| replace:: :green:`NORMAL` :yellow:`CLIMATE`
 .. |P001_github| replace:: P001_Switch.ino
 .. _P001_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P001_Switch.ino
 .. |P001_usedby| replace:: :ref:`P001_Switch_page`, :ref:`P001_Door_switch_page`, :ref:`P001_PIR_sensor_page`
@@ -35,6 +37,7 @@
 .. |P002_typename| replace:: :cyan:`Analog Input - Internal`
 .. |P002_porttype| replace:: `.`
 .. |P002_status| replace:: :green:`NORMAL` :yellow:`CLIMATE`
+.. |P002_status_lb| replace:: :green:`NORMAL` :yellow:`CLIMATE`
 .. |P002_github| replace:: P002_ADC.ino
 .. _P002_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P002_ADC.ino
 .. |P002_usedby| replace:: `.`
@@ -48,6 +51,7 @@
 .. |P003_typename| replace:: :cyan:`Generic - Pulse counter`
 .. |P003_porttype| replace:: `.`
 .. |P003_status| replace:: :green:`NORMAL` :yellow:`CLIMATE`
+.. |P003_status_lb| replace:: :green:`NORMAL` :yellow:`CLIMATE`
 .. |P003_github| replace:: P003_Pulse.ino
 .. _P003_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P003_Pulse.ino
 .. |P003_usedby| replace:: :ref:`P003_LJ12A3_page`, :ref:`P003_TCR5000_page`, :ref:`P003_YFS401_page`
@@ -61,6 +65,7 @@
 .. |P004_typename| replace:: :cyan:`Environment - DS18xxx/MAX31xxx/1-Wire Temperature`
 .. |P004_porttype| replace:: `1-Wire`
 .. |P004_status| replace:: :green:`NORMAL` :yellow:`CLIMATE`
+.. |P004_status_lb| replace:: :green:`NORMAL` :yellow:`CLIMATE`
 .. |P004_github| replace:: P004_Dallas.ino
 .. _P004_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P004_Dallas.ino
 .. |P004_usedby| replace:: :ref:`P004_page`
@@ -74,6 +79,7 @@
 .. |P005_typename| replace:: :cyan:`Environment - DHT11/12/22  SONOFF2301/7021/MS01`
 .. |P005_porttype| replace:: `.`
 .. |P005_status| replace:: :green:`NORMAL` :yellow:`CLIMATE`
+.. |P005_status_lb| replace:: :green:`NORMAL` :yellow:`CLIMATE`
 .. |P005_github| replace:: P005_DHT.ino
 .. _P005_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P005_DHT.ino
 .. |P005_usedby| replace:: :ref:`P005_DHT11_DHT22_page`
@@ -87,6 +93,7 @@
 .. |P006_typename| replace:: :cyan:`Environment - BMP085/180`
 .. |P006_porttype| replace:: `.`
 .. |P006_status| replace:: :green:`NORMAL` :yellow:`CLIMATE`
+.. |P006_status_lb| replace:: :green:`NORMAL` :yellow:`CLIMATE`
 .. |P006_github| replace:: P006_BMP085.ino
 .. _P006_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P006_BMP085.ino
 .. |P006_usedby| replace:: :ref:`P006_BMP085_page`, :ref:`P006_BMP180_page`
@@ -100,6 +107,7 @@
 .. |P007_typename| replace:: :cyan:`Analog input - PCF8591`
 .. |P007_porttype| replace:: `.`
 .. |P007_status| replace:: :green:`NORMAL`
+.. |P007_status_lb| replace:: :green:`NORMAL`
 .. |P007_github| replace:: P007_PCF8591.ino
 .. _P007_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P007_PCF8591.ino
 .. |P007_usedby| replace:: `.`
@@ -113,6 +121,7 @@
 .. |P008_typename| replace:: :cyan:`RFID - Wiegand`
 .. |P008_porttype| replace:: `.`
 .. |P008_status| replace:: :green:`NORMAL`
+.. |P008_status_lb| replace:: :green:`NORMAL`
 .. |P008_github| replace:: P008_RFID.ino
 .. _P008_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P008_RFID.ino
 .. |P008_usedby| replace:: `.`
@@ -126,6 +135,7 @@
 .. |P009_typename| replace:: :cyan:`Switch Input - MCP23017`
 .. |P009_porttype| replace:: `.`
 .. |P009_status| replace:: :green:`NORMAL`
+.. |P009_status_lb| replace:: :green:`NORMAL`
 .. |P009_github| replace:: P009_MCP.ino
 .. _P009_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P009_MCP.ino
 .. |P009_usedby| replace:: `.`

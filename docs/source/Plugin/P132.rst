@@ -13,7 +13,9 @@ Type: |P132_type|
 
 Name: |P132_name|
 
-Status: |P132_status|
+Status ESP32: |P132_status|
+
+Status ESP8266: |P132_status_lb|
 
 GitHub: |P132_github|_
 

@@ -3,6 +3,7 @@
 .. |P180_typename| replace:: :cyan:`Generic - I2C Generic`
 .. |P180_porttype| replace:: `.`
 .. |P180_status| replace:: :yellow:`COLLECTION` :yellow:`CLIMATE` :yellow:`DISPLAY` :yellow:`ENERGY` :yellow:`NEOPIXEL`
+.. |P180_status_lb| replace:: :yellow:`NEOPIXEL`
 .. |P180_github| replace:: P180_I2C_generic.ino
 .. _P180_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P180_I2C_generic.ino
 .. |P180_usedby| replace:: `.`

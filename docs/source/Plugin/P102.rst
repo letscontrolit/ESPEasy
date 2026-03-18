@@ -13,7 +13,9 @@ Type: |P102_type|
 
 Name: |P102_name|
 
-Status: |P102_status|
+Status ESP32: |P102_status|
+
+Status ESP8266: |P102_status_lb|
 
 GitHub: |P102_github|_
 

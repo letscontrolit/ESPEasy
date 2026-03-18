@@ -13,7 +13,9 @@ Type: |P153_type|
 
 Name: |P153_name|
 
-Status: |P153_status|
+Status ESP32: |P153_status|
+
+Status ESP8266: |P153_status_lb|
 
 GitHub: |P153_github|_
 

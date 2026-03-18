@@ -62,8 +62,8 @@ bool NWPlugin_002(NWPlugin::Function function, EventStruct *event, String& strin
       Settings.setRoutePrio_for_network(event->NetworkIndex, 10);
 # endif
       Settings.setNetworkInterfaceSubnetBlockClientIP(event->NetworkIndex, false);
-      Settings.setNetworkInterfaceStartupDelayAtBoot(event->NetworkIndex, 10000);
-      Settings.StartAP_on_NW002_init(false);
+      Settings.setNetworkInterfaceStartupDelay(event->NetworkIndex, 10000);
+      Settings.setNetworkInterface_isFallback(event->NetworkIndex, true);
       Settings.StartAPfallback_NoCredentials(true);
       Settings.DoNotStartAPfallback_ConnectFail(false);
       Settings.APfallback_autostart_max_uptime_m(0);
@@ -88,8 +88,19 @@ bool NWPlugin_002(NWPlugin::Function function, EventStruct *event, String& strin
 
     case NWPlugin::Function::NWPLUGIN_WEBSERVER_SHOULD_RUN:
     {
-      success = ESPEasy::net::wifi::wifiAPmodeActivelyUsed();
+      success = ESPEasy::net::wifi::WifiIsAP(WiFi.getMode());
+//      success = ESPEasy::net::wifi::wifiAPmodeActivelyUsed();
 
+      break;
+    }
+
+    case NWPlugin::Function::NWPLUGIN_FALLBACK_INTERFACE_SHOULD_START:
+    {
+      if (Settings.getNetworkInterface_isFallback(event->NetworkIndex)){
+        success = ESPEasy::net::wifi::shouldStartAP_fallback();
+      } else {
+        success = true;
+      }
       break;
     }
 
@@ -246,7 +257,6 @@ bool NWPlugin_002(NWPlugin::Function function, EventStruct *event, String& strin
       // Usually the AP will be started when no WiFi is defined, or the defined one cannot be found. This flag may prevent it.
       Settings.StartAPfallback_NoCredentials(isFormItemChecked(LabelType::WIFI_START_AP_NO_CREDENTIALS));
       Settings.DoNotStartAPfallback_ConnectFail(!isFormItemChecked(LabelType::WIFI_START_AP_ON_CONNECT_FAIL));
-      Settings.StartAP_on_NW002_init(isFormItemChecked(LabelType::WIFI_START_AP_ON_NW002_INIT));
       Settings.APfallback_autostart_max_uptime_m(getFormItemInt(LabelType::WIFI_MAX_UPTIME_AUTO_START_AP));
       Settings.APfallback_minimal_on_time_sec(getFormItemInt(LabelType::WIFI_AP_MINIMAL_ON_TIME));
 
@@ -260,8 +270,6 @@ bool NWPlugin_002(NWPlugin::Function function, EventStruct *event, String& strin
 
     case NWPlugin::Function::NWPLUGIN_WEBFORM_LOAD:
     {
-      addFormCheckBox(LabelType::WIFI_START_AP_ON_NW002_INIT);
-
       addFormSubHeader(F("Wifi AP Settings"));
       addFormPasswordBox(F("WPA AP Mode Key"), F("apkey"), SecuritySettings.WifiAPKey, 63);
       addFormNote(F("WPA Key must be at least 8 characters long"));

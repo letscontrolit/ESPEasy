@@ -14,11 +14,19 @@ Type: |NW003_type|
 
 Name: |NW003_name|
 
-Status: |NW003_status|
+Status ESP32: |NW003_status|
+
+Status ESP8266: |NW003_status_lb|
 
 GitHub: |NW003_github|_
 
 Maintainer: |NW003_maintainer|
+
+.. include:: Ethernet_generic.repl
+
+.. include:: Ethernet_rmii.repl
+
+.. include:: Ethernet_poe_iso.repl
 
 Change log
 ----------

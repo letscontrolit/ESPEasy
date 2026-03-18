@@ -13,7 +13,9 @@ Type: |P127_type|
 
 Name: |P127_name|
 
-Status: |P127_status|
+Status ESP32: |P127_status|
+
+Status ESP8266: |P127_status_lb|
 
 GitHub: |P127_github|_
 
