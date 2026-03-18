@@ -16,20 +16,30 @@
 
 void set_mDNS() {
   #if FEATURE_MDNS
-  if (!ESPEasy::net::NetworkConnected(true)) return;
-
-  update_mDNS();
+  if (ESPEasy::net::NetworkConnected(true)) update_mDNS();
   #endif // if FEATURE_MDNS
 }
 
 void update_mDNS() {
   #if FEATURE_MDNS
-  if (mDNS_init) {
+
+#ifdef ESP8266
+    #define UPDATE_MDNS_RUNNING mDNS_init = MDNS.isRunning()
+    #define MDNS_RUNNING  MDNS.isRunning()
+#else
+    #define UPDATE_MDNS_RUNNING mDNS_init = false
+    #define MDNS_RUNNING  mDNS_init
+#endif
+
+
+
+
+  if (MDNS_RUNNING) {
     MDNS.end();
-    mDNS_init = false;
+    UPDATE_MDNS_RUNNING;
   }
   if (webserverRunning) {
-    if (!mDNS_init) {
+    if (!MDNS_RUNNING) {
       addLog(LOG_LEVEL_INFO, F("mDNS : Starting mDNS..."));
       mDNS_init = MDNS.begin(ESPEasy::net::NetworkGetHostname().c_str());
       MDNS.setInstanceName(ESPEasy::net::NetworkGetHostname()); // Needed for when the hostname has changed.
@@ -48,14 +58,15 @@ void update_mDNS() {
       }
       if (mDNS_init) {
         MDNS.addService(F("http"), F("tcp"), Settings.WebserverPort);
+        MDNS.addService(F("espeasyp2p"), F("udp"), Settings.UDPPort);
       }
     }
   } else {
     #ifdef ESP8266
-    if (mDNS_init) {
+    if (MDNS_RUNNING) {
       MDNS.close();
     }
-    mDNS_init = false;
+    UPDATE_MDNS_RUNNING;
     #endif
   }
   #endif

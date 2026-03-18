@@ -100,7 +100,7 @@ void CheckRunningServices() {
 #endif // if FEATURE_WIFI
 
 #if FEATURE_MDNS
-  set_mDNS();
+  update_mDNS();
   #endif
 }
 

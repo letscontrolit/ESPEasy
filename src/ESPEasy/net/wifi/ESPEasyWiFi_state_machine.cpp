@@ -489,7 +489,7 @@ bool ESPEasyWiFi_t::connectSTA()
    */
   WiFi_pre_STA_setup();
 # if defined(ESP8266)
-  wifi_station_set_hostname(NetworkCreateRFCCompliantHostname().c_str());
+  WiFi.hostname(NetworkCreateRFCCompliantHostname().c_str());
 
 # endif // if defined(ESP8266)
 # if defined(ESP32)

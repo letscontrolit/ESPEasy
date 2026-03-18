@@ -184,7 +184,11 @@ bool captivePortal() {
     return false;
   }
 
-  if (!isIP(web_server.hostHeader()) && (web_server.hostHeader() != (ESPEasy::net::NetworkGetHostname() + F(".local")))) {
+  if (!isIP(web_server.hostHeader()) 
+#if FEATURE_MDNS
+      && !getValue(LabelType::M_DNS).equalsIgnoreCase(web_server.hostHeader())
+#endif
+) {
     String redirectURL = concat(F("http://"), formatIP(client_localIP));
     #ifdef WEBSERVER_SETUP
 

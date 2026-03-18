@@ -617,7 +617,8 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
     #if FEATURE_MDNS
     case LabelType::M_DNS:
     {
-      const String url = ESPEasy::net::NetworkGetHostname() + F(".local");
+      String url = ESPEasy::net::NetworkGetHostname() + F(".local");
+      url.toLowerCase();
 
       if (extendedValue) {
         return KeyValueStruct(F("mDNS"),
