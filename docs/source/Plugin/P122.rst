@@ -13,7 +13,9 @@ Type: |P122_type|
 
 Name: |P122_name|
 
-Status: |P122_status|
+Status ESP32: |P122_status|
+
+Status ESP8266: |P122_status_lb|
 
 GitHub: |P122_github|_
 

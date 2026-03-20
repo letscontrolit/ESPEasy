@@ -13,7 +13,9 @@ Type: |P002_type|
 
 Name: |P002_name|
 
-Status: |P002_status|
+Status ESP32: |P002_status|
+
+Status ESP8266: |P002_status_lb|
 
 GitHub: |P002_github|_
 

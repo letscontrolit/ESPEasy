@@ -15,6 +15,7 @@ Welcome to ESP Easy's documentation!
    ESPEasy/FunctionBlocks.rst
    Config/Config.rst
    Hardware/Hardware.rst
+   Interfaces/Interfaces.rst
    Network/_Network.rst
    Controller/_Controller.rst
    Plugin/_Plugin.rst

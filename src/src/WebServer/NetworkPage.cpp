@@ -160,12 +160,20 @@ void handle_networks_CopySubmittedSettings_NWPluginCall(ESPEasy::net::networkInd
 # endif
 # ifdef ESP32
     Settings.setRoutePrio_for_network(networkindex, getFormItemInt(F("routeprio"), 0));
+    Settings.setNetworkInterface_isFallback(networkindex, isFormItemChecked(F("fallback")));
     Settings.setNetworkInterfaceSubnetBlockClientIP(networkindex, isFormItemChecked(F("block_web_access")));
 # endif // ifdef ESP32
+# ifdef ESP8266
+    if (networkindex == 1) {
+      // Only add fallback checkbox to AP on ESP8266
+      Settings.setNetworkInterface_isFallback(networkindex, isFormItemChecked(F("fallback")));
+    }
+# endif // ifdef ESP32
+
 # if FEATURE_USE_IPV6
     Settings.setNetworkEnabled_IPv6(networkindex, isFormItemChecked(F("en_ipv6")));
 # endif
-    Settings.setNetworkInterfaceStartupDelayAtBoot(networkindex, getFormItemInt(F("delay_start")));
+    Settings.setNetworkInterfaceStartupDelay(networkindex, getFormItemInt(F("delay_start")));
     String dummy;
     ESPEasy::net::NWPluginCall(NWPlugin::Function::NWPLUGIN_WEBFORM_SAVE, &TempEvent, dummy);
   }
@@ -258,6 +266,9 @@ void handle_networks_ShowAllNetworksTable()
                 if (TempEvent.Par2) {
                   addHtml(F("(*)"));
                 }
+//                if (TempEvent.Par3 > 0) {
+//                  addHtml(strformat(F("<BR>%u ms"), TempEvent.Par3));
+//                }
               }
               break;
 # endif // ifdef ESP32
@@ -375,11 +386,21 @@ void handle_networks_NetworkSettingsPage(ESPEasy::net::networkIndex_t networkind
       Settings.getRoutePrio_for_network(networkindex),
       0, 255);
     addFormNote(F("The active interface with highest priority will be used for default route (gateway)."));
+    addFormCheckBox(F("Fallback Interface"), F("fallback"), Settings.getNetworkInterface_isFallback(networkindex));
+# endif
+# ifdef ESP8266
+    if (networkindex == 1) {
+      // Only add fallback checkbox to AP on ESP8266
+      addFormCheckBox(F("Fallback Interface"), F("fallback"), Settings.getNetworkInterface_isFallback(networkindex));
+    }
 # endif // ifdef ESP32
-    addFormCheckBox(F("Block Web Access"), F("block_web_access"), Settings.getNetworkInterfaceSubnetBlockClientIP(networkindex));
-    addFormNote(F("When checked, any host from a subnet on this network interface will be blocked"));
-    addFormNumericBox(F("Delay Startup At Boot"), F("delay_start"), Settings.getNetworkInterfaceStartupDelayAtBoot(networkindex), 0, 60000);
+    addFormNumericBox(F("Delay Startup"), F("delay_start"), Settings.getNetworkInterfaceStartupDelay(networkindex), 0, 60000);
     addUnit(F("ms"));
+#ifdef ESP32
+    addFormNote(F("For fallback interface, it is the delay after connection of primary interface has failed. For non-fallback it is the delay from boot"));
+#endif
+    addFormCheckBox(F("Block Web Access"), F("block_web_access"), Settings.getNetworkInterfaceSubnetBlockClientIP(networkindex));
+    addFormNote(F("When checked, any host from a subnet on this network interface will be blocked to access the ESPEasy web interface"));
 
 # if FEATURE_USE_IPV6
     addFormCheckBox(F("Enable IPv6"), F("en_ipv6"), Settings.getNetworkEnabled_IPv6(networkindex));

@@ -14,7 +14,9 @@ Type: |C009_type|
 
 Name: |C009_name|
 
-Status: |C009_status|
+Status ESP32: |C009_status|
+
+Status ESP8266: |C009_status_lb|
 
 GitHub: |C009_github|_
 

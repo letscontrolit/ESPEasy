@@ -260,9 +260,6 @@ class SettingsStruct_tmpl
   inline bool StartAPfallback_NoCredentials() const  { return !VariousBits_2.StartAPfallback_NoCredentials; }
   inline void StartAPfallback_NoCredentials(bool value) { VariousBits_2.StartAPfallback_NoCredentials = !value; }
 
-  inline bool StartAP_on_NW002_init() const  { return VariousBits_2.StartAP_on_NW002_init; }
-  inline void StartAP_on_NW002_init(bool value) { VariousBits_2.StartAP_on_NW002_init = value; }
-
   inline bool DoNotStartAPfallback_ConnectFail() const  { return VariousBits_1.DoNotStartAPfallback_ConnectFail; }
   inline void DoNotStartAPfallback_ConnectFail(bool value) { VariousBits_1.DoNotStartAPfallback_ConnectFail = value; }
 
@@ -463,6 +460,10 @@ public:
 
   void setNetworkEnabled(ESPEasy::net::networkIndex_t index, bool enabled);
 
+  bool getNetworkInterface_isFallback(ESPEasy::net::networkIndex_t index) const;
+
+  void setNetworkInterface_isFallback(ESPEasy::net::networkIndex_t index, bool enabled);
+
   bool getNetworkInterfaceSubnetBlockClientIP(ESPEasy::net::networkIndex_t index) const;
 
   void setNetworkInterfaceSubnetBlockClientIP(ESPEasy::net::networkIndex_t index, bool enabled);
@@ -483,9 +484,9 @@ public:
   void setRoutePrio_for_network(ESPEasy::net::networkIndex_t index, uint8_t prio);
 #endif
 
-  uint32_t getNetworkInterfaceStartupDelayAtBoot(ESPEasy::net::networkIndex_t index) const;
+  uint32_t getNetworkInterfaceStartupDelay(ESPEasy::net::networkIndex_t index) const;
 
-  void setNetworkInterfaceStartupDelayAtBoot(ESPEasy::net::networkIndex_t index, uint32_t delay_ms);
+  void setNetworkInterfaceStartupDelay(ESPEasy::net::networkIndex_t index, uint32_t delay_ms);
 
   uint32_t PID = 0;
   int           Version = 0;
@@ -741,7 +742,7 @@ public:
       uint32_t MQTTConnectInBackground             : 1; // Bit 13  // inverted
 
       uint32_t StartAPfallback_NoCredentials       : 1; // Bit 14 // inverted
-      uint32_t StartAP_on_NW002_init               : 1; // Bit 15
+      uint32_t Unused_bit15                        : 1; // Bit 15
       uint32_t APfallback_minimal_on_time_sec      : 8; // Bit 16 - 23
       uint32_t APfallback_autostart_max_uptime_m   : 8; // Bit 23 - 31  '0' == disabled
     };
@@ -762,12 +763,12 @@ public:
   uint8_t       NetworkEnabled_bits{};
   uint8_t       NetworkInterfaceSubnetBlockClientIP_bits{}; // Client IP Block Level. Allow from subnet of this interface
   uint8_t       NetworkEnabled_ipv6_bits{};                 // Whether or not to use IPv6 for the given interface  (Settings.EnableIPv6() is the global on/off for IPv6)
-  uint8_t       NetworkUnused_3{};
+  uint8_t       NetworkInterface_isFallback_bits{};
 #ifdef ESP32
   uint8_t       NetworkRoutePrio[NETWORK_MAX] = {0};
 #endif
   // TODO TD-er: For ESP8266 we may likely ever use upto 2 or 3 network interfaces, so maybe re-use the rest later?
-  uint16_t  NetworkInterfaceStartupDelayAtBoot[NETWORK_MAX]{};
+  uint16_t  NetworkInterfaceStartupDelay[NETWORK_MAX]{};
 
 
   // Try to extend settings to make the checksum 4-uint8_t aligned.

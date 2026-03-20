@@ -38,7 +38,7 @@ struct ProtocolStruct
     uint32_t needsNetwork         : 1;
     uint32_t allowsExpire         : 1;
     uint32_t allowLocalSystemTime : 1;
-#if FEATURE_MQTT_TLS
+#if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS
     uint32_t usesTLS              : 1; // May offer TLS related settings and options
 #else
     uint32_t dontUseBit16         : 1;

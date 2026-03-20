@@ -13,7 +13,9 @@ Type: |P147_type|
 
 Name: |P147_name|
 
-Status: |P147_status|
+Status ESP32: |P147_status|
+
+Status ESP8266: |P147_status_lb|
 
 GitHub: |P147_github|_
 

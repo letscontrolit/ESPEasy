@@ -13,7 +13,9 @@ Type: |P004_type|
 
 Name: |P004_name|
 
-Status: |P004_status|
+Status ESP32: |P004_status|
+
+Status ESP8266: |P004_status_lb|
 
 GitHub: |P004_github|_
 

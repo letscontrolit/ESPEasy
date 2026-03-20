@@ -13,7 +13,9 @@ Type: |P100_type|
 
 Name: |P100_name|
 
-Status: |P100_status|
+Status ESP32: |P100_status|
+
+Status ESP8266: |P100_status_lb|
 
 GitHub: |P100_github|_
 

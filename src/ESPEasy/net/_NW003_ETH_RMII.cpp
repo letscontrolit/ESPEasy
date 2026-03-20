@@ -60,7 +60,7 @@ bool NWPlugin_003(NWPlugin::Function function, EventStruct *event, String& strin
     {
       Settings.setRoutePrio_for_network(event->NetworkIndex, 50);
       Settings.setNetworkInterfaceSubnetBlockClientIP(event->NetworkIndex, false);
-      Settings.setNetworkInterfaceStartupDelayAtBoot(event->NetworkIndex, 500 * event->NetworkIndex);
+      Settings.setNetworkInterfaceStartupDelay(event->NetworkIndex, 500 * event->NetworkIndex);
 
       ESPEasy_key_value_store kvs;
       ESPEasy::net::eth::NW003_data_struct_ETH_RMII::loadDefaults(
@@ -93,6 +93,12 @@ bool NWPlugin_003(NWPlugin::Function function, EventStruct *event, String& strin
       if (iface) {
         success = iface->connected();
       }
+      break;
+    }
+
+    case NWPlugin::Function::NWPLUGIN_FALLBACK_INTERFACE_SHOULD_START:
+    {
+      success = true;
       break;
     }
 

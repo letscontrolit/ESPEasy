@@ -13,7 +13,9 @@ Type: |P129_type|
 
 Name: |P129_name|
 
-Status: |P129_status|
+Status ESP32: |P129_status|
+
+Status ESP8266: |P129_status_lb|
 
 GitHub: |P129_github|_
 

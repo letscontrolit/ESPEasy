@@ -13,7 +13,9 @@ Type: |P070_type|
 
 Name: |P070_name|
 
-Status: |P070_status|
+Status ESP32: |P070_status|
+
+Status ESP8266: |P070_status_lb|
 
 GitHub: |P070_github|_
 

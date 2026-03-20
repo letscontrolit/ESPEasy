@@ -1,0 +1,29 @@
+
+SPI Ethernet
+^^^^^^^^^^^^
+
+(Added: 2024/02)
+
+As mentioned above, these SPI based Ethernet interfaces require the SPI interface to be configured.
+
+The SPI bus can be shared, but the SPI Ethernet chips are a bit specific about the used frequency.
+Currently the default SPI frequency of 20 MHz is used, so not all other SPI devices may work together with SPI Ethernet.
+
+Some boards like the ETH01-EVO (ESP32-C3 based) do not even have the SPI bus pins made accesible.
+
+.. note:: Switching to ECO mode can sometimes result in an unreachable node when using SPI Ethernet. After a reboot the node works just fine again (in ECO mode).  This is currently being investigated.
+
+
+GPIO Configuration
+""""""""""""""""""
+
+* CS pin: Just as any SPI device, it needs a CS pin to tell the device it is being addressed.
+* IRQ/INT pin: Allows the Ethernet chip to signal the ESP about new data. (Optional for W5500)
+* RST pin: ESP will try to reset the Ethernet adapter during boot. Not all boards may have this wired.
+
+
+SPI Ethernet ESP32 Boards
+"""""""""""""""""""""""""
+
+.. include:: ../Reference/SPI_Ethernet_ESP32_boards.rst
+

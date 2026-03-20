@@ -1542,6 +1542,22 @@ void SettingsStruct_tmpl<N_TASKS>::setNetworkEnabled(ESPEasy::net::networkIndex_
 }
 
 template<uint32_t N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::getNetworkInterface_isFallback(ESPEasy::net::networkIndex_t index) const
+{
+  if (validNetworkIndex(index)) return bitRead(NetworkInterface_isFallback_bits, index);
+  return false;
+}
+
+template<uint32_t N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::setNetworkInterface_isFallback(ESPEasy::net::networkIndex_t index, bool enabled)
+{
+  if (validNetworkIndex(index)) {
+    bitWrite(NetworkInterface_isFallback_bits, index, enabled);
+  }
+}
+
+
+template<uint32_t N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::getNetworkInterfaceSubnetBlockClientIP(ESPEasy::net::networkIndex_t index) const {
   if (validNetworkIndex(index)) return bitRead(NetworkInterfaceSubnetBlockClientIP_bits, index);
   return false;
@@ -1591,19 +1607,19 @@ void SettingsStruct_tmpl<N_TASKS>::setRoutePrio_for_network(ESPEasy::net::networ
 #endif
 
 template<uint32_t N_TASKS>
-uint32_t SettingsStruct_tmpl<N_TASKS>::getNetworkInterfaceStartupDelayAtBoot(ESPEasy::net::networkIndex_t index) const
+uint32_t SettingsStruct_tmpl<N_TASKS>::getNetworkInterfaceStartupDelay(ESPEasy::net::networkIndex_t index) const
 {
   if (validNetworkIndex(index)) {
-    return static_cast<uint32_t>(NetworkInterfaceStartupDelayAtBoot[index]) * 10ul;
+    return static_cast<uint32_t>(NetworkInterfaceStartupDelay[index]) * 10ul;
   }
   return 0;
 }
 
 template<uint32_t N_TASKS>
-void SettingsStruct_tmpl<N_TASKS>::setNetworkInterfaceStartupDelayAtBoot(ESPEasy::net::networkIndex_t index, uint32_t delay_ms)
+void SettingsStruct_tmpl<N_TASKS>::setNetworkInterfaceStartupDelay(ESPEasy::net::networkIndex_t index, uint32_t delay_ms)
 {
   if (validNetworkIndex(index)) {
-    NetworkInterfaceStartupDelayAtBoot[index] = delay_ms/10ul;
+    NetworkInterfaceStartupDelay[index] = delay_ms/10ul;
   }
 }
 

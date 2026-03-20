@@ -93,7 +93,7 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
     {
       const char *separator = event->String1.c_str(); // contains the NewLine sequence
       string = strformat(
-        F("%sCS: %s%sDC: %s%s RES: %s%sBtn: %s%sBckl: : %s"),
+        F("%sCS: %s%sDC: %s%s RES: %s%sBtn: %s%sBckl: %s"),
         separator,
         formatGpioLabel(PIN(0),                    false).c_str(),
         separator,

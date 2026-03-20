@@ -3792,6 +3792,25 @@ To create/register a plugin, you have to :
 #ifndef FEATURE_MODBUS_FAC
 #define FEATURE_MODBUS_FAC                    0
 #endif
+#ifndef FEATURE_MODBUS_INTERFACES_TAB // TODO Temporary, until P183 finished
+#ifdef USES_P183
+#define FEATURE_MODBUS_INTERFACES_TAB         1
+#else
+#define FEATURE_MODBUS_INTERFACES_TAB         0
+#endif
+#endif
+
+#ifndef FEATURE_CAN
+#define FEATURE_CAN                           0
+#endif // ifndef FEATURE_CAN
+
+#ifndef FEATURE_WRMBUS // mBus (wired)
+#define FEATURE_WRMBUS                        0
+#endif // ifndef FEATURE_WRMBUS
+
+#ifndef FEATURE_WIMBUS // w-mBus (wireless)
+#define FEATURE_WIMBUS                        0
+#endif // ifndef FEATURE_WIMBUS
 
 #ifndef FEATURE_MQTT
 #define FEATURE_MQTT                          0
@@ -4558,10 +4577,10 @@ To create/register a plugin, you have to :
 #endif
 
 
-#if !FEATURE_SPI && !FEATURE_I2C
+#if !FEATURE_SPI && !FEATURE_I2C && !FEATURE_MODBUS && !FEATURE_CAN && !FEATURE_WRMBUS && !FEATURE_WIMBUS
 #ifdef WEBSERVER_INTERFACES
 #undef WEBSERVER_INTERFACES
 #endif
-#endif
+#endif // if !FEATURE_SPI && !FEATURE_I2C && !FEATURE_MODBUS && !FEATURE_CAN && !FEATURE_WRMBUS && !FEATURE_WIMBUS
 
 #endif // CUSTOMBUILD_DEFINE_PLUGIN_SETS_H

@@ -65,7 +65,9 @@ enum class ESPEasy_cmd_e : uint8_t {
   hiddenssid,
 #endif
 
+#if FEATURE_I2C
   i2cscanner,
+#endif
   inc,
   ip,
 #if FEATURE_USE_IPV6

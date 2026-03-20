@@ -11,7 +11,9 @@ Type: |N001_type|
 
 Name: |N001_name|
 
-Status: |N001_status|
+Status ESP32: |N001_status|
+
+Status ESP8266: |N001_status_lb|
 
 GitHub: |N001_github|_
 

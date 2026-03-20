@@ -13,7 +13,9 @@ Type: |P018_type|
 
 Name: |P018_name|
 
-Status: |P018_status|
+Status ESP32: |P018_status|
+
+Status ESP8266: |P018_status_lb|
 
 GitHub: |P018_github|_
 

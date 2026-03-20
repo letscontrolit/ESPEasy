@@ -13,7 +13,9 @@ Type: |P180_type|
 
 Name: |P180_name|
 
-Status: |P180_status|
+Status ESP32: |P180_status|
+
+Status ESP8266: |P180_status_lb|
 
 GitHub: |P180_github|_
 
