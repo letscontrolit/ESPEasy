@@ -80,7 +80,9 @@ bool ModbusLINK_struct::init(const ESPEasySerialPort port,
   bool rs485Mode = ModbusLINK_struct::_easySerial->setRS485Mode(dere_pin, collision_detect);
 
   ModbusLINK_struct::_easySerial->begin(baudrate);
-
+  _dere_pin        = dere_pin;
+  _collision_detect = collision_detect;
+  
   # ifdef MODBUS_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
@@ -262,6 +264,36 @@ void ModbusLINK_struct::processCommand()
   }   // next iterarion
 
   return;
+}
+
+int16_t ModbusLINK_struct::getBaudrate(void) const
+{
+return _easySerial != nullptr ? _easySerial->getBaudRate() : 0;
+}
+
+ESPEasySerialPort ModbusLINK_struct::getPort(void) const
+{
+return ESPEasySerialPort();
+}
+
+int16_t ModbusLINK_struct::getSerialRX(void) const
+{
+return _easySerial != nullptr ? _easySerial->getRxPin() : -1;
+}
+
+int16_t ModbusLINK_struct::getSerialTX(void) const
+{
+return _easySerial != nullptr ? _easySerial->getTxPin() : -1;
+}
+
+int8_t ModbusLINK_struct::getDerePin(void) const
+{
+return _dere_pin;
+}
+
+bool ModbusLINK_struct::getCollisionDetect(void) const
+{
+return _collision_detect;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

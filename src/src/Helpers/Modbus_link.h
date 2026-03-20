@@ -22,6 +22,7 @@ typedef enum class ModbusQueueState {
   RESPONSE_RECEIVED = 3, // Response has been received and is being processed
   ERROR_OCCURRED    = 4, // An error occurred during processing (e.g., timeout, invalid response)
   READY_FOR_DESTROY = 5  // Element is marked for deletion and can be freed
+
 } ModbusQueueState_t;
 
 const __FlashStringHelper* toString(ModbusQueueState_t state);
@@ -33,6 +34,7 @@ typedef enum class ModbusTransactionType {
   NONE                   = 0, // Undefined/unknown transaction type
   READ_HOLDING_REGISTERS = 1, // Read holding registers (function code 0x03)
   WRITE_SINGLE_REGISTER  = 2  // Write single register (function code 0x06)
+
 } ModbusTransactionType_t;
 
 // Modbus request queue element structure
@@ -54,6 +56,7 @@ struct Modbus_RequestQueueElement {
   unsigned long         _startTime                     = 0;                            // Time the request was issued
   uint8_t               _sendframe[MODBUS_XMIT_BUFFER] = { 0 };                        // Reqest frame to send
   uint8_t               _rcvframe[MODBUS_RCV_BUFFER]   = { 0 };                        // Response frame received
+
 };
 
 // Queue of Modbus request elements
@@ -92,10 +95,22 @@ struct ModbusLINK_struct  {
   uint16_t                    queueTransaction(Modbus_RequestQueueElement *transaction);
   void                        processCommand();
 
+  int16_t                     getBaudrate(void) const;
+
+  ESPEasySerialPort           getPort(void) const;
+
+  int16_t                     getSerialRX(void) const;
+
+  int16_t                     getSerialTX(void) const;
+
+  int8_t                      getDerePin(void) const;
+
+  bool                        getCollisionDetect(void) const;
+
 private:
 
-  static void   dumpQueueElement(Modbus_RequestQueueElement *el);
-  static void   dumpState(ModbusQueueState_t state);
+  static void dumpQueueElement(Modbus_RequestQueueElement *el);
+  static void dumpState(ModbusQueueState_t state);
 
   ESPeasySerial      *_easySerial       = nullptr; // Pointer to the serial port object
   Modbus_RequestQueue _requestQueue     = {};      // Queue of Modbus requests to process
@@ -104,8 +119,11 @@ private:
   uint32_t            _reads_pass       = 0;       // TODO: statistics
   uint32_t            _reads_crc_failed = 0;       // TODO: statistics
   uint32_t            _reads_nodata     = 0;       // TODO: statistics
+  uint8_t             _dere_pin         = 0;       // Pin for RS485 direction control
+  bool                _collision_detect = false;   // Flag to indicate if collision detection is enabled
 
   uint8_t _last_error = 0;
+
 };
 
 

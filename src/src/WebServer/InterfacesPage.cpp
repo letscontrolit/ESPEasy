@@ -26,6 +26,9 @@
 #  include "../Helpers/I2C_access.h"
 #  include "../Helpers/Hardware_device_info.h"
 # endif // if FEATURE_I2C_MULTIPLE
+# if FEATURE_MODBUS_FAC
+#  include "../Helpers/Modbus_mgr.h"
+# endif
 
 // ********************************************************************************
 // Web Interface hardware page
@@ -53,7 +56,9 @@ void handle_interfaces() {
   #if FEATURE_SPI
   interfaces_show_SPI();
   #endif
-
+  #if FEATURE_MODBUS_FAC
+  ModbusMGR_singleton.show_modbus_interfaces();
+  #endif
 
   addFormSeparator(2);
 
@@ -80,6 +85,10 @@ void save_interfaces() {
 
   #if FEATURE_SPI
   if (save_SPI(error)) { updated = true; }
+  #endif
+
+  #if FEATURE_MODBUS_FAC
+  if (ModbusMGR_singleton.save_modbus_interfaces(error)) { updated = false; }  // For now updated is false
   #endif
 
   if (updated) {

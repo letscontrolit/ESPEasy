@@ -13,6 +13,9 @@
 #include "../Helpers/Networking.h"
 #include "../Helpers/PeriodicalActions.h"
 
+#if FEATURE_MODBUS_FAC
+#include "MOdbus_mgr.h"
+#endif 
 
 /*********************************************************************************************\
 * Interval Timer
@@ -165,6 +168,10 @@ void ESPEasy_Scheduler::process_interval_timer(SchedulerTimerID timerID, unsigne
       if (!UseRTOSMultitasking) {
         run10TimesPerSecond();
       }
+      // TODO: Flashmark Hackey way to hook the modbus here. Needs a better way to trigger the modbus processing at regular intervals.
+#if FEATURE_MODBUS_FAC
+      ModbusMGR_singleton.processLinks();
+#endif 
       break;
     case SchedulerIntervalTimer_e::TIMER_1SEC:             runOncePerSecond();      break;
     case SchedulerIntervalTimer_e::TIMER_30SEC:            runEach30Seconds();      break;

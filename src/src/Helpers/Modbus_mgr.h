@@ -39,7 +39,12 @@ typedef struct ModbusMGR_struct  {
 
   bool disconnect(uint8_t deviceID);
 
+  void processLinks();
+  
   void dumpAdminInfo();
+
+  void show_modbus_interfaces();
+  bool save_modbus_interfaces(String& error);
 
 private:
 

@@ -193,8 +193,10 @@ bool ModbusDEVICE_struct::writeSingleRegister(uint16_t             address,
 // Periodic processing function to allow the Modbus device to process its queued requests
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void ModbusDEVICE_struct::processCommand() {
+  // TODO: This function is currently not used since the Modbus link processing is triggered directly from the scheduler.
   if (_modbus_link != nullptr) {
-    _modbus_link->processCommand(); // Trigger processing of the command queue on the link
+    ////_modbus_link->processCommand(); // Trigger processing of the command queue on the link
+    ////ModbusMGR_singleton.processLinks();
   }
 }
 
