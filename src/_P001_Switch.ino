@@ -11,6 +11,19 @@
 
 # include "src/PluginStructs/P001_data_struct.h"
 
+# ifdef ESP32
+#  include "esp_sleep.h"
+#  if defined(CONFIG_IDF_TARGET_ESP32) || \
+  defined(CONFIG_IDF_TARGET_ESP32S2) ||   \
+  defined(CONFIG_IDF_TARGET_ESP32S3)
+#   include "driver/rtc_io.h"
+#  endif // if defined(CONFIG_IDF_TARGET_ESP32) || defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32S3)
+void setupGpioWakeup(uint8_t pin,
+                     bool    wakeOnLow = true); // if ever needed we can also add support for wakeOnHigh, but for now
+                                                // when using a switch/button, the wakeup will be triggered by the pin going low (active
+                                                // low)
+# endif // ifdef ESP32
+
 // #######################################################################################################
 // #################################### Plugin 001: Input Switch #########################################
 // #######################################################################################################
@@ -125,6 +138,14 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
         P001_LP_MIN_INT,
         P001_SAFE_BTN);
 
+        # ifdef ESP32
+
+      if (esp_sleep_is_valid_wakeup_gpio((gpio_num_t)CONFIG_PIN1)) {
+        addFormCheckBox(F("Wake from sleep"), F("sw_wake"), P001_WAKE_BTN);
+        addFormNote(F("Make sure to enable the internal pull-up resistor or add an external pull-up resistor!"));
+      }
+# endif // ifdef ESP32
+
       # if FEATURE_MQTT_DISCOVER && FEATURE_MQTT_DEVICECLASS
 
       if (switchtype != PLUGIN_001_TYPE_DIMMER) {
@@ -160,6 +181,13 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
         P001_LP_MIN_INT,
         P001_SAFE_BTN);
 
+      # ifdef ESP32
+
+      if (esp_sleep_is_valid_wakeup_gpio((gpio_num_t)CONFIG_PIN1)) {
+        P001_WAKE_BTN = isFormItemChecked(F("sw_wake"));
+      }
+      # endif // ifdef ESP32
+
       # if FEATURE_MQTT_DISCOVER && FEATURE_MQTT_DEVICECLASS
       P001_MQTT_DEVICECLASS = getFormItemInt(F("devcls"));
       # endif // if FEATURE_MQTT_DISCOVER && FEATURE_MQTT_DEVICECLASS
@@ -190,10 +218,34 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
+
       // apply INIT only if PORT is in range. Do not start INIT if port not set in the device page.
       if (validGpio(CONFIG_PIN1))
       {
         success = initPluginTaskData(event->TaskIndex, new (std::nothrow) P001_data_struct(event));
+
+      # ifdef ESP32
+
+        // https://docs.espressif.com/projects/esp-idf/en/stable/esp32s3/api-reference/system/sleep_modes.html#external-wakeup-ext0
+         #  if defined(CONFIG_IDF_TARGET_ESP32) || \
+        defined(CONFIG_IDF_TARGET_ESP32S2) ||      \
+        defined(CONFIG_IDF_TARGET_ESP32S3)
+
+        // this would need adaption if we ever want to support wakeOnHigh as well
+        // if (wakeOnLow) {
+        rtc_gpio_pullup_dis((gpio_num_t)CONFIG_PIN1);
+
+        // } else {
+        //   rtc_gpio_pulldown_dis(gpio);
+        // }
+        rtc_gpio_deinit((gpio_num_t)CONFIG_PIN1);
+         #  endif // if defined(CONFIG_IDF_TARGET_ESP32) || defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32S3)
+
+        if (P001_WAKE_BTN) {
+          setupGpioWakeup(CONFIG_PIN1, true);
+        }
+        # endif // ifdef ESP32
+
       }
       break;
     }
@@ -247,5 +299,45 @@ boolean Plugin_001(uint8_t function, struct EventStruct *event, String& string)
   }
   return success;
 }
+
+# ifdef ESP32
+
+void setupGpioWakeup(uint8_t pin, bool wakeOnLow) {
+  gpio_num_t gpio = static_cast<gpio_num_t>(pin);
+
+  pinMode(pin, wakeOnLow ? INPUT_PULLUP : INPUT_PULLDOWN);
+
+  if (esp_sleep_is_valid_wakeup_gpio(gpio)) {
+  #  if defined(CONFIG_IDF_TARGET_ESP32) || \
+    defined(CONFIG_IDF_TARGET_ESP32S2) ||   \
+    defined(CONFIG_IDF_TARGET_ESP32S3)
+
+    // Configure RTC pull resistors
+    if (wakeOnLow) {
+      rtc_gpio_pullup_en(gpio);
+    } else {
+      rtc_gpio_pulldown_en(gpio);
+    }
+
+    esp_sleep_enable_ext0_wakeup(gpio, wakeOnLow ? 0 : 1);
+
+  #  elif defined(CONFIG_IDF_TARGET_ESP32C2) || \
+    defined(CONFIG_IDF_TARGET_ESP32C3) ||       \
+    defined(CONFIG_IDF_TARGET_ESP32C6)
+
+    uint64_t mask = 1ULL << gpio;
+
+    esp_deep_sleep_enable_gpio_wakeup(
+      mask,
+      wakeOnLow ? ESP_GPIO_WAKEUP_GPIO_LOW : ESP_GPIO_WAKEUP_GPIO_HIGH
+      );
+
+  #  else // if defined(CONFIG_IDF_TARGET_ESP32) || defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32S3)
+    #   warning "Unknown ESP32 target — GPIO wakeup not configured"
+  #  endif // if defined(CONFIG_IDF_TARGET_ESP32) || defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32S3)
+  }
+}
+
+# endif // ifdef ESP32
 
 #endif // USES_P001

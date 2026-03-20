@@ -32,7 +32,8 @@ struct GPIO_plugin_helper_data_t {
     bool       safeButton,
     bool       sendBootState,
     uint8_t    switchType  = SWITCH_TYPE_NORMAL_SWITCH,
-    uint8_t    dimmerValue = 0);
+    uint8_t    dimmerValue = 0,
+    bool       wakeButton = false);
 
   ~GPIO_plugin_helper_data_t();
 
@@ -66,6 +67,7 @@ struct GPIO_plugin_helper_data_t {
   const uint8_t    _dimmerValue;
   const bool       _safeButton;
   const bool       _sendBootState;
+  const bool       _wakeButton;
   bool             _longpressFired;
 };
 

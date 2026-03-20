@@ -18,7 +18,8 @@ GPIO_plugin_helper_data_t::GPIO_plugin_helper_data_t(
   bool       safeButton,
   bool       sendBootState,
   uint8_t    switchType,
-  uint8_t    dimmerValue) :
+  uint8_t    dimmerValue,
+  bool       wakeButton) :
   _portStatus_key(createKey(pluginNumber, pin)),
   _debounceInterval_ms(debounceInterval_ms),
   _doubleClickMaxInterval_ms(doubleClickMaxInterval_ms),
@@ -32,6 +33,7 @@ GPIO_plugin_helper_data_t::GPIO_plugin_helper_data_t(
   _switchType(switchType),
   _dimmerValue(dimmerValue),
   _safeButton(safeButton),
+  _wakeButton(false),
   _sendBootState(sendBootState),
   _longpressFired(false)
 {
