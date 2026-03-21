@@ -33,7 +33,7 @@ GPIO_plugin_helper_data_t::GPIO_plugin_helper_data_t(
   _switchType(switchType),
   _dimmerValue(dimmerValue),
   _safeButton(safeButton),
-  _wakeButton(false),
+  _wakeButton(wakeButton),
   _sendBootState(sendBootState),
   _longpressFired(false)
 {
