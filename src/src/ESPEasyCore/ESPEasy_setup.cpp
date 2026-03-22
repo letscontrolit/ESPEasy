@@ -599,9 +599,13 @@ void ESPEasy_setup()
   #  if SOC_PM_SUPPORT_EXT1_WAKEUP
   if (Settings.UseRules)
   {
-    String event = F("System#GPIOWake=");
-    event += getWakeupGPIO();
-    rulesProcessing(event);
+    int8_t wakePin = getWakeupGPIO();
+
+    if (wakePin >= 0) {
+      String event = F("System#GPIOWake=");
+      event += wakePin;
+      rulesProcessing(event);
+    }
     setupGpioWakeup(64); // Todo: need to get the mask from settings struct
   }
   #  endif // if SOC_PM_SUPPORT_EXT1_WAKEUP
