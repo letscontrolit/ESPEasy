@@ -32,8 +32,7 @@ P001_data_struct::P001_data_struct(struct EventStruct *event) :
     P001_SAFE_BTN != 0,
     P001_BOOTSTATE,
     (P001_getSwitchType(event) == PLUGIN_001_TYPE_DIMMER) ? SWITCH_TYPE_DIMMER : P001_BUTTON_TYPE,
-    P001_DIMMER_VALUE,
-    P001_WAKE_BTN)
+    P001_DIMMER_VALUE)
 {
   uint8_t pinModeValue = PIN_MODE_INPUT;
 

@@ -986,6 +986,59 @@ void SettingsStruct_tmpl<N_TASKS>::setPinBootState(int8_t gpio_pin, PinBootState
   }
 # endif // ifdef ESP32
 }
+
+#  if SOC_PM_SUPPORT_EXT1_WAKEUP
+// template<uint32_t N_TASKS>
+// uint64_t SettingsStruct_tmpl<N_TASKS>::getWakeGpioMask() const {
+//   uint64_t mask = 0;
+//   for (int i = 0; i < 8; ++i) {
+//     mask |= (uint64_t)(this->WakeGpioMask_bytes[i]) << (i * 8);
+//   }
+//   return mask;
+// }
+
+// template<uint32_t N_TASKS>
+// void SettingsStruct_tmpl<N_TASKS>::setWakeGpioMask(uint64_t mask) {
+//   for (int i = 0; i < 8; ++i) {
+//     this->WakeGpioMask_bytes[i] = (mask >> (i * 8)) & 0xFF;
+//   }
+// }
+
+// template<uint32_t N_TASKS>
+// void SettingsStruct_tmpl<N_TASKS>::addWakeGpio(uint8_t pin) {
+//   uint64_t mask = getWakeGpioMask();
+//   mask |= (1ULL << pin);
+//   setWakeGpioMask(mask);
+// }
+
+// template<uint32_t N_TASKS>
+// void SettingsStruct_tmpl<N_TASKS>::removeWakeGpio(uint8_t pin) {
+//   uint64_t mask = getWakeGpioMask();
+//   mask &= ~(1ULL << pin);
+//   setWakeGpioMask(mask);
+// }
+//-----------------------------------------uint64
+// template<uint32_t N_TASKS>
+// uint64_t SettingsStruct_tmpl<N_TASKS>::getWakeGpioMask() const {
+//   return WakeGpioMask;
+// }
+
+// template<uint32_t N_TASKS>
+// void SettingsStruct_tmpl<N_TASKS>::setWakeGpioMask(uint64_t mask) {
+//   WakeGpioMask = mask;
+// }
+
+// template<uint32_t N_TASKS>
+// void SettingsStruct_tmpl<N_TASKS>::addWakeGpio(uint8_t pin) {
+//   WakeGpioMask |= (1ULL << pin);
+// }
+
+// template<uint32_t N_TASKS>
+// void SettingsStruct_tmpl<N_TASKS>::removeWakeGpio(uint8_t pin) {
+//   WakeGpioMask &= ~(1ULL << pin);
+// }
+#endif
+
 #if FEATURE_SPI
 template<uint32_t N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::isSPI_enabled(uint8_t spi_bus) const {

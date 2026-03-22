@@ -639,6 +639,25 @@ void addFormPinStateSelect(int gpio, int choice)
 }
 
 // ********************************************************************************
+// Add a GPIO wake select list
+// ********************************************************************************
+#  if SOC_PM_SUPPORT_EXT1_WAKEUP
+void addFormPinWakeSelect(int gpio, uint64_t wakeGpioMask){
+    if (esp_sleep_is_valid_wakeup_gpio((gpio_num_t)gpio)) {
+      // Check if this GPIO is part of the wake mask
+      bool checked = (wakeGpioMask & (1ULL << gpio)) != 0;
+      char label[20];      //  "Wake from GPIO-" + GPIO number + null
+      char checkboxId[10];  // "WoL" + GPIO number + null
+
+      snprintf(checkboxId, sizeof(checkboxId), "WoL%d", gpio);
+      snprintf(label, sizeof(label), "Wake from GPIO-%d", gpio);
+
+      addFormCheckBox(label, checkboxId, checked);
+    }
+  }
+# endif 
+
+// ********************************************************************************
 // Retrieve return values from form/checkbox.
 // ********************************************************************************
 int getFormItemInt(const __FlashStringHelper * key, int defaultValue) {

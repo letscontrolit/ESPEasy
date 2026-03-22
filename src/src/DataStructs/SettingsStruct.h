@@ -357,11 +357,23 @@ private:
     , int8_t& index_high
     #endif
     ) const;
-  
+
+    #  if SOC_PM_SUPPORT_EXT1_WAKEUP
+    //uint64_t WakeGpioMask = 0;
+    #endif
 public:
 
   PinBootState getPinBootState(int8_t gpio_pin) const;
   void setPinBootState(int8_t gpio_pin, PinBootState state);
+
+#  if SOC_PM_SUPPORT_EXT1_WAKEUP
+    // --- Wake GPIO mask handling ---
+  // uint64_t getWakeGpioMask() const;
+  // void     setWakeGpioMask(uint64_t mask);
+
+  // void addWakeGpio(uint8_t pin);
+  // void removeWakeGpio(uint8_t pin);
+  #  endif // if SOC_PM_SUPPORT_EXT1_WAKEUP
 
 #if FEATURE_SPI
   bool getSPI_pins(int8_t  spi_gpios[3],

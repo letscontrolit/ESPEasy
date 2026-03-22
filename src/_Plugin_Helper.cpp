@@ -12,6 +12,10 @@
 #include "src/Helpers/Misc.h"
 #include "src/Helpers/StringParser.h"
 
+# ifdef SOC_PM_SUPPORT_EXT1_WAKEUP
+#  include "driver/rtc_io.h"
+# endif 
+
 
 PluginTaskData_base *Plugin_task_data[TASKS_MAX] = {};
 
@@ -206,3 +210,50 @@ int checkDeviceVTypeForTask(struct EventStruct *event) {
   }
   return -1;
 }
+
+#  if SOC_PM_SUPPORT_EXT1_WAKEUP
+void setupGpioWakeup(uint64_t ext1_mask) {
+
+  #   if CONFIG_IDF_TARGET_ESP32
+  auto new_mode = ESP_EXT1_WAKEUP_ALL_LOW;
+#   else
+  auto new_mode = ESP_EXT1_WAKEUP_ANY_LOW;
+#   endif // if CONFIG_IDF_TARGET_ESP32
+
+// If no pins left → disable wakeup completely
+  if (ext1_mask == 0) {
+    esp_sleep_disable_wakeup_source(ESP_SLEEP_WAKEUP_EXT1);
+    return;
+  }
+
+  // Loop through all possible GPIOs (0–63 for bitmask)
+  for (int gpio = 0; gpio < 64; ++gpio) {
+
+    // Check if this GPIO is part of the mask
+    if (ext1_mask & (1ULL << gpio)) {
+
+      gpio_num_t rtc_gpio = static_cast<gpio_num_t>(gpio);
+
+      // Configure RTC pull-up (wake on LOW)
+      rtc_gpio_pullup_en(rtc_gpio);
+      rtc_gpio_pulldown_dis(rtc_gpio);
+    }
+  }
+  esp_sleep_enable_ext1_wakeup_io(ext1_mask, new_mode);
+}
+
+int8_t getWakeupGPIO() {
+  if (esp_sleep_get_wakeup_cause() != ESP_SLEEP_WAKEUP_EXT1) {
+    return -1; // Not an EXT1 wakeup
+  }
+
+  uint64_t wakeMask = esp_sleep_get_ext1_wakeup_status();
+
+  if (wakeMask == 0) {
+    return -1;
+  }
+
+  // Get first active GPIO (fast version)
+  return __builtin_ctzll(wakeMask);
+}
+# endif 
