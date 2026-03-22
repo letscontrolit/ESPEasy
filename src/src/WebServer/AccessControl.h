@@ -8,21 +8,9 @@
 // ********************************************************************************
 // Allowed IP range check
 // ********************************************************************************
-#define ALL_ALLOWED            0
-#define LOCAL_SUBNET_ALLOWED   1
-#define ONLY_IP_RANGE_ALLOWED  2
+bool clientIPinSubnetDefaultNetwork();
 
-boolean ipLessEqual(const IPAddress& ip, const IPAddress& high);
-
-boolean ipInRange(const IPAddress& ip, const IPAddress& low, const IPAddress& high);
-
-String describeAllowedIPrange();
-
-bool getIPallowedRange(IPAddress& low, IPAddress& high);
-
-bool clientIPinSubnet();
-
-boolean clientIPallowed();
+bool clientIPallowed();
 
 void clearAccessBlock();
 

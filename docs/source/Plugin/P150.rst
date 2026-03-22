@@ -13,7 +13,9 @@ Type: |P150_type|
 
 Name: |P150_name|
 
-Status: |P150_status|
+Status ESP32: |P150_status|
+
+Status ESP8266: |P150_status_lb|
 
 GitHub: |P150_github|_
 

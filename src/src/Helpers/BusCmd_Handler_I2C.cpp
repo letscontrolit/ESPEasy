@@ -1,5 +1,6 @@
 #include "../Helpers/BusCmd_Handler_I2C.h"
 
+#if FEATURE_BUS_COMMAND
 /**
  * Constructor BusCmd_Handler_I2C
  */
@@ -487,4 +488,5 @@ uint32_t BusCmd_Handler_I2C::writeStringReg(uint16_t      reg,
   return _wire->endTransmission() == 0;
 }
 
-#endif // if FEATURE_BUSCMD_STRING
+#endif
+#endif

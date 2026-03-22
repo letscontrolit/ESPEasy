@@ -148,7 +148,7 @@ boolean Plugin_123(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       # ifdef PLUGIN_123_DEBUG
-      addLogMove(LOG_LEVEL_INFO, F("P123 PLUGIN_WEBFORM_LOAD"));
+      addLog(LOG_LEVEL_INFO, F("P123 PLUGIN_WEBFORM_LOAD"));
       # endif // ifdef PLUGIN_123_DEBUG
       {
         addRowLabel(F("Display task"));
@@ -243,7 +243,7 @@ boolean Plugin_123(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
     {
       # ifdef PLUGIN_123_DEBUG
-      addLogMove(LOG_LEVEL_INFO, F("P123 PLUGIN_WEBFORM_SAVE"));
+      addLog(LOG_LEVEL_INFO, F("P123 PLUGIN_WEBFORM_SAVE"));
       # endif // ifdef PLUGIN_123_DEBUG
       P123_CONFIG_DISPLAY_PREV = P123_CONFIG_DISPLAY_TASK;
       P123_CONFIG_THRESHOLD    = getFormItemInt(F("threshold"));
@@ -286,7 +286,7 @@ boolean Plugin_123(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_INIT:
     {
       # ifdef PLUGIN_123_DEBUG
-      addLogMove(LOG_LEVEL_INFO, F("P123 PLUGIN_INIT"));
+      addLog(LOG_LEVEL_INFO, F("P123 PLUGIN_INIT"));
       # endif // ifdef PLUGIN_123_DEBUG
 
       if (0 == P123_I2C_ADDRESS) {

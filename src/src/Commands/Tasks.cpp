@@ -129,25 +129,48 @@ const __FlashStringHelper * taskValueSet(struct EventStruct *event, const char *
   EventStruct tmpEvent(taskIndex);
   if (GetArgv(Line, TmpStr1, 4)) {
     const Sensor_VType sensorType = tmpEvent.getSensorType();
+#if FEATURE_EXTENDED_TASK_VALUE_TYPES
+    bool done = false;
+    if (isUInt64OutputDataType(sensorType))
+    {
+      // Don't try to do calculations as storing as double will loose accuracy
+      uint64_t val{};
+      if (validUInt64FromString(TmpStr1, val)) {
+        done = true;
+        UserVar.setUint64(taskIndex, varNr, val);
+      }
+    } else if (isInt64OutputDataType(sensorType))
+    {
+      // Don't try to do calculations as storing as double will loose accuracy
+      int64_t val{};
+      if (validInt64FromString(TmpStr1, val)) {
+        done = true;
+        UserVar.setInt64(taskIndex, varNr, val);
+      }
+    } 
+    if (!done) {
+#endif
+      // FIXME TD-er: Must check if the value has to be computed and not convert to double when sensor type is 64 bit int.
 
-    // FIXME TD-er: Must check if the value has to be computed and not convert to double when sensor type is 64 bit int.
+      // Perform calculation with float result.
+      ESPEASY_RULES_FLOAT_TYPE result{};
 
-    // Perform calculation with float result.
-    ESPEASY_RULES_FLOAT_TYPE result{};
+      if (isError(Calculate(TmpStr1, result))) {
+        success = false;
+        return F("CALCULATION_ERROR");
+      }
+      #ifndef BUILD_NO_DEBUG
+      addLog(LOG_LEVEL_INFO, strformat(
+        F("taskValueSet: %s  taskindex: %d varNr: %d result: %f type: %d"),
+        Line,
+        taskIndex,
+        varNr, result, sensorType));
+      #endif
 
-    if (isError(Calculate(TmpStr1, result))) {
-      success = false;
-      return F("CALCULATION_ERROR");
+      UserVar.set(taskIndex, varNr, result, sensorType);
+#if FEATURE_EXTENDED_TASK_VALUE_TYPES
     }
-    #ifndef BUILD_NO_DEBUG
-    addLog(LOG_LEVEL_INFO, strformat(
-      F("taskValueSet: %s  taskindex: %d varNr: %d result: %f type: %d"),
-      Line,
-      taskIndex,
-      varNr, result, sensorType));
-    #endif
-
-    UserVar.set(taskIndex, varNr, result, sensorType);
+#endif
   } else  {
     // TODO: Get Task description and var name
     serialPrintln(formatUserVarNoCheck(&tmpEvent, varNr));

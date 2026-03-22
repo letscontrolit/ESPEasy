@@ -8,7 +8,7 @@
 #include "../Globals/Services.h"
 #include "../Globals/Settings.h"
 
-#include "../Globals/ESPEasyWiFiEvent.h"
+#include "../../ESPEasy/net/Globals/ESPEasyWiFiEvent.h"
 
 // ********************************************************************************
 // Web Interface handle other requests
@@ -29,7 +29,8 @@ void handleNotFound() {
   }
 
   // if Wifi setup, launch setup wizard if AP_DONT_FORCE_SETUP is not set.
-  if (WiFiEventData.wifiSetup && !Settings.ApDontForceSetup())
+  if (//WiFiEventData.wifiSetup && 
+      Settings.ApCaptivePortal())
   {
     web_server.send_P(200, (PGM_P)F("text/html"), (PGM_P)F("<meta HTTP-EQUIV='REFRESH' content='0; url=/setup'>"));
     return;

@@ -155,7 +155,9 @@ void handle_filelist() {
   # ifdef USES_C016
 
   if (hasArg(F("delcache"))) {
+#ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_INFO, F("RTC  : delcache"));
+#endif
     C016_deleteAllCacheBlocks();
 
     while (GarbageCollection()) {
@@ -163,6 +165,15 @@ void handle_filelist() {
     }
   }
   # endif // ifdef USES_C016
+  #if FEATURE_DOWNLOAD
+  if (hasArg(F("delbak"))) {
+    deleteBakFiles();
+
+    while (GarbageCollection()) {
+      delay(1);
+    }
+  }
+  #endif
   int32_t startIdx       = 0;
   const String fstart    = webArg(F("start"));
 
@@ -178,9 +189,8 @@ void handle_filelist() {
   int count = -1;
 
   bool moreFilesPresent  = false;
-#if FEATURE_RTC_CACHE_STORAGE
   bool cacheFilesPresent = false;
-#endif
+  bool bakFilesPresent = false;
 
 # if defined(ESP8266)
 
@@ -198,13 +208,20 @@ void handle_filelist() {
       if (f) {
         filesize = f.size();
       }
+      const String fname = dir.fileName();
+
 #if FEATURE_RTC_CACHE_STORAGE
-      if (!cacheFilesPresent && (getCacheFileCountFromFilename(dir.fileName()) != -1))
+      if (!cacheFilesPresent && (getCacheFileCountFromFilename(fname) != -1))
       {
         cacheFilesPresent = true;
       }
 #endif
-      handle_filelist_add_file(dir.fileName(), filesize, startIdx);
+#if FEATURE_DOWNLOAD
+      if (fname.endsWith(F("_bak"))) {
+        bakFilesPresent = true;
+      }
+#endif
+      handle_filelist_add_file(fname, filesize, startIdx);
     }
   }
   moreFilesPresent = dir.next();
@@ -220,13 +237,21 @@ void handle_filelist() {
 
       if (count >= startIdx)
       {
+        const String fname = file.name();
+
 #if FEATURE_RTC_CACHE_STORAGE
-        if (!cacheFilesPresent && (getCacheFileCountFromFilename(file.name()) != -1))
+        if (!cacheFilesPresent && (getCacheFileCountFromFilename(fname) != -1))
         {
           cacheFilesPresent = true;
         }
 #endif
-        handle_filelist_add_file(file.name(), file.size(), startIdx);
+#if FEATURE_DOWNLOAD
+        if (fname.endsWith(F("_bak"))) {
+          bakFilesPresent = true;
+        }
+#endif
+
+        handle_filelist_add_file(fname, file.size(), startIdx);
       }
     }
     file = root.openNextFile();
@@ -245,11 +270,7 @@ void handle_filelist() {
   if ((count >= endIdx) && moreFilesPresent) {
     start_next = endIdx + 1;
   }
-#if FEATURE_RTC_CACHE_STORAGE
-  handle_filelist_buttons(start_prev, start_next, cacheFilesPresent);
-#else
-  handle_filelist_buttons(start_prev, start_next, false);
-#endif
+  handle_filelist_buttons(start_prev, start_next, cacheFilesPresent, bakFilesPresent);
 }
 
 void handle_filelist_add_file(const String& filename, int filesize, int startIdx) {
@@ -281,7 +302,7 @@ void handle_filelist_add_file(const String& filename, int filesize, int startIdx
   }
 }
 
-void handle_filelist_buttons(int start_prev, int start_next, bool cacheFilesPresent) {
+void handle_filelist_buttons(int start_prev, int start_next, bool cacheFilesPresent, bool bakFilesPresent) {
   html_end_table();
   html_end_form();
   html_BR();
@@ -306,6 +327,12 @@ void handle_filelist_buttons(int start_prev, int start_next, bool cacheFilesPres
   if (cacheFilesPresent) {
     html_add_button_prefix(F("red"), true);
     addHtml(F("filelist?delcache=1'>Delete Cache Files</a>"));
+  }
+#endif
+#if FEATURE_DOWNLOAD
+  if (bakFilesPresent) {
+    html_add_button_prefix(F("red"), true);
+    addHtml(F("filelist?delbak=1'>Delete '_bak' Files</a>"));
   }
 #endif
   addHtml(F("<BR><BR>"));

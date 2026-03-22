@@ -9,14 +9,14 @@
 byte server[] = {172, 16, 0, 2};
 
 // function declarations
-void callback(char* topic, uint8_t* payload, size_t length);
+void callback(char* topic, uint8_t* payload, size_t plength);
 int test_keepalive_pings_idle();
 int test_keepalive_pings_with_outbound_qos0();
 int test_keepalive_pings_with_inbound_qos0();
 int test_keepalive_no_pings_inbound_qos1();
 int test_keepalive_disconnects_hung();
 
-void callback(_UNUSED_ char* topic, _UNUSED_ uint8_t* payload, _UNUSED_ size_t length) {
+void callback(_UNUSED_ char* topic, _UNUSED_ uint8_t* payload, _UNUSED_ size_t plength) {
     // handle message arrived
 }
 
@@ -54,7 +54,7 @@ int test_keepalive_pings_idle() {
 }
 
 int test_keepalive_pings_with_outbound_qos0() {
-    IT("keeps a connection alive that only sends qos0 (takes 1 minute)");
+    IT("keeps a connection alive that only sends QoS 0 (takes 1 minute)");
 
     ShimClient shimClient;
     shimClient.setAllowConnect(true);
@@ -90,7 +90,7 @@ int test_keepalive_pings_with_outbound_qos0() {
 }
 
 int test_keepalive_pings_with_inbound_qos0() {
-    IT("keeps a connection alive that only receives qos0 (takes 1 minute)");
+    IT("keeps a connection alive that only receives QoS 0 (takes 1 minute)");
 
     ShimClient shimClient;
     shimClient.setAllowConnect(true);
@@ -123,7 +123,7 @@ int test_keepalive_pings_with_inbound_qos0() {
 }
 
 int test_keepalive_no_pings_inbound_qos1() {
-    IT("does not send pings for connections with inbound qos1 (takes 1 minute)");
+    IT("does not send pings for connections with inbound QoS 1 (takes 1 minute)");
 
     ShimClient shimClient;
     shimClient.setAllowConnect(true);

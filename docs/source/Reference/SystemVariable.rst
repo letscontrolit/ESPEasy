@@ -123,6 +123,14 @@ More uses of these system variables can be seen in the rules section and formula
 
        Does not have the ``+xm`` and ``-xh`` calculations that ``%sunrise%`` and ``%sunset%`` support.
      - 
+   * - ``%latitude%``
+     - 50.12345
+     - Configured Latitude (decimal degrees) as used for calculating the sunrise and sunset times.
+     - 
+   * - ``%longitude%``
+     - 50.12345
+     - Configured Longitude (decimal degrees) as used for calculating the sunrise and sunset times.
+     - 
    * - ``%lcltime_am%``
      - 2020-03-16 1:23:54 AM
      - Current date/time (AM/PM) if NTP is enabled (YYYY-MM-DD hh:mm:ss xM).
@@ -357,6 +365,12 @@ The conversion always outputs a string, but not all of these can be converted ba
    * - mm to imperial: ``%c_mm2imp%(1900)``
      - mm to imperial: ``6'2.8"``
      - Millimeter to imperial units
+   * - Degrees to radians: ``%c_d2r%(22)``
+     - Degrees to radians: ``0.38``
+     - Degrees to radians
+   * - Radians to degrees: ``%c_r2d%(0.357)``
+     - Radians to degrees: ``20.45``
+     - Radians to degrees
    * - Mins to days: ``%c_m2day%(1900)``
      - Mins to days: ``1.32``
      - Minutes expressed in days

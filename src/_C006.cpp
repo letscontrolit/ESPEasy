@@ -18,7 +18,7 @@
 # include "src/ESPEasyCore/Controller.h"
 # include "src/Globals/Settings.h"
 # include "src/Helpers/_CPlugin_Helper_mqtt.h"
-# include "src/Helpers/Network.h"
+# include "src/Helpers/NetworkStatusLED.h"
 # include "src/Helpers/PeriodicalActions.h"
 # include "_Plugin_Helper.h"
 

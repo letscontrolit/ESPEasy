@@ -7,7 +7,7 @@
 byte server[] = {172, 16, 0, 2};
 
 // function declarations
-void callback(char* topic, uint8_t* payload, size_t length);
+void callback(char* topic, uint8_t* payload, size_t plength);
 int test_connect_fails_no_network();
 int test_connect_fails_on_no_response();
 int test_connect_properly_formatted();
@@ -23,7 +23,7 @@ int test_connect_with_will_username_password();
 int test_connect_disconnect_connect();
 int test_connect_custom_keepalive();
 
-void callback(_UNUSED_ char* topic, _UNUSED_ uint8_t* payload, _UNUSED_ size_t length) {
+void callback(_UNUSED_ char* topic, _UNUSED_ uint8_t* payload, _UNUSED_ size_t plength) {
     // handle message arrived
 }
 

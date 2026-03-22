@@ -7,6 +7,8 @@
 # include <Adafruit_Sensor.h>
 # include <Adafruit_BMP3XX.h>
 
+#include "../Globals/SPIe.h"
+
 
 # define P154_I2C_ADDR        PCONFIG(0)
 # define P154_ALTITUDE        PCONFIG(1)
@@ -36,6 +38,7 @@ private:
   uint8_t i2cAddress;
   int16_t elevation{};
   int16_t csPin{};
+  uint8_t _spi_bus{};
 
   bool initialized = false;
   bool i2cMode     = true;

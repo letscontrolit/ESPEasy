@@ -9,12 +9,12 @@
 #define RTC_BASE_CACHE   124
 
 #ifdef ESP8266
-# define RTC_CACHE_DATA_SIZE 240 // 10 elements, limited by RTC memory
+# define RTC_CACHE_DATA_SIZE 240      // 10 elements, limited by RTC memory
 # ifdef ESP8266_16M14M
 #  ifdef USE_LITTLEFS
 #   define CACHE_FILE_MAX_SIZE 262144 // LittleFS can handle larger files just fine.
 #  else // ifdef USE_LITTLEFS
-#   define CACHE_FILE_MAX_SIZE 48000 // Try to reduce the nr. of files, but SPIFFS still slows down on lager files.
+#   define CACHE_FILE_MAX_SIZE 48000  // Try to reduce the nr. of files, but SPIFFS still slows down on lager files.
 #  endif // ifdef USE_LITTLEFS
 # else  // ifdef ESP8266_16M14M
 #  define CACHE_FILE_MAX_SIZE 24000
@@ -53,21 +53,22 @@ struct RTCStruct
   bool       lastWiFi_set() const;
 
 
-  uint8_t       ID1                   = 0;
-  uint8_t       ID2                   = 0;
-  uint8_t       lastWiFiChannel       = 0;
-  uint8_t       factoryResetCounter   = 0;
-  uint8_t       deepSleepState        = 0;
-  uint8_t       bootFailedCount       = 0;
-  uint8_t       flashDayCounter       = 0;
-  uint8_t       lastWiFiSettingsIndex = 0;
-  unsigned long flashCounter          = 0;
-  unsigned long bootCounter           = 0;
-  unsigned long lastMixedSchedulerId  = 0;
-  uint8_t       lastBSSID[6]          = { 0 };
-  uint8_t       unused1               = 0; // Force alignment to 4 bytes
-  uint8_t       unused2               = 0;
-  unsigned long lastSysTime           = 0;
+  uint8_t  ID1                   = 0;
+  uint8_t  ID2                   = 0;
+  uint8_t  lastWiFiChannel       = 0;
+  uint8_t  factoryResetCounter   = 0;
+  uint8_t  deepSleepState        = 0;
+  uint8_t  bootFailedCount       = 0;
+  uint8_t  flashDayCounter       = 0;
+  uint8_t  lastWiFiSettingsIndex = 0;
+  uint32_t flashCounter          = 0;
+  uint32_t bootCounter           = 0;
+  uint32_t lastMixedSchedulerId  = 0;
+  uint8_t  lastBSSID[6]          = { 0 };
+  uint8_t  unused1               = 0; // Force alignment to 4 bytes
+  uint8_t  unused2               = 0;
+  uint32_t lastSysTime           = 0;
+
 };
 
 

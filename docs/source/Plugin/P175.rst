@@ -15,7 +15,9 @@ Port Type: |P175_porttype|
 
 Name: |P175_name|
 
-Status: |P175_status|
+Status ESP32: |P175_status|
+
+Status ESP8266: |P175_status_lb|
 
 GitHub: |P175_github|_
 

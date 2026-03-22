@@ -102,7 +102,7 @@ boolean Plugin_137(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_PRIORITY_INIT:
     {
       #  ifndef BUILD_NO_DEBUG
-      addLogMove(LOG_LEVEL_DEBUG, F("P137: PLUGIN_PRIORITY_INIT"));
+      addLog(LOG_LEVEL_DEBUG, F("P137: PLUGIN_PRIORITY_INIT"));
       #  endif // ifndef BUILD_NO_DEBUG
       success = Settings.isPowerManagerTask(event->TaskIndex); // Are we the PowerManager task?
       break;
@@ -207,9 +207,9 @@ boolean Plugin_137(uint8_t function, struct EventStruct *event, String& string)
         selector.reloadonchange = !Settings.isPowerManagerTask(event->TaskIndex);
         selector.addFormSelector(F("Predefined device configuration"), F("predef"), 0);
 
-        if (!Settings.isPowerManagerTask(event->TaskIndex)) {
-          addFormNote(F("Page will reload when selection is changed."));
-        }
+        // if (!Settings.isPowerManagerTask(event->TaskIndex)) {
+        //   addFormNote(F("Page will reload when selection is changed."));
+        // }
 
         const P137_PredefinedDevices_e current_ = static_cast<P137_PredefinedDevices_e>(P137_CURRENT_PREDEFINED);
 
@@ -392,13 +392,13 @@ boolean Plugin_137(uint8_t function, struct EventStruct *event, String& string)
 
       if (nullptr != P137_init) {
         #  ifndef BUILD_NO_DEBUG
-        addLogMove(LOG_LEVEL_INFO, F("P137: Already initialized, skipped."));
+        addLog(LOG_LEVEL_INFO, F("P137: Already initialized, skipped."));
         #  endif // ifndef BUILD_NO_DEBUG
         // has been initialized so nothing to do here
         success = true; // Still was successful (to keep plugin enabled!)
       } else {
         #  ifndef BUILD_NO_DEBUG
-        addLogMove(LOG_LEVEL_DEBUG, F("P137: PLUGIN_INIT"));
+        addLog(LOG_LEVEL_DEBUG, F("P137: PLUGIN_INIT"));
         #  endif // ifndef BUILD_NO_DEBUG
         success = initPluginTaskData(event->TaskIndex, new (std::nothrow) P137_data_struct(event));
       }

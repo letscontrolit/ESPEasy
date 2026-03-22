@@ -63,7 +63,7 @@ bool CPlugin_003(CPlugin::Function function, struct EventStruct *event, String& 
       void *ptr               = special_calloc(1, size);
 
       if (ptr != nullptr) {
-        std::unique_ptr<C003_queue_element> element(
+        UP_C003_queue_element  element(
           new (ptr) C003_queue_element(
             event->ControllerIndex,
             event->TaskIndex,

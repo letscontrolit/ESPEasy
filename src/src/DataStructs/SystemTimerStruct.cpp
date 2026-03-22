@@ -19,7 +19,7 @@ systemTimerStruct::systemTimerStruct(int recurringCount, unsigned long msecFromN
     // Create a new timer which should be "scheduled" now to clear up any data
     _recurringCount = 0; // Do not reschedule
     _loopCount      = 0; // Do not execute
-    #ifndef BUILD_MINIMAL_OTA
+    #ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_INFO, F("TIMER: disable timer"));
     #endif
   }
@@ -35,7 +35,7 @@ systemTimerStruct::systemTimerStruct(int recurringCount, unsigned long msecFromN
 }
 
 struct EventStruct systemTimerStruct::toEvent() const {
-  struct EventStruct TempEvent(TaskIndex);
+  struct EventStruct TempEvent(static_cast<taskIndex_t>(_index));
 
   TempEvent.Par1 = _recurringCount;
   TempEvent.Par2 = _interval;
@@ -45,14 +45,28 @@ struct EventStruct systemTimerStruct::toEvent() const {
   return TempEvent;
 }
 
-void systemTimerStruct::fromEvent(taskIndex_t taskIndex,
+struct EventStruct systemTimerStruct::toNetworkEvent() const {
+  struct EventStruct TempEvent;
+
+  TempEvent.NetworkIndex = _index;
+
+  TempEvent.Par1 = _recurringCount;
+  TempEvent.Par2 = _interval;
+  TempEvent.Par3 = _timerIndex;
+  TempEvent.Par4 = _remainder;
+  TempEvent.Par5 = _loopCount;
+  return TempEvent;
+
+}
+
+void systemTimerStruct::fromEvent(int Index,
                                   int         Par1,
                                   int         Par2,
                                   int         Par3,
                                   int         Par4,
                                   int         Par5)
 {
-  TaskIndex       = taskIndex;
+  _index          = Index;
   _recurringCount = Par1;
   _interval       = Par2;
   _timerIndex     = Par3;

@@ -4,11 +4,11 @@
 #include "../../ESPEasy_common.h"
 
 #include "../Commands/Common.h"
-#include "../ESPEasyCore/ESPEasyNetwork.h"
-#include "../Globals/NetworkState.h"
+#include "../../ESPEasy/net/ESPEasyNetwork.h"
+#include "../../ESPEasy/net/Globals/NetworkState.h"
 #include "../Globals/Settings.h"
 #include "../Helpers/Misc.h"
-#include "../Helpers/Network.h"
+#include "../Helpers/NetworkStatusLED.h"
 #include "../Helpers/Networking.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringParser.h"
@@ -61,7 +61,7 @@ const __FlashStringHelper* Command_UDP_SendToUPDMix(struct EventStruct *event, c
 
 const __FlashStringHelper* Command_UDP_SendToUPD(struct EventStruct *event, const char *Line, const bool handleMix)
 {
-  if (NetworkConnected()) {
+  if (ESPEasy::net::NetworkConnected()) {
     const String ip   = parseString(Line, 2);
     const int    port = parseCommandArgumentInt(Line, 2, -1);
 
@@ -82,20 +82,26 @@ const __FlashStringHelper* Command_UDP_SendToUPD(struct EventStruct *event, cons
     IPAddress UDP_IP;
 
     if (UDP_IP.fromString(ip)) {
+      WiFiUDP udp;
+
+      if (!beginWiFiUDP_randomPort(udp)) {
+        return return_command_failed_flashstr();
+      }
+
       FeedSW_watchdog();
-      portUDP.beginPacket(UDP_IP, port);
+      udp.beginPacket(UDP_IP, port);
 
       if (handleMix) {
-        portUDP.write(&argument[0], argument.size());
+        udp.write(&argument[0], argument.size());
       } else {
         #if defined(ESP8266)
-        portUDP.write(message.c_str(),                                    message.length());
+        udp.write(message.c_str(),                                    message.length());
         #endif // if defined(ESP8266)
         #if defined(ESP32)
-        portUDP.write(reinterpret_cast<const uint8_t *>(message.c_str()), message.length());
+        udp.write(reinterpret_cast<const uint8_t *>(message.c_str()), message.length());
         #endif // if defined(ESP32)
       }
-      portUDP.endPacket();
+      udp.endPacket();
       FeedSW_watchdog();
       delay(0);
     }

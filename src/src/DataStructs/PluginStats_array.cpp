@@ -29,7 +29,37 @@ PluginStats_array::~PluginStats_array()
   }
 }
 
-void PluginStats_array::initPluginStats(taskIndex_t taskIndex, taskVarIndex_t taskVarIndex)
+void PluginStats_array::initPluginStats(taskVarIndex_t taskVarIndex)
+{
+  if (taskVarIndex < VARS_PER_TASK) {
+
+    String label;
+
+    if (ExtraTaskSettings.enabledPluginStats(taskVarIndex)) {
+      label = ExtraTaskSettings.TaskDeviceValueNames[taskVarIndex];
+# if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+      const uint8_t uomIndex = ExtraTaskSettings.getTaskVarUnitOfMeasure(taskVarIndex);
+
+      if (uomIndex != 0) {
+        label = strformat(F("%s (%s)"), ExtraTaskSettings.TaskDeviceValueNames[taskVarIndex], toUnitOfMeasureName(uomIndex).c_str());
+      }
+# endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+    }
+    initPluginStats(
+      taskVarIndex,
+      label,
+      ExtraTaskSettings.TaskDeviceValueDecimals[taskVarIndex],
+      ExtraTaskSettings.TaskDeviceErrorValue[taskVarIndex],
+      ExtraTaskSettings.getPluginStatsConfig(taskVarIndex));
+  }
+}
+
+void PluginStats_array::initPluginStats(
+  taskVarIndex_t              taskVarIndex,
+  const String              & label,
+  uint8_t                     nrDecimals,
+  float                       errorValue,
+  const PluginStats_Config_t& displayConfig)
 {
   if (taskVarIndex < VARS_PER_TASK) {
     delete _plugin_stats[taskVarIndex];
@@ -42,35 +72,24 @@ void PluginStats_array::initPluginStats(taskIndex_t taskIndex, taskVarIndex_t ta
       }
     }
 
-    if (ExtraTaskSettings.enabledPluginStats(taskVarIndex)) {
+    if (label.length()) {
       // Try to allocate in PSRAM or 2nd heap if possible
       constexpr unsigned size = sizeof(PluginStats);
       void *ptr               = special_calloc(1, size);
 
       if (ptr == nullptr) { _plugin_stats[taskVarIndex] = nullptr; }
       else {
-        _plugin_stats[taskVarIndex] = new (ptr) PluginStats(
-          ExtraTaskSettings.TaskDeviceValueDecimals[taskVarIndex],
-          ExtraTaskSettings.TaskDeviceErrorValue[taskVarIndex]);
+        _plugin_stats[taskVarIndex] =
+          new (ptr) PluginStats(nrDecimals, errorValue);
       }
 
 
       if (_plugin_stats[taskVarIndex] != nullptr) {
-        # if FEATURE_TASKVALUE_UNIT_OF_MEASURE
-        const uint8_t uomIndex = ExtraTaskSettings.getTaskVarUnitOfMeasure(taskVarIndex);
-        String label(ExtraTaskSettings.TaskDeviceValueNames[taskVarIndex]);
-
-        if (uomIndex != 0) {
-          label = strformat(F("%s (%s)"), ExtraTaskSettings.TaskDeviceValueNames[taskVarIndex], toUnitOfMeasureName(uomIndex).c_str());
-        }
         _plugin_stats[taskVarIndex]->setLabel(label);
-        # else // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
-        _plugin_stats[taskVarIndex]->setLabel(ExtraTaskSettings.TaskDeviceValueNames[taskVarIndex]);
-        # endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
         # if FEATURE_CHART_JS
         const __FlashStringHelper *colors[] = { F("#A52422"), F("#BEA57D"), F("#0F4C5C"), F("#A4BAB7") };
         _plugin_stats[taskVarIndex]->_ChartJS_dataset_config.color         = colors[taskVarIndex];
-        _plugin_stats[taskVarIndex]->_ChartJS_dataset_config.displayConfig = ExtraTaskSettings.getPluginStatsConfig(taskVarIndex);
+        _plugin_stats[taskVarIndex]->_ChartJS_dataset_config.displayConfig = displayConfig;
         # endif // if FEATURE_CHART_JS
 
         if (_plugin_stats_timestamps != nullptr) {
@@ -192,47 +211,60 @@ void PluginStats_array::pushPluginStatsValues(
     if (valueCount > 0) {
       const Sensor_VType sensorType = event->getSensorType();
 
-      const int64_t timestamp_sysmicros = event->getTimestamp_as_systemMicros();
-
-      if (onlyUpdateTimestampWhenSame && (_plugin_stats_timestamps != nullptr)) {
-        // When only updating the timestamp of the last entry,
-        // we should look at the last 2 entries to see if they are the same.
-        bool   isSame = true;
-        size_t i      = 0;
-
-        while (isSame && i < valueCount) {
-          if (_plugin_stats[i] != nullptr) {
-            const float value = UserVar.getAsDouble(event->TaskIndex, i, sensorType);
-
-            if (!_plugin_stats[i]->matchesLastTwoEntries(value)) {
-              isSame = false;
-            }
-          }
-          ++i;
-        }
-
-        if (isSame) {
-          _plugin_stats_timestamps->updateLast(timestamp_sysmicros);
-          return;
-        }
-      }
-
-      if (_plugin_stats_timestamps != nullptr) {
-        _plugin_stats_timestamps->push(timestamp_sysmicros);
-      }
+      EventStruct tempEvent;
 
       for (size_t i = 0; i < valueCount; ++i) {
         if (_plugin_stats[i] != nullptr) {
-          const float value = UserVar.getAsDouble(event->TaskIndex, i, sensorType);
-          _plugin_stats[i]->push(value);
-
-          if (trackPeaks) {
-            _plugin_stats[i]->trackPeak(value, timestamp_sysmicros);
-          }
+          tempEvent.ParfN[i] = UserVar.getAsDouble(event->TaskIndex, i, sensorType);
         }
+      }
+      pushStatsValues(&tempEvent, valueCount, trackPeaks, onlyUpdateTimestampWhenSame);
+    }
+  }
+}
+
+bool PluginStats_array::pushStatsValues(struct EventStruct *event,
+                                        size_t              valueCount,
+                                        bool                trackPeaks,
+                                        bool                onlyUpdateTimestampWhenSame)
+{
+  const int64_t timestamp_sysmicros = event->getTimestamp_as_systemMicros();
+
+  if (onlyUpdateTimestampWhenSame && (_plugin_stats_timestamps != nullptr)) {
+    // When only updating the timestamp of the last entry,
+    // we should look at the last 2 entries to see if they are the same.
+    bool   isSame = true;
+    size_t i      = 0;
+
+    while (isSame && i < valueCount) {
+      if (_plugin_stats[i] != nullptr) {
+        if (!_plugin_stats[i]->matchesLastTwoEntries(event->ParfN[i])) {
+          isSame = false;
+        }
+      }
+      ++i;
+    }
+
+    if (isSame) {
+      _plugin_stats_timestamps->updateLast(timestamp_sysmicros);
+      return false;
+    }
+  }
+
+  if (_plugin_stats_timestamps != nullptr) {
+    _plugin_stats_timestamps->push(timestamp_sysmicros);
+  }
+
+  for (size_t i = 0; i < valueCount; ++i) {
+    if (_plugin_stats[i] != nullptr) {
+      _plugin_stats[i]->push(event->ParfN[i]);
+
+      if (trackPeaks) {
+        _plugin_stats[i]->trackPeak(event->ParfN[i], timestamp_sysmicros);
       }
     }
   }
+  return true;
 }
 
 bool PluginStats_array::plugin_get_config_value_base(struct EventStruct *event,
@@ -323,6 +355,7 @@ bool PluginStats_array::webformLoad_show_stats(struct EventStruct *event, bool s
 }
 
 # if FEATURE_CHART_JS
+
 void PluginStats_array::plot_ChartJS(bool onlyJSON) const
 {
   const size_t nrSamples = nrSamplesPresent();
@@ -330,84 +363,86 @@ void PluginStats_array::plot_ChartJS(bool onlyJSON) const
   if (nrSamples == 0) { return; }
 
   // Chart Header
+
+  ChartJS_options_scales scales;
   {
-    ChartJS_options_scales scales;
-    {
-      ChartJS_options_scale scaleOption(F("x"));
-
-      if (_plugin_stats_timestamps != nullptr) {
-        scaleOption.scaleType = F("time");
-      }
-      scales.add(scaleOption);
-    }
-
-    for (size_t i = 0; i < VARS_PER_TASK; ++i) {
-      if (_plugin_stats[i] != nullptr) {
-        ChartJS_options_scale scaleOption(
-          _plugin_stats[i]->_ChartJS_dataset_config.displayConfig,
-          _plugin_stats[i]->getLabel());
-        scaleOption.axisTitle.color = _plugin_stats[i]->_ChartJS_dataset_config.color;
-        scales.add(scaleOption);
-
-        _plugin_stats[i]->_ChartJS_dataset_config.axisID = scaleOption.axisID;
-      }
-    }
-
-    scales.update_Yaxis_TickCount();
-
-    const bool enableZoom = true;
-
-    add_ChartJS_chart_header(
-      F("line"),
-      F("TaskStatsChart"),
-      {},
-      500 + (70 * (scales.nr_Y_scales() - 1)),
-      500,
-      scales.toString(),
-      enableZoom,
-      nrSamples,
-      onlyJSON);
-  }
-
-
-  // Add labels
-  addHtml(F("\"labels\":["));
-
-  for (size_t i = 0; i < nrSamples; ++i) {
-    if (i != 0) {
-      addHtml(',');
-    }
+    ChartJS_options_scale scaleOption(F("x"));
 
     if (_plugin_stats_timestamps != nullptr) {
-      struct tm ts;
-      uint32_t  unix_time_frac{};
-      const uint32_t unixtime_sec    = node_time.systemMicros_to_Unixtime((*_plugin_stats_timestamps)[i], unix_time_frac);
-      const uint32_t local_timestamp = time_zone.toLocal(unixtime_sec);
-      breakTime(local_timestamp, ts);
-      addHtml('"');
-      addHtml(formatDateTimeString(ts));
-      addHtml(strformat(F(".%03u"), unix_time_frac_to_millis(unix_time_frac)));
-      addHtml('"');
-    } else {
-      addHtmlInt(i);
+      scaleOption.scaleType = F("time");
     }
+    scales.add(scaleOption);
   }
-  addHtml(F("],\n\"datasets\":["));
-
-
-  // Data sets
-  bool first = true;
 
   for (size_t i = 0; i < VARS_PER_TASK; ++i) {
     if (_plugin_stats[i] != nullptr) {
-      if (!first) {
-        addHtml(',');
-      }
-      first = false;
-      _plugin_stats[i]->plot_ChartJS_dataset();
+      ChartJS_options_scale scaleOption(
+        _plugin_stats[i]->_ChartJS_dataset_config.displayConfig,
+        _plugin_stats[i]->getLabel());
+      scaleOption.axisTitle.color = _plugin_stats[i]->_ChartJS_dataset_config.color;
+      scales.add(scaleOption);
+
+      _plugin_stats[i]->_ChartJS_dataset_config.axisID = scaleOption.axisID;
     }
   }
-  add_ChartJS_chart_footer(onlyJSON);
+
+  scales.update_Yaxis_TickCount();
+
+  const bool enableZoom = true;
+  {
+    auto chart = add_ChartJS_chart_header(
+      F("line"),
+      F("TaskStatsChart"),
+      {},
+      scales,
+      enableZoom,
+      nrSamples,
+      onlyJSON);
+
+    if (chart) {
+      auto data = chart->createChild(F("data"));
+
+      if (data) {
+        {
+          auto labels = data->createChildArray(F("labels"));
+
+          if (labels) {
+            for (size_t i = 0; i < nrSamples; ++i) {
+              if (_plugin_stats_timestamps != nullptr) {
+                struct tm ts;
+                uint32_t  unix_time_frac{};
+                const uint32_t unixtime_sec    = node_time.systemMicros_to_Unixtime((*_plugin_stats_timestamps)[i], unix_time_frac);
+                const uint32_t local_timestamp = time_zone.toLocal(unixtime_sec);
+                breakTime(local_timestamp, ts);
+                labels->write({
+                  EMPTY_STRING,
+                  formatDateTimeString(ts) + strformat(F(".%03u"), unix_time_frac_to_millis(unix_time_frac))
+                });
+              } else {
+                labels->write({ EMPTY_STRING, i });
+              }
+            }
+
+          }
+        }
+        {
+          auto datasets = data->createChildArray(F("datasets"));
+
+          if (datasets) {
+            for (size_t i = 0; i < VARS_PER_TASK; ++i) {
+              if (_plugin_stats[i] != nullptr) {
+                auto dataset = datasets->createChild();
+
+                if (dataset) {
+                  _plugin_stats[i]->plot_ChartJS_dataset(*dataset);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 }
 
 void PluginStats_array::plot_ChartJS_scatter(
@@ -416,8 +451,6 @@ void PluginStats_array::plot_ChartJS_scatter(
   const __FlashStringHelper    *id,
   const ChartJS_title         & chartTitle,
   const ChartJS_dataset_config& datasetConfig,
-  int                           width,
-  int                           height,
   bool                          showAverage,
   const String                & options,
   bool                          onlyJSON) const
@@ -433,73 +466,106 @@ void PluginStats_array::plot_ChartJS_scatter(
     return;
   }
 
-  String axisOptions;
-
   {
     ChartJS_options_scales scales;
     scales.add({ F("x"), stats_X->getLabel() });
     scales.add({ F("y"), stats_Y->getLabel() });
-    axisOptions = scales.toString();
-  }
 
 
-  const size_t nrSamples  = stats_X->getNrSamples();
-  const bool   enableZoom = false;
+    const size_t nrSamples  = stats_X->getNrSamples();
+    const bool   enableZoom = false;
 
-  add_ChartJS_chart_header(
-    F("scatter"),
-    id,
-    chartTitle,
-    width,
-    height,
-    axisOptions,
-    enableZoom,
-    nrSamples,
-    onlyJSON);
+    auto chart = add_ChartJS_chart_header(
+      F("scatter"),
+      id,
+      chartTitle,
+      scales,
+      enableZoom,
+      nrSamples,
+      onlyJSON);
 
-  // Add labels, which will be shown in a tooltip when hovering with the mouse over a point.
-  addHtml(F("\"labels\":["));
+    if (chart) {
+      chart->allowFormatOverrides(false);
+      auto data = chart->createChild(F("data"));
 
-  for (size_t i = 0; i < nrSamples; ++i) {
-    if (i != 0) {
-      addHtml(',');
+      if (data) {
+        {
+          // Add labels, which will be shown in a tooltip when hovering with the mouse over a point.
+          auto labels = data->createChildArray(F("labels"));
+
+          if (labels) {
+            for (size_t i = 0; i < nrSamples; ++i) {
+              labels->write({ EMPTY_STRING, i });
+            }
+          }
+        }
+        {
+
+          auto datasets = data->createChildArray(F("datasets"));
+
+          if (datasets) {
+            {
+              auto dataset = datasets->createChild();
+
+              if (dataset) {
+                dataset->write({ F("showLine"), true });
+
+                {
+                  // Long/Lat Coordinates
+                  auto data = add_ChartJS_dataset_header(*dataset, datasetConfig);
+
+                  if (data) {
+
+                    const uint8_t nrDecimalsX = stats_X->getNrDecimals();
+                    const uint8_t nrDecimalsY = stats_Y->getNrDecimals();
+
+                    // Add scatter data
+                    for (size_t i = 0; i < nrSamples; ++i) {
+                      const float valX = (*stats_X)[i];
+                      const float valY = (*stats_Y)[i];
+                      add_ChartJS_scatter_data_point(*data, valX, valY, nrDecimalsX, nrDecimalsY);
+                    }
+                  }
+                }
+              }
+            }
+
+            if (showAverage) {
+              auto dataset = datasets->createChild();
+
+              if (dataset) {
+                dataset->write({ F("pointRadius"), 6 });
+                dataset->write({ F("pointHoverRadius"), 10 });
+
+                {
+                  // Add single point showing the average
+                  auto data = add_ChartJS_dataset_header(
+                    *dataset,
+                  {
+                    F("Average"),
+                    F("#0F4C5C") });
+
+                  if (data) {
+                    const float valX = stats_X->getSampleAvg();
+                    const float valY = stats_Y->getSampleAvg();
+                    add_ChartJS_scatter_data_point(
+                      *data,
+                      valX,
+                      valY,
+                      stats_X->getNrDecimals(),
+                      stats_Y->getNrDecimals());
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
-    addHtmlInt(i);
   }
-  addHtml(F("],\n\"datasets\":["));
-
-  // Long/Lat Coordinates
-  add_ChartJS_dataset_header(datasetConfig);
-
-  // Add scatter data
-  for (size_t i = 0; i < nrSamples; ++i) {
-    const float valX = (*stats_X)[i];
-    const float valY = (*stats_Y)[i];
-    add_ChartJS_scatter_data_point(valX, valY, 6);
-  }
-
-  add_ChartJS_dataset_footer(F("\"showLine\":true"));
-
-  if (showAverage) {
-    // Add single point showing the average
-    addHtml(',');
-    add_ChartJS_dataset_header(
-    {
-      F("Average"),
-      F("#0F4C5C") });
-
-    {
-      const float valX = stats_X->getSampleAvg();
-      const float valY = stats_Y->getSampleAvg();
-      add_ChartJS_scatter_data_point(valX, valY, 6);
-    }
-    add_ChartJS_dataset_footer(F("\"pointRadius\":6,\"pointHoverRadius\":10"));
-  }
-  add_ChartJS_chart_footer(onlyJSON);
 }
 
 # endif // if FEATURE_CHART_JS
-
 
 PluginStats * PluginStats_array::getPluginStats(taskVarIndex_t taskVarIndex) const
 {

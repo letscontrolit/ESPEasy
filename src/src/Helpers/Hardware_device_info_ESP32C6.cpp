@@ -112,9 +112,14 @@ const __FlashStringHelper* getChipModel(uint32_t chip_model, uint32_t chip_revis
     //    AddLog(LOG_LEVEL_DEBUG_MORE, PSTR("HDW: ESP32 Model %d, Revision %d, Core %d, Package %d"), chip_info.model, chip_revision,
     // chip_info.cores, chip_ver);
 
+    const int32_t flash_cap = getEmbeddedFlashSize();
+
     switch (pkg_version) {
-      case 0: return F("ESP32-C6");
-      case 1: return F("ESP32-C6FH4 (QFN32)");
+      case 0: return F("ESP32-C6 (QFN40)");
+      case 1: 
+      if (flash_cap == 4) return F("ESP32-C6FH4 (QFN32)");
+      if (flash_cap == 8) return F("ESP32-C6FH8 (QFN32)");
+      break;
     }
 
     return F("ESP32-C6");

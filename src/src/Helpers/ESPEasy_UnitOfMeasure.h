@@ -47,6 +47,11 @@ const uint64_t UOM_GROUP_NONE               = 0x0;
 # define UOM_milliVolt   119
 # define UOM_Mbps        97 // Mbit/s
 # define UOM_usec        39
+# define UOM_msec        40
+# define UOM_sec         41
+# define UOM_min         42
+# define UOM_hour        43
+# define UOM_day         44
 # define UOM_GHz         53
 # define UOM_MHz         132
 # define UOM_ppm         33

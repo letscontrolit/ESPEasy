@@ -59,8 +59,6 @@ String getLWT_messageDisconnect(const ControllerSettingsStruct& ControllerSettin
 \*********************************************************************************************/
 void SendStatusOnlyIfNeeded(struct EventStruct *event, bool param1, uint32_t key, const String& param2, int16_t param3);
 
-bool SourceNeedsStatusUpdate(EventValueSource::Enum eventSource);
-
 void SendStatus(struct EventStruct *event, const __FlashStringHelper * status);
 void SendStatus(struct EventStruct *event, const String& status);
 
@@ -79,15 +77,16 @@ bool MQTTpublish(controllerIndex_t controller_idx, taskIndex_t taskIndex,  Strin
 * Send status info back to channel where request came from
 \*********************************************************************************************/
 void MQTTStatus(struct EventStruct *event, const String& status);
+#endif //if FEATURE_MQTT
 
-#if FEATURE_MQTT_TLS
+# if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS
 bool GetTLSfingerprint(String& fp);
 
 bool GetTLS_Certificate(String& cert, bool caRoot);
 
 #endif
 
-#endif //if FEATURE_MQTT
+
 
 
 /*********************************************************************************************\

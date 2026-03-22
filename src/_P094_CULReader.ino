@@ -14,7 +14,7 @@
  * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported for CUL-reader)
  */
 
-# include "src/ESPEasyCore/ESPEasyNetwork.h"
+# include "ESPEasy/net/ESPEasyNetwork.h"
 
 # include "src/Helpers/ESPEasy_Storage.h"
 # include "src/Helpers/StringConverter.h"
@@ -281,7 +281,7 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
 
           if (event->String2.length() > 0) {
             const bool   fromCUL = true;
-            const String source  = NetworkGetHostname();
+            const String source  = ESPEasy::net::NetworkGetHostname();
 
             if (Plugin_094_match_all(event->TaskIndex, event->String2, source, fromCUL)) {
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {

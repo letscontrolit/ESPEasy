@@ -6,7 +6,7 @@
 #endif // ifdef ESP32
 
 #ifdef ESP8266
-#include "../Globals/ESPEasyWiFiEvent.h"
+#include "../../ESPEasy/net/Globals/ESPEasyWiFiEvent.h"
 
 
 bool Hardware_ADC_t::init() {
@@ -15,13 +15,13 @@ bool Hardware_ADC_t::init() {
 
 
 int  Hardware_ADC_t::read() {
-  if (!WiFiEventData.wifiConnectInProgress) {
+//  if (!WiFiEventData.wifiConnectInProgress) {
 # if FEATURE_ADC_VCC
     _lastADCvalue = ESP.getVcc();
 # else // if FEATURE_ADC_VCC
     _lastADCvalue = analogRead(A0);
 # endif // if FEATURE_ADC_VCC
-  }
+//  }
   return _lastADCvalue;
 }
 

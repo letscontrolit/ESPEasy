@@ -8,7 +8,7 @@
 #include "../DataStructs/SettingsStruct.h"
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
-#include "../ESPEasyCore/ESPEasyNetwork.h"
+#include "../../ESPEasy/net/ESPEasyNetwork.h"
 
 #include "../Globals/Settings.h"
 
@@ -28,7 +28,7 @@ const __FlashStringHelper* httpEmitToHTTP(struct EventStruct        *event,
                                           const bool                 useBody,
                                           const bool                 useHttps)
 {
-  if (NetworkConnected()) {
+  if (ESPEasy::net::NetworkConnected()) {
     String   user, pass, host, file, path, header, postBody;
     uint16_t port;
     uint8_t  idx;

@@ -8,6 +8,7 @@
 
 
 /** Changelog:
+ * 2025-08-12 tonhuisman: Enable use of secondary SPI bus
  * 2024-08-12 tonhuisman: Add Default font selection setting, if AdafruitGFX_Helper fonts are included
  * 2022-10-08 tonhuisman: Enable PLUGIN_GET_CONFIG_VALUE event to get runtime info from plugin
  * 2022-09-24 tonhuisman: Store inverted setting when changed via inv subcommand (not saved)
@@ -53,6 +54,7 @@ boolean Plugin_141(uint8_t function, struct EventStruct *event, String& string)
       dev.SendDataOption = false;
       dev.TimerOption    = true;
       dev.TimerOptional  = true;
+      dev.SpiBusSelect   = true;
       break;
     }
 
@@ -248,7 +250,9 @@ boolean Plugin_141(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      if (Settings.InitSPI != 0) {
+      const uint8_t spi_bus = Settings.getSPIBusForTask(event->TaskIndex);
+
+      if (Settings.isSPI_valid(spi_bus)) {
         initPluginTaskData(event->TaskIndex,
                            new (std::nothrow) P141_data_struct(P141_CONFIG_FLAG_GET_ROTATION,
                                                                P141_CONFIG_FLAG_GET_FONTSCALE,
@@ -262,7 +266,8 @@ boolean Plugin_141(uint8_t function, struct EventStruct *event, String& string)
                                                                ADAGFX_WHITE,
                                                                ADAGFX_BLACK,
                                                                bitRead(P141_CONFIG_FLAGS, P141_CONFIG_FLAG_BACK_FILL) == 0,
-                                                               bitRead(P141_CONFIG_FLAGS, P141_CONFIG_FLAG_INVERTED) == 1
+                                                               bitRead(P141_CONFIG_FLAGS, P141_CONFIG_FLAG_INVERTED) == 1,
+                                                               spi_bus
                                                                # if ADAGFX_FONTS_INCLUDED
                                                                ,
                                                                P141_CONFIG_DEFAULT_FONT

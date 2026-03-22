@@ -11,6 +11,7 @@
  * 2025-11-19 tonhuisman: Use Rotation flipped setting from ESPEasy_TouchHandler
  * 2025-09-28 tonhuisman: Keep previous code for ESP8266, to match the limited binary space available
  * 2025-09-27 tonhuisman: Implement ESPEasy_TouchHandler
+ * 2025-08-13 tonhuisman: Enable use of secondary SPI bus
  * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported for Touch)
  * 2020-11-01 tonhuisman: Solved previous strange rotation settings to be compatible with TFT ILI9341
  * 2020-11-01 tonhuisman: Add option to flip rotation by 180 deg, and command touch,flip,<0|1>
@@ -37,17 +38,18 @@
  * touch,disable,<objectName>   : Disables an enabled objectname
  */
 
-#define PLUGIN_099
-#define PLUGIN_ID_099         99
-#define PLUGIN_NAME_099       "Touch - XPT2046 on a TFT display"
-#define PLUGIN_VALUENAME1_099 "X"
-#define PLUGIN_VALUENAME2_099 "Y"
-#define PLUGIN_VALUENAME3_099 "Z"
+# define PLUGIN_099
+# define PLUGIN_ID_099         99
+# define PLUGIN_NAME_099       "Touch - XPT2046 on a TFT display"
+# define PLUGIN_VALUENAME1_099 "X"
+# define PLUGIN_VALUENAME2_099 "Y"
+# define PLUGIN_VALUENAME3_099 "Z"
 
-#include "src/PluginStructs/P099_data_struct.h"
+# include "src/PluginStructs/P099_data_struct.h"
 
 
-#ifdef ESP32
+# ifdef ESP32
+
 boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
@@ -57,10 +59,11 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_DEVICE_ADD:
     {
       auto& dev = Device[++deviceCount];
-      dev.Number     = PLUGIN_ID_099;
-      dev.Type       = DEVICE_TYPE_SPI;
-      dev.VType      = Sensor_VType::SENSOR_TYPE_TRIPLE;
-      dev.ValueCount = 3;
+      dev.Number       = PLUGIN_ID_099;
+      dev.Type         = DEVICE_TYPE_SPI;
+      dev.VType        = Sensor_VType::SENSOR_TYPE_TRIPLE;
+      dev.ValueCount   = 3;
+      dev.SpiBusSelect = true;
       break;
     }
 
@@ -93,14 +96,14 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-    # if FEATURE_MQTT_DISCOVER
+    #  if FEATURE_MQTT_DISCOVER
     case PLUGIN_GET_DISCOVERY_VTYPES:
     {
       event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_NONE); // Not yet supported
       success     = true;
       break;
     }
-    # endif // if FEATURE_MQTT_DISCOVER
+    #  endif // if FEATURE_MQTT_DISCOVER
 
     case PLUGIN_SET_DEFAULTS:
     {
@@ -109,10 +112,10 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
       P099_CONFIG_ROTATION  = P099_TS_ROTATION;
       P099_CONFIG_X_RES     = P099_TS_X_RES;
       P099_CONFIG_Y_RES     = P099_TS_Y_RES;
-      # if P099_ENABLE_OLD_CONFIG
+      #  if P099_ENABLE_OLD_CONFIG
       P099_CONFIG_OBJECTCOUNT = P099_INIT_OBJECTCOUNT;
       P099_CONFIG_DEBOUNCE_MS = P099_DEBOUNCE_MILLIS;
-      # endif // if P099_ENABLE_OLD_CONFIG
+      #  endif // if P099_ENABLE_OLD_CONFIG
 
       constexpr uint32_t lSettings = 0
                                      + (P099_TS_SEND_XY          ? (1 << P099_FLAGS_SEND_XY) : 0)
@@ -134,9 +137,9 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
       {
         addRowLabel(F("Display task"));
         addTaskSelect(F("dsptask"), P099_GET_CONFIG_DISPLAY);
-        # ifndef P099_LIMIT_BUILD_SIZE
+        #  ifndef P099_LIMIT_BUILD_SIZE
         addFormNote(F("Screen Width, Heigth, Rotation &amp; Color-depth will be fetched from the Display task if possible."));
-        # endif // ifndef P099_LIMIT_BUILD_SIZE
+        #  endif // ifndef P099_LIMIT_BUILD_SIZE
       }
 
       uint16_t width_      = P099_CONFIG_X_RES;
@@ -201,11 +204,11 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
       P099_CONFIG_ROTATION     = getFormItemInt(F("protate"));
       P099_CONFIG_X_RES        = getFormItemInt(F("pwidth"));
       P099_CONFIG_Y_RES        = getFormItemInt(F("pheight"));
-      # if P099_ENABLE_OLD_CONFIG
+      #  if P099_ENABLE_OLD_CONFIG
       P099_CONFIG_OBJECTCOUNT = getFormItemInt(F("pobjectcount"));
 
       if (P099_CONFIG_OBJECTCOUNT > P099_MaxObjectCount) { P099_CONFIG_OBJECTCOUNT = P099_MaxObjectCount; }
-      # endif // if P099_ENABLE_OLD_CONFIG
+      #  endif // if P099_ENABLE_OLD_CONFIG
 
       uint32_t lSettings = 0;
 
@@ -238,6 +241,7 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
+      const uint8_t spi_bus = Settings.getSPIBusForTask(event->TaskIndex);
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P099_data_struct());
       P099_data_struct *P099_data = static_cast<P099_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -247,7 +251,8 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
                                                           false,
                                                           P099_CONFIG_THRESHOLD,
                                                           P099_CONFIG_X_RES,
-                                                          P099_CONFIG_Y_RES);
+                                                          P099_CONFIG_Y_RES,
+                                                          spi_bus);
 
       break;
     }
@@ -295,13 +300,14 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
   return success;
 }   // Plugin_099
 
-#endif // ifdef ESP32
+# endif // ifdef ESP32
 
 /********************************************************************************************************************************
 * Below code is using the old but smaller implementation for ESP8266, and should only get bugfixes, if needed
 ********************************************************************************************************************************/
 
-#ifdef ESP8266
+# ifdef ESP8266
+
 boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
@@ -311,10 +317,11 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_DEVICE_ADD:
     {
       auto& dev = Device[++deviceCount];
-      dev.Number     = PLUGIN_ID_099;
-      dev.Type       = DEVICE_TYPE_SPI;
-      dev.VType      = Sensor_VType::SENSOR_TYPE_TRIPLE;
-      dev.ValueCount = 3;
+      dev.Number       = PLUGIN_ID_099;
+      dev.Type         = DEVICE_TYPE_SPI;
+      dev.VType        = Sensor_VType::SENSOR_TYPE_TRIPLE;
+      dev.ValueCount   = 3;
+      dev.SpiBusSelect = true;
       break;
     }
 
@@ -340,14 +347,14 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-    # if FEATURE_MQTT_DISCOVER
+    #  if FEATURE_MQTT_DISCOVER
     case PLUGIN_GET_DISCOVERY_VTYPES:
     {
       event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_NONE); // Not yet supported
       success     = true;
       break;
     }
-    # endif // if FEATURE_MQTT_DISCOVER
+    #  endif // if FEATURE_MQTT_DISCOVER
 
     case PLUGIN_SET_DEFAULTS:
     {
@@ -605,12 +612,12 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
       if (error.length() > 0) {
         addHtmlError(error);
       }
-      # ifdef PLUGIN_099_DEBUG
+      #  ifdef PLUGIN_099_DEBUG
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         addLogMove(LOG_LEVEL_INFO, concat(F("P099 data save size: "), sizeof(P099_data->StoredSettings)));
       }
-      # endif // PLUGIN_099_DEBUG
+      #  endif // PLUGIN_099_DEBUG
       SaveCustomTaskSettings(event->TaskIndex, reinterpret_cast<const uint8_t *>(&(P099_data->StoredSettings)),
                              sizeof(P099_data->StoredSettings));
       delete P099_data;
@@ -621,6 +628,7 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
+      const uint8_t spi_bus = Settings.getSPIBusForTask(event->TaskIndex);
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P099_data_struct());
       P099_data_struct *P099_data = static_cast<P099_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -633,7 +641,8 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
                                                           bitRead(P099_CONFIG_FLAGS, P099_FLAGS_SEND_Z),
                                                           bitRead(P099_CONFIG_FLAGS, P099_FLAGS_USE_CALIBRATION),
                                                           P099_CONFIG_X_RES,
-                                                          P099_CONFIG_Y_RES);
+                                                          P099_CONFIG_Y_RES,
+                                                          spi_bus);
 
       break;
     }
@@ -703,25 +712,25 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
                 if (!bitRead(P099_CONFIG_FLAGS, P099_FLAGS_SEND_Z) && validDeviceIndex(DeviceIndex)) { // Do NOT send a Z event for each
                                                                                                        // touch?
                   // FIXME TD-er: Should not change anything in the Device vector.
-                  # ifdef ESP8266
+                  #  ifdef ESP8266
                   Device[DeviceIndex].VType      = Sensor_VType::SENSOR_TYPE_DUAL;
                   Device[DeviceIndex].ValueCount = 2;
-                  # else // ifdef ESP8266
+                  #  else // ifdef ESP8266
                   Device.getDeviceStructForEdit(DeviceIndex).VType      = Sensor_VType::SENSOR_TYPE_DUAL;
                   Device.getDeviceStructForEdit(DeviceIndex).ValueCount = 2;
-                  # endif // ifdef ESP8266
+                  #  endif // ifdef ESP8266
                 }
                 sendData(event);                                                                       // Send X/Y(/Z) event
 
                 if (!bitRead(P099_CONFIG_FLAGS, P099_FLAGS_SEND_Z) && validDeviceIndex(DeviceIndex)) { // Reset device configuration
                   // FIXME TD-er: Should not change anything in the Device vector.
-                  # ifdef ESP8266
+                  #  ifdef ESP8266
                   Device[DeviceIndex].VType      = Sensor_VType::SENSOR_TYPE_TRIPLE;
                   Device[DeviceIndex].ValueCount = 3;
-                  # else // ifdef ESP8266
+                  #  else // ifdef ESP8266
                   Device.getDeviceStructForEdit(DeviceIndex).VType      = Sensor_VType::SENSOR_TYPE_TRIPLE;
                   Device.getDeviceStructForEdit(DeviceIndex).ValueCount = 3;
-                  # endif // ifdef ESP8266
+                  #  endif // ifdef ESP8266
                 }
               }
 
@@ -771,6 +780,6 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
   return success;
 }   // Plugin_099
 
-#endif // ifdef ESP8266
+# endif // ifdef ESP8266
 
 #endif // USES_P099

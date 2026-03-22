@@ -32,7 +32,9 @@
   },
   "espidf": {
     "custom_sdkconfig": [
-      "CONFIG_FREERTOS_UNICORE=y" 
+      "CONFIG_FREERTOS_UNICORE=y",
+      "# CONFIG_BOOTLOADER_SPI_CUSTOM_WP_PIN is not set",
+      "CONFIG_BOOTLOADER_SPI_WP_PIN=7"
     ]
   },
   "url": "https://en.wikipedia.org/wiki/ESP32",

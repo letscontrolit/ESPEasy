@@ -34,10 +34,14 @@ ESPEasy does support a number of variants of the processors manufactured by Espr
 * **ESP32-S3** Support added: 2023-05-03
 * **ESP32-C2 / ESP8684** Support added: 2023-11-10
 * **ESP32-C3 / ESP8685** Support added: 2023-05-03
-* **ESP32-C5** Not yet supported
+* **ESP32-C5** Preliminary support added: 2026-01-09
 * **ESP32-C6** Support added: 2023-11-10
+* **ESP32-C61** Preliminary support added: 2026-01-09
+* **ESP32-E22** Not yet supported
 * **ESP32-H2** Not yet supported
-* **ESP32-P4** Not yet supported
+* **ESP32-H21** Not yet supported
+* **ESP32-H4** Not yet supported
+* **ESP32-P4** Support added: 2026-01-08
 
 
 .. list-table:: Espressif platforms
@@ -92,7 +96,7 @@ ESPEasy does support a number of variants of the processors manufactured by Espr
       - 160
       - 120
       - 96
-      - 400
+      - 360 (v1.x) / 400 (v3.x)
    *  - Voltage (V)
       - 2.5 ~ 3.6
       - 3.0 ~ 3.6
@@ -115,8 +119,8 @@ ESPEasy does support a number of variants of the processors manufactured by Espr
       - 
       - Nov-23
       - 
-      - 
-      - 
+      - n/a
+      - Jan-26
    *  - Introduction
       - 2014
       - 2016
@@ -124,23 +128,23 @@ ESPEasy does support a number of variants of the processors manufactured by Espr
       - 2021
       - 2022
       - 2020
-      - 
+      - 2022
       - 2021
-      - 
+      - 2024
       - 2021
-      - 
-   *  - Status (2024/12)
+      - 2023
+   *  - Status (2026/03)
       - End-Of-Life
       - Mass Production (solo1: NRND)
       - NRND
       - Mass Production
       - Mass Production
       - Mass Production
-      - Sample
       - Mass Production
-      - Sample
       - Mass Production
-      - Sample
+      - Mass Production
+      - Mass Production
+      - Mass Production
    *  - Wi-Fi
       - IEEE 802.11 b/g/n; 2.4 GHz; HT20; up to 72 Mbps
       - IEEE 802.11 b/g/n; 2.4 GHz; HT20/40; up to 150 Mbps
@@ -616,8 +620,10 @@ Datasheets
 * `DS:ESP32-S3 <https://www.espressif.com/sites/default/files/documentation/esp32-s3_datasheet_en.pdf>`_
 * `DS:ESP32-C3 <https://www.espressif.com/sites/default/files/documentation/esp32-c3_datasheet_en.pdf>`_ / `DS:ESP8685 <https://www.espressif.com/sites/default/files/documentation/esp8685_datasheet_en.pdf>`_ 
 * `DS:ESP32-C2 <https://www.espressif.com/sites/default/files/documentation/esp8684_datasheet_en.pdf>`_ / `DS:ESP8684 <https://www.espressif.com/sites/default/files/documentation/esp8684_datasheet_en.pdf>`_ 
+* `DS:ESP32-C5 <https://www.espressif.com/sites/default/files/documentation/esp32-c5_datasheet_en.pdf>`_
 * `DS:ESP32-C6 <https://www.espressif.com/sites/default/files/documentation/esp32-c6_datasheet_en.pdf>`_
 * `DS:ESP32-H2 <https://cdn-shop.adafruit.com/product-files/5715/esp32-h2_datasheet_en.pdf>`_
+* `DS:ESP32-P4 <https://www.espressif.com/sites/default/files/documentation/esp32-p4_datasheet_en.pdf>`_
 
 
 Technical Reference Manuals
@@ -629,8 +635,10 @@ Technical Reference Manuals
 * `TR:ESP32-S3 <https://www.espressif.com/sites/default/files/documentation/esp32-s3_technical_reference_manual_en.pdf>`_
 * `TR:ESP32-C3 <https://www.espressif.com/sites/default/files/documentation/esp32-c3_technical_reference_manual_en.pdf>`_
 * `TR:ESP32-C2 <https://www.espressif.com/sites/default/files/documentation/esp8684_technical_reference_manual_en.pdf>`_
+* `TR:ESP32-C5 <https://www.espressif.com/sites/default/files/documentation/esp32-c5_technical_reference_manual_en.pdf>`_
 * `TR:ESP32-C6 <https://www.espressif.com/sites/default/files/documentation/esp32-c6_technical_reference_manual_en.pdf>`_
 * `TR:ESP32-H2 <https://www.espressif.com/sites/default/files/documentation/esp32-h2_technical_reference_manual_en.pdf>`_
+* `TR:ESP32-P4 <https://www.espressif.com/sites/default/files/documentation/esp32-p4_technical_reference_manual_en.pdf>`_
 
 
 ESP8266/ESP8285
@@ -877,7 +885,7 @@ ESP32-C5
 
 This will be the first Espressif SoC supporting 5 GHz WiFi.
 
-.. note:: Not yet available (as of Dec 2024)
+.. note:: Beta silicon is available (as of June 2025), which may change in Q3 or Q4 of 2025. So not yet adviced to be used in real products
 
 ESP32-C6
 ========
@@ -920,4 +928,5 @@ The CPU is rather powerful and there are versions with quite a large amount of P
 
 It does have a RMII interface for Ethernet, like the ESP32-classic does.
 
-.. note:: Not yet supported (as of Dec 2024)
+.. note:: Not yet supported. Beta silicon is available (as of June 2025), which may change in Q3 or Q4 of 2025. So not yet adviced to be used in real products
+

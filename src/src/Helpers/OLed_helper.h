@@ -1,8 +1,6 @@
 #ifndef HELPERS_OLED_HELPER_H
 #define HELPERS_OLED_HELPER_H
 #include "../../_Plugin_Helper.h"
-#include "SSD1306.h"
-#include "SH1106Wire.h"
 
 /**
  * Helper with OLed related functions
@@ -13,6 +11,10 @@
  * 2022-06-18 tonhuisman: Created helper with FormSelectors for Controller, Rotation, Contrast and Sizes
  *                        and generic function OLedSetContrast
  */
+
+#if defined(USES_P023) || defined(USES_P036) || defined(USES_P109)
+#include "SSD1306.h"
+#include "SH1106Wire.h"
 
 #define OLED_CONTRAST_OFF  0x01
 #define OLED_CONTRAST_LOW  0x40
@@ -37,4 +39,5 @@ bool OLedI2CAddressCheck(uint8_t                    function,
                          const __FlashStringHelper *id,
                          int8_t                     deviceAddress);
 
+#endif
 #endif // ifndef HELPERS_OLED_HELPER_H

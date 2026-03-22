@@ -40,6 +40,8 @@ struct SecurityStruct
 
   bool hasWiFiCredentials(WiFiCredentialsSlot slot) const;
 
+  String getSSID(WiFiCredentialsSlot slot) const;
+
   String getPassword() const;
 
   char          WifiSSID[32];
@@ -57,6 +59,7 @@ struct SecurityStruct
   //its safe to extend this struct, up to 4096 bytes, default values in config are 0. Make sure crc is last
   uint8_t       ProgmemMd5[16] = {0}; // crc of the binary that last saved the struct to file.
   uint8_t       md5[16] = {0};
+
 };
 
 

@@ -2,6 +2,7 @@
 #include "../WebServer/Markup.h"
 
 #include "../WebServer/HTML_wrappers.h"
+#include "../WebServer/KeyValueWriter_WebForm.h"
 #include "../WebServer/Markup_Forms.h"
 
 #include "../CustomBuild/ESPEasyLimits.h"
@@ -11,6 +12,7 @@
 #include "../Helpers/Convert.h"
 #include "../Helpers/ESPEasy_UnitOfMeasure.h"
 #include "../Helpers/Hardware_GPIO.h"
+#include "../Helpers/Hardware_device_info.h"
 #include "../Helpers/StringConverter_Numerical.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_GPIO.h"
@@ -113,8 +115,12 @@ void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int
     bool input, output, warning;
 
     if (getGpioInfo(gpio, pinnr, input, output, warning)) {
+#if FEATURE_I2C
       bool includeI2C = true;
+#endif
+#if FEATURE_SPI
       bool includeSPI = true;
+#endif
       bool includeSerial = true;
       #if FEATURE_ETHERNET
       bool includeEthernet = true;
@@ -126,6 +132,7 @@ void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int
       // bool includeResetPin = true;
 
       switch (purpose) {
+#if FEATURE_SPI
         case PinSelectPurpose::SPI:
         case PinSelectPurpose::SPI_MISO:
           includeSPI = false;
@@ -133,11 +140,12 @@ void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int
             return;
           }
           break;
+#endif
+#if FEATURE_ETHERNET
         case PinSelectPurpose::Ethernet:
-          #if FEATURE_ETHERNET
           includeEthernet = false;
-          #endif // if FEATURE_ETHERNET
           break;
+#endif
         case PinSelectPurpose::Generic:
 
           if (!input && !output) {
@@ -159,7 +167,7 @@ void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int
             return;
           }
           break;
-
+#if FEATURE_I2C
         case PinSelectPurpose::I2C:
 #if FEATURE_I2C_MULTIPLE
         case PinSelectPurpose::I2C_2:
@@ -168,6 +176,7 @@ void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int
 #endif
 #endif
           includeI2C = false;
+#endif
           // fallthrough
         case PinSelectPurpose::Generic_bidir:
 
@@ -216,19 +225,20 @@ void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int
           break;
   
       }
-
+#if FEATURE_I2C
       if (includeI2C && Settings.isI2C_pin(gpio)) {
         disabled = true;
       }
+#endif
 
       if (includeSerial && isSerialConsolePin(gpio)) {
         disabled = true;
       }
-
+#if FEATURE_SPI
       if (includeSPI && Settings.isSPI_pin(gpio)) {
         disabled = true;
       }
-
+#endif
       // Not blocking these GPIO pins, as they may already be in dual-purpose use, just a place-holder
       // if (includeStatusLed && (Settings.Pin_status_led == gpio)) {
       //   disabled = true;
@@ -403,11 +413,7 @@ void addRowLabel_tr_id(const __FlashStringHelper *label, const __FlashStringHelp
 
 void addRowLabel_tr_id(const __FlashStringHelper *label, const String& id)
 {
-  if (id.isEmpty()) {
-    addRowLabel(label);
-  } else {
-    addRowLabel_tr_id(String(label), id);
-  }
+  addRowLabel_tr_id(String(label), id);
 }
 
 void addRowLabel_tr_id(const String& label, const String& id)
@@ -421,9 +427,7 @@ void addRowLabel_tr_id(const String& label, const String& id)
 
 void addRowLabel(const __FlashStringHelper *label)
 {
-  html_TR_TD();
-  addHtml(concat(label, F(":</td>")));
-  html_TD();
+  addRowLabel(String(label), EMPTY_STRING);
 }
 
 void addRowLabel(const String& label, const String& id)
@@ -443,15 +447,10 @@ void addRowLabel(const String& label, const String& id)
   addHtml(F("</td>"));
   html_TD();
 }
-
+#ifdef WEBSERVER_GITHUB_COPY
 // Add a row label and mark it with copy markers to copy it to clipboard.
 void addRowLabel_copy(const __FlashStringHelper *label) {
-  addHtml(F("<TR>"));
-  html_copyText_TD();
-  addHtml(label);
-  addHtml(':');
-  html_copyText_marker();
-  html_copyText_TD();
+  addRowLabel_copy(String(label));
 }
 
 void addRowLabel_copy(const String& label) {
@@ -462,6 +461,7 @@ void addRowLabel_copy(const String& label) {
   html_copyText_marker();
   html_copyText_TD();
 }
+#endif
 
 void addRowLabel(LabelType::Enum label) {
   addRowLabel(getLabel(label));
@@ -470,28 +470,29 @@ void addRowLabel(LabelType::Enum label) {
 void addRowLabelValue(LabelType::Enum label) {
   addRowLabel(getLabel(label));
   addHtml(getValue(label));
+#if FEATURE_TASKVALUE_UNIT_OF_MEASURE
   addUnit(getFormUnit(label));
+#endif
 }
 
 void addRowLabelValues(const LabelType::Enum labels[]) {
-  size_t i = 0;
-  LabelType::Enum cur  = static_cast<const LabelType::Enum>(pgm_read_byte(labels + i));
 
-  while (true) {
-    const LabelType::Enum next = static_cast<const LabelType::Enum>(pgm_read_byte(labels + i + 1));
-    addRowLabelValue(cur);
-    if (next == LabelType::MAX_LABEL) {
-      return;
-    }
-    ++i;
-    cur = next;
-  }
+  KeyValueWriter_WebForm writer(true);
+  writer.writeLabels(labels, true);
 }
 
 void addRowLabelValue_copy(LabelType::Enum label) {
   addRowLabel_copy(getLabel(label));
   addHtml(getValue(label));
+#if FEATURE_TASKVALUE_UNIT_OF_MEASURE
   addUnit(getFormUnit(label));
+#endif
+}
+
+void addRowColspan(int colspan) {
+  addHtml(strformat(
+    F("<TR><TD colspan=\"%d\">"),
+    colspan));
 }
 
 // ********************************************************************************
@@ -499,13 +500,7 @@ void addRowLabelValue_copy(LabelType::Enum label) {
 // ********************************************************************************
 void addTableSeparator(const __FlashStringHelper *label, int colspan, int h_size)
 {
-  addHtml(strformat(
-    F("<TR><TD colspan=%d><H%d>"),
-    colspan, h_size));
-  addHtml(label);
-  addHtml(strformat(
-    F("</H%d></TD></TR>"),
-    h_size));
+  addTableSeparator(String(label), colspan, h_size);
 }
 
 void addTableSeparator(const __FlashStringHelper *label, int colspan, int h_size, const __FlashStringHelper *helpButton)
@@ -514,10 +509,8 @@ void addTableSeparator(const __FlashStringHelper *label, int colspan, int h_size
 }
 
 void addTableSeparator(const String& label, int colspan, int h_size, const String& helpButton) {
-  addHtml(strformat(
-    F("<TR><TD colspan=%d><H%d>"),
-    colspan, h_size));
-  addHtml(label);
+  addRowColspan(colspan);
+  addHtml(strformat(F("<H%d>%s"), h_size, label.c_str()));
 
   if (!helpButton.isEmpty()) {
     addHelpButton(helpButton);
@@ -546,6 +539,15 @@ void addFormHeader(const __FlashStringHelper *header,
   html_table_header(F(""));
 }
 
+void addFormHeader(const String&              header,
+                   const __FlashStringHelper *helpButton,
+                   const __FlashStringHelper *rtdHelpButton)
+{
+  html_TR();
+  html_table_header(header, helpButton, rtdHelpButton, 300);
+  html_table_header(F(""));
+}
+
 /*
 void addFormHeader(const String& header, const String& helpButton) {
   addFormHeader(header, helpButton, EMPTY_STRING);
@@ -558,6 +560,41 @@ void addFormHeader(const String& header, const String& helpButton, const String&
   html_table_header(F(""));
 }
 */
+
+// ********************************************************************************
+// Add a detail wrapper start & end, terminates the page-table, and starts a new page table
+// ********************************************************************************
+#ifndef BUILD_MINIMAL_OTA
+void addFormDetailsStart(const bool initialOpen) {
+  addFormDetailsStart(F("Details..."), initialOpen);
+}
+
+void addFormDetailsStart(const __FlashStringHelper *caption, const bool initialOpen)
+{
+  html_end_table();
+  addHtml(strformat(F("<details %s>"), FsP(initialOpen ? F("open") : F(""))));
+  addHtml(F("<summary>"));
+  addHtml(caption);
+  addHtml(F("</summary>"));
+  html_table_class_normal();
+  addFormFixedFirstColumn();
+}
+
+void addFormDetailsEnd()
+{
+  html_end_table();
+  addHtml(F("</details>"));
+  html_table_class_normal();
+  addFormFixedFirstColumn();
+}
+
+// Fix first table column at 25vw (view width %) via css class 'tc1', as we work with multiple tables that should be vertically aligned
+// This must be added as the first element in a table definition
+void addFormFixedFirstColumn()
+{
+  addHtml(F("<colgroup><col span=\"1\" class=\"tc1\"/></colgroup>"));
+}
+#endif // ifndef BUILD_MINIMAL_OTA
 
 // ********************************************************************************
 // Add a sub header
@@ -670,7 +707,7 @@ void addNumericBox(const String& id, int value, int min, int max, bool disabled)
 
 #endif // if FEATURE_TOOLTIPS
 
-void addFloatNumberBox(const String& id, float value, float min, float max, unsigned int nrDecimals, float stepsize
+void addFloatNumberBox(const String& id, float value, float min, float max, uint8_t nrDecimals, float stepsize
                        #if FEATURE_TOOLTIPS
                        , const String& tooltip
                        #endif // if FEATURE_TOOLTIPS
@@ -895,6 +932,14 @@ void addRTDControllerButton(cpluginID_t cpluginID) {
     strformat(
       F("Controller/%s.html"),
       get_formatted_Controller_number(cpluginID).c_str()));
+}
+
+void   addRTDNetworkDriverButton(ESPEasy::net::nwpluginID_t nwpluginID)
+{
+  addRTDHelpButton(
+    strformat(
+      F("Network/%s.html"),
+      nwpluginID.toDisplayString().c_str()));
 }
 # endif // ifndef LIMIT_BUILD_SIZE
 

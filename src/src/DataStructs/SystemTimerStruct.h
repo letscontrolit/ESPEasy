@@ -20,7 +20,7 @@ private:
   int         _remainder         = 0;
   int         _loopCount         = 0;
   int         _alternateInterval = 0;
-  taskIndex_t TaskIndex          = INVALID_TASK_INDEX;
+  int         _index             = -1;
   bool        _alternateState    = false;
 
 public:
@@ -35,7 +35,9 @@ public:
 
   struct EventStruct toEvent() const;
 
-  void               fromEvent(taskIndex_t TaskIndex,
+  struct EventStruct toNetworkEvent() const;
+
+  void               fromEvent(int  Index,
                                int         Par1,
                                int         Par2,
                                int         Par3,

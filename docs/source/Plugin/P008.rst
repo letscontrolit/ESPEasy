@@ -13,7 +13,9 @@ Type: |P008_type|
 
 Name: |P008_name|
 
-Status: |P008_status|
+Status ESP32: |P008_status|
+
+Status ESP8266: |P008_status_lb|
 
 GitHub: |P008_github|_
 

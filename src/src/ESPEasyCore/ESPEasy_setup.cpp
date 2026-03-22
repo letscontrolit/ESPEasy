@@ -7,20 +7,21 @@
 #include "../Commands/InternalCommands_decoder.h"
 #include "../CustomBuild/CompiletimeDefines.h"
 #include "../ESPEasyCore/ESPEasyGPIO.h"
-#include "../ESPEasyCore/ESPEasyNetwork.h"
+#include "../../ESPEasy/net/ESPEasyNetwork.h"
 #include "../ESPEasyCore/ESPEasyRules.h"
-#include "../ESPEasyCore/ESPEasyWifi.h"
-#include "../ESPEasyCore/ESPEasyWifi_ProcessEvent.h"
+#include "../../ESPEasy/net/wifi/ESPEasyWifi.h"
+
 #include "../ESPEasyCore/Serial.h"
 #include "../Globals/Cache.h"
 #include "../Globals/ESPEasy_Console.h"
-#include "../Globals/ESPEasyWiFiEvent.h"
+#include "../../ESPEasy/net/Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/ESPEasy_time.h"
-#include "../Globals/NetworkState.h"
+#include "../../ESPEasy/net/Globals/NetworkState.h"
 #include "../Globals/RTC.h"
 #include "../Globals/Statistics.h"
-#include "../Globals/WiFi_AP_Candidates.h"
+#include "../../ESPEasy/net/Globals/WiFi_AP_Candidates.h"
 #include "../Helpers/_CPlugin_init.h"
+#include "../../ESPEasy/net/Helpers/_NWPlugin_init.h"
 #include "../Helpers/_NPlugin_init.h"
 #include "../Helpers/_Plugin_init.h"
 #include "../Helpers/DeepSleep.h"
@@ -128,6 +129,10 @@ void sw_watchdog_callback(void *arg)
 \*********************************************************************************************/
 void ESPEasy_setup()
 {
+# ifdef BOARD_HAS_PSRAM
+  psramInit();
+# endif // ifdef BOARD_HAS_PSRAM
+
 #if defined(ESP8266_DISABLE_EXTRA4K) || defined(USE_SECOND_HEAP)
 
   //  disable_extra4k_at_link_time();
@@ -143,9 +148,6 @@ void ESPEasy_setup()
   DisableBrownout(); // Workaround possible weak LDO resulting in brownout detection during Wifi connection
 # endif  // DISABLE_ESP32_BROWNOUT
 
-# ifdef BOARD_HAS_PSRAM
-  psramInit();
-# endif // ifdef BOARD_HAS_PSRAM
 
 # if CONFIG_IDF_TARGET_ESP32
 
@@ -232,13 +234,14 @@ void ESPEasy_setup()
 
   PluginSetup();
   CPluginSetup();
+  ESPEasy::net::NWPluginSetup();
 
-  initWiFi();
-  WiFiEventData.clearAll();
+//  ESPEasy::net::wifi::initWiFi();
+//  WiFiEventData.clearAll();
 
-#ifndef BUILD_MINIMAL_OTA
+#ifndef LIMIT_BUILD_SIZE
   run_compiletime_checks();
-#endif // ifndef BUILD_MINIMAL_OTA
+#endif
 #ifdef ESP8266
 
   //  ets_isr_attach(8, sw_watchdog_callback, nullptr);  // Set a callback for feeding the watchdog.
@@ -366,12 +369,12 @@ void ESPEasy_setup()
   #ifndef BUILD_NO_RAM_TRACKER
   logMemUsageAfter(F("LoadSettings()"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
-
+#ifndef BUILD_NO_DEBUG
   addLog(LOG_LEVEL_INFO, concat(F("CPU Frequency: "), ESP.getCpuFreqMHz()));
-  
+#endif
 
 #ifdef ESP32
-#ifndef CORE32SOLO1
+#if !defined(CORE32SOLO1) && !defined(ESP32P4)
 
   // Configure dynamic frequency scaling:
   // maximum and minimum frequencies are set in sdkconfig,
@@ -415,6 +418,9 @@ void ESPEasy_setup()
       toDisable = disableNotification(toDisable);
     }
     #endif // if FEATURE_NOTIFIER
+    if (toDisable != 0) {
+      toDisable = disableNetwork(toDisable);
+    }
 
     if (toDisable != 0) {
       toDisable = disableRules(toDisable);
@@ -433,6 +439,9 @@ void ESPEasy_setup()
       toDisable = disableAllNotifications(toDisable);
     }
 #endif // if FEATURE_NOTIFIER
+    if (toDisable != 0) {
+      toDisable = disableAllNetworkss(toDisable);
+    }
   }
   #if FEATURE_ETHERNET
 
@@ -442,63 +451,19 @@ void ESPEasy_setup()
   active_network_medium = Settings.NetworkMedium;
   #else // if FEATURE_ETHERNET
 
-  if (Settings.NetworkMedium == NetworkMedium_t::Ethernet) {
-    Settings.NetworkMedium = NetworkMedium_t::WIFI;
+  if (Settings.NetworkMedium == ESPEasy::net::NetworkMedium_t::Ethernet) {
+    Settings.NetworkMedium = ESPEasy::net::NetworkMedium_t::WIFI;
   }
   #endif // if FEATURE_ETHERNET
 
-  setNetworkMedium(Settings.NetworkMedium);
-
-  bool initWiFi = active_network_medium == NetworkMedium_t::WIFI;
-
-  // FIXME TD-er: Must add another check for 'delayed start WiFi' for poorly designed ESP8266 nodes.
-
-
-  if (initWiFi) {
-#ifdef ESP32
-    // FIXME TD-er: Disabled for now, as this may not return and thus block the ESP forever.
-    // See: https://github.com/espressif/esp-idf/issues/15862
-    //check_and_update_WiFi_Calibration();
-#endif
-
-    WiFi_AP_Candidates.clearCache();
-    WiFi_AP_Candidates.load_knownCredentials();
-    setSTA(true);
-
-    if (!WiFi_AP_Candidates.hasCandidates()) {
-      WiFiEventData.wifiSetup = true;
-      RTC.clearLastWiFi(); // Must scan all channels
-      // Wait until scan has finished to make sure as many as possible are found
-      // We're still in the setup phase, so nothing else is taking resources of the ESP.
-      WifiScan(false);
-      WiFiEventData.lastScanMoment.clear();
-    }
-
-    // Always perform WiFi scan
-    // It appears reconnecting from RTC may take just as long to be able to send first packet as performing a scan first and then connect.
-    // Perhaps the WiFi radio needs some time to stabilize first?
-    if (!WiFi_AP_Candidates.hasCandidates()) {
-      WifiScan(false, RTC.lastWiFiChannel);
-    }
-    WiFi_AP_Candidates.clearCache();
-    processScanDone();
-    WiFi_AP_Candidates.load_knownCredentials();
-
-    if (!WiFi_AP_Candidates.hasCandidates()) {
-      #ifndef BUILD_MINIMAL_OTA
-      addLog(LOG_LEVEL_INFO, F("Setup: Scan all channels"));
-      #endif
-      WifiScan(false);
-    }
-
-    //    setWifiMode(WIFI_OFF);
-  }
+  // FIXME TD-er: This network medium setting may be obsolete as we need a priority scale/order
+//  ESPEasy::net::setNetworkMedium(Settings.NetworkMedium);
   #ifndef BUILD_NO_RAM_TRACKER
   logMemUsageAfter(F("WifiScan()"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
 
 
-  //  setWifiMode(WIFI_STA);
+  //  ESPEasy::net::wifi::setWifiMode(WIFI_STA);
   checkRuleSets();
   #ifndef BUILD_NO_RAM_TRACKER
   logMemUsageAfter(F("checkRuleSets()"));
@@ -523,11 +488,11 @@ void ESPEasy_setup()
   #ifndef BUILD_NO_RAM_TRACKER
   logMemUsageAfter(F("initSerial()"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
-
+#ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     addLogMove(LOG_LEVEL_INFO, concat(F("INIT : Free RAM:"), FreeMem()));
   }
-
+#endif
 #ifndef BUILD_NO_DEBUG
 
   if (Settings.UseSerial && (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE)) {
@@ -540,6 +505,10 @@ void ESPEasy_setup()
   CPluginInit();
   #ifndef BUILD_NO_RAM_TRACKER
   logMemUsageAfter(F("CPluginInit()"));
+  #endif // ifndef BUILD_NO_RAM_TRACKER
+  ESPEasy::net::NWPluginInit();
+  #ifndef BUILD_NO_RAM_TRACKER
+  logMemUsageAfter(F("NWPluginInit()"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
   #if FEATURE_NOTIFIER
   NPluginInit();
@@ -555,7 +524,7 @@ void ESPEasy_setup()
   #ifndef BUILD_NO_RAM_TRACKER
   logMemUsageAfter(F("PluginInit()"));
   #endif
-
+#ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log;
     if (reserve_special(log, 80)) {
@@ -568,7 +537,7 @@ void ESPEasy_setup()
       addLogMove(LOG_LEVEL_INFO, log);
     }
   }
-
+#endif
   /*
      if ((getDeviceCount() + 1) >= PLUGIN_MAX) {
       addLog(LOG_LEVEL_ERROR, concat(F("Programming error! - Increase PLUGIN_MAX ("), getDeviceCount()) + ')');
@@ -620,25 +589,6 @@ void ESPEasy_setup()
     rulesProcessing(event);
   }
   #endif // ifdef ESP32
-
-  #if FEATURE_ETHERNET
-
-  if (Settings.ETH_Pin_power_rst != -1) {
-    GPIO_Write(PLUGIN_GPIO, Settings.ETH_Pin_power_rst, 1);
-  }
-
-  #endif // if FEATURE_ETHERNET
-
-  NetworkConnectRelaxed();
-  #ifndef BUILD_NO_RAM_TRACKER
-  logMemUsageAfter(F("NetworkConnectRelaxed()"));
-  #endif // ifndef BUILD_NO_RAM_TRACKER
-
-  setWebserverRunning(true);
-  #ifndef BUILD_NO_RAM_TRACKER
-  logMemUsageAfter(F("setWebserverRunning()"));
-  #endif // ifndef BUILD_NO_RAM_TRACKER
-
 
   #if FEATURE_REPORTING
   ReportStatus();

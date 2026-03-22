@@ -17,6 +17,15 @@ const __FlashStringHelper* ESPEasySerialPort_toString(ESPEasySerialPort port, bo
 #if USABLE_SOC_UART_NUM > 2
     case ESPEasySerialPort::serial2:         return shortName ? F("serial2") : F("HW Serial2");
 #endif // if USABLE_SOC_UART_NUM > 2
+#if USABLE_SOC_UART_NUM > 3
+    case ESPEasySerialPort::serial3:         return shortName ? F("serial3") : F("HW Serial3");
+#endif 
+#if USABLE_SOC_UART_NUM > 4
+    case ESPEasySerialPort::serial4:         return shortName ? F("serial4") : F("HW Serial4");
+#endif 
+#if USABLE_SOC_UART_NUM > 5
+    case ESPEasySerialPort::serial5:         return shortName ? F("serial5") : F("HW Serial5");
+#endif 
 #if USES_SW_SERIAL
     case ESPEasySerialPort::software:        return shortName ? F("serialsw") : F("SW Serial");
 #endif // if USES_SW_SERIAL
@@ -49,6 +58,15 @@ bool isHWserial(ESPEasySerialPort port)
 #if USABLE_SOC_UART_NUM > 2
     case ESPEasySerialPort::serial2:
 #endif // if USABLE_SOC_UART_NUM > 2
+#if USABLE_SOC_UART_NUM > 3
+    case ESPEasySerialPort::serial3:
+#endif 
+#if USABLE_SOC_UART_NUM > 4
+    case ESPEasySerialPort::serial4:
+#endif 
+#if USABLE_SOC_UART_NUM > 5
+    case ESPEasySerialPort::serial5:
+#endif 
       return true;
     default:
       break;
@@ -69,6 +87,15 @@ bool useGPIOpins(ESPEasySerialPort port)
 #if USABLE_SOC_UART_NUM > 2
     case ESPEasySerialPort::serial2:
 #endif // if USABLE_SOC_UART_NUM > 2
+#if USABLE_SOC_UART_NUM > 3
+    case ESPEasySerialPort::serial3:
+#endif 
+#if USABLE_SOC_UART_NUM > 4
+    case ESPEasySerialPort::serial4:
+#endif 
+#if USABLE_SOC_UART_NUM > 5
+    case ESPEasySerialPort::serial5:
+#endif 
 #if USES_SW_SERIAL
     case ESPEasySerialPort::software:
 #endif // if USES_SW_SERIAL
@@ -96,6 +123,15 @@ bool validSerialPort(ESPEasySerialPort port)
 #if USABLE_SOC_UART_NUM > 2
     case ESPEasySerialPort::serial2:
 #endif // if USABLE_SOC_UART_NUM > 2
+#if USABLE_SOC_UART_NUM > 3
+    case ESPEasySerialPort::serial3:
+#endif 
+#if USABLE_SOC_UART_NUM > 4
+    case ESPEasySerialPort::serial4:
+#endif 
+#if USABLE_SOC_UART_NUM > 5
+    case ESPEasySerialPort::serial5:
+#endif 
 #if USES_SW_SERIAL
     case ESPEasySerialPort::software:
 #endif // if USES_SW_SERIAL

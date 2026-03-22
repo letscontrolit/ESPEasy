@@ -3,6 +3,8 @@
 
 #include "../../ESPEasy_common.h"
 
+#if FEATURE_I2C
+
 #include "../DataTypes/TaskIndex.h"
 
 void initI2C();
@@ -37,5 +39,5 @@ void    I2CMultiplexerReset(uint8_t i2cBus);
 
 bool    I2CMultiplexerPortSelectedForTask(taskIndex_t taskIndex);
 #endif // if FEATURE_I2CMULTIPLEXER
-
+#endif
 #endif // ifndef HELPERS_HARDWARE_I2C_H

@@ -13,7 +13,9 @@ Type: |P125_type|
 
 Name: |P125_name|
 
-Status: |P125_status|
+Status ESP32: |P125_status|
+
+Status ESP8266: |P125_status_lb|
 
 GitHub: |P125_github|_
 

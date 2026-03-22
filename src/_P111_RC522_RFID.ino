@@ -6,6 +6,9 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2025-09-12 TD-er:      Add support for 7-byte UID
+ * 2025-08-20 TD-er:      Speed-up reading + send immediate event
+ * 2025-08-13 tonhuisman: Enable use of secondary SPI bus
  * 2025-06-14 tonhuisman: Add support for Custom Value Type per task value
  * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported for RFID)
  *                        Update changelog
@@ -39,12 +42,18 @@ boolean Plugin_111(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_DEVICE_ADD:
     {
       auto& dev = Device[++deviceCount];
-      dev.Number         = PLUGIN_ID_111;
-      dev.Type           = DEVICE_TYPE_SPI3;
-      dev.VType          = Sensor_VType::SENSOR_TYPE_ULONG;
-      dev.ValueCount     = 1;
-      dev.SendDataOption = true;
-      dev.CustomVTypeVar = true;
+      dev.Number           = PLUGIN_ID_111;
+      dev.Type             = DEVICE_TYPE_SPI3;
+#if FEATURE_EXTENDED_TASK_VALUE_TYPES
+      dev.VType            = Sensor_VType::SENSOR_TYPE_UINT64_SINGLE;
+#else
+      dev.VType            = Sensor_VType::SENSOR_TYPE_ULONG;
+#endif
+      dev.ValueCount       = 1;
+      dev.HasFormatUserVar = true;
+      dev.SendDataOption   = true;
+      dev.CustomVTypeVar   = true;
+      dev.SpiBusSelect   = true;
       break;
     }
 
@@ -65,6 +74,21 @@ boolean Plugin_111(uint8_t function, struct EventStruct *event, String& string)
       event->String1 = formatGpioName_output(F("CS PIN"));            // P111_CS_PIN
       event->String2 = formatGpioName_output_optional(F("RST PIN ")); // P111_RST_PIN
       event->String3 = formatGpioName_input_optional(F("IRQ PIN "));  // P111_IRQ_PIN
+      break;
+    }
+
+    case PLUGIN_FORMAT_USERVAR:
+    {
+#if FEATURE_EXTENDED_TASK_VALUE_TYPES
+      string = formatULLtoHex(
+        UserVar.getUint64(event->TaskIndex, event->idx), 
+        1);
+#else
+      string = formatToHex(
+        UserVar.getSensorTypeLong(event->TaskIndex, event->idx), 
+        1);
+#endif
+      success = true;
       break;
     }
 
@@ -161,7 +185,8 @@ boolean Plugin_111(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P111_data_struct(P111_CS_PIN, P111_RST_PIN, P111_IRQ_PIN));
+      const uint8_t spi_bus = Settings.getSPIBusForTask(event->TaskIndex);
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P111_data_struct(P111_CS_PIN, P111_RST_PIN, P111_IRQ_PIN, spi_bus));
       P111_data_struct *P111_data = static_cast<P111_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P111_data) {

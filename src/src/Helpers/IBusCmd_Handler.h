@@ -17,7 +17,7 @@
  * 2025-05-13 tonhuisman: Add String data-format support, guarded with FEATURE_BUSCMD_STRING
  * 2025-05-10 tonhuisman: Extract interface and I2C implementation from Plugin P180 I2C Generic implementation
  */
-
+#if FEATURE_BUS_COMMAND
 #include <vector>
 
 class IBusCmd_Handler { // Interface/Abstract Class
@@ -86,4 +86,5 @@ public:
                                   bool          wideReg = false) = 0;
   #endif // if FEATURE_BUSCMD_STRING
 };
+#endif
 #endif // ifndef _HELPERS_IBUSCMD_HANDLER_H

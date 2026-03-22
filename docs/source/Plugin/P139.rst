@@ -13,7 +13,9 @@ Type: |P139_type|
 
 Name: |P139_name|
 
-Status: |P139_status|
+Status ESP32: |P139_status|
+
+Status ESP8266: |P139_status_lb|
 
 GitHub: |P139_github|_
 

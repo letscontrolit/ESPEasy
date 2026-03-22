@@ -13,7 +13,9 @@ Type: |P115_type|
 
 Name: |P115_name|
 
-Status: |P115_status|
+Status ESP32: |P115_status|
+
+Status ESP8266: |P115_status_lb|
 
 GitHub: |P115_github|_
 

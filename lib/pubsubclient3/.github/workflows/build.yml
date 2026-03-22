@@ -3,6 +3,10 @@ name: build
 on:
   push:
     branches: [ "master" ]
+    paths:
+      - 'examples/**'
+      - 'src/**'
+      - 'tests/**'
   pull_request:
     branches: [ "master" ]
 

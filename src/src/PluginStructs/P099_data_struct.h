@@ -13,6 +13,8 @@
 
 # include <XPT2046_Touchscreen.h>
 
+# include "../Globals/SPIe.h"
+
 // #define PLUGIN_099_DEBUG    // Additional debugging information
 # ifndef LIMIT_BUILD_SIZE
 #  define PLUGIN_099_DEBUG      // Additional debugging information
@@ -65,7 +67,8 @@ struct P099_data_struct : public PluginTaskData_base
             bool                flipped,
             uint8_t             z_treshold,
             uint16_t            ts_x_res,
-            uint16_t            ts_y_res);
+            uint16_t            ts_y_res,
+            uint8_t             spi_bus);
   # endif // ifdef ESP32
   # ifdef ESP8266
   bool init(taskIndex_t taskIndex,
@@ -77,7 +80,8 @@ struct P099_data_struct : public PluginTaskData_base
             bool        send_z,
             bool        useCalibration,
             uint16_t    ts_x_res,
-            uint16_t    ts_y_res);
+            uint16_t    ts_y_res,
+            uint8_t     spi_bus);
   void loadTouchObjects(taskIndex_t taskIndex);
   # endif // ifdef ESP8266
   bool isInitialized() const;
@@ -134,6 +138,7 @@ private:
   uint8_t              _z_treshold    = 0;
   uint16_t             _ts_x_res      = 0;
   uint16_t             _ts_y_res      = 0;
+  uint8_t              _spi_bus       = 0;
   # ifdef ESP8266
   bool _send_xy        = 0;
   bool _send_z         = 0;

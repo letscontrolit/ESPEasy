@@ -501,7 +501,7 @@ void P109_data_struct::actionMode(struct EventStruct *event) {
  * Display header, alternating between WiFi AP SSID and Sysname
  */
 void P109_data_struct::display_header() {
-  if (_alternateTitle && _showWiFiName && WiFiEventData.WiFiServicesInitialized()) {
+  if (_alternateTitle && _showWiFiName && ESPEasy::net::NetworkConnected()) {
     // String newString = ;
     display_title(WiFi.SSID());
   } else {
@@ -536,7 +536,7 @@ void P109_data_struct::display_title(const String& title) {
  * Draw Signal Strength Bars, return true when there was an update.
  */
 bool P109_data_struct::display_wifibars() {
-  const bool connected    = WiFiEventData.WiFiServicesInitialized();
+  const bool connected    = ESPEasy::net::NetworkConnected();
   const int  nbars_filled = (WiFi.RSSI() + 100) / 8;
   const int  newState     = connected ? nbars_filled : P109_WIFI_STATE_UNSET;
 
@@ -561,7 +561,7 @@ bool P109_data_struct::display_wifibars() {
   _display->fillRect(x, y, size_x, size_y);
   _display->setColor(WHITE);
 
-  if (WiFiEventData.WiFiServicesInitialized()) {
+  if (ESPEasy::net::NetworkConnected()) {
     for (uint8_t ibar = 0; ibar < nbars; ++ibar) {
       const int16_t height = size_y * (ibar + 1) / nbars;
       const int16_t xpos   = x + ibar * width;

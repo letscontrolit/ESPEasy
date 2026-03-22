@@ -6,6 +6,7 @@
 #include "../Globals/Settings.h"
 
 #include "../Helpers/Misc.h"
+#include "../Helpers/StringConverter.h"
 
 
 // ********************************************************************************
@@ -2164,14 +2165,14 @@ deviceIndex_t getDeviceIndex_from_PluginID(pluginID_t pluginID)
 
 pluginID_t getPluginID_from_DeviceIndex(deviceIndex_t deviceIndex)
 {
-  if (validDeviceIndex_init(deviceIndex))
+  if (do_check_validDeviceIndex(deviceIndex))
   {
     return pluginID_t::toPluginID(pgm_read_byte(DeviceIndex_to_Plugin_id + deviceIndex.value));
   }
   return INVALID_PLUGIN_ID;
 }
 
-bool validDeviceIndex_init(deviceIndex_t deviceIndex)
+bool do_check_validDeviceIndex(deviceIndex_t deviceIndex)
 {
   if (_Plugin_init_setupDone) {
     return deviceIndex < DeviceIndex_to_Plugin_id_size;
@@ -2182,17 +2183,35 @@ bool validDeviceIndex_init(deviceIndex_t deviceIndex)
 // Array containing "DeviceIndex" alfabetically sorted.
 deviceIndex_t getDeviceIndex_sorted(deviceIndex_t deviceIndex)
 {
-  if (validDeviceIndex_init(deviceIndex)) {
+  if (do_check_validDeviceIndex(deviceIndex)) {
     return DeviceIndex_sorted[deviceIndex.value];
   }
   return INVALID_DEVICE_INDEX;
 }
 
 
-boolean PluginCall(deviceIndex_t deviceIndex, uint8_t function, struct EventStruct *event, String& string)
+boolean do_PluginCall(deviceIndex_t deviceIndex, uint8_t function, struct EventStruct *event, String& string)
 {
-  if (validDeviceIndex_init(deviceIndex))
+  // TODO TD-er: May need to be changed to some other type when we ever will have > 64 tasks
+  static uint64_t taskIndex_initialized{};
+  if (do_check_validDeviceIndex(deviceIndex))
   {
+    if (function == PLUGIN_INIT) {
+      if (bitReadULL(taskIndex_initialized, event->TaskIndex)) {
+        // FIXME TD-er: What to do here? Was already initialized
+        addLog(LOG_LEVEL_ERROR, strformat(F("Task %d was already initialized"), event->TaskIndex + 1));
+        return false;
+      }
+      bitSetULL(taskIndex_initialized, event->TaskIndex);
+    } else if (function == PLUGIN_EXIT) {
+      if (!bitReadULL(taskIndex_initialized, event->TaskIndex)) {
+        // FIXME TD-er: What to do here? Was not (yet) initialized
+//        addLog(LOG_LEVEL_ERROR, strformat(F("Task %d was not (yet) initialized"), event->TaskIndex + 1));
+        return false;
+      }
+      bitClearULL(taskIndex_initialized, event->TaskIndex);
+    }
+
     Plugin_ptr_t plugin_call = (Plugin_ptr_t)pgm_read_ptr(Plugin_ptr + deviceIndex.value);
     return plugin_call(function, event, string);
   }
@@ -2232,7 +2251,7 @@ void PluginSetup()
         struct EventStruct TempEvent;
         TempEvent.idx = deviceIndex.value;
         String dummy;
-        PluginCall(deviceIndex, PLUGIN_DEVICE_ADD, &TempEvent, dummy);
+        do_PluginCall(deviceIndex, PLUGIN_DEVICE_ADD, &TempEvent, dummy);
       }
     }
   }

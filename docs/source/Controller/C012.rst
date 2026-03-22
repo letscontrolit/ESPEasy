@@ -14,7 +14,9 @@ Type: |C012_type|
 
 Name: |C012_name|
 
-Status: |C012_status|
+Status ESP32: |C012_status|
+
+Status ESP8266: |C012_status_lb|
 
 GitHub: |C012_github|_
 

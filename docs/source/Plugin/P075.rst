@@ -16,7 +16,9 @@ Type: |P075_type|
 
 Name: |P075_name|
 
-Status: |P075_status|
+Status ESP32: |P075_status|
+
+Status ESP8266: |P075_status_lb|
 
 GitHub: |P075_github|_
 

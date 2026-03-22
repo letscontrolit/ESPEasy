@@ -3,7 +3,7 @@
 #ifdef USES_P020
 
 # include "../ESPEasyCore/Serial.h"
-# include "../ESPEasyCore/ESPEasyNetwork.h"
+# include "../../ESPEasy/net/ESPEasyNetwork.h"
 
 # include "../Globals/EventQueue.h"
 
@@ -71,7 +71,7 @@ void P020_Task::startServer(uint16_t portnumber) {
     gatewayPort   = portnumber;
     ser2netServer = new (std::nothrow) WiFiServer(portnumber);
 
-    if ((nullptr != ser2netServer) && NetworkConnected()) {
+    if ((nullptr != ser2netServer) && ESPEasy::net::NetworkConnected(true)) {
       ser2netServer->begin();
 
       if (serverActive(ser2netServer)) {
@@ -90,7 +90,7 @@ void P020_Task::startServer(uint16_t portnumber) {
 }
 
 void P020_Task::checkServer() {
-  if ((nullptr != ser2netServer) && !serverActive(ser2netServer) && NetworkConnected()) {
+  if ((nullptr != ser2netServer) && !serverActive(ser2netServer) && ESPEasy::net::NetworkConnected()) {
     ser2netServer->close();
     ser2netServer->begin();
 
@@ -100,7 +100,7 @@ void P020_Task::checkServer() {
   }
   # if P020_USE_PROTOCOL
 
-  if ((nullptr != ser2netUdp) && !_udpInit && NetworkConnected()) {
+  if ((nullptr != ser2netUdp) && !_udpInit && ESPEasy::net::NetworkConnected()) {
     _udpInit = true; // Init only once
 
     if (ser2netUdp->begin(_udpport) == 0) {

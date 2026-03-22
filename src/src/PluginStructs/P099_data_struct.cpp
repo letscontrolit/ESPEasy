@@ -1,7 +1,7 @@
 #include "../PluginStructs/P099_data_struct.h"
 
 #ifdef USES_P099
-# include "../ESPEasyCore/ESPEasyNetwork.h"
+# include "../../ESPEasy/net/ESPEasyNetwork.h"
 # include "../Helpers/ESPEasy_Storage.h"
 # include "../Helpers/Scheduler.h"
 # include "../Helpers/StringConverter.h"
@@ -290,7 +290,8 @@ bool P099_data_struct::init(taskIndex_t taskIndex,
                             bool        send_z,
                             bool        useCalibration,
                             uint16_t    ts_x_res,
-                            uint16_t    ts_y_res) {
+                            uint16_t    ts_y_res,
+                            uint8_t     spi_bus) {
   reset();
 
   _address_ts_cs  = cs;
@@ -302,8 +303,13 @@ bool P099_data_struct::init(taskIndex_t taskIndex,
   _useCalibration = useCalibration;
   _ts_x_res       = ts_x_res;
   _ts_y_res       = ts_y_res;
+  _spi_bus        = spi_bus;
 
-  touchscreen = new (std::nothrow) XPT2046_Touchscreen(_address_ts_cs);
+  touchscreen = new (std::nothrow) XPT2046_Touchscreen(_address_ts_cs
+                                                       # ifdef ESP32
+                                                       , 0 == _spi_bus ? SPI : SPIe
+                                                       # endif // ifdef ESP32
+                                                       );
 
   if (touchscreen != nullptr) {
     touchscreen->setRotation(_rotation);
