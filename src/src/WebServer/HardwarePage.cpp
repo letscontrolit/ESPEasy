@@ -55,13 +55,21 @@ void handle_hardware() {
     Settings.Pin_sd_cs                = getFormItemInt(F("sd"));
     int gpio = 0;
 
-    #  if SOC_PM_SUPPORT_EXT1_WAKEUP
     while (gpio <= MAX_GPIO) {
-      if (validGpio(gpio)) {
+      if (isSerialConsolePin(gpio)) {
+        // do not add the pin state select for these pins.
+      } else {
+        if (validGpio(gpio)) {
           String int_pinlabel('p');
           int_pinlabel       += gpio;
           Settings.setPinBootState(gpio, static_cast<PinBootState>(getFormItemInt(int_pinlabel)));
+        }
       }
+      ++gpio;
+    }
+
+    #  if SOC_PM_SUPPORT_EXT1_WAKEUP
+    while (gpio <= MAX_GPIO) {
       if (validGpio(gpio)) {
         char checkboxId[8]; // "WoL" + max 2 digits + null terminator
         snprintf(checkboxId, sizeof(checkboxId), "WoL%d", gpio);
