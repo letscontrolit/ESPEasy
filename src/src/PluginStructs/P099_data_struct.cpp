@@ -43,13 +43,15 @@ void P099_data_struct::reset() {
  * Initialize data and set up the touchscreen.
  */
 # ifdef ESP32
+
 bool P099_data_struct::init(struct EventStruct *event,
                             uint8_t             cs,
                             uint8_t             rotation,
                             bool                flipped,
                             uint8_t             z_treshold,
                             uint16_t            ts_x_res,
-                            uint16_t            ts_y_res) {
+                            uint16_t            ts_y_res,
+                            uint8_t             spi_bus) {
   reset();
 
   _address_ts_cs = cs;
@@ -57,6 +59,7 @@ bool P099_data_struct::init(struct EventStruct *event,
   _rotation      = rotation;
   _ts_x_res      = ts_x_res;
   _ts_y_res      = ts_y_res;
+  _spi_bus       = spi_bus;
 
   touchHandler = new (std::nothrow) ESPEasy_TouchHandler(static_cast<taskIndex_t>(P099_GET_CONFIG_DISPLAY),
                                                          static_cast<AdaGFXColorDepth>(P099_COLOR_DEPTH));
@@ -66,7 +69,11 @@ bool P099_data_struct::init(struct EventStruct *event,
     _flipped = touchHandler->_flipped;
 
     if (touchHandler->touchEnabled()) {
-      touchscreen = new (std::nothrow) XPT2046_Touchscreen(_address_ts_cs);
+      touchscreen = new (std::nothrow) XPT2046_Touchscreen(_address_ts_cs
+                                                           #  ifdef ESP32
+                                                           , 0 == _spi_bus ? SPI : SPIe
+                                                           #  endif // ifdef ESP32
+                                                           );
 
       if (touchscreen != nullptr) {
         touchscreen->setRotation(_rotation);
@@ -306,9 +313,9 @@ bool P099_data_struct::init(taskIndex_t taskIndex,
   _spi_bus        = spi_bus;
 
   touchscreen = new (std::nothrow) XPT2046_Touchscreen(_address_ts_cs
-                                                       # ifdef ESP32
+                                                       #  ifdef ESP32
                                                        , 0 == _spi_bus ? SPI : SPIe
-                                                       # endif // ifdef ESP32
+                                                       #  endif // ifdef ESP32
                                                        );
 
   if (touchscreen != nullptr) {
@@ -569,6 +576,7 @@ enum class p099_subcommands_e {
   flip,
   enable,
   disable
+
 };
 
 bool P099_data_struct::plugin_write(struct EventStruct *event, const String& string) {
@@ -589,7 +597,8 @@ bool P099_data_struct::plugin_write(struct EventStruct *event, const String& str
         return false;
       }
 
-      switch (static_cast<p099_subcommands_e>(command_i)) {
+      switch (static_cast<p099_subcommands_e>(command_i))
+      {
         case p099_subcommands_e::rot:
         {
           // touch,rot,<0..3> : Set rotation to 0, 90, 180, 270 degrees
