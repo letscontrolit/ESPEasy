@@ -257,6 +257,11 @@ class SettingsStruct_tmpl
   void SendDerivedTaskValues(taskIndex_t taskIndex, controllerIndex_t controllerIndex, bool value);
   #endif // if FEATURE_STRING_VARIABLES
 
+#if FEATURE_COLORIZE_CONSOLE_LOGS
+  inline bool ColorizeSerialLog() const  { return !VariousBits_2.ColorizeSerialLog; }
+  inline void ColorizeSerialLog(bool value) { VariousBits_2.ColorizeSerialLog = !value; }
+#endif
+
   inline bool StartAPfallback_NoCredentials() const  { return !VariousBits_2.StartAPfallback_NoCredentials; }
   inline void StartAPfallback_NoCredentials(bool value) { VariousBits_2.StartAPfallback_NoCredentials = !value; }
 
@@ -741,8 +746,8 @@ public:
       uint32_t RestoreUserVarsFromEEPROMOnWarmBoot : 1; // Bit 12
       uint32_t MQTTConnectInBackground             : 1; // Bit 13  // inverted
 
-      uint32_t StartAPfallback_NoCredentials       : 1; // Bit 14 // inverted
-      uint32_t Unused_bit15                        : 1; // Bit 15
+      uint32_t StartAPfallback_NoCredentials       : 1; // Bit 14  // inverted
+      uint32_t ColorizeSerialLog                   : 1; // Bit 15  // inverted
       uint32_t APfallback_minimal_on_time_sec      : 8; // Bit 16 - 23
       uint32_t APfallback_autostart_max_uptime_m   : 8; // Bit 23 - 31  '0' == disabled
     };
