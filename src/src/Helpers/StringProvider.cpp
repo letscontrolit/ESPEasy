@@ -483,6 +483,13 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
       return KeyValueStruct(F("MQTT Connect in background"), Settings.MQTTConnectInBackground());
     }
 #endif // if FEATURE_MQTT_CONNECT_BACKGROUND
+#if FEATURE_COLORIZE_CONSOLE_LOGS
+    case LabelType::COLORIZE_CONSOLE_LOGS:
+    {
+      return KeyValueStruct(F("Colorize Console Logs"), Settings.ColorizeSerialLog());
+    }
+#endif
+
 
 #if CONFIG_SOC_WIFI_SUPPORT_5G
     case LabelType::WIFI_BAND_MODE:

@@ -112,6 +112,9 @@ struct LabelType {
     #if FEATURE_MQTT_CONNECT_BACKGROUND
     MQTT_CONNECT_IN_BACKGROUND,
     #endif // if FEATURE_MQTT_CONNECT_BACKGROUND
+#if FEATURE_COLORIZE_CONSOLE_LOGS
+    COLORIZE_CONSOLE_LOGS,
+#endif
 
     BOOT_TYPE,               // Cold boot
     BOOT_COUNT,              // 0
