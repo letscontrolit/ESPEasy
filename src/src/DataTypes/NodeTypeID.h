@@ -21,6 +21,7 @@
 #define NODE_TYPE_ID_ESP_EASY32H21_STD     43
 #define NODE_TYPE_ID_ESP_EASY32H4_STD      44
 #define NODE_TYPE_ID_ESP_EASY32P4r3_STD    45
+#define NODE_TYPE_ID_ESP_EASY32S31_STD     46
 #define NODE_TYPE_ID_ARDUINO_EASY_STD      65
 #define NODE_TYPE_ID_NANO_EASY_STD         81
 
@@ -35,6 +36,8 @@
     #  define NODE_TYPE_ID            NODE_TYPE_ID_ESP_EASY32S2_STD
   # elif defined(ESP32S3)
     #  define NODE_TYPE_ID            NODE_TYPE_ID_ESP_EASY32S3_STD
+  # elif defined(ESP32S31)
+    #  define NODE_TYPE_ID            NODE_TYPE_ID_ESP_EASY32S31_STD
   # elif defined(ESP32C2)
     #  define NODE_TYPE_ID            NODE_TYPE_ID_ESP_EASY32C2_STD
   # elif defined(ESP32C3)
