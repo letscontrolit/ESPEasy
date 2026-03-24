@@ -80,7 +80,11 @@ struct WiFi_AP_Candidate {
   # ifdef ESP32
   #  if ESP_IDF_VERSION_MAJOR >= 5
   wifi_country_t   country;
+  #if ESP_IDF_VERSION_MAJOR < 6
   wifi_bandwidth_t bandwidth{ WIFI_BW_HT20 };
+  #else
+  wifi_bandwidth_t bandwidth{ WIFI_BW20 };
+  #endif
   #  endif // if ESP_IDF_VERSION_MAJOR >= 5
   # endif // ifdef ESP32
 

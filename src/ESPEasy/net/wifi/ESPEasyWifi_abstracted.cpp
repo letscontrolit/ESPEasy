@@ -106,7 +106,11 @@ void doSetAPinternal(bool enable)
                dns.toString().c_str())
              );
     }
+#if ESP_IDF_VERSION_MAJOR < 6
     WiFi.AP.bandwidth(WIFI_BW_HT20);
+#else
+    WiFi.AP.bandwidth(WIFI_BW20);
+#endif
     # endif // ifdef ESP32
     # ifdef ESP8266
 

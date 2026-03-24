@@ -468,7 +468,11 @@ void doSetConnectionSpeed(bool ForceWiFi_bg_mode)
   #  ifndef SOC_WIFI_SUPPORTED
   return;
   #  else
+#if ESP_IDF_VERSION_MAJOR < 6
   esp_wifi_set_bandwidth(WIFI_IF_STA, WIFI_BW_HT20);
+#else
+  esp_wifi_set_bandwidth(WIFI_IF_STA, WIFI_BW20);
+#endif
 
 
 #   if CONFIG_SOC_WIFI_SUPPORT_5G

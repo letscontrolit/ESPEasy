@@ -22,8 +22,8 @@
 // but must be declared 'static'
 // This also means we can only have a single instance of this
 // RTC_cache_handler_struct.
-RTC_NOINIT_ATTR RTC_cache_struct RTC_cache;
-RTC_NOINIT_ATTR uint8_t RTC_cache_data[RTC_CACHE_DATA_SIZE];
+ESPEasy_RTC_ATTR RTC_cache_struct RTC_cache;
+ESPEasy_RTC_ATTR uint8_t RTC_cache_data[RTC_CACHE_DATA_SIZE];
 #endif // ifdef ESP32
 
 
