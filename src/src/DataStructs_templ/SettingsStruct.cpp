@@ -986,6 +986,7 @@ void SettingsStruct_tmpl<N_TASKS>::setPinBootState(int8_t gpio_pin, PinBootState
   }
 # endif // ifdef ESP32
 }
+
 #if FEATURE_SPI
 template<uint32_t N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::isSPI_enabled(uint8_t spi_bus) const {
@@ -996,12 +997,14 @@ bool SettingsStruct_tmpl<N_TASKS>::isSPI_enabled(uint8_t spi_bus) const {
 template<uint32_t N_TASKS>
 uint8_t SettingsStruct_tmpl<N_TASKS>::getNrConfiguredSPI_buses() const
 {
+  #ifdef ESP8266
+  return isSPI_valid(0u) ? 1 : 0;
+  #else
   uint8_t res{};
   if (isSPI_valid(0u)) ++res;
-  #ifdef ESP32
   if (getSPIBusCount() > 1 && isSPI_valid(1u)) ++res;
-  #endif
   return res;
+  #endif
 }
 
 template<uint32_t N_TASKS>
@@ -1064,51 +1067,6 @@ bool SettingsStruct_tmpl<N_TASKS>::getSPI_pins(int8_t spi_gpios[3], uint8_t spi_
   }
   return false;
 }
-
-#ifdef ESP32
-template<uint32_t N_TASKS>
-spi_host_device_t SettingsStruct_tmpl<N_TASKS>::getSPI_host(uint8_t spi_bus) const
-{
-  if (isSPI_valid(spi_bus)) {
-    const SPI_Options_e SPI_selection = static_cast<SPI_Options_e>(0 == spi_bus ? InitSPI : InitSPI1);
-    switch (SPI_selection) {
-      case SPI_Options_e::Vspi_Fspi:
-      case SPI_Options_e::UserDefined_VSPI:
-      {
-        #if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
-        return static_cast<spi_host_device_t>(FSPI_HOST);
-        #else
-        return static_cast<spi_host_device_t>(VSPI_HOST);
-        #endif
-      }
-#ifdef ESP32_CLASSIC
-      case SPI_Options_e::Hspi:
-      {
-        return static_cast<spi_host_device_t>(HSPI_HOST);
-      }
-#endif
-#if SOC_SPI_PERIPH_NUM > 2
-      case SPI_Options_e::UserDefined_HSPI:
-      {
-        return static_cast<spi_host_device_t>(HSPI_HOST);
-      }
-#endif
-      case SPI_Options_e::None:
-        break;
-    }
-
-  }
-  #if ESP_IDF_VERSION_MAJOR < 5
-  #if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
-  return static_cast<spi_host_device_t>(FSPI_HOST);
-  #else
-  return static_cast<spi_host_device_t>(VSPI_HOST);
-  #endif
-  #else
-  return spi_host_device_t::SPI_HOST_MAX;
-  #endif
-}
-#endif
 
 
 template<uint32_t N_TASKS>

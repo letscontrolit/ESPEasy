@@ -488,9 +488,9 @@ void NW003_data_struct_ETH_RMII::ethPrintSettings() {
       log += F(" Eth Clock mode: ");
       log += ESPEasy::net::toString(ETH_ClockMode);
       log += strformat(F(" MDC: %d MIO: %d PWR: %d"),
-                       _kvs->getValueAsInt(NW003_KEY_ETH_PIN_MDC),
-                       _kvs->getValueAsInt(NW003_KEY_ETH_PIN_MDIO),
-                       _kvs->getValueAsInt(NW003_KEY_ETH_PIN_POWER));
+                       static_cast<int>(_kvs->getValueAsInt(NW003_KEY_ETH_PIN_MDC)),
+                       static_cast<int>(_kvs->getValueAsInt(NW003_KEY_ETH_PIN_MDIO)),
+                       static_cast<int>(_kvs->getValueAsInt(NW003_KEY_ETH_PIN_POWER)));
       addLogMove(LOG_LEVEL_INFO, log);
     }
   }

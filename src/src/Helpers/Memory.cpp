@@ -32,7 +32,7 @@ extern "C" {
 // FIXME TD-er: For ESP32 you need to provide the task number, or nullptr to get from the calling task.
 uint32_t getCurrentFreeStack() {
   return ((uint8_t *)esp_cpu_get_sp()) - 
-  #if ESP_IDF_VERSION_MAJOR < 5
+  #if ESP_IDF_VERSION_MAJOR <= 5
   pxTaskGetStackStart(nullptr);
   #else
   xTaskGetStackStart(nullptr);

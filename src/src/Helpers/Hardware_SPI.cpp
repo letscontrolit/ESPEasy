@@ -50,7 +50,7 @@ void initializeSPIBuses() {
 
     if ((skipInitSPI != 1) && Settings.getSPI_pins(spi_gpios, 0u)) {
       SPI.setHwCs(false);
-      SPI.begin(spi_gpios[0], spi_gpios[1], spi_gpios[2]); // Use explicit GPIO configuration
+      if (SPI.begin(spi_gpios[0], spi_gpios[1], spi_gpios[2])) // Use explicit GPIO configuration
       SPI_initialized |= 1;
     }
 
@@ -65,7 +65,7 @@ void initializeSPIBuses() {
 
     if ((skipInitSPI != 2) && Settings.getSPI_pins(spi_gpios, 1u)) {
       SPIe.setHwCs(false);
-      SPIe.begin(spi_gpios[0], spi_gpios[1], spi_gpios[2]);
+      if (SPIe.begin(spi_gpios[0], spi_gpios[1], spi_gpios[2]))
       SPI_initialized |= 2;
     }
 
@@ -96,6 +96,18 @@ void initializeSPIBuses() {
   } else {
     addLog(LOG_LEVEL_INFO, F("INIT : SPI not enabled"));
   }
+}
+
+SPIClass* getSPI(uint8_t spi_bus)
+{
+  if (Settings.isSPI_valid(spi_bus)) {
+    if (spi_bus == 0) return &SPI;
+    #ifdef ESP32
+    if (spi_bus == 1) return &SPIe;
+    #endif
+  } 
+  
+  return nullptr;
 }
 
 #if FEATURE_SD

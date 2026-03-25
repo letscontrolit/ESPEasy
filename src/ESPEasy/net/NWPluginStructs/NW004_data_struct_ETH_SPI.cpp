@@ -7,6 +7,7 @@
 
 # include "../../../src/Helpers/ESPEasy_time_calc.h"
 # include "../../../src/Helpers/Hardware_GPIO.h"
+# include "../../../src/Helpers/Hardware_SPI.h"
 # include "../../../src/Helpers/LongTermOnOffTimer.h"
 # include "../../../src/Helpers/SPI_Helper.h"
 # include "../../../src/Helpers/StringConverter.h"
@@ -317,6 +318,9 @@ bool NW004_data_struct_ETH_SPI::write_Eth_port(KeyValueWriter *writer)
 
   int8_t spi_gpios[3]{};
 
+  // FIXME TD-er: No idea what this line actually does or should do....
+  // My best guess is: if the bus isn't 0, nothing will be printed.
+  // See: https://stackoverflow.com/questions/16475032/comma-operator-in-if-condition
   if (!Settings.getSPI_pins(spi_gpios), (uint8_t)_kvs->getValueAsInt(NW004_KEY_SPI_BUS)) { return false; }
   const __FlashStringHelper*labels[] = {
     F("CLK"), F("MISO"), F("MOSI"), F("CS"), F("IRQ"), F("RST") };
@@ -391,10 +395,10 @@ void NW004_data_struct_ETH_SPI::ethPrintSettings() {
       log += F(" PHY Addr: ");
       log += _kvs->getValueAsInt(NW004_KEY_ETH_PHY_ADDR);
       log += strformat(F(" SPI bus: %d CS: %d IRQ: %d RST: %d"),
-                       _kvs->getValueAsInt(NW004_KEY_SPI_BUS),
-                       _kvs->getValueAsInt(NW004_KEY_ETH_PIN_CS),
-                       _kvs->getValueAsInt(NW004_KEY_ETH_PIN_IRQ),
-                       _kvs->getValueAsInt(NW004_KEY_ETH_PIN_RST));
+                       static_cast<int>(_kvs->getValueAsInt(NW004_KEY_SPI_BUS)),
+                       static_cast<int>(_kvs->getValueAsInt(NW004_KEY_ETH_PIN_CS)),
+                       static_cast<int>(_kvs->getValueAsInt(NW004_KEY_ETH_PIN_IRQ)),
+                       static_cast<int>(_kvs->getValueAsInt(NW004_KEY_ETH_PIN_RST)));
       addLogMove(LOG_LEVEL_INFO, log);
     }
   }
@@ -440,12 +444,10 @@ bool NW004_data_struct_ETH_SPI::ETHConnectRelaxed() {
     const int rstPin   = _kvs->getValueAsInt(NW004_KEY_ETH_PIN_RST);
     const int csPin    = _kvs->getValueAsInt(NW004_KEY_ETH_PIN_CS);
     const int irqPin   = _kvs->getValueAsInt(NW004_KEY_ETH_PIN_IRQ);
-    const int spi_bus  = _kvs->getValueAsInt(NW004_KEY_SPI_BUS);
+    const int spi_bus  = _kvs->getValueAsInt_or_default(NW004_KEY_SPI_BUS, 0);
 
-
-    spi_host_device_t SPI_host = Settings.getSPI_host(spi_bus);
-
-    if (SPI_host == spi_host_device_t::SPI_HOST_MAX) {
+    auto spi_instance = getSPI(spi_bus);
+    if (!spi_instance) {
       addLog(LOG_LEVEL_ERROR, F("SPI not enabled"));
       # ifdef ESP32C3
 
@@ -455,11 +457,14 @@ bool NW004_data_struct_ETH_SPI::ETHConnectRelaxed() {
       Settings.SPI_SCLK_pin = 7;
       Settings.SPI_MISO_pin = 3;
       Settings.SPI_MOSI_pin = 10;
+      initializeSPIBuses();
+      spi_instance = getSPI(0);
       # endif // ifdef ESP32C3
     }
 
     // else
-    if (SPI_host != spi_host_device_t::SPI_HOST_MAX) {
+    if (spi_instance)
+    {
       // TODO TD-er: Do we need to include the CLK, MISO, MOSI pins in the call or do we need to start the SPI bus first?
 # if ETH_SPI_SUPPORTS_CUSTOM
       success = iface->begin(
@@ -468,7 +473,7 @@ bool NW004_data_struct_ETH_SPI::ETHConnectRelaxed() {
         csPin,
         irqPin,
         rstPin,
-        SPI_host);
+        *spi_instance); 
 # else // if ETH_SPI_SUPPORTS_CUSTOM
       success = iface->begin(
         to_ESP_phy_type(phyType),
@@ -481,6 +486,8 @@ bool NW004_data_struct_ETH_SPI::ETHConnectRelaxed() {
         static_cast<int>(Settings.SPI_MISO_pin),
         static_cast<int>(Settings.SPI_MOSI_pin));
 # endif // if ETH_SPI_SUPPORTS_CUSTOM
+    } else {
+      addLog(LOG_LEVEL_ERROR, F("ETH  : Failed to get SPI host"));
     }
   }
 

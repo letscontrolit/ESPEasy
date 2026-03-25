@@ -375,9 +375,6 @@ public:
 
   bool isSPI_enabled(uint8_t spi_bus) const;
   uint8_t getNrConfiguredSPI_buses() const;
-  #ifdef ESP32
-  spi_host_device_t getSPI_host(uint8_t spi_bus = 0) const;
-  #endif
 
   // Return true when pin is one of the SPI pins and SPI is enabled
   bool isSPI_pin(int8_t  pin,
