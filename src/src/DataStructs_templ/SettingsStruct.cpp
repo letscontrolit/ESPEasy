@@ -1011,6 +1011,10 @@ bool SettingsStruct_tmpl<N_TASKS>::getSPI_pinsForTask(taskIndex_t TaskIndex,
                           int8_t  spi_gpios[3],
                           bool    noCheck) const
 {
+  spi_gpios[0] = -1;
+  spi_gpios[1] = -1;
+  spi_gpios[2] = -1;
+
   if (!validTaskIndex(TaskIndex)) return false;
   return getSPI_pins(
     spi_gpios,
