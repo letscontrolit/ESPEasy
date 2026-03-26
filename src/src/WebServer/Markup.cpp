@@ -249,9 +249,10 @@ void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int
       // }
   
   #if FEATURE_ETHERNET
-
-      if (Settings.isEthernetPin(gpio) || (includeEthernet && Settings.isEthernetPinOptional(gpio))) {
-        disabled = true;
+      if (includeEthernet) {
+        if (Settings.isEthernetPin(gpio) || Settings.isEthernetPinOptional(gpio)) {
+          disabled = true;
+        }
       }
   #endif // if FEATURE_ETHERNET
 
@@ -271,25 +272,7 @@ void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int
 
 void addSelector_Item(const __FlashStringHelper *option, int index, bool    selected, bool    disabled, const String& attr)
 {
-  addHtml(F("<option "));
-  addHtmlAttribute(F("value"), index);
-
-  if (selected) {
-    addHtml(F(" selected"));
-  }
-
-  if (disabled) {
-    addDisabled();
-  }
-
-  if (attr.length() > 0)
-  {
-    addHtml(' ');
-    addHtml(attr);
-  }
-  addHtml('>');
-  addHtml(option);
-  addHtml(F("</option>"));
+  addSelector_Item(String(option), index, selected, disabled, attr);
 }
 
 void addSelector_Item(const String& option, int index, bool    selected, bool    disabled, const String& attr)
@@ -301,7 +284,10 @@ void addSelector_Item(const String& option, int index, bool    selected, bool   
     addHtml(F(" selected"));
   }
 
-  if (disabled) {
+  if (disabled && !selected) {
+    // Make sure something that's selected isn't marked disabled.
+    // Disabled items are not sent in the POST, so if saving settings 
+    // where a chosen option is marked 'disabled' you may get odd results.
     addDisabled();
   }
 
