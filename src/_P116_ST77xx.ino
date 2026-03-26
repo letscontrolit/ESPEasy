@@ -342,9 +342,7 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      const uint8_t spi_bus = Settings.getSPIBusForTask(event->TaskIndex);
-
-      if (Settings.isSPI_valid(spi_bus)) {
+      if (Settings.isSPI_validForTask(event->TaskIndex)) {
         initPluginTaskData(event->TaskIndex,
                            new (std::nothrow) P116_data_struct(static_cast<ST77xx_type_e>(P116_CONFIG_FLAG_GET_TYPE),
                                                                P116_CONFIG_FLAG_GET_ROTATION,
@@ -357,8 +355,7 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
                                                                                               P116_CONFIG_FLAG_GET_CMD_TRIGGER)),
                                                                P116_CONFIG_GET_COLOR_FOREGROUND,
                                                                P116_CONFIG_GET_COLOR_BACKGROUND,
-                                                               bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_BACK_FILL) == 0,
-                                                               spi_bus
+                                                               bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_BACK_FILL) == 0
                                                                # if ADAGFX_FONTS_INCLUDED
                                                                ,
                                                                P116_CONFIG_DEFAULT_FONT

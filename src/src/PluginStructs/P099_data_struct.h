@@ -8,8 +8,6 @@
 
 # include <XPT2046_Touchscreen.h>
 
-# include "../Globals/SPIe.h"
-
 // #define PLUGIN_099_DEBUG    // Additional debugging information
 
 // Define default values for both ESP32/lolin32 and D1 Mini
@@ -86,8 +84,7 @@ struct P099_data_struct : public PluginTaskData_base
             bool        send_z,
             bool        useCalibration,
             uint16_t    ts_x_res,
-            uint16_t    ts_y_res,
-            uint8_t     spi_bus);
+            uint16_t    ts_y_res);
   bool isInitialized() const;
   void loadTouchObjects(taskIndex_t taskIndex);
   bool touched();
@@ -122,7 +119,6 @@ struct P099_data_struct : public PluginTaskData_base
   bool                 _useCalibration = 0;
   uint16_t             _ts_x_res       = 0;
   uint16_t             _ts_y_res       = 0;
-  uint8_t              _spi_bus        = 0;
 
   // This is filled during checking of a touchobject
   uint32_t SurfaceAreas[P099_MaxObjectCount] = { 0 };

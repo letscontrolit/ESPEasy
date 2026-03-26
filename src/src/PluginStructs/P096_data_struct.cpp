@@ -2,6 +2,7 @@
 
 #ifdef USES_P096
 
+#include "../Helpers/Hardware_SPI.h"
 
 /****************************************************************************
  * EPD_type_toString: Display-value for the device selected
@@ -75,7 +76,6 @@ P096_data_struct::P096_data_struct(EPD_type_e          display,
                                    uint8_t             fontscaling,
                                    AdaGFXTextPrintMode textmode,
                                    String              commandTrigger,
-                                   uint8_t             spi_bus,
                                    uint16_t            fgcolor,
                                    uint16_t            bgcolor,
                                    AdaGFXColorDepth    colorDepth,
@@ -85,7 +85,7 @@ P096_data_struct::P096_data_struct(EPD_type_e          display,
   _xpix(width), _ypix(height),
   # endif // if !P096_USE_EXTENDED_SETTINGS
   _rotation(rotation), _fontscaling(fontscaling), _textmode(textmode), _commandTrigger(commandTrigger),
-  _spi_bus(spi_bus), _fgcolor(fgcolor), _bgcolor(bgcolor), _colorDepth(colorDepth), _textBackFill(textBackFill)
+  _fgcolor(fgcolor), _bgcolor(bgcolor), _colorDepth(colorDepth), _textBackFill(textBackFill)
 {
   _commandTrigger.toLowerCase();
   _commandTriggerCmd  = _commandTrigger;
@@ -121,27 +121,36 @@ bool P096_data_struct::plugin_init(struct EventStruct *event) {
   bool success = false;
 
   if (nullptr == eInkScreen) {
+    # ifdef ESP32
+    auto spi_ptr = getSPIBusForTask(event->TaskIndex);
+    if (!spi_ptr) {
+      addLog(LOG_LEVEL_ERROR, F("EPD  : No SPI configured"));
+      return false;
+    }
+    #endif
+
+
     addLog(LOG_LEVEL_INFO, F("EPD  : Init start."));
 
     switch (_display) {
       case EPD_type_e::EPD_IL3897:
         eInkScreen = new (std::nothrow) LOLIN_IL3897(_xpix, _ypix, PIN(1), PIN(2), PIN(0), PIN(3)
                                                      # ifdef ESP32
-                                                     , 0 == _spi_bus ? SPI : SPIe
+                                                     , *spi_ptr
                                                      # endif // ifdef ESP32
                                                      ); // HSPI
         break;
       case EPD_type_e::EPD_UC8151D:
         eInkScreen = new (std::nothrow) LOLIN_UC8151D(_xpix, _ypix, PIN(1), PIN(2), PIN(0), PIN(3)
                                                       # ifdef ESP32
-                                                      , 0 == _spi_bus ? SPI : SPIe
+                                                      , *spi_ptr
                                                       # endif // ifdef ESP32
                                                       ); // HSPI
         break;
       case EPD_type_e::EPD_SSD1680:
         eInkScreen = new (std::nothrow) LOLIN_SSD1680(_xpix, _ypix, PIN(1), PIN(2), PIN(0), PIN(3)
                                                       # ifdef ESP32
-                                                      , 0 == _spi_bus ? SPI : SPIe
+                                                      , *spi_ptr
                                                       # endif // ifdef ESP32
                                                       ); // HSPI
         break;
@@ -149,7 +158,7 @@ bool P096_data_struct::plugin_init(struct EventStruct *event) {
       case EPD_type_e::EPD_WS2IN7:
         eInkScreen = new (std::nothrow) Waveshare_2in7(_xpix, _ypix, PIN(1), PIN(2), PIN(0), PIN(3)
                                                        #  ifdef ESP32
-                                                       , 0 == _spi_bus ? SPI : SPIe
+                                                       , *spi_ptr
                                                        #  endif // ifdef ESP32
                                                        ); // HSPI
         break;

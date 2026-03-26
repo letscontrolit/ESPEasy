@@ -508,9 +508,7 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      const uint8_t spi_bus = Settings.getSPIBusForTask(event->TaskIndex);
-
-      if (Settings.isSPI_valid(spi_bus)) {
+      if (Settings.isSPI_validForTask(event->TaskIndex)) {
         initPluginTaskData(event->TaskIndex,
                            # if P096_USE_EXTENDED_SETTINGS
                            new (std::nothrow) P096_data_struct(static_cast<EPD_type_e>(P096_CONFIG_FLAG_GET_DISPLAYTYPE),
@@ -519,7 +517,6 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
                                                                static_cast<AdaGFXTextPrintMode>(P096_CONFIG_FLAG_GET_MODE),
                                                                P096_CommandTrigger_toString(static_cast<P096_CommandTrigger>(
                                                                                               P096_CONFIG_FLAG_GET_CMD_TRIGGER)),
-                                                               spi_bus,
                                                                P096_CONFIG_GET_COLOR_FOREGROUND,
                                                                P096_CONFIG_GET_COLOR_BACKGROUND,
                                                                static_cast<AdaGFXColorDepth>(P096_CONFIG_FLAG_GET_COLORDEPTH),
@@ -531,8 +528,7 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
                                                                P096_CONFIG_ROTATION,
                                                                P096_CONFIG_FLAG_GET_FONTSCALE,
                                                                AdaGFXTextPrintMode::ContinueToNextLine,
-                                                               F("epd"),
-                                                               spi_bus)
+                                                               F("epd"))
                            # endif // if P096_USE_EXTENDED_SETTINGS
                            );
         P096_data_struct *P096_data = static_cast<P096_data_struct *>(getPluginTaskData(event->TaskIndex));

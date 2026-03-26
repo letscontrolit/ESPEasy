@@ -3,7 +3,6 @@
 #ifdef USES_NW004
 
 # include "../../../src/Globals/Settings.h"
-# include "../../../src/Globals/SPIe.h"
 
 # include "../../../src/Helpers/ESPEasy_time_calc.h"
 # include "../../../src/Helpers/Hardware_GPIO.h"
@@ -318,10 +317,12 @@ bool NW004_data_struct_ETH_SPI::write_Eth_port(KeyValueWriter *writer)
 
   int8_t spi_gpios[3]{};
 
-  // FIXME TD-er: No idea what this line actually does or should do....
-  // My best guess is: if the bus isn't 0, nothing will be printed.
-  // See: https://stackoverflow.com/questions/16475032/comma-operator-in-if-condition
-  if (!Settings.getSPI_pins(spi_gpios), (uint8_t)_kvs->getValueAsInt(NW004_KEY_SPI_BUS)) { return false; }
+  if (!Settings.getSPI_pins(
+        spi_gpios,
+        (uint8_t)_kvs->getValueAsInt(NW004_KEY_SPI_BUS)))
+  {
+    return false;
+  }
   const __FlashStringHelper*labels[] = {
     F("CLK"), F("MISO"), F("MOSI"), F("CS"), F("IRQ"), F("RST") };
   const int pins[] = {
@@ -412,7 +413,7 @@ bool NW004_data_struct_ETH_SPI::ETHConnectRelaxed() {
   if (!(data && iface)) { return false; }
 
   if (data->started() && data->connected()) {
-    if (EthLinkUp()) return true;
+    if (EthLinkUp()) { return true; }
     data->mark_connect_failed();
     return false;
   }
@@ -447,6 +448,7 @@ bool NW004_data_struct_ETH_SPI::ETHConnectRelaxed() {
     const int spi_bus  = _kvs->getValueAsInt_or_default(NW004_KEY_SPI_BUS, 0);
 
     auto spi_instance = getSPI(spi_bus);
+
     if (!spi_instance) {
       addLog(LOG_LEVEL_ERROR, F("SPI not enabled"));
       # ifdef ESP32C3
@@ -472,7 +474,7 @@ bool NW004_data_struct_ETH_SPI::ETHConnectRelaxed() {
         csPin,
         irqPin,
         rstPin,
-        *spi_instance); 
+        *spi_instance);
 # else // if ETH_SPI_SUPPORTS_CUSTOM
       success = iface->begin(
         to_ESP_phy_type(phyType),

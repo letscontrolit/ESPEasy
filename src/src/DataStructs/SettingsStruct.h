@@ -32,6 +32,9 @@
  #define DEFAULT_SPI 0
 #endif
 
+#if FEATURE_SPI
+#include "../DataTypes/SPI_options.h"
+#endif
 
 // FIXME TD-er: Move this PinBootState to DataTypes folder
 
@@ -369,6 +372,10 @@ public:
   void setPinBootState(int8_t gpio_pin, PinBootState state);
 
 #if FEATURE_SPI
+  bool getSPI_pinsForTask(taskIndex_t TaskIndex,
+                          int8_t  spi_gpios[3],
+                          bool    noCheck = false) const;
+
   bool getSPI_pins(int8_t  spi_gpios[3],
                    uint8_t spi_bus = 0,
                    bool    noCheck = false) const;
@@ -382,9 +389,12 @@ public:
 
   // Return true when SPI enabled and opt. user defined pins valid.
   bool isSPI_valid(uint8_t spi_bus) const;
+  bool isSPI_validForTask(taskIndex_t TaskIndex) const;
 
   uint8_t getSPIBusForTask(taskIndex_t TaskIndex) const;
   void    setSPIBusForTask(taskIndex_t TaskIndex, uint8_t spi_bus);
+
+  SPI_Options_e getSPISelection(uint8_t spi_bus) const;
 
   #if FEATURE_SD
   uint8_t getSPIBusForSDCard() const;

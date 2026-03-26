@@ -57,7 +57,11 @@ void sendData(struct EventStruct *event, bool sendEvents)
     createRuleEvents(event);
   }
 
-  if (Settings.UseValueLogger && (Settings.InitSPI > static_cast<int>(SPI_Options_e::None)) && (Settings.Pin_sd_cs >= 0)) {
+
+  
+  if (Settings.UseValueLogger && 
+    (Settings.getSPISelection(Settings.getSPIBusForSDCard()) != SPI_Options_e::None) && 
+    (Settings.Pin_sd_cs >= 0)) {
     SendValueLogger(event->TaskIndex);
   }
 
