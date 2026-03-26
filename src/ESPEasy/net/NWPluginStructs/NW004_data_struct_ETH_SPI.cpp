@@ -452,7 +452,6 @@ bool NW004_data_struct_ETH_SPI::ETHConnectRelaxed() {
       # ifdef ESP32C3
 
       // FIXME TD-er: Fallback for ETH01-EVO board
-      SPI_host              = spi_host_device_t::SPI2_HOST;
       Settings.InitSPI      = static_cast<int>(SPI_Options_e::UserDefined_VSPI);
       Settings.SPI_SCLK_pin = 7;
       Settings.SPI_MISO_pin = 3;
