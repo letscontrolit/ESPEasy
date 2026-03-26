@@ -58,12 +58,13 @@ void sendData(struct EventStruct *event, bool sendEvents)
   }
 
 
-  
+#if FEATURE_SD
   if (Settings.UseValueLogger && 
     (Settings.getSPISelection(Settings.getSPIBusForSDCard()) != SPI_Options_e::None) && 
     (Settings.Pin_sd_cs >= 0)) {
     SendValueLogger(event->TaskIndex);
   }
+#endif
 
   //  LoadTaskSettings(event->TaskIndex); // could have changed during background tasks.
 
