@@ -2423,7 +2423,7 @@ To create/register a plugin, you have to :
 
   // Enable extra climate-related plugins (CO2/Temp/Hum)
 
-  #if defined(USES_P169) && defined(ESP32)
+  #if !defined(USES_P169) && defined(ESP32)
     #define USES_P169   // Environment - AS3935 Lightning Detector
   #endif
   #if !defined(USES_P173) // && defined(ESP32)
