@@ -502,7 +502,7 @@ bool InternalCommands::executeInternalCommand()
 #endif // ifndef LIMIT_BUILD_SIZE
 #if FEATURE_WIFI
     case ESPEasy_cmd_e::wifiallowap:                COMMAND_CASE_R(Command_Wifi_AllowAP,    0);      // WiFi.h
-    case ESPEasy_cmd_e::wifiapmode:                 COMMAND_CASE_R(Command_Wifi_APMode,     0);      // WiFi.h
+    case ESPEasy_cmd_e::wifiapmode:                 COMMAND_CASE_R(Command_Wifi_APMode,     -1);      // WiFi.h
     case ESPEasy_cmd_e::wificonnect:                COMMAND_CASE_A(Command_Wifi_Connect,    0);      // WiFi.h
     case ESPEasy_cmd_e::wifidisconnect:             COMMAND_CASE_A(Command_Wifi_Disconnect, 0);      // WiFi.h
     case ESPEasy_cmd_e::wifikey:                    COMMAND_CASE_R(Command_Wifi_Key,        1);      // WiFi.h
