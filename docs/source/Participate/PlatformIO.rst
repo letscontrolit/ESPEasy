@@ -67,13 +67,20 @@ Install
 For development of ESPEasy, a number of extensions has to be installed in VS-Code:
 
 * pioarduino IDE (by pioarduino)
-* C/C++ (by Microsoft)
+* Select a C++ code completion plugin, either Microsoft C/C++ Intellisense or LLVM ``clangd``
+* Microsoft
+
+  * C/C++ (by Microsoft)
+* LLVM
+
+  * clangd (by LLVM)
 * C/C++ Extension Pack (by Microsoft)
 * C/C++ Themes (by Microsoft)
 * Uncrustify (by Zachary Flower, originally by Laurent Tréguier)
 
 Optional, but highly recommended:
 
+* C/C++ DevTools (by Microsoft)
 * Bookmarks (by Alessandro Fragnani)
 * GitLens - Git supercharged (by Gitkraken)
 * Todo Tree (by Gruntfuggly)
@@ -84,8 +91,10 @@ Optional, but highly recommended:
 * reStructuredText Syntax highlighting (by Trond Snekvik)
 * Extension pack for reStructuredText (by LeXtudio Inc.)
 * Markdown All in One (by Yu Zhang)
+* ESP Crash Decoder (by Jason2866)
 * WSL (by Microsoft) (when using WSL2 as documented below)
 
+In VSCode 1.113 the default code color scheme has changed from ``Light Modern`` or ``Dark Modern`` to ``VS Code Light`` or ``VS Code Dark``. For many users this change was quite unexpected as the used colors are quite different from the previous color scheme, so to revert to the previous default setting press ``Ctrl-K,Ctrl-T`` (``Cmd-K,Cmd-T`` on MacOs) and choose the previous default light or dark theme, or choose a different setting from the available options.
 
 Uncrustify
 ----------
