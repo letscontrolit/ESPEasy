@@ -624,7 +624,23 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
     #if FEATURE_MDNS
     case LabelType::M_DNS:
     {
-      String url = ESPEasy::net::NetworkGetHostname() + F(".local");
+      String hostname;
+      #ifdef ESP32
+      // Retrieve and print the actual (resolved) hostname - checking if there are any conflicts in the network
+      char actualHostname[MDNS_NAME_BUF_LEN];  // MDNS_NAME_BUF_LEN is 64 from mdns.h
+      esp_err_t err = mdns_hostname_get(actualHostname);
+      if (err == ESP_OK) {
+        hostname = String(actualHostname);
+      }
+      if (hostname.isEmpty()) {
+        hostname = ESPEasy::net::NetworkGetHostname();
+      }
+      #endif
+      #ifdef ESP8266
+      hostname = ESPEasy::net::NetworkGetHostname();
+      #endif
+      
+      String url = concat(hostname, F(".local"));
       url.toLowerCase();
 
       if (extendedValue) {

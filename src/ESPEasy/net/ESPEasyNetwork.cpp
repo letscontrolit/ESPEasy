@@ -101,7 +101,7 @@ void CheckRunningServices() {
 
 #if FEATURE_MDNS
   update_mDNS();
-  #endif
+#endif
 }
 
 uint64_t NetworkConnectDuration_ms()

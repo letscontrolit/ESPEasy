@@ -3,6 +3,11 @@
 
 #include "../../include/ESPEasy_config.h"
 
+#ifdef ESP32
+#include <esp_idf_version.h>
+#endif
+
+
 /*
 #################################################
  This is the place where plugins are registered
@@ -3475,16 +3480,18 @@ To create/register a plugin, you have to :
   #ifndef LIMIT_BUILD_SIZE
     #ifndef FEATURE_MDNS
       #ifdef ESP32
-        #if ESP_IDF_VERSION_MAJOR >= 5
+        #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 4)
           // See if it is now more usable...
-          // See: https://github.com/letscontrolit/ESPEasy/issues/5061
+          // See: 
+          // https://github.com/letscontrolit/ESPEasy/issues/5061
+          // https://github.com/letscontrolit/ESPEasy/issues/5513#issuecomment-4143114757
           #define FEATURE_MDNS  1
         #else
           #define FEATURE_MDNS  0
         #endif
       #else
         // Do not use MDNS on ESP8266 due to memory leak
-        #define FEATURE_MDNS  0
+        #define FEATURE_MDNS  1
       #endif
     #endif
   #endif

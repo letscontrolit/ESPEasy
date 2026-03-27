@@ -13,6 +13,11 @@
 #endif
 
 
+#if FEATURE_MDNS
+#include "../../../src/Helpers/MDNS_Helper.h"
+#endif
+
+
 namespace ESPEasy {
 namespace net {
 
@@ -190,6 +195,9 @@ void NWPluginData_static_runtime::processEvents()
     }
   # endif // ifndef BUILD_NO_DEBUG
 #endif // ifdef ESP8266
+#if FEATURE_MDNS
+//    update_mDNS();
+#endif
   }
 
 #if FEATURE_USE_IPV6
@@ -216,6 +224,9 @@ void NWPluginData_static_runtime::processEvents()
         }
       }
     }
+#if FEATURE_MDNS
+//    update_mDNS();
+#endif
   }
 #endif // if FEATURE_USE_IPV6
 
@@ -239,6 +250,17 @@ void NWPluginData_static_runtime::processEvents()
       enable_txrx_events();
     }
 #endif // if FEATURE_NETWORK_TRAFFIC_COUNT
+
+#ifdef ESP8266
+
+    if (!_isAP) {
+      // Check for priority changes on ESP8266 is essentially a check to see
+      // if we were connected via WiFi or not.
+      // So we can call priority route changed here
+      String dummy;
+      ESPEasy::net::NWPluginCall(NWPlugin::Function::NWPLUGIN_PRIORITY_ROUTE_CHANGED, 0, dummy);
+    }
+#endif // ifdef ESP8266
 
     // Send out event
     if (Settings.UseRules && _eventInterfaceName.length())

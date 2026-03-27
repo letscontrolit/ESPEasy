@@ -180,8 +180,8 @@ public:
 #ifdef ESP32
     NWPLUGIN_GET_INTERFACE,
     NWPLUGIN_WEBFORM_SHOW_ROUTE_PRIO,
-    NWPLUGIN_PRIORITY_ROUTE_CHANGED, // The default interface was changed, let other interfaces check to see if they need to do something.
 #endif // ifdef ESP32
+    NWPLUGIN_PRIORITY_ROUTE_CHANGED, // The default interface was changed, let other interfaces check to see if they need to do something.
 #if FEATURE_NETWORK_TRAFFIC_COUNT
     NWPLUGIN_GET_TRAFFIC_COUNT,      // TX/RX count in event->Par64_1, resp. event->Par64_2
 #endif

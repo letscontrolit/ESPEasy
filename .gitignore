@@ -92,3 +92,5 @@ src/src/CustomBuild/CompiletimeDefines_generated.h
 sdkconfig.*
 
 src/Custom_.h
+
+compile_commands.json
