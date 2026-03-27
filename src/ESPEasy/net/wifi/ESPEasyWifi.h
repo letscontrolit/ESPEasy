@@ -103,7 +103,7 @@ void    WifiDisconnect();
 bool    WiFiScanAllowed();
 void    WiFiScan_log_to_serial();
 
-void    setAPinternal(bool enable); // FIXME TD-er: Move to ESPEasyWifi_abstracted...
+bool    setAPinternal(bool enable); // FIXME TD-er: Move to ESPEasyWifi_abstracted...
 
 void    setUseStaticIP(bool enabled);
 bool    WiFiUseStaticIP();

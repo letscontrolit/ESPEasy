@@ -84,9 +84,7 @@ bool NWPluginCall(NWPlugin::Function Function, EventStruct *event, String& str)
 
         if (Settings.getNWPluginID_for_network(x) && checkedEnabled) {
           if (Function == NWPlugin::Function::NWPLUGIN_INIT_ALL) {
-            if (!Settings.getNetworkInterface_isFallback(x)) {
-              Scheduler.setNetworkInitTimer(Settings.getNetworkInterfaceStartupDelay(x), x);
-            }
+            Scheduler.setNetworkInitTimer(Settings.getNetworkInterfaceStartupDelay(x), x);
           }
           
           if (Function == NWPlugin::Function::NWPLUGIN_WEBSERVER_SHOULD_RUN &&

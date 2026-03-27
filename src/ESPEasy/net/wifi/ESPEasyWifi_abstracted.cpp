@@ -74,10 +74,10 @@ bool doWiFiScanAllowed() {
 }
 
 // Only internal scope
-void doSetAPinternal(bool enable)
+bool doSetAPinternal(bool enable)
 {
   if (enable) {
-    if (!Settings.getNetworkEnabled(NETWORK_INDEX_WIFI_AP)) { return; }
+    if (!Settings.getNetworkEnabled(NETWORK_INDEX_WIFI_AP)) { return false; }
 
     // create and store unique AP SSID/PW to prevent ESP from starting AP mode with default SSID and No password!
     // setup ssid for AP Mode when needed
@@ -98,6 +98,7 @@ void doSetAPinternal(bool enable)
     }
 
     if (!WiFi.softAPConfig(apIP, apIP, subnet, dhcp_lease_start, dns)) {
+      #ifndef LIMIT_BUILD_SIZE
       addLog(LOG_LEVEL_ERROR, strformat(
                ("WIFI : [AP] softAPConfig failed! IP: %s, GW: %s, SN: %s DNS: %s"),
                apIP.toString().c_str(),
@@ -105,6 +106,8 @@ void doSetAPinternal(bool enable)
                subnet.toString().c_str(),
                dns.toString().c_str())
              );
+      #endif
+      return false;
     }
 #if ESP_IDF_VERSION_MAJOR < 6
     WiFi.AP.bandwidth(WIFI_BW_HT20);
@@ -123,6 +126,7 @@ void doSetAPinternal(bool enable)
                subnet.toString().c_str())
              );
 #endif
+      return false;
     }
     # endif // ifdef ESP8266
 
@@ -158,6 +162,7 @@ void doSetAPinternal(bool enable)
                      formatIP(apIP).c_str()));
       }
 #endif
+      return false;
     }
 
     if (Settings.ApCaptivePortal()) {
@@ -203,6 +208,7 @@ void doSetAPinternal(bool enable)
 
     doSetAP(false);
   }
+  return false;
 }
 
 void doSetConnectionSpeed() {

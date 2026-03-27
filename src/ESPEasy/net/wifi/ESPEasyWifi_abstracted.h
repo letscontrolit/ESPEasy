@@ -60,7 +60,7 @@ void                       doWifiScan(bool    async,
 bool doWiFiScanAllowed();
 
 // Only internal scope
-void doSetAPinternal(bool enable);
+bool doSetAPinternal(bool enable);
 
 // ********************************************************************************
 // Event handlers

@@ -607,7 +607,8 @@ bool ESPEasyWiFi_t::shouldStartAP_fallback() const
     return false;
   }
 
-  return _connect_attempt > Settings.ConnectFailRetryCount;
+  return (Settings.ConnectFailRetryCount > 0) && 
+         (_connect_attempt > Settings.ConnectFailRetryCount);
 }
 
 

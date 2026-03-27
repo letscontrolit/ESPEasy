@@ -463,7 +463,7 @@ void WiFiScan_log_to_serial()
 }
 
 // Only internal scope
-void setAPinternal(bool enable)   { doSetAPinternal(enable); }
+bool setAPinternal(bool enable)   { return doSetAPinternal(enable); }
 
 void setUseStaticIP(bool enabled) { doSetUseStaticIP(enabled); }
 
