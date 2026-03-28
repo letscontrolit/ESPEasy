@@ -12,7 +12,7 @@
 #include "src/Helpers/Misc.h"
 #include "src/Helpers/StringParser.h"
 
-# ifdef SOC_PM_SUPPORT_EXT1_WAKEUP
+# ifdef FEATURE_EXT1_WAKEUP
 #  include "driver/rtc_io.h"
 # endif 
 
@@ -211,7 +211,7 @@ int checkDeviceVTypeForTask(struct EventStruct *event) {
   return -1;
 }
 
-#  if SOC_PM_SUPPORT_EXT1_WAKEUP
+#  if FEATURE_EXT1_WAKEUP
 void setupGpioWakeup(uint64_t ext1_mask) {
 
   #   if CONFIG_IDF_TARGET_ESP32

@@ -4545,3 +4545,9 @@ To create/register a plugin, you have to :
 #endif // if !FEATURE_SPI && !FEATURE_I2C && !FEATURE_MODBUS && !FEATURE_CAN && !FEATURE_WRMBUS && !FEATURE_WIMBUS
 
 #endif // CUSTOMBUILD_DEFINE_PLUGIN_SETS_H
+
+#if SOC_PM_SUPPORT_EXT1_WAKEUP
+#define FEATURE_EXT1_WAKEUP 1
+#else
+#define FEATURE_EXT1_WAKEUP 0
+#endif

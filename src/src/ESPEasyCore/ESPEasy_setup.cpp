@@ -596,7 +596,7 @@ void ESPEasy_setup()
     rulesProcessing(event);
   }
 
-  #  if SOC_PM_SUPPORT_EXT1_WAKEUP
+  #  if FEATURE_EXT1_WAKEUP
   if (Settings.UseRules)
   {
     int8_t wakePin = getWakeupGPIO();
@@ -606,9 +606,9 @@ void ESPEasy_setup()
       event += wakePin;
       rulesProcessing(event);
     }
-    setupGpioWakeup(64); // Todo: need to get the mask from settings struct
+    setupGpioWakeup(Settings.getWakeGpioMask());
   }
-  #  endif // if SOC_PM_SUPPORT_EXT1_WAKEUP
+  #  endif // if FEATURE_EXT1_WAKEUP
 
   #endif // ifdef ESP32
 

@@ -358,22 +358,16 @@ private:
     #endif
     ) const;
 
-    #  if SOC_PM_SUPPORT_EXT1_WAKEUP
-    //uint64_t WakeGpioMask = 0;
-    #endif
 public:
 
   PinBootState getPinBootState(int8_t gpio_pin) const;
   void setPinBootState(int8_t gpio_pin, PinBootState state);
 
-#  if SOC_PM_SUPPORT_EXT1_WAKEUP
+ # if FEATURE_EXT1_WAKEUP
     // --- Wake GPIO mask handling ---
-  // uint64_t getWakeGpioMask() const;
-  // void     setWakeGpioMask(uint64_t mask);
-
-  // void addWakeGpio(uint8_t pin);
-  // void removeWakeGpio(uint8_t pin);
-  #  endif // if SOC_PM_SUPPORT_EXT1_WAKEUP
+  uint64_t getWakeGpioMask() const;
+  void     setWakeGpioMask(uint64_t mask);
+  #  endif // if FEATURE_EXT1_WAKEUP
 
 #if FEATURE_SPI
   bool getSPI_pins(int8_t  spi_gpios[3],
@@ -601,7 +595,15 @@ public:
   int8_t        SPI1_SCLK_pin = -1;
   int8_t        SPI1_MISO_pin = -1;
   int8_t        SPI1_MOSI_pin = -1;
+ #ifdef ESP32
+  uint32_t      wakePin_bitmask_lLo=0;
+  uint32_t      wakePin_bitmask_lHi=0;
+  // int8_t     wakeOnLow = 1;
+
+  unsigned int OLD_TaskDeviceID[N_TASKS - 10] = {0};  // UNUSED: this can be reused
+  #else
   unsigned int  OLD_TaskDeviceID[N_TASKS - 8] = {0};  // UNUSED: this can be reused
+  #endif
 
   // FIXME TD-er: When used on ESP8266, this conversion union may not work
   // It might work as it is 32-bit in size.

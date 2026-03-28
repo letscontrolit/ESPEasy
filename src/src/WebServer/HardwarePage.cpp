@@ -21,9 +21,8 @@
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_GPIO.h"
 
-# ifdef SOC_PM_SUPPORT_EXT1_WAKEUP
+# ifdef FEATURE_EXT1_WAKEUP
 #include "../../_Plugin_Helper.h"
-static uint64_t wakeGpioMask = 0;
 # endif 
 
 // ********************************************************************************
@@ -68,9 +67,9 @@ void handle_hardware() {
       ++gpio;
     }
     
-    #  if SOC_PM_SUPPORT_EXT1_WAKEUP
+    #  if FEATURE_EXT1_WAKEUP
     gpio = 0;
-    wakeGpioMask = 0;
+    uint64_t wakeGpioMask = 0;
     while (gpio <= MAX_GPIO) {
       if (validGpio(gpio)) {
         char checkboxId[8]; // "WoL" + max 2 digits + null terminator
@@ -82,8 +81,9 @@ void handle_hardware() {
       }
       ++gpio;
     }
-    setupGpioWakeup(wakeGpioMask);
-    #  endif // if SOC_PM_SUPPORT_EXT1_WAKEUP
+    Settings.setWakeGpioMask(wakeGpioMask); // save the bitmask
+    setupGpioWakeup(wakeGpioMask); //attach gpios for wakeup
+    #  endif // if FEATURE_EXT1_WAKEUP
 
     error += SaveSettings();
     addHtmlError(error);
@@ -141,16 +141,16 @@ void handle_hardware() {
   }
   addFormDetailsEnd();
 
- #  if SOC_PM_SUPPORT_EXT1_WAKEUP
+ #  if FEATURE_EXT1_WAKEUP
   addFormSubHeader(F("GPIO wake from sleep"));
   addFormDetailsStart(0);
 
   addFormNote(F("For pins without internal pull-up, add external resistor if unstable."));
   for (int gpio = 0; gpio <= MAX_GPIO; ++gpio) {
-    addFormPinWakeSelect(gpio, wakeGpioMask);
+    addFormPinWakeSelect(gpio, Settings.getWakeGpioMask());
   }
   addFormDetailsEnd();
-  #  endif // if SOC_PM_SUPPORT_EXT1_WAKEUP
+  #  endif // if FEATURE_EXT1_WAKEUP
 
   addFormSeparator(2);
 

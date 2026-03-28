@@ -987,17 +987,19 @@ void SettingsStruct_tmpl<N_TASKS>::setPinBootState(int8_t gpio_pin, PinBootState
 # endif // ifdef ESP32
 }
 
-#  if SOC_PM_SUPPORT_EXT1_WAKEUP
+#  if FEATURE_EXT1_WAKEUP
 
-// template<uint32_t N_TASKS>
-// uint64_t SettingsStruct_tmpl<N_TASKS>::getWakeGpioMask() const {
-//   return WakeGpioMask;
-// }
+template<uint32_t N_TASKS>
+uint64_t SettingsStruct_tmpl<N_TASKS>::getWakeGpioMask() const {
+  return (static_cast<uint64_t>(wakePin_bitmask_lHi) << 32) |
+          wakePin_bitmask_lLo;
+}
 
-// template<uint32_t N_TASKS>
-// void SettingsStruct_tmpl<N_TASKS>::setWakeGpioMask(uint64_t mask) {
-//   WakeGpioMask = mask;
-// }
+template<uint32_t N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::setWakeGpioMask(uint64_t mask) {
+  wakePin_bitmask_lLo = static_cast<uint32_t>(mask & 0xFFFFFFFFULL);
+  wakePin_bitmask_lHi = static_cast<uint32_t>(mask >> 32);
+}
 
 #endif
 
