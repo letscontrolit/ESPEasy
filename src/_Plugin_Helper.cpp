@@ -12,7 +12,7 @@
 #include "src/Helpers/Misc.h"
 #include "src/Helpers/StringParser.h"
 
-# ifdef FEATURE_EXT1_WAKEUP
+# if FEATURE_EXT1_WAKEUP
 #  include "driver/rtc_io.h"
 # endif 
 

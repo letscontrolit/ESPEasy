@@ -4546,7 +4546,7 @@ To create/register a plugin, you have to :
 
 #endif // CUSTOMBUILD_DEFINE_PLUGIN_SETS_H
 
-#if SOC_PM_SUPPORT_EXT1_WAKEUP
+#if SOC_PM_SUPPORT_EXT1_WAKEUP && defined(ESP32)
 #define FEATURE_EXT1_WAKEUP 1
 #else
 #define FEATURE_EXT1_WAKEUP 0

@@ -598,8 +598,7 @@ public:
  #ifdef ESP32
   uint32_t      wakePin_bitmask_lLo=0;
   uint32_t      wakePin_bitmask_lHi=0;
-  // int8_t     wakeOnLow = 1;
-
+  // int8_t     wakeOnLow = 1; // Chromoxdor: a checkbox for wake on LOW or HIGH can be added later, but for now this is as far as i go
   unsigned int OLD_TaskDeviceID[N_TASKS - 10] = {0};  // UNUSED: this can be reused
   #else
   unsigned int  OLD_TaskDeviceID[N_TASKS - 8] = {0};  // UNUSED: this can be reused
