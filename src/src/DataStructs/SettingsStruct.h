@@ -367,7 +367,8 @@ public:
     // --- Wake GPIO mask handling ---
   uint64_t getWakeGpioMask() const;
   void     setWakeGpioMask(uint64_t mask);
-  bool&    wakeOnHigh();
+  bool     wakeOnHigh();
+  void     setWakeOnHigh(bool value);
   #  endif // if FEATURE_PIN_WAKEUP
 
 #if FEATURE_SPI
@@ -596,9 +597,9 @@ public:
   int8_t        SPI1_SCLK_pin = -1;
   int8_t        SPI1_MISO_pin = -1;
   int8_t        SPI1_MOSI_pin = -1;
-  uint32_t      wakePin_bitmask_lLo=0;
-  uint32_t      wakePin_bitmask_lHi=0;
-  boolean       wakeOnHigh_ckd = false;
+  uint32_t      wakePin_bitmask_lLo = 0;
+  uint32_t      wakePin_bitmask_lHi = 0;
+  uint32_t      wakeOnHigh_ckd = 0;
   unsigned int OLD_TaskDeviceID[N_TASKS - 11] = {0};  // UNUSED: this can be reused
 
   // FIXME TD-er: When used on ESP8266, this conversion union may not work

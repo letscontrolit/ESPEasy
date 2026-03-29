@@ -117,8 +117,9 @@ GPIO wake-up on newer devices supports per-pin trigger level configuration, but 
 When the unit wakes up from deep sleep, an event is generated with the GPIO number that caused the wakeup.
 ``"EVENT: System#GPIOWake=XX"``, where ``XX`` is the GPIO number.
 
-Make sure to add a pull-up or pull-down resistor to the selected GPIO pin(s) if they are not already present, to avoid false wakeups.
+Make sure to add a pull-up or pull-down resistor to the selected GPIO pin(s) when needed, to avoid false wakeups.
 (some GPIO pins have internal pull-up or pull-down resistors, but not all of them, and the internal pull-up/down may not be sufficient for stable operation in all cases)
+For **GPIO Wake-up** all internal pull-up/down resistors should work. No need to add them anywhere as this is done automatically.
 
 .. note::
 
@@ -126,12 +127,12 @@ Make sure to add a pull-up or pull-down resistor to the selected GPIO pin(s) if 
 
    **EXT1 Wake-up (RTC)**
 
-   If ``SOC_PM_SUPPORT_EXT1_WAKEUP`` is available, EXT1 wake-up is used:
+   If ``SOC_PM_SUPPORT_EXT1_WAKEUP`` is available, EXT1 wake-up is used (e.g. ESP32 classic, ESP32-S2, ESP32-S3, ESP32-C6):
 
    - Only works on RTC-capable pins
    - Very low power (RTC domain)
 
-   **GPIO Wake-up (Fallback)**
+   **GPIO Wake-up**
 
    On platforms without EXT1 support (e.g. ESP32-C3), GPIO wake-up is used:
 

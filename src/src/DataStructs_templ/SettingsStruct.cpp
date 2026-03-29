@@ -1002,8 +1002,17 @@ void SettingsStruct_tmpl<N_TASKS>::setWakeGpioMask(uint64_t mask) {
 }
 
 template<uint32_t N_TASKS>
-bool& SettingsStruct_tmpl<N_TASKS>::wakeOnHigh() {
-  return wakeOnHigh_ckd;
+bool SettingsStruct_tmpl<N_TASKS>::wakeOnHigh() {
+    return (wakeOnHigh_ckd & 0x1) != 0;
+}
+
+template<uint32_t N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::setWakeOnHigh(bool value) {
+    if (value) {
+        wakeOnHigh_ckd |= 0x1;
+    } else {
+        wakeOnHigh_ckd &= ~0x1;
+    }
 }
 #endif
 

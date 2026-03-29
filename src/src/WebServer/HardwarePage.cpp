@@ -71,7 +71,7 @@ void handle_hardware() {
     #  if FEATURE_PIN_WAKEUP
     gpio = 0;
     uint64_t wakeGpioMask = 0;
-    Settings.wakeOnHigh() = isFormItemChecked(F("WoHi")); // Wake on HIGH or LOW
+    Settings.setWakeOnHigh(isFormItemChecked(F("WoHi")));  // Wake on HIGH or LOW
     while (gpio <= MAX_GPIO) {
       if (esp_sleep_is_valid_wakeup_gpio((gpio_num_t)gpio)) {
         char checkboxId[8]; // "WoL" + max 2 digits + null terminator
