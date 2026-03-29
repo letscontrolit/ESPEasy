@@ -74,12 +74,8 @@ void handle_hardware() {
     Settings.setWakeOnHigh(isFormItemChecked(F("WoHi")));  // Wake on HIGH or LOW
     while (gpio <= MAX_GPIO) {
       if (esp_sleep_is_valid_wakeup_gpio((gpio_num_t)gpio)) {
-        char checkboxId[8]; // "WoL" + max 2 digits + null terminator
-        snprintf(checkboxId, sizeof(checkboxId), "WoL%d", gpio);
-         // if the checkbox is checked, set the corresponding bit in wakeMask
-        if (isFormItemChecked(checkboxId)) {
-          wakeGpioMask |= (1ULL << gpio);
-        }
+        String checkboxId = strformat(F("WoL%d"), gpio);
+        bitWrite(wakeGpioMask, gpio, isFormItemChecked(checkboxId));
       }
       ++gpio;
     }
@@ -149,7 +145,7 @@ void handle_hardware() {
   #else
   addFormSubHeader(F("GPIO Wake-up"));
   #endif
-  addFormDetailsStart(0);
+  addFormDetailsStart(Settings.getWakeGpioMask() != 0);
   addFormCheckBox(F("Wake on HIGH"), F("WoHi"), Settings.wakeOnHigh());
   #if FEATURE_PIN_WAKEUP == 1
   addFormNote(F("(default: Wake on LOW) Add an external Pull-Resistor if needed!"));

@@ -645,12 +645,9 @@ void addFormPinStateSelect(int gpio, int choice)
 void addFormPinWakeSelect(int gpio, uint64_t wakeGpioMask){
     if (esp_sleep_is_valid_wakeup_gpio((gpio_num_t)gpio)) {
       // Check if this GPIO is part of the wake mask
-      bool checked = (wakeGpioMask & (1ULL << gpio)) != 0;
-      char label[20];      //  "Wake from GPIO-" + GPIO number + null
-      char checkboxId[10];  // "WoL" + GPIO number + null
-
-      snprintf(checkboxId, sizeof(checkboxId), "WoL%d", gpio);
-      snprintf(label, sizeof(label), "Wake from GPIO-%d", gpio);
+      bool checked = bitRead(wakeGpioMask, gpio);
+      String checkboxId = strformat(F("WoL%d"), gpio);
+      String label      = strformat(F("Wake from GPIO-%d"), gpio);
 
       addFormCheckBox(label, checkboxId, checked);
     }

@@ -533,7 +533,7 @@ public:
   uint32_t WireClockStretchLimit = 0;
   union {
     struct {
-      uint32_t unused_00                        : 1; // Bit 0
+      uint32_t wakeOnHigh_ckd                   : 1; // Bit 0 //used for wake on high or low
       uint32_t unused_01                        : 1; // Bit 1
       uint32_t unused_02                        : 1; // Bit 2
       uint32_t unused_03                        : 1; // Bit 3
@@ -599,8 +599,8 @@ public:
   int8_t        SPI1_MOSI_pin = -1;
   uint32_t      wakePin_bitmask_lLo = 0;
   uint32_t      wakePin_bitmask_lHi = 0;
-  uint32_t      wakeOnHigh_ckd = 0;
-  unsigned int OLD_TaskDeviceID[N_TASKS - 11] = {0};  // UNUSED: this can be reused
+
+  unsigned int OLD_TaskDeviceID[N_TASKS - 10] = {0};  // UNUSED: this can be reused
 
   // FIXME TD-er: When used on ESP8266, this conversion union may not work
   // It might work as it is 32-bit in size.

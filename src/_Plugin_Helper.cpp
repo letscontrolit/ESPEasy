@@ -216,7 +216,7 @@ void setupGpioWakeup(uint64_t ext1_mask) {
   if (ext1_mask == 0) {
     #if FEATURE_PIN_WAKEUP == 1
       esp_sleep_disable_wakeup_source(ESP_SLEEP_WAKEUP_EXT1);
-    #else
+    #elif FEATURE_PIN_WAKEUP == 2
       esp_sleep_disable_wakeup_source(ESP_SLEEP_WAKEUP_GPIO);
     #endif
     return;
@@ -238,7 +238,7 @@ void setupGpioWakeup(uint64_t ext1_mask) {
 
   // Configure pull-ups/pull-downs for all pins in the mask
   for (int gpio = 0; gpio < 64; ++gpio) {
-    if (ext1_mask & (1ULL << gpio)) {
+    if (bitRead(ext1_mask, gpio)) {
       gpio_num_t rtc_gpio = static_cast<gpio_num_t>(gpio);
 
       if (!Settings.wakeOnHigh()) {
@@ -261,7 +261,7 @@ void setupGpioWakeup(uint64_t ext1_mask) {
 
   // Configure all pins in the mask
   for (int gpio = 0; gpio < 64; ++gpio) {
-    if (ext1_mask & (1ULL << gpio)) {
+    if (bitRead(ext1_mask, gpio)) {
       gpio_num_t rtc_gpio = static_cast<gpio_num_t>(gpio);
 
       // if (!Settings.wakeOnHigh()) {
