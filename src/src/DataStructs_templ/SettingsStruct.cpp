@@ -987,7 +987,7 @@ void SettingsStruct_tmpl<N_TASKS>::setPinBootState(int8_t gpio_pin, PinBootState
 # endif // ifdef ESP32
 }
 
-#  if FEATURE_EXT1_WAKEUP
+#  if FEATURE_PIN_WAKEUP
 
 template<uint32_t N_TASKS>
 uint64_t SettingsStruct_tmpl<N_TASKS>::getWakeGpioMask() const {
@@ -1001,6 +1001,10 @@ void SettingsStruct_tmpl<N_TASKS>::setWakeGpioMask(uint64_t mask) {
   wakePin_bitmask_lHi = static_cast<uint32_t>(mask >> 32);
 }
 
+template<uint32_t N_TASKS>
+bool& SettingsStruct_tmpl<N_TASKS>::wakeOnHigh() {
+  return wakeOnHigh_ckd;
+}
 #endif
 
 #if FEATURE_SPI

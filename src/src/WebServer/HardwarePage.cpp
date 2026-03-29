@@ -21,8 +21,9 @@
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_GPIO.h"
 
-# ifdef FEATURE_EXT1_WAKEUP
+# ifdef FEATURE_PIN_WAKEUP
 #include "../../_Plugin_Helper.h"
+#include "driver/rtc_io.h"
 # endif 
 
 // ********************************************************************************
@@ -67,11 +68,12 @@ void handle_hardware() {
       ++gpio;
     }
     
-    #  if FEATURE_EXT1_WAKEUP
+    #  if FEATURE_PIN_WAKEUP
     gpio = 0;
     uint64_t wakeGpioMask = 0;
+    Settings.wakeOnHigh() = isFormItemChecked(F("WoHi")); // Wake on HIGH or LOW
     while (gpio <= MAX_GPIO) {
-      if (validGpio(gpio)) {
+      if (esp_sleep_is_valid_wakeup_gpio((gpio_num_t)gpio)) {
         char checkboxId[8]; // "WoL" + max 2 digits + null terminator
         snprintf(checkboxId, sizeof(checkboxId), "WoL%d", gpio);
          // if the checkbox is checked, set the corresponding bit in wakeMask
@@ -83,7 +85,7 @@ void handle_hardware() {
     }
     Settings.setWakeGpioMask(wakeGpioMask); // save the bitmask
     setupGpioWakeup(wakeGpioMask); //attach gpios for wakeup
-    #  endif // if FEATURE_EXT1_WAKEUP
+    #  endif // if FEATURE_PIN_WAKEUP
 
     error += SaveSettings();
     addHtmlError(error);
@@ -141,16 +143,24 @@ void handle_hardware() {
   }
   addFormDetailsEnd();
 
- #  if FEATURE_EXT1_WAKEUP
-  addFormSubHeader(F("GPIO wake from sleep"));
+ #  if FEATURE_PIN_WAKEUP
+  #if FEATURE_PIN_WAKEUP == 1
+  addFormSubHeader(F("EXT1 Wake-up Pins"));
+  #else
+  addFormSubHeader(F("GPIO Wake-up"));
+  #endif
   addFormDetailsStart(0);
-
-  addFormNote(F("For pins without internal pull-up, add external resistor if unstable."));
+  addFormCheckBox(F("Wake on HIGH"), F("WoHi"), Settings.wakeOnHigh());
+  #if FEATURE_PIN_WAKEUP == 1
+  addFormNote(F("(default: Wake on LOW) Add an external Pull-Resistor if needed!"));
+  #else
+  addFormNote(F("(default: Wake on LOW) No external pull-up/down resistors are needed"));
+  #endif
   for (int gpio = 0; gpio <= MAX_GPIO; ++gpio) {
     addFormPinWakeSelect(gpio, Settings.getWakeGpioMask());
   }
   addFormDetailsEnd();
-  #  endif // if FEATURE_EXT1_WAKEUP
+  #  endif // if FEATURE_PIN_WAKEUP
 
   addFormSeparator(2);
 

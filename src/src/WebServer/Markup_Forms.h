@@ -311,9 +311,9 @@ void addFormPinStateSelect(int gpio,
 // ********************************************************************************
 // Add a GPIO wake select list
 // ********************************************************************************
-#  if FEATURE_EXT1_WAKEUP
+#  if FEATURE_PIN_WAKEUP
 void addFormPinWakeSelect(int gpio, uint64_t wakeGpioMask);
-#  endif // if FEATURE_EXT1_WAKEUP
+#  endif // if FEATURE_PIN_WAKEUP
 
 // ********************************************************************************
 // Retrieve return values from form/checkbox.

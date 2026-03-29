@@ -12,13 +12,12 @@
 #include "src/Helpers/Misc.h"
 #include "src/Helpers/StringParser.h"
 
-# if FEATURE_EXT1_WAKEUP
-#  include "driver/rtc_io.h"
-# endif 
+#if FEATURE_PIN_WAKEUP
+# include "driver/rtc_io.h"
+#endif
 
 
 PluginTaskData_base *Plugin_task_data[TASKS_MAX] = {};
-
 
 String PCONFIG_LABEL(int n) {
   if (n < PLUGIN_CONFIGVAR_MAX) {
@@ -51,9 +50,9 @@ bool initPluginTaskData(taskIndex_t taskIndex, PluginTaskData_base *data) {
   }
 
   // 2nd heap may have been active to allocate the PluginTaskData, but here we need to keep the default heap active
-  # ifdef USE_SECOND_HEAP
+  #ifdef USE_SECOND_HEAP
   HeapSelectDram ephemeral;
-  # endif // ifdef USE_SECOND_HEAP
+  #endif // ifdef USE_SECOND_HEAP
 
 
   clearPluginTaskData(taskIndex);
@@ -65,16 +64,18 @@ bool initPluginTaskData(taskIndex_t taskIndex, PluginTaskData_base *data) {
 
   #if FEATURE_PLUGIN_STATS
       const uint8_t valueCount = getValueCountForTask(taskIndex);
+
       for (size_t i = 0; i < valueCount; ++i) {
         if (Cache.enabledPluginStats(taskIndex, i)) {
           Plugin_task_data[taskIndex]->initPluginStats(i);
         }
       }
-  #endif
+  #endif // if FEATURE_PLUGIN_STATS
   #if FEATURE_PLUGIN_FILTER
-  // TODO TD-er: Implement init
 
-  #endif
+      // TODO TD-er: Implement init
+
+  #endif // if FEATURE_PLUGIN_FILTER
 
     } else {
       delete data;
@@ -85,7 +86,7 @@ bool initPluginTaskData(taskIndex_t taskIndex, PluginTaskData_base *data) {
 
 PluginTaskData_base* getPluginTaskData(taskIndex_t taskIndex) {
   if (pluginTaskData_initialized(taskIndex)) {
-    
+
     if (!Plugin_task_data[taskIndex]->baseClassOnly()) {
       return Plugin_task_data[taskIndex];
     }
@@ -100,7 +101,6 @@ PluginTaskData_base* getPluginTaskDataBaseClassOnly(taskIndex_t taskIndex) {
   return nullptr;
 }
 
-
 bool pluginTaskData_initialized(taskIndex_t taskIndex) {
   if (!validTaskIndex(taskIndex)) {
     return false;
@@ -109,29 +109,24 @@ bool pluginTaskData_initialized(taskIndex_t taskIndex) {
          (Plugin_task_data[taskIndex]->_taskdata_pluginID == Settings.getPluginID_for_task(taskIndex));
 }
 
-String getPluginCustomArgName(int varNr) {
-  return getPluginCustomArgName(F("pc_arg"), varNr);
-}
+String getPluginCustomArgName(int varNr)                                   { return getPluginCustomArgName(F("pc_arg"), varNr); }
 
-String getPluginCustomArgName(const __FlashStringHelper * label, int varNr) {
-  return concat(label, varNr + 1);
-}
+String getPluginCustomArgName(const __FlashStringHelper *label, int varNr) { return concat(label, varNr + 1); }
 
-int getFormItemIntCustomArgName(int varNr) {
-  return getFormItemInt(getPluginCustomArgName(varNr));
-}
+int    getFormItemIntCustomArgName(int varNr)                              { return getFormItemInt(getPluginCustomArgName(varNr)); }
 
 // Helper function to create formatted custom values for display in the devices overview page.
 // When called from PLUGIN_WEBFORM_SHOW_VALUES, the last item should add a traling div_br class
 // if the regular values should also be displayed.
 // The call to PLUGIN_WEBFORM_SHOW_VALUES should only return success = true when no regular values should be displayed
 // Note that the varNr of the custom values should not conflict with the existing variable numbers (e.g. start at VARS_PER_TASK)
-void pluginWebformShowValue(taskIndex_t taskIndex, uint8_t varNr, const __FlashStringHelper * label, const String& value, bool addTrailingBreak) {
+void pluginWebformShowValue(taskIndex_t taskIndex, uint8_t varNr, const __FlashStringHelper *label, const String& value,
+                            bool addTrailingBreak) {
   pluginWebformShowValue(taskIndex, varNr, String(label), value, addTrailingBreak);
 }
 
 void pluginWebformShowValue(taskIndex_t   taskIndex,
-                            uint8_t          varNr,
+                            uint8_t       varNr,
                             const String& label,
                             const String& value,
                             bool          addTrailingBreak) {
@@ -179,11 +174,12 @@ bool pluginOptionalTaskIndexArgumentMatch(taskIndex_t taskIndex, const String& s
   return found_taskIndex == taskIndex;
 }
 
-bool pluginWebformShowGPIOdescription(taskIndex_t taskIndex,
-                                      const __FlashStringHelper * newline,
-                                      String& description)
+bool pluginWebformShowGPIOdescription(taskIndex_t                taskIndex,
+                                      const __FlashStringHelper *newline,
+                                      String                   & description)
 {
   struct EventStruct TempEvent(taskIndex);
+
   TempEvent.String1 = newline;
   return PluginCall(PLUGIN_WEBFORM_SHOW_GPIO_DESCR, &TempEvent, description);
 }
@@ -203,6 +199,7 @@ int checkDeviceVTypeForTask(struct EventStruct *event) {
       String dummy;
 
       event->idx = -1;
+
       if (PluginCall(PLUGIN_GET_DEVICEVTYPE, event, dummy)) {
         return event->idx; // pconfig_index
       }
@@ -211,49 +208,98 @@ int checkDeviceVTypeForTask(struct EventStruct *event) {
   return -1;
 }
 
-#  if FEATURE_EXT1_WAKEUP
+#if FEATURE_PIN_WAKEUP
+
 void setupGpioWakeup(uint64_t ext1_mask) {
 
-  #   if CONFIG_IDF_TARGET_ESP32
-  auto new_mode = ESP_EXT1_WAKEUP_ALL_LOW;
-#   else
-  auto new_mode = ESP_EXT1_WAKEUP_ANY_LOW;
-#   endif // if CONFIG_IDF_TARGET_ESP32
-
-// If no pins left → disable wakeup completely
+  // disable wakeup completely if nothin is selected
   if (ext1_mask == 0) {
-    esp_sleep_disable_wakeup_source(ESP_SLEEP_WAKEUP_EXT1);
+    #if FEATURE_PIN_WAKEUP == 1
+      esp_sleep_disable_wakeup_source(ESP_SLEEP_WAKEUP_EXT1);
+    #else
+      esp_sleep_disable_wakeup_source(ESP_SLEEP_WAKEUP_GPIO);
+    #endif
     return;
   }
 
-  // Loop through all possible GPIOs (0–63 for bitmask)
+#if FEATURE_PIN_WAKEUP == 1
+  // --- EXT1 Wakeup (supported on classic ESP32/S2/S3) ---
+  esp_sleep_ext1_wakeup_mode_t new_mode;
+
+  if (Settings.wakeOnHigh()) {
+    new_mode = ESP_EXT1_WAKEUP_ANY_HIGH;
+  } else {
+    #if CONFIG_IDF_TARGET_ESP32
+      new_mode = ESP_EXT1_WAKEUP_ALL_LOW;
+    #else
+      new_mode = ESP_EXT1_WAKEUP_ANY_LOW;
+    #endif
+  }
+
+  // Configure pull-ups/pull-downs for all pins in the mask
   for (int gpio = 0; gpio < 64; ++gpio) {
-
-    // Check if this GPIO is part of the mask
     if (ext1_mask & (1ULL << gpio)) {
-
       gpio_num_t rtc_gpio = static_cast<gpio_num_t>(gpio);
 
-      // Configure RTC pull-up (wake on LOW)
-      rtc_gpio_pullup_en(rtc_gpio);
-      rtc_gpio_pulldown_dis(rtc_gpio);
+      if (!Settings.wakeOnHigh()) {
+        rtc_gpio_pullup_en(rtc_gpio);
+        rtc_gpio_pulldown_dis(rtc_gpio);
+      } else {
+        rtc_gpio_pullup_dis(rtc_gpio);
+        rtc_gpio_pulldown_en(rtc_gpio);
+      }
     }
   }
+
+
   esp_sleep_enable_ext1_wakeup_io(ext1_mask, new_mode);
+
+#elif FEATURE_PIN_WAKEUP == 2
+  // --- GPIO-based wakeup for chips without EXT1 (e.g. ESP32-C3) ---
+  esp_deepsleep_gpio_wake_up_mode_t gpio_mode = 
+      Settings.wakeOnHigh() ? ESP_GPIO_WAKEUP_GPIO_HIGH : ESP_GPIO_WAKEUP_GPIO_LOW;
+
+  // Configure all pins in the mask
+  for (int gpio = 0; gpio < 64; ++gpio) {
+    if (ext1_mask & (1ULL << gpio)) {
+      gpio_num_t rtc_gpio = static_cast<gpio_num_t>(gpio);
+
+      // if (!Settings.wakeOnHigh()) {
+      //   gpio_pullup_en(rtc_gpio);
+      //   gpio_pulldown_dis(rtc_gpio);
+      // } else {
+      //   gpio_pullup_dis(rtc_gpio);
+      //   gpio_pulldown_en(rtc_gpio);
+      // }
+    }
+  }
+
+  esp_deep_sleep_enable_gpio_wakeup(ext1_mask, gpio_mode);
+
+#endif
 }
 
 int8_t getWakeupGPIO() {
-  if (esp_sleep_get_wakeup_cause() != ESP_SLEEP_WAKEUP_EXT1) {
-    return -1; // Not an EXT1 wakeup
-  }
+  esp_sleep_wakeup_cause_t cause = esp_sleep_get_wakeup_cause();
 
+#if FEATURE_PIN_WAKEUP == 1
+  if (cause != ESP_SLEEP_WAKEUP_EXT1) {
+    return -1;
+  }
   uint64_t wakeMask = esp_sleep_get_ext1_wakeup_status();
+#else
+  if (cause != ESP_SLEEP_WAKEUP_GPIO) {
+    return -1;
+  }
+  uint64_t wakeMask = esp_sleep_get_gpio_wakeup_status();
+#endif
 
   if (wakeMask == 0) {
     return -1;
   }
 
-  // Get first active GPIO (fast version)
+  // Return first active GPIO
   return __builtin_ctzll(wakeMask);
 }
-# endif 
+
+#endif // if FEATURE_PIN_WAKEUP

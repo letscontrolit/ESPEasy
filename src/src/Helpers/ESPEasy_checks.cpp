@@ -178,13 +178,8 @@ void run_compiletime_checks() {
   static_assert(198u == offsetof(SettingsStruct, TaskDeviceNumber), "NOTIFICATION_MAX has changed?");
 
   // All settings related to N_TASKS
-  #ifdef ESP32
-  static_assert((240 + TASKS_MAX) == offsetof(SettingsStruct, OLD_TaskDeviceID), ""); // 32-bit alignment, so offset of 2 bytes.
-  #else
-  static_assert((232 + TASKS_MAX) == offsetof(SettingsStruct, OLD_TaskDeviceID), ""); // 32-bit alignment, so offset of 2 bytes.
-  #endif
+  static_assert((244 + TASKS_MAX) == offsetof(SettingsStruct, OLD_TaskDeviceID), ""); // 32-bit alignment, so offset of 2 bytes.
   static_assert((200 + (67 * TASKS_MAX)) == offsetof(SettingsStruct, ControllerEnabled), "");
-
 
   // Used to compute true offset.
   //const size_t offset = offsetof(SettingsStruct, ControllerEnabled);

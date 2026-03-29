@@ -363,11 +363,12 @@ public:
   PinBootState getPinBootState(int8_t gpio_pin) const;
   void setPinBootState(int8_t gpio_pin, PinBootState state);
 
- # if FEATURE_EXT1_WAKEUP
+ # if FEATURE_PIN_WAKEUP
     // --- Wake GPIO mask handling ---
   uint64_t getWakeGpioMask() const;
   void     setWakeGpioMask(uint64_t mask);
-  #  endif // if FEATURE_EXT1_WAKEUP
+  bool&    wakeOnHigh();
+  #  endif // if FEATURE_PIN_WAKEUP
 
 #if FEATURE_SPI
   bool getSPI_pins(int8_t  spi_gpios[3],
@@ -595,14 +596,10 @@ public:
   int8_t        SPI1_SCLK_pin = -1;
   int8_t        SPI1_MISO_pin = -1;
   int8_t        SPI1_MOSI_pin = -1;
- #ifdef ESP32
   uint32_t      wakePin_bitmask_lLo=0;
   uint32_t      wakePin_bitmask_lHi=0;
-  // int8_t     wakeOnLow = 1; // Chromoxdor: a checkbox for wake on LOW or HIGH can be added later, but for now this is as far as i go
-  unsigned int OLD_TaskDeviceID[N_TASKS - 10] = {0};  // UNUSED: this can be reused
-  #else
-  unsigned int  OLD_TaskDeviceID[N_TASKS - 8] = {0};  // UNUSED: this can be reused
-  #endif
+  boolean       wakeOnHigh_ckd = false;
+  unsigned int OLD_TaskDeviceID[N_TASKS - 11] = {0};  // UNUSED: this can be reused
 
   // FIXME TD-er: When used on ESP8266, this conversion union may not work
   // It might work as it is 32-bit in size.

@@ -168,9 +168,9 @@ int getValueCountForTask(taskIndex_t taskIndex);
 // Return pconfig_index
 int checkDeviceVTypeForTask(struct EventStruct *event);
 
-#if FEATURE_EXT1_WAKEUP
+#if FEATURE_PIN_WAKEUP
 void setupGpioWakeup(uint64_t ext1_mask);
 int8_t getWakeupGPIO();
-#endif // if FEATURE_EXT1_WAKEUP
+#endif // if FEATURE_PIN_WAKEUP
 
 #endif // PLUGIN_HELPER_H
