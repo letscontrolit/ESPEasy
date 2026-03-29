@@ -1001,15 +1001,6 @@ void SettingsStruct_tmpl<N_TASKS>::setWakeGpioMask(uint64_t mask) {
   wakePin_bitmask_lHi = static_cast<uint32_t>(mask >> 32);
 }
 
-template<uint32_t N_TASKS>
-bool SettingsStruct_tmpl<N_TASKS>::wakeOnHigh() {
-    return VariousBits_3.wakeOnHigh_ckd;
-}
-
-template<uint32_t N_TASKS>
-void SettingsStruct_tmpl<N_TASKS>::setWakeOnHigh(bool value) {
-    VariousBits_3.wakeOnHigh_ckd = value;
-}
 #endif
 
 #if FEATURE_SPI

@@ -363,13 +363,14 @@ public:
   PinBootState getPinBootState(int8_t gpio_pin) const;
   void setPinBootState(int8_t gpio_pin, PinBootState state);
 
- # if FEATURE_PIN_WAKEUP
+#if FEATURE_PIN_WAKEUP
     // --- Wake GPIO mask handling ---
   uint64_t getWakeGpioMask() const;
   void     setWakeGpioMask(uint64_t mask);
-  bool     wakeOnHigh();
-  void     setWakeOnHigh(bool value);
-  #  endif // if FEATURE_PIN_WAKEUP
+
+  inline bool wakeOnHigh() { return VariousBits_3.wakeOnHigh_ckd; }
+  inline void setWakeOnHigh(bool value) { VariousBits_3.wakeOnHigh_ckd = value; }
+#endif // if FEATURE_PIN_WAKEUP
 
 #if FEATURE_SPI
   bool getSPI_pins(int8_t  spi_gpios[3],
