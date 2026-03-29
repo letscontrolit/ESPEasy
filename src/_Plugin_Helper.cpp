@@ -263,14 +263,6 @@ void setupGpioWakeup(uint64_t ext1_mask) {
   for (int gpio = 0; gpio < 64; ++gpio) {
     if (bitRead(ext1_mask, gpio)) {
       gpio_num_t rtc_gpio = static_cast<gpio_num_t>(gpio);
-
-      // if (!Settings.wakeOnHigh()) {
-      //   gpio_pullup_en(rtc_gpio);
-      //   gpio_pulldown_dis(rtc_gpio);
-      // } else {
-      //   gpio_pullup_dis(rtc_gpio);
-      //   gpio_pulldown_en(rtc_gpio);
-      // }
     }
   }
 

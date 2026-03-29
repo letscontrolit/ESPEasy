@@ -132,7 +132,13 @@ void handle_hardware() {
 #endif // if FEATURE_SD
 
   addFormSubHeader(F("GPIO boot states"));
-  addFormDetailsStart(0);
+  bool expandBootStates{};
+  int gpio = 0;
+  while (!expandBootStates && gpio <= MAX_GPIO) {
+    expandBootStates = Settings.getPinBootState(gpio) != PinBootState::Default_state;
+    ++gpio;
+  }
+  addFormDetailsStart(expandBootStates);
   
   for (int gpio = 0; gpio <= MAX_GPIO; ++gpio) {
     addFormPinStateSelect(gpio, static_cast<int>(Settings.getPinBootState(gpio)));

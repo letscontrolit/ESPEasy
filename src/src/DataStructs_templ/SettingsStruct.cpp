@@ -1003,12 +1003,12 @@ void SettingsStruct_tmpl<N_TASKS>::setWakeGpioMask(uint64_t mask) {
 
 template<uint32_t N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::wakeOnHigh() {
-    return bitRead(VariousBits_3._all_bits, 0);  // Bit 0 = wakeOnHigh_ckd
+    return VariousBits_3.wakeOnHigh_ckd;
 }
 
 template<uint32_t N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::setWakeOnHigh(bool value) {
-    bitWrite(VariousBits_3._all_bits, 0, value); // Bit 0 = wakeOnHigh_ckd
+    VariousBits_3.wakeOnHigh_ckd = value;
 }
 #endif
 
