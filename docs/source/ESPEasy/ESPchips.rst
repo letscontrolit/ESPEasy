@@ -95,7 +95,7 @@ ESPEasy does support a number of variants of the processors manufactured by Espr
       - 240 (solo1:160)
       - 240
       - 240
-      - 240
+      - 320
       - 120
       - 160
       - 240
@@ -117,18 +117,18 @@ ESPEasy does support a number of variants of the processors manufactured by Espr
       - 3.0 ~ 3.6
       - 3.0 ~ 3.6 
    *  - ESPEasy supported since
-      - 05/15/26
+      - 2026/05
       - 2017/12 (solo1:2023/05)
-      - 09/21/26
-      - 05/23/26
+      - 2021/09
+      - 2023/05
       - 
-      - 11/23/26
-      - 05/23/26
-      - 01/26/26
-      - 11/23/26
-      - 01/26/26
+      - 2023/11
+      - 2023/05
+      - 2026/01
+      - 2023/11
+      - 2026/01
       - n/a
-      - 01/26/26 
+      - 2026/01
    *  - Introduction
       - 2014
       - 2016
