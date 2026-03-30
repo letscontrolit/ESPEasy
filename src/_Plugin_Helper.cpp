@@ -265,13 +265,6 @@ void setupGpioWakeup(uint64_t ext1_mask) {
   esp_deepsleep_gpio_wake_up_mode_t gpio_mode = 
       Settings.wakeOnHigh() ? ESP_GPIO_WAKEUP_GPIO_HIGH : ESP_GPIO_WAKEUP_GPIO_LOW;
 
-  // Configure all pins in the mask
-  for (int gpio = 0; gpio < 64; ++gpio) {
-    if (bitRead(ext1_mask, gpio)) {
-      gpio_num_t rtc_gpio = static_cast<gpio_num_t>(gpio);
-    }
-  }
-
   esp_deep_sleep_enable_gpio_wakeup(ext1_mask, gpio_mode);
 
 #endif

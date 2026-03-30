@@ -128,7 +128,7 @@ For **GPIO Wake-up** all internal pull-up/down resistors should work. No need to
 
    **EXT1 Wake-up (RTC)**
 
-   If ``SOC_PM_SUPPORT_EXT1_WAKEUP`` is available, EXT1 wake-up is used (e.g. ESP32 classic, ESP32-S2, ESP32-S3, ESP32-C6):
+   If ``SOC_PM_SUPPORT_EXT1_WAKEUP`` is available, EXT1 wake-up is used (e.g. ESP32 classic, ESP32-S2, ESP32-S3, ESP32-C6, ESP32-H2):
 
    - Only works on RTC-capable pins
    - Very low power (RTC domain)
