@@ -241,12 +241,18 @@ void setupGpioWakeup(uint64_t ext1_mask) {
     if (bitRead(ext1_mask, gpio)) {
       gpio_num_t rtc_gpio = static_cast<gpio_num_t>(gpio);
 
-      if (!Settings.wakeOnHigh()) {
-        rtc_gpio_pullup_en(rtc_gpio);
-        rtc_gpio_pulldown_dis(rtc_gpio);
-      } else {
+      if (!Settings.getWakePulls()) {
+        if (!Settings.wakeOnHigh()) {
+          rtc_gpio_pullup_en(rtc_gpio);
+          rtc_gpio_pulldown_dis(rtc_gpio);
+        } else {
+          rtc_gpio_pullup_dis(rtc_gpio);
+          rtc_gpio_pulldown_en(rtc_gpio);
+        }
+      }
+      else {
         rtc_gpio_pullup_dis(rtc_gpio);
-        rtc_gpio_pulldown_en(rtc_gpio);
+        rtc_gpio_pulldown_dis(rtc_gpio);
       }
     }
   }

@@ -72,6 +72,7 @@ void handle_hardware() {
     gpio = 0;
     uint64_t wakeGpioMask = 0;
     Settings.setWakeOnHigh(isFormItemChecked(F("WoHi")));  // Wake on HIGH or LOW
+    Settings.setWakePulls(isFormItemChecked(F("WakePulls")));  // disable internal pulls for wakeup pins
     while (gpio <= MAX_GPIO) {
       if (esp_sleep_is_valid_wakeup_gpio((gpio_num_t)gpio)) {
         String checkboxId = strformat(F("WoL%d"), gpio);
@@ -152,6 +153,9 @@ void handle_hardware() {
   addFormSubHeader(F("GPIO Wake-up"));
   #endif
   addFormDetailsStart(Settings.getWakeGpioMask() != 0);
+  #if FEATURE_PIN_WAKEUP == 1
+  addFormCheckBox(F("Disable internal pulls"), F("WakePulls"), Settings.getWakePulls());
+  #endif
   addFormCheckBox(F("Wake on HIGH"), F("WoHi"), Settings.wakeOnHigh());
   #if FEATURE_PIN_WAKEUP == 1
   addFormNote(F("(default: Wake on LOW) Add an external Pull-Resistor if needed!"));

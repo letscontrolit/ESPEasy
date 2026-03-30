@@ -110,6 +110,7 @@ GPIO wake from sleep
           This feature is only available on ESP32 devices.
 
 Supported GPIO pins can be selected to wake the unit from deep sleep.
+For ESP32 devices with EXT1 wake-up support, the internal RTC-Resistors can be disabled globally and it applies to **all** selected pins.
 The signal level (HIGH or LOW) is configured globally and applies to **all** selected pins.
 GPIO wake-up on newer devices supports per-pin trigger level configuration, but this comes at the cost of higher power consumption.
 **TODO:**   Integrate per-pin trigger level selection for GPIO wake-up.
