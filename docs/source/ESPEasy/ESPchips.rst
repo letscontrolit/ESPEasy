@@ -48,7 +48,7 @@ ESPEasy does support a number of variants of the processors manufactured by Espr
 
 .. list-table:: Espressif platforms
    :header-rows: 1
-   :widths: 7 7 7 7 7 7 7 7 7 7 7 7
+   :widths: 7 7 7 7 7 7 7 7 7 7 7 7 7
    :stub-columns: 1   
    
    *  - 
