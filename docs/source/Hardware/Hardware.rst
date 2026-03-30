@@ -115,7 +115,7 @@ GPIO wake-up on newer devices supports per-pin trigger level configuration, but 
 **TODO:**   Integrate per-pin trigger level selection for GPIO wake-up.
 
 When the unit wakes up from deep sleep, an event is generated with the GPIO number that caused the wakeup.
-``"EVENT: System#GPIOWake=XX"``, where ``XX`` is the GPIO number.
+``"EVENT: System#GPIOWake=X"``, where ``X`` is the GPIO number.
 
 Make sure to add a pull-up or pull-down resistor to the selected GPIO pin(s) when needed, to avoid false wakeups.
 (some GPIO pins have internal pull-up or pull-down resistors, but not all of them, and the internal pull-up/down may not be sufficient for stable operation in all cases)
@@ -145,3 +145,7 @@ For **GPIO Wake-up** all internal pull-up/down resistors should work. No need to
    - GPIO wake-up: fallback for newer chips, more flexible but less efficient
 
    The firmware automatically selects the correct method at compile time.
+
+.. warning::
+        When using this feature, be aware that if you are also using a GPIO in rules (e.g., Monitor,GPIO,8) or in a Plugin Task (P001), you might get an event at wakeup if the button is pressed slightly too long, which can cause unexpected behavior.
+        If this is unwanted, take precautions such as monitoring the GPIO a bit later after boot (e.g., with a timer), or disabling the corresponding task and enabling it later after boot (e.g., with a timer) to avoid this.
