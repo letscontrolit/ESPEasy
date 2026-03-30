@@ -370,8 +370,8 @@ public:
 
   inline bool wakeOnHigh() { return VariousBits_3.wakeOnHigh_ckd; }
   inline void setWakeOnHigh(bool value) { VariousBits_3.wakeOnHigh_ckd = value; }
-  inline bool getWakePulls() { return VariousBits_3.diableWakePulls; }
-  inline void setWakePulls(bool value) { VariousBits_3.diableWakePulls = value; }
+  inline bool getWakePulls() { return VariousBits_3.disableWakePulls; }
+  inline void setWakePulls(bool value) { VariousBits_3.disableWakePulls = value; }
 #endif // if FEATURE_PIN_WAKEUP
 
 #if FEATURE_SPI
@@ -537,7 +537,7 @@ public:
   union {
     struct {
       uint32_t wakeOnHigh_ckd                   : 1; // Bit 0 //HardwarePage: used for wake on high or low
-      uint32_t diableWakePulls                  : 1; // Bit 1 //HardwarePage: used for for disabling pulls in general
+      uint32_t disableWakePulls                 : 1; // Bit 1 //HardwarePage: used for disabling internal pulls in general
       uint32_t unused_02                        : 1; // Bit 2
       uint32_t unused_03                        : 1; // Bit 3
       uint32_t unused_04                        : 1; // Bit 4
