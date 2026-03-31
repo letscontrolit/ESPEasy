@@ -447,13 +447,11 @@ public:
   }
 
   uint32_t getVariousBits2() const {
-    uint32_t res;
-    memcpy(&res, &VariousBits_2, sizeof(VariousBits_2));
-    return res;    
+    return VariousBits_2._all_bits;    
   }
 
   void setVariousBits2(uint32_t value) {
-    memcpy(&VariousBits_2, &value, sizeof(VariousBits_2));
+    VariousBits_2._all_bits = value;
   }
 
   bool getNetworkEnabled(ESPEasy::net::networkIndex_t index) const;
@@ -514,14 +512,59 @@ public:
   uint8_t       SDLogLevel = 0;
   uint32_t BaudRate = 115200;
   uint32_t MessageDelay_unused = 0;  // MQTT settings now moved to the controller settings.
-  uint8_t       deepSleep_wakeTime = 0;   // 0 = Sleep Disabled, else time awake from sleep in seconds
-  boolean       CustomCSS = false;
-  boolean       DST = false;
-  uint8_t       WDI2CAddress = 0;
-  boolean       UseRules = false;
-  boolean       UseSerial = false;
-  boolean       UseSSDP = false;
-  uint8_t       ExternalTimeSource = 0;
+  union {
+    struct {
+      uint32_t deepSleep_wakeTime               : 8; // Bit 0..7, 0 = Sleep Disabled, else time awake from sleep in seconds
+      uint32_t CustomCSS                        : 1; // Bit 8 used
+      uint32_t unusedU0_09                      : 1; // Bit 9
+      uint32_t unusedU0_10                      : 1; // Bit 10
+      uint32_t unusedU0_11                      : 1; // Bit 11
+      uint32_t unusedU0_12                      : 1; // Bit 12
+      uint32_t unusedU0_13                      : 1; // Bit 13
+      uint32_t unusedU0_14                      : 1; // Bit 14
+      uint32_t unusedU0_15                      : 1; // Bit 15
+      uint32_t DST                              : 1; // Bit 16 used
+      uint32_t unusedU0_17                      : 1; // Bit 17
+      uint32_t unusedU0_18                      : 1; // Bit 18
+      uint32_t unusedU0_19                      : 1; // Bit 19
+      uint32_t unusedU0_20                      : 1; // Bit 20
+      uint32_t unusedU0_21                      : 1; // Bit 21
+      uint32_t unusedU0_22                      : 1; // Bit 22
+      uint32_t unusedU0_23                      : 1; // Bit 23
+      uint32_t WDI2CAddress                     : 8; // Bit 24..31 used
+    };
+    uint32_t _unnamedUnion0{};
+  };
+  union {
+    struct {
+      uint32_t UseRules                         : 1; // Bit 0 used
+      uint32_t unusedU1_01                      : 1; // Bit 1
+      uint32_t unusedU1_02                      : 1; // Bit 2
+      uint32_t unusedU1_03                      : 1; // Bit 3
+      uint32_t unusedU1_04                      : 1; // Bit 4
+      uint32_t unusedU1_05                      : 1; // Bit 5
+      uint32_t unusedU1_06                      : 1; // Bit 6
+      uint32_t unusedU1_07                      : 1; // Bit 7
+      uint32_t UseSerial                        : 1; // Bit 8 used
+      uint32_t unusedU1_09                      : 1; // Bit 9
+      uint32_t unusedU1_10                      : 1; // Bit 10
+      uint32_t unusedU1_11                      : 1; // Bit 11
+      uint32_t unusedU1_12                      : 1; // Bit 12
+      uint32_t unusedU1_13                      : 1; // Bit 13
+      uint32_t unusedU1_14                      : 1; // Bit 14
+      uint32_t unusedU1_15                      : 1; // Bit 15
+      uint32_t UseSSDP                          : 1; // Bit 16 used
+      uint32_t unusedU1_17                      : 1; // Bit 17
+      uint32_t unusedU1_18                      : 1; // Bit 18
+      uint32_t unusedU1_19                      : 1; // Bit 19
+      uint32_t unusedU1_20                      : 1; // Bit 20
+      uint32_t unusedU1_21                      : 1; // Bit 21
+      uint32_t unusedU1_22                      : 1; // Bit 22
+      uint32_t unusedU1_23                      : 1; // Bit 23
+      uint32_t ExternalTimeSource               : 8; // Bit 24..31 used
+    };
+    uint32_t _unnamedUnion1{};
+  };
   uint32_t WireClockStretchLimit = 0;
   union {
     struct {
