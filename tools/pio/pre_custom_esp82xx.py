@@ -22,6 +22,7 @@ if os.path.isfile('src/Custom.h'):
   custom_defines=["-DUSE_CUSTOM_H"]
 else:
   custom_defines=[
+    "-DESP8266",
     "-DCONTROLLER_SET_ALL",
     "-DNOTIFIER_SET_NONE",
     "-DPLUGIN_SET_NONE",
@@ -61,7 +62,7 @@ else:
 
     "-DFEATURE_MQTT_TLS=0",
     "-DFEATURE_EMAIL_TLS=0",
-#    "-DFEATURE_MDNS=1",
+    "-DFEATURE_MDNS=1",
 #    "-DFEATURE_SD=1",
     "-DFEATURE_EXT_RTC=1",
     "-DFEATURE_I2CMULTIPLEXER=1",

@@ -174,6 +174,7 @@ void sendHeadandTail_stdtemplate(bool Tail, bool rebooting) {
 }
 
 bool captivePortal() {
+  if (!Settings.ApCaptivePortal()) return false;
   const IPAddress client_localIP = web_server.client().localIP();
   const bool fromAP              = client_localIP == apIP;
   const bool hasWiFiCredentials  = SecuritySettings.hasWiFiCredentials();

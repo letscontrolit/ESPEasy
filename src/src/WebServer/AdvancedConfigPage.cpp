@@ -134,7 +134,9 @@ void handle_advanced() {
 #if FEATURE_USE_IPV6
     Settings.EnableIPv6(isFormItemChecked(LabelType::ENABLE_IPV6));
 #endif
-
+#if FEATURE_MDNS
+    Settings.Use_mDNS(isFormItemChecked(LabelType::USE_MDNS));
+#endif
 
 
 
@@ -400,6 +402,10 @@ void handle_advanced() {
 #if FEATURE_USE_IPV6
   ,LabelType::ENABLE_IPV6
 #endif
+#if FEATURE_MDNS
+  ,LabelType::USE_MDNS
+#endif
+
         };
   addFormCheckBoxes(labels, NR_ELEMENTS(labels));
 }

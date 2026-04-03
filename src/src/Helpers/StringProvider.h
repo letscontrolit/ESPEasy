@@ -138,9 +138,10 @@ struct LabelType {
 //    IP6_GATEWAY,
 #endif
     CLIENT_IP,               // 192.168.1.67
-    #if FEATURE_MDNS
+#if FEATURE_MDNS
     M_DNS,                   // breadboard.local
-    #endif // if FEATURE_MDNS
+    USE_MDNS,
+#endif // if FEATURE_MDNS
     DNS,                     // 192.168.1.1 / (IP unset)
     DNS_1,
     DNS_2,

@@ -313,6 +313,9 @@ void handle_sysinfo() {
 void handle_sysinfo_basicInfo() {
   static const LabelType::Enum labels[] PROGMEM =
   {
+#if FEATURE_MDNS
+    LabelType::M_DNS,
+#endif
     LabelType::UNIT_NR,
 
     LabelType::LOCAL_TIME,

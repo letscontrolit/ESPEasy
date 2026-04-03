@@ -53,7 +53,7 @@ void handle_timingstats() {
   addRowLabel(F("Start Period"));
   struct tm startPeriod = node_time.addSeconds(node_time.local_tm, -1.0f * timespan, true, true);
   addHtml(formatDateTimeString(startPeriod, '-', ':', ' ', false));
-  addRowLabelValue(LabelType::LOCAL_TIME);
+  addRowLabelValue(LabelType::LOCAL_TIME, false);
   addRowLabel(F("Time span"));
   addHtmlFloat(timespan);
   addHtml(F(" sec"));

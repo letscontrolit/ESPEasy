@@ -72,6 +72,7 @@ void update_mDNS() {
   #if FEATURE_MDNS
 
   end_mDNS();
+  if (!Settings.Use_mDNS()) return;
 
   if (webserverRunning) {
     if (!MDNS_RUNNING) {

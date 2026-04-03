@@ -13,6 +13,7 @@
 #include "../NWPluginStructs/NW001_data_struct_WiFi_STA.h"
 
 #include "../_NWPlugin_Helper.h"
+#include "ESPEasy/net/wifi/ESPEasyWifi.h"
 
 #if FEATURE_ETHERNET
 # include "../eth/ETH_NWPluginData_static_runtime.h"
@@ -137,19 +138,7 @@ bool NWPluginCall(NWPlugin::Function Function, EventStruct *event, String& str)
             if ((Function == NWPlugin::Function::NWPLUGIN_PRIORITY_ROUTE_CHANGED) &&
                 Settings.getNetworkInterface_isFallback(x))
             {
-              bool connected                                          = false;
-              ESPEasy::net::wifi::NW001_data_struct_WiFi_STA *NW_data =
-                static_cast<ESPEasy::net::wifi::NW001_data_struct_WiFi_STA *>(getNWPluginData(event->NetworkIndex));
-
-              if (NW_data) {
-                auto runtime_data = NW_data->getNWPluginData_static_runtime();
-
-                if (runtime_data) {
-                  connected = runtime_data->connected();
-                }
-              }
-
-              if (!connected) {
+              if (!ESPEasy::net::wifi::WiFiConnected()) {
                 String dummy;
 
                 if (do_NWPluginCall(

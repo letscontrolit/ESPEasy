@@ -141,11 +141,11 @@ void addRowLabel_copy(const String& label);
 
 void addRowLabel(LabelType::Enum label);
 
-void addRowLabelValue(LabelType::Enum label);
+void addRowLabelValue(LabelType::Enum label, bool extendedValue);
 
-void addRowLabelValues(const LabelType::Enum labels[]);
+void addRowLabelValues(const LabelType::Enum labels[], bool extendedValue = true);
 
-void addRowLabelValue_copy(LabelType::Enum label);
+void addRowLabelValue_copy(LabelType::Enum label, bool extendedValue = false);
 
 void addRowColspan(int colspan);
 

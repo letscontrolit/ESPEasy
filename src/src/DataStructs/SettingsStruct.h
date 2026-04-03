@@ -292,6 +292,12 @@ class SettingsStruct_tmpl
   inline bool UseLastWiFiFromRTC() const { return VariousBits_1.UseLastWiFiFromRTC; }
   inline void UseLastWiFiFromRTC(bool value) { VariousBits_1.UseLastWiFiFromRTC = value; }
 
+#if FEATURE_MDNS
+  inline bool Use_mDNS() const { return VariousBits_3.Use_mDNS; }
+  inline void Use_mDNS(bool value) { VariousBits_3.Use_mDNS = value; }
+#endif
+
+
   ExtTimeSource_e ExtTimeSource() const;
   void ExtTimeSource(ExtTimeSource_e value);
 
@@ -537,9 +543,9 @@ public:
   uint32_t WireClockStretchLimit = 0;
   union {
     struct {
-      uint32_t unused_00                        : 1; // Bit 0
-      uint32_t unused_01                        : 1; // Bit 1
-      uint32_t unused_02                        : 1; // Bit 2
+      uint32_t wakeOnHigh_ckd                   : 1; // Bit 0
+      uint32_t diableWakePulls                  : 1; // Bit 1
+      uint32_t Use_mDNS                         : 1; // Bit 2
       uint32_t unused_03                        : 1; // Bit 3
       uint32_t unused_04                        : 1; // Bit 4
       uint32_t unused_05                        : 1; // Bit 5

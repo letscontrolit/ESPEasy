@@ -300,6 +300,7 @@ void handle_json()
                 {
                   LabelType::HOST_NAME,
 #if FEATURE_MDNS
+                  LabelType::USE_MDNS,
                   LabelType::M_DNS,
 #endif // if FEATURE_MDNS
                   //        LabelType::IP_CONFIG,

@@ -453,23 +453,23 @@ void addRowLabel(LabelType::Enum label) {
   addRowLabel(getLabel(label));
 }
 
-void addRowLabelValue(LabelType::Enum label) {
+void addRowLabelValue(LabelType::Enum label, bool extendedValue) {
   addRowLabel(getLabel(label));
-  addHtml(getValue(label));
+  addHtml(extendedValue ? getExtendedValue(label) : getValue(label));
 #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
   addUnit(getFormUnit(label));
 #endif
 }
 
-void addRowLabelValues(const LabelType::Enum labels[]) {
+void addRowLabelValues(const LabelType::Enum labels[], bool extendedValue) {
 
   KeyValueWriter_WebForm writer(true);
-  writer.writeLabels(labels, true);
+  writer.writeLabels(labels, extendedValue);
 }
 
-void addRowLabelValue_copy(LabelType::Enum label) {
+void addRowLabelValue_copy(LabelType::Enum label, bool extendedValue) {
   addRowLabel_copy(getLabel(label));
-  addHtml(getValue(label));
+  addHtml(extendedValue ? getExtendedValue(label) : getValue(label));
 #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
   addUnit(getFormUnit(label));
 #endif

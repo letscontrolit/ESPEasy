@@ -172,6 +172,7 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
     {
       return KeyValueStruct(F("CPU Eco Mode"), Settings.EcoPowerMode());
     }
+
 #if FEATURE_SET_WIFI_TX_PWR
     case LabelType::WIFI_TX_MAX_PWR:
     {
@@ -624,6 +625,7 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
     #if FEATURE_MDNS
     case LabelType::M_DNS:
     {
+      if (!Settings.Use_mDNS()) break;
       String hostname;
       #ifdef ESP32
       // Retrieve and print the actual (resolved) hostname - checking if there are any conflicts in the network
@@ -652,6 +654,10 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
       }
       return KeyValueStruct(F("mDNS"), url);
     }
+    case LabelType::USE_MDNS:
+    {
+      return KeyValueStruct(F("Enable mDNS"), Settings.Use_mDNS());
+    }    
     #endif // if FEATURE_MDNS
     case LabelType::DNS:
     {
@@ -1374,6 +1380,12 @@ String getFormNote(LabelType::Enum label)
     case LabelType::CPU_ECO_MODE:
       flash_str = F("Node may miss receiving packets with Eco mode enabled");
       break;
+
+#if FEATURE_MDNS
+    case LabelType::USE_MDNS:
+      flash_str = F("Allow node to be known on the local network as <hostname>.local");
+      break;
+#endif
 
     case LabelType::WIFI_AP_CHANNEL:
       flash_str = F("WiFi channel to be used when only WiFi AP is active");
