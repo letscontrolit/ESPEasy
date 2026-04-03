@@ -6,7 +6,9 @@
 # include "../../ESPEasy/net/ESPEasyNetwork.h"
 # include "../../ESPEasy/net/wifi/ESPEasyWifi.h"
 # include "../../ESPEasy/net/Globals/ESPEasyWiFiEvent.h"
+#if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 # include "../Helpers/ESPEasy_UnitOfMeasure.h"
+#endif
 # include "../Helpers/Memory.h"
 # include "../Helpers/Hardware_temperature_sensor.h"
 # ifdef ESP32

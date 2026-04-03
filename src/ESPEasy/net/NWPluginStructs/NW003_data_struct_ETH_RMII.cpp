@@ -14,6 +14,7 @@
 
 # include "../../../src/WebServer/Markup.h"
 # include "../../../src/WebServer/Markup_Forms.h"
+# include "../../../src/WebServer/KeyValueWriter_WebForm.h"
 # include "../../../src/WebServer/ESPEasy_key_value_store_webform.h"
 
 # include "../Globals/NetworkState.h"
@@ -21,6 +22,8 @@
 # include "../Helpers/NW_info_writer.h"
 
 # include "../eth/ESPEasyEth.h"
+
+# include "../ESPEasyNetwork.h"
 
 # define NW_PLUGIN_ID  3
 

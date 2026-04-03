@@ -2,8 +2,9 @@
 
 #include "../../../src/DataStructs/ESPEasy_EventStruct.h"
 #include "../../../src/DataTypes/ESPEasy_plugin_functions.h"
-#include "../../../src/Globals/Settings.h"
+#if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 #include "../../../src/Helpers/ESPEasy_UnitOfMeasure.h"
+#endif
 #include "../../../src/Helpers/StringConverter.h"
 
 #include "../Globals/NWPlugins.h"

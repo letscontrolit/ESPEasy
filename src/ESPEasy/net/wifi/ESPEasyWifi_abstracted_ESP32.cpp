@@ -11,7 +11,7 @@
 #  include "../../../src/Helpers/StringConverter.h"
 
 #  include "../../net/ESPEasyNetwork.h" // Needed for NetworkCreateRFCCompliantHostname, WiFi code should not include network code
-#  include "../Globals/ESPEasyWiFiEvent.h"
+//#  include "../Globals/ESPEasyWiFiEvent.h"
 #  include "../wifi/ESPEasyWiFi_STA_Event_ESP32.h"
 
 #  include <WiFiGeneric.h>

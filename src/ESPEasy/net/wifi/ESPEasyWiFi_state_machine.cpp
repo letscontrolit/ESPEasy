@@ -3,17 +3,11 @@
 #if FEATURE_WIFI
 
 # include "../../../src/ESPEasyCore/ESPEasy_Log.h"
-# include "../../../src/Globals/EventQueue.h"
 # include "../../../src/Globals/RTC.h"
 # include "../../../src/Globals/SecuritySettings.h"
 # include "../../../src/Globals/Settings.h"
-# include "../../../src/Helpers/NetworkStatusLED.h"
-# include "../../../src/Helpers/StringConverter.h"
-# include "../../../src/Helpers/StringGenerator_WiFi.h"
-
 
 # include "../ESPEasyNetwork.h" // for setNetworkMedium, however this should not be part of the WiFi code
-# include "../Globals/ESPEasyWiFiEvent.h"
 # include "../Globals/WiFi_AP_Candidates.h"
 # include "../wifi/ESPEasyWifi.h"
 # include "../wifi/ESPEasyWifi_abstracted.h"

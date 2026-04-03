@@ -12,7 +12,7 @@
 #endif
 
 #include <map>
-#include <list>
+//#include <list>
 
 namespace ESPEasy {
 namespace net {

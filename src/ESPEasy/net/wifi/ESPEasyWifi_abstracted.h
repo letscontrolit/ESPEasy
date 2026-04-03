@@ -5,8 +5,8 @@
 #if FEATURE_WIFI
 
 # include "../wifi/WiFiConnectionProtocol.h"
-# include "../wifi/WiFi_STA_connected_state.h"
-# include "../wifi/WiFi_State.h"
+//# include "../wifi/WiFi_STA_connected_state.h"
+//# include "../wifi/WiFi_State.h"
 
 
 # if defined(ESP8266)
@@ -14,7 +14,7 @@
 #  include <ESP8266WiFi.h>
 # endif // if defined(ESP8266)
 # if defined(ESP32)
-#  include "../wifi/ESPEasyWiFi_STA_Event_ESP32.h"
+//#  include "../wifi/ESPEasyWiFi_STA_Event_ESP32.h"
 #  include <WiFi.h>
 #  include <WiFiType.h>
 # endif // if defined(ESP32)

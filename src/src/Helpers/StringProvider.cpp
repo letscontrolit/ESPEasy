@@ -18,21 +18,22 @@
 
 #include "../Globals/Device.h"
 #include "../Globals/ESPEasy_Console.h"
-#include "../Globals/ESPEasy_Scheduler.h"
 #include "../Globals/ESPEasy_time.h"
-#include "../../ESPEasy/net/Globals/ESPEasyWiFiEvent.h"
 
 #include "../../ESPEasy/net/Globals/NetworkState.h"
 #include "../Globals/RTC.h"
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Settings.h"
-#include "../../ESPEasy/net/Globals/WiFi_AP_Candidates.h"
 
 #include "../Helpers/Convert.h"
 #include "../Helpers/ESPEasy_Storage.h"
+# if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 #include "../Helpers/ESPEasy_UnitOfMeasure.h"
+#endif
 #include "../Helpers/Hardware_device_info.h"
+#if FEATURE_INTERNAL_TEMPERATURE
 #include "../Helpers/Hardware_temperature_sensor.h"
+#endif
 #include "../Helpers/Memory.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Networking.h"
@@ -42,9 +43,7 @@
 #include "../Helpers/StringGenerator_System.h"
 #include "../Helpers/StringGenerator_WiFi.h"
 
-#include "../WebServer/JSON.h"
-#include "../WebServer/AccessControl.h"
-#include "../WebServer/Markup.h"
+#include "../WebServer/common.h"
 
 #ifdef ESP32
 # include <soc/rtc.h>

@@ -1,23 +1,19 @@
 #include "../Globals/NWPlugins.h"
 
-#include "../../../_Plugin_Helper.h"
 #include "../../../src/DataStructs/ESPEasy_EventStruct.h"
 #include "../../../src/DataStructs/TimingStats.h"
 #include "../../../src/DataTypes/ESPEasy_plugin_functions.h"
-#include "../../../src/ESPEasyCore/ESPEasy_Log.h"
 #include "../../../src/Globals/SecuritySettings.h"
 #include "../../../src/Globals/Settings.h"
-#include "../../../src/Helpers/PrintToString.h"
 #include "../Helpers/_NWPlugin_init.h"
 #include "../Helpers/NWAccessControl.h"
-#include "../NWPluginStructs/NW001_data_struct_WiFi_STA.h"
+
+#include "../../../src/Globals/ESPEasy_Scheduler.h"
 
 #include "../_NWPlugin_Helper.h"
-#include "ESPEasy/net/wifi/ESPEasyWifi.h"
+#include "../wifi/ESPEasyWifi.h"
+#include "../ESPEasyNetwork.h"
 
-#if FEATURE_ETHERNET
-# include "../eth/ETH_NWPluginData_static_runtime.h"
-#endif
 
 
 namespace ESPEasy {

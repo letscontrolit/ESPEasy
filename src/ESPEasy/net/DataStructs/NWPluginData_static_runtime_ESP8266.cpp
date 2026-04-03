@@ -2,7 +2,6 @@
 
 #ifdef ESP8266
 
-# include "../../../src/Helpers/StringConverter.h"
 # include "../Globals/NetworkState.h"
 # include "../ESPEasyNetwork.h"
 

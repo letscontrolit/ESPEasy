@@ -2,7 +2,8 @@
 
 #include "../Helpers/StringConverter.h"
 
-#include "../../ESPEasy/net/Globals/ESPEasyWiFiEvent.h"
+//#include "../../ESPEasy/net/Globals/ESPEasyWiFiEvent.h"
+#include "../../ESPEasy/net/ESPEasyNetwork.h"
 #include "../../ESPEasy/net/_NWPlugin_Helper.h"
 #include "../../ESPEasy/net/NWPluginStructs/NW001_data_struct_WiFi_STA.h"
 

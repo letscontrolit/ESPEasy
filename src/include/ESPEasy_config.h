@@ -80,6 +80,8 @@
   #endif
 #endif
 
+#include <memory>
+
 #define ZERO_FILL(S)  memset((S), 0, sizeof(S))
 #define ZERO_TERMINATE(S)  S[sizeof(S) - 1] = 0
 

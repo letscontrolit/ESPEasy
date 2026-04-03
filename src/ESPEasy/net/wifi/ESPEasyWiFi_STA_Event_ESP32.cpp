@@ -10,20 +10,20 @@
 #   include <PPP.h>
 #  endif
 
-#  include "../../../src/DataStructs/RTCStruct.h"
+//#  include "../../../src/DataStructs/RTCStruct.h"
 #  include "../../../src/DataTypes/ESPEasyTimeSource.h"
 #  include "../../../src/ESPEasyCore/ESPEasy_Log.h"
-#  include "../../../src/Globals/RTC.h"
-#  include "../../../src/Helpers/ESPEasy_time_calc.h"
+//#  include "../../../src/Globals/RTC.h"
+//#  include "../../../src/Helpers/ESPEasy_time_calc.h"
 #  include "../../../src/Helpers/StringConverter.h"
 #  include "../../../src/Helpers/StringGenerator_WiFi.h"
-#  include "../../net/ESPEasyNetwork.h"
+//#  include "../../net/ESPEasyNetwork.h"
 #  include "../DataStructs/NWPluginData_static_runtime.h"
-#  include "../Globals/ESPEasyWiFiEvent.h"
-#  include "../Globals/NetworkState.h"
-#  include "../Globals/WiFi_AP_Candidates.h"
-#  include "../eth/ESPEasyEth.h"
-#  include "../wifi/ESPEasyWifi.h"
+//#  include "../Globals/ESPEasyWiFiEvent.h"
+//#  include "../Globals/NetworkState.h"
+//#  include "../Globals/WiFi_AP_Candidates.h"
+//#  include "../eth/ESPEasyEth.h"
+//#  include "../wifi/ESPEasyWifi.h"
 
 namespace ESPEasy {
 namespace net {

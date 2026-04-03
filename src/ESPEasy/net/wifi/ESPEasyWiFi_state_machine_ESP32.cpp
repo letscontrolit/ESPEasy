@@ -14,9 +14,9 @@
 #  include <WiFiSTA.h>
 #  include <WiFiType.h>
 
-#  include "../wifi/ESPEasyWifi_abstracted.h"
+//#  include "../wifi/ESPEasyWifi_abstracted.h"
 
-#  include "../../../src/Globals/Settings.h"
+//#  include "../../../src/Globals/Settings.h"
 
 
 namespace ESPEasy {
