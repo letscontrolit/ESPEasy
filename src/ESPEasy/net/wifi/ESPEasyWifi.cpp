@@ -11,6 +11,12 @@
 # include "../../../src/Helpers/ESPEasy_time_calc.h"
 # include "../../../src/Helpers/StringConverter.h"
 
+#ifdef ESP8266
+# ifndef BUILD_NO_DEBUG
+#include "../../../src/Helpers/StringGenerator_WiFi.h"
+#endif
+#endif
+
 # ifdef ESP32
 #  include <WiFiGeneric.h>
 #  include <esp_wifi.h> // Needed to call ESP-IDF functions like esp_wifi_....
