@@ -12,6 +12,7 @@
 #  include <esp_wifi.h>
 #  include <esp_wifi_ap_get_sta_list.h>
 #  include <NetworkEvents.h>
+#  include <NetworkManager.h>
 # endif // ifdef ESP32
 
 # define NW_PLUGIN_ID  2

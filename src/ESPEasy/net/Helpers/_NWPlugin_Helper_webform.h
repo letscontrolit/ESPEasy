@@ -2,10 +2,10 @@
 
 #include "../../../ESPEasy_common.h"
 
-#include "../../../src/Helpers/ESPEasy_UnitOfMeasure.h"
-
 #include "../DataStructs/NetworkSettingsStruct.h"
-#include "../Globals/NWPlugins.h"
+#include "../DataTypes/NetworkIndex.h"
+#include "../DataTypes/NetworkDriverIndex.h"
+
 
 namespace ESPEasy {
 namespace net {

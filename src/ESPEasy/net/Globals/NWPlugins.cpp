@@ -3,15 +3,21 @@
 #include "../../../src/DataStructs/ESPEasy_EventStruct.h"
 #include "../../../src/DataStructs/TimingStats.h"
 #include "../../../src/DataTypes/ESPEasy_plugin_functions.h"
+#ifdef ESP32
 #include "../../../src/Globals/SecuritySettings.h"
+#endif
 #include "../../../src/Globals/Settings.h"
 #include "../Helpers/_NWPlugin_init.h"
+#ifdef ESP32
 #include "../Helpers/NWAccessControl.h"
+#endif
 
 #include "../../../src/Globals/ESPEasy_Scheduler.h"
 
 #include "../_NWPlugin_Helper.h"
+#ifdef ESP8266
 #include "../wifi/ESPEasyWifi.h"
+#endif
 #include "../ESPEasyNetwork.h"
 
 

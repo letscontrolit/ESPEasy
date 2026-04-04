@@ -14,7 +14,7 @@
 
 
 #if FEATURE_MDNS
-#include "../../../src/Helpers/MDNS_Helper.h"
+//#include "../../../src/Helpers/MDNS_Helper.h"
 #endif
 
 
@@ -28,7 +28,7 @@ namespace net {
 
 typedef std::map<int, TX_RX_traffic_count> InterfaceTrafficCount_t;
 
-static InterfaceTrafficCount_t interfaceTrafficCount;
+static InterfaceTrafficCount_t interfaceTrafficCount{};
 
 static void tx_rx_event_handler(void *arg, esp_event_base_t event_base,
                                 int32_t event_id, void *event_data)

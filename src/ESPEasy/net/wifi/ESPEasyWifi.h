@@ -12,9 +12,6 @@
 # endif // if defined(ESP32)
 
 # include "../wifi/WiFiConnectionProtocol.h"
-//# include "../DataStructs/WiFi_AP_Candidate.h"
-
-//# include "../../../src/Helpers/LongTermTimer.h"
 
 # ifdef BOARD_HAS_SDIO_ESP_HOSTED
 # include "../../../src/Helpers/KeyValueWriter.h"

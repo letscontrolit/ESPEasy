@@ -5,7 +5,7 @@
 # include "../DataStructs/ESPEasy_packed_raw_data.h"
 # include "../../ESPEasy/net/ESPEasyNetwork.h"
 # include "../../ESPEasy/net/wifi/ESPEasyWifi.h"
-# include "../../ESPEasy/net/Globals/ESPEasyWiFiEvent.h"
+//# include "../../ESPEasy/net/Globals/ESPEasyWiFiEvent.h"
 #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 # include "../Helpers/ESPEasy_UnitOfMeasure.h"
 #endif

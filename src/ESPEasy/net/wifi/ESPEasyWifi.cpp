@@ -3,19 +3,12 @@
 #if FEATURE_WIFI
 
 # include "../Globals/ESPEasyWiFi.h"
-//# include "../Globals/ESPEasyWiFiEvent.h"
 # include "../Globals/WiFi_AP_Candidates.h"
 # include "../wifi/ESPEasyWifi_abstracted.h"
 # include "../../net/ESPEasyNetwork.h"
 # include "../../../src/ESPEasyCore/Serial.h"
 # include "../../../src/Globals/Settings.h"
 # include "../../../src/Helpers/ESPEasy_time_calc.h"
-
-# include "../../../src/Helpers/StringGenerator_WiFi.h"
-
-#if FEATURE_TASKVALUE_UNIT_OF_MEASURE
-# include "../../../src/Helpers/ESPEasy_UnitOfMeasure.h"
-#endif
 # include "../../../src/Helpers/StringConverter.h"
 
 # ifdef ESP32
@@ -439,7 +432,7 @@ void WiFiScan_log_to_serial()
 
     int i = 0;
 
-    for (auto it = WiFi_AP_Candidates.scanned_begin(); it != WiFi_AP_Candidates.scanned_end(); ++it)
+    for (WiFi_AP_Candidate_const_iterator it = WiFi_AP_Candidates.scanned_begin(); it != WiFi_AP_Candidates.scanned_end(); ++it)
     {
       ++i;
 

@@ -19,9 +19,9 @@ struct NW002_data_struct_WiFi_AP : public NWPluginData_base {
 
   bool webform_getPort(KeyValueWriter *writer);
 
-  bool init(EventStruct *event);
+  bool init(EventStruct *event) override;
 
-  bool exit(EventStruct *event);
+  bool exit(EventStruct *event) override;
 
 # ifdef ESP32
   bool handle_priority_route_changed() override;
@@ -33,7 +33,7 @@ struct NW002_data_struct_WiFi_AP : public NWPluginData_base {
   bool                         webformLoad_show_stats(struct EventStruct *event) const override;
 # endif // if FEATURE_NETWORK_STATS
 
-  NWPluginData_static_runtime* getNWPluginData_static_runtime();
+  NWPluginData_static_runtime* getNWPluginData_static_runtime() override;
 
 private:
 

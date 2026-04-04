@@ -2,19 +2,11 @@
 
 #include "../net/ESPEasyNetwork.h"
 
-#include "../../src/ESPEasyCore/ESPEasy_Log.h"
-#include "../net/eth/ESPEasyEth.h"
-//#include "../net/wifi/ESPEasyWifi.h"
-
-//#include "../../src/Globals/ESPEasy_time.h"
-//#include "../../ESPEasy/net/Globals/ESPEasyWiFiEvent.h"
 #include "../../ESPEasy/net/Globals/NetworkState.h"
-//#include "../../src/Globals/Settings.h"
-
+#include "../../src/ESPEasyCore/ESPEasy_Log.h"
 #include "../../src/Helpers/NetworkStatusLED.h"
-//#include "../../src/Helpers/Networking.h"
 #include "../../src/Helpers/StringConverter.h"
-//#include "../../src/Helpers/MDNS_Helper.h"
+#include "../net/eth/ESPEasyEth.h"
 #include "../net/Globals/NWPlugins.h"
 
 #include <NetworkManager.h>

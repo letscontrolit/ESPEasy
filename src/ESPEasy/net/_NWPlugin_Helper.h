@@ -3,11 +3,7 @@
 #include "../../ESPEasy_common.h"
 
 #include "../../src/CustomBuild/ESPEasyLimits.h"
-//#include "../../src/DataStructs/ESPEasy_EventStruct.h"
-//#include "../../src/Helpers/LongTermTimer.h"
-//#include "../../src/WebServer/KeyValueWriter_WebForm.h"
 #include "../net/DataStructs/NWPluginData_base.h"
-//#include "../net/ESPEasyNetwork.h"
 
 #if FEATURE_STORE_NETWORK_INTERFACE_SETTINGS
 #include "../../src/Helpers/_ESPEasy_key_value_store.h"

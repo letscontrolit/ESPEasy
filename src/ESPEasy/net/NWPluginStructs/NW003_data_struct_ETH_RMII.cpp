@@ -7,9 +7,7 @@
 
 # include "../../../src/Globals/Settings.h"
 
-# include "../../../src/Helpers/ESPEasy_time_calc.h"
 # include "../../../src/Helpers/Hardware_GPIO.h"
-# include "../../../src/Helpers/LongTermOnOffTimer.h"
 # include "../../../src/Helpers/StringConverter.h"
 
 # include "../../../src/WebServer/Markup.h"
@@ -17,11 +15,7 @@
 # include "../../../src/WebServer/KeyValueWriter_WebForm.h"
 # include "../../../src/WebServer/ESPEasy_key_value_store_webform.h"
 
-# include "../Globals/NetworkState.h"
-
 # include "../Helpers/NW_info_writer.h"
-
-# include "../eth/ESPEasyEth.h"
 
 # include "../ESPEasyNetwork.h"
 

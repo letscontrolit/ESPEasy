@@ -12,7 +12,6 @@
 #endif
 
 #include <map>
-//#include <list>
 
 namespace ESPEasy {
 namespace net {
@@ -173,7 +172,7 @@ private:
   // This depends on host and interface.
   // Duration is negative when it was suggested but not actually set.
   // Duration is positive when actually being set
-  mutable std::map<int, int32_t>_connectDurations;
+  mutable std::map<int, int32_t> _connectDurations{};
 
   mutable uint32_t _connectionFailures{};
 

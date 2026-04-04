@@ -6,6 +6,8 @@
 
 #if FEATURE_WIFI
 
+#include <list>
+
 namespace ESPEasy {
 namespace net {
 namespace wifi {
@@ -118,6 +120,11 @@ struct WiFi_AP_Candidate {
   };
 
 };
+
+typedef std::list<WiFi_AP_Candidate> WiFi_AP_Candidate_List_t;
+
+typedef WiFi_AP_Candidate_List_t::const_iterator WiFi_AP_Candidate_const_iterator;
+
 
 } // namespace wifi
 } // namespace net

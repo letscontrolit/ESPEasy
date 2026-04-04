@@ -3,7 +3,6 @@
 #include "../_NWPlugin_Helper.h"
 #ifdef USES_NW004
 
-#include "../eth/ETH_NWPluginData_static_runtime.h"
 
 namespace ESPEasy {
 namespace net {
@@ -34,11 +33,11 @@ struct NW004_data_struct_ETH_SPI : public NWPluginData_base {
 
   bool                         webform_getPort(KeyValueWriter *writer);
 
-  bool                         init(EventStruct *event);
+  bool                         init(EventStruct *event) override;
 
-  bool                         exit(EventStruct *event);
+  bool                         exit(EventStruct *event) override;
 
-  NWPluginData_static_runtime* getNWPluginData_static_runtime();
+  NWPluginData_static_runtime* getNWPluginData_static_runtime() override;
 
   bool write_Eth_HW_Address(KeyValueWriter *writer);
   bool write_Eth_port(KeyValueWriter *writer);
