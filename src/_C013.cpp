@@ -296,7 +296,7 @@ void C013_Receive(struct EventStruct *event) {
             }
 
             for (controllerIndex_t x = 0; x < CONTROLLER_MAX; x++) {
-              Settings.TaskDeviceSendData[x][infoReply->destTaskIndex] = false;
+              Settings.TaskDeviceSendData(x, infoReply->destTaskIndex, false);
             }
             safe_strncpy(ExtraTaskSettings.TaskDeviceName, infoReply->taskName, sizeof(infoReply->taskName));
 

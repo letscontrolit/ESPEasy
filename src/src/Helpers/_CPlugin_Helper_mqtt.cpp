@@ -533,7 +533,7 @@ bool MQTT_HomeAssistant_SendAutoDiscovery(controllerIndex_t         ControllerIn
       if (validDeviceIndex(DeviceIndex) &&
           Device[DeviceIndex].SendDataOption &&           // do (can) we send data?
           Settings.TaskDeviceEnabled(x) &&                // task enabled?
-          Settings.TaskDeviceSendData[ControllerIndex][x] // selected for this controller?
+          Settings.TaskDeviceSendData(ControllerIndex, x) // selected for this controller?
           ) {
         const String taskName   = getTaskDeviceName(x);
         const int    valueCount = getValueCountForTask(x);

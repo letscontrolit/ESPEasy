@@ -69,6 +69,12 @@ enum class PinBootState {
 #ifndef FEATURE_UNNAMED_BITFIELDS_2
   #define FEATURE_UNNAMED_BITFIELDS_2         0   // 3x 7 bits globally, adds ESP32: 256 ESP8266: 176 bytes
 #endif
+#ifndef FEATURE_UNNAMED_BITFIELDS_3
+  #define FEATURE_UNNAMED_BITFIELDS_3         0   // 7 bits globally, adds ESP32: 36 ESP8266: 64 bytes
+#endif
+#ifndef FEATURE_UNNAMED_BITFIELDS_4
+  #define FEATURE_UNNAMED_BITFIELDS_4         0   // 7 bits globally, adds ESP32: 36 ESP8266: 64 bytes
+#endif
 #ifndef FEATURE_TASKDEVICE_BITFIELDS_4
   #define FEATURE_TASKDEVICE_BITFIELDS_4      0   // 7 bits per TaskDevice, adds ESP32: 32 ESP8266: 64 bytes + 16 bytes per bit-function
 #endif
@@ -83,6 +89,9 @@ enum class PinBootState {
 #endif
 #ifndef FEATURE_NOTIFICATION_BITFIELDS_1
   #define FEATURE_NOTIFICATION_BITFIELDS_1    0   // 7 bits per Notifier, adds ESP32: 108 ESP8266: 64 bytes + 16 bytes per bit-function
+#endif
+#ifndef FEATURE_CONTROLLERTASK_BITFIELDS_1
+  #define FEATURE_CONTROLLERTASK_BITFIELDS_1  0   // 7 bits per controller/task combo, adds ESP32: 56 ESP8266: 80 bytes + 16/20 bytes per bit-function
 #endif
 
 
@@ -281,6 +290,18 @@ class SettingsStruct_tmpl
   inline const bool NotificationEnabled(uint8_t notificationIndex) { return _NotificationEnabled[notificationIndex]; }
   inline void NotificationEnabled(uint8_t notificationIndex, bool state) { _NotificationEnabled[notificationIndex] = state; }
   #endif // if FEATURE_NOTIFICATION_BITFIELDS_1
+
+  #if FEATURE_CONTROLLERTASK_BITFIELDS_1
+  inline const bool TaskDeviceSendData(controllerIndex_t controllerIndex, taskIndex_t taskIndex) { return ControllerTaskBitfield_1[controllerIndex][taskIndex].TaskDeviceSendData; }
+  inline void TaskDeviceSendData(controllerIndex_t controllerIndex, taskIndex_t taskIndex, bool state) { ControllerTaskBitfield_1[controllerIndex][taskIndex].TaskDeviceSendData = state; }
+  
+  // Template for accessor, using bool
+  inline const bool controllerTaskBitfield1_01(controllerIndex_t controllerIndex, taskIndex_t taskIndex) { return ControllerTaskBitfield_1[controllerIndex][taskIndex].unusedCT1_01; }
+  inline void ControllerTaskBitfield1_01(controllerIndex_t controllerIndex, taskIndex_t taskIndex, uint8_t value) { ControllerTaskBitfield_1[controllerIndex][taskIndex].unusedCT1_01 = value; }
+  #else // if FEATURE_CONTROLLERTASK_BITFIELDS_1
+  inline const bool TaskDeviceSendData(controllerIndex_t controllerIndex, taskIndex_t taskIndex) { return _TaskDeviceSendData[controllerIndex][taskIndex]; }
+  inline void TaskDeviceSendData(controllerIndex_t controllerIndex, taskIndex_t taskIndex, bool state) { _TaskDeviceSendData[controllerIndex][taskIndex] = state; }
+  #endif // if FEATURE_CONTROLLERTASK_BITFIELDS_1
 
   // Connect to Hidden SSID using channel and BSSID
   // This is much slower, but appears to be needed for some access points 
@@ -844,7 +865,23 @@ union {
   boolean       _NotificationEnabled[NOTIFICATION_MAX] = {0};
   #endif // if FEATURE_NOTIFICATION_BITFIELDS_1
   uint32_t  TaskDeviceID[CONTROLLER_MAX][N_TASKS]{};        // IDX number (mainly used by Domoticz)
-  boolean       TaskDeviceSendData[CONTROLLER_MAX][N_TASKS]{};
+  #if FEATURE_CONTROLLERTASK_BITFIELDS_1
+  union {
+    uint8_t ControllerTaskBitfield_1_internal[CONTROLLER_MAX][N_TASKS]{};
+    struct {
+      uint8_t TaskDeviceSendData                : 1; // Bit 0 used
+      uint8_t unusedCT1_01                      : 1; // Bit 1
+      uint8_t unusedCT1_02                      : 1; // Bit 2
+      uint8_t unusedCT1_03                      : 1; // Bit 3
+      uint8_t unusedCT1_04                      : 1; // Bit 4
+      uint8_t unusedCT1_05                      : 1; // Bit 5
+      uint8_t unusedCT1_06                      : 1; // Bit 6
+      uint8_t unusedCT1_07                      : 1; // Bit 7
+    } ControllerTaskBitfield_1[CONTROLLER_MAX][N_TASKS];
+  };
+  #else // if FEATURE_CONTROLLERTASK_BITFIELDS_1
+  boolean       _TaskDeviceSendData[CONTROLLER_MAX][N_TASKS]{};
+  #endif // if FEATURE_CONTROLLERTASK_BITFIELDS_1
   union {
     struct {
       uint32_t Pin_status_led_Inversed          : 1; // Bit 0 used
@@ -884,11 +921,43 @@ union {
   };
   uint16_t      DST_Start = 0;
   uint16_t      DST_End = 0;
+  #if FEATURE_UNNAMED_BITFIELDS_3
+  union {
+    struct {
+      uint8_t UseRTOSMultitasking              : 1; // Bit 0 used
+      uint8_t unusedU3_01                      : 1; // Bit 1
+      uint8_t unusedU3_02                      : 1; // Bit 2
+      uint8_t unusedU3_03                      : 1; // Bit 3
+      uint8_t unusedU3_04                      : 1; // Bit 4
+      uint8_t unusedU3_05                      : 1; // Bit 5
+      uint8_t unusedU3_06                      : 1; // Bit 6
+      uint8_t unusedU3_07                      : 1; // Bit 7
+    };
+    uint8_t _unnamedUnion3{};
+  };
+  #else // if FEATURE_UNNAMED_BITFIELDS_3
   boolean       UseRTOSMultitasking = false;
+  #endif // if FEATURE_UNNAMED_BITFIELDS_3
   int8_t        Pin_Reset = -1;
   uint8_t       SyslogFacility = 0;
   uint32_t      StructSize = 0;  // Forced to be 32 bit, to make sure alignment is clear.
+  #if FEATURE_UNNAMED_BITFIELDS_4
+  union {
+    struct {
+      uint8_t MQTTUseUnitNameAsClientId_unused : 1; // Bit 0 used
+      uint8_t unusedU4_01                      : 1; // Bit 1
+      uint8_t unusedU4_02                      : 1; // Bit 2
+      uint8_t unusedU4_03                      : 1; // Bit 3
+      uint8_t unusedU4_04                      : 1; // Bit 4
+      uint8_t unusedU4_05                      : 1; // Bit 5
+      uint8_t unusedU4_06                      : 1; // Bit 6
+      uint8_t unusedU4_07                      : 1; // Bit 7
+    };
+    uint8_t _unnamedUnion4{};
+  };
+  #else // if FEATURE_UNNAMED_BITFIELDS_4
   boolean       MQTTUseUnitNameAsClientId_unused = false;
+  #endif // if FEATURE_UNNAMED_BITFIELDS_4
 
   //its safe to extend this struct, up to several bytes, default values in config are 0
   //look in misc.ino how config.dat is used because also other stuff is stored in it at different offsets.

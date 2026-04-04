@@ -299,7 +299,7 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
               if (validIntFromString(ctrl, ctrlNr) && (ctrlNr >= 1) && (ctrlNr <= CONTROLLER_MAX) && 
                   Settings.ControllerEnabled(ctrlNr - 1)) { // Controller nr. valid and enabled
                 if (valueName.endsWith(F(".enabled"))) {    // Task-controller enabled
-                  value = Settings.TaskDeviceSendData[ctrlNr - 1][taskIndex];
+                  value = Settings.TaskDeviceSendData(ctrlNr - 1, taskIndex);
                 } else if (valueName.endsWith(F(".idx"))) { // Task-controller idx value
                   protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(ctrlNr - 1);
 

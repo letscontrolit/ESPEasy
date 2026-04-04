@@ -788,7 +788,7 @@ void SettingsStruct_tmpl<N_TASKS>::clearTask(taskIndex_t task) {
 
   for (controllerIndex_t i = 0; i < CONTROLLER_MAX; ++i) {
     TaskDeviceID[i][task]       = 0u;
-    TaskDeviceSendData[i][task] = false;
+    TaskDeviceSendData(i, task, false);
   }
   TaskDeviceNumber[task]     = 0u; //.setInvalid();
   // OLD_TaskDeviceID[task]     = 0u; // UNUSED: this must be removed

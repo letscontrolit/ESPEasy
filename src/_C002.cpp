@@ -97,7 +97,7 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
             # endif // if defined(USES_P088)
 
             if (Settings.TaskDeviceEnabled(x) &&
-                (Settings.TaskDeviceSendData[ControllerID][x]
+                (Settings.TaskDeviceSendData(ControllerID, x)
                  || (Settings.getPluginID_for_task(x) == PLUGIN_ID_DOMOTICZ_HELPER) // Domoticz helper doesn't have controller checkboxes...
                  # if defined(USES_P088)
                  || (Settings.getPluginID_for_task(x) == PLUGIN_ID_HEATPUMP_IR)     // Heatpump IR doesn't have controller checkboxes...

@@ -66,7 +66,7 @@ void sendData(struct EventStruct *event, bool sendEvents)
   for (controllerIndex_t x = 0; x < CONTROLLER_MAX; x++)
   {
     if (Settings.ControllerEnabled(x) &&
-        Settings.TaskDeviceSendData[x][event->TaskIndex] &&
+        Settings.TaskDeviceSendData(x, event->TaskIndex) &&
         Settings.Protocol[x])
     {
       event->ControllerIndex = x;

@@ -603,7 +603,7 @@ void handle_json()
                     if (controllerWriter) {
                       controllerWriter->write({ F("Controller"), x + 1 });
                       controllerWriter->write({ F("IDX"),        Settings.TaskDeviceID[x][TaskIndex] });
-                      controllerWriter->write({ F("Enabled"),    !!Settings.TaskDeviceSendData[x][TaskIndex] });
+                      controllerWriter->write({ F("Enabled"),    !!Settings.TaskDeviceSendData(x, TaskIndex) });
                     }
                   }
                 }

@@ -418,11 +418,11 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
   for (controllerIndex_t controllerNr = 0; controllerNr < CONTROLLER_MAX; controllerNr++)
   {
     Settings.TaskDeviceID[controllerNr][taskIndex]       = getFormItemInt(getPluginCustomArgName(F("TDID"), controllerNr));
-    Settings.TaskDeviceSendData[controllerNr][taskIndex] = isFormItemChecked(getPluginCustomArgName(F("TDSD"), controllerNr));
+    Settings.TaskDeviceSendData(controllerNr, taskIndex, isFormItemChecked(getPluginCustomArgName(F("TDSD"), controllerNr)));
     # if FEATURE_MQTT_DISCOVER
 
     if (isFormItemChecked(getPluginCustomArgName(F("TDDSC"), controllerNr)) &&
-        Settings.TaskDeviceSendData[controllerNr][taskIndex]) {
+        Settings.TaskDeviceSendData(controllerNr, taskIndex)) {
       discoverController = controllerNr;
     }
     # endif // if FEATURE_MQTT_DISCOVER
@@ -550,7 +550,7 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
   {
     TempEvent.ControllerIndex = x;
 
-    if (Settings.TaskDeviceSendData[TempEvent.ControllerIndex][TempEvent.TaskIndex] &&
+    if (Settings.TaskDeviceSendData(TempEvent.ControllerIndex, TempEvent.TaskIndex) &&
         Settings.ControllerEnabled(TempEvent.ControllerIndex) && Settings.Protocol[TempEvent.ControllerIndex])
     {
       String dummy;
@@ -692,7 +692,7 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
 
           for (controllerIndex_t controllerNr = 0; controllerNr < CONTROLLER_MAX; controllerNr++)
           {
-            if (Settings.TaskDeviceSendData[controllerNr][x])
+            if (Settings.TaskDeviceSendData(controllerNr, x))
             {
               if (doBR) {
                 html_BR();
@@ -1705,7 +1705,7 @@ void devicePage_show_controller_config(taskIndex_t taskIndex, deviceIndex_t Devi
         html_TD(F("width:50px;padding-left:0"));
         addCheckBox(
           getPluginCustomArgName(F("TDSD"), controllerNr), // ="taskdevicesenddata"
-          Settings.TaskDeviceSendData[controllerNr][taskIndex]);
+          Settings.TaskDeviceSendData(controllerNr, taskIndex));
 
         # if FEATURE_STRING_VARIABLES
         const bool allowSendDerived = !device.HideDerivedValues &&
