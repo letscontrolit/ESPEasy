@@ -106,7 +106,7 @@ void handle_metrics_devices() {
     const bool pluginID_set         = INVALID_PLUGIN_ID != Settings.getPluginID_for_task(x);
 
     if (pluginID_set) {
-      if (Settings.TaskDeviceEnabled[x]) {
+      if (Settings.TaskDeviceEnabled(x)) {
         String deviceName = getTaskDeviceName(x);
 
         if (deviceName.isEmpty()) { // Empty name, then use taskN

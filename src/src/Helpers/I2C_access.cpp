@@ -487,7 +487,7 @@ bool I2C_deviceCheck(uint8_t     i2caddr,
         if (deviceCheckI2C[taskIndex] >= maxRetries) {
           // Disable temporarily as device check failed
           // FIXME TD-er: Should reschedule call to PLUGIN_INIT????
-          Settings.TaskDeviceEnabled[taskIndex] = false; // If the number of retries is reached, disable the device
+          Settings.TaskDeviceEnabled(taskIndex, false); // If the number of retries is reached, disable the device
           # ifndef BUILD_NO_DEBUG
           addLog(LOG_LEVEL_ERROR, concat(F("I2C  : Device doesn't respond for task: "), static_cast<int>(taskIndex + 1)));
           # endif // ifndef BUILD_NO_DEBUG

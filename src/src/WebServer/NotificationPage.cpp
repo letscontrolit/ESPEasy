@@ -62,7 +62,7 @@ void handle_notifications() {
 
     if (notification == INVALID_N_PLUGIN_ID) {
       Settings.Notification[notificationindex]        = INVALID_N_PLUGIN_ID.value;
-      Settings.NotificationEnabled[notificationindex] = false;
+      Settings.NotificationEnabled(notificationindex, false);
     } else {
       MakeNotificationSettings(NotificationSettings);
 
@@ -94,7 +94,7 @@ void handle_notifications() {
             NotificationSettings->Timeout_ms                = getFormItemInt(F("timeout"), NPLUGIN_001_DEF_TM);
             NotificationSettings->Pin1                      = getFormItemInt(F("pin1"), -1);
             NotificationSettings->Pin2                      = getFormItemInt(F("pin2"), -1);
-            Settings.NotificationEnabled[notificationindex] = isFormItemChecked(F("notificationenabled"));
+            Settings.NotificationEnabled(notificationindex, isFormItemChecked(F("notificationenabled")));
             strncpy_webserver_arg(NotificationSettings->Domain,   F("domain"));
             strncpy_webserver_arg(NotificationSettings->Server,   F("server"));
             strncpy_webserver_arg(NotificationSettings->Sender,   F("sender"));
@@ -121,7 +121,7 @@ void handle_notifications() {
       nprotocolIndex_t NotificationProtocolIndex = getNProtocolIndex_from_NotifierIndex(notificationindex);
 
       if (validNProtocolIndex(NotificationProtocolIndex) &&
-          Settings.NotificationEnabled[notificationindex])
+          Settings.NotificationEnabled(notificationindex))
       {
         // TempEvent.NotificationProtocolIndex = NotificationProtocolIndex;
         TempEvent.NotificationIndex = notificationindex;
@@ -162,7 +162,7 @@ void handle_notifications() {
 
         if (nplugin_set)
         {
-          addEnabled(Settings.NotificationEnabled[x]);
+          addEnabled(Settings.NotificationEnabled(x));
 
           html_TD();
           String NotificationName = F("(plugin not found?)");
@@ -222,7 +222,7 @@ void handle_notifications() {
     if (Settings.Notification[notificationindex] != INVALID_N_PLUGIN_ID.value)
     {
       addRowLabel(F("Enabled"));
-      addCheckBox(F("notificationenabled"), Settings.NotificationEnabled[notificationindex]);
+      addCheckBox(F("notificationenabled"), Settings.NotificationEnabled(notificationindex));
       addFormSeparator(2);
 
       MakeNotificationSettings(NotificationSettings);

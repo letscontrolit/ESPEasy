@@ -38,7 +38,7 @@ P001_data_struct::P001_data_struct(struct EventStruct *event) :
 
   // setPinState(PLUGIN_ID_001, _data._pin, PIN_MODE_INPUT, switchstate[event->TaskIndex]);
   //  if it is in the device list we assume it's an input pin
-  if (Settings.TaskDevicePin1PullUp[event->TaskIndex])
+  if (Settings.TaskDevicePin1PullUp(event->TaskIndex))
   {
     setInternalGPIOPullupMode(_data._pin);
     pinModeValue = PIN_MODE_INPUT_PULLUP;

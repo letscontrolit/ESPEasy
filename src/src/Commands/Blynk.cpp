@@ -21,7 +21,7 @@ controllerIndex_t firstEnabledBlynk_ControllerIndex() {
     if (validProtocolIndex(ProtocolIndex)) {
       const cpluginID_t number = getCPluginID_from_ProtocolIndex(ProtocolIndex);
 
-      if ((number == 12) && Settings.ControllerEnabled[i]) {
+      if ((number == 12) && Settings.ControllerEnabled(i)) {
         return i;
       }
     }

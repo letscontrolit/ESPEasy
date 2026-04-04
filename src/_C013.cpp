@@ -272,7 +272,7 @@ void C013_Receive(struct EventStruct *event) {
           if (currentPluginID == infoReply->deviceNumber) {
             // Check to see if task already is set to receive from this host
             if ((Settings.TaskDeviceDataFeed[infoReply->destTaskIndex] == infoReply->sourceUnit) &&
-                Settings.TaskDeviceEnabled[infoReply->destTaskIndex]) {
+                Settings.TaskDeviceEnabled(infoReply->destTaskIndex)) {
               mustUpdateCurrentTask = true;
             }
           }
@@ -285,7 +285,7 @@ void C013_Receive(struct EventStruct *event) {
             Settings.TaskDeviceDataFeed[infoReply->destTaskIndex] = infoReply->sourceUnit; // remote feed store unit nr sending the data
 
             if (mustUpdateCurrentTask) {
-              Settings.TaskDeviceEnabled[infoReply->destTaskIndex] = true;
+              Settings.TaskDeviceEnabled(infoReply->destTaskIndex, true);
             }
 
             constexpr pluginID_t DUMMY_PLUGIN_ID{ 33 };
@@ -332,7 +332,7 @@ void C013_Receive(struct EventStruct *event) {
         SaveTaskSettings(taskIndex);
         SaveSettings();
 
-        if (Settings.TaskDeviceEnabled[taskIndex]) {
+        if (Settings.TaskDeviceEnabled(taskIndex)) {
           struct EventStruct TempEvent(taskIndex);
           TempEvent.Source = EventValueSource::Enum::VALUE_SOURCE_UDP;
 

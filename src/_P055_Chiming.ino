@@ -186,7 +186,7 @@ boolean Plugin_055(uint8_t function, struct EventStruct *event, String& string)
       }
 
       if (Plugin_055_Data != nullptr) {
-        Plugin_055_Data->lowActive       = Settings.TaskDevicePin1Inversed[event->TaskIndex];
+        Plugin_055_Data->lowActive       = Settings.TaskDevicePin1Inversed(event->TaskIndex);
         Plugin_055_Data->millisChimeTime = PCONFIG(0);
         Plugin_055_Data->millisPauseTime = PCONFIG(1);
         Plugin_055_Data->chimeClock      = PCONFIG(2);

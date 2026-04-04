@@ -179,7 +179,11 @@ void run_compiletime_checks() {
 
   // All settings related to N_TASKS
   static_assert((232 + TASKS_MAX) == offsetof(SettingsStruct, OLD_TaskDeviceID), ""); // 32-bit alignment, so offset of 2 bytes.
-  static_assert((200 + (67 * TASKS_MAX)) == offsetof(SettingsStruct, ControllerEnabled), "");
+  #if FEATURE_CONTROLLER_BITFIELDS_1
+  static_assert((200 + (67 * TASKS_MAX)) == offsetof(SettingsStruct, ControllerBitfield_1), "");
+  #else // if FEATURE_CONTROLLER_BITFIELDS_1
+  static_assert((200 + (67 * TASKS_MAX)) == offsetof(SettingsStruct, _ControllerEnabled), "");
+  #endif // if FEATURE_CONTROLLER_BITFIELDS_1
 
   // Used to compute true offset.
   //const size_t offset = offsetof(SettingsStruct, ControllerEnabled);
@@ -245,14 +249,14 @@ String checkTaskSettings(taskIndex_t taskIndex) {
     return F("Invalid name. Should not be numeric.");
   }
   if (deviceName.isEmpty()) {
-    if (Settings.TaskDeviceEnabled[taskIndex]) {
+    if (Settings.TaskDeviceEnabled(taskIndex)) {
       // Decide what to do here, for now give a warning when task is enabled.
       return F("Warning: Task Device Name is empty. It is adviced to give tasks an unique name");
     }
   }
   // Do not use the cached function findTaskIndexByName since that one does rely on the fact names should be unique.
   for (taskIndex_t i = 0; i < TASKS_MAX; ++i) {
-    if (i != taskIndex && Settings.TaskDeviceEnabled[i]) {
+    if (i != taskIndex && Settings.TaskDeviceEnabled(i)) {
       LoadTaskSettings(i);
       if (ExtraTaskSettings.TaskDeviceName[0] != 0) {
         if (strcasecmp(ExtraTaskSettings.TaskDeviceName, deviceName.c_str()) == 0) {

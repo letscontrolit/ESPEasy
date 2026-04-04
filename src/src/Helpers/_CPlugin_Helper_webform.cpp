@@ -138,7 +138,7 @@ void addControllerEnabledForm(controllerIndex_t controllerindex) {
   bool isAlternativeDisplayName = false;
   const String displayName      = getControllerParameterDisplayName(ProtocolIndex, varType, isAlternativeDisplayName);
   const String internalName     = getControllerParameterInternalName(ProtocolIndex, varType);
-  addFormCheckBox(displayName, internalName, Settings.ControllerEnabled[controllerindex]);
+  addFormCheckBox(displayName, internalName, Settings.ControllerEnabled(controllerindex));
 }
 
 #if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS
@@ -416,7 +416,7 @@ void addControllerParameterForm(const ControllerSettingsStruct  & ControllerSett
       addTaskSelectBox(displayName, internalName, ControllerSettings.SampleSetInitiator);
       break;
     case ControllerSettingsStruct::CONTROLLER_ENABLED:
-      addFormCheckBox(displayName, internalName, Settings.ControllerEnabled[controllerindex]);
+      addFormCheckBox(displayName, internalName, Settings.ControllerEnabled(controllerindex));
       break;
   }
 }
@@ -606,7 +606,7 @@ void saveControllerParameterForm(ControllerSettingsStruct        & ControllerSet
       ControllerSettings.SampleSetInitiator = getFormItemInt(internalName, ControllerSettings.SampleSetInitiator);
       break;
     case ControllerSettingsStruct::CONTROLLER_ENABLED:
-      Settings.ControllerEnabled[controllerindex] = isFormItemChecked(internalName);
+      Settings.ControllerEnabled(controllerindex, isFormItemChecked(internalName));
       break;
   }
 }

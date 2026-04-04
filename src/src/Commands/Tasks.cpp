@@ -116,7 +116,7 @@ const __FlashStringHelper * taskValueSet(struct EventStruct *event, const char *
     success = false;
     return F("NOT_A_DUMMY_TASK");
   }
-  if (!Settings.TaskDeviceEnabled[taskIndex]) {
+  if (!Settings.TaskDeviceEnabled(taskIndex)) {
     success = false;
     return F("TASK_NOT_ENABLED");
   }
@@ -375,7 +375,7 @@ const __FlashStringHelper * Command_Task_ValueToggle(struct EventStruct *event, 
   if (!validateAndParseTaskValueArguments(event, Line, taskIndex, varNr)) {
     return F("INVALID_PARAMETERS");
   }
-  if (!Settings.TaskDeviceEnabled[taskIndex]) {
+  if (!Settings.TaskDeviceEnabled(taskIndex)) {
     return F("TASK_NOT_ENABLED");
   }
 
@@ -411,7 +411,7 @@ const __FlashStringHelper * Command_ScheduleTask_Run(struct EventStruct *event, 
   if (!validateAndParseTaskIndexArguments(event, Line, taskIndex) || event->Par2 < 0) {
     return F("INVALID_PARAMETERS");
   }
-  if (!Settings.TaskDeviceEnabled[taskIndex]) {
+  if (!Settings.TaskDeviceEnabled(taskIndex)) {
     return F("TASK_NOT_ENABLED");
   }
 
@@ -433,7 +433,7 @@ const __FlashStringHelper * Command_Task_Run(struct EventStruct *event, const ch
   if (!validateAndParseTaskIndexArguments(event, Line, taskIndex) || event->Par2 < 0) {
     return F("INVALID_PARAMETERS");
   }
-  if (!Settings.TaskDeviceEnabled[taskIndex]) {
+  if (!Settings.TaskDeviceEnabled(taskIndex)) {
     return F("TASK_NOT_ENABLED");
   }
   uint32_t unixTime = 0;

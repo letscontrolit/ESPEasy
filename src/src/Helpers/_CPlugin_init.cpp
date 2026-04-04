@@ -2182,7 +2182,7 @@ void CPluginInit()
   // Set all not supported cplugins to disabled.
   for (controllerIndex_t controller = 0; controller < CONTROLLER_MAX; ++controller) {
     if (!supportedCPluginID(Settings.Protocol[controller])) {
-      Settings.ControllerEnabled[controller] = false;
+      Settings.ControllerEnabled(controller, false);
     }
   }
   CPluginCall(CPlugin::Function::CPLUGIN_INIT_ALL, 0);
@@ -2201,7 +2201,7 @@ void CPlugin_Exit_Init(controllerIndex_t controllerIndex)
     // May need to call init later, so make sure exit is called first
     CPluginCall(CPlugin::Function::CPLUGIN_EXIT, &TempEvent, dummy);
 
-    if (Settings.ControllerEnabled[controllerIndex]) {
+    if (Settings.ControllerEnabled(controllerIndex)) {
       CPluginCall(CPlugin::Function::CPLUGIN_INIT, &TempEvent, dummy);
     }
   }

@@ -55,7 +55,7 @@ bool initPluginTaskData(taskIndex_t taskIndex, PluginTaskData_base *data) {
   clearPluginTaskData(taskIndex);
 
   if (data != nullptr) {
-    if (Settings.TaskDeviceEnabled[taskIndex]) {
+    if (Settings.TaskDeviceEnabled(taskIndex)) {
       Plugin_task_data[taskIndex]                     = data;
       Plugin_task_data[taskIndex]->_taskdata_pluginID = Settings.getPluginID_for_task(taskIndex);
 

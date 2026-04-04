@@ -337,7 +337,7 @@ bool PluginCallForTask(taskIndex_t taskIndex, uint8_t Function, EventStruct *Tem
   #endif // ifdef USE_SECOND_HEAP
 
   bool retval                    = false;
-  const bool considerTaskEnabled = Settings.TaskDeviceEnabled[taskIndex];
+  const bool considerTaskEnabled = Settings.TaskDeviceEnabled(taskIndex);
 
   // || (Settings.TaskDeviceEnabled[taskIndex].enabled && Function == PLUGIN_INIT);
 
@@ -594,7 +594,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
                                                        // [<TaskName>]. prefix
               const pluginID_t pluginID = Settings.getPluginID_for_task(thisTask);
 
-              if (Settings.TaskDeviceEnabled[thisTask] // and internally needs to know wether it was called with the taskname prefixed
+              if (Settings.TaskDeviceEnabled(thisTask) // and internally needs to know wether it was called with the taskname prefixed
                   && validPluginID_fullcheck(pluginID)
                   && (Settings.TaskDeviceDataFeed[thisTask] == 0)) {
                 const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(thisTask);
@@ -673,7 +673,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
     {
       for (taskIndex_t taskIndex = 0; taskIndex < TASKS_MAX; taskIndex++)
       {
-        if (Settings.TaskDeviceEnabled[taskIndex]) {
+        if (Settings.TaskDeviceEnabled(taskIndex)) {
           if (PluginCallForTask(taskIndex, Function, &TempEvent, str)) {
             #ifndef BUILD_NO_RAM_TRACKER
             checkRAM(F("PluginCallUDP"), taskIndex);
@@ -719,8 +719,8 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
             // What interval?  (see: PR #4793)
             // Settings.TaskDeviceEnabled[taskIndex].setRetryInit();
             // Scheduler.setPluginTaskTimer(10000, taskIndex, PLUGIN_INIT);
-            Settings.TaskDeviceEnabled[taskIndex] = false;
-            result                                = false;
+            Settings.TaskDeviceEnabled(taskIndex, false);
+            result = false;
           }
           #ifndef BUILD_NO_DEBUG
 
@@ -746,7 +746,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
 
               while (log.length() < 67) { log += ' '; }
 
-              log += Settings.TaskDeviceEnabled[taskIndex] ? F("[ena]") : F("[dis]");
+              log += Settings.TaskDeviceEnabled(taskIndex) ? F("[ena]") : F("[dis]");
 
               while (log.length() < 73) { log += ' '; }
               log += getPluginNameFromDeviceIndex(getDeviceIndex_from_TaskIndex(taskIndex));
@@ -808,7 +808,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
       }
 
       if ((Function == PLUGIN_READ) || (Function == PLUGIN_INIT) || (Function == PLUGIN_PROCESS_CONTROLLER_DATA)) {
-        if (!Settings.TaskDeviceEnabled[event->TaskIndex]) {
+        if (!Settings.TaskDeviceEnabled(event->TaskIndex)) {
           return false;
         }
 
@@ -942,7 +942,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
           if (!retval && (Settings.TaskDeviceDataFeed[event->TaskIndex] == 0)) {
             // Disable temporarily as PLUGIN_INIT failed
             // FIXME TD-er: Should reschedule call to PLUGIN_INIT????
-            Settings.TaskDeviceEnabled[event->TaskIndex] = false;
+            Settings.TaskDeviceEnabled(event->TaskIndex, false);
           } else {
               #if FEATURE_PLUGIN_STATS
 

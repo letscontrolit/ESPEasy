@@ -92,7 +92,7 @@ boolean Plugin_088(uint8_t function, struct EventStruct *event, String& string)
         if (Settings.Protocol[i] == 2) { controllerNr = i; }
       }
 
-      if (Settings.ControllerEnabled[controllerNr])
+      if (Settings.ControllerEnabled(controllerNr))
       {
         addRowLabel(F("IDX"));
         String id = F("TDID"); // ="taskdeviceid"

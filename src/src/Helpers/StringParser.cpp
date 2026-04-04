@@ -252,7 +252,7 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
 
         if (validTaskIndex(taskIndex)) {
           bool isHandled = false;
-          if (Settings.TaskDeviceEnabled[taskIndex]) {
+          if (Settings.TaskDeviceEnabled(taskIndex)) {
             uint8_t valueNr = findDeviceValueIndexByName(valueName, taskIndex);
 
             if (valueNr != VARS_PER_TASK) {
@@ -288,7 +288,7 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
           if (!isHandled && valueName.startsWith(F("settings."))) {  // Task settings values
             String value;
             if (valueName.endsWith(F(".enabled"))) {           // Task state
-              value = Settings.TaskDeviceEnabled[taskIndex] ? '1' : '0';
+              value = Settings.TaskDeviceEnabled(taskIndex) ? '1' : '0';
             } else if (valueName.endsWith(F(".interval"))) {   // Task interval
               value = Settings.TaskDeviceTimer[taskIndex];
             } else if (valueName.endsWith(F(".valuecount"))) { // Task value count
@@ -297,7 +297,7 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
               String ctrl = valueName.substring(19, 20);
               int32_t ctrlNr = 0;
               if (validIntFromString(ctrl, ctrlNr) && (ctrlNr >= 1) && (ctrlNr <= CONTROLLER_MAX) && 
-                  Settings.ControllerEnabled[ctrlNr - 1]) { // Controller nr. valid and enabled
+                  Settings.ControllerEnabled(ctrlNr - 1)) { // Controller nr. valid and enabled
                 if (valueName.endsWith(F(".enabled"))) {    // Task-controller enabled
                   value = Settings.TaskDeviceSendData[ctrlNr - 1][taskIndex];
                 } else if (valueName.endsWith(F(".idx"))) { // Task-controller idx value
@@ -320,7 +320,7 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
             }
           }
           #if FEATURE_STRING_VARIABLES
-          if (!isHandled && Settings.TaskDeviceEnabled[taskIndex]) {
+          if (!isHandled && Settings.TaskDeviceEnabled(taskIndex)) {
             String value;
             const String valName = parseString(valueName, 1);
             String derived = getCustomStringVar(strformat(F(TASK_VALUE_DERIVED_PREFIX_TEMPLATE), deviceName.c_str(), valName.c_str()));
@@ -856,7 +856,7 @@ taskIndex_t findTaskIndexByName(String deviceName, bool allowDisabled)
 
   for (taskIndex_t taskIndex = 0; taskIndex < TASKS_MAX; taskIndex++)
   {
-    if (Settings.TaskDeviceEnabled[taskIndex] || allowDisabled) {
+    if (Settings.TaskDeviceEnabled(taskIndex) || allowDisabled) {
       String taskDeviceName = getTaskDeviceName(taskIndex);
 
       if (!taskDeviceName.isEmpty())

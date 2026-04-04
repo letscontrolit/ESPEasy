@@ -143,7 +143,7 @@ boolean Plugin_059(uint8_t function, struct EventStruct *event, String& string)
 
         if (validGpio(pin))
         {
-          // pinMode(pin, (Settings.TaskDevicePin1PullUp[event->TaskIndex]) ? INPUT_PULLUP : INPUT);
+          // pinMode(pin, Settings.TaskDevicePin1PullUp(event->TaskIndex) ? INPUT_PULLUP : INPUT);
           constexpr pluginID_t P059_PLUGIN_ID{ PLUGIN_ID_059 };
 
           const uint32_t key = createKey(P059_PLUGIN_ID, pin);

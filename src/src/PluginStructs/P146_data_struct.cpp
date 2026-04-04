@@ -389,7 +389,7 @@ bool P146_data_struct::sendViaOriginalTask(
       tmpEvent.idx             = Settings.TaskDeviceID[x][P146_TaskIndex];
 
       if (Settings.TaskDeviceSendData[x][P146_TaskIndex] &&
-          Settings.ControllerEnabled[x] &&
+          Settings.ControllerEnabled(x) &&
           Settings.Protocol[x])
       {
         protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(x);

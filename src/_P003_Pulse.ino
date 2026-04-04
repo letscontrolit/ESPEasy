@@ -229,7 +229,7 @@ boolean Plugin_003(uint8_t function, struct EventStruct *event, String& string)
       config.gpio             = CONFIG_PIN1;
       config.taskIndex        = event->TaskIndex;
       config.interruptPinMode = static_cast<Internal_GPIO_pulseHelper::GPIOtriggerMode>(PCONFIG(P003_IDX_MODETYPE));
-      config.pullupPinMode    = Settings.TaskDevicePin1PullUp[event->TaskIndex] ? INPUT_PULLUP : INPUT;
+      config.pullupPinMode    = Settings.TaskDevicePin1PullUp(event->TaskIndex) ? INPUT_PULLUP : INPUT;
 
       // FIXME TD-er: Must set the state using globalMapPortStatus
 

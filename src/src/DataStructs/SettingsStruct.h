@@ -59,6 +59,32 @@ enum class PinBootState {
 
 };
 
+/**
+ * Determine what additional bit-fields to use, only enable when needed because of additional build-size
+ * First use up the bits in VariousBits_3 (like VariousBits_1 and VariousBits_2) because of the build size increases!
+ */
+#ifndef FEATURE_UNNAMED_BITFIELDS_1
+  #define FEATURE_UNNAMED_BITFIELDS_1         0   // 2x 7 bits globally, adds ESP32: 36 ESP8266: 64 bytes
+#endif
+#ifndef FEATURE_UNNAMED_BITFIELDS_2
+  #define FEATURE_UNNAMED_BITFIELDS_2         0   // 3x 7 bits globally, adds ESP32: 256 ESP8266: 176 bytes
+#endif
+#ifndef FEATURE_TASKDEVICE_BITFIELDS_4
+  #define FEATURE_TASKDEVICE_BITFIELDS_4      0   // 7 bits per TaskDevice, adds ESP32: 32 ESP8266: 64 bytes + 16 bytes per bit-function
+#endif
+#ifndef FEATURE_TASKDEVICE_BITFIELDS_5
+  #define FEATURE_TASKDEVICE_BITFIELDS_5      0   // 7 bits per TaskDevice, adds ESP32: 16 ESP8266: 64 bytes + 16 bytes per bit-function
+#endif
+#ifndef FEATURE_TASKDEVICE_BITFIELDS_6
+  #define FEATURE_TASKDEVICE_BITFIELDS_6      0   // 7 bits per TaskDevice, adds ESP32: -80 ESP8266: 172 bytes + 16 bytes per bit-function
+#endif
+#ifndef FEATURE_CONTROLLER_BITFIELDS_1
+  #define FEATURE_CONTROLLER_BITFIELDS_1      0   // 7 bits per Controller, adds ESP32: 168 ESP8266: 192 bytes + 16 bytes per bit-function
+#endif
+#ifndef FEATURE_NOTIFICATION_BITFIELDS_1
+  #define FEATURE_NOTIFICATION_BITFIELDS_1    0   // 7 bits per Notifier, adds ESP32: 108 ESP8266: 64 bytes + 16 bytes per bit-function
+#endif
+
 
 
 
@@ -195,6 +221,66 @@ class SettingsStruct_tmpl
   inline bool PassiveWiFiScan() const { return !VariousBits_2.PassiveWiFiScan; }
   inline void PassiveWiFiScan(bool value) { VariousBits_2.PassiveWiFiScan = !value; }
 #endif
+
+  #if FEATURE_TASKDEVICE_BITFIELDS_4
+  inline const bool TaskDevicePin1PullUp(uint32_t taskIndex) { return TaskDeviceBitfield_4[taskIndex].TaskDevicePin1PullUp; }
+  inline void TaskDevicePin1PullUp(uint32_t taskIndex, bool state) { TaskDeviceBitfield_4[taskIndex].TaskDevicePin1PullUp = state; }
+  
+  // Template for accessor, using bool
+  inline const bool TaskDeviceBitfield4_01(uint32_t taskIndex) { return TaskDeviceBitfield_4[taskIndex].unusedU4_01; }
+  inline void TaskDeviceBitfield4_01(uint32_t taskIndex, bool state) { TaskDeviceBitfield_4[taskIndex].unusedU4_01 = state; }
+  #else // if FEATURE_TASKDEVICE_BITFIELDS_4
+  inline const bool TaskDevicePin1PullUp(uint32_t taskIndex) { return _TaskDevicePin1PullUp[taskIndex]; }
+  inline void TaskDevicePin1PullUp(uint32_t taskIndex, bool state) { _TaskDevicePin1PullUp[taskIndex] = state; }
+  #endif // if FEATURE_TASKDEVICE_BITFIELDS_4
+  
+  #if FEATURE_TASKDEVICE_BITFIELDS_5
+  inline const bool TaskDevicePin1Inversed(uint32_t taskIndex) { return TaskDeviceBitfield_5[taskIndex].TaskDevicePin1Inversed; }
+  inline void TaskDevicePin1Inversed(uint32_t taskIndex, bool state) { TaskDeviceBitfield_5[taskIndex].TaskDevicePin1Inversed = state; }
+  
+  // Template for accessor, using uint8_t, can be multiple bits, if desired
+  inline const uint8_t TaskDeviceBitfield5_01(uint32_t taskIndex) { return TaskDeviceBitfield_5[taskIndex].unusedU5_01; }
+  inline void TaskDeviceBitfield5_01(uint32_t taskIndex, uint8_t value) { TaskDeviceBitfield_5[taskIndex].unusedU5_01 = value; }
+  #else // if FEATURE_TASKDEVICE_BITFIELDS_5
+  inline const bool TaskDevicePin1Inversed(uint32_t taskIndex) { return _TaskDevicePin1Inversed[taskIndex]; }
+  inline void TaskDevicePin1Inversed(uint32_t taskIndex, bool state) { _TaskDevicePin1Inversed[taskIndex] = state; }
+  #endif // if FEATURE_TASKDEVICE_BITFIELDS_5
+
+  #if FEATURE_TASKDEVICE_BITFIELDS_6
+  inline const bool TaskDeviceEnabled(taskIndex_t taskIndex) { return TaskDeviceBitfield_6[taskIndex].TaskDeviceEnabled; }
+  inline void TaskDeviceEnabled(taskIndex_t taskIndex, bool state) { TaskDeviceBitfield_6[taskIndex].TaskDeviceEnabled = state; }
+  
+  // Template for accessor, using uint8_t, can be multiple bits, if desired
+  inline const uint8_t TaskDeviceBitfield6_01(uint32_t taskIndex) { return TaskDeviceBitfield_6[taskIndex].unusedU6_01; }
+  inline void TaskDeviceBitfield6_01(uint32_t taskIndex, uint8_t value) { TaskDeviceBitfield_6[taskIndex].unusedU6_01 = value; }
+  #else // if FEATURE_TASKDEVICE_BITFIELDS_6
+  inline const bool TaskDeviceEnabled(taskIndex_t taskIndex) { return _TaskDeviceEnabled[taskIndex]; }
+  inline void TaskDeviceEnabled(taskIndex_t taskIndex, bool state) { _TaskDeviceEnabled[taskIndex] = state; }
+  #endif // if FEATURE_TASKDEVICE_BITFIELDS_6
+
+  #if FEATURE_CONTROLLER_BITFIELDS_1
+  inline const bool ControllerEnabled(controllerIndex_t controllerIndex) { return ControllerBitfield_1[controllerIndex].ControllerEnabled; }
+  inline void ControllerEnabled(controllerIndex_t controllerIndex, bool state) { ControllerBitfield_1[controllerIndex].ControllerEnabled = state; }
+  
+  // Template for accessor, using bool
+  inline const bool ControllerBitfield1_01(controllerIndex_t controllerIndex) { return ControllerBitfield_1[controllerIndex].unusedC1_01; }
+  inline void ControllerBitfield1_01(controllerIndex_t controllerIndex, uint8_t value) { ControllerBitfield_1[controllerIndex].unusedC1_01 = value; }
+  #else // if FEATURE_CONTROLLER_BITFIELDS_1
+  inline const bool ControllerEnabled(controllerIndex_t controllerIndex) { return _ControllerEnabled[controllerIndex]; }
+  inline void ControllerEnabled(controllerIndex_t controllerIndex, bool state) { _ControllerEnabled[controllerIndex] = state; }
+  #endif // if FEATURE_CONTROLLER_BITFIELDS_1
+
+  #if FEATURE_NOTIFICATION_BITFIELDS_1
+  inline const bool NotificationEnabled(uint8_t notificationIndex) { return NotificationBitfield_1[notificationIndex].NotificationEnabled; }
+  inline void NotificationEnabled(uint8_t notificationIndex, bool state) { NotificationBitfield_1[notificationIndex].NotificationEnabled = state; }
+  
+  // Template for accessor, using bool
+  inline const bool NotificationBitfield1_01(uint8_t notificationIndex) { return NotificationBitfield_1[notificationIndex].unusedN1_01; }
+  inline void NotificationBitfield1_01(uint8_t notificationIndex, uint8_t value) { NotificationBitfield_1[notificationIndex].unusedN1_01 = value; }
+  #else // if FEATURE_NOTIFICATION_BITFIELDS_1
+  inline const bool NotificationEnabled(uint8_t notificationIndex) { return _NotificationEnabled[notificationIndex]; }
+  inline void NotificationEnabled(uint8_t notificationIndex, bool state) { _NotificationEnabled[notificationIndex] = state; }
+  #endif // if FEATURE_NOTIFICATION_BITFIELDS_1
 
   // Connect to Hidden SSID using channel and BSSID
   // This is much slower, but appears to be needed for some access points 
@@ -512,6 +598,7 @@ public:
   uint8_t       SDLogLevel = 0;
   uint32_t BaudRate = 115200;
   uint32_t MessageDelay_unused = 0;  // MQTT settings now moved to the controller settings.
+  #if FEATURE_UNNAMED_BITFIELDS_1
   union {
     struct {
       uint32_t deepSleep_wakeTime               : 8; // Bit 0..7, 0 = Sleep Disabled, else time awake from sleep in seconds
@@ -535,6 +622,13 @@ public:
     };
     uint32_t _unnamedUnion0{};
   };
+  #else // if FEATURE_UNNAMED_BITFIELDS_1
+  uint8_t       deepSleep_wakeTime = 0;   // 0 = Sleep Disabled, else time awake from sleep in seconds
+  boolean       CustomCSS = false;
+  boolean       DST = false;
+  uint8_t       WDI2CAddress = 0;
+  #endif // if FEATURE_UNNAMED_BITFIELDS_1
+  #if FEATURE_UNNAMED_BITFIELDS_2
   union {
     struct {
       uint32_t UseRules                         : 1; // Bit 0 used
@@ -565,6 +659,12 @@ public:
     };
     uint32_t _unnamedUnion1{};
   };
+  #else // if FEATURE_UNNAMED_BITFIELDS_2
+  boolean       UseRules = false;
+  boolean       UseSerial = false;
+  boolean       UseSSDP = false;
+  uint8_t       ExternalTimeSource = 0;
+  #endif // if FEATURE_UNNAMED_BITFIELDS_2
   uint32_t WireClockStretchLimit = 0;
   union {
     struct {
@@ -645,9 +745,41 @@ public:
     };
     int8_t        TaskDevicePin[4][N_TASKS]{};
   };
-  boolean       TaskDevicePin1PullUp[N_TASKS] = {0};
+  #if FEATURE_TASKDEVICE_BITFIELDS_4
+  union {
+    boolean TaskDeviceBitfield_4_internal[N_TASKS]{};
+    struct {
+      uint8_t TaskDevicePin1PullUp             : 1; // Bit 0 used
+      uint8_t unusedU4_01                      : 1; // Bit 1
+      uint8_t unusedU4_02                      : 1; // Bit 2
+      uint8_t unusedU4_03                      : 1; // Bit 3
+      uint8_t unusedU4_04                      : 1; // Bit 4
+      uint8_t unusedU4_05                      : 1; // Bit 5
+      uint8_t unusedU4_06                      : 1; // Bit 6
+      uint8_t unusedU4_07                      : 1; // Bit 7
+    } TaskDeviceBitfield_4[N_TASKS];
+  };
+  #else // if FEATURE_TASKDEVICE_BITFIELDS_4
+  boolean       _TaskDevicePin1PullUp[N_TASKS] = {0};
+  #endif // if FEATURE_TASKDEVICE_BITFIELDS_4
   int16_t       TaskDevicePluginConfig[N_TASKS][PLUGIN_CONFIGVAR_MAX]{};
-  boolean       TaskDevicePin1Inversed[N_TASKS] = {0};
+  #if FEATURE_TASKDEVICE_BITFIELDS_5
+  union {
+    boolean TaskDeviceBitfield5_internal[N_TASKS]{};
+    struct {
+      uint8_t TaskDevicePin1Inversed           : 1; // Bit 0 used
+      uint8_t unusedU5_01                      : 1; // Bit 1
+      uint8_t unusedU5_02                      : 1; // Bit 2
+      uint8_t unusedU5_03                      : 1; // Bit 3
+      uint8_t unusedU5_04                      : 1; // Bit 4
+      uint8_t unusedU5_05                      : 1; // Bit 5
+      uint8_t unusedU5_06                      : 1; // Bit 6
+      uint8_t unusedU5_07                      : 1; // Bit 7
+    } TaskDeviceBitfield_5[N_TASKS];
+  };
+  #else //if FEATURE_TASKDEVICE_BITFIELDS_5
+  boolean       _TaskDevicePin1Inversed[N_TASKS] = {0};
+  #endif //if FEATURE_TASKDEVICE_BITFIELDS_5
   float         TaskDevicePluginConfigFloat[N_TASKS][PLUGIN_CONFIGFLOATVAR_MAX]{};
 
   // FIXME TD-er: When used on ESP8266, this conversion union may not work
@@ -660,15 +792,96 @@ public:
   uint8_t       VariousTaskBits[N_TASKS] = {0};
   uint8_t       TaskDeviceDataFeed[N_TASKS] = {0};    // When set to 0, only read local connected sensorsfeeds
   uint32_t TaskDeviceTimer[N_TASKS] = {0};
-  boolean       TaskDeviceEnabled[N_TASKS] = {0};
-  boolean       ControllerEnabled[CONTROLLER_MAX] = {0};
-  boolean       NotificationEnabled[NOTIFICATION_MAX] = {0};
+  #if FEATURE_TASKDEVICE_BITFIELDS_6
+union {
+    boolean TaskDeviceBitfield_6_internal[N_TASKS]{};
+    struct {
+      uint8_t TaskDeviceEnabled                : 1; // Bit 0 used
+      uint8_t unusedU6_01                      : 1; // Bit 1
+      uint8_t unusedU6_02                      : 1; // Bit 2
+      uint8_t unusedU6_03                      : 1; // Bit 3
+      uint8_t unusedU6_04                      : 1; // Bit 4
+      uint8_t unusedU6_05                      : 1; // Bit 5
+      uint8_t unusedU6_06                      : 1; // Bit 6
+      uint8_t unusedU6_07                      : 1; // Bit 7
+    } TaskDeviceBitfield_6[N_TASKS];
+  };
+  #else // if FEATURE_TASKDEVICE_BITFIELDS_6
+  boolean       _TaskDeviceEnabled[N_TASKS] = {0};
+  #endif // if FEATURE_TASKDEVICE_BITFIELDS_6
+  #if FEATURE_CONTROLLER_BITFIELDS_1
+  union {
+    boolean ControllerBitfield_1_internal[CONTROLLER_MAX]{};
+    struct {
+      uint8_t ControllerEnabled                : 1; // Bit 0 used
+      uint8_t unusedC1_01                      : 1; // Bit 1
+      uint8_t unusedC1_02                      : 1; // Bit 2
+      uint8_t unusedC1_03                      : 1; // Bit 3
+      uint8_t unusedC1_04                      : 1; // Bit 4
+      uint8_t unusedC1_05                      : 1; // Bit 5
+      uint8_t unusedC1_06                      : 1; // Bit 6
+      uint8_t unusedC1_07                      : 1; // Bit 7
+    } ControllerBitfield_1[CONTROLLER_MAX];
+  };
+  #else // if FEATURE_CONTROLLER_BITFIELDS_1
+  boolean       _ControllerEnabled[CONTROLLER_MAX] = {0};
+  #endif // if FEATURE_CONTROLLER_BITFIELDS_1
+  #if FEATURE_NOTIFICATION_BITFIELDS_1
+  union {
+    boolean NotificationBitfield_1_internal[NOTIFICATION_MAX]{};
+    struct {
+      uint8_t NotificationEnabled              : 1; // Bit 0 used
+      uint8_t unusedN1_01                      : 1; // Bit 1
+      uint8_t unusedN1_02                      : 1; // Bit 2
+      uint8_t unusedN1_03                      : 1; // Bit 3
+      uint8_t unusedN1_04                      : 1; // Bit 4
+      uint8_t unusedN1_05                      : 1; // Bit 5
+      uint8_t unusedN1_06                      : 1; // Bit 6
+      uint8_t unusedN1_07                      : 1; // Bit 7
+    } NotificationBitfield_1[NOTIFICATION_MAX];
+  };
+  #else // if FEATURE_NOTIFICATION_BITFIELDS_1
+  boolean       _NotificationEnabled[NOTIFICATION_MAX] = {0};
+  #endif // if FEATURE_NOTIFICATION_BITFIELDS_1
   uint32_t  TaskDeviceID[CONTROLLER_MAX][N_TASKS]{};        // IDX number (mainly used by Domoticz)
   boolean       TaskDeviceSendData[CONTROLLER_MAX][N_TASKS]{};
-  boolean       Pin_status_led_Inversed = false;
-  boolean       deepSleepOnFail = false;
-  boolean       UseValueLogger = false;
-  boolean       ArduinoOTAEnable = false;
+  union {
+    struct {
+      uint32_t Pin_status_led_Inversed          : 1; // Bit 0 used
+      uint32_t unusedU2_01                      : 1; // Bit 1
+      uint32_t unusedU2_02                      : 1; // Bit 2
+      uint32_t unusedU2_03                      : 1; // Bit 3
+      uint32_t unusedU2_04                      : 1; // Bit 4
+      uint32_t unusedU2_05                      : 1; // Bit 5
+      uint32_t unusedU2_06                      : 1; // Bit 6
+      uint32_t unusedU2_07                      : 1; // Bit 7
+      uint32_t deepSleepOnFail                  : 1; // Bit 8 used
+      uint32_t unusedU2_09                      : 1; // Bit 9
+      uint32_t unusedU2_10                      : 1; // Bit 10
+      uint32_t unusedU2_11                      : 1; // Bit 11
+      uint32_t unusedU2_12                      : 1; // Bit 12
+      uint32_t unusedU2_13                      : 1; // Bit 13
+      uint32_t unusedU2_14                      : 1; // Bit 14
+      uint32_t unusedU2_15                      : 1; // Bit 15
+      uint32_t UseValueLogger                   : 1; // Bit 16 used
+      uint32_t unusedU2_17                      : 1; // Bit 17
+      uint32_t unusedU2_18                      : 1; // Bit 18
+      uint32_t unusedU2_19                      : 1; // Bit 19
+      uint32_t unusedU2_20                      : 1; // Bit 20
+      uint32_t unusedU2_21                      : 1; // Bit 21
+      uint32_t unusedU2_22                      : 1; // Bit 22
+      uint32_t unusedU2_23                      : 1; // Bit 23
+      uint32_t ArduinoOTAEnable                 : 1; // Bit 24 used
+      uint32_t unusedU2_25                      : 1; // Bit 25
+      uint32_t unusedU2_26                      : 1; // Bit 26
+      uint32_t unusedU2_27                      : 1; // Bit 27
+      uint32_t unusedU2_28                      : 1; // Bit 28
+      uint32_t unusedU2_29                      : 1; // Bit 29
+      uint32_t unusedU2_30                      : 1; // Bit 30
+      uint32_t unusedU2_31                      : 1; // Bit 31
+    };
+    uint32_t _unnamedUnion2{};
+  };
   uint16_t      DST_Start = 0;
   uint16_t      DST_End = 0;
   boolean       UseRTOSMultitasking = false;

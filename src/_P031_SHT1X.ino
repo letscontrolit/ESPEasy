@@ -85,7 +85,7 @@ boolean Plugin_031(uint8_t function, struct EventStruct *event, String& string)
         # endif // ifndef BUILD_NO_DEBUG
       P031_data->init(
         CONFIG_PIN1, CONFIG_PIN2,
-        Settings.TaskDevicePin1PullUp[event->TaskIndex],
+        Settings.TaskDevicePin1PullUp(event->TaskIndex),
         PCONFIG(0));
       # ifndef BUILD_NO_DEBUG
 

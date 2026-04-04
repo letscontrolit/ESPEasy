@@ -64,16 +64,18 @@ bool MQTT_handle_topic_commands(struct EventStruct *event,
         uint8_t valueNr                   = findDeviceValueIndexByName(valueName, taskIndex);
         const taskVarIndex_t taskVarIndex = static_cast<taskVarIndex_t>(valueNr);
 
-        if (validDeviceIndex(deviceIndex) && validTaskVarIndex(taskVarIndex) && Settings.TaskDeviceEnabled[taskIndex]) {
+        if (validDeviceIndex(deviceIndex) && validTaskVarIndex(taskVarIndex) && Settings.TaskDeviceEnabled(taskIndex)) {
           # if defined(USES_P001) || defined(USES_P009) || defined(USES_P019) || defined(USES_P033) || defined(USES_P086)
           const int pluginID = Device[deviceIndex].Number;
           # endif // if defined(USES_P001) || defined(USES_P009) || defined(USES_P010) || defined(USES_P033) || defined(USES_P086)
+          # if defined(USES_P001) || defined(USES_P009) || defined(USES_P019)
+          const bool inverted = Settings.TaskDevicePin1Inversed(taskIndex);
+          # endif // if defined(USES_P001) || defined(USES_P009) || defined(USES_P019)
           # ifdef USES_P001
 
           if (!handled && (pluginID == 1) && validGpio(Settings.TaskDevicePin[0][taskIndex])) { // Plugin 1 Switch, uses 1st GPIO only
             EventStruct   TempEvent(taskIndex);
             const uint8_t switchtype = P001_data_struct::P001_getSwitchType(&TempEvent);        // 0 = Switch
-            const bool    inverted   = Settings.TaskDevicePin1Inversed[taskIndex];
             uint32_t value{};
             validUIntFromString(event->String2, value);
 
@@ -89,7 +91,6 @@ bool MQTT_handle_topic_commands(struct EventStruct *event,
 
           if (!handled && ((pluginID == 9) || (pluginID == 19))) { // Plugin 9 MCP23017, Plugin 19 PCF8574
             EventStruct TempEvent(taskIndex);
-            const bool  inverted = Settings.TaskDevicePin1Inversed[taskIndex];
             uint32_t    value{};
             validUIntFromString(event->String2, value);
 
@@ -370,45 +371,27 @@ bool getDiscoveryVType(struct EventStruct *event, QueryVType_ptr func_ptr, uint8
 }
 
 // helper functions to supply a single value VType to be used by getDiscoveryVType
-int Plugin_QueryVType_BinarySensor(uint8_t value_nr) {
-  return static_cast<int>(Sensor_VType::SENSOR_TYPE_SWITCH) | Sensor_VType_CAN_SET;
-}
+int Plugin_QueryVType_BinarySensor(uint8_t value_nr)    { return static_cast<int>(Sensor_VType::SENSOR_TYPE_SWITCH) | Sensor_VType_CAN_SET; }
 
 int Plugin_QueryVType_BinarySensorInv(uint8_t value_nr) {
   return static_cast<int>(Sensor_VType::SENSOR_TYPE_SWITCH_INVERTED) | Sensor_VType_CAN_SET;
 }
 
-int Plugin_QueryVType_Analog(uint8_t value_nr) {
-  return static_cast<int>(Sensor_VType::SENSOR_TYPE_ANALOG_ONLY);
-}
+int    Plugin_QueryVType_Analog(uint8_t value_nr)         { return static_cast<int>(Sensor_VType::SENSOR_TYPE_ANALOG_ONLY); }
 
-int Plugin_QueryVType_CO2(uint8_t value_nr) {
-  return static_cast<int>(Sensor_VType::SENSOR_TYPE_CO2_ONLY);
-}
+int    Plugin_QueryVType_CO2(uint8_t value_nr)            { return static_cast<int>(Sensor_VType::SENSOR_TYPE_CO2_ONLY); }
 
-int Plugin_QueryVType_Distance(uint8_t value_nr) {
-  return static_cast<int>(Sensor_VType::SENSOR_TYPE_DISTANCE_ONLY);
-}
+int    Plugin_QueryVType_Distance(uint8_t value_nr)       { return static_cast<int>(Sensor_VType::SENSOR_TYPE_DISTANCE_ONLY); }
 
-int Plugin_QueryVType_DustPM2_5(uint8_t value_nr) {
-  return static_cast<int>(Sensor_VType::SENSOR_TYPE_DUSTPM2_5_ONLY);
-}
+int    Plugin_QueryVType_DustPM2_5(uint8_t value_nr)      { return static_cast<int>(Sensor_VType::SENSOR_TYPE_DUSTPM2_5_ONLY); }
 
-int Plugin_QueryVType_Lux(uint8_t value_nr) {
-  return static_cast<int>(Sensor_VType::SENSOR_TYPE_LUX_ONLY);
-}
+int    Plugin_QueryVType_Lux(uint8_t value_nr)            { return static_cast<int>(Sensor_VType::SENSOR_TYPE_LUX_ONLY); }
 
-int Plugin_QueryVType_Temperature(uint8_t value_nr) {
-  return static_cast<int>(Sensor_VType::SENSOR_TYPE_TEMP_ONLY);
-}
+int    Plugin_QueryVType_Temperature(uint8_t value_nr)    { return static_cast<int>(Sensor_VType::SENSOR_TYPE_TEMP_ONLY); }
 
-int Plugin_QueryVType_Weight(uint8_t value_nr) {
-  return static_cast<int>(Sensor_VType::SENSOR_TYPE_WEIGHT_ONLY);
-}
+int    Plugin_QueryVType_Weight(uint8_t value_nr)         { return static_cast<int>(Sensor_VType::SENSOR_TYPE_WEIGHT_ONLY); }
 
-String makeHomeAssistantCompliantName(const String& name) {
-  return ESPEasy::net::makeRFCCompliantName(name, '_', '_', 0);
-}
+String makeHomeAssistantCompliantName(const String& name) { return ESPEasy::net::makeRFCCompliantName(name, '_', '_', 0); }
 
 #  if FEATURE_MQTT_DEVICECLASS
 const char mqtt_binary_deviceclass_names[] PROGMEM =
@@ -434,16 +417,17 @@ int MQTT_binary_deviceClassIndex(const String& deviceClassName) {
 
 // TwoWay devices are marked with ² in the selector, and discovered as 'light' instead of 'binary_sensor'
 bool MQTT_binary_deviceClassTwoWay(int devClassIndex) {
-  switch (devClassIndex) { // Index into mqtt_binary_deviceclass_names
-    case 1:                // power
-    case 2:                // light
-    case 3:                // plug
-    case 5:                // garage_door
-    case 8:                // lock
-    case 26:               // sound
-    case 28:               // vibration
-    case 29:               // switch
-    case 30:               // outlet
+  switch (devClassIndex) // Index into mqtt_binary_deviceclass_names
+  {
+    case 1:              // power
+    case 2:              // light
+    case 3:              // plug
+    case 5:              // garage_door
+    case 8:              // lock
+    case 26:             // sound
+    case 28:             // vibration
+    case 29:             // switch
+    case 30:             // outlet
       return true;
     default:
       break;
@@ -453,9 +437,10 @@ bool MQTT_binary_deviceClassTwoWay(int devClassIndex) {
 
 // Switch devices are marked with ÷ in the selector, and discovered as 'switch' instead of 'light'
 bool MQTT_binary_deviceClassSwitch(int devClassIndex) {
-  switch (devClassIndex) { // Index into mqtt_binary_deviceclass_names
-    case 29:               // switch
-    case 30:               // outlet
+  switch (devClassIndex) // Index into mqtt_binary_deviceclass_names
+  {
+    case 29:             // switch
+    case 30:             // outlet
       return true;
     default:
       break;
@@ -466,9 +451,11 @@ bool MQTT_binary_deviceClassSwitch(int devClassIndex) {
 #  endif // if FEATURE_MQTT_DEVICECLASS
 
 #  if FEATURE_MQTT_STATE_CLASS
+
 const __FlashStringHelper* MQTT_sensor_StateClass(uint8_t index,
                                                   bool    display) {
-  switch (index) {
+  switch (index)
+  {
     case 0: return F("");
     case 1: return display ? F("Measurement") : F("measurement");
     case 2: return display ? F("Measurement-angle") : F("measurement_angle");
@@ -507,7 +494,8 @@ bool MQTT_SendAutoDiscovery(controllerIndex_t ControllerIndex, cpluginID_t CPlug
 
 
     // Dispatch autoDiscovery per supported CPlugin
-    switch (CPluginID) {
+    switch (CPluginID)
+    {
       case 5: // CPLUGIN_ID_005 : Home assistant/openHAB
         success = MQTT_HomeAssistant_SendAutoDiscovery(ControllerIndex, *ControllerSettings);
         break;
@@ -544,7 +532,7 @@ bool MQTT_HomeAssistant_SendAutoDiscovery(controllerIndex_t         ControllerIn
       // Device is enabled so send information
       if (validDeviceIndex(DeviceIndex) &&
           Device[DeviceIndex].SendDataOption &&           // do (can) we send data?
-          Settings.TaskDeviceEnabled[x] &&                // task enabled?
+          Settings.TaskDeviceEnabled(x) &&                // task enabled?
           Settings.TaskDeviceSendData[ControllerIndex][x] // selected for this controller?
           ) {
         const String taskName   = getTaskDeviceName(x);
@@ -636,7 +624,8 @@ bool MQTT_HomeAssistant_SendAutoDiscovery(controllerIndex_t         ControllerIn
             struct EventStruct TempEvent(x);
             const uint8_t varCount = discoveryItems[s].varIndex + discoveryItems[s].valueCount;
 
-            switch (discoveryItems[s].VType) {
+            switch (discoveryItems[s].VType)
+            {
               // VType values to support, mapped to device classes:
               case Sensor_VType::SENSOR_TYPE_SWITCH:
               case Sensor_VType::SENSOR_TYPE_SWITCH_INVERTED:

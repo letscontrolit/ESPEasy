@@ -269,7 +269,7 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
     }
 
     case PLUGIN_FIFTY_PER_SECOND: {
-      if (Settings.TaskDeviceEnabled[event->TaskIndex]) {
+      if (Settings.TaskDeviceEnabled(event->TaskIndex)) {
         P094_data_struct *P094_data =
           static_cast<P094_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -468,7 +468,7 @@ boolean Plugin_094(uint8_t function, struct EventStruct *event, String& string) 
     {
       // event->String1 => topic;
       // event->String2 => payload;
-      if (Settings.TaskDeviceEnabled[event->TaskIndex]) {
+      if (Settings.TaskDeviceEnabled(event->TaskIndex)) {
         const bool fromCUL = false;
 
         if (!Plugin_094_match_all(event->TaskIndex, event->String2, event->String1, fromCUL)) {
