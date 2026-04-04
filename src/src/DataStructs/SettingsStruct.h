@@ -747,7 +747,7 @@ public:
   };
   #if FEATURE_TASKDEVICE_BITFIELDS_4
   union {
-    boolean TaskDeviceBitfield_4_internal[N_TASKS]{};
+    uint8_t TaskDeviceBitfield_4_internal[N_TASKS]{};
     struct {
       uint8_t TaskDevicePin1PullUp             : 1; // Bit 0 used
       uint8_t unusedU4_01                      : 1; // Bit 1
@@ -765,7 +765,7 @@ public:
   int16_t       TaskDevicePluginConfig[N_TASKS][PLUGIN_CONFIGVAR_MAX]{};
   #if FEATURE_TASKDEVICE_BITFIELDS_5
   union {
-    boolean TaskDeviceBitfield5_internal[N_TASKS]{};
+    uint8_t TaskDeviceBitfield5_internal[N_TASKS]{};
     struct {
       uint8_t TaskDevicePin1Inversed           : 1; // Bit 0 used
       uint8_t unusedU5_01                      : 1; // Bit 1
@@ -794,7 +794,7 @@ public:
   uint32_t TaskDeviceTimer[N_TASKS] = {0};
   #if FEATURE_TASKDEVICE_BITFIELDS_6
 union {
-    boolean TaskDeviceBitfield_6_internal[N_TASKS]{};
+    uint8_t TaskDeviceBitfield_6_internal[N_TASKS]{};
     struct {
       uint8_t TaskDeviceEnabled                : 1; // Bit 0 used
       uint8_t unusedU6_01                      : 1; // Bit 1
@@ -811,7 +811,7 @@ union {
   #endif // if FEATURE_TASKDEVICE_BITFIELDS_6
   #if FEATURE_CONTROLLER_BITFIELDS_1
   union {
-    boolean ControllerBitfield_1_internal[CONTROLLER_MAX]{};
+    uint8_t ControllerBitfield_1_internal[CONTROLLER_MAX]{};
     struct {
       uint8_t ControllerEnabled                : 1; // Bit 0 used
       uint8_t unusedC1_01                      : 1; // Bit 1
@@ -828,7 +828,7 @@ union {
   #endif // if FEATURE_CONTROLLER_BITFIELDS_1
   #if FEATURE_NOTIFICATION_BITFIELDS_1
   union {
-    boolean NotificationBitfield_1_internal[NOTIFICATION_MAX]{};
+    uint8_t NotificationBitfield_1_internal[NOTIFICATION_MAX]{};
     struct {
       uint8_t NotificationEnabled              : 1; // Bit 0 used
       uint8_t unusedN1_01                      : 1; // Bit 1
