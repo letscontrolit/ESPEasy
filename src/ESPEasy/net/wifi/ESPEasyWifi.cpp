@@ -10,6 +10,9 @@
 # include "../../../src/ESPEasyCore/Serial.h"
 # include "../../../src/Globals/Settings.h"
 # include "../../../src/Helpers/ESPEasy_time_calc.h"
+
+# include "../../../src/Helpers/StringGenerator_WiFi.h"
+
 #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 # include "../../../src/Helpers/ESPEasy_UnitOfMeasure.h"
 #endif

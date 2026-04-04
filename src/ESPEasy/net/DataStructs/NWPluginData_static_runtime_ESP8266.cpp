@@ -3,7 +3,9 @@
 #ifdef ESP8266
 
 # include "../Globals/NetworkState.h"
+
 # include "../ESPEasyNetwork.h"
+# include "../../../src/Helpers/StringConverter.h"
 
 namespace ESPEasy {
 namespace net {
