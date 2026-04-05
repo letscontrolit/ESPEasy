@@ -7,6 +7,7 @@
 # include "../WebServer/HTML_wrappers.h"
 
 # include "../_Plugin_Helper.h"
+# include "../Helpers/_CPlugin_init.h"
 # if FEATURE_NOTIFIER
 #  include "../Globals/NPlugins.h"
 #  include "../DataTypes/NPluginID.h"
