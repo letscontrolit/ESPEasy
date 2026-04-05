@@ -1077,7 +1077,9 @@ bool SettingsStruct_tmpl<N_TASKS>::getSPI_pins(int8_t spi_gpios[3], uint8_t spi_
     }
     # endif // ifdef ESP32
     # ifdef ESP8266
-    spi_gpios[0] = 14; spi_gpios[1] = 12; spi_gpios[2] = 13;
+    spi_gpios[0] = SOC_SPI_SCLK;
+    spi_gpios[1] = SOC_SPI_MISO;
+    spi_gpios[2] = SOC_SPI_MOSI;
     # endif // ifdef ESP8266
     return true;
   }

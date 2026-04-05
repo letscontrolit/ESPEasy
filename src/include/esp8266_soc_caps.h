@@ -1,8 +1,8 @@
 #pragma once
 
-
-#include <cstdint>
 #ifdef ESP8266
+
+# include <cstdint>
 # include <eagle_soc.h>
 
 /******************************************************************************\
@@ -121,6 +121,21 @@ constexpr uint32_t SOC_GPIO_VALID_GPIO_MASK = (0x1FFFFUL & ~(0UL | BIT6 | BIT7 |
 # define SOC_I2C_SUPPORT_10BIT_ADDR (0)
 
 # define SOC_I2C_STOP_INDEPENDENT (0)
+
+/*-------------------------- SPI CAPS ----------------------------------------*/
+# define SOC_SPI_PERIPH_NUM     (1U)
+# define SOC_SPI_SCLK           (14)
+# define SOC_SPI_MISO           (12)
+# define SOC_SPI_MOSI           (13)
+
+
+/*-------------------------- UART CAPS ---------------------------------------*/
+# define SOC_UART_NUM                (2)
+# define SOC_TX0 1
+# define SOC_RX0 3
+# define SOC_UART_FIFO_LEN           (128)       /*!< The UART hardware FIFO length */
+
+
 
 
   # include <c_types.h>
