@@ -224,7 +224,7 @@ void doSetConnectionSpeed() {
 # if FEATURE_SET_WIFI_TX_PWR
 
 void doSetWiFiTXpower() {
-  doSetWiFiTXpower(0, WiFi.RSSI());
+   doSetWiFiTXpower(0, WiFi.RSSI());
 
   // Just some minimal value, will be adjusted in doSetWiFiTXpower
 }
