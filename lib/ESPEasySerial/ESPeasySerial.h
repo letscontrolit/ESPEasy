@@ -86,12 +86,12 @@ public:
 #endif // ifdef ESP32
 
   void   end();
-  int    peek(void);
+  int    peek(void) override;
   size_t write(uint8_t val) override;
   int    read(void) override;
   int    read(uint8_t *buffer, size_t size);
   int    available(void) override;
-  int    availableForWrite(void);
+  int    availableForWrite(void) override;
   void   flush(void) override;
 
 
@@ -111,7 +111,7 @@ public:
 
   // HardwareSerial specific:
   size_t write(const uint8_t *buffer,
-               size_t         size);
+               size_t         size) override;
   size_t write(const char *buffer);
   int    getBaudRate() const;
 
