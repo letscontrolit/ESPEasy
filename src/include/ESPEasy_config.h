@@ -68,6 +68,12 @@
       #define IRAM_ATTR ICACHE_RAM_ATTR
     #endif
   #endif
+  #ifndef SOC_WIFI_SUPPORTED
+    #define SOC_WIFI_SUPPORTED  1
+  #endif
+  #ifndef FEATURE_WIFI
+    #define FEATURE_WIFI        1
+  #endif
 #endif
 
 #if defined(ESP32)

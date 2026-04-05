@@ -250,9 +250,14 @@ WiFiConnectionProtocol doGetConnectionProtocol()
 
 #  if FEATURE_SET_WIFI_TX_PWR
 
-void  doSetWiFiTXpower(float& dBm) { WiFi.setOutputPower(dBm); }
+float _lastSetdBm{};
 
-float doGetWiFiTXpower()           { return WiFi.getOutputPower(); }
+void  doSetWiFiTXpower(float& dBm) { 
+  WiFi.setOutputPower(dBm); 
+  _lastSetdBm = dBm;
+}
+
+float doGetWiFiTXpower()           { return _lastSetdBm; }
 
 #  endif // if FEATURE_SET_WIFI_TX_PWR
 

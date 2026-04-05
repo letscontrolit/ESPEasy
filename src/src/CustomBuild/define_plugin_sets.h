@@ -4049,7 +4049,11 @@ To create/register a plugin, you have to :
         #define FEATURE_SET_WIFI_TX_PWR   1
       #endif
     #elif defined(ESP8266)
-      #define FEATURE_SET_WIFI_TX_PWR   1
+      #ifndef LIMIT_BUILD_SIZE
+        #define FEATURE_SET_WIFI_TX_PWR   1
+      #else
+        #define FEATURE_SET_WIFI_TX_PWR   0
+      #endif
     #endif
   #endif
 #endif

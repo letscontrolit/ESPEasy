@@ -55,8 +55,12 @@ def get_cdn_url_prefix():
                 tags.sort()
                 tags.reverse()
                 tag = tags[0]
+
+                today = date.today()
+                d1 = today.strftime("%Y%m%d")
+
                 # work-around to allow users to use files not yet available on a tagged version
-                if '20220809' in tag:
+                if d1 not in tag:
                     return 'https://cdn.jsdelivr.net/gh/letscontrolit/ESPEasy@mega/static/'
                     
                 tag = tag.replace('refs/tags/','@')
