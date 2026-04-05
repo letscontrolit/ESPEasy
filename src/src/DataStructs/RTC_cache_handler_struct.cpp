@@ -2,14 +2,11 @@
 
 #if FEATURE_RTC_CACHE_STORAGE
 
-#include "../../ESPEasy_common.h"
 #include "../DataStructs/RTCStruct.h"
 #include "../Helpers/CRC_functions.h"
 #include "../Helpers/ESPEasy_Storage.h"
-#include "../Helpers/StringConverter.h"
 
 #include "../ESPEasyCore/ESPEasy_backgroundtasks.h"
-#include "../ESPEasyCore/ESPEasy_Log.h"
 
 #ifdef ESP8266
 # include <user_interface.h>

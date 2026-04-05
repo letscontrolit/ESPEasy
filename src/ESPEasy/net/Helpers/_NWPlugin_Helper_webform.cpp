@@ -1,7 +1,5 @@
 #include "../Helpers/_NWPlugin_Helper_webform.h"
 
-#include "../../../ESPEasy_common.h"
-
 #include "../../../src/DataStructs/ESPEasy_EventStruct.h"
 #include "../../../src/DataTypes/ESPEasy_plugin_functions.h"
 #include "../../../src/Globals/Settings.h"

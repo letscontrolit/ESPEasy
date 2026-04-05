@@ -13,13 +13,10 @@
 #include "../WebServer/Markup_Forms.h"
 
 #include "../ESPEasyCore/ESPEasyRules.h"
-#include "../ESPEasyCore/Serial.h"
 
 #include "../Globals/Settings.h"
 #include "../Helpers/ESPEasy_Storage.h"
-#include "../Helpers/Numerical.h"
 #include "../Helpers/StringConverter.h"
-#include "../Static/WebStaticData.h"
 
 #include <FS.h>
 

@@ -1,6 +1,5 @@
 #include "../DataStructs/NetworkSettingsStruct.h"
 
-#include "../../../ESPEasy_common.h"
 
 #include <IPAddress.h>
 #include <WString.h>

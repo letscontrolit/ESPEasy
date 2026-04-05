@@ -1,6 +1,5 @@
 #include "../Commands/WiFi.h"
 
-#include "../../ESPEasy_common.h"
 
 #if FEATURE_WIFI
 
@@ -8,9 +7,6 @@
 
 # include "../DataStructs/ESPEasy_EventStruct.h"
 
-# include "../ESPEasyCore/Serial.h"
-
-# include "../../ESPEasy/net/Globals/ESPEasyWiFiEvent.h"
 # include "../Globals/RTC.h"
 # include "../Globals/ESPEasy_Scheduler.h"
 # include "../Globals/SecuritySettings.h"

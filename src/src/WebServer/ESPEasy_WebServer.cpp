@@ -9,7 +9,7 @@
 #include "../WebServer/ConfigPage.h"
 #include "../WebServer/ControlPage.h"
 #include "../WebServer/ControllerPage.h"
-#include "../WebServer/CustomPage.h"
+//#include "../WebServer/CustomPage.h"
 #include "../WebServer/DevicesPage.h"
 #include "../WebServer/DownloadPage.h"
 #include "../WebServer/FactoryResetPage.h"
@@ -19,11 +19,11 @@
 #include "../WebServer/InterfacesPage.h"
 #include "../WebServer/I2C_Scanner.h"
 #include "../WebServer/JSON.h"
-#include "../WebServer/LoadFromFS.h"
+//#include "../WebServer/LoadFromFS.h"
 #include "../WebServer/Log.h"
-#include "../WebServer/Markup.h"
-#include "../WebServer/Markup_Buttons.h"
-#include "../WebServer/Markup_Forms.h"
+//#include "../WebServer/Markup.h"
+//#include "../WebServer/Markup_Buttons.h"
+//#include "../WebServer/Markup_Forms.h"
 #include "../WebServer/NetworkPage.h"
 #include "../WebServer/NotificationPage.h"
 #include "../WebServer/PluginListPage.h"
@@ -47,8 +47,6 @@
 #include "../../_Plugin_Helper.h"
 #include "../../ESPEasy_common.h"
 
-#include "../CustomBuild/CompiletimeDefines.h"
-
 #include "../DataStructs/TimingStats.h"
 
 #include "../DataTypes/SettingsType.h"
@@ -57,16 +55,13 @@
 #include "../ESPEasyCore/ESPEasyRules.h"
 #include "../../ESPEasy/net/wifi/ESPEasyWifi.h"
 
-
-#include "../Globals/CPlugins.h"
-#include "../Globals/Device.h"
 #include "../../ESPEasy/net/Globals/NetworkState.h"
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Settings.h"
+#include "../Globals/Services.h"
 
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Hardware_device_info.h"
-#include "../Helpers/Networking.h"
 #include "../Helpers/OTA.h"
 #include "../Helpers/StringConverter.h"
 

@@ -9,17 +9,15 @@
 
 #include "../Globals/Settings.h"
 
-#include "../Helpers/Convert.h"
 #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 #include "../Helpers/ESPEasy_UnitOfMeasure.h"
 #endif
 #include "../Helpers/Hardware_GPIO.h"
 #include "../Helpers/Hardware_device_info.h"
-#include "../Helpers/StringConverter_Numerical.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_GPIO.h"
 
-#include "../../ESPEasy_common.h"
+
 
 #ifdef ESP32
 # include "soc/soc_caps.h"

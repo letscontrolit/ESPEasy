@@ -15,7 +15,6 @@
 #  include "../ESPEasy/net/DataTypes/NetworkDriverIndex.h"
 # endif // ifdef WEBSERVER_NETWORK
 # include "../DataStructs/ProtocolStruct.h"
-# include "../Helpers/_CPlugin_Helper.h"
 
 void handle_pluginlist() {
   # ifndef BUILD_NO_RAM_TRACKER

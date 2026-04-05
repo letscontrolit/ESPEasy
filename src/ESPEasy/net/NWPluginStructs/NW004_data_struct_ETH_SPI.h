@@ -3,6 +3,7 @@
 #include "../_NWPlugin_Helper.h"
 #ifdef USES_NW004
 
+#include "../../../src/Helpers/StringGenerator_GPIO.h"
 
 namespace ESPEasy {
 namespace net {

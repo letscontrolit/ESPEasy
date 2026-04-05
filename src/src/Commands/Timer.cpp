@@ -1,11 +1,5 @@
 #include "../Commands/Timer.h"
 
-
-
-
-#include "../../ESPEasy_common.h"
-
-
 #include "../Commands/Common.h"
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
@@ -13,7 +7,6 @@
 
 #include "../Globals/ESPEasy_Scheduler.h"
 
-#include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Scheduler.h"
 

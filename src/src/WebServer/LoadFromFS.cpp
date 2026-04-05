@@ -1,17 +1,15 @@
 #include "../WebServer/LoadFromFS.h"
 
-#include "../CustomBuild/CompiletimeDefines.h"
-
 #include "../Globals/Cache.h"
 #include "../Globals/RamTracker.h"
 
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/NetworkStatusLED.h"
 #include "../Helpers/Numerical.h"
+#include "../Helpers/StringConverter.h"
 
 #include "../WebServer/CustomPage.h"
 #include "../WebServer/HTML_wrappers.h"
-#include "../WebServer/ESPEasy_WebServer.h"
 #include "../Static/WebStaticData.h"
 
 // ********************************************************************************

@@ -11,6 +11,10 @@
 # include "../../../src/Helpers/ESPEasy_time_calc.h"
 # include "../../../src/Helpers/StringConverter.h"
 
+#if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+# include "../../../src/Helpers/ESPEasy_UnitOfMeasure.h"
+#endif
+
 #ifdef ESP8266
 # ifndef BUILD_NO_DEBUG
 #include "../../../src/Helpers/StringGenerator_WiFi.h"

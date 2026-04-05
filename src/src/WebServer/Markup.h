@@ -2,11 +2,9 @@
 #define WEBSERVER_WEBSERVER_MARKUP_H
 
 #include "../WebServer/common.h"
-#include "../DataTypes/ProtocolIndex.h"
 #include "../DataTypes/CPluginID.h"
 #include "../ESPEasy/net/DataTypes/NWPluginID.h"
 #include "../DataTypes/PluginID.h"
-#include "../Globals/Plugins.h"
 #include "../Helpers/StringGenerator_GPIO.h"
 
 

@@ -18,12 +18,10 @@
 # include "../Helpers/Hardware_GPIO.h"
 # include "../Helpers/Hardware_I2C.h"
 # include "../Helpers/Hardware_SPI.h"
-# include "../Helpers/SPI_Helper.h"
 # include "../Helpers/StringConverter.h"
 # include "../Helpers/StringGenerator_GPIO.h"
 
 # if FEATURE_I2C_MULTIPLE
-#  include "../Helpers/I2C_access.h"
 #  include "../Helpers/Hardware_device_info.h"
 # endif // if FEATURE_I2C_MULTIPLE
 

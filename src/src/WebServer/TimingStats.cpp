@@ -5,16 +5,10 @@
 #include "../WebServer/ESPEasy_WebServer.h"
 #include "../WebServer/HTML_wrappers.h"
 #include "../WebServer/Markup.h"
-#include "../WebServer/Markup_Forms.h"
-
-#include "../DataTypes/ESPEasy_plugin_functions.h"
+#include "../Helpers/_Plugin_init.h"
 
 #include "../Globals/ESPEasy_time.h"
 #include "../Globals/RamTracker.h"
-
-#include "../Globals/Device.h"
-
-#include "../Helpers/_Plugin_init.h"
 
 
 #define TIMING_STATS_THRESHOLD 100000

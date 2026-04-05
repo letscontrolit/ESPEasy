@@ -1,8 +1,6 @@
 #include "../Commands/InternalCommands.h"
 
-#include "../../ESPEasy_common.h"
 
-#include "../../_Plugin_Helper.h"
 #include "../Globals/Settings.h"
 
 #if FEATURE_BLYNK
@@ -55,9 +53,7 @@
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
 
-#include "../Helpers/Misc.h"
 #include "../Helpers/StringConverter.h"
-#include "../Helpers/StringParser.h"
 
 
 bool checkNrArguments(const char *cmd, const String& Line, int nrArguments) {

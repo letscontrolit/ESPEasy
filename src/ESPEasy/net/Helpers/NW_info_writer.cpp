@@ -6,6 +6,7 @@
 #include "../../../src/Helpers/ESPEasy_UnitOfMeasure.h"
 #endif
 #include "../../../src/Helpers/StringConverter.h"
+#include "../../../src/Helpers/StringGenerator_GPIO.h"
 
 #include "../Globals/NWPlugins.h"
 
