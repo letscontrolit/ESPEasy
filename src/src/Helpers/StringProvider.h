@@ -113,12 +113,6 @@ struct LabelType {
     MQTT_CONNECT_IN_BACKGROUND,
     #endif // if FEATURE_MQTT_CONNECT_BACKGROUND
 
-    #if FEATURE_EEPROM_EXTERNAL
-    EEPROM_RESTORE_ON_COLDBOOT,
-    EEPROM_RESTORE_ON_WARMBOOT,
-    EEPROM_SAVE_DELAY,
-    #endif // if FEATURE_EEPROM_EXTERNAL
-
     BOOT_TYPE,               // Cold boot
     BOOT_COUNT,              // 0
     RESET_REASON,            // Software/System restart

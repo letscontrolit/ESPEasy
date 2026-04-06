@@ -209,7 +209,11 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
            uint32_t slot{};
            String value;
            if (validUIntFromString(valueName, slot)) {
+             #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+             value = doubleToString(ESPEasy::eeprom::readEEPROMSlot(slot));
+             #else // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
              value = toString(ESPEasy::eeprom::readEEPROMSlot(slot));
+             #endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
            } else if (valueName.equalsIgnoreCase(F("max"))) {
              value = ESPEasy::eeprom::getEEPROMMaxSlots();
            } else if (valueName.equalsIgnoreCase(F("wp"))) {

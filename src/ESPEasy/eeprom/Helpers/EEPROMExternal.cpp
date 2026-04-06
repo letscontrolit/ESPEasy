@@ -13,7 +13,7 @@ EEPROMExternal_WriteProtect_e EEPROMExternalWriteProtect = EEPROMExternal_WriteP
 bool EEPROMParamsOkState{};
 LongTermTimer EEPROMParamsOkTimer;
 
-constexpr uint32_t sizeof_uint32_t = sizeof(uint32_t);
+constexpr uint32_t sizeof_eeprom_slot = sizeof(double);
 
 /**
  * Initialize the external EEPROM device and variables
@@ -89,26 +89,12 @@ bool validateEEPROMExternalParameters(bool force) {
                                                                                              // result
     return EEPROMParamsOkState;
   }
-  const uint16_t eepromVersionParam     = EEPROMExternal->readInt(EEPROM_PARAMS_VERSION_ADDRESS);
-  const uint16_t eepromTasksMaxParam    = EEPROMExternal->readInt(EEPROM_PARAMS_TASKS_MAX);
-  const uint16_t eepromVarsPerTaskParam = EEPROMExternal->readInt(EEPROM_PARAMS_VARS_PER_TASK);
-  const uint32_t eepromPinstateParam    = EEPROMExternal->readLong(EEPROM_PARAMS_PINSTATE_ADDRESS);
+  const uint16_t eepromVersionParam = EEPROMExternal->readInt(EEPROM_PARAMS_VERSION_ADDRESS);
 
   EEPROMParamsOkTimer.setNow();
   EEPROMParamsOkState = false;
 
-  # if FEATURE_RTC_CACHE_STORAGE
-  const uint32_t eepromRtcCacheParam = EEPROMExternal->readLong(EEPROM_PARAMS_RTC_CACHE_ADDRESS);
-  # endif // if FEATURE_RTC_CACHE_STORAGE
-
-  if ((EEPROM_PARAMS_CURRENT_VERSION == eepromVersionParam) &&
-      (TASKS_MAX == eepromTasksMaxParam) &&
-      (VARS_PER_TASK == eepromVarsPerTaskParam) &&
-      # if FEATURE_RTC_CACHE_STORAGE
-      (EEPROM_RTC_CACHE_START_OFFSET == eepromRtcCacheParam) &&
-      # endif // if FEATURE_RTC_CACHE_STORAGE
-      (EEPROM_GPIO_PINSTATE_START_OFFSET == eepromPinstateParam) &&
-      (EEPROM_GPIO_PINSTATE_END_OFFSET <= EEPROM_CUSTOM_START_OFFSET)) {
+  if (EEPROM_PARAMS_CURRENT_VERSION == eepromVersionParam) {
     EEPROMParamsOkState = true;
   }
 
@@ -118,42 +104,12 @@ bool validateEEPROMExternalParameters(bool force) {
 /**
  * Update the stored parameters in EEPROM
  * - Version
- * - Max. tasks
- * - Vars per tasks
- * - RTC Cache address
- * - Pinstate address
  */
 void updateEEPROMExternalParameters() {
-  const uint16_t eepromVersionParam     = EEPROMExternal->readInt(EEPROM_PARAMS_VERSION_ADDRESS);
-  const uint16_t eepromTasksMaxParam    = EEPROMExternal->readInt(EEPROM_PARAMS_TASKS_MAX);
-  const uint16_t eepromVarsPerTaskParam = EEPROMExternal->readInt(EEPROM_PARAMS_VARS_PER_TASK);
-  const uint32_t eepromPinstateParam    = EEPROMExternal->readLong(EEPROM_PARAMS_PINSTATE_ADDRESS);
-
-  # if FEATURE_RTC_CACHE_STORAGE
-  const uint32_t eepromRtcCacheParam = EEPROMExternal->readLong(EEPROM_PARAMS_RTC_CACHE_ADDRESS);
-  # endif // if FEATURE_RTC_CACHE_STORAGE
+  const uint16_t eepromVersionParam = EEPROMExternal->readInt(EEPROM_PARAMS_VERSION_ADDRESS);
 
   if (EEPROM_PARAMS_CURRENT_VERSION != eepromVersionParam) {
     EEPROMExternal->writeInt(EEPROM_PARAMS_VERSION_ADDRESS, EEPROM_PARAMS_CURRENT_VERSION);
-  }
-
-  if (TASKS_MAX != eepromTasksMaxParam) {
-    EEPROMExternal->writeInt(EEPROM_PARAMS_TASKS_MAX, TASKS_MAX);
-  }
-
-  if (VARS_PER_TASK != eepromVarsPerTaskParam) {
-    EEPROMExternal->writeInt(EEPROM_PARAMS_VARS_PER_TASK, VARS_PER_TASK);
-  }
-
-  # if FEATURE_RTC_CACHE_STORAGE
-
-  if (EEPROM_RTC_CACHE_START_OFFSET != eepromRtcCacheParam) {
-    EEPROMExternal->writeLong(EEPROM_PARAMS_RTC_CACHE_ADDRESS, EEPROM_RTC_CACHE_START_OFFSET);
-  }
-  # endif // if FEATURE_RTC_CACHE_STORAGE
-
-  if (EEPROM_GPIO_PINSTATE_START_OFFSET != eepromPinstateParam) {
-    EEPROMExternal->writeLong(EEPROM_PARAMS_PINSTATE_ADDRESS, EEPROM_GPIO_PINSTATE_START_OFFSET);
   }
 }
 
@@ -213,9 +169,7 @@ EEPROMExternal_WriteProtect_e checkEEPROMExternalWriteProtected(bool forced) {
 /**
  * Is the EEPROM WriteProtected?
  */
-bool isEEPROMExternalWriteProtected() {
-  return EEPROMExternal_WriteProtect_e::ReadWrite != checkEEPROMExternalWriteProtected();
-}
+bool    isEEPROMExternalWriteProtected() { return EEPROMExternal_WriteProtect_e::ReadWrite != checkEEPROMExternalWriteProtected(); }
 
 /**
  * Switch to I2C Bus and multiplexer channel of External EEPROM
@@ -250,7 +204,8 @@ uint8_t selectEEPROMI2CBusAndMultiplexer() {
  * EEPROM size in bytes
  */
 uint32_t getEEPROMSize(EEPROMExternal_Type_e type) {
-  switch (type) {
+  switch (type)
+  {
     case EEPROMExternal_Type_e::AT24C256:
     case EEPROMExternal_Type_e::MB85RC256:
       return 32768ul;
@@ -287,7 +242,8 @@ uint32_t getEEPROMSize(EEPROMExternal_Type_e type,
                        uint8_t             & pageSize) {
   pageSize = 0;
 
-  switch (type) {
+  switch (type)
+  {
     case EEPROMExternal_Type_e::AT24C256:
     case EEPROMExternal_Type_e::MB85RC256:
       pageSize = 64u;
@@ -321,21 +277,20 @@ uint32_t getEEPROMSize(EEPROMExternal_Type_e type,
  * EEPROM/FRAM name
  */
 const __FlashStringHelper* getEEPROMName(EEPROMExternal_Type_e type) {
-  # ifndef BUILD_NO_DEBUG
-
-  switch (type) {
+  switch (type)
+  {
     case EEPROMExternal_Type_e::AT24C256:
       return F("AT24C256");
     case EEPROMExternal_Type_e::AT24C512:
       return F("AT24C512");
-    #  if EEPROM_SUPPORT_AT24C1024
+    # if EEPROM_SUPPORT_AT24C1024
     case EEPROMExternal_Type_e::AT24C1024:
       return F("AT24C1024");
-    #  endif // if EEPROM_SUPPORT_AT24C1024
-    #  if EEPROM_SUPPORT_AT24C2048
+    # endif // if EEPROM_SUPPORT_AT24C1024
+    # if EEPROM_SUPPORT_AT24C2048
     case EEPROMExternal_Type_e::AT24C2048:
       return F("AT24C2048");
-    #  endif // if EEPROM_SUPPORT_AT24C2048
+    # endif // if EEPROM_SUPPORT_AT24C2048
     case EEPROMExternal_Type_e::AT24C32:
       return F("AT24C32");
     case EEPROMExternal_Type_e::AT24C64:
@@ -346,14 +301,14 @@ const __FlashStringHelper* getEEPROMName(EEPROMExternal_Type_e type) {
       return F("MB85RC256");
     case EEPROMExternal_Type_e::MB85RC512:
       return F("MB85RC512");
-    #  if EEPROM_SUPPORT_AT24C1024
+    # if EEPROM_SUPPORT_AT24C1024
     case EEPROMExternal_Type_e::MB85RC1M:
       return F("MB85RC1M");
-    #  endif // if EEPROM_SUPPORT_AT24C1024
-    #  if EEPROM_SUPPORT_AT24C2048
+    # endif // if EEPROM_SUPPORT_AT24C1024
+    # if EEPROM_SUPPORT_AT24C2048
     case EEPROMExternal_Type_e::MB85RC2M:
       return F("MB85RC2M");
-    #  endif // if EEPROM_SUPPORT_AT24C2048
+    # endif // if EEPROM_SUPPORT_AT24C2048
     case EEPROMExternal_Type_e::MB85RC32:
       return F("MB85RC32");
     case EEPROMExternal_Type_e::MB85RC64:
@@ -362,9 +317,6 @@ const __FlashStringHelper* getEEPROMName(EEPROMExternal_Type_e type) {
       return F("MB85RC128");
   }
   return F("");
-  # else // ifndef BUILD_NO_DEBUG
-  return F("EEPROM/FRAM");
-  # endif // ifndef BUILD_NO_DEBUG
 }
 
 /**
@@ -375,7 +327,7 @@ uint32_t getEEPROMAddressForSlot(uint32_t slot) {
     const uint32_t eepromSize = getEEPROMSize(static_cast<EEPROMExternal_Type_e>(Settings.EEPROMExternalType()));
 
     if ((eepromSize > 0) && (slot < getEEPROMMaxSlots())) {
-      const uint32_t slotAddr = EEPROM_CUSTOM_START_OFFSET + (slot * sizeof_uint32_t);
+      const uint32_t slotAddr = EEPROM_CUSTOM_START_OFFSET + (slot * sizeof_eeprom_slot);
 
       if (slotAddr < eepromSize) {
         return slotAddr;
@@ -386,34 +338,14 @@ uint32_t getEEPROMAddressForSlot(uint32_t slot) {
 }
 
 /**
- * EEPROM address for task and varnr or 0xFFFF when error
- */
-uint32_t getEEPROMAddressForTaskValue(taskIndex_t task, taskVarIndex_t varNr) {
-  if (checkEEPROMEnabled() > 0) {
-    const uint32_t eepromSize = getEEPROMSize(static_cast<EEPROMExternal_Type_e>(Settings.EEPROMExternalType()));
-
-    if ((eepromSize > 0) && validTaskIndex(task) && validTaskVarIndex(varNr)) {
-      const uint32_t slotAddr = EEPROM_USERVAR_START_OFFSET + (((task * VARS_PER_TASK) + varNr) * sizeof_uint32_t);
-
-      if (slotAddr < eepromSize) {
-        return slotAddr;
-      }
-    }
-  }
-  return std::numeric_limits<uint32_t>::max();
-}
-
-/**
- * EEPROM available number of slots, max 1024
- * NB: Only first half of EEPROM_CUSTOM_START_OFFSET available for slots when String Variables feature enabled!
+ * EEPROM available number of slots, max use all available space minus some administrative bytes
  */
 uint32_t getEEPROMMaxSlots() {
   if (checkEEPROMEnabled() > 0) {
     const uint32_t eepromSize = getEEPROMSize(static_cast<EEPROMExternal_Type_e>(Settings.EEPROMExternalType()));
 
     if (eepromSize > 0) {
-      const uint32_t slotMax = min((unsigned long)(((eepromSize - EEPROM_CUSTOM_START_OFFSET) / EEPROM_CUSTOM_DIVISOR) / sizeof_uint32_t),
-                                   1024ul);
+      const uint32_t slotMax = (unsigned long)(((eepromSize - EEPROM_CUSTOM_START_OFFSET) / EEPROM_CUSTOM_DIVISOR) / sizeof_eeprom_slot);
 
       return slotMax;
     }
@@ -424,15 +356,27 @@ uint32_t getEEPROMMaxSlots() {
 /**
  * EEPROM write value to slot if the slot is valid
  */
+# if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+
 bool writeEEPROMSlot(uint32_t slot,
-                     float    data) {
+                     double   data)
+# else // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+
+bool writeEEPROMSlot(uint32_t slot,
+                     float    data)
+# endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+{
   const uint32_t addr = getEEPROMAddressForSlot(slot);
 
   if ((addr != std::numeric_limits<uint32_t>::max()) && !isEEPROMExternalWriteProtected()) {
-    const float oldData = EEPROMExternal->readLong(addr);
+    # if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+    const double oldData = EEPROMExternal->readDouble(addr);
+    # else // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+    const float oldData = EEPROMExternal->readDouble(addr);
+    # endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
 
     if (!essentiallyEqual(oldData, data)) {
-      EEPROMExternal->writeFloat(addr, data);
+      EEPROMExternal->writeDouble(addr, data); // Always write double size!
     }
     return true;
   }
@@ -442,170 +386,30 @@ bool writeEEPROMSlot(uint32_t slot,
 /**
  * EEPROM read value from slot or 0 when invalid
  */
+# if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+
+double readEEPROMSlot(uint32_t slot) {
+  const uint32_t addr = getEEPROMAddressForSlot(slot);
+
+  if (addr != std::numeric_limits<uint32_t>::max()) {
+    return EEPROMExternal->readDouble(addr);
+  }
+  return 0.0;
+}
+
+# else // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+
 float readEEPROMSlot(uint32_t slot) {
   const uint32_t addr = getEEPROMAddressForSlot(slot);
 
   if (addr != std::numeric_limits<uint32_t>::max()) {
-    return EEPROMExternal->readFloat(addr);
+    return EEPROMExternal->readDouble(addr); // Always read double size!
   }
   return 0.0f;
 }
 
-# if FEATURE_EEPROM_BACKGROUND
+# endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
 
-// A map of tasks to be executed
-std::map<EEPROMExternalTaskType_e, EEPROMExternalTaskData> EEPROMTaskMap;
-uint16_t EEPROMSaveDelaySeconds{};
-
-/**
- * Convert TaskType to text
- */
-const __FlashStringHelper* TaskDataTypeToString(EEPROMExternalTaskType_e type) {
-  switch (type) {
-    case EEPROMExternalTaskType_e::None: return F("");
-    case EEPROMExternalTaskType_e::UserVars: return F("UserVars");
-    case EEPROMExternalTaskType_e::ValueSlots: return F("ValueSlots");
-    case EEPROMExternalTaskType_e::C016Caches: return F("C016 Cache elements");
-    case EEPROMExternalTaskType_e::PinStates: return F("Pinstates");
-  }
-  return F("");
-}
-
-/**
- * Perform the actual task, bij calling the provided function
- */
-void EEPROM_execute_task(void *parameter) {
-  EEPROMExternalTaskData*_task_data = static_cast<EEPROMExternalTaskData *>(parameter);
-
-  if ((_task_data->status == EEPROMExternalTaskState_e::Starting) && (nullptr != _task_data->function)) {
-    _task_data->status = EEPROMExternalTaskState_e::Processing;
-
-    selectEEPROMI2CBusAndMultiplexer();
-
-    _task_data->timer.setNow();
-
-    // Blocking operation
-    _task_data->data = _task_data->function();
-
-    // Results are in
-    _task_data->duration = _task_data->timer.millisPassedSince();
-
-    #  if FEATURE_I2CMULTIPLEXER
-    I2CMultiplexerOff(
-      #   if FEATURE_I2C_MULTIPLE
-      Settings.getI2CInterfaceEEPROM()
-      #   else // if FEATURE_I2C_MULTIPLE
-      0
-      #   endif // if FEATURE_I2C_MULTIPLE
-      ); // Restore the Multiplexer channel
-    #  endif // if FEATURE_I2CMULTIPLEXER
-
-    _task_data->status = EEPROMExternalTaskState_e::Ready;
-  }
-
-  _task_data->function = nullptr; // Don't run again accidently
-  #  if FEATURE_EEPROM_RTOS_TASK
-  _task_data->taskHandle = NULL;
-  vTaskDelete(_task_data->taskHandle);
-  #  endif // if FEATURE_EEPROM_RTOS_TASK
-}
-
-/**
- * Insert a task into the taskmap, 1 per task type, ignore new task when same type is already scheduled to run, or currently running
- */
-bool EEPROMAddTask(EEPROMExternalTaskType_e type,
-                   EEPROMExternalTaskData   taskData) {
-  auto task = EEPROMTaskMap.find(type);
-
-  // Is a task is already in progress, skip until the next AddTask
-  if ((task == EEPROMTaskMap.end()) || (EEPROMExternalTaskState_e::Available == task->second.status)) {
-    EEPROMTaskMap[type] = taskData;    // Insert task
-    task                = EEPROMTaskMap.find(type);
-
-    if (task != EEPROMTaskMap.end()) { // Upserted successfully
-      task->second.status = EEPROMExternalTaskState_e::Starting;
-
-      #  ifndef BUILD_NO_DEBUG
-
-      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-        addLog(LOG_LEVEL_DEBUG,
-               strformat(F("EEPROM: AddTask upserted for %s, status %u (tasks: %u)"
-                           #   if FEATURE_EEPROM_RTOS_TASK
-                           " (RTOS)"
-                           #   endif // if FEATURE_EEPROM_RTOS_TASK
-                           ),
-                         FsP(TaskDataTypeToString(task->second.type)), static_cast<uint8_t>(task->second.status), EEPROMTaskMap.size()));
-      }
-      #  endif // ifndef BUILD_NO_DEBUG
-    } else {
-      addLog(LOG_LEVEL_ERROR, F("EEPROM: Task not inserted"));
-    }
-
-    #  if FEATURE_EEPROM_RTOS_TASK
-    EEPROMExternalLoop(); // Kick off if it's a RTOS task
-    #  endif // if FEATURE_EEPROM_RTOS_TASK
-    return true;
-  }
-  return false;
-}
-
-/**
- * Check the task map for tasks to run and start that, also report about finished tasks, and clean those for re-use
- */
-bool EEPROMExternalLoop() {
-  if (0 != EEPROMSaveDelaySeconds) {
-    EEPROMSaveDelaySeconds--;
-    return false;
-  }
-  EEPROMSaveDelaySeconds = Settings.EEPROMSaveDelaySeconds();
-
-  for (auto task = EEPROMTaskMap.begin(); task != EEPROMTaskMap.end(); ++task) {
-    if ((EEPROMExternalTaskState_e::Ready == task->second.status) ||
-        (EEPROMExternalTaskState_e::Error == task->second.status)) {
-      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        addLog(LOG_LEVEL_INFO, strformat(F("EEPROM: Write %s %s %d in %u msec."
-                                           #  if FEATURE_EEPROM_RTOS_TASK
-                                           " (RTOS)"
-                                           #  endif // if FEATURE_EEPROM_RTOS_TASK
-                                           ),
-                                         FsP(TaskDataTypeToString(task->second.type)),
-                                         FsP(EEPROMExternalTaskState_e::Ready == task->second.status ? F("success") : F("failed")),
-                                         task->second.data,
-                                         task->second.duration));
-      }
-      task->second.status = EEPROMExternalTaskState_e::Available;
-    }
-
-    if (EEPROMExternalTaskState_e::Starting == task->second.status) {
-      if (nullptr != task->second.function) {
-        #  ifndef BUILD_NO_DEBUG
-
-        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-          addLog(LOG_LEVEL_DEBUG, strformat(F("EEPROM: Loop starting task: %s"), FsP(TaskDataTypeToString(task->second.type))));
-        }
-        #  endif // ifndef BUILD_NO_DEBUG
-        #  if FEATURE_EEPROM_RTOS_TASK
-        xTaskCreatePinnedToCore(
-          EEPROM_execute_task,      // Function that should be called
-          "EEPROM.write()",         // Name of the task (for debugging)
-          4000,                     // Stack size (bytes)
-          &task->second,            // Parameter to pass
-          1,                        // Task priority
-          &task->second.taskHandle, // Task handle
-          xPortGetCoreID()          // Core you want to run the task on (0 or 1)
-          );
-        #  else // if FEATURE_EEPROM_RTOS_TASK
-        EEPROM_execute_task(&task->second);
-        #  endif // if FEATURE_EEPROM_RTOS_TASK
-      } else {
-        task->second.status = EEPROMExternalTaskState_e::Available; // Recycle
-      }
-    }
-  }
-  return false;
-}
-
-# endif // if FEATURE_EEPROM_BACKGROUND
 } // namespace eeprom
 } // namespace ESPEasy
 #endif // if FEATURE_EEPROM_EXTERNAL

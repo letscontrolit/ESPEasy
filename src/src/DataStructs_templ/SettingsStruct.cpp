@@ -1355,7 +1355,7 @@ uint8_t SettingsStruct_tmpl<N_TASKS>::getI2CInterfacePCFMCP() const {
 }
 
 #if FEATURE_EEPROM_EXTERNAL
-template<unsigned int N_TASKS>
+template<uint32_t N_TASKS>
 uint8_t SettingsStruct_tmpl<N_TASKS>::getI2CInterfaceEEPROM() const {
   return get3BitFromUL(I2C_peripheral_bus, I2C_PERIPHERAL_BUS_EEPROM);
 }
@@ -1363,37 +1363,29 @@ uint8_t SettingsStruct_tmpl<N_TASKS>::getI2CInterfaceEEPROM() const {
 #endif // if FEATURE_I2C_MULTIPLE
 
 #if FEATURE_EEPROM_EXTERNAL
-template<unsigned int N_TASKS>
+template<uint32_t N_TASKS>
 uint8_t SettingsStruct_tmpl<N_TASKS>::EEPROMExternalI2CAddress() const {
   return get8BitFromUL(EEPROMExternalFlags, EEPROM_EXTERNAL_FLAGS_ADDRESS);
 }
-template<unsigned int N_TASKS>
+template<uint32_t N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::EEPROMExternalI2CAddress(uint8_t address) {
   set8BitToUL(EEPROMExternalFlags, EEPROM_EXTERNAL_FLAGS_ADDRESS, address);
 }
-template<unsigned int N_TASKS>
+template<uint32_t N_TASKS>
 uint16_t SettingsStruct_tmpl<N_TASKS>::EEPROMExternalI2CMultiplexerFlags() const {
   return get16BitFromUL(EEPROMExternalFlags, EEPROM_EXTERNAL_FLAGS_MUX);
 }
-template<unsigned int N_TASKS>
+template<uint32_t N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::EEPROMExternalI2CMultiplexerFlags(uint16_t muxFlags) {
   set16BitToUL(EEPROMExternalFlags, EEPROM_EXTERNAL_FLAGS_MUX, muxFlags);
 }
-template<unsigned int N_TASKS>
+template<uint32_t N_TASKS>
 uint8_t SettingsStruct_tmpl<N_TASKS>::EEPROMExternalType() const {
   return static_cast<uint8_t>(get4BitFromUL(EEPROMExternalFlags, EEPROM_EXTERNAL_FLAGS_SIZE));
 }
-template<unsigned int N_TASKS>
+template<uint32_t N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::EEPROMExternalType(uint8_t type) {
   set4BitToUL(EEPROMExternalFlags, EEPROM_EXTERNAL_FLAGS_SIZE, type);
-}
-template<unsigned int N_TASKS>
-uint8_t SettingsStruct_tmpl<N_TASKS>::EEPROMSaveDelaySeconds() const {
-  return get8BitFromUL(EEPROMSaveOptions, EEPROM_SAVEOPTIONS_DELAY);
-}
-template<unsigned int N_TASKS>
-void SettingsStruct_tmpl<N_TASKS>::EEPROMSaveDelaySeconds(uint8_t seconds) {
-  set8BitToUL(EEPROMSaveOptions, EEPROM_SAVEOPTIONS_DELAY, seconds);
 }
 #endif // if FEATURE_EEPROM_EXTERNAL
 

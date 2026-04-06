@@ -62,8 +62,6 @@
 #define EEPROM_MUX_FLAGS_PORT           0 // bit-offset within multiplexerflags for the portnr/bits (8 bits)
 #define EEPROM_MUX_FLAGS_MULTI          8 // bit-offset within multiplexerflags for bits or port (1 bit)
 
-#define EEPROM_SAVEOPTIONS_DELAY        0 // bit-offset within EEPROMSaveOptions for the Save Delay (seconds)
-
 #endif // if FEATURE_EEPROM_EXTERNAL
 // Stored in Settings.I2C_SPI_bus_Flags !!!
 #define SPI_FLAGS_TASK_BUS_NUMBER           0 // 2 bit, stores the configured bus for a task

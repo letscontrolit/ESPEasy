@@ -303,19 +303,6 @@ void ExtraTaskSettingsStruct::setTaskVarStateClass(taskVarIndex_t taskVarIndex,
   }
 }
 #endif // if FEATURE_MQTT_STATE_CLASS
-#if FEATURE_EEPROM_EXTERNAL
-bool ExtraTaskSettingsStruct::getTaskVarStoreInEEPROM(taskVarIndex_t taskVarIndex) const {
-  if (!validTaskVarIndex(taskVarIndex)) { return false; }
-  return bitRead(VariousBits[taskVarIndex], 27);
-}
-
-void ExtraTaskSettingsStruct::setTaskVarStoreInEEPROM(taskVarIndex_t taskVarIndex,
-                                                      bool           store) {
-  if (validTaskVarIndex(taskVarIndex)) {
-    bitWrite(VariousBits[taskVarIndex], 27, store);
-  }
-}
-#endif // if FEATURE_EEPROM_EXTERNAL
 
 
 void ExtraTaskSettingsStruct::populateDeviceValueNamesSeq(

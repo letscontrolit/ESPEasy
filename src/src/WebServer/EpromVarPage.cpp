@@ -15,17 +15,10 @@
 
 #include "../Helpers/StringConverter.h"
 
-// #if FEATURE_STRING_VARIABLES
-// # include "../Helpers/StringParser.h"
-// #endif // if
-
 #if FEATURE_EEPROM_EXTERNAL
 
 void handle_eepromvars() {
   if (!isLoggedIn()) { return; }
-
-  const bool showTasks = getFormItemInt(F("tasks"), 1) == 1;
-  const bool allTasks  = getFormItemInt(F("enabled"), 0) != 0;
 
   TXBuffer.startStream();
   sendHeadandTail_stdtemplate(_HEAD);
@@ -42,52 +35,6 @@ void handle_eepromvars() {
                       400);
     html_table_header(F(""));
 
-    if (showTasks) {
-      html_TR();
-
-      // sub-table header
-      html_table_header(allTasks ? F("Task") : F("Task (Enabled)"), 300);
-      html_table_header(F("Value"),                                 500);
-      html_table_header(F("Content"),                               400);
-      html_table_header(F(""));
-
-      for (taskIndex_t tsk = 0; tsk < TASKS_MAX; ++tsk) {
-        const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(tsk);
-
-        if ((Settings.TaskDeviceEnabled[tsk] && validDeviceIndex(DeviceIndex)) || allTasks) {
-          LoadTaskSettings(tsk);
-          html_TR_TD();
-          addHtmlInt(tsk + 1);
-          addHtml(' ');
-          addHtml(getTaskDeviceName(tsk));
-
-          for (taskVarIndex_t var = 0; var < VARS_PER_TASK; ++var) {
-            if (var != 0) {
-              html_TR_TD();
-            }
-            html_TD();
-            addHtmlInt(var + 1);
-            addHtml(' ');
-            addHtml(getTaskValueName(tsk, var));
-            html_TD();
-            const uint32_t addr  = ESPEasy::eeprom::getEEPROMAddressForTaskValue(tsk, var);
-            const float    value = ESPEasy::eeprom::EEPROMExternal->readFloat(addr);
-            const uint32_t data  = ESPEasy::eeprom::EEPROMExternal->readLong(addr);
-
-            if (isnan(value) || (addr == std::numeric_limits<uint32_t>::max()) || !ExtraTaskSettings.getTaskVarStoreInEEPROM(var)) {
-              addHtml('-');
-            } else {
-              addHtml(floatToString(value, ExtraTaskSettings.TaskDeviceValueDecimals[var]));
-
-              if (!essentiallyZero(value)) { // Only show hex values for non-zero values to reduce eye-strain
-                addHtml(strformat(F(" (0x%04x)"), data));
-              }
-            }
-          }
-          delay(0);
-        }
-      }
-    }
     html_TR();
 
     // sub-table header
@@ -109,13 +56,14 @@ void handle_eepromvars() {
         html_TR_TD();
         addHtmlInt(slot);
         html_TD();
+        # if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+        addHtml(doubleToString(value));
+        # else // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
         addHtml(toString(value));
+        # endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
         html_TD(2);
       }
     }
-
-    // TODO: List String values in EEPROM
-    // TODO: List C016 Cache entries in EEPROM
 
     addTableSeparator(F("Summary"), 3, 2);
 
@@ -136,8 +84,6 @@ void handle_eepromvars() {
       addHtmlInt(maxSlots);
     }
     html_TD();
-
-    // TODO: List String summary in EEPROM
 
     html_end_table();
   } else {

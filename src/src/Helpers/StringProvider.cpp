@@ -484,21 +484,6 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
     }
 #endif // if FEATURE_MQTT_CONNECT_BACKGROUND
 
-    #if FEATURE_EEPROM_EXTERNAL
-    case LabelType::EEPROM_RESTORE_ON_COLDBOOT:
-    {
-      return KeyValueStruct(F("Cold boot: Restore Task Values from EEPROM"), Settings.RestoreUserVarsFromEEPROMOnColdBoot());
-    }
-    case LabelType::EEPROM_RESTORE_ON_WARMBOOT:
-    {
-      return KeyValueStruct(F("Warm boot: Restore Task Values from EEPROM"), Settings.RestoreUserVarsFromEEPROMOnWarmBoot());
-    }
-    case LabelType::EEPROM_SAVE_DELAY:
-    {
-      return KeyValueStruct(F("Save interval (seconds)"), Settings.EEPROMSaveDelaySeconds());
-    }
-    #endif // if FEATURE_EEPROM_EXTERNAL
-
 #if CONFIG_SOC_WIFI_SUPPORT_5G
     case LabelType::WIFI_BAND_MODE:
     {

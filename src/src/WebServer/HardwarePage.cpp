@@ -65,9 +65,6 @@ void handle_hardware() {
     Settings.EEPROMExternalType(getFormItemInt(F("eepromtype"),
                                 static_cast<int>(ESPEasy::eeprom::EEPROMExternal_Type_e::AT24C256)));
     Settings.EEPROMExternalI2CAddress(getFormItemInt(F("i2c_eeprom"), 0));
-    Settings.RestoreUserVarsFromEEPROMOnColdBoot(isFormItemChecked(LabelType::EEPROM_RESTORE_ON_COLDBOOT));
-    Settings.RestoreUserVarsFromEEPROMOnWarmBoot(isFormItemChecked(LabelType::EEPROM_RESTORE_ON_WARMBOOT));
-    Settings.EEPROMSaveDelaySeconds(getFormItemInt(LabelType::EEPROM_SAVE_DELAY));
 
     # if FEATURE_I2CMULTIPLEXER
 
@@ -228,9 +225,6 @@ void handle_hardware() {
       addRowLabel(F("'WriteEE' slots available"));
       addHtmlInt(ESPEasy::eeprom::getEEPROMMaxSlots());
     }
-    addFormCheckBox(getLabel(LabelType::EEPROM_RESTORE_ON_COLDBOOT), getInternalLabel(LabelType::EEPROM_RESTORE_ON_COLDBOOT), Settings.RestoreUserVarsFromEEPROMOnColdBoot() && eepromChecked, !eepromChecked);
-    addFormCheckBox(getLabel(LabelType::EEPROM_RESTORE_ON_WARMBOOT), getInternalLabel(LabelType::EEPROM_RESTORE_ON_WARMBOOT), Settings.RestoreUserVarsFromEEPROMOnWarmBoot() && eepromChecked, !eepromChecked);
-    addFormNumericBox(getLabel(LabelType::EEPROM_SAVE_DELAY), getInternalLabel(LabelType::EEPROM_SAVE_DELAY), Settings.EEPROMSaveDelaySeconds(), 0, 250);
   }
   #endif // if FEATURE_EEPROM_EXTERNAL
 

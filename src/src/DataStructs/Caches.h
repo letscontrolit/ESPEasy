@@ -60,9 +60,6 @@ struct ExtraTaskSettings_cache_t {
   #if FEATURE_MQTT_STATE_CLASS
   uint8_t mqttStateClass[VARS_PER_TASK] = { 0 }; // state_class = None, Measurement, Measurement Angle, Total, Total Increasing
   #endif // if FEATURE_MQTT_STATE_CLASS
-  #if FEATURE_EEPROM_EXTERNAL
-  bool storeInEEPROM[VARS_PER_TASK]{};
-  #endif // if FEATURE_EEPROM_EXTERNAL
 };
 
 typedef std::map<String, taskIndex_t>                    TaskIndexNameMap;
@@ -136,10 +133,6 @@ struct Caches {
   uint8_t getTaskVarStateClass(taskIndex_t    taskIndex,
                                taskVarIndex_t taskVarIndex);
   #endif // if FEATURE_MQTT_STATE_CLASS
-  #if FEATURE_EEPROM_EXTERNAL
-  uint8_t getTaskVarStoreInEEPROM(taskIndex_t    taskIndex,
-                                  taskVarIndex_t taskVarIndex);
-  #endif // if FEATURE_EEPROM_EXTERNAL
 
   // Update all cached values, except the checksum.
   void updateExtraTaskSettingsCache();

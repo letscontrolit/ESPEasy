@@ -29,9 +29,6 @@
 # include "../Helpers/_Plugin_init.h"
 # include "../Helpers/_Plugin_SensorTypeHelper.h"
 # include "../Helpers/_Plugin_Helper_serial.h"
-#if FEATURE_EEPROM_EXTERNAL
-# include "../../ESPEasy/eeprom/Helpers/EEPROMExternal.h"
-#endif // if FEATURE_EEPROM_EXTERNAL
 # include "../Helpers/ESPEasy_Storage.h"
 # include "../Helpers/I2C_Plugin_Helper.h"
 # include "../Helpers/SPI_Helper.h"
@@ -456,11 +453,6 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
 # if FEATURE_PLUGIN_FILTER
     ExtraTaskSettings.enablePluginFilter(varNr, isFormItemChecked(getPluginCustomArgName(F("TDFIL"), varNr)));
 # endif // if FEATURE_PLUGIN_FILTER
-    #if FEATURE_EEPROM_EXTERNAL
-    if (ESPEasy::eeprom::checkEEPROMEnabled() > 0) {
-      ExtraTaskSettings.setTaskVarStoreInEEPROM(varNr, isFormItemChecked(getPluginCustomArgName(F("TDEE"), varNr)));
-    }
-    #endif // if FEATURE_EEPROM_EXTERNAL
 
 # if FEATURE_PLUGIN_STATS
     PluginStats_Config_t pluginStats_Config;
@@ -1844,13 +1836,6 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
       ++colCount;
     }
 
-    #if FEATURE_EEPROM_EXTERNAL
-    if (ESPEasy::eeprom::checkEEPROMEnabled() > 0) {
-      html_table_header(F("Eeprom"), 30);
-      ++colCount;
-    }
-    #endif // if FEATURE_EEPROM_EXTERNAL
-
 # if FEATURE_PLUGIN_STATS
 
     if (device.PluginStats)
@@ -1989,19 +1974,6 @@ void devicePage_show_task_values(taskIndex_t taskIndex, deviceIndex_t DeviceInde
         const String id = getPluginCustomArgName(F("TDVD"), varNr); // ="taskdevicevaluedecimals"
         addNumericBox(id, Cache.getTaskDeviceValueDecimals(taskIndex, varNr), 0, 6);
       }
-
-      #if FEATURE_EEPROM_EXTERNAL
-      if (ESPEasy::eeprom::checkEEPROMEnabled() > 0) {
-        html_TD();
-        addCheckBox(
-          getPluginCustomArgName(F("TDEE"), varNr),
-          Cache.getTaskVarStoreInEEPROM(taskIndex, varNr), false
-          #if FEATURE_TOOLTIPS
-          , F("Store value in External EEPROM")
-          #endif // if FEATURE_TOOLTIPS
-        );
-      }
-      #endif // if FEATURE_EEPROM_EXTERNAL
 
 # if FEATURE_PLUGIN_STATS
 

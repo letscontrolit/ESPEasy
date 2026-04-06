@@ -4323,28 +4323,6 @@ To create/register a plugin, you have to :
     #endif
   #endif
 #endif // ifndef FEATURE_EEPROM_EXTERNAL
-#ifndef FEATURE_EEPROM_BACKGROUND
-  #ifdef ESP32
-    #define FEATURE_EEPROM_BACKGROUND   1
-    #ifndef FEATURE_EEPROM_RTOS_TASK
-      #define FEATURE_EEPROM_RTOS_TASK  0 // I2C is not thread-safe
-    #endif
-  #endif // ifdef ESP32
-  #ifdef ESP8266
-    #ifdef LIMIT_BUILD_SIZE
-      #define FEATURE_EEPROM_BACKGROUND 0 // Disabled for limited builds on ESP8266
-    #else
-      #define FEATURE_EEPROM_BACKGROUND 1 // Enabled by default on ESP8266
-    #endif
-  #endif // ifdef ESP8266
-#endif // ifndef FEATURE_EEPROM_BACKGROUND
-#if defined(ESP8266) && defined(FEATURE_EEPROM_RTOS_TASK) && FEATURE_EEPROM_RTOS_TASK
-  #undef FEATURE_EEPROM_RTOS_TASK
-  #define FEATURE_EEPROM_RTOS_TASK      0 // Not supported on ESP8266
-#endif // if defined(ESP8266) && defined(FEATURE_EEPROM_RTOS_TASK) && FEATURE_EEPROM_RTOS_TASK
-#ifndef FEATURE_EEPROM_RTOS_TASK
-  #define FEATURE_EEPROM_RTOS_TASK      0
-#endif // ifndef FEATURE_EEPROM_RTOS_TASK
 
 #ifndef FEATURE_PLUGIN_LIST
   #ifdef ESP32

@@ -225,12 +225,6 @@ class SettingsStruct_tmpl
   inline void ShowUnitOfMeasureOnDevicesPage(bool value) { VariousBits_2.ShowUnitOfMeasureOnDevicesPage = !value; }
   #endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 
-  #if FEATURE_EEPROM_EXTERNAL
-  bool RestoreUserVarsFromEEPROMOnColdBoot() const { return VariousBits_2.RestoreUserVarsFromEEPROMOnColdBoot; }
-  void RestoreUserVarsFromEEPROMOnColdBoot(bool value) { VariousBits_2.RestoreUserVarsFromEEPROMOnColdBoot = value; }
-  bool RestoreUserVarsFromEEPROMOnWarmBoot() const { return VariousBits_2.RestoreUserVarsFromEEPROMOnWarmBoot; }
-  void RestoreUserVarsFromEEPROMOnWarmBoot(bool value) { VariousBits_2.RestoreUserVarsFromEEPROMOnWarmBoot = value; }
-  #endif // if FEATURE_EEPROM_EXTERNAL
 #if CONFIG_SOC_WIFI_SUPPORT_5G
   wifi_band_mode_t WiFi_band_mode() const { 
     if (VariousBits_2.WiFi_band_mode == 0) return WIFI_BAND_MODE_AUTO;
@@ -428,9 +422,7 @@ public:
   void     EEPROMExternalI2CMultiplexerFlags(uint16_t muxFlags);
   uint8_t  EEPROMExternalType() const;
   void     EEPROMExternalType(uint8_t type);
-  uint8_t  EEPROMSaveDelaySeconds() const;
-  void     EEPROMSaveDelaySeconds(uint8_t seconds);
-  #endif
+  #endif // if FEATURE_EEPROM_EXTERNAL
 
   #if FEATURE_I2CMULTIPLEXER
   int8_t getI2CMultiplexerType(uint8_t i2cBus) const;
@@ -758,8 +750,8 @@ public:
       uint32_t ShowUnitOfMeasureOnDevicesPage      : 1; // Bit 07  // inverted
       uint32_t WiFi_band_mode                      : 2; // Bit 08 & 09
       uint32_t WiFi_AP_enable_NAPT                 : 1; // Bit 10  // inverted
-      uint32_t RestoreUserVarsFromEEPROMOnColdBoot : 1; // Bit 11
-      uint32_t RestoreUserVarsFromEEPROMOnWarmBoot : 1; // Bit 12
+      uint32_t unused_11                           : 1; // Bit 11
+      uint32_t unused_12                           : 1; // Bit 12
       uint32_t MQTTConnectInBackground             : 1; // Bit 13  // inverted
 
       uint32_t StartAPfallback_NoCredentials       : 1; // Bit 14 // inverted

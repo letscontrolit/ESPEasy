@@ -89,11 +89,6 @@ struct ExtraTaskSettingsStruct
   void          setTaskVarStateClass(taskVarIndex_t taskVarIndex,
                                      uint8_t        stateClass);
   #endif // if FEATURE_MQTT_STATE_CLASS
-  #if FEATURE_EEPROM_EXTERNAL
-  bool          getTaskVarStoreInEEPROM(taskVarIndex_t taskVarIndex) const;
-  void          setTaskVarStoreInEEPROM(taskVarIndex_t taskVarIndex,
-                                        bool           store);
-  #endif // if FEATURE_EEPROM_EXTERNAL
 
   void          populateDeviceValueNamesSeq(const __FlashStringHelper *valuename,
                                             size_t                     nrValues,
