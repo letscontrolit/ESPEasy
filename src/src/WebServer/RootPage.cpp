@@ -12,16 +12,11 @@
 
 # include "../Commands/ExecuteCommand.h"
 # include "../../ESPEasy/net/ESPEasyNetwork.h"
-# include "../Globals/ESPEasy_time.h"
-# include "../../ESPEasy/net/Globals/ESPEasyWiFiEvent.h"
 # include "../Globals/MainLoopCommand.h"
-# include "../../ESPEasy/net/Globals/NetworkState.h"
 # include "../Globals/Nodes.h"
 # include "../Globals/Settings.h"
 # include "../Globals/Statistics.h"
-# include "../Helpers/ESPEasy_Storage.h"
 # include "../Helpers/Memory.h"
-# include "../Helpers/Misc.h"
 # include "../Helpers/StringGenerator_System.h"
 # include "../Helpers/WebServer_commandHelper.h"
 

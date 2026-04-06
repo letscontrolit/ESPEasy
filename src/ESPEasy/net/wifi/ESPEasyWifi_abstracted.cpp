@@ -3,15 +3,13 @@
 #if FEATURE_WIFI
 
 # include "../../net/ESPEasyNetwork.h"
-# include "../../../src/Globals/EventQueue.h"
 # include "../../../src/Globals/SecuritySettings.h"
 # include "../../../src/Globals/Services.h"
 # include "../../../src/Globals/Settings.h"
-# include "../Globals/WiFi_AP_Candidates.h"
 # include "../../../src/Helpers/StringConverter.h"
-# include "../Globals/ESPEasyWiFiEvent.h"
-# include "../Globals/ESPEasyWiFi.h"
+# include "../Globals/WiFi_AP_Candidates.h"
 # include "../Globals/NetworkState.h"
+#include "../wifi/ESPEasyWifi.h"
 
 namespace ESPEasy {
 namespace net {
@@ -74,10 +72,10 @@ bool doWiFiScanAllowed() {
 }
 
 // Only internal scope
-void doSetAPinternal(bool enable)
+bool doSetAPinternal(bool enable)
 {
   if (enable) {
-    if (!Settings.getNetworkEnabled(NETWORK_INDEX_WIFI_AP)) { return; }
+    if (!Settings.getNetworkEnabled(NETWORK_INDEX_WIFI_AP)) { return false; }
 
     // create and store unique AP SSID/PW to prevent ESP from starting AP mode with default SSID and No password!
     // setup ssid for AP Mode when needed
@@ -98,6 +96,7 @@ void doSetAPinternal(bool enable)
     }
 
     if (!WiFi.softAPConfig(apIP, apIP, subnet, dhcp_lease_start, dns)) {
+      #ifndef LIMIT_BUILD_SIZE
       addLog(LOG_LEVEL_ERROR, strformat(
                ("WIFI : [AP] softAPConfig failed! IP: %s, GW: %s, SN: %s DNS: %s"),
                apIP.toString().c_str(),
@@ -105,8 +104,14 @@ void doSetAPinternal(bool enable)
                subnet.toString().c_str(),
                dns.toString().c_str())
              );
+      #endif
+      return false;
     }
+#if ESP_IDF_VERSION_MAJOR < 6
     WiFi.AP.bandwidth(WIFI_BW_HT20);
+#else
+    WiFi.AP.bandwidth(WIFI_BW20);
+#endif
     # endif // ifdef ESP32
     # ifdef ESP8266
 
@@ -119,6 +124,7 @@ void doSetAPinternal(bool enable)
                subnet.toString().c_str())
              );
 #endif
+      return false;
     }
     # endif // ifdef ESP8266
 
@@ -154,6 +160,7 @@ void doSetAPinternal(bool enable)
                      formatIP(apIP).c_str()));
       }
 #endif
+      return false;
     }
 
     if (Settings.ApCaptivePortal()) {
@@ -199,6 +206,7 @@ void doSetAPinternal(bool enable)
 
     doSetAP(false);
   }
+  return false;
 }
 
 void doSetConnectionSpeed() {
@@ -216,7 +224,7 @@ void doSetConnectionSpeed() {
 # if FEATURE_SET_WIFI_TX_PWR
 
 void doSetWiFiTXpower() {
-  doSetWiFiTXpower(0, WiFi.RSSI());
+   doSetWiFiTXpower(0, WiFi.RSSI());
 
   // Just some minimal value, will be adjusted in doSetWiFiTXpower
 }

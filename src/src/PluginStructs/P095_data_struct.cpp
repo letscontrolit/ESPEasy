@@ -2,6 +2,8 @@
 
 #ifdef USES_P095
 
+#include "../Helpers/Hardware_SPI.h"
+
 /****************************************************************************
  * ILI9xxx_type_toString: Display-value for the device selected
  ***************************************************************************/
@@ -99,8 +101,7 @@ P095_data_struct::P095_data_struct(ILI9xxx_type_e      displayType,
                                    String              commandTrigger,
                                    uint16_t            fgcolor,
                                    uint16_t            bgcolor,
-                                   bool                textBackFill,
-                                   uint8_t spi_bus
+                                   bool                textBackFill
                                    # if                ADAGFX_FONTS_INCLUDED
                                    ,
                                    const uint8_t       defaultFontId
@@ -109,7 +110,7 @@ P095_data_struct::P095_data_struct(ILI9xxx_type_e      displayType,
   : _displayType(displayType), _rotation(rotation), _fontscaling(fontscaling), _textmode(textmode),
   _backlightPin(backlightPin), _backlightPercentage(backlightPercentage), _displayTimer(displayTimer),
   _displayTimeout(displayTimer), _commandTrigger(commandTrigger), _fgcolor(fgcolor), _bgcolor(bgcolor),
-  _textBackFill(textBackFill), _spi_bus(spi_bus)
+  _textBackFill(textBackFill)
   # if ADAGFX_FONTS_INCLUDED
   , _defaultFontId(defaultFontId)
   # endif // if ADAGFX_FONTS_INCLUDED
@@ -167,7 +168,9 @@ bool P095_data_struct::plugin_init(struct EventStruct *event) {
     # endif // if P095_ENABLE_ILI948X
     {
       # ifdef ESP32 // PIN(0) and PIN(1) swapped!
-      tft = new (std::nothrow) Adafruit_ILI9341(0 == _spi_bus ? &SPI : &SPIe,
+      auto spi_ptr = getSPIBusForTask(event->TaskIndex);
+      if (spi_ptr) 
+      tft = new (std::nothrow) Adafruit_ILI9341(spi_ptr,
                                                 PIN(1),
                                                 PIN(0),
                                                 PIN(2),

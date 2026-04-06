@@ -16,7 +16,9 @@
 #include "../Helpers/_CPlugin_init.h"
 #include "../Helpers/ESPEasy_math.h"
 #include "../Helpers/ESPEasy_Storage.h"
+#if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 #include "../Helpers/ESPEasy_UnitOfMeasure.h"
+#endif
 #include "../Helpers/Misc.h"
 #include "../Helpers/Numerical.h"
 #include "../Helpers/StringConverter.h"

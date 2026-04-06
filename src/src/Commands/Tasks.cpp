@@ -1,12 +1,9 @@
 #include "../Commands/Tasks.h"
 
 
-#include "../../ESPEasy_common.h"
 #include "../../_Plugin_Helper.h"
 
 #include "../Commands/Common.h"
-
-#include "../DataStructs/TimingStats.h"
 
 #include "../ESPEasyCore/Controller.h"
 #include "../ESPEasyCore/Serial.h"
@@ -16,7 +13,9 @@
 #include "../Globals/RuntimeData.h"
 #include "../Globals/Settings.h"
 
+#if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 #include "../Helpers/ESPEasy_UnitOfMeasure.h"
+#endif
 #include "../Helpers/Misc.h"
 #include "../Helpers/Numerical.h"
 #include "../Helpers/StringConverter.h"

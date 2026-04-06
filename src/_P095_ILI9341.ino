@@ -467,9 +467,7 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      const uint8_t spi_bus = Settings.getSPIBusForTask(event->TaskIndex);
-
-      if (Settings.isSPI_valid(spi_bus)) {
+      if (Settings.isSPI_validForTask(event->TaskIndex)) {
         # if P095_ENABLE_ILI948X
 
         if (10 == P095_CONFIG_FLAG_GET_TYPE) { // If ILI9486 was selected, reset to ILI9488
@@ -488,8 +486,7 @@ boolean Plugin_095(uint8_t function, struct EventStruct *event, String& string)
                                                                                               P095_CONFIG_FLAG_GET_CMD_TRIGGER)),
                                                                P095_CONFIG_GET_COLOR_FOREGROUND,
                                                                P095_CONFIG_GET_COLOR_BACKGROUND,
-                                                               bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_BACK_FILL) == 0,
-                                                               spi_bus
+                                                               bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_BACK_FILL) == 0
                                                                # if ADAGFX_FONTS_INCLUDED
                                                                ,
                                                                P095_CONFIG_DEFAULT_FONT

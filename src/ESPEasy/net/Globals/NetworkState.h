@@ -5,9 +5,6 @@
 #include <IPAddress.h>
 #include <WiFiUdp.h>
 
-#include "../../../src/DataTypes/ESPEasy_plugin_functions.h"
-#include "../../../src/DataTypes/NetworkMedium.h"
-
 
 // Ethernet Connectiopn status
 extern ESPEasy::net::NetworkMedium_t active_network_medium;

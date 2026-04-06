@@ -11,21 +11,8 @@
 # define NWPLUGIN_NAME_005       "PPP modem"
 
 # include "../../src/DataStructs/ESPEasy_EventStruct.h"
-# include "../net/ESPEasyNetwork.h"
-# include "../../src/Globals/SecuritySettings.h"
 # include "../../src/Globals/Settings.h"
-# include "../../src/Helpers/ESPEasy_Storage.h"
-# include "../../src/Helpers/PrintToString.h"
 # include "../../src/Helpers/StringConverter.h"
-# include "../../src/Helpers/_Plugin_Helper_serial.h"
-# include "../../src/WebServer/ESPEasy_WebServer.h"
-# include "../../src/WebServer/HTML_Print.h"
-# include "../../src/WebServer/HTML_wrappers.h"
-# include "../../src/WebServer/Markup.h"
-# include "../../src/WebServer/Markup_Forms.h"
-# include "../../src/WebServer/common.h"
-# include "../net/Globals/NWPlugins.h"
-# include "../net/Helpers/_NWPlugin_Helper_webform.h"
 # include "../net/Helpers/_NWPlugin_init.h"
 # include "../net/NWPluginStructs/NW005_data_struct_PPP_modem.h"
 
@@ -143,7 +130,6 @@ bool NWPlugin_005(NWPlugin::Function function, EventStruct *event, String& strin
       break;
     }
 
-# ifndef LIMIT_BUILD_SIZE
     case NWPlugin::Function::NWPLUGIN_WEBFORM_SHOW_PORT:
     {
       if (event->kvWriter) {
@@ -156,7 +142,6 @@ bool NWPlugin_005(NWPlugin::Function function, EventStruct *event, String& strin
       }
       break;
     }
-# endif // ifndef LIMIT_BUILD_SIZE
 
     case NWPlugin::Function::NWPLUGIN_WEBFORM_SAVE:
     {

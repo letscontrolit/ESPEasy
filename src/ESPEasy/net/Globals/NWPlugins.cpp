@@ -1,20 +1,25 @@
 #include "../Globals/NWPlugins.h"
 
-#include "../../../_Plugin_Helper.h"
 #include "../../../src/DataStructs/ESPEasy_EventStruct.h"
 #include "../../../src/DataStructs/TimingStats.h"
 #include "../../../src/DataTypes/ESPEasy_plugin_functions.h"
-#include "../../../src/ESPEasyCore/ESPEasy_Log.h"
+#ifdef ESP32
 #include "../../../src/Globals/SecuritySettings.h"
-#include "../../../src/Globals/Settings.h"
-#include "../../../src/Helpers/PrintToString.h"
-#include "../Helpers/_NWPlugin_init.h"
-#include "../Helpers/NWAccessControl.h"
-#include "../_NWPlugin_Helper.h"
-
-#if FEATURE_ETHERNET
-# include "../eth/ETH_NWPluginData_static_runtime.h"
 #endif
+#include "../../../src/Globals/Settings.h"
+#include "../Helpers/_NWPlugin_init.h"
+#ifdef ESP32
+#include "../Helpers/NWAccessControl.h"
+#endif
+
+#include "../../../src/Globals/ESPEasy_Scheduler.h"
+
+#include "../_NWPlugin_Helper.h"
+#ifdef ESP8266
+#include "../wifi/ESPEasyWifi.h"
+#endif
+#include "../ESPEasyNetwork.h"
+
 
 
 namespace ESPEasy {
@@ -59,15 +64,11 @@ bool NWPluginCall(NWPlugin::Function Function, EventStruct *event, String& str)
     case NWPlugin::Function::NWPLUGIN_FIFTY_PER_SECOND:
     case NWPlugin::Function::NWPLUGIN_WRITE:
     case NWPlugin::Function::NWPLUGIN_WEBSERVER_SHOULD_RUN:
-#ifdef ESP32
     case NWPlugin::Function::NWPLUGIN_PRIORITY_ROUTE_CHANGED:
-#endif
     {
       // Set to true where return value doesn't matter
       bool success =
-#ifdef ESP32
         Function != NWPlugin::Function::NWPLUGIN_PRIORITY_ROUTE_CHANGED &&
-#endif
         Function != NWPlugin::Function::NWPLUGIN_WRITE &&
         Function != NWPlugin::Function::NWPLUGIN_WEBSERVER_SHOULD_RUN;
 
@@ -84,13 +85,11 @@ bool NWPluginCall(NWPlugin::Function Function, EventStruct *event, String& str)
 
         if (Settings.getNWPluginID_for_network(x) && checkedEnabled) {
           if (Function == NWPlugin::Function::NWPLUGIN_INIT_ALL) {
-            if (!Settings.getNetworkInterface_isFallback(x)) {
-              Scheduler.setNetworkInitTimer(Settings.getNetworkInterfaceStartupDelay(x), x);
-            }
+            Scheduler.setNetworkInitTimer(Settings.getNetworkInterfaceStartupDelay(x), x);
           }
-          
-          if (Function == NWPlugin::Function::NWPLUGIN_WEBSERVER_SHOULD_RUN &&
-              Settings.getNetworkInterfaceSubnetBlockClientIP(x)) 
+
+          if ((Function == NWPlugin::Function::NWPLUGIN_WEBSERVER_SHOULD_RUN) &&
+              Settings.getNetworkInterfaceSubnetBlockClientIP(x))
           {
             // Skip check for this network interface as access to the web UI should be blocked anyway
           } else {
@@ -107,11 +106,12 @@ bool NWPluginCall(NWPlugin::Function Function, EventStruct *event, String& str)
 
               if (!currentDefaultInterface) {
                 String dummy;
+
                 if (do_NWPluginCall(
-                  getNetworkDriverIndex_from_NetworkIndex(x),
-                  NWPlugin::Function::NWPLUGIN_FALLBACK_INTERFACE_SHOULD_START,
-                  event,
-                  dummy))
+                      getNetworkDriverIndex_from_NetworkIndex(x),
+                      NWPlugin::Function::NWPLUGIN_FALLBACK_INTERFACE_SHOULD_START,
+                      event,
+                      dummy))
                 {
                   // No current default interface, thus we need to start this one.
                   Scheduler.setNetworkInitTimer(Settings.getNetworkInterfaceStartupDelay(x), x);
@@ -135,6 +135,29 @@ bool NWPluginCall(NWPlugin::Function Function, EventStruct *event, String& str)
               }
             }
 #endif // ifdef ESP32
+#ifdef ESP8266
+
+            if ((Function == NWPlugin::Function::NWPLUGIN_PRIORITY_ROUTE_CHANGED) &&
+                Settings.getNetworkInterface_isFallback(x))
+            {
+              if (!ESPEasy::net::wifi::WiFiConnected()) {
+                String dummy;
+
+                if (do_NWPluginCall(
+                      getNetworkDriverIndex_from_NetworkIndex(x),
+                      NWPlugin::Function::NWPLUGIN_FALLBACK_INTERFACE_SHOULD_START,
+                      event,
+                      dummy))
+                {
+                  // No current default interface, thus we need to start this one.
+                  Scheduler.setNetworkInitTimer(Settings.getNetworkInterfaceStartupDelay(x), x);
+                }
+              } else {
+                // TODO TD-er: What to do when performing the setup process?
+                Scheduler.setNetworkExitTimer(10, x);
+              }
+            }
+#endif // ifdef ESP8266
             String command;
 
             if (Function == NWPlugin::Function::NWPLUGIN_WRITE) {
@@ -156,12 +179,11 @@ bool NWPluginCall(NWPlugin::Function Function, EventStruct *event, String& str)
           }
         }
       }
-#ifdef ESP32
 
       if (Function == NWPlugin::Function::NWPLUGIN_PRIORITY_ROUTE_CHANGED) {
         CheckRunningServices();
       }
-#endif // ifdef ESP32
+
       return success;
     }
 
@@ -302,14 +324,14 @@ bool NWPluginCall(NWPlugin::Function Function, EventStruct *event, String& str)
 
     // calls to specific network which need to be enabled before calling
     case NWPlugin::Function::NWPLUGIN_INIT:
-    case NWPlugin::Function::NWPLUGIN_CONNECT_SUCCESS:
-    case NWPlugin::Function::NWPLUGIN_CONNECT_FAIL:
+//    case NWPlugin::Function::NWPLUGIN_CONNECT_SUCCESS:
+//    case NWPlugin::Function::NWPLUGIN_CONNECT_FAIL:
     case NWPlugin::Function::NWPLUGIN_WEBFORM_SHOW_ACTIVE:
     case NWPlugin::Function::NWPLUGIN_WEBFORM_SHOW_CONNECTED:
-    case NWPlugin::Function::NWPLUGIN_WEBFORM_SHOW_EXTENDED:
+//    case NWPlugin::Function::NWPLUGIN_WEBFORM_SHOW_EXTENDED:
     case NWPlugin::Function::NWPLUGIN_WEBFORM_SHOW_HW_ADDRESS:
     case NWPlugin::Function::NWPLUGIN_WEBFORM_SHOW_IP:
-#ifndef LIMIT_BUILD_SIZE
+#ifdef ESP32
     case NWPlugin::Function::NWPLUGIN_WEBFORM_SHOW_PORT:
 #endif
     case NWPlugin::Function::NWPLUGIN_WEBFORM_SHOW_HOSTNAME:
@@ -334,7 +356,7 @@ bool NWPluginCall(NWPlugin::Function Function, EventStruct *event, String& str)
     case NWPlugin::Function::NWPLUGIN_WEBFORM_LOAD:
     case NWPlugin::Function::NWPLUGIN_WEBFORM_SAVE:
 
-    case NWPlugin::Function::NWPLUGIN_DRIVER_TEMPLATE:
+//    case NWPlugin::Function::NWPLUGIN_DRIVER_TEMPLATE:
     {
       const networkIndex_t networkIndex = event->NetworkIndex;
       bool success                      = false;

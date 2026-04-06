@@ -1,10 +1,7 @@
 #include "../WebServer/JSON.h"
 
-#include "../WebServer/ESPEasy_WebServer.h"
 #include "../WebServer/JSON.h"
 #include "../WebServer/Markup_Forms.h"
-
-#include "../CustomBuild/CompiletimeDefines.h"
 
 #include "../DataStructs/TimingStats.h"
 
@@ -12,12 +9,11 @@
 #include "../Globals/Nodes.h"
 #include "../Globals/Device.h"
 #include "../Globals/Plugins.h"
-#include "../Globals/NPlugins.h"
 
 #include "../Helpers/_Plugin_init.h"
-#include "../Helpers/ESPEasyStatistics.h"
-#include "../Helpers/ESPEasy_Storage.h"
+#if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 #include "../Helpers/ESPEasy_UnitOfMeasure.h"
+#endif
 #include "../Helpers/KeyValueWriter_JSON.h"
 #include "../Helpers/Numerical.h"
 #include "../Helpers/StringConverter.h"
@@ -300,6 +296,7 @@ void handle_json()
                 {
                   LabelType::HOST_NAME,
 #if FEATURE_MDNS
+                  LabelType::USE_MDNS,
                   LabelType::M_DNS,
 #endif // if FEATURE_MDNS
                   //        LabelType::IP_CONFIG,

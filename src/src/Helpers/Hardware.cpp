@@ -2,12 +2,10 @@
 
 #include "../Commands/GPIO.h"
 #include "../CustomBuild/ESPEasyLimits.h"
-#include "../DataTypes/SPI_options.h"
 #include "../ESPEasyCore/ESPEasyGPIO.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
 
 #include "../Globals/Device.h"
-#include "../../ESPEasy/net/Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/ExtraTaskSettings.h"
 #include "../Globals/Settings.h"
 #include "../Globals/Statistics.h"
@@ -15,13 +13,13 @@
 
 #include "../Helpers/ESPEasy_FactoryDefault.h"
 #include "../Helpers/ESPEasy_Storage.h"
+#if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 #include "../Helpers/ESPEasy_UnitOfMeasure.h"
-#include "../Helpers/FS_Helper.h"
+#endif
 #include "../Helpers/Hardware_device_info.h"
 #include "../Helpers/Hardware_GPIO.h"
 #include "../Helpers/Hardware_I2C.h"
 #include "../Helpers/Hardware_SPI.h"
-#include "../Helpers/I2C_access.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/PortStatus.h"
 #include "../Helpers/StringConverter.h"

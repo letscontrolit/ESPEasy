@@ -1,13 +1,10 @@
 #include "../WebServer/WiFiScanner.h"
 
 #include "../WebServer/ESPEasy_WebServer.h"
-#include "../WebServer/AccessControl.h"
 #include "../WebServer/HTML_wrappers.h"
-
+#include "../Helpers/StringConverter.h"
 #include "../../ESPEasy/net/wifi/ESPEasyWifi.h"
-
 #include "../../ESPEasy/net/Globals/WiFi_AP_Candidates.h"
-#include "../Helpers/StringGenerator_WiFi.h"
 
 #ifdef USES_ESPEASY_NOW
 #include "../Globals/ESPEasy_now_handler.h"

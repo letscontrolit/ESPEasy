@@ -1,12 +1,11 @@
 #include "../WebServer/UploadPage.h"
 
 #include "../WebServer/ESPEasy_WebServer.h"
-#include "../WebServer/AccessControl.h"
 #include "../WebServer/Markup_Buttons.h"
 #include "../WebServer/HTML_wrappers.h"
 
-#include "../Globals/Cache.h"
 #include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/StringConverter.h"
 #if FEATURE_TARSTREAM_SUPPORT
 # include "../Helpers/TarStream.h"
 #endif // if FEATURE_TARSTREAM_SUPPORT

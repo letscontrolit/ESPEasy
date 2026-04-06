@@ -8,8 +8,6 @@
 
 #include "../DataStructs/ESPEasy_EventStruct.h"
 
-#include "../ESPEasyCore/Serial.h"
-
 #include "../Globals/ESPEasy_time.h"
 #include "../Globals/Settings.h"
 

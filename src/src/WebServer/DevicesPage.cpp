@@ -1051,7 +1051,7 @@ void format_SPI_port_description(int8_t spi_gpios[3], uint8_t spi_bus)
     return;
   }
   # ifdef ESP32
-  addHtml(getSPI_optionToShortString(static_cast<SPI_Options_e>(0 == spi_bus ? Settings.InitSPI : Settings.InitSPI1), spi_bus));
+  addHtml(getSPI_optionToShortString(Settings.getSPISelection(spi_bus), spi_bus));
   # endif // ifdef ESP32
   # ifdef ESP8266
   addHtml(F("SPI"));
@@ -1080,7 +1080,7 @@ void format_I2C_pin_description(taskIndex_t x)
 void format_SPI_pin_description(int8_t spi_gpios[3], taskIndex_t x, bool showCSpin)
 {
   const uint8_t spi_bus = Settings.getSPIBusForTask(x);
-  if ((0 == spi_bus ? Settings.InitSPI : Settings.InitSPI1) > static_cast<int>(SPI_Options_e::None)) {
+  if (Settings.getSPISelection(spi_bus) != SPI_Options_e::None) {
     const __FlashStringHelper*labels[] = { F("CLK"), F("MISO"), F("MOSI") };
 
     for (size_t i = 0; i < NR_ELEMENTS(labels); ++i) {

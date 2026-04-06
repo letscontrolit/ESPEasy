@@ -1,8 +1,5 @@
 #include "../DataStructs/ControllerSettingsStruct.h"
 
-#include "../../ESPEasy_common.h"
-
-#include "../CustomBuild/ESPEasyLimits.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../../ESPEasy/net/ESPEasyNetwork.h"
 #include "../../ESPEasy/net/Globals/NWPlugins.h"

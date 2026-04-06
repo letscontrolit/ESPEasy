@@ -1,12 +1,7 @@
 #include "../WebServer/Metrics.h"
-#include "../WebServer/ESPEasy_WebServer.h"
-#include "../../ESPEasy-Globals.h"
+
 #include "../Commands/Diagnostic.h"
-#include "../../ESPEasy/net/ESPEasyNetwork.h"
-#include "../../ESPEasy/net/wifi/ESPEasyWifi.h"
 #include "../../_Plugin_Helper.h"
-#include "../Helpers/ESPEasyStatistics.h"
-#include "../Static/WebStaticData.h"
 
 #ifdef WEBSERVER_METRICS
 

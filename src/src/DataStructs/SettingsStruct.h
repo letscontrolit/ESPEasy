@@ -32,6 +32,9 @@
  #define DEFAULT_SPI 0
 #endif
 
+#if FEATURE_SPI
+#include "../DataTypes/SPI_options.h"
+#endif
 
 // FIXME TD-er: Move this PinBootState to DataTypes folder
 
@@ -364,6 +367,11 @@ class SettingsStruct_tmpl
   void SendDerivedTaskValues(taskIndex_t taskIndex, controllerIndex_t controllerIndex, bool value);
   #endif // if FEATURE_STRING_VARIABLES
 
+#if FEATURE_COLORIZE_CONSOLE_LOGS
+  inline bool ColorizeSerialLog() const  { return !VariousBits_2.ColorizeSerialLog; }
+  inline void ColorizeSerialLog(bool value) { VariousBits_2.ColorizeSerialLog = !value; }
+#endif
+
   inline bool StartAPfallback_NoCredentials() const  { return !VariousBits_2.StartAPfallback_NoCredentials; }
   inline void StartAPfallback_NoCredentials(bool value) { VariousBits_2.StartAPfallback_NoCredentials = !value; }
 
@@ -390,6 +398,12 @@ class SettingsStruct_tmpl
 
   inline bool UseLastWiFiFromRTC() const { return VariousBits_1.UseLastWiFiFromRTC; }
   inline void UseLastWiFiFromRTC(bool value) { VariousBits_1.UseLastWiFiFromRTC = value; }
+
+#if FEATURE_MDNS
+  inline bool Use_mDNS() const { return VariousBits_3.Use_mDNS; }
+  inline void Use_mDNS(bool value) { VariousBits_3.Use_mDNS = value; }
+#endif
+
 
   ExtTimeSource_e ExtTimeSource() const;
   void ExtTimeSource(ExtTimeSource_e value);
@@ -471,15 +485,16 @@ public:
   void setPinBootState(int8_t gpio_pin, PinBootState state);
 
 #if FEATURE_SPI
+  bool getSPI_pinsForTask(taskIndex_t TaskIndex,
+                          int8_t  spi_gpios[3],
+                          bool    noCheck = false) const;
+
   bool getSPI_pins(int8_t  spi_gpios[3],
                    uint8_t spi_bus = 0,
                    bool    noCheck = false) const;
 
   bool isSPI_enabled(uint8_t spi_bus) const;
   uint8_t getNrConfiguredSPI_buses() const;
-  #ifdef ESP32
-  spi_host_device_t getSPI_host(uint8_t spi_bus = 0) const;
-  #endif
 
   // Return true when pin is one of the SPI pins and SPI is enabled
   bool isSPI_pin(int8_t  pin,
@@ -487,9 +502,12 @@ public:
 
   // Return true when SPI enabled and opt. user defined pins valid.
   bool isSPI_valid(uint8_t spi_bus) const;
+  bool isSPI_validForTask(taskIndex_t TaskIndex) const;
 
   uint8_t getSPIBusForTask(taskIndex_t TaskIndex) const;
   void    setSPIBusForTask(taskIndex_t TaskIndex, uint8_t spi_bus);
+
+  SPI_Options_e getSPISelection(uint8_t spi_bus) const;
 
   #if FEATURE_SD
   uint8_t getSPIBusForSDCard() const;
@@ -689,9 +707,9 @@ public:
   uint32_t WireClockStretchLimit = 0;
   union {
     struct {
-      uint32_t unused_00                        : 1; // Bit 0
-      uint32_t unused_01                        : 1; // Bit 1
-      uint32_t unused_02                        : 1; // Bit 2
+      uint32_t wakeOnHigh_ckd                   : 1; // Bit 0
+      uint32_t diableWakePulls                  : 1; // Bit 1
+      uint32_t Use_mDNS                         : 1; // Bit 2
       uint32_t unused_03                        : 1; // Bit 3
       uint32_t unused_04                        : 1; // Bit 4
       uint32_t unused_05                        : 1; // Bit 5
@@ -1066,8 +1084,8 @@ union {
       uint32_t RestoreUserVarsFromEEPROMOnWarmBoot : 1; // Bit 12
       uint32_t MQTTConnectInBackground             : 1; // Bit 13  // inverted
 
-      uint32_t StartAPfallback_NoCredentials       : 1; // Bit 14 // inverted
-      uint32_t Unused_bit15                        : 1; // Bit 15
+      uint32_t StartAPfallback_NoCredentials       : 1; // Bit 14  // inverted
+      uint32_t ColorizeSerialLog                   : 1; // Bit 15  // inverted
       uint32_t APfallback_minimal_on_time_sec      : 8; // Bit 16 - 23
       uint32_t APfallback_autostart_max_uptime_m   : 8; // Bit 23 - 31  '0' == disabled
     };

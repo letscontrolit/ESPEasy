@@ -13,9 +13,7 @@
 #include "../Static/WebStaticData.h"
 
 #include "../WebServer/HTML_wrappers.h"
-#include "../WebServer/LoadFromFS.h"
 
-#include "../../ESPEasy_common.h"
 
 // Determine what pages should be visible
 #ifndef MENU_INDEX_MAIN_VISIBLE

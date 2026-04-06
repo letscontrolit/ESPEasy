@@ -985,6 +985,12 @@ void afterloadSettings() {
     eventQueue.clear();
   }
   node_time.applyTimeZone();
+  #ifdef ESP8266
+  WiFi.hostname(ESPEasy::net::NetworkCreateRFCCompliantHostname().c_str());
+  #endif
+  #ifdef ESP32
+  // FIXME TD-er: Must also update hostname on other interfaces for ESP32
+  #endif
   ESPEasy::net::CheckRunningServices(); // To update changes in hostname.
 }
 
