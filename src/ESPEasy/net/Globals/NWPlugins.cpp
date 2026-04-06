@@ -324,11 +324,11 @@ bool NWPluginCall(NWPlugin::Function Function, EventStruct *event, String& str)
 
     // calls to specific network which need to be enabled before calling
     case NWPlugin::Function::NWPLUGIN_INIT:
-    case NWPlugin::Function::NWPLUGIN_CONNECT_SUCCESS:
-    case NWPlugin::Function::NWPLUGIN_CONNECT_FAIL:
+//    case NWPlugin::Function::NWPLUGIN_CONNECT_SUCCESS:
+//    case NWPlugin::Function::NWPLUGIN_CONNECT_FAIL:
     case NWPlugin::Function::NWPLUGIN_WEBFORM_SHOW_ACTIVE:
     case NWPlugin::Function::NWPLUGIN_WEBFORM_SHOW_CONNECTED:
-    case NWPlugin::Function::NWPLUGIN_WEBFORM_SHOW_EXTENDED:
+//    case NWPlugin::Function::NWPLUGIN_WEBFORM_SHOW_EXTENDED:
     case NWPlugin::Function::NWPLUGIN_WEBFORM_SHOW_HW_ADDRESS:
     case NWPlugin::Function::NWPLUGIN_WEBFORM_SHOW_IP:
 #ifdef ESP32
@@ -356,7 +356,7 @@ bool NWPluginCall(NWPlugin::Function Function, EventStruct *event, String& str)
     case NWPlugin::Function::NWPLUGIN_WEBFORM_LOAD:
     case NWPlugin::Function::NWPLUGIN_WEBFORM_SAVE:
 
-    case NWPlugin::Function::NWPLUGIN_DRIVER_TEMPLATE:
+//    case NWPlugin::Function::NWPLUGIN_DRIVER_TEMPLATE:
     {
       const networkIndex_t networkIndex = event->NetworkIndex;
       bool success                      = false;
