@@ -92,5 +92,6 @@ src/src/CustomBuild/CompiletimeDefines_generated.h
 sdkconfig.*
 
 src/Custom_.h
+src/idf_component.yml
 
 compile_commands.json
