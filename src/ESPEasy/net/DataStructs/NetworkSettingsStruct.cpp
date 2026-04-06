@@ -1,14 +1,5 @@
 #include "../DataStructs/NetworkSettingsStruct.h"
 
-#include "../../../ESPEasy_common.h"
-
-#include "../../../src/CustomBuild/ESPEasyLimits.h"
-#include "../../../src/ESPEasyCore/ESPEasy_Log.h"
-#include "../ESPEasyNetwork.h"
-#include "../../../src/Helpers/Misc.h"
-#include "../../../src/Helpers/Networking.h"
-#include "../../../src/Helpers/StringConverter.h"
-
 
 #include <IPAddress.h>
 #include <WString.h>

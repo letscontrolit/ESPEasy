@@ -2,6 +2,8 @@
 
 #include "sdkconfig.h" // this sets useful config symbols, like CONFIG_IDF_TARGET_ESP32C3
 
+#if ESP_IDF_VERSION_MAJOR <= 5
+
 #ifndef CONFIG_SOC_RMT_TX_CANDIDATES_PER_GROUP // turn this off with something new from idf5.1
 // ESP32C3 I2S is not supported yet due to significant changes to interface
 #if defined(ARDUINO_ARCH_ESP32) && !defined(CONFIG_IDF_TARGET_ESP32C5)  && !defined(CONFIG_IDF_TARGET_ESP32C3) && !defined(CONFIG_IDF_TARGET_ESP32C2)
@@ -42,4 +44,5 @@ bool i2sWriteDone(uint8_t bus_num);
 }
 #endif
 #endif
-#endif // ESP_IDF_VERSION_MAJOR < 5
+#endif
+#endif

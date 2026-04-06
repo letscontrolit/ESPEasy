@@ -60,9 +60,9 @@ static int32_t getNextKey_noCredentials(int32_t key);
 
   bool   write_ModemState(KeyValueWriter*writer);
 
-  bool   init(EventStruct *event);
+  bool   init(EventStruct *event) override;
 
-  bool   exit(EventStruct *event);
+  bool   exit(EventStruct *event) override;
 
   bool   handle_nwplugin_write(EventStruct *event,
                                String     & str) override;
@@ -78,7 +78,7 @@ static int32_t getNextKey_noCredentials(int32_t key);
 # endif // if FEATURE_NETWORK_STATS
 
 
-  NWPluginData_static_runtime* getNWPluginData_static_runtime();
+  NWPluginData_static_runtime* getNWPluginData_static_runtime() override;
 
 private:
 

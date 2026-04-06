@@ -12,6 +12,7 @@ String toNodeTypeDisplayString(uint8_t nodeType) {
     case NODE_TYPE_ID_ESP_EASY32_STD:      break;
     case NODE_TYPE_ID_ESP_EASY32S2_STD:    suffix = F("-S2"); break;
     case NODE_TYPE_ID_ESP_EASY32S3_STD:    suffix = F("-S3"); break;
+    case NODE_TYPE_ID_ESP_EASY32S31_STD:   suffix = F("-S31"); break;
     case NODE_TYPE_ID_ESP_EASY32C2_STD:    suffix = F("-C2"); break;
     case NODE_TYPE_ID_ESP_EASY32C3_STD:    suffix = F("-C3"); break;
     case NODE_TYPE_ID_ESP_EASY32C5_STD:    suffix = F("-C5"); break;

@@ -3,6 +3,7 @@
 #ifdef USES_P104
 
 # include "../Helpers/ESPEasy_Storage.h"
+# include "../Helpers/Hardware_SPI.h"
 # include "../Helpers/Numerical.h"
 # include "../WebServer/Markup_Forms.h"
 # include "../WebServer/ESPEasy_WebServer.h"
@@ -33,12 +34,13 @@ P104_data_struct::P104_data_struct(MD_MAX72XX::moduleType_t _mod,
                                    uint8_t                  _modules,
                                    uint8_t                  _zonesCount)
   : mod(_mod), taskIndex(_taskIndex), cs_pin(_cs_pin), modules(_modules), expectedZones(_zonesCount) {
-  const uint8_t spi_bus = Settings.getSPIBusForTask(taskIndex);
+  auto spi_ptr = getSPIBusForTask(taskIndex);
+  if (spi_ptr && Settings.isSPI_validForTask(taskIndex)) {
 
-  if (Settings.isSPI_valid(spi_bus)) {
+
     P = new (std::nothrow) MD_Parola(mod,
                                      # ifdef ESP32
-                                     0 == spi_bus ? SPI : SPIe,
+                                     *spi_ptr,
                                      # endif // ifdef ESP32
                                      cs_pin, modules);
   } else {

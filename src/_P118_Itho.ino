@@ -200,12 +200,10 @@ boolean Plugin_118(uint8_t function, struct EventStruct *event, String& string)
       # endif // ifdef P118_DEBUG_LOG
 
       if (validGpio(P118_CSPIN) && (P118_IRQPIN != P118_CSPIN)) {
-        const uint8_t spi_bus = Settings.getSPIBusForTask(event->TaskIndex);
         initPluginTaskData(event->TaskIndex, new (std::nothrow) P118_data_struct(P118_CSPIN,
                                                                                  P118_IRQPIN,
                                                                                  P118_CONFIG_LOG == 1,
-                                                                                 P118_CONFIG_RF_LOG == 1,
-                                                                                 spi_bus));
+                                                                                 P118_CONFIG_RF_LOG == 1));
         P118_data_struct *P118_data = static_cast<P118_data_struct *>(getPluginTaskData(event->TaskIndex));
 
         success = (nullptr != P118_data) && P118_data->plugin_init(event);

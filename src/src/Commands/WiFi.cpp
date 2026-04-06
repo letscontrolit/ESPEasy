@@ -1,30 +1,24 @@
 #include "../Commands/WiFi.h"
 
-#include "../../ESPEasy_common.h"
 
 #if FEATURE_WIFI
 
-#include "../Commands/Common.h"
+# include "../Commands/Common.h"
 
-#include "../DataStructs/ESPEasy_EventStruct.h"
+# include "../DataStructs/ESPEasy_EventStruct.h"
 
-#include "../ESPEasyCore/Serial.h"
+# include "../Globals/RTC.h"
+# include "../Globals/ESPEasy_Scheduler.h"
+# include "../Globals/SecuritySettings.h"
+# include "../Globals/Settings.h"
 
-#include "../../ESPEasy/net/Globals/ESPEasyWiFiEvent.h"
-#include "../Globals/RTC.h"
-#include "../Globals/SecuritySettings.h"
-#include "../Globals/Settings.h"
+# include "../Helpers/ESPEasy_Storage.h"
+# include "../Helpers/StringConverter.h"
 
-#include "../Helpers/ESPEasy_Storage.h"
-#include "../Helpers/StringConverter.h"
-
-#include "../../ESPEasy/net/wifi/ESPEasyWifi.h"
+# include "../../ESPEasy/net/wifi/ESPEasyWifi.h"
 
 
-
-#define WIFI_MODE_MAX (WiFiMode_t)4
-
-
+# define WIFI_MODE_MAX (WiFiMode_t)4
 
 String Command_Wifi_SSID(struct EventStruct *event, const char *Line)
 {
@@ -84,7 +78,7 @@ const __FlashStringHelper* Command_Wifi_Scan(struct EventStruct *event, const ch
 
 const __FlashStringHelper* Command_Wifi_Connect(struct EventStruct *event, const char *Line)
 {
-//  WiFiEventData.wifiConnectAttemptNeeded = true;
+  //  WiFiEventData.wifiConnectAttemptNeeded = true;
   return return_command_success_flashstr();
 }
 
@@ -98,13 +92,38 @@ const __FlashStringHelper* Command_Wifi_Disconnect(struct EventStruct *event, co
 
 const __FlashStringHelper* Command_Wifi_APMode(struct EventStruct *event, const char *Line)
 {
-   ESPEasy::net::wifi::setAPinternal(true);
+  if (!Settings.getNetworkEnabled(1)) { return return_command_failed_flashstr(); }
+  String TmpStr1;
+  bool   APenable = true;
+
+  // Command structure:
+  // WifiAPMode               Start AP mode
+  // WifiAPMode,<on|off|1|0>  Start/stop AP mode
+
+  if (GetArgv(Line, TmpStr1, 2)) {
+    TmpStr1.toLowerCase();
+
+    if ((event->Par1 == 0) || (strcmp_P(TmpStr1.c_str(), PSTR("off")) == 0)) {
+      APenable = false;
+    } else if ((event->Par1 == 1) || (strcmp_P(TmpStr1.c_str(), PSTR("on")) == 0)) {
+      APenable = true;
+    } else {
+      return return_incorrect_nr_arguments();
+    }
+  }
+
+  if (APenable) {
+    Scheduler.setNetworkInitTimer(10, 1);
+  }
+  else {
+    Scheduler.setNetworkExitTimer(10, 1);
+  }
   return return_command_success_flashstr();
 }
 
 const __FlashStringHelper* Command_Wifi_STAMode(struct EventStruct *event, const char *Line)
 {
-   ESPEasy::net::wifi::setSTA(true);
+  ESPEasy::net::wifi::setSTA(true);
   return return_command_success_flashstr();
 }
 
@@ -147,17 +166,16 @@ const __FlashStringHelper* Command_Wifi_AllowAP(struct EventStruct *event, const
 // in the wifi settings of the core library
 const __FlashStringHelper* Command_WiFi_Erase(struct EventStruct *event, const char *Line)
 {
-  return Erase_WiFi_Calibration() 
+  return Erase_WiFi_Calibration()
     ? return_command_success_flashstr()
     : return_command_failed_flashstr();
 }
 
-
-#if FEATURE_OTA_FW_UPDATE_ESP_HOSTED_MCU
+# if FEATURE_OTA_FW_UPDATE_ESP_HOSTED_MCU
 #  include "esp_hosted.h"
 
 // Perform OTA update on the esp-hosted-mcu firmware of the external WiFi module (typically ESP32-C6)
-// Latest builds are available here: 
+// Latest builds are available here:
 // https://pioarduino.github.io/esp-hosted-mcu-firmware/
 String Command_Wifi_OTA_hosted_mcu(
   struct EventStruct *event, const char *Line)
@@ -179,17 +197,19 @@ String Command_Wifi_OTA_hosted_mcu(
     }
     addLog(LOG_LEVEL_INFO, concat(F("OTA update esp-hosted-mcu: "), url));
 
-// FIXME TD-er: Must implement new API. See https://github.com/espressif/esp-hosted-mcu/blob/main/examples/host_performs_slave_ota/main/main.c
-// Current implementation does not work, so will disable for now...
-/*
-    esp_err_t err = esp_hosted_slave_ota(url.c_str());
+    // FIXME TD-er: Must implement new API. See
+    // https://github.com/espressif/esp-hosted-mcu/blob/main/examples/host_performs_slave_ota/main/main.c
+    // Current implementation does not work, so will disable for now...
 
-    if (err != ESP_OK) {
-      String str(strformat(F("Failed to start OTA update: %s"), esp_err_to_name(err)));
-      addLog(LOG_LEVEL_ERROR, str);
-      return str;
-    }
-*/
+    /*
+        esp_err_t err = esp_hosted_slave_ota(url.c_str());
+
+        if (err != ESP_OK) {
+          String str(strformat(F("Failed to start OTA update: %s"), esp_err_to_name(err)));
+          addLog(LOG_LEVEL_ERROR, str);
+          return str;
+        }
+     */
   }
   return return_command_success_flashstr();
 }
@@ -197,4 +217,4 @@ String Command_Wifi_OTA_hosted_mcu(
 # endif // ifdef ESP32P4
 
 
-#endif
+#endif // if FEATURE_WIFI

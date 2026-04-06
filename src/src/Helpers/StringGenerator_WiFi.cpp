@@ -2,7 +2,8 @@
 
 #include "../Helpers/StringConverter.h"
 
-#include "../../ESPEasy/net/Globals/ESPEasyWiFiEvent.h"
+//#include "../../ESPEasy/net/Globals/ESPEasyWiFiEvent.h"
+#include "../../ESPEasy/net/ESPEasyNetwork.h"
 #include "../../ESPEasy/net/_NWPlugin_Helper.h"
 #include "../../ESPEasy/net/NWPluginStructs/NW001_data_struct_WiFi_STA.h"
 
@@ -19,8 +20,14 @@ switch (encryptionType) {
     case WIFI_AUTH_WPA2_PSK:             return F("WPA2 PSK");
     case WIFI_AUTH_WPA_WPA2_PSK:         return F("WPA/WPA2 PSK");
     case WIFI_AUTH_WPA2_ENTERPRISE:      return F("WPA2-Enterprise");
+#if ESP_IDF_VERSION_MAJOR < 6
     case WIFI_AUTH_WPA3_EXT_PSK:            // This authentication mode will yield same result as WIFI_AUTH_WPA3_PSK and not recommended to be used. It will be deprecated in future: please use WIFI_AUTH_WPA3_PSK instead.
     case WIFI_AUTH_WPA3_EXT_PSK_MIXED_MODE: // This authentication mode will yield same result as WIFI_AUTH_WPA3_PSK and not recommended to be used. It will be deprecated in future: please use WIFI_AUTH_WPA3_PSK instead.
+#else
+    case WIFI_AUTH_DUMMY_1:          /**< Placeholder: Previously used by WIFI_AUTH_WPA3_EXT_PSK */
+    case WIFI_AUTH_DUMMY_2:          /**< Placeholder: Previously used by WIFI_AUTH_WPA3_EXT_PSK_MIXED_MODE */
+      break;
+#endif
     case WIFI_AUTH_WPA3_PSK:             return F("WPA3 PSK");
     case WIFI_AUTH_WPA2_WPA3_PSK:        return F("WPA2/WPA3 PSK");
     case WIFI_AUTH_WAPI_PSK:             return F("WAPI PSK");

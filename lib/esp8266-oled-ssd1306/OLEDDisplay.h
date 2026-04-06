@@ -248,7 +248,7 @@ class OLEDDisplay : public Print {
     void drawLogBuffer(uint16_t x, uint16_t y);
 
     // Implementent needed function to be compatible with Print class
-    size_t write(uint8_t c);
+    size_t write(uint8_t c) override;
     size_t write(const char* s);
 
     uint8_t            *buffer = NULL;

@@ -2,11 +2,12 @@
 
 #ifdef USES_P039
 
+#if FEATURE_HAS_SPIe
+#include "../Helpers/Hardware_SPI.h"
+#endif
+
 P039_data_struct::P039_data_struct(struct EventStruct*event) {
-  # ifdef ESP32
-  const uint8_t spi_bus = Settings.getSPIBusForTask(event->TaskIndex);
-  _spi = 0 == spi_bus ? SPI : SPIe;
-  # endif // ifdef ESP32
+  get_SPI_CS_Pin(event);
 }
 
 bool P039_data_struct::begin(struct EventStruct*event) {
@@ -1199,6 +1200,12 @@ uint16_t P039_data_struct::readLM7xRegisters(int8_t l_CS_pin_no, uint8_t l_LM7xs
    **************************************************************************/
 int P039_data_struct::get_SPI_CS_Pin(struct EventStruct *event) { // If no Pin is in Config we use 15 as default -> Hardware Chip Select on
                                                                   // ESP8266
+  #if FEATURE_HAS_SPIe
+  auto spi_ptr = getSPIBusForTask(event->TaskIndex);
+  if (spi_ptr) {
+    _spi = *spi_ptr;
+  }
+  #endif
   if (CONFIG_PIN1 != -1) {
     return CONFIG_PIN1;
   }

@@ -7,8 +7,6 @@
 # include <Adafruit_GFX.h>     // include Adafruit graphics library
 # include <Adafruit_PCD8544.h> // include Adafruit PCD8544 LCD library
 
-# include "../Globals/SPIe.h"
-
 # include "../Helpers/AdafruitGFX_helper.h" // Use Adafruit graphics helper object
 
 # ifndef P141_FEATURE_CURSOR_XY_VALUES
@@ -92,8 +90,7 @@ public:
                    uint16_t            fgcolor         = ADAGFX_WHITE,
                    uint16_t            bgcolor         = ADAGFX_BLACK,
                    bool                textBackFill    = true,
-                   bool                displayInverted = false,
-                   uint8_t             spi_bus         = 0
+                   bool                displayInverted = false
                    # if                ADAGFX_FONTS_INCLUDED
                    ,
                    const uint8_t defaultFontId = 0
@@ -154,7 +151,6 @@ private:
   uint16_t            _bgcolor;
   bool                _textBackFill;
   bool                _displayInverted;
-  uint8_t             _spi_bus;
   # if ADAGFX_FONTS_INCLUDED
   uint8_t _defaultFontId;
   # endif // if ADAGFX_FONTS_INCLUDED

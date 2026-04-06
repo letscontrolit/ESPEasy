@@ -18,21 +18,22 @@
 
 #include "../Globals/Device.h"
 #include "../Globals/ESPEasy_Console.h"
-#include "../Globals/ESPEasy_Scheduler.h"
 #include "../Globals/ESPEasy_time.h"
-#include "../../ESPEasy/net/Globals/ESPEasyWiFiEvent.h"
 
 #include "../../ESPEasy/net/Globals/NetworkState.h"
 #include "../Globals/RTC.h"
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Settings.h"
-#include "../../ESPEasy/net/Globals/WiFi_AP_Candidates.h"
 
 #include "../Helpers/Convert.h"
 #include "../Helpers/ESPEasy_Storage.h"
+# if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 #include "../Helpers/ESPEasy_UnitOfMeasure.h"
+#endif
 #include "../Helpers/Hardware_device_info.h"
+#if FEATURE_INTERNAL_TEMPERATURE
 #include "../Helpers/Hardware_temperature_sensor.h"
+#endif
 #include "../Helpers/Memory.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Networking.h"
@@ -42,9 +43,7 @@
 #include "../Helpers/StringGenerator_System.h"
 #include "../Helpers/StringGenerator_WiFi.h"
 
-#include "../WebServer/JSON.h"
-#include "../WebServer/AccessControl.h"
-#include "../WebServer/Markup.h"
+#include "../WebServer/common.h"
 
 #ifdef ESP32
 # include <soc/rtc.h>
@@ -172,6 +171,7 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
     {
       return KeyValueStruct(F("CPU Eco Mode"), Settings.EcoPowerMode());
     }
+
 #if FEATURE_SET_WIFI_TX_PWR
     case LabelType::WIFI_TX_MAX_PWR:
     {
@@ -483,6 +483,13 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
       return KeyValueStruct(F("MQTT Connect in background"), Settings.MQTTConnectInBackground());
     }
 #endif // if FEATURE_MQTT_CONNECT_BACKGROUND
+#if FEATURE_COLORIZE_CONSOLE_LOGS
+    case LabelType::COLORIZE_CONSOLE_LOGS:
+    {
+      return KeyValueStruct(F("Colorize Console Logs"), Settings.ColorizeSerialLog());
+    }
+#endif
+
 
 #if CONFIG_SOC_WIFI_SUPPORT_5G
     case LabelType::WIFI_BAND_MODE:
@@ -617,7 +624,25 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
     #if FEATURE_MDNS
     case LabelType::M_DNS:
     {
-      const String url = ESPEasy::net::NetworkGetHostname() + F(".local");
+      if (!Settings.Use_mDNS()) break;
+      String hostname;
+      #ifdef ESP32
+      // Retrieve and print the actual (resolved) hostname - checking if there are any conflicts in the network
+      char actualHostname[MDNS_NAME_BUF_LEN];  // MDNS_NAME_BUF_LEN is 64 from mdns.h
+      esp_err_t err = mdns_hostname_get(actualHostname);
+      if (err == ESP_OK) {
+        hostname = String(actualHostname);
+      }
+      if (hostname.isEmpty()) {
+        hostname = ESPEasy::net::NetworkGetHostname();
+      }
+      #endif
+      #ifdef ESP8266
+      hostname = ESPEasy::net::NetworkGetHostname();
+      #endif
+      
+      String url = concat(hostname, F(".local"));
+      url.toLowerCase();
 
       if (extendedValue) {
         return KeyValueStruct(F("mDNS"),
@@ -628,6 +653,10 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
       }
       return KeyValueStruct(F("mDNS"), url);
     }
+    case LabelType::USE_MDNS:
+    {
+      return KeyValueStruct(F("Enable mDNS"), Settings.Use_mDNS());
+    }    
     #endif // if FEATURE_MDNS
     case LabelType::DNS:
     {
@@ -1350,6 +1379,12 @@ String getFormNote(LabelType::Enum label)
     case LabelType::CPU_ECO_MODE:
       flash_str = F("Node may miss receiving packets with Eco mode enabled");
       break;
+
+#if FEATURE_MDNS
+    case LabelType::USE_MDNS:
+      flash_str = F("Allow node to be known on the local network as <hostname>.local");
+      break;
+#endif
 
     case LabelType::WIFI_AP_CHANNEL:
       flash_str = F("WiFi channel to be used when only WiFi AP is active");

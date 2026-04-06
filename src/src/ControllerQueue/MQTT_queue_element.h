@@ -35,15 +35,15 @@ public:
                               bool        retained,
                               bool        callbackTask);
 
-  size_t                    getSize() const;
+  size_t                    getSize() const override;
 
-  bool                      isDuplicate(const Queue_element_base& other) const;
+  bool                      isDuplicate(const Queue_element_base& other) const override;
 
-  const UnitMessageCount_t* getUnitMessageCount() const {
+  const UnitMessageCount_t* getUnitMessageCount() const override {
     return &UnitMessageCount;
   }
 
-  UnitMessageCount_t* getUnitMessageCount() {
+  UnitMessageCount_t* getUnitMessageCount() override {
     return &UnitMessageCount;
   }
 

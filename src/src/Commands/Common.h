@@ -6,7 +6,6 @@
 #include "../../ESPEasy_common.h"
 
 #include "../DataStructs/ESPEasy_EventStruct.h"
-#include "../DataTypes/EventValueSource.h"
 
 
 #include <IPAddress.h>

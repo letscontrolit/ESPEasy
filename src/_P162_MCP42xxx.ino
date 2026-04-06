@@ -125,8 +125,9 @@ boolean Plugin_162(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      const uint8_t spi_bus = Settings.getSPIBusForTask(event->TaskIndex);
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P162_data_struct(P162_CS_PIN, P162_RST_PIN, P162_SHD_PIN, spi_bus));
+      initPluginTaskData(
+        event->TaskIndex, 
+        new (std::nothrow) P162_data_struct(P162_RST_PIN, P162_SHD_PIN));
       P162_data_struct *P162_data = static_cast<P162_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P162_data) {

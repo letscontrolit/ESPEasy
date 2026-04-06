@@ -4,7 +4,9 @@
 
 #ifdef USES_P078
 
+#if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 # include "../Helpers/ESPEasy_UnitOfMeasure.h"
+#endif
 
 # include <limits>
 

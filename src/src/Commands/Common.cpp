@@ -3,9 +3,6 @@
 #include <ctype.h>
 #include <IPAddress.h>
 
-#include "../../ESPEasy_common.h"
-
-#include "../../ESPEasy/net/wifi/ESPEasyWifi.h"
 #include "../ESPEasyCore/Serial.h"
 
 #include "../Helpers/Networking.h"

@@ -1,10 +1,9 @@
 #include "../DataStructs/KeyValueStruct.h"
 
+#if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 #include "../Helpers/ESPEasy_UnitOfMeasure.h"
+#endif
 #include "../Helpers/StringConverter.h"
-#include "../Helpers/StringConverter_Numerical.h"
-
-#include "../WebServer/Markup.h"
 
 
 // ********************************************************************************
