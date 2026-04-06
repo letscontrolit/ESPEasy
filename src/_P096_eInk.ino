@@ -13,6 +13,11 @@
 
 // #define PLUGIN_096_MAX_DISPLAY 1 // Unused
 
+/** Changelog:
+ * 2025-08-13 tonhuisman: Enable use of secondary SPI bus
+ * 2025-08-13 tonhuisman: Start changelog
+ */
+
 /* README.MD
 
 
@@ -184,6 +189,7 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
       dev.TimerOption   = true;
       dev.TimerOptional = true;
       # endif // if P096_USE_EXTENDED_SETTINGS
+      dev.SpiBusSelect = true;
       break;
     }
 
@@ -278,8 +284,8 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
           options4,
           optionValues4);
         selector.addFormSelector(F("eInk display model"),
-                        F("_type"),
-                        P096_CONFIG_FLAG_GET_DISPLAYTYPE);
+                                 F("_type"),
+                                 P096_CONFIG_FLAG_GET_DISPLAYTYPE);
       }
 
       addFormSubHeader(F("Layout"));
@@ -292,7 +298,7 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
         const __FlashStringHelper *options2[] = { F("Normal"), F("+90&deg;"), F("+180&deg;"), F("+270&deg;") };
         int optionValues2[]                   = { 0, 1, 2, 3 };
         constexpr size_t optionCount          = NR_ELEMENTS(optionValues2);
-        const FormSelectorOptions selector( optionCount, options2, optionValues2);
+        const FormSelectorOptions selector(optionCount, options2, optionValues2);
         selector.addFormSelector(F("Rotation"), F("_rotate"), P096_CONFIG_ROTATION);
       }
       # endif // ifdef P096_USE_ADA_GRAPHICS
@@ -341,8 +347,8 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
         }
         constexpr size_t optionCount = NR_ELEMENTS(colorDepthOptions);
         const FormSelectorOptions selector(optionCount, colorDepths, colorDepthOptions);
-        selector.addFormSelector(F("Greyscale levels"),F("_colorDepth"),
-            P096_CONFIG_FLAG_GET_COLORDEPTH);
+        selector.addFormSelector(F("Greyscale levels"), F("_colorDepth"),
+                                 P096_CONFIG_FLAG_GET_COLORDEPTH);
       }
 
       AdaGFXFormTextPrintMode(F("_mode"), P096_CONFIG_FLAG_GET_MODE);
@@ -379,7 +385,7 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
         constexpr size_t optionCount = NR_ELEMENTS(commandTriggerOptions);
         const FormSelectorOptions selector(optionCount, commandTriggers, commandTriggerOptions);
         selector.addFormSelector(F("Write Command trigger"), F("_commandtrigger"),
-                        P096_CONFIG_FLAG_GET_CMD_TRIGGER);
+                                 P096_CONFIG_FLAG_GET_CMD_TRIGGER);
         addFormNote(F("Select the command that is used to handle commands for this display."));
       }
 
@@ -502,7 +508,9 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      if (Settings.InitSPI != 0) {
+      const uint8_t spi_bus = Settings.getSPIBusForTask(event->TaskIndex);
+
+      if (Settings.isSPI_valid(spi_bus)) {
         initPluginTaskData(event->TaskIndex,
                            # if P096_USE_EXTENDED_SETTINGS
                            new (std::nothrow) P096_data_struct(static_cast<EPD_type_e>(P096_CONFIG_FLAG_GET_DISPLAYTYPE),
@@ -511,6 +519,7 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
                                                                static_cast<AdaGFXTextPrintMode>(P096_CONFIG_FLAG_GET_MODE),
                                                                P096_CommandTrigger_toString(static_cast<P096_CommandTrigger>(
                                                                                               P096_CONFIG_FLAG_GET_CMD_TRIGGER)),
+                                                               spi_bus,
                                                                P096_CONFIG_GET_COLOR_FOREGROUND,
                                                                P096_CONFIG_GET_COLOR_BACKGROUND,
                                                                static_cast<AdaGFXColorDepth>(P096_CONFIG_FLAG_GET_COLORDEPTH),
@@ -522,7 +531,8 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
                                                                P096_CONFIG_ROTATION,
                                                                P096_CONFIG_FLAG_GET_FONTSCALE,
                                                                AdaGFXTextPrintMode::ContinueToNextLine,
-                                                               F("epd"))
+                                                               F("epd"),
+                                                               spi_bus)
                            # endif // if P096_USE_EXTENDED_SETTINGS
                            );
         P096_data_struct *P096_data = static_cast<P096_data_struct *>(getPluginTaskData(event->TaskIndex));

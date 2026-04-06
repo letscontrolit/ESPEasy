@@ -1,0 +1,39 @@
+# Minimal Doxyfile for Doxygen 1.13.2
+
+# Project related configuration options
+PROJECT_NAME           = "PubSubClient3"
+PROJECT_NUMBER         = "automatically updated by doxygen-update-version.sh"
+PROJECT_BRIEF          = "Located at <a href='https://github.com/hmueller01/pubsubclient3'>GitHub</a>"
+OUTPUT_DIRECTORY       = ./site
+INPUT                  = ./src
+RECURSIVE              = YES
+
+# Build related configuration options
+EXTRACT_ALL            = YES
+EXTRACT_PRIVATE        = NO
+EXTRACT_STATIC         = NO
+EXCLUDE_SYMBOLS        = CHECK_STRING_LENGTH
+
+# HTML output
+GENERATE_HTML          = YES
+HTML_OUTPUT            = api
+HTML_COLORSTYLE        = AUTO_LIGHT
+HTML_HEADER            = .github/doxygen-header.html
+
+# LaTeX output (disable if not needed)
+GENERATE_LATEX         = NO
+
+# Source code browsing
+SOURCE_BROWSER         = YES
+
+# Warnings
+WARNINGS               = YES
+
+# Dot/Graphviz support (disable if not needed)
+HAVE_DOT               = NO
+
+# File patterns (optional, default covers most C/C++ files)
+FILE_PATTERNS          = *.h *.cpp *.c *.hpp
+
+# Language
+OUTPUT_LANGUAGE        = English

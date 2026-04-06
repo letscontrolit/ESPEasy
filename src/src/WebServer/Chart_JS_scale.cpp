@@ -32,7 +32,7 @@ ChartJS_options_scale::ChartJS_options_scale(const PluginStats_Config_t& config,
   display        = Display::Auto;
 }
 
-String ChartJS_options_scale::toString() const
+void ChartJS_options_scale::toString(KeyValueWriter& parent) const
 {
   if (!axisID.isEmpty()) {
     // In JSON, boolean values do not need quotes
@@ -46,34 +46,44 @@ String ChartJS_options_scale::toString() const
 
     String positionStr;
 
-    switch (position) {
-      case Position::Top:    positionStr = F("top"); break;
-      case Position::Bottom: positionStr = F("bottom"); break;
-      case Position::Right:  positionStr = F("right"); break;
-      case Position::Center: positionStr = F("center"); break;
-      case Position::Left:   positionStr = F("left"); break;
+    switch (position)
+    {
+      case Position::Top:    positionStr = F("top");
+        break;
+      case Position::Bottom: positionStr = F("bottom");
+        break;
+      case Position::Right:  positionStr = F("right");
+        break;
+      case Position::Center: positionStr = F("center");
+        break;
+      case Position::Left:   positionStr = F("left");
+        break;
     }
 
     String extraOptions;
+
     if (typeStr.equalsIgnoreCase(F("time")) || typeStr.equalsIgnoreCase(F("timeseries"))) {
       // Make sure to use 24h time notation.
-      extraOptions += F(",\"time\":{\"displayFormats\":{\"millisecond\":\"HH:mm:ss.SSS\",\"second\":\"HH:mm:ss\",\"minute\":\"HH:mm:ss\",\"hour\":\"HH:mm\",\"day\":\"dd-MMM\",\"month\":\"MMM-yyyy\",\"year\":\"yyyy\"},\"tooltipFormat\":\"yyyy-MM-dd HH:mm:ss\"}");
+      extraOptions +=
+        F(
+          ",\"time\":{\"displayFormats\":{\"millisecond\":\"HH:mm:ss.SSS\",\"second\":\"HH:mm:ss\",\"minute\":\"HH:mm:ss\",\"hour\":\"HH:mm\",\"day\":\"dd-MMM\",\"month\":\"MMM-yyyy\",\"year\":\"yyyy\"},\"tooltipFormat\":\"yyyy-MM-dd HH:mm:ss\"}");
     }
 
     if (tickCount > 0) {
       extraOptions += strformat(F(",\"ticks\":{\"count\":%d}"), tickCount);
     }
-    return strformat(
-      F("\"%s\":{\"display\":%s,\"type\":\"%s\",\"position\":\"%s\",\"title\":%s,\"weight\":%d%s}"),
-      axisID.c_str(),
+    parent.write({
+      axisID,
+    strformat(
+      F("{\"display\":%s,\"type\":\"%s\",\"position\":\"%s\",\"title\":%s,\"weight\":%d%s}"),
       displayStr.c_str(),
       typeStr.c_str(),
       positionStr.c_str(),
       axisTitle.toString().c_str(),
       weight,
-      extraOptions.c_str());
+      extraOptions.c_str())
+      });
   }
-  return EMPTY_STRING;
 }
 
 bool ChartJS_options_scale::is_Y_axis() const
@@ -116,27 +126,16 @@ void ChartJS_options_scales::update_Yaxis_TickCount()
   }
 }
 
-String ChartJS_options_scales::toString() const
+void ChartJS_options_scales::toString(KeyValueWriter& parent) const
 {
-  if (_scales.empty()) { return EMPTY_STRING; }
+  if (_scales.empty()) { return; }
+  auto scales = parent.createChild(F("scales"));
 
-  String res   = F("\"scales\":{");
-  bool   first = true;
-
-  for (auto it = _scales.begin(); it != _scales.end(); ++it) {
-    const String scale_str = it->toString();
-
-    if (!scale_str.isEmpty()) {
-      if (!first) {
-        res += ',';
-      }
-      first = false;
-      res  += '\n';
-      res  += scale_str;
+  if (scales) {
+    for (auto it = _scales.begin(); it != _scales.end(); ++it) {
+      it->toString(*scales);
     }
   }
-  res += '}';
-  return res;
 }
 
 size_t ChartJS_options_scales::nr_Y_scales() const

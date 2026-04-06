@@ -15,10 +15,10 @@
 
 
 # define P146_TASKVALUE_FILENR  UserVar.getFloat(event->TaskIndex, 0)
-# define P146_SET_TASKVALUE_FILENR(x)  UserVar.setFloat(event->TaskIndex, 0, x)
+# define P146_SET_TASKVALUE_FILENR(x) UserVar.setFloat(event->TaskIndex, 0, x)
 
 # define P146_TASKVALUE_FILEPOS UserVar.getFloat(event->TaskIndex, 1)
-# define P146_SET_TASKVALUE_FILEPOS(x)  UserVar.setFloat(event->TaskIndex, 1, x)
+# define P146_SET_TASKVALUE_FILEPOS(x) UserVar.setFloat(event->TaskIndex, 1, x)
 
 # define P146_GET_SEND_BINARY       bitRead(PCONFIG(0), 0)
 # define P146_SET_SEND_BINARY(X)    bitWrite(PCONFIG(0), 0, X)
@@ -30,7 +30,7 @@
 # define P146_SET_SEND_TIMESTAMP(X) bitWrite(PCONFIG(0), 2, X)
 
 # define P146_GET_SEND_READ_POS     bitRead(PCONFIG(0), 3)
-# define P146_SET_SEND_READ_POS(X)  bitWrite(PCONFIG(0), 3, X)
+# define P146_SET_SEND_READ_POS(X) bitWrite(PCONFIG(0), 3, X)
 
 # define P146_GET_JOIN_TIMESTAMP    bitRead(PCONFIG(0), 4)
 # define P146_SET_JOIN_TIMESTAMP(X) bitWrite(PCONFIG(0), 4, X)
@@ -40,6 +40,12 @@
 
 # define P146_GET_ERASE_BINFILES    bitRead(PCONFIG(0), 6)
 # define P146_SET_ERASE_BINFILES(X) bitWrite(PCONFIG(0), 6, X)
+
+# define P146_GET_SEND_VIA_ORIG_TASK     bitRead(PCONFIG(0), 7)
+# define P146_SET_SEND_VIA_ORIG_TASK(X)  bitWrite(PCONFIG(0), 7, X)
+
+# define P146_GET_SEND_VIA_EVENT         bitRead(PCONFIG(0), 8)
+# define P146_SET_SEND_VIA_EVENT(X)      bitWrite(PCONFIG(0), 8, X)
 
 
 # define P146_SEPARATOR_CHARACTER   PCONFIG(1)
@@ -75,6 +81,11 @@ public:
   static bool sendViaOriginalTask(taskIndex_t P146_TaskIndex,
                                   bool        sendTimestamp);
 
+  // Send as event using the following format:
+  // TaskName#AllCache,<unixTime>,<valueCount>,<cacheFileNr>,<readPosCacheFile>,<taskValue1>,...,<taskValueN>
+  static bool sendViaEvent_AllCache(taskIndex_t P146_TaskIndex,
+                                    bool        sendTimestamp);
+
   static bool setPeekFilePos(int peekFileNr,
                              int peekReadPos);
 
@@ -94,6 +105,7 @@ private:
   ESPEasyControllerCache_CSV_dumper *dumper = nullptr;
 
   std::list<ESPEasyControllerCache_CSV_element>lines;
+
 };
 
 

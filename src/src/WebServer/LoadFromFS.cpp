@@ -6,7 +6,7 @@
 #include "../Globals/RamTracker.h"
 
 #include "../Helpers/ESPEasy_Storage.h"
-#include "../Helpers/Network.h"
+#include "../Helpers/NetworkStatusLED.h"
 #include "../Helpers/Numerical.h"
 
 #include "../WebServer/CustomPage.h"
@@ -278,7 +278,7 @@ bool loadFromFS(String path) {
 
   // prevent reloading stuff on every click
   if (static_file) {
-    sendHeader(F("Cache-Control"), F("public, max-age=31536000, s-maxage=31536000, immutable"));
+    sendHeader(F("Cache-Control"), F("public,max-age=31536000,s-maxage=31536000,immutable"));
 
     //    sendHeader(F("Cache-Control"), F("max-age=86400"));
 //    sendHeader(F("Expires"),       F("-1"));
@@ -298,7 +298,7 @@ bool loadFromFS(String path) {
   }
 
   if (!web_server.client().connected()) {
-    #ifndef BUILD_MINIMAL_OTA
+    #ifndef LIMIT_BUILD_SIZE
     addLog(LOG_LEVEL_INFO, strformat(
       F("loadFromFS: Client %s not connected"), 
       web_server.client().remoteIP().toString().c_str()

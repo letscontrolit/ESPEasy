@@ -3,7 +3,8 @@
 #include "../Globals/Device.h"
 #include "../Globals/ExtraTaskSettings.h"
 #include "../Globals/Settings.h"
-#include "../Globals/WiFi_AP_Candidates.h"
+
+#include "../../ESPEasy/net/Globals/WiFi_AP_Candidates.h"
 
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/StringConverter.h"
@@ -20,7 +21,7 @@ void Caches::clearAllCaches()
 
 void Caches::clearAllButTaskCaches() {
   clearFileCaches();
-  WiFi_AP_Candidates.clearCache();
+  ESPEasy::net::wifi::WiFi_AP_Candidates.clearCache();
   rulesHelper.closeAllFiles();
 }
 

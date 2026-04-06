@@ -4,6 +4,8 @@
 
 #ifdef USES_P078
 
+# include "../Helpers/ESPEasy_UnitOfMeasure.h"
+
 # include <limits>
 
 # include <SDM.h> // Requires SDM library from Reaper7 - https://github.com/reaper7/SDM_Energy_Meter/
@@ -246,6 +248,39 @@ Sensor_VType Plugin_078_QueryVType(SDM_MODEL model, int choice) {
 }
 
 # endif // if FEATURE_MQTT_DISCOVER
+
+# if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+uint64_t Plugin_078_QueryUOMGroup(SDM_MODEL model, int choice) {
+  const int index = SDM_getRegisterDescriptionIndexForModel(model, choice);
+
+  if (index >= 0) {
+    const uint8_t  value_nr = static_cast<uint8_t>(register_description_list[index].getUnitOfMeasure());
+    const uint64_t vtypes[] = {
+      UOM_GROUP_PERC_HUM_BAT_MOIST, // THD
+      UOM_GROUP_VOLTAGE_CURRENT,    // Voltage
+      UOM_GROUP_VOLTAGE_CURRENT,    // Current
+      UOM_GROUP_POWER,              // Power
+      UOM_GROUP_ENERGY_STORAGE,     // Active energy
+      UOM_GROUP_REACTIVE_POWER,     // Ah
+      UOM_GROUP_FREQUENCY,          // Frequency
+      UOM_GROUP_WIND_DIRECTION,     // Phase angle
+      UOM_GROUP_PERC_HUM_BAT_MOIST, // Power factor
+      UOM_GROUP_APPARENT_POWER,     // Apparant power
+      UOM_GROUP_REACTIVE_POWER,     // Reactive power
+      UOM_GROUP_APPARENT_POWER,     // Apparent energy
+      UOM_GROUP_REACTIVE_POWER,     // Reactive energy
+      UOM_GROUP_NONE,               // Nature of load
+    };
+    constexpr uint8_t valueCount = NR_ELEMENTS(vtypes);
+
+    if (value_nr < valueCount) {
+      return vtypes[value_nr];
+    }
+  }
+  return UOM_GROUP_ALL;
+}
+
+# endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 
 void SDM_loadOutputSelector(struct EventStruct *event, uint8_t pconfigIndex, uint8_t valuenr)
 {

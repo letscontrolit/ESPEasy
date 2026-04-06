@@ -13,7 +13,9 @@ Type: |P062_type|
 
 Name: |P062_name|
 
-Status: |P062_status|
+Status ESP32: |P062_status|
+
+Status ESP8266: |P062_status_lb|
 
 GitHub: |P062_github|_
 

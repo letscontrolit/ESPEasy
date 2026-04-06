@@ -25,6 +25,9 @@ const __FlashStringHelper * return_incorrect_source();
 const __FlashStringHelper * return_not_connected();
 
 String return_result(struct EventStruct *event,
+                     const __FlashStringHelper * result);
+
+String return_result(struct EventStruct *event,
                      const String      & result);
 
 const __FlashStringHelper * return_see_serial(struct EventStruct *event);
@@ -65,5 +68,13 @@ String Command_GetORSetInt8_t(struct EventStruct *event,
                             const char         *Line,
                             int8_t             *value,
                             int                 arg);
+
+String Command_GetORSetFloatMinMax(struct EventStruct *event,
+                                   const __FlashStringHelper * targetDescription,
+                                   const char         *Line,
+                                   float              *value,
+                                   int                 arg,
+                                   float               _min,
+                                   float               _max);
 
 #endif // COMMAND_COMMON_H

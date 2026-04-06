@@ -19,8 +19,8 @@
 class LOLIN_SSD1680 : public LOLIN_EPD
 {
 public:
-	LOLIN_SSD1680(int width, int height, int8_t SID, int8_t SCLK, int8_t DC, int8_t RST, int8_t CS, int8_t BUSY = -1);
-	LOLIN_SSD1680(int width, int height, int8_t DC, int8_t RST, int8_t CS, int8_t BUSY = -1);
+	LOLIN_SSD1680(int width, int height, int8_t SID, int8_t SCLK, int8_t DC, int8_t RST, int8_t CS, int8_t BUSY = -1, SPIClass& spi = SPI);
+	LOLIN_SSD1680(int width, int height, int8_t DC, int8_t RST, int8_t CS, int8_t BUSY = -1, SPIClass& spi = SPI);
 
 	void begin(bool reset = true);
 

@@ -11,10 +11,10 @@
 #include "../DataStructs/GpioFactorySettingsStruct.h"
 
 #include "../ESPEasyCore/ESPEasy_backgroundtasks.h"
-#include "../ESPEasyCore/ESPEasyWifi.h"
+#include "../../ESPEasy/net/wifi/ESPEasyWifi.h"
 #include "../ESPEasyCore/Serial.h"
 
-#include "../Globals/ESPEasyWiFiEvent.h"
+#include "../../ESPEasy/net/Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/RTC.h"
 #include "../Globals/ResetFactoryDefaultPref.h"
 #include "../Globals/SecuritySettings.h"
@@ -236,7 +236,9 @@ void ResetFactory(bool formatFS)
     setLogLevelFor(LOG_TO_SYSLOG, DEFAULT_SYSLOG_LEVEL);
     setLogLevelFor(LOG_TO_SERIAL, DEFAULT_SERIAL_LOG_LEVEL);
     setLogLevelFor(LOG_TO_WEBLOG, DEFAULT_WEB_LOG_LEVEL);
+#if FEATURE_SD
     setLogLevelFor(LOG_TO_SDCARD, DEFAULT_SD_LOG_LEVEL);
+#endif
     Settings.SyslogFacility = DEFAULT_SYSLOG_FACILITY;
     Settings.SyslogPort     = DEFAULT_SYSLOG_PORT;
     Settings.UseValueLogger = DEFAULT_USE_SD_LOG;
@@ -318,10 +320,10 @@ void ResetFactory(bool formatFS)
   Settings.NetworkMedium = gpio_settings.network_medium;
 
   /*
-          Settings.GlobalSync						= DEFAULT_USE_GLOBAL_SYNC;
+          Settings.GlobalSync_unused	= DEFAULT_USE_GLOBAL_SYNC;
 
           Settings.IP_Octet						= DEFAULT_IP_OCTET;
-          Settings.WDI2CAddress					= DEFAULT_WD_IC2_ADDRESS;
+          Settings.WDI2CAddress			  = DEFAULT_WD_IC2_ADDRESS;
           Settings.UseSSDP						= DEFAULT_USE_SSDP;
           Settings.ConnectionFailuresThreshold	= DEFAULT_CON_FAIL_THRES;
           Settings.WireClockStretchLimit			= DEFAULT_I2C_CLOCK_LIMIT;
@@ -419,8 +421,8 @@ void ResetFactory(bool formatFS)
   // NOTE: this is a known ESP8266 bug, not our fault. :)
   delay(1000);
   WiFi.persistent(true);  // use SDK storage of SSID/WPA parameters
-  WiFiEventData.intent_to_reboot = true;
-  WifiDisconnect();       // this will store empty ssid/wpa into sdk storage
+//  WiFiEventData.intent_to_reboot = true;
+  ESPEasy::net::wifi::WifiDisconnect();       // this will store empty ssid/wpa into sdk storage
   WiFi.persistent(false); // Do not use SDK storage of SSID/WPA parameters
   reboot(IntendedRebootReason_e::ResetFactory);
 }

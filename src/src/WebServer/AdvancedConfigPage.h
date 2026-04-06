@@ -19,7 +19,9 @@ void addFormExtTimeSourceSelect(const __FlashStringHelper * label, const __Flash
 
 void addFormLogLevelSelect(LabelType::Enum label, int choice);
 
+#if FEATURE_SYSLOG
 void addFormLogFacilitySelect(const __FlashStringHelper * label, const __FlashStringHelper * id, int choice);
+#endif
 
 
 #endif // ifdef WEBSERVER_ADVANCED

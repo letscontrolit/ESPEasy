@@ -387,14 +387,14 @@ boolean Plugin_079(uint8_t function, struct EventStruct *event, String& string)
             }
           }
         }
-
+#ifndef BUILD_NO_DEBUG
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           addLog(LOG_LEVEL_INFO,
                  strformat(F("%s: Addr=0x%02x: Mtr=%s, Dir=%s, Spd=%s"),
                            ModeStr.c_str(), I2C_ADDR_PCFG_P079, paramMotor.c_str(),
                            paramDirection.c_str(), paramSpeed.c_str()));
         }
-
+#endif
         success = true;
       }
       break;

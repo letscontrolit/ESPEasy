@@ -84,6 +84,9 @@ void handle_config_download(bool fullBackup,
 
   if (fullBackup && (nullptr != tarStream)) {
     const String security_dat = getFileName(FileType::SECURITY_DAT);
+#if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE
+    const String device_security_dat = getFileName(FileType::DEV_SECURITY_DAT);
+#endif
     #  if defined(ESP8266)
 
     fs::Dir dir = ESPEASY_FS.openDir("");
@@ -92,7 +95,13 @@ void handle_config_download(bool fullBackup,
       fs::File file = dir.openFile("r");
 
       if (file) {
-        if (!noCreds || (noCreds && (0 != strncasecmp(file.name(), security_dat.c_str(), security_dat.length())))) {
+        if (!noCreds || 
+            (noCreds 
+              && (0 != strncasecmp(file.name(), security_dat.c_str(), security_dat.length()))
+#if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE
+              && (0 != strncasecmp(file.name(), device_security_dat.c_str(), device_security_dat.length()))
+#endif
+            )) {
           tarStream->addFile(file.name(), file.size());
         }
         file.close();
@@ -105,8 +114,14 @@ void handle_config_download(bool fullBackup,
 
     while (file) {
       if (!file.isDirectory()) {
-        if (!noCreds || (noCreds && (0 != strncasecmp(file.name(), security_dat.c_str(), security_dat.length())))) {
-          tarStream->addFile(file.name(), file.size());
+        if (!noCreds || 
+            (noCreds 
+              && (0 != strncasecmp(file.name(), security_dat.c_str(), security_dat.length()))
+#if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE
+              && (0 != strncasecmp(file.name(), device_security_dat.c_str(), device_security_dat.length()))
+#endif
+            )) {
+          tarStream->addFileIfExists(file.name());
         }
       }
       file = root.openNextFile();
@@ -130,6 +145,10 @@ void handle_config_download(bool fullBackup,
 
       if (!noCreds) {
         tarStream->addFileIfExists(getFileName(FileType::SECURITY_DAT));
+#if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE
+        // TODO TD-er: Must add separate flag for this
+//        tarStream->addFileIfExists(getFileName(FileType::DEV_SECURITY_DAT));
+#endif
       }
 
       // rules<n>.txt files

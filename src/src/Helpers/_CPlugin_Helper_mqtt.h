@@ -38,6 +38,7 @@ String                     makeHomeAssistantCompliantName(const String& name);
 #  if FEATURE_MQTT_DEVICECLASS
 String                     MQTT_binary_deviceClassName(int devClassIndex);
 bool                       MQTT_binary_deviceClassTwoWay(int devClassIndex);
+bool                       MQTT_binary_deviceClassSwitch(int devClassIndex);
 int                        MQTT_binary_deviceClassIndex(const String& deviceClassName);
 #  endif // if FEATURE_MQTT_DEVICECLASS
 #  if FEATURE_MQTT_STATE_CLASS
@@ -96,11 +97,11 @@ bool MQTT_DiscoveryPublishWithStatusAndSet(taskIndex_t               taskIndex,
                                            controllerIndex_t         ControllerIndex,
                                            ControllerSettingsStruct& ControllerSettings,
                                            const __FlashStringHelper*componentClass,
-                                           String                    deviceClass,
-                                           String                    unitOfMeasure,
+                                           const String            & deviceClass,
+                                           const String            & unitOfMeasure,
                                            struct EventStruct       *event,
-                                           const String              deviceElement,
-                                           const String              stateClass,
+                                           const String            & deviceElement,
+                                           const String            & stateClass,
                                            bool                      success,
                                            bool                      hasSet,
                                            bool                      hasIcon,

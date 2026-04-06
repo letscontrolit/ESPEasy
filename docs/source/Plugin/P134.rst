@@ -13,7 +13,9 @@ Type: |P134_type|
 
 Name: |P134_name|
 
-Status: |P134_status|
+Status ESP32: |P134_status|
+
+Status ESP8266: |P134_status_lb|
 
 GitHub: |P134_github|_
 

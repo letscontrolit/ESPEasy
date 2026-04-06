@@ -100,7 +100,7 @@ bool gpio_monitor_helper(int port, struct EventStruct *event, const char *Line)
     globalMapPortStatus[key].state = state;
 
     if (state == -1) { globalMapPortStatus[key].mode = PIN_MODE_OFFLINE; }
-    #ifndef BUILD_MINIMAL_OTA
+    #ifndef BUILD_NO_DEBUG
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       addLog(LOG_LEVEL_INFO, concat(
         logPrefix,
@@ -148,7 +148,7 @@ bool gpio_unmonitor_helper(int port, struct EventStruct *event, const char *Line
     SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, dummy, 0);
 
     removeMonitorFromPort(key);
-    #ifndef BUILD_MINIMAL_OTA
+    #ifndef BUILD_NO_DEBUG
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       addLog(LOG_LEVEL_INFO, concat(
         logPrefix,
@@ -417,7 +417,7 @@ const __FlashStringHelper * Command_GPIO_RTTTL(struct EventStruct *event, const 
     return return_command_success_flashstr();
   }
   #else // if FEATURE_RTTTL
-  #ifndef BUILD_MINIMAL_OTA
+  #ifndef BUILD_NO_DEBUG
   addLog(LOG_LEVEL_ERROR, F("RTTTL: command not included in build"));
   #endif
   #endif // if FEATURE_RTTTL

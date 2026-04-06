@@ -13,7 +13,9 @@ Type: |P059_type|
 
 Name: |P059_name|
 
-Status: |P059_status|
+Status ESP32: |P059_status|
+
+Status ESP8266: |P059_status_lb|
 
 GitHub: |P059_github|_
 

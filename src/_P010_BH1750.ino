@@ -142,13 +142,14 @@ boolean Plugin_010(uint8_t function, struct EventStruct *event, String& string)
 
       if (lux != -1.0f) {
         UserVar.setFloat(event->TaskIndex, 0, lux);
-
+#ifndef BUILD_NO_DEBUG
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           addLog(LOG_LEVEL_INFO,
                  strformat(F("BH1750 Address: 0x%02x Mode: 0x%02x : Light intensity: %s"),
                            PCONFIG(0),  PCONFIG(1),
                            formatUserVarNoCheck(event, 0).c_str()));
         }
+#endif
         success = true;
       }
       break;

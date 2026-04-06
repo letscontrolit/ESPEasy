@@ -103,7 +103,7 @@ String minutesToHourColonMinute(int minutes) {
   return strformat(F("%02d:%02d"), hours, mins);
 }
 
-String secondsToDayHourMinuteSecond(int seconds) {
+String secondsToDayHourMinuteSecond(int seconds, bool useHMS) {
   const int  sec     = seconds % 60;
   const int  minutes = seconds / 60;
   const int  days    = minutes / 1440;
@@ -111,43 +111,56 @@ String secondsToDayHourMinuteSecond(int seconds) {
   const int  hours   = min_day / 60;
   const int  mins    = min_day % 60;
   if (days == 0) {
-    return strformat(F("%02d:%02d:%02d"), hours, mins, sec);
+    if (hours == 0 && useHMS) { 
+      return strformat(F("%dm%02ds"), mins, sec); 
+    }
+    return strformat(
+      useHMS ? F("%dh%02dm%02ds") : F("%02d:%02d:%02d"), 
+      hours, mins, sec);
   } 
-  return strformat(F("%dT%02d:%02d:%02d"), days, hours, mins, sec);
+  return strformat(
+    useHMS ? F("%dT%02dh%02dm%02ds") : F("%dT%02d:%02d:%02d"), 
+    days, hours, mins, sec);
 }
 
-String secondsToDayHourMinuteSecond_ms(int64_t systemMicros) 
+String secondsToDayHourMinuteSecond_ms(int64_t systemMicros, bool useHMS) 
 {
   if (systemMicros < 0ll) {
-    return concat('-', secondsToDayHourMinuteSecond_ms(-1ll*systemMicros));
+    return concat('-', secondsToDayHourMinuteSecond_ms(-1ll*systemMicros, useHMS));
   }
 
   uint32_t usec{};
   const uint32_t seconds = micros_to_sec_usec(systemMicros, usec);
   return strformat(
     F("%s.%03u"),
-    secondsToDayHourMinuteSecond(seconds).c_str(),
+    secondsToDayHourMinuteSecond(seconds, useHMS).c_str(),
     usec / 1000ul);
 }
 
-String format_msec_duration(int64_t duration) {
+String format_msec_duration(int64_t duration, bool useHMS) {
   if (duration < 0ll) {
-    return concat('-', format_msec_duration(-1ll*duration));
+    return concat('-', format_msec_duration(-1ll*duration, useHMS));
   }
   const uint32_t duration_s = duration / 1000ll;
   const int32_t duration_ms = duration % 1000ll;
 
   if (duration_s < 60) {
     return strformat(
-      F("%02d.%03d"),
+      useHMS ? F("%02d.%03d sec") : F("%02d.%03d"),
       duration_s,
       duration_ms);
   }
+  if (useHMS && duration_s > 60) {
+    // No need to show msec when time is over 1 minute
+    return secondsToDayHourMinuteSecond(duration_s, useHMS);
+  }
   return strformat(
     F("%s.%03d"),
-    secondsToDayHourMinuteSecond(duration_s).c_str(),
+    secondsToDayHourMinuteSecond(duration_s, useHMS).c_str(),
     duration_ms);
 }
+
+String format_msec_duration_HMS(int64_t duration) { return format_msec_duration(duration, true); }
 
 
 // Compute the dew point temperature, given temperature and humidity (temp in Celsius)

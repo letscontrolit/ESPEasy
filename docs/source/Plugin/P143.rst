@@ -13,7 +13,9 @@ Type: |P143_type|
 
 Name: |P143_name|
 
-Status: |P143_status|
+Status ESP32: |P143_status|
+
+Status ESP8266: |P143_status_lb|
 
 GitHub: |P143_github|_
 

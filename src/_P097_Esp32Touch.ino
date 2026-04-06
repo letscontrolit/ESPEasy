@@ -173,7 +173,7 @@ boolean Plugin_097(uint8_t function, struct EventStruct *event, String& string)
             const bool touched_prev = bitRead(p097_pinTouchedPrev, t);
             #  endif // ifdef ESP32_CLASSIC
 
-            #  if defined(ESP32S2) || defined(ESP32S3)
+            #  if defined(ESP32S2) || defined(ESP32S3) || defined(ESP32P4)
 
             if (touched) {
               bitClear(p097_pinTouched, t);

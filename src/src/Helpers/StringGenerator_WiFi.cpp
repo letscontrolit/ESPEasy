@@ -2,7 +2,9 @@
 
 #include "../Helpers/StringConverter.h"
 
-#include "../Globals/ESPEasyWiFiEvent.h"
+#include "../../ESPEasy/net/Globals/ESPEasyWiFiEvent.h"
+#include "../../ESPEasy/net/_NWPlugin_Helper.h"
+#include "../../ESPEasy/net/NWPluginStructs/NW001_data_struct_WiFi_STA.h"
 
 #ifdef ESP8266
 #include <ESP8266WiFi.h>
@@ -11,12 +13,23 @@
 const __FlashStringHelper * WiFi_encryptionType(uint8_t encryptionType) {
 switch (encryptionType) {
   #ifdef ESP32
-    case WIFI_AUTH_OPEN:             return F("open"); 
-    case WIFI_AUTH_WEP:              return F("WEP"); 
-    case WIFI_AUTH_WPA_PSK:          return F("WPA/PSK"); 
-    case WIFI_AUTH_WPA2_PSK:         return F("WPA2/PSK"); 
-    case WIFI_AUTH_WPA_WPA2_PSK:     return F("WPA/WPA2/PSK"); 
-    case WIFI_AUTH_WPA2_ENTERPRISE:  return F("WPA2 Enterprise"); 
+    case WIFI_AUTH_OPEN:                 return F("open");
+    case WIFI_AUTH_WEP:                  return F("WEP");
+    case WIFI_AUTH_WPA_PSK:              return F("WPA PSK");
+    case WIFI_AUTH_WPA2_PSK:             return F("WPA2 PSK");
+    case WIFI_AUTH_WPA_WPA2_PSK:         return F("WPA/WPA2 PSK");
+    case WIFI_AUTH_WPA2_ENTERPRISE:      return F("WPA2-Enterprise");
+    case WIFI_AUTH_WPA3_EXT_PSK:            // This authentication mode will yield same result as WIFI_AUTH_WPA3_PSK and not recommended to be used. It will be deprecated in future: please use WIFI_AUTH_WPA3_PSK instead.
+    case WIFI_AUTH_WPA3_EXT_PSK_MIXED_MODE: // This authentication mode will yield same result as WIFI_AUTH_WPA3_PSK and not recommended to be used. It will be deprecated in future: please use WIFI_AUTH_WPA3_PSK instead.
+    case WIFI_AUTH_WPA3_PSK:             return F("WPA3 PSK");
+    case WIFI_AUTH_WPA2_WPA3_PSK:        return F("WPA2/WPA3 PSK");
+    case WIFI_AUTH_WAPI_PSK:             return F("WAPI PSK");
+    case WIFI_AUTH_OWE:                  return F("OWE");
+    case WIFI_AUTH_WPA3_ENT_192:         return F("WPA3 ENT SUITE B 192 BIT");
+    case WIFI_AUTH_DPP:                  return F("DPP");
+    case WIFI_AUTH_WPA3_ENTERPRISE:      return F("WPA3-Enterprise Only Mode");
+    case WIFI_AUTH_WPA2_WPA3_ENTERPRISE: return F("WPA3-Enterprise Transition Mode");
+    case WIFI_AUTH_WPA_ENTERPRISE:       return F("WPA-Enterprise");
   #else // ifdef ESP32
     case ENC_TYPE_WEP:   return F("WEP"); 
     case ENC_TYPE_TKIP:  return F("WPA/PSK"); 
@@ -119,13 +132,33 @@ const __FlashStringHelper * getLastDisconnectReason(WiFiDisconnectReason reason)
   }
 }
 
-String getLastDisconnectReason() {
+WiFiDisconnectReason getWiFi_disconnectReason()
+{
+  ESPEasy::net::wifi::NW001_data_struct_WiFi_STA *NW_data =
+          static_cast<ESPEasy::net::wifi::NW001_data_struct_WiFi_STA *>(ESPEasy::net::getNWPluginData(NETWORK_INDEX_WIFI_STA));
+  if (NW_data) {
+    return NW_data->getWiFi_disconnectReason();
+  }
+  return WIFI_DISCONNECT_REASON_UNSPECIFIED;
+}
+
+String getWiFi_disconnectReason_str() {
   #ifndef LIMIT_BUILD_SIZE
-  String reason = wrap_braces(String(WiFiEventData.lastDisconnectReason));
-  reason += ' ';
-  reason += getLastDisconnectReason(WiFiEventData.lastDisconnectReason);
-  return reason;
+  const WiFiDisconnectReason reason = getWiFi_disconnectReason();
+  return strformat(
+    F("(%d) %s"), 
+    reason, 
+    FsP(getLastDisconnectReason(reason)));
   #else
-  return wrap_braces(String(WiFiEventData.lastDisconnectReason));
+  return wrap_braces(String(getWiFi_disconnectReason()));
   #endif
+}
+
+const __FlashStringHelper*   getWiFi_encryptionType() {
+  ESPEasy::net::wifi::NW001_data_struct_WiFi_STA *NW_data =
+          static_cast<ESPEasy::net::wifi::NW001_data_struct_WiFi_STA *>(ESPEasy::net::getNWPluginData(NETWORK_INDEX_WIFI_STA));
+  if (NW_data) {
+    return NW_data->getWiFi_encryptionType();
+  }
+  return F("-");
 }

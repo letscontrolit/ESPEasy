@@ -1,0 +1,40 @@
+.. csv-table::
+  :header: "Command", "Extra information"
+  :widths: 20, 30
+
+  "
+  ``genI2C,cmd,<i2c-command-sequence>[,<value-index>[,<cache-name>]]``
+
+  ``i2c-command-sequence``: A sequence of I2C Commands, documented below. When commas, spaces or quotes are used in the sequence, then the command sequence should be wrapped in quotes that are not yet used in the command sequence.
+
+  ``value-index``: The Value field (by number or name) to be used for the result of the command sequence.
+
+  ``cache-name``: The name of the cache entry to overwrite with this command sequence.
+
+  ","
+  This command will often be used in Rules, as re-typing a command sequence can be quite tedious. In that case, when ``{``, ``}``, ``%``, ``[`` or ``]`` are used in the command, these should be escaped by inserting a backslash ``\`` before these special characters, to avoid them being resolved by the rules processing before the sequence is passed to the plugin. The plugin will take care of removing the escape characters.
+
+  To be able to use the value retrieved from the I2C device, the ``value-index`` should be used to store the outcome in one of the values of the plugin. This can also be achieved by using the ``value`` I2C command.
+
+  The ``cache-name`` argument can be used to replace an existing command sequence in the cache, that will then be used on the next execution (Interval or TaskRun) of the plugin, when this cache-name is also used by one of the value fields. Should normally not be needed, but can be useful when testing or debugging a command sequence for a device.
+  "
+  "
+  ``genI2C,exec,<cache-name>[,<value-index>]``
+
+  ``cache-name``: The name of the cache entry to retrieve the command sequence from and execute.
+
+  ``value-index``: The Value field (by number or name) to be used for the result of the command sequence.
+  ","
+  This command is used to execute a cached I2C Command sequence, and optionally store the result in a task value.
+  "
+  "
+  ``genI2C,log,<0|1>``
+
+  0 - Disable plugin logging
+
+  1 - Enable plugin logging
+  ","
+  Enable or disable logging for the I2C Command sequence(s) during parsing and execution.
+
+  NB: No logging will be generated during parsing or execution of 1/sec, 10/sec or 50/sec event processing to avoid overloading the ESP, as logging can incur quite a processing penalty.
+  "

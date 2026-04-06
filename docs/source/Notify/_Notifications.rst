@@ -16,8 +16,8 @@ Notifications Plugins
 ======================
 
 .. csv-table::
-   :header: "Name", "Status", "Notify Number"
-   :widths: 10, 8, 5
+   :header: "Plugin name", "ESP32 Plugin status", "ESP8266 Plugin status", "Plugin Number"
+   :widths: 9, 6, 6, 3
 
-   ":ref:`N001_page`","|N001_status|","N001"
-   ":ref:`N002_page`","|N002_status|","N002"
+   ":ref:`N001_page`","|N001_status|","|N001_status_lb|","N001"
+   ":ref:`N002_page`","|N002_status|","|N002_status_lb|","N002"

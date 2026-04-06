@@ -91,6 +91,16 @@ void FormSelectorOptions::clearClassName()
   classname = F("");
 }
 
+void FormSelectorOptions::addFormSelector(LabelType::Enum label, int selectedIndex) const
+{
+  auto kv = getKeyValue(label);
+  addFormSelector(getLabel(kv), getInternalLabel(kv), selectedIndex);
+  #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+  addUnit(kv.getUnit());
+  #endif
+  addFormNote(getFormNote(label));
+}
+
 void FormSelectorOptions::addFormSelector(
   const __FlashStringHelper *label,
   const __FlashStringHelper *id,

@@ -12,6 +12,7 @@ const __FlashStringHelper * toString(SchedulerTimerType_e timerType) {
     case SchedulerTimerType_e::PLUGIN_DEVICETIMER_IN_e: return F("PLUGIN_DEVICETIMER_IN");
     case SchedulerTimerType_e::RulesTimer:              return F("Rules#Timer");
     case SchedulerTimerType_e::IntendedReboot:          return F("Intended Reboot");
+    case SchedulerTimerType_e::NWPLUGIN_TIMER_IN_e:     return F("NWPLUGIN_TIMER_IN");
   }
   return F("Unknown");
 }

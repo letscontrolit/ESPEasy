@@ -14,7 +14,9 @@ Type: |C016_type|
 
 Name: |C016_name|
 
-Status: |C016_status|
+Status ESP32: |C016_status|
+
+Status ESP8266: |C016_status_lb|
 
 GitHub: |C016_github|_
 

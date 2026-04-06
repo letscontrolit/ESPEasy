@@ -13,7 +13,9 @@ Type: |P111_type|
 
 Name: |P111_name|
 
-Status: |P111_status|
+Status ESP32: |P111_status|
+
+Status ESP8266: |P111_status_lb|
 
 GitHub: |P111_github|_
 

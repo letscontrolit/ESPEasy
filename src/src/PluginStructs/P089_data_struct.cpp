@@ -4,8 +4,9 @@
 
 
 # include "../Helpers/Networking.h"
-
 # include "../Helpers/_Plugin_init.h"
+
+# include "../../ESPEasy/net/ESPEasyNetwork.h"
 
 # ifdef ESP32
 P089_data_struct::P089_data_struct() {
@@ -34,7 +35,7 @@ P089_data_struct::~P089_data_struct() {
 
 bool P089_data_struct::send_ping(struct EventStruct *event) {
   /* This ping lost for sure */
-  if (!isInitialized() || !NetworkConnected()) {
+  if (!isInitialized() || !ESPEasy::net::NetworkConnected()) {
     return true;
   }
 
@@ -148,7 +149,7 @@ bool P089_data_struct::send_ping(struct EventStruct *event) {
   }
 
   /* This ping lost for sure */
-  if (!NetworkConnected()) {
+  if (!ESPEasy::net::NetworkConnected()) {
     return true;
   }
 

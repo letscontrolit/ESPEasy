@@ -3,8 +3,8 @@
 
 .. _N002_page:
 
-Notifications Buzzer
-=====================
+|N002_typename|
+========================
 
 |N002_shortinfo|
 
@@ -12,7 +12,9 @@ Type: |N002_type|
 
 Name: |N002_name|
 
-Status: |N002_status|
+Status ESP32: |N002_status|
+
+Status ESP8266: |N002_status_lb|
 
 GitHub: |N002_github|_
 

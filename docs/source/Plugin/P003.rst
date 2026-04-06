@@ -13,7 +13,9 @@ Type: |P003_type|
 
 Name: |P003_name|
 
-Status: |P003_status|
+Status ESP32: |P003_status|
+
+Status ESP8266: |P003_status_lb|
 
 GitHub: |P003_github|_
 

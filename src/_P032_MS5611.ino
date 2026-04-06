@@ -122,13 +122,14 @@ boolean Plugin_032(uint8_t function, struct EventStruct *event, String& string)
           } else {
             UserVar.setFloat(event->TaskIndex, 1, P032_data->ms5611_pressure);
           }
-
+#ifndef BUILD_NO_DEBUG
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             addLog(LOG_LEVEL_INFO,
                    concat(F("MS5611  : Temperature: "), formatUserVarNoCheck(event, 0)));
             addLog(LOG_LEVEL_INFO,
                    concat(F("MS5611  : Barometric Pressure: "), formatUserVarNoCheck(event, 1)));
           }
+#endif
           success = true;
         }
       }

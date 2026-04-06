@@ -1,4 +1,558 @@
 -------------------------------------------------
+Changes in release mega-20260108 (since mega-20260107)
+-------------------------------------------------
+
+Release date: Thu Jan  8 08:33:12 AM CET 2026
+
+TD-er (1):
+      Add Python version for prepare-dist in release.yml
+
+
+-------------------------------------------------
+Changes in release mega-20260107 (since mega-20250430)
+-------------------------------------------------
+
+Release date: Wed Jan  7 11:00:02 PM CET 2026
+
+Bartłomiej Zimoń (4):
+      Update Flashing.rst
+      Update Flashing.rst
+      Update Flashing.rst
+      Update Flashing.rst
+
+Fabio Ancona (2):
+      Update LD2410 doc adding info of false positive
+      Update P159.rst
+
+Jason2866 (8):
+      remove cache use uv
+      Update build.yml
+      Update post_esp32.py
+      Update post_esp32.py
+      add forgotten function
+      missing import os
+      Update post_esp32.py
+      remove cache use uv
+
+TD-er (55):
+      [Favicon] Serve favicon.ico as inline SVG
+      [settings] Reduce initial default config.dat to 96k on ESP32
+      [JSON] Tweak generating JSON via web requests
+      [Favicon] Tweak blue color in SVG ESPEasy favicon
+      [Time] Speedup printing date/time string
+      [Build] Remove TAR support from LIMIT_BUILD_SIZE builds (saves 5+ kB)
+      [OLED display] Reduce build size for P023
+      [SysVarPage] Fix table layout on builds with excludes features
+      [SysVarPage] Make more clear separation for "Standard Conversions"
+      [Sysvar] Enable %c_random% for all builds
+      [ESP32-S2] Change ADC for ESP32-S2 back to 13 bit
+      [ESPtool] Prepare use of esptool v5.0.0
+      [Build] Get rid of all ESP32-SPIFFS builds
+      [ESPtool] Prepare use of esptool v5.0.0
+      [ESPEasy p2p] Add node-IDs for new Espressif SoC models
+      [ADC] Fix not setting attenuation on internal ADC
+      [Build] Update to latest IDF5.4 build + add C6 builds
+      [ESP32-S3] Revert changes in board defines for ESP32-S3 with OPI PSRAM
+      [Build] Speed up ESP32 builds via CompiletimeDefines_generated.h
+      [WebFlasher] Add missing ESP32-xx MCUs to manifest script
+      [Build] Speed up ESP32 builds via CompiletimeDefines_generated.h
+      [WebFlasher] Add missing ESP32-xx MCUs to manifest script
+      [Rules] Fix processing variables with index > 2^31
+      [MFRC522] Speed-up detecting cards + make error recovery more stable
+      [MFRC522] Improve range of reader
+      [MFRC522] Simplify board reset during init
+      [MFRC522] Allow to dump card info to debug logs
+      [MFRC522] Do proper timing for communicating with card
+      [MFRC522] Speedup reading by acting on interrupt pin
+      Add HTML_Print and PrintToString helpers
+      [Log] Add PrintToLog helper
+      [PWM motor] Speedup acting on limit switch interrupt
+      [ESP-IDF] Update to latest SDK version
+      [WebFlasher] Add more info on migrate to LittleFS on web flasher page
+      [WebFlasher] Update LittleFS migration guide in webflasher page
+      [PWM motor] Fix limit switch invert (again)
+      [PubSubClient] Update to new fork PubSubClient3
+      [PubSubClient3] Speedup publish large messages using buffer
+      [PubSubClient3] Add check for nullptr in CHECK_STRING_LENGTH
+      [Controller] Fix crashes on MQTT callback calls
+      [WebServer] Properly close chunked transfer
+      [Cleanup] Fix JS issues + correctly end chunked transfer
+      [Build] Try fixing failing solo1 build
+      [ESP32-U4WDH] Fix bootloop on non-Solo1 builds
+      Fix missing #ifdef USES_P056
+      [Build] Fix missing #ifndef LIMIT_BUILD_SIZE
+      [SysVars] Fix showing variables with hex number as index
+      [MQTTDiscovery] Reduce mem alloc MQTT_DiscoveryPublishWithStatusAndSet
+      Reduce ESP32 Display build size (BUILD_NO_DEBUG)
+      [CacheReader] Fix continue reading after crash/reboot
+      [CacheReader] Fix reading cache files from CacheController
+      [CacheReader] Add support for 64bit ints + output as events
+      [CacheReader] Fix incorrect settings array index
+      [Build] Limit package building to use Python 3.13
+      [Collection] Remove P038 and P095 from ESP32 Collection builds
+
+Ton Huisman (369):
+      [P073] Add support for 74HC595 displays
+      [P073] Disable debug log
+      [P073] Make build fit again (part 1)
+      [P073] Make build fit again (part 2)
+      [P094] Remove from Collection D for ESP8266 buildsize
+      [P073] Move most code to PluginStruct files, explicit compile-time defines
+      [P073] Make 7-segment font functions publicly available
+      [P073] Separate 74HC595 multiplexed displays, code improvements
+      [P073] Update documentation
+      [P073] Disable 74HC595 displays for now
+      [P073] Add double-buffering for 74HC595 displays
+      [P073] Make some functions available externally, fix 74HC595 matrix display (sort-of, still some flickering)
+      [P073] Fine-tuning and allow to include 74HC595 in ESP8266 Custom builds
+      [P073] Make P073_revert7bits() available for global use
+      [P073] Fix copy/paste error
+      [P073] Use more efficient bit-revert algorithm, as suggested
+      [P073] Add option for time-blinking the second dot instead of the colon
+      [P073] Use DIRECT_PIN_IO for TM1637 displays for better timing accuracy
+      [P073] Update documentation
+      [P073] Should use the public function
+      [P165] Fix compiler warning
+      [MQTT] (Auto)Discovery implementation
+      [P052] Add MQTT Discovery data for supported Values
+      [Source] Fix CR/LF vs LF
+      [MQTT] Add support for more VTypes, implement more VTypes, small improvements
+      [MQTT] Move TaskValue VType Discovery to each plugin where needed. Some other code improvements
+      [P105] Fix Uncrustify formatting
+      [P164] Add fixme for currently unsupported AQI Discovery value
+      [Discovery] Add VType for Reactive Power
+      [Discovery] Implement VType for Reactive Power
+      [P076] Implement Discovery support (for user-selected values)
+      [P077] Implement Discovery support (for user-selected values)
+      [P078] Implement Discovery support (for user-selected values)
+      [P085] Implement Discovery support (for user-selected values)
+      [P102] Implement Discovery support (for user-selected values)
+      [P108] Implement Discovery support (for user-selected values)
+      [P115] Implement Discovery support (for user-selected values)
+      [P132] Implement Discovery support (for user-selected values)
+      [P142] Implement Discovery support (for user-selected values)
+      [Discovery] Refactor getting VType per plugin, add some more plugins for AutoDiscovery
+      [Discovery] Add support for some more VTypes, add AQI and NOx
+      [P147] Implement MQTT Discovery support
+      [P164] Update MQTT Discovery support
+      [EasyColorCode] Updates April 2025
+      [P020] Update documentation
+      [P116] Fix typo in docs
+      [P180] Add plugin Generic I2C
+      [P180] Add also to Display, Energy and Neopixel collection builds (ESP32 only)
+      [P180] No defaults for I2C address or number of values
+      [P180] Cleanup memory after use, fix ESP8266 compilation
+      [P180] Cleanup memory after use, fix ESP8266 compilation
+      [Rules] Fix parsing bracketed expressions from position 0
+      [P180] Add conditionally cancelling a command sequence (if)
+      [Rules] Add support for crc8 and crc32 functions
+      [P180] Optimize hex formatting, add preprocessed calculation to logging
+      [Rules] Add optional validation of crc to crc8 and crc32 functions
+      [EasyColorCode] Add more plugin commands
+      [P180] Correct regular value handling, improved hex formatting
+      [P180] Add documentation and usage examples
+      [P180] Add exec subcommand, add valuename support, fix issue updating command-cache
+      [P180] Add handling 1/sec, 10/sec and 50/sec event processing, add log subcommand
+      [P180] Update documentation and usage examples
+      [P180] Update documentation and usage examples
+      [EasyColorCode] Update commands for P180
+      [Docs] Add examples for substring for translation of day/month names
+      [P180] Add let I2C Command, limit delay to max 10ms for 1ps/10ps/50ps
+      [P180] Add to Custom-sample.h
+      Bugfix [P075] Typo in check for RxD GPIO pin
+      [P180] Refactor into BusCmd, phase 1
+      [P021] Bugfix: Make Invert work without a GPIO pin selected
+      [P180] Refactor into BusCmd_Handler interface, phase 2, Add String support
+      [P180] Remove previously added but unused I2C functions
+      [P061] Resolve I2C related FIXMEs, gaining ~120 bytes
+      [P180] Update documentation
+      [P011] Optimize I2C calls, gaining ~110 bytes
+      [Discovery] Add /config and Retain Discovery settings to MQTT Controller with AutoDiscovery
+      [Discovery] Fix Switch auto-discovery [Discovery] Add support for Inverted Switch [Discovery] Add support for Switch Device Class configuration
+      [P001] Implement Switch MQTT Device Class setting and Inverted Switch discovery
+      [P009] Implement Switch MQTT Device Class setting and Inverted Switch discovery
+      [P001][P009] Correct typo
+      [P019] Implement Switch MQTT Device Class setting and Inverted Switch discovery
+      [P021] Implement Switch MQTT Device Class setting and Inverted Switch discovery
+      [Discovery] Add support for different Switch device class per value
+      [Rules] Add support for String type variables
+      [StringVars] Fix variable typo
+      [StringVars] Remove unneeded UnaryOperator::IsNum
+      [StringVars] Fix new introduced template parser bug
+      [StringVars] Make string comparisons work with `if`
+      Add new commands and functions for String variables support
+      [SysVars] Make second argument for 2-argument conversions optional
+      [StringVars] Add documentation
+      [StringVars] Add documentation for [length#var]
+      [Bugfix] String commands parser fix off-by-one issue
+      [Rules] Add string function Lookup with docs
+      [Rules] Add conversion function %c_strf%() with docs
+      [Rules] Fix typo in docs
+      [StringVars] Add TaskValueSetDerived, TaskValueSetPresentation commands and handling
+      [StringVars] Add TaskValueSetDerived, TaskValueSetPresentation docs
+      [Docs] Move Data Acquisition to separate include file
+      [StringVars] Avoid calculation of formula with presentation prefix ($)
+      [StringVars] Improved handling of calculated values for Derived values
+      [SysVars, Conversions] Add %localunixtime%, %systzoffset_s% sysvars and %c_ts2date%() conversion + docs
+      [SysVars] Exclude %localunixtime% from Limited builds
+      [SysVars] Rename %localunixtime% to %unixtime_lcl%
+      [DerivedValues] Add Event & Log option and generate events and logging for Derived values, update docs
+      [SysVars] Add %c_ts2wday%(timestamp) (dow) conversion and docs
+      [EasyColorCode] Add more new commands and functions for String variables support
+      [P180] Add GET_CONFIG_VAR support
+      [Discovery] Fix typo in BinarySensorInverted helper
+      [Docs] Update WSL2 USB Serial configuration since Linux 6.x core update
+      [Feature] Add Unit of Measure for all taskvalues and present on Devices overview page
+      [UoM] Add Unit of measure value to /json endpoint
+      [UoM] Add Unit of measure value Devices overview page update script (also uses Presentation if available)
+      [Build] Reduce size of included Github clipboard script
+      [Build] Include reboot.js script in readable form
+      [Build] Reduce size of included Fetch and parse logs script
+      [UoM] Add Unit of measure value Devices overview page update script (also uses Presentation if available)
+      [JSON] Add Presentation as separate value instead of replacing Value (using updated .js scrip)
+      [UoM] Make .js script more fault tolerant when no global UoM enable setting is available
+      [DerivedValues] Don't determine max decimals for display but use default
+      [DerivedValues] Add optional Unit of Measure and include in /json output
+      [UoM] Make .js script more fault tolerant when no global UoM enable setting is available
+      [UoM] Optional default when fetching Unit of Measure
+      [Discovery] Implement UoM per taskValue when available
+      [I2C] Show I2C Bus nr in Not enabled message of i2cscanner
+      [I2C] Add a few missing I2C device addresses for INA219
+      [UoM] Add Feature TaskValue-attributes with support for .uom, .decimals, .hasformula and .statsenabled
+      [DerivedValues] Move parsing derived variables to correct code-location
+      [DerivedValues] Add TaskValue attribute support for DerivedValues (empty is not valid)
+      [Discovery] Add default empty option for Device Class selector (all values shift 1 index up!)
+      [P116] Add support for ST7735/ST7789 170x320 displays
+      [SysVarPage] Exclude c_random from list for limited builds
+      [UoM] Add documentation
+      [UoM] Update documentation
+      [UoM] Update documentation
+      [VTypes] Refactor SensorValueType selector so it can be used separately
+      [VTypes] Refactor SensorValueType selector so it can be used separately (cherry picked)
+      [ValueTypes] Add Custom VType selection
+      [Plugins] Add CustomVTypeVar option for plugins that need custom Value Type selection
+      [DerivedValues] Add support for Value Type argument
+      [AutoDiscovery] Add support for Derived values, UoM and Value Type, some code optimizations
+      [C006] Add support for sending derived values
+      [C014] Add Unit of Measure to AutoDiscovery, add Send Derived values support
+      [Docs] Updates and improvements, Summer '25
+      [Docs] Update docs for Value Type setting for selected plugins
+      [Docs] Move Send derived values as a per controller setting for tasks
+      [Derived Values] Move enable sending per task-controller, Code optimization
+      [C014] Docs: Update UoM feature
+      [P027] Docs: Fix a few typos
+      [P180] Improvements and fixes in handling of signed values
+      [Docs] Update/extend the SPIFFS to LittleFS migration procedure
+      [Docs] Update/extend the SPIFFS to LittleFS migration procedure
+      [Docs] Extract SPIFFS to LittleFS migration guide for accessability
+      [Docs] Expand SPIFFS to LittleFS migration guide, add troubleshooting section
+      [AutoDiscovery] Add support for Wind direction and Wind speed
+      [Plugins] Minor code improvement
+      [UoM] Restructure UoM selector into categories, add more uom options
+      [UoM] Fix UoM selector empty value
+      [Docs] Update Unit of Measure documentation and screenshots
+      [AutoDiscovery] Embed setting for `online` message in `/config` setting
+      [Docs] Update documentation for C005
+      [AutoDiscovery] Update PluginTemplate
+      [AutoDiscovery] Embed setting for `online` message in `/config` setting
+      [Docs] P165 Fix a few typos
+      [AutoDiscovery] Remove unused code
+      [AutoDiscovery] Make start delay compiletime configurable, and extend max delay from 10 to 30 sec.
+      [Docs] Update documentation for C005
+      [AutoDiscover] Add Duration, Date and Timestamp device classes, fix some irregularities
+      [AutoDiscover] Add Data rate, Data size, Sound pressure and Signal strength
+      [AutoDiscover] Refactor discovery message composition to reduce binary size by nearly 4k
+      [AutoDiscover] Set Unit of Measure and Value Type when adding a device (when possible/available)
+      [P095] Add ILI9342 display variants
+      [P095] ILI9342 added configurations, set resolution correctly
+      [P095] Update documentation
+      [UoM] Correct a few Value Type UoM defaults
+      [P026] Set default Value Type and UoM when changing a task value setting
+      [Converters] Add `%c_ts2isodate%()` Timestamp to ISO date conversion
+      [Converters] Add `%c_ts2isodate%()` Timestamp to ISO date conversion
+      [AutoDiscover] Clean names sent to HA by replacing unsupported characters by `_`
+      [Converters] Include system time-zone in `%c_ts2isodate%()` to have HA accept the `Timestamp` value type
+      [Converters] Make system time-zone optional in `%c_ts2isodate%()` (second argument != 0)
+      [Converters] Make system time-zone optional in `%c_ts2isodate%()` (second argument != 0)
+      [AutoDiscover] Add `Date/Time` (`datetime`) Device class
+      [AutoDiscover] Fix handling of BARO_ONLY values, and allow multiple BARO_ONLY values
+      [AutoDiscover] Remove non-working `Date/Time` (`datetime`) Device class :-(
+      [ValueTypes] Add categorized selector for Value Type per Value
+      [P176] Set default Value Types when adding the plugin
+      [ValueTypes] Fix optional None value
+      [P180] Remove unneeded code
+      [AutoDiscover] Try to get switch trigger working
+      [ValueTypes] Reorder value types somewhat, use categorized selector where applicable
+      [ValueTypes] Update documentation
+      [P014] Fix MQTT Discovery value types
+      [Build] Remove "_CDC_" from all env names due to linker issues
+      [MQTT] Fix command handling for /set and /cmd topic endpoints, add support for P001 in /set
+      [AutoDiscover] Mark some MQTT Device classes as 2-way to have on/off devices (Light)
+      [CustomVtype, UoM] Fix compilation for ESP8266 when not all enabled
+      [AutoDiscover] Better array index checks
+      [Backup] Add backup without credentials included (security.dat)
+      [Metrics] Add internal CPU temperature
+      [Backup] Use term credentials instead of username/password
+      [Backup] Update documentation
+      [Metrics] Update documentation
+      [AutoDiscover] Add support for P009 and P019, only send discovery for plugins that actually send data
+      [AutoDiscover] Fix flippin bit-flip issue
+      [AutoDiscover] Fix P021 not to be handled as a Switch
+      [Backup] Fix typo in variable name for ESP8266
+      [AutoDiscover] Fix Group configuration
+      [Backup] Compile error when TAR support disabled
+      [Libs] MFRC522 remove unused variable
+      [Libs] PubSubClient signed/unsigned comnparison warning
+      [AutoDiscover] Set default Auto Discovery topics when adding HA Controller
+      [P009][P019] Fix logging alignment
+      [AutoDiscover] Fix a few comments
+      [AutoDiscover] Docs improvement for Group feature
+      [TaskValueSetDerived] Improved parsing of Unit of Measure value
+      [AutoDiscover] Fix conditional compilation issue
+      [Rules] Enable rules by default on a clean install
+      [AutoDiscover] Add state_class support and some Value Types
+      [AutoDiscover] Enable state_class support for plugins and correct a few Value Types
+      [AutoDiscover] Update documentation
+      [AutoDiscover] Fix compilation when state_class support not enabled
+      [AutoDiscover] Small code improvement
+      [P078] Improved value descriptions and register appended, small code improvements
+      [Caches] Formatting (minor)
+      [P056] Add multi-instance use
+      [P078] Fix docs parser warning
+      [P056] Update documentation
+      [P102] Add support for PZEM-017v1
+      [P102] UI updates and corrections
+      [P102] Add documentation
+      [Build] Fix compiler warning for unused variable
+      [BusCmd I2C] Add support for handling > 128 bytes on I2C read/write (ESP32)
+      [BusCmd Helper] Add support for variable length string and buffers (Byte/Word), and some bugfixes
+      [P180] Update documentation
+      [BusCmd Helper] Send data & event when updating value.N from other than PLUGIN_READ action
+      [BusCmd Helper] Add LetStr I2C command, analogue to the `LetStr` Rules command, updated documentation
+      [P102] Small typo in documentation
+      [AutoDiscover] Use %sysname% instead of group_nr if Controller Group = UnitNr
+      [AutoDiscover] Update documentation for Group setting
+      [AutoDiscover] Add 15 more Value types and 7 UoM values, fix some default UoM
+      [AutoDiscover] Update Value type and UoM documentation
+      [MQTT] Add Retain option per task
+      [MQTT] Update documentation for Retained setting per task
+      [MQTT] Some documentation improvements
+      [Build] Add [P105] AHT2x to Collection G so it can be used with [P164] ENS160
+      [P089] Add support for ESP32
+      [P089] Remove unneeded attribute
+      [P089] Create separate Ping Service to handle single-instance Ping function sequentially
+      [P180] Add Tiny Code Reader example to documentation
+      [P180] Add optional skip argument to IF I2C command, update docs
+      [P021] Emphasize warning to prevent saving settings too often
+      [P039] Update SPI and GPIO documentation
+      [P037] Use configured decimals when generating events
+      [P037] Update documentation for: use configured decimals when generating events
+      [P168] Disable blocking Lux Read-Method options
+      [P168] Update documentation
+      [P102] Don't check non-available values for NaN
+      [P102] Correct documentation small typos
+      [MQTT] Handle connecting to broker as a background process
+      [Tools] Update documentation for MQTT Connect in background
+      [MQTT] Move Settings attribute to next available bit
+      [MQTT] Reconnect on unexpected network interruptions
+      [P089] Update documentation
+      [MQTT] Cancel background connection request after 2 minutes when still not connected
+      [MQTT] Fix reconnect on unexpected network interruptions
+      [Discovery] Avoid setting the timeout more than once
+      [MQTT] Use client timeout for delay between connection attempts
+      [Build] Fix missing include
+      [MQTT] Refactor background connection process to avoid logging from background task
+      [AutoDiscover] Fix small typos in default UoM list
+      [AutoDiscover] Fix spelling error in precipitation
+      [AutoDiscover] Fix spelling error in precipitation
+      [MQTT] Fix compilation on ESP8266 (Retain per task)
+      [P089] Bugfix: Putt include in scope
+      [P102] Use added setModel() method when needed
+      [P033] Enable formula field
+      [P033] Update documentation
+      [P102] Use defined constants
+      [P102] Add Submit instruction after use of 'Reset energy' mode
+      [P102] Update documentation
+      [Info] Emphasize the number of flash writes count since cold boot #3116
+      [C011] HTTP Advanced - Don't URL-encode header
+      [HTTP] Add support for TLS
+      [HTTP] Enable TLS support for Controllers using HTTP
+      [P002] Fix docs layout issue
+      [HTTP] Defensive programming in test for https url
+      [HTTP] Enable TLS support also for Controller C007 Emoncms
+      [Devices] Limit displaying of (old) Wiki Help button to P056 and below
+      [Devices] Limit displaying of (old) Wiki Help button to P079 and below
+      [MQTT] Reduce work/memory in background task, use xTaskDelay as required
+      [Docs] Correct some layout inconsistencies
+      [Docs] Update overview generator, include Notify and Network plugins
+      [Build] Fix compiler warning
+      [Tools] Add Plugin list overview page
+      [Tools] Update documentation for Plugin list
+      [Build] Split Display into Display A and Display B
+      [Build] Display A/B split: Update documentation
+      [Tools] Add documentation-button to Plugin list overview page
+      [Tools] Add preliminary support for Network plugins
+      [Docs] Add MQTT Device class documentation for plugins where available
+      [MQTT] Minor corrections
+      [TLS] Update TLS to be able to use ECDHE_ECDSA_AES_128_GCM_SHA256 cipher
+      [Docs] ESP8266 is Feature Complete!
+      [TLS-MQTT] Automatic switch to ECDSA when error is 296 (TLS handshake)
+      [MQTT AutoDiscovery] Add support for Switch Device Class
+      [MQTT AutoDiscovery] Update documentation for Device Class
+      [P026] Fix Value Type for TXpower to use dBm
+      [HTTP] Fix build and feature-enable for non-MAX builds
+      [HTTP] Update documentation for TLS options
+      [UoM] Refactoring to reduce page-load time and size
+      [Build] Add Collection H and split Climate into Climate A and Climate B
+      [Build] Fix build errors for Collection H and Climate B
+      [Build] Remove obsolete comments
+      [Build] Move more plugins from Collection G to H to make Collection G fit
+      [Build] Reduce build-size for all Collection builds using BUILD_NO_DEBUG
+      [Build] Reduce build-size for Collection C build
+      [P169] Fix DEBUG log
+      [Build] Avoid build-reduction for MAX builds
+      [Build] Avoid build-reduction for MAX builds
+      [P021] Code optimizations
+      [Build] Remove _LittleFS and _ETH from build names due to linker issues
+      [Build] Enable `custom_remove_include` to not build ignored libs
+      [Build] Limit package building to use Python 3.13
+      [UI] Update addTaskSelector() to use FormSelectorOptions
+      [Docs] P180 Add example for reading Sensirion SDP-8xx
+      [Docs] P180 Small corrections
+      [Docs] P180 Sensirion SDP-8xx add description for Single-shot measurement
+      [Bugfix] Don't use Flash-string parameter default as ESP8266 compiler doesn't support that
+      [Bugfix] PluginList add missing includes needed in some builds
+      [PluginList] Update for HTTPS TLS support
+      [Build] Fix SafeBoot build
+      [Bugfix] Derived values avoid parsing invalid values causing crashes
+      [Bugfix] Derived values avoid parsing invalid values causing crashes, more global fix
+      [Bugfix] Revert previous change as that didn't really fix the issue
+      [AutoDiscovery] Show Auto Discovery for Controllers that have this enabled (Task configuration)
+      [Bugfix] Calculation missed value when returning from multiple brackets
+      [Bugfix] MQTT StateClass selector stored wrong index
+      [P003] Enable MQTT State Class option so pulse-counter can be used for energy measurement (in HA)
+      [P180] BusCmd_Helper processing I2C commands via cmd subcommand was locked out
+      [SysVars] Add %latitude% and %longitude% vars and Latitude and Longitude commands
+      [SysVars] Documentation for %latitude% and %longitude% vars and Latitude and Longitude commands
+      [P180] Enable CustomVTypeVar and MQTTStateClass device flags
+      [P180] Fix typo in parameter for log subcommand
+      [P180] Add documentation for TF-Luna laser distance sensor
+      [P180] Small updates in documentation of TF-Luna laser distance sensor
+      [P180] Add documentation for QMC6310 3-axis magnetic sensor, add example-index to docs page
+      [Bugfix] Calculation of functions discarded the next operator
+      [Bugfix] Calculation of functions remove unneeded value duplication, small debug-code optimization
+      [Rules] Add some functions, conversions and constants
+      [Rules] Add some functions, conversions and constants, fix docs typo
+      [Docs] Updates and improvements (2025 Q4/2026-01)
+      [Stats] Add minp/maxp stats values and change min/max stats values for running min/max value, update docs
+      [Bugfix] Compilation error fix for custom IR build
+      [Bugfix] Metrix: Export 0 for empty values
+      [Bugfix] Metrix: Export 0 for empty values, fix for ESP8266
+      [AdaGFX] Fix `tpm` subcommand argument check
+      [Docs] Update copyright notice to show 2026
+      [AdaGFX] Fix space-height issue for some fonts
+      [P116] Add ST77xx resolutions 240x320 and 240x280
+      [P116] Allow for > 16 hardware types in selection
+      [P116] Update documentation with new resolutions
+      [P087] Add support for receiving binary data, fixed length data, and event as hex string
+      [P087] Update documentation
+      [P087] Add to `ENERGY` build (ESP32 only)
+      [Converters] Bugfix formatToHex_wordarray()
+      [P087] Use PCONFIG_ULONG to store new config flags
+      [P004] Change name to include DS18xxx/MAX31xxx for better recognizability
+      [P057] Add documentation as it wasn't included yet
+
+chromoxdor (63):
+      Update Networking.cpp
+      a tiny bit better formatting
+      changes for OPENMETEO_EVENT and THINGSPEAK_EVENT
+      Update Networking.cpp
+      combining two functions
+      wrong use of concat times two :)
+      update
+      Update Networking.cpp
+      put thingspeak and openmeteo events into extra file
+      added inverter event
+      fix for not building on minimal_core_274_esp8266...
+      #ifdef to #if. m(
+      more universal json event approach
+      Update HTTPResponseParser.h
+      added variable decimals for floating point numbers
+      some changes to the json-event
+      made the eventQueue even more complex :P
+      minor changes
+      moved variable to cpp file
+      updates
+      Update HTTPResponseParser.cpp
+      Update define_plugin_sets.h
+      Update HTTPResponseParser.cpp
+      Update HTTPResponseParser.cpp
+      documentation and slight reduction of code
+      Update define_plugin_sets.h
+      corrected json examples
+      Docs: Formatting and linking
+      fixed typo
+      [P164 ] Adding a sleep mode
+      Update P164_data_struct.cpp
+      Update define_plugin_sets.h
+      Changes as requested
+      Update HTTPResponseParser.rst
+      Update HTTPResponseParser.cpp
+      ColorCode Additions
+      Update espeasy.js
+      forgot the "f" and the minified version
+      some unessecary commas removed
+      no indentation for comments....
+      added a format button if on mobile device
+      format even without colorcode enabled
+      more robust block checks
+      jump to line of first error and keep history
+      make it work for android non color rules again
+      Readded search bar and enhanced it.
+      fixed broken replace function
+      forgot someting to change
+      find while typing
+      fix replace
+      more robust live search handling
+      removed unnecessary function
+      scroll to top when found
+      Update codemirror.min.css
+      replace: scroll to top too
+      as good as it gets :)
+      minor corrections help text
+      rephrasing of the confirm dialog
+      fix: jump back to cursor position after formatting
+      ..and remove an old dialog before opening a new one
+      disable shortcuts
+      disable shortcut: forgot to add the corresponding function
+      Update espeasy.min.js
+
+dependabot[bot] (10):
+      Bump cryptography from 43.0.1 to 44.0.1
+      Bump actions/download-artifact from 4 to 5
+      Bump actions/checkout from 4 to 5
+      Bump actions/setup-python from 5 to 6
+      Bump actions/github-script from 7 to 8
+      Bump actions/download-artifact from 5 to 6
+      Bump actions/upload-artifact from 4 to 5
+      Bump actions/checkout from 5 to 6
+      Bump actions/upload-artifact from 5 to 6
+      Bump actions/download-artifact from 6 to 7
+
+jfmennedy (1):
+      Fix horizantal vane not working
+
+repa6 (7):
+      added TAC2100 support to _P078_Eastron plugin
+      Update _P078_Eastron.ino with changelog info
+      Update P078_data_struct.h: added comma after TAC2100=7
+      extended TAC2100 registers list and added TAC2100 to docimentation
+      fixed redister nature of load
+      Update P078_data_struct.cpp - added nat:load to SDM_UOMtoString strings
+      Update P078_data_struct.cpp - updated register addresses for the last 5 registers of TAC2100
+
+
+-------------------------------------------------
 Changes in release mega-20250430 (since mega-20241222)
 -------------------------------------------------
 

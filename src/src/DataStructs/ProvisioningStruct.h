@@ -8,7 +8,7 @@
 # include "../DataStructs/FactoryDefaultPref.h"
 # include "../DataTypes/ESPEasyFileType.h"
 
-# include <memory> // for std::shared_ptr
+# include <memory> // for std::unique_ptr
 
 /*********************************************************************************************\
 * ProvisioningStruct
@@ -47,16 +47,17 @@ struct ProvisioningStruct
       uint16_t allowFetchNotificationDat :1;
       uint16_t allowFetchProvisioningDat :1;
       uint16_t allowFetchRules :4;
+      uint16_t allowFetchDeviceSecurityDat :1;
 
-      uint16_t unused :7;  // Add to use full 16 bit.
+      uint16_t unused :6;  // Add to use full 16 bit.
     } allowedFlags;
     uint16_t _allBits;
   };
 };
 
-typedef std::shared_ptr<ProvisioningStruct> ProvisioningStruct_ptr_type;
+DEF_UP(ProvisioningStruct);
 
-#define MakeProvisioningSettings(T) void * calloc_ptr = special_calloc(1,sizeof(ProvisioningStruct)); ProvisioningStruct_ptr_type T(new (calloc_ptr)  ProvisioningStruct());
+#define MakeProvisioningSettings(T) void * calloc_ptr = special_calloc(1,sizeof(ProvisioningStruct)); UP_ProvisioningStruct T(new (calloc_ptr)  ProvisioningStruct());
 
 
 

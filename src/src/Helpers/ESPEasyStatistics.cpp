@@ -2,7 +2,7 @@
 
 
 #if FEATURE_TIMING_STATS
-
+#ifdef WEBSERVER_NEW_UI
 #include "../DataStructs/TimingStats.h"
 #include "../WebServer/ESPEasy_WebServer.h"
 #include "../Helpers/Convert.h"
@@ -139,5 +139,5 @@ void jsonStatistics(bool clearStats) {
   }
 }
 
-
+#endif
 #endif // if FEATURE_TIMING_STATS

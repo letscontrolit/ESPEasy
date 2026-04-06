@@ -21,6 +21,31 @@
 # define P87_Nchars              128
 # define P87_MAX_CAPTURE_INDEX   32
 
+# define P087_BAUDRATE           PCONFIG_LONG(0)
+# define P087_BAUDRATE_LABEL     PCONFIG_LABEL(0)
+# define P087_SERIAL_CONFIG      PCONFIG_LONG(1)
+
+# define P087_QUERY_VALUE        0 // Temp placement holder until we know what selectors are needed.
+# define P087_NR_OUTPUT_OPTIONS  1
+
+# define P087_NR_OUTPUT_VALUES   1
+# define P087_QUERY1_CONFIG_POS  3
+
+# define P087_DEFAULT_BAUDRATE   38400
+
+# define P087_READ_BIN_LABEL     PCONFIG_LABEL(1)
+# define P087_EVENT_HEX_LABEL    PCONFIG_LABEL(2)
+# define P087_FIXED_LENGTH_LABEL PCONFIG_LABEL(3)
+# define P087_CONFIG_FLAGS       PCONFIG_ULONG(2)
+# define P087_FLAG_READ_BIN      0
+# define P087_FLAG_EVENT_HEX     1
+# define P087_FLAG_FIXED_LENGTH  2 // 8 bit
+# define P087_CONFIG_SET_READ_BIN(S) (bitWrite(P087_CONFIG_FLAGS, P087_FLAG_READ_BIN, (S)))
+# define P087_CONFIG_GET_READ_BIN    (bitRead(P087_CONFIG_FLAGS, P087_FLAG_READ_BIN))
+# define P087_CONFIG_SET_EVENT_HEX(S) (bitWrite(P087_CONFIG_FLAGS, P087_FLAG_EVENT_HEX, (S)))
+# define P087_CONFIG_GET_EVENT_HEX    (bitRead(P087_CONFIG_FLAGS, P087_FLAG_EVENT_HEX))
+# define P087_CONFIG_SET_FIXED_LENGTH(S) (set8BitToUL(P087_CONFIG_FLAGS, P087_FLAG_FIXED_LENGTH, (S)))
+# define P087_CONFIG_GET_FIXED_LENGTH    (get8BitFromUL(P087_CONFIG_FLAGS, P087_FLAG_FIXED_LENGTH))
 
 enum P087_Filter_Comp {
   Equal    = 0,
@@ -115,6 +140,25 @@ public:
   bool plugin_get_config_value(struct EventStruct *event,
                                String            & string);
 
+  # ifndef LIMIT_BUILD_SIZE
+  void setHandleBinary(bool state) {
+    handle_binary = state;
+  }
+
+  void setEventAsHex(bool state) {
+    event_hex = state;
+  }
+
+  bool isEventAsHex() const {
+    return event_hex;
+  }
+
+  void setFixedLength(uint8_t value) {
+    fixed_length = value;
+  }
+
+  # endif // ifndef LIMIT_BUILD_SIZE
+
 private:
 
   bool max_length_reached() const;
@@ -133,6 +177,11 @@ private:
   bool capture_index_used[P87_MAX_CAPTURE_INDEX]           = { 0 };
   bool capture_index_must_not_match[P87_MAX_CAPTURE_INDEX] = { 0 };
   bool regex_empty                                         = false;
+  # ifndef LIMIT_BUILD_SIZE
+  bool    handle_binary = false;
+  bool    event_hex     = false;
+  uint8_t fixed_length{};
+  # endif // ifndef LIMIT_BUILD_SIZE
 };
 
 

@@ -64,13 +64,14 @@ bool ModbusRTU_struct::init(const ESPEasySerialPort port, const int16_t serial_r
   }
 
   detected_device_description = getDevice_description(_modbus_address);
-
+#ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log; // = F("Modbus detected: ");
     log += detected_device_description;
     addLogMove(LOG_LEVEL_INFO, log);
     modbus_log_MEI(_modbus_address);
   }
+#endif
   return true;
 }
 
@@ -252,8 +253,10 @@ String ModbusRTU_struct::parse_modbus_MEI_response(unsigned int& object_value_in
 
   if (_recv_buf_used < 8) {
     // Too small.
+#ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_INFO,
            concat(F("MEI response too small: "), _recv_buf_used));
+#endif
     next_object_id = 0xFF;
     more_follows   = false;
     return result;

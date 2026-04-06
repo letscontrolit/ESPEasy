@@ -11,6 +11,8 @@
 
 /**
  * Changelog:
+ * 2025-12-22 tonhuisman: Add support for receiving binary data, fixed length receive and sending events with hex data
+ *                        Moved most #define variables to P087_data_struct.h
  * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported for Serial Proxy)
  * 2024-02-27 tonhuisman: Always process the regular expression like 'Global Match' to enable retrieving the available values
  * 2024-02-26 tonhuisman: Apply log-string and other code optimizations
@@ -36,19 +38,6 @@
 # define PLUGIN_087
 # define PLUGIN_ID_087           87
 # define PLUGIN_NAME_087         "Communication - Serial Proxy"
-
-
-# define P087_BAUDRATE           PCONFIG_LONG(0)
-# define P087_BAUDRATE_LABEL     PCONFIG_LABEL(0)
-# define P087_SERIAL_CONFIG      PCONFIG_LONG(1)
-
-# define P087_QUERY_VALUE        0 // Temp placement holder until we know what selectors are needed.
-# define P087_NR_OUTPUT_OPTIONS  1
-
-# define P087_NR_OUTPUT_VALUES   1
-# define P087_QUERY1_CONFIG_POS  3
-
-# define P087_DEFAULT_BAUDRATE   38400
 
 
 // Plugin settings:
@@ -168,6 +157,14 @@ boolean Plugin_087(uint8_t function, struct EventStruct *event, String& string) 
       addFormSubHeader(F("Statistics"));
       P087_html_show_stats(event);
 
+      # ifndef LIMIT_BUILD_SIZE
+      addFormSubHeader(F("Data options"));
+      addFormCheckBox(F("Receive binary data"), P087_READ_BIN_LABEL, P087_CONFIG_GET_READ_BIN);
+      addFormNumericBox(F("Fixed length input data"), P087_FIXED_LENGTH_LABEL, P087_CONFIG_GET_FIXED_LENGTH, 0, 255);
+      addUnit(F("0 = off, max. 255"));
+      addFormCheckBox(F("Event with hex. data (no prefix)"), P087_EVENT_HEX_LABEL, P087_CONFIG_GET_EVENT_HEX);
+      # endif // ifndef LIMIT_BUILD_SIZE
+
       success = true;
       break;
     }
@@ -175,6 +172,11 @@ boolean Plugin_087(uint8_t function, struct EventStruct *event, String& string) 
     case PLUGIN_WEBFORM_SAVE: {
       P087_BAUDRATE      = getFormItemInt(P087_BAUDRATE_LABEL);
       P087_SERIAL_CONFIG = serialHelper_serialconfig_webformSave();
+      # ifndef LIMIT_BUILD_SIZE
+      P087_CONFIG_SET_READ_BIN(isFormItemChecked(P087_READ_BIN_LABEL));
+      P087_CONFIG_SET_FIXED_LENGTH(getFormItemInt(P087_FIXED_LENGTH_LABEL));
+      P087_CONFIG_SET_EVENT_HEX(isFormItemChecked(P087_EVENT_HEX_LABEL));
+      # endif // ifndef LIMIT_BUILD_SIZE
 
       P087_data_struct *P087_data =
         static_cast<P087_data_struct *>(getPluginTaskData(event->TaskIndex));
@@ -207,6 +209,15 @@ boolean Plugin_087(uint8_t function, struct EventStruct *event, String& string) 
       if (P087_data->init(port, serial_rx, serial_tx, P087_BAUDRATE, static_cast<uint8_t>(P087_SERIAL_CONFIG))) {
         LoadCustomTaskSettings(event->TaskIndex, P087_data->_lines, P87_Nlines, 0);
         P087_data->post_init();
+        # ifndef LIMIT_BUILD_SIZE
+        P087_data->setHandleBinary(P087_CONFIG_GET_READ_BIN);
+        P087_data->setEventAsHex(P087_CONFIG_GET_EVENT_HEX);
+
+        if (P087_CONFIG_GET_FIXED_LENGTH > 0) {
+          P087_data->setMaxLength(P087_CONFIG_GET_FIXED_LENGTH);
+        }
+        P087_data->setFixedLength(P087_CONFIG_GET_FIXED_LENGTH);
+        # endif // ifndef LIMIT_BUILD_SIZE
         success = true;
         serialHelper_log_GpioDescription(port, serial_rx, serial_tx);
       } else {
@@ -216,17 +227,15 @@ boolean Plugin_087(uint8_t function, struct EventStruct *event, String& string) 
     }
 
     case PLUGIN_FIFTY_PER_SECOND: {
-      if (Settings.TaskDeviceEnabled[event->TaskIndex]) {
-        P087_data_struct *P087_data =
-          static_cast<P087_data_struct *>(getPluginTaskData(event->TaskIndex));
+      P087_data_struct *P087_data =
+        static_cast<P087_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-        if ((nullptr != P087_data) && P087_data->loop()) {
-          Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 10);
-          delay(0); // Processing a full sentence may take a while, run some
-                    // background tasks.
-        }
-        success = true;
+      if ((nullptr != P087_data) && P087_data->loop()) {
+        Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 10);
+        delay(0); // Processing a full sentence may take a while, run some
+                  // background tasks.
       }
+      success = true;
       break;
     }
 
@@ -237,6 +246,12 @@ boolean Plugin_087(uint8_t function, struct EventStruct *event, String& string) 
       if ((nullptr != P087_data) && P087_data->getSentence(event->String2)) {
         if (Plugin_087_match_all(event->TaskIndex, event->String2)) {
           //          sendData(event);
+          # ifndef LIMIT_BUILD_SIZE
+
+          if (P087_data->isEventAsHex() && !event->String2.isEmpty()) { // Convert to hex without prefix
+            event->String2 = formatToHex_array(reinterpret_cast<const uint8_t *>(&event->String2[0]), event->String2.length());
+          }
+          # endif // ifndef LIMIT_BUILD_SIZE
           # ifndef BUILD_NO_DEBUG
           addLog(LOG_LEVEL_DEBUG, event->String2);
           # endif // ifndef BUILD_NO_DEBUG

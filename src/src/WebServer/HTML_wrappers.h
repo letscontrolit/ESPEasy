@@ -34,7 +34,7 @@ void html_TD();
 void html_TD(const __FlashStringHelper * style);
 
 void html_TD(int td_cnt);
-
+#ifdef WEBSERVER_GITHUB_COPY
 extern int copyTextCounter;
 
 void html_reset_copyTextCounter();
@@ -43,6 +43,7 @@ void html_copyText_TD();
 
 // Add some recognizable token to show which parts will be copied.
 void html_copyText_marker();
+#endif
 
 void html_add_estimate_symbol();
 
@@ -92,6 +93,7 @@ void html_add_wide_button_prefix(const String& classes, bool enabled);
 
 void html_add_form();
 
+void html_add_JQuery_script(const __FlashStringHelper * url);
 void html_add_JQuery_script();
 #if FEATURE_CHART_JS
 void html_add_ChartJS_script();
@@ -121,6 +123,8 @@ void addHtml(const char& char1);
 void addHtml(const char& char1, const char& char2);
 void addHtml(const __FlashStringHelper * html);
 void addHtml(const String& html);
+// Add text wrapped in <pre> ... </pre>  (monospaced formatted)
+void addHtml_pre(const String& html);
 void addHtml(String&& html);
 void addHtmlInt(int8_t int_val);
 void addHtmlInt(int16_t int_val);
@@ -138,11 +142,11 @@ void addHtmlInt(int32_t int_val);
 void addHtmlInt(uint32_t int_val);
 void addHtmlInt(int64_t int_val);
 void addHtmlInt(uint64_t int_val);
-void addHtmlFloat(const float& value, unsigned int nrDecimals = 2u);
-void addHtmlFloat_NaN_toNull(const float& value, unsigned int nrDecimals = 2u);
+void addHtmlFloat(const float& value, uint8_t nrDecimals = 2u);
+//void addHtmlFloat_NaN_toNull(const float& value, uint8_t nrDecimals = 2u);
 #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
-void addHtmlFloat(const double& value, unsigned int nrDecimals = 2u);
-void addHtmlFloat_NaN_toNull(const double& value, unsigned int nrDecimals = 2u);
+void addHtmlFloat(const double& value, uint8_t nrDecimals = 2u);
+//void addHtmlFloat_NaN_toNull(const double& value, uint8_t nrDecimals = 2u);
 #endif
 
 void addEncodedHtml(const __FlashStringHelper * html);

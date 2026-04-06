@@ -16,6 +16,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2025-08-23 tonhuisman: Add 10/sec call to poll background connection process while not connected
  * 2025-06-17 tonhuisman: Enable sending Derived values when available
  * 2024-11-29 tonhuisman: Add Discovery trigger setting
  * 2024-11-11 tonhuisman: Add AutoDiscovery options
@@ -86,9 +87,8 @@ bool CPlugin_005(CPlugin::Function function, struct EventStruct *event, String& 
         LoadControllerSettings(event->ControllerIndex, *ControllerSettings);
 
         if (ControllerSettings->mqtt_autoDiscovery() &&
-
-            // (ControllerSettings->MqttAutoDiscoveryTrigger[0] != 0) &&
-            (ControllerSettings->MqttAutoDiscoveryTopic[0] != 0)) {
+            (ControllerSettings->MqttAutoDiscoveryTopic[0] != 0) &&
+            (0 == mqttDiscoveryTimeout)) {
           mqttDiscoveryController = event->ControllerIndex;
           mqttDiscoveryTimeout    = random(10, MQTT_DISCOVERY_MAX_DELAY_0_1_SECONDS);
 
@@ -103,9 +103,10 @@ bool CPlugin_005(CPlugin::Function function, struct EventStruct *event, String& 
       break;
     }
 
-    # if FEATURE_MQTT_DISCOVER
     case CPlugin::Function::CPLUGIN_TEN_PER_SECOND:
     {
+      # if FEATURE_MQTT_DISCOVER
+
       if ((mqttDiscoveryTimeout > 0) && MQTTclient_connected) {
         mqttDiscoveryTimeout--;
 
@@ -116,9 +117,12 @@ bool CPlugin_005(CPlugin::Function function, struct EventStruct *event, String& 
           success = MQTT_SendAutoDiscovery(event->ControllerIndex, CPLUGIN_ID_005);
         }
       }
+      # endif // if FEATURE_MQTT_DISCOVER
+      # if FEATURE_MQTT_CONNECT_BACKGROUND
+      MQTTConnectInBackground(CONTROLLER_MAX, true); // Report state
+      # endif // if FEATURE_MQTT_CONNECT_BACKGROUND
       break;
     }
-    # endif // if FEATURE_MQTT_DISCOVER
 
     case CPlugin::Function::CPLUGIN_EXIT:
     {

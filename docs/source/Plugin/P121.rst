@@ -14,7 +14,9 @@ Type: |P121_type|
 
 Name: |P121_name|
 
-Status: |P121_status|
+Status ESP32: |P121_status|
+
+Status ESP8266: |P121_status_lb|
 
 GitHub: |P121_github|_
 

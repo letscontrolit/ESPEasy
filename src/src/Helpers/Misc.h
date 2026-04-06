@@ -9,7 +9,9 @@
 #include "../DataTypes/TaskIndex.h"
 #include "../Helpers/Scheduler.h"
 
+#include "../../ESPEasy/net/DataTypes/NetworkIndex.h"
 
+#define bitReadULL(value, bit) ((value) >> (bit) & 1)
 #define bitSetULL(value, bit) ((value) |= (1ULL << (bit)))
 #define bitClearULL(value, bit) ((value) &= ~(1ULL << (bit)))
 #define bitWriteULL(value, bit, bitvalue) (bitvalue ? bitSetULL(value, bit) : bitClearULL(value, bit))
@@ -41,6 +43,12 @@ bool remoteConfig(struct EventStruct *event,
    delay in milliseconds with background processing
  \*********************************************************************************************/
 void delayBackground(unsigned long dsdelay);
+
+/********************************************************************************************\
+   Toggle network enabled state
+ \*********************************************************************************************/
+bool setNetworkEnableStatus(ESPEasy::net::networkIndex_t networkIndex,
+                               bool              enabled);
 
 
 /********************************************************************************************\

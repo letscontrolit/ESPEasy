@@ -12,6 +12,7 @@
 
 
 # if FEATURE_CHART_JS
+#  include "../Helpers/KeyValueWriter.h"
 #  include "../WebServer/Chart_JS_title.h"
 # endif // if FEATURE_CHART_JS
 
@@ -67,12 +68,16 @@ public:
     return _maxValue >= _minValue;
   }
 
+  uint8_t getNrDecimals() const { return _nrDecimals; }
+
   // Set the peaks to unset values
   void   resetPeaks();
 
   void   clearSamples();
 
   size_t getNrSamples() const;
+
+  size_t getNrUsableSamples() const;
 
   // Compute average over all stored values
   float  getSampleAvg() const;
@@ -157,7 +162,7 @@ public:
   }
 
 # if FEATURE_CHART_JS
-  void plot_ChartJS_dataset() const;
+  void plot_ChartJS_dataset(KeyValueWriter & parent) const;
 # endif // if FEATURE_CHART_JS
 
 # if FEATURE_CHART_JS

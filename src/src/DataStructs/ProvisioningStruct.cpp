@@ -43,6 +43,10 @@ bool ProvisioningStruct::fetchFileTypeAllowed(FileType::Enum filetype, unsigned 
     case FileType::NOTIFICATION_DAT: return allowedFlags.allowFetchNotificationDat;
     case FileType::RULES_TXT:        return (filenr < RULESETS_MAX) && bitRead(allowedFlags.allowFetchRules, filenr);
     case FileType::PROVISIONING_DAT: return allowedFlags.allowFetchProvisioningDat;
+#if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE
+    case FileType::DEV_SECURITY_DAT: return allowedFlags.allowFetchDeviceSecurityDat;
+#endif
+
 
     case FileType::MAX_FILETYPE:
       break;
@@ -57,6 +61,9 @@ void ProvisioningStruct::setFetchFileTypeAllowed(FileType::Enum filetype, unsign
     case FileType::SECURITY_DAT:     allowedFlags.allowFetchSecurityDat     = checked; break;
     case FileType::NOTIFICATION_DAT: allowedFlags.allowFetchNotificationDat = checked; break;
     case FileType::PROVISIONING_DAT: allowedFlags.allowFetchProvisioningDat = checked; break;
+#if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE
+    case FileType::DEV_SECURITY_DAT: allowedFlags.allowFetchDeviceSecurityDat = checked; break;
+#endif
     case FileType::RULES_TXT:
 
       if (filenr < RULESETS_MAX) {

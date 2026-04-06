@@ -13,7 +13,9 @@ Type: |P019_type|
 
 Name: |P019_name|
 
-Status: |P019_status|
+Status ESP32: |P019_status|
+
+Status ESP8266: |P019_status_lb|
 
 GitHub: |P019_github|_
 
@@ -111,6 +113,8 @@ Advanced event management
 * **Long press min interval (ms)**: This is the interval that you need to press the button before the long press event is triggered.
 
 * **Use safe button (slower)**: This effectively adds an extra De-bounce delay and sends event value ``4`` when reached.
+
+.. include:: DeviceClass_binary.repl
 
 .. include:: DataAcquisition.repl
 

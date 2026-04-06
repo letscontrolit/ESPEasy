@@ -53,6 +53,7 @@ void ESPEasy_time_zone::setTimeZone(const TimeChangeRule& dstStart, const TimeCh
 }
 
 void ESPEasy_time_zone::logTimeZoneInfo() {
+#ifndef BUILD_NO_DEBUG
   if (!loglevelActiveFor(LOG_LEVEL_INFO)) return;
   String log = F("Current Time Zone: ");
 
@@ -82,6 +83,7 @@ void ESPEasy_time_zone::logTimeZoneInfo() {
   log += m_std.offset;
   log += F(" min");
   addLogMove(LOG_LEVEL_INFO, log);
+#endif
 }
 
 

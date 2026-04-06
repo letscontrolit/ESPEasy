@@ -28,9 +28,20 @@
 #include <ESPeasySerial.h>
 #endif
 
+#define PZEM004Tv30_EXPECTED_RESPONSE 25
+#define PZEM004Tv30_REQUEST_REGISTERS 10
+
+#define PZEM017v1_EXPECTED_RESPONSE 21
+#define PZEM017v1_REQUEST_REGISTERS 8
 
 #define PZEM_DEFAULT_ADDR    0xF8
 
+#define PZEM_MAX_EXPECTED_RESPONSE 25 // PZEM004v30 needs this buffer size, adjust for models that need a bigger buffer
+
+enum class PZEM_model : uint8_t {
+    PZEM004Tv30 = 0, // Buffer size 25, request 10 registers
+    PZEM017Tv1  = 1, // Buffer size 21, request 8 registers
+};
 
 class PZEM004Tv30
 {
@@ -40,6 +51,7 @@ public:
 #endif
     ~PZEM004Tv30();
 
+    void setModel(PZEM_model model); // Sets some communication buffer params
 
     float voltage();
     float current();
@@ -52,8 +64,14 @@ public:
     bool setAddress(uint8_t addr);
     uint8_t getAddress();
 
-    bool setPowerAlarm(uint16_t watts);
-    bool getPowerAlarm();
+    // Unused methods:
+    // bool setPowerAlarm(uint16_t watts);
+    // bool getPowerAlarm();
+
+    // bool setHighvoltAlarm(uint16_t volts); //moja uprava
+    // bool setLowvoltAlarm(uint16_t volts); //moja uprava
+    // bool isHighvoltAlarmOn(); //upravil som
+    // bool isLowvoltAlarmOn(); //upravil som
 
     bool resetEnergy();
     void init(uint8_t addr); // Init common to all constructors
@@ -64,15 +82,22 @@ private:
     bool _isSoft;    // Is serial interface software
 
     uint8_t _addr;   // Device address
+    PZEM_model _model = PZEM_model::PZEM004Tv30; // Current default
+
+    uint8_t _response[PZEM_MAX_EXPECTED_RESPONSE];
+    uint8_t _expectedResponse = PZEM004Tv30_EXPECTED_RESPONSE;
+    uint8_t _requestRegisters = PZEM004Tv30_REQUEST_REGISTERS;
 
     struct {
         float voltage;
         float current;
         float power;
         float energy;
-        float frequeny;
-        float pf;
-        uint16_t alarms;
+        float frequeny; // PZEM004
+        float pf; // PZEM004
+        uint16_t alarms; // PZEM004
+        uint16_t HVAlarms; //upravil som PZEM017
+        uint16_t LVAlarms; //upravil sOM PZEM017
     }  _currentValues; // Measured values
 
     uint64_t _lastRead; // Last time values were updated

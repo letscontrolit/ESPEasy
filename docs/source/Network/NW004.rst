@@ -1,0 +1,47 @@
+.. include:: _network_substitutions.repl
+
+.. _NW004_page:
+
+|NW004_typename|
+==================================================
+
+|NW004_shortinfo|
+
+Network details
+---------------
+
+Type: |NW004_type|
+
+Name: |NW004_name|
+
+Status ESP32: |NW004_status|
+
+Status ESP8266: |NW004_status_lb|
+
+GitHub: |NW004_github|_
+
+Maintainer: |NW004_maintainer|
+
+.. include:: Ethernet_generic.repl
+
+.. include:: Ethernet_spi.repl
+
+.. include:: Ethernet_poe_iso.repl
+
+Change log
+----------
+
+.. versionchanged:: 2.0
+  ...
+
+  |added|
+  Major overhaul for 2.0 release.
+
+.. versionadded:: 1.0
+  ...
+
+  |added|
+  Initial release version.
+
+Description
+-----------

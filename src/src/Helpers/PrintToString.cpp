@@ -19,3 +19,8 @@ const String& PrintToString::get() const
 {
   return _str;
 }
+
+String&& PrintToString::getMove()
+{
+  return std::move(_str);
+}

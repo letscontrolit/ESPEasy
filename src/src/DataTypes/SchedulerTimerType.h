@@ -12,6 +12,7 @@
     GPIO_timer             = 4u,
     PLUGIN_DEVICETIMER_IN_e = 5u, // Similar to PLUGIN_TASKTIMER_IN, addressed to a plugin instead of a task.
     RulesTimer             = 6u,
+    NWPLUGIN_TIMER_IN_e    = 7u,
     IntendedReboot         = 15u // Used to show intended reboot
   };
 

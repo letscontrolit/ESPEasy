@@ -15,7 +15,9 @@ Port Type: |P079_porttype|
 
 Name: |P079_name|
 
-Status: |P079_status|
+Status ESP32: |P079_status|
+
+Status ESP8266: |P079_status_lb|
 
 GitHub: |P079_github|_
 

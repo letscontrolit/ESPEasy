@@ -38,6 +38,9 @@ bool isProtectedFileType(const String& filename)
     matchFileType(filename, FileType::CONFIG_DAT) ||
     matchFileType(filename, FileType::SECURITY_DAT) ||
     matchFileType(filename, FileType::NOTIFICATION_DAT) ||
+#if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE
+    matchFileType(filename, FileType::DEV_SECURITY_DAT) ||
+#endif
     matchFileType(filename, FileType::PROVISIONING_DAT);
 }
 
@@ -48,6 +51,9 @@ const __FlashStringHelper* getFileName(FileType::Enum filetype) {
     case FileType::NOTIFICATION_DAT: return F("notification.dat");
     case FileType::SECURITY_DAT:     return F("security.dat");
     case FileType::PROVISIONING_DAT: return F("provisioning.dat");
+#if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE
+    case FileType::DEV_SECURITY_DAT: return F("devsecurity.dat");
+#endif
     case FileType::RULES_TXT:
       // Use getRulesFileName
       break;
@@ -84,6 +90,9 @@ bool getDownloadFiletypeChecked(FileType::Enum filetype, unsigned int filenr) {
     case FileType::NOTIFICATION_DAT: return ResetFactoryDefaultPreference.fetchNotificationDat();
     case FileType::RULES_TXT:        return ResetFactoryDefaultPreference.fetchRulesTXT(filenr);
     case FileType::PROVISIONING_DAT: return ResetFactoryDefaultPreference.fetchProvisioningDat();
+#if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE
+    case FileType::DEV_SECURITY_DAT: return ResetFactoryDefaultPreference.fetchDeviceSecurityDat();
+#endif
       break;
 
     case FileType::MAX_FILETYPE:
