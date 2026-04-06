@@ -849,7 +849,7 @@ To create/register a plugin, you have to :
       #ifdef BUILD_NO_DEBUG
         #undef BUILD_NO_DEBUG
       #endif
-      
+      // TD-er: 2026/04/06  mDNS is still as stable as a drunk man on roller skates, better not use it
 //      #define FEATURE_MDNS  1
       #define FEATURE_CUSTOM_PROVISIONING 1
       #define FEATURE_DOWNLOAD 1
@@ -3479,19 +3479,20 @@ To create/register a plugin, you have to :
 #if FEATURE_ARDUINO_OTA
   #ifndef LIMIT_BUILD_SIZE
     #ifndef FEATURE_MDNS
+      // TD-er: 2026/04/06  Still as stable as a drunk man on roller skates, better not use it
       #ifdef ESP32
         #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 4)
           // See if it is now more usable...
           // See: 
           // https://github.com/letscontrolit/ESPEasy/issues/5061
           // https://github.com/letscontrolit/ESPEasy/issues/5513#issuecomment-4143114757
-          #define FEATURE_MDNS  1
+          #define FEATURE_MDNS  0
         #else
           #define FEATURE_MDNS  0
         #endif
       #else
         // Do not use MDNS on ESP8266 due to memory leak
-        #define FEATURE_MDNS  1
+        #define FEATURE_MDNS  0
       #endif
     #endif
   #endif
