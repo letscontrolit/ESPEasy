@@ -4,14 +4,9 @@
 
 # include "../../ESPEasy-Globals.h"
 # include "../../ESPEasy/net/ESPEasyNetwork.h"
-# include "../../ESPEasy/net/Globals/ESPEasyWiFi.h"
-# include "../../ESPEasy/net/Globals/ESPEasyWiFiEvent.h"
 # include "../../ESPEasy/net/Globals/NetworkState.h"
 # include "../../ESPEasy/net/Helpers/NWAccessControl.h"
 # include "../../ESPEasy/net/Helpers/NW_info_writer.h"
-#if FEATURE_ETHERNET
-# include "../../ESPEasy/net/eth/ESPEasyEth.h"
-#endif
 # include "../../ESPEasy/net/wifi/ESPEasyWifi.h"
 # include "../Commands/Diagnostic.h"
 # include "../CustomBuild/CompiletimeDefines.h"
@@ -20,27 +15,21 @@
 # include "../Globals/ESPEasy_time.h"
 # include "../Globals/RTC.h"
 # include "../Globals/Settings.h"
-# include "../Helpers/Convert.h"
-# include "../Helpers/ESPEasyStatistics.h"
 # include "../Helpers/ESPEasy_Storage.h"
 # include "../Helpers/Hardware_device_info.h"
 # include "../Helpers/KeyValueWriter_JSON.h"
 # include "../Helpers/Memory.h"
 # include "../Helpers/Misc.h"
 # include "../Helpers/Networking.h"
-# include "../Helpers/OTA.h"
 # include "../Helpers/StringConverter.h"
-# include "../Helpers/StringGenerator_GPIO.h"
 # include "../Helpers/StringGenerator_System.h"
 # include "../Helpers/StringProvider.h"
 # include "../Static/WebStaticData.h"
-# include "../WebServer/AccessControl.h"
 # include "../WebServer/ESPEasy_WebServer.h"
 # include "../WebServer/HTML_wrappers.h"
 # include "../WebServer/KeyValueWriter_WebForm.h"
 # include "../WebServer/Markup.h"
 # include "../WebServer/Markup_Buttons.h"
-# include "../WebServer/NetworkPage.h"
 
 # if FEATURE_MQTT
 #  include "../Globals/MQTT.h"
@@ -313,6 +302,9 @@ void handle_sysinfo() {
 void handle_sysinfo_basicInfo() {
   static const LabelType::Enum labels[] PROGMEM =
   {
+#if FEATURE_MDNS
+    LabelType::M_DNS,
+#endif
     LabelType::UNIT_NR,
 
     LabelType::LOCAL_TIME,

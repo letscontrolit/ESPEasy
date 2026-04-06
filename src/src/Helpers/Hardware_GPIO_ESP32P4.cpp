@@ -136,9 +136,16 @@ bool getADC_gpio_info(int gpio_pin, int& adc, int& ch, int& t)
 #if SOC_TOUCH_SENSOR_SUPPORTED
 int touchPinToGpio(int touch_pin)
 {
+  #if ESP_IDF_VERSION_MAJOR < 6
   if (touch_pin >= 0 && touch_pin < SOC_TOUCH_SENSOR_NUM) {
     return touch_pin + 2;
   }
+  #else
+  // FIXME TD-er: Must check if the returned pin number is correct.
+  if (touch_pin >= SOC_TOUCH_MIN_CHAN_ID && touch_pin <= SOC_TOUCH_MAX_CHAN_ID) {
+    return touch_pin;
+  }
+  #endif
   return -1;
 }
 #endif

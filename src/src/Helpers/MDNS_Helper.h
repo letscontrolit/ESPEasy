@@ -5,7 +5,10 @@
 
 void set_mDNS();
 
+void end_mDNS();
+
 void update_mDNS();
+
 
 
 #endif

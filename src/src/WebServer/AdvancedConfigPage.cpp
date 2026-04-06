@@ -134,7 +134,9 @@ void handle_advanced() {
 #if FEATURE_USE_IPV6
     Settings.EnableIPv6(isFormItemChecked(LabelType::ENABLE_IPV6));
 #endif
-
+#if FEATURE_MDNS
+    Settings.Use_mDNS(isFormItemChecked(LabelType::USE_MDNS));
+#endif
 
 
 
@@ -167,6 +169,9 @@ void handle_advanced() {
     #if FEATURE_MQTT_CONNECT_BACKGROUND
     Settings.MQTTConnectInBackground(isFormItemChecked(LabelType::MQTT_CONNECT_IN_BACKGROUND));
     #endif // if FEATURE_MQTT_CONNECT_BACKGROUND
+    #if FEATURE_COLORIZE_CONSOLE_LOGS
+    Settings.ColorizeSerialLog(isFormItemChecked(LabelType::COLORIZE_CONSOLE_LOGS));
+    #endif
 
     addHtmlError(SaveSettings());
 
@@ -351,7 +356,9 @@ void handle_advanced() {
       #if FEATURE_MQTT_CONNECT_BACKGROUND
       ,LabelType::MQTT_CONNECT_IN_BACKGROUND
       #endif // if FEATURE_MQTT_CONNECT_BACKGROUND
-
+      #if FEATURE_COLORIZE_CONSOLE_LOGS
+      ,LabelType::COLORIZE_CONSOLE_LOGS
+      #endif
       # ifndef NO_HTTP_UPDATER
       ,LabelType::ALLOW_OTA_UNLIMITED
       # endif // ifndef NO_HTTP_UPDATER
@@ -395,6 +402,10 @@ void handle_advanced() {
 #if FEATURE_USE_IPV6
   ,LabelType::ENABLE_IPV6
 #endif
+#if FEATURE_MDNS
+  ,LabelType::USE_MDNS
+#endif
+
         };
   addFormCheckBoxes(labels, NR_ELEMENTS(labels));
 }

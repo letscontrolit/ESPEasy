@@ -986,23 +986,42 @@ void SettingsStruct_tmpl<N_TASKS>::setPinBootState(int8_t gpio_pin, PinBootState
   }
 # endif // ifdef ESP32
 }
+
 #if FEATURE_SPI
 template<uint32_t N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::isSPI_enabled(uint8_t spi_bus) const {
-  const SPI_Options_e SPI_selection = static_cast<SPI_Options_e>(0 == spi_bus ? InitSPI : InitSPI1);
-  return SPI_Options_e::None != SPI_selection;
+  return SPI_Options_e::None != getSPISelection(spi_bus);
 }
 
 template<uint32_t N_TASKS>
 uint8_t SettingsStruct_tmpl<N_TASKS>::getNrConfiguredSPI_buses() const
 {
+  #ifdef ESP8266
+  return isSPI_valid(0u) ? 1 : 0;
+  #else
   uint8_t res{};
   if (isSPI_valid(0u)) ++res;
-  #ifdef ESP32
   if (getSPIBusCount() > 1 && isSPI_valid(1u)) ++res;
-  #endif
   return res;
+  #endif
 }
+
+template<uint32_t N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::getSPI_pinsForTask(taskIndex_t TaskIndex,
+                          int8_t  spi_gpios[3],
+                          bool    noCheck) const
+{
+  spi_gpios[0] = -1;
+  spi_gpios[1] = -1;
+  spi_gpios[2] = -1;
+
+  if (!validTaskIndex(TaskIndex)) return false;
+  return getSPI_pins(
+    spi_gpios,
+    getSPIBusForTask(TaskIndex),
+    noCheck);
+}
+
 
 template<uint32_t N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::getSPI_pins(int8_t spi_gpios[3], uint8_t spi_bus, bool noCheck) const {
@@ -1012,7 +1031,7 @@ bool SettingsStruct_tmpl<N_TASKS>::getSPI_pins(int8_t spi_gpios[3], uint8_t spi_
 
   if (noCheck || isSPI_valid(spi_bus)) {
     # ifdef ESP32
-    const SPI_Options_e SPI_selection = static_cast<SPI_Options_e>(0 == spi_bus ? InitSPI : InitSPI1);
+  const SPI_Options_e SPI_selection = getSPISelection(spi_bus);
 
     switch (SPI_selection) {
       case SPI_Options_e::Vspi_Fspi:
@@ -1058,57 +1077,14 @@ bool SettingsStruct_tmpl<N_TASKS>::getSPI_pins(int8_t spi_gpios[3], uint8_t spi_
     }
     # endif // ifdef ESP32
     # ifdef ESP8266
-    spi_gpios[0] = 14; spi_gpios[1] = 12; spi_gpios[2] = 13;
+    spi_gpios[0] = SOC_SPI_SCLK;
+    spi_gpios[1] = SOC_SPI_MISO;
+    spi_gpios[2] = SOC_SPI_MOSI;
     # endif // ifdef ESP8266
     return true;
   }
   return false;
 }
-
-#ifdef ESP32
-template<uint32_t N_TASKS>
-spi_host_device_t SettingsStruct_tmpl<N_TASKS>::getSPI_host(uint8_t spi_bus) const
-{
-  if (isSPI_valid(spi_bus)) {
-    const SPI_Options_e SPI_selection = static_cast<SPI_Options_e>(0 == spi_bus ? InitSPI : InitSPI1);
-    switch (SPI_selection) {
-      case SPI_Options_e::Vspi_Fspi:
-      case SPI_Options_e::UserDefined_VSPI:
-      {
-        #if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
-        return static_cast<spi_host_device_t>(FSPI_HOST);
-        #else
-        return static_cast<spi_host_device_t>(VSPI_HOST);
-        #endif
-      }
-#ifdef ESP32_CLASSIC
-      case SPI_Options_e::Hspi:
-      {
-        return static_cast<spi_host_device_t>(HSPI_HOST);
-      }
-#endif
-#if SOC_SPI_PERIPH_NUM > 2
-      case SPI_Options_e::UserDefined_HSPI:
-      {
-        return static_cast<spi_host_device_t>(HSPI_HOST);
-      }
-#endif
-      case SPI_Options_e::None:
-        break;
-    }
-
-  }
-  #if ESP_IDF_VERSION_MAJOR < 5
-  #if CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
-  return static_cast<spi_host_device_t>(FSPI_HOST);
-  #else
-  return static_cast<spi_host_device_t>(VSPI_HOST);
-  #endif
-  #else
-  return spi_host_device_t::SPI_HOST_MAX;
-  #endif
-}
-#endif
 
 
 template<uint32_t N_TASKS>
@@ -1190,6 +1166,14 @@ bool SettingsStruct_tmpl<N_TASKS>::isSPI_valid(uint8_t spi_bus) const {
   #endif // ifdef ESP32
   return result;
 }
+
+template<uint32_t N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::isSPI_validForTask(taskIndex_t TaskIndex) const
+{
+  if (!validTaskIndex(TaskIndex)) return false;
+  return isSPI_valid(getSPIBusForTask(TaskIndex));
+}
+
 #endif
 #if FEATURE_I2C
 template<uint32_t N_TASKS>
@@ -1238,12 +1222,25 @@ uint8_t SettingsStruct_tmpl<N_TASKS>::getNrConfiguredI2C_buses() const
 // stored in I2C_SPI_bus_Flags per Task
 template<uint32_t N_TASKS>
 uint8_t SettingsStruct_tmpl<N_TASKS>::getSPIBusForTask(taskIndex_t TaskIndex) const {
+  if (validTaskIndex(TaskIndex))
   return get2BitFromUL(I2C_SPI_bus_Flags[TaskIndex], SPI_FLAGS_TASK_BUS_NUMBER);
+  return 0;
 }
 
 template<uint32_t N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::setSPIBusForTask(taskIndex_t TaskIndex, uint8_t spi_bus) {
+  if (validTaskIndex(TaskIndex))
   set2BitToUL(I2C_SPI_bus_Flags[TaskIndex], SPI_FLAGS_TASK_BUS_NUMBER, spi_bus);
+}
+
+template<uint32_t N_TASKS>
+SPI_Options_e SettingsStruct_tmpl<N_TASKS>::getSPISelection(uint8_t spi_bus) const
+{
+  #ifdef ESP32
+  return static_cast<SPI_Options_e>(0 == spi_bus ? InitSPI : InitSPI1);
+  #else
+  return static_cast<SPI_Options_e>(InitSPI);
+  #endif
 }
 
 #if FEATURE_SD

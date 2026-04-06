@@ -174,8 +174,8 @@ boolean Plugin_104(uint8_t function, struct EventStruct *event, String& string) 
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      int8_t spi_pins[3];
-      Settings.getSPI_pins(spi_pins);
+      int8_t spi_pins[3]{};
+      Settings.getSPI_pinsForTask(event->TaskIndex, spi_pins);
       int    pinnr = -1;
       bool   input, output, warning;
       String note;

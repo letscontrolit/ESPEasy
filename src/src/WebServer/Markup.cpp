@@ -9,15 +9,15 @@
 
 #include "../Globals/Settings.h"
 
-#include "../Helpers/Convert.h"
+#if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 #include "../Helpers/ESPEasy_UnitOfMeasure.h"
+#endif
 #include "../Helpers/Hardware_GPIO.h"
 #include "../Helpers/Hardware_device_info.h"
-#include "../Helpers/StringConverter_Numerical.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_GPIO.h"
 
-#include "../../ESPEasy_common.h"
+
 
 #ifdef ESP32
 # include "soc/soc_caps.h"
@@ -249,9 +249,10 @@ void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int
       // }
   
   #if FEATURE_ETHERNET
-
-      if (Settings.isEthernetPin(gpio) || (includeEthernet && Settings.isEthernetPinOptional(gpio))) {
-        disabled = true;
+      if (includeEthernet) {
+        if (Settings.isEthernetPin(gpio) || Settings.isEthernetPinOptional(gpio)) {
+          disabled = true;
+        }
       }
   #endif // if FEATURE_ETHERNET
 
@@ -271,25 +272,7 @@ void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int
 
 void addSelector_Item(const __FlashStringHelper *option, int index, bool    selected, bool    disabled, const String& attr)
 {
-  addHtml(F("<option "));
-  addHtmlAttribute(F("value"), index);
-
-  if (selected) {
-    addHtml(F(" selected"));
-  }
-
-  if (disabled) {
-    addDisabled();
-  }
-
-  if (attr.length() > 0)
-  {
-    addHtml(' ');
-    addHtml(attr);
-  }
-  addHtml('>');
-  addHtml(option);
-  addHtml(F("</option>"));
+  addSelector_Item(String(option), index, selected, disabled, attr);
 }
 
 void addSelector_Item(const String& option, int index, bool    selected, bool    disabled, const String& attr)
@@ -301,7 +284,10 @@ void addSelector_Item(const String& option, int index, bool    selected, bool   
     addHtml(F(" selected"));
   }
 
-  if (disabled) {
+  if (disabled && !selected) {
+    // Make sure something that's selected isn't marked disabled.
+    // Disabled items are not sent in the POST, so if saving settings 
+    // where a chosen option is marked 'disabled' you may get odd results.
     addDisabled();
   }
 
@@ -467,23 +453,23 @@ void addRowLabel(LabelType::Enum label) {
   addRowLabel(getLabel(label));
 }
 
-void addRowLabelValue(LabelType::Enum label) {
+void addRowLabelValue(LabelType::Enum label, bool extendedValue) {
   addRowLabel(getLabel(label));
-  addHtml(getValue(label));
+  addHtml(extendedValue ? getExtendedValue(label) : getValue(label));
 #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
   addUnit(getFormUnit(label));
 #endif
 }
 
-void addRowLabelValues(const LabelType::Enum labels[]) {
+void addRowLabelValues(const LabelType::Enum labels[], bool extendedValue) {
 
   KeyValueWriter_WebForm writer(true);
-  writer.writeLabels(labels, true);
+  writer.writeLabels(labels, extendedValue);
 }
 
-void addRowLabelValue_copy(LabelType::Enum label) {
+void addRowLabelValue_copy(LabelType::Enum label, bool extendedValue) {
   addRowLabel_copy(getLabel(label));
-  addHtml(getValue(label));
+  addHtml(extendedValue ? getExtendedValue(label) : getValue(label));
 #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
   addUnit(getFormUnit(label));
 #endif

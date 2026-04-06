@@ -3,7 +3,6 @@
 #ifdef WEBSERVER_CONFIG
 
 #include "../WebServer/HTML_wrappers.h"
-#include "../WebServer/AccessControl.h"
 #include "../WebServer/Markup.h"
 #include "../WebServer/Markup_Buttons.h"
 #include "../WebServer/Markup_Forms.h"
@@ -19,13 +18,11 @@
 #include "../../ESPEasy/net/Helpers/NWAccessControl.h"
 
 #include "../Globals/MQTT.h"
-#include "../Globals/Nodes.h"
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Settings.h"
 
 #include "../Helpers/DeepSleep.h"
 #include "../Helpers/ESPEasy_Storage.h"
-#include "../Helpers/Networking.h"
 #include "../Helpers/StringConverter.h"
 
 

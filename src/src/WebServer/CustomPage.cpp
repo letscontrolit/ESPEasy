@@ -10,7 +10,6 @@
 
 #include "../Commands/ExecuteCommand.h"
 #include "../Globals/Nodes.h"
-#include "../Globals/Device.h"
 #include "../Globals/Plugins.h"
 #include "../Globals/Settings.h"
 

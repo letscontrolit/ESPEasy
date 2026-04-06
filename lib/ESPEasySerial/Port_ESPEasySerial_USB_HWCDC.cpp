@@ -115,8 +115,7 @@ int Port_ESPEasySerial_USB_HWCDC_t::available(void)
 int Port_ESPEasySerial_USB_HWCDC_t::availableForWrite(void)
 {
   if (_hwcdc_serial != nullptr && _hwcdc_serial->isConnected()) {
-      const int res = _hwcdc_serial->availableForWrite();
-      return res > 64 ? 64 : res;
+      return _hwcdc_serial->availableForWrite();
   }
   return 0;
 }

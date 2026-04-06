@@ -1035,9 +1035,9 @@
     "
     WifiAPMode","
     :red:`Internal`","
-    Force the unit into AP mode.
+    Force the unit into AP mode or turn AP mode off.
 
-    ``WifiAPMode``"
+    ``WifiAPMode,<on|off|1|0>``"
     "
     WifiConnect","
     :red:`Internal`","

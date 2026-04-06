@@ -45,6 +45,9 @@
 #include "../../ESPEasy_fdwdecl.h"
 #endif
 
+#if FEATURE_MDNS
+#include "../Helpers/MDNS_Helper.h"
+#endif
 
 #define PLUGIN_ID_MQTT_IMPORT         37
 
@@ -564,12 +567,17 @@ void flushAndDisconnectAllClients() {
     saveToRTC();
     delay(100); // Flush anything in the network buffers.
   }
+
   process_serialWriteBuffer();
 }
 
 
 void prepareShutdown(IntendedRebootReason_e reason)
 {
+#if FEATURE_MDNS
+  end_mDNS();
+#endif
+
 //  WiFiEventData.intent_to_reboot = true;
 #if FEATURE_MQTT
   runPeriodicalMQTT(); // Flush outstanding MQTT messages

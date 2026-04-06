@@ -1,14 +1,10 @@
 #include "../Commands/UPD.h"
 
 
-#include "../../ESPEasy_common.h"
-
 #include "../Commands/Common.h"
 #include "../../ESPEasy/net/ESPEasyNetwork.h"
-#include "../../ESPEasy/net/Globals/NetworkState.h"
 #include "../Globals/Settings.h"
 #include "../Helpers/Misc.h"
-#include "../Helpers/NetworkStatusLED.h"
 #include "../Helpers/Networking.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringParser.h"

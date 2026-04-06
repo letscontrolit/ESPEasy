@@ -3,12 +3,7 @@
 
 #include "../WebServer/common.h"
 
-
-#include "../CustomBuild/ESPEasyLimits.h"
 #include "../DataTypes/SettingsType.h"
-#include "../Globals/Plugins.h"
-#include "../Helpers/StringConverter.h"
-
 #include "../WebServer/WebTemplateParser.h"
 
 
