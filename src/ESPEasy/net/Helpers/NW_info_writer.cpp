@@ -2,8 +2,11 @@
 
 #include "../../../src/DataStructs/ESPEasy_EventStruct.h"
 #include "../../../src/DataTypes/ESPEasy_plugin_functions.h"
+#include "ESPEasy_config.h"
+#include "src/Helpers/StringProvider.h"
+#include <cstddef>
 #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
-#include "../../../src/Helpers/ESPEasy_UnitOfMeasure.h"
+# include "../../../src/Helpers/ESPEasy_UnitOfMeasure.h"
 #endif
 #include "../../../src/Helpers/StringConverter.h"
 #include "../../../src/Helpers/StringGenerator_GPIO.h"
@@ -69,7 +72,7 @@ bool write_NetworkAdapterFlags(ESPEasy::net::networkIndex_t networkindex, KeyVal
   }
   return true;
 }
-#ifndef LIMIT_BUILD_SIZE
+
 bool write_NetworkAdapterPort(ESPEasy::net::networkIndex_t networkindex,
                               KeyValueWriter              *writer)
 {
@@ -83,7 +86,7 @@ bool write_NetworkAdapterPort(ESPEasy::net::networkIndex_t networkindex,
   NWPluginCall(NWPlugin::Function::NWPLUGIN_WEBFORM_SHOW_PORT, &TempEvent, str);
   return true;
 }
-#endif
+
 
 bool write_IP_config(ESPEasy::net::networkIndex_t networkindex, KeyValueWriter*writer)
 {
@@ -128,6 +131,40 @@ bool write_IP_config(ESPEasy::net::networkIndex_t networkindex, KeyValueWriter*w
 }
 
 #endif // ifdef ESP32
+
+#ifdef ESP8266
+
+bool write_IP_config(ESPEasy::net::networkIndex_t networkindex, KeyValueWriter*writer)
+{
+  if (writer == nullptr) { return false; }
+
+  if (networkindex == 0) {
+    static const LabelType::Enum labels[] PROGMEM = {
+
+      LabelType::IP_CONFIG,
+      LabelType::IP_ADDRESS_SUBNET,
+      LabelType::GATEWAY,
+      LabelType::CLIENT_IP,
+      LabelType::DNS,
+
+      LabelType::MAX_LABEL
+    };
+    writer->writeLabels(labels, true);
+
+    return true;
+  }
+
+  struct EventStruct TempEvent;
+  TempEvent.kvWriter = writer;
+
+  TempEvent.NetworkIndex = networkindex;
+
+  String str;
+
+  return ESPEasy::net::NWPluginCall(NWPlugin::Function::NWPLUGIN_WEBFORM_SHOW_IP, &TempEvent);
+}
+
+#endif // ifdef ESP8266
 
 bool write_NetworkConnectionInfo(ESPEasy::net::networkIndex_t networkindex, KeyValueWriter*writer)
 {
@@ -176,7 +213,7 @@ bool write_Eth_Show_Connected(const ETHClass& eth, KeyValueWriter *writer)
 
 bool write_Eth_HW_Address(
   const ESPEasy::net::EthPhyType_t phyType,
-  const ETHClass* eth, KeyValueWriter *writer)
+  const ETHClass*eth, KeyValueWriter *writer)
 {
   if (writer == nullptr) { return false; }
 
@@ -201,6 +238,7 @@ bool write_Eth_HW_Address(
 
 #endif // if defined(USES_NW003) || defined(USES_NW004)
 
+#ifdef ESP32
 bool write_NetworkPort(const __FlashStringHelper*labels[], const int pins[], size_t nrElements, KeyValueWriter *writer)
 {
   if (writer == nullptr) { return false; }
@@ -233,6 +271,7 @@ bool write_NetworkPort(const __FlashStringHelper*labels[], const int pins[], siz
 
   return success;
 }
+#endif
 
 } // namespace net
 } // namespace ESPEasy

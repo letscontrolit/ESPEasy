@@ -108,7 +108,6 @@ bool NWPlugin_003(NWPlugin::Function function, EventStruct *event, String& strin
       }
       break;
     }
-# ifndef LIMIT_BUILD_SIZE
     case NWPlugin::Function::NWPLUGIN_WEBFORM_SHOW_PORT:
     {
       ESPEasy::net::eth::NW003_data_struct_ETH_RMII *NW_data =
@@ -119,7 +118,6 @@ bool NWPlugin_003(NWPlugin::Function function, EventStruct *event, String& strin
       }
       break;
     }
-# endif // ifndef LIMIT_BUILD_SIZE
 
     case NWPlugin::Function::NWPLUGIN_WEBFORM_SAVE:
     {

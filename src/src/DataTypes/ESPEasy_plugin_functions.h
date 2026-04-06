@@ -199,7 +199,7 @@ public:
     NWPLUGIN_WEBFORM_SHOW_HOSTNAME,   // Used for showing hostname
     NWPLUGIN_WEBFORM_SHOW_HW_ADDRESS, // Used for showing MAC
     NWPLUGIN_WEBFORM_SHOW_IP,         // Used for showing IP
-#ifndef LIMIT_BUILD_SIZE
+#ifdef ESP32
     NWPLUGIN_WEBFORM_SHOW_PORT,        // Used for showing host information for the network adapter.
 #endif
 

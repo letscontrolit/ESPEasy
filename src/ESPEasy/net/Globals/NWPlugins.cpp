@@ -331,7 +331,7 @@ bool NWPluginCall(NWPlugin::Function Function, EventStruct *event, String& str)
     case NWPlugin::Function::NWPLUGIN_WEBFORM_SHOW_EXTENDED:
     case NWPlugin::Function::NWPLUGIN_WEBFORM_SHOW_HW_ADDRESS:
     case NWPlugin::Function::NWPLUGIN_WEBFORM_SHOW_IP:
-#ifndef LIMIT_BUILD_SIZE
+#ifdef ESP32
     case NWPlugin::Function::NWPLUGIN_WEBFORM_SHOW_PORT:
 #endif
     case NWPlugin::Function::NWPLUGIN_WEBFORM_SHOW_HOSTNAME:
