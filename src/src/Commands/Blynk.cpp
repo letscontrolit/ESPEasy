@@ -11,7 +11,7 @@
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/_CPlugin_Helper.h"
 
-#include "../../ESPEasy_fdwdecl.h"
+//#include "../../ESPEasy_fdwdecl.h"
 
 
 controllerIndex_t firstEnabledBlynk_ControllerIndex() {

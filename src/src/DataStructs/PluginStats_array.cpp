@@ -6,7 +6,6 @@
 
 # include "../Globals/TimeZone.h"
 
-# include "../Helpers/ESPEasy_math.h"
 # include "../Helpers/Memory.h"
 
 # include "../WebServer/Chart_JS.h"

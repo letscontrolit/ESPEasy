@@ -1,5 +1,5 @@
 #include "../Globals/SPIe.h"
 
-#ifdef ESP32
+#if defined(ESP32) && SOC_SPI_PERIPH_NUM > 2
 SPIClass SPIe(HSPI);
-#endif // ifdef ESP32
+#endif

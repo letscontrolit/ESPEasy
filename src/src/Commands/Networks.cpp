@@ -5,7 +5,6 @@
 #include "../../ESPEasy/net/Globals/NetworkState.h"
 #include "../../ESPEasy/net/Helpers/NWAccessControl.h"
 #include "../../ESPEasy/net/eth/ESPEasyEth.h"
-#include "../../ESPEasy_common.h"
 #include "../Commands/Common.h"
 #include "../Globals/Settings.h"
 #include "../Helpers/StringConverter.h"

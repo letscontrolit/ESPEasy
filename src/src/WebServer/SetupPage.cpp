@@ -15,15 +15,12 @@
 # include "../../ESPEasy/net/wifi/ESPEasyWifi.h"
 
 
-# include "../../ESPEasy/net/Globals/ESPEasyWiFiEvent.h"
-# include "../../ESPEasy/net/Globals/NetworkState.h"
 # include "../Globals/RTC.h"
 # include "../Globals/Settings.h"
 # include "../Globals/SecuritySettings.h"
 # include "../../ESPEasy/net/Globals/WiFi_AP_Candidates.h"
 
 # include "../Helpers/Misc.h"
-# include "../Helpers/Networking.h"
 # include "../Helpers/ESPEasy_Storage.h"
 # include "../Helpers/StringConverter.h"
 

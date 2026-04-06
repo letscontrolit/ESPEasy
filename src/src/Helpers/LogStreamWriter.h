@@ -36,6 +36,8 @@ protected:
   virtual size_t write_item(Print& stream,
                             size_t  nrBytesToWrite);
 
+  size_t write_part(String& str, Print& stream, size_t nrBytesToWrite);
+
 
   virtual size_t write_skipping(Print& stream);
 

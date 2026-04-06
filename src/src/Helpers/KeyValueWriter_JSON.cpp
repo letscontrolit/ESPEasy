@@ -3,8 +3,6 @@
 #include "../Globals/Settings.h"
 #include "../Helpers/StringConverter.h"
 
-#include "../WebServer/HTML_wrappers.h"
-
 
 KeyValueWriter_JSON::KeyValueWriter_JSON(bool emptyHeader, PrintToString *toStr)
   : KeyValueWriter(emptyHeader, toStr)

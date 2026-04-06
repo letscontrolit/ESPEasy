@@ -3,10 +3,9 @@
 
 #include "../WebServer/common.h"
 
-#include "../DataTypes/FormSelectorOptions.h"
 #include "../../ESPEasy/net/DataStructs/MAC_address.h"
-#include "../Globals/Plugins.h"
 #include "../Helpers/StringGenerator_GPIO.h"
+#include "../DataTypes/TaskIndex.h"
 
 
 // ********************************************************************************

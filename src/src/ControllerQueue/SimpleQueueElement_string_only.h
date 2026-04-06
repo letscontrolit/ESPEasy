@@ -23,15 +23,15 @@ public:
                                             taskIndex_t TaskIndex,
                                             String   && req);
 
-  size_t                    getSize() const;
+  size_t                    getSize() const override;
 
-  bool                      isDuplicate(const Queue_element_base& other) const;
+  bool                      isDuplicate(const Queue_element_base& other) const override;
 
-  const UnitMessageCount_t* getUnitMessageCount() const {
+  const UnitMessageCount_t* getUnitMessageCount() const override {
     return nullptr;
   }
 
-  UnitMessageCount_t* getUnitMessageCount() {
+  UnitMessageCount_t* getUnitMessageCount() override {
     return nullptr;
   }
 

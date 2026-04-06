@@ -3,6 +3,11 @@
 
 #include "../../include/ESPEasy_config.h"
 
+#ifdef ESP32
+#include <esp_idf_version.h>
+#endif
+
+
 /*
 #################################################
  This is the place where plugins are registered
@@ -844,7 +849,7 @@ To create/register a plugin, you have to :
       #ifdef BUILD_NO_DEBUG
         #undef BUILD_NO_DEBUG
       #endif
-      
+      // TD-er: 2026/04/06  mDNS is still as stable as a drunk man on roller skates, better not use it
 //      #define FEATURE_MDNS  1
       #define FEATURE_CUSTOM_PROVISIONING 1
       #define FEATURE_DOWNLOAD 1
@@ -2423,7 +2428,7 @@ To create/register a plugin, you have to :
 
   // Enable extra climate-related plugins (CO2/Temp/Hum)
 
-  #if defined(USES_P169) && defined(ESP32)
+  #if !defined(USES_P169) && defined(ESP32)
     #define USES_P169   // Environment - AS3935 Lightning Detector
   #endif
   #if !defined(USES_P173) // && defined(ESP32)
@@ -3474,10 +3479,13 @@ To create/register a plugin, you have to :
 #if FEATURE_ARDUINO_OTA
   #ifndef LIMIT_BUILD_SIZE
     #ifndef FEATURE_MDNS
+      // TD-er: 2026/04/06  Still as stable as a drunk man on roller skates, better not use it
       #ifdef ESP32
-        #if ESP_IDF_VERSION_MAJOR >= 5
+        #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 4)
           // See if it is now more usable...
-          // See: https://github.com/letscontrolit/ESPEasy/issues/5061
+          // See: 
+          // https://github.com/letscontrolit/ESPEasy/issues/5061
+          // https://github.com/letscontrolit/ESPEasy/issues/5513#issuecomment-4143114757
           #define FEATURE_MDNS  0
         #else
           #define FEATURE_MDNS  0
@@ -4042,7 +4050,11 @@ To create/register a plugin, you have to :
         #define FEATURE_SET_WIFI_TX_PWR   1
       #endif
     #elif defined(ESP8266)
-      #define FEATURE_SET_WIFI_TX_PWR   1
+      #ifndef LIMIT_BUILD_SIZE
+        #define FEATURE_SET_WIFI_TX_PWR   1
+      #else
+        #define FEATURE_SET_WIFI_TX_PWR   0
+      #endif
     #endif
   #endif
 #endif

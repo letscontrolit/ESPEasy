@@ -2,6 +2,8 @@
 
 #if defined(USES_P154) || defined(USES_P172)
 
+#include "../Helpers/Hardware_SPI.h"
+
 # define P154_BMP3_CHIP_ID     0x50
 # define P154_BMP390_CHIP_ID   0x60
 
@@ -10,26 +12,29 @@ P154_data_struct::P154_data_struct(struct EventStruct *event) :
   i2cAddress(P154_I2C_ADDR),
   elevation(P154_ALTITUDE),
   csPin(PIN(0))
-{
-  # ifdef ESP32
-  _spi_bus = Settings.getSPIBusForTask(event->TaskIndex);
-  # endif // ifdef ESP32
-}
+{}
 
-bool P154_data_struct::begin(bool _i2cMode)
+bool P154_data_struct::begin(struct EventStruct *event, bool _i2cMode)
 {
   i2cMode = _i2cMode;
 
   if (i2cMode && !bmp.begin_I2C(i2cAddress)) {
     return false;
   }
-
-  if (!i2cMode && !bmp.begin_SPI(csPin
-                                 # ifdef ESP32
-                                 , 0 == _spi_bus ? &SPI : &SPIe
-                                 # endif // ifdef ESP32
-                                 )) {
-    return false;
+  if (!i2cMode) {
+# ifdef ESP32
+    auto spi_ptr = getSPIBusForTask(event->TaskIndex);
+    if (!spi_ptr) {
+      return false;
+    }
+#endif
+    if (!bmp.begin_SPI(csPin
+                      # ifdef ESP32
+                      , spi_ptr
+                      # endif // ifdef ESP32
+                      )) {
+      return false;
+    }
   }
 
   // Set up oversampling and filter initialization

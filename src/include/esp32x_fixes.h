@@ -33,7 +33,7 @@
  *                            -include "esp32x_fixes.h"
  */
 
-//#include <sdkconfig.h>
+// #include <sdkconfig.h>
 
 #ifdef __riscv
 
@@ -46,90 +46,40 @@
 #endif // __riscv
 
 #ifdef ESP32
-#include <soc/soc_caps.h>
+# include <soc/soc_caps.h>
 #endif
 
 // alias, deprecated for the chips after esp32s2
 #ifdef CONFIG_IDF_TARGET_ESP32
-# define SPI_HOST    SPI1_HOST
-# define HSPI_HOST   SPI2_HOST
-# define VSPI_HOST   SPI3_HOST
+# define SPI_HOST    SPI1_HOST // SPI 1 bus attached to the flash (can use the same data lines but different SS)
+# define HSPI_HOST   SPI2_HOST // SPI 2 bus normally mapped to pins 12 - 15, but can be matrixed to any pins
+# define VSPI_HOST   SPI3_HOST // SPI 3 bus normally attached to pins 5, 18, 19 and 23, but can be matrixed to any pins
 
-#elif CONFIG_IDF_TARGET_ESP32S2
-
-// SPI_HOST (SPI1_HOST) is not supported by the SPI Master and SPI Slave driver on ESP32-S2 and later
-# define SPI_HOST    SPI1_HOST
-# define FSPI_HOST   SPI2_HOST
-# define HSPI_HOST   SPI3_HOST
-# define VSPI_HOST   SPI3_HOST
-
-#elif CONFIG_IDF_TARGET_ESP32S3
+#else // ifdef CONFIG_IDF_TARGET_ESP32
 
 // SPI_HOST (SPI1_HOST) is not supported by the SPI Master and SPI Slave driver on ESP32-S2 and later
 # define SPI_HOST    SPI1_HOST
-# define FSPI_HOST   SPI2_HOST
-# define HSPI_HOST   SPI3_HOST
-# define VSPI_HOST   SPI3_HOST
-# ifndef REG_SPI_BASE
-#  if ESP_IDF_VERSION_MAJOR < 5
-#   define REG_SPI_BASE(i) (DR_REG_SPI1_BASE + (((i) > 1) ? (((i) * 0x1000) + 0x20000) : (((~(i)) & 1) * 0x1000)))
-#  endif
-
-// SPI_MOSI_DLEN_REG is not defined anymore in esp32s3, instead use SPI_MS_DLEN_REG
-#  define SPI_MOSI_DLEN_REG(x) SPI_MS_DLEN_REG(x)
-# endif // REG_SPI_BASE
-
-#elif CONFIG_IDF_TARGET_ESP32C3
-# define SPI_HOST    SPI1_HOST
-# define HSPI_HOST   SPI2_HOST
-# define VSPI_HOST   SPI2_HOST /* No SPI3_host on C3 */
-# if ESP_IDF_VERSION_MAJOR < 5
-
-// fix a bug in esp-idf 4.4 for esp32c3
-#  ifndef REG_SPI_BASE
-#   define REG_SPI_BASE(i) (DR_REG_SPI1_BASE + (((i) > 1) ? (((i) * 0x1000) + 0x20000) : (((~(i)) & 1) * 0x1000)))
-
-// SPI_MOSI_DLEN_REG is not defined anymore in esp32c3, instead use SPI_MS_DLEN_REG
-#   define SPI_MOSI_DLEN_REG(x) SPI_MS_DLEN_REG(x)
-#  endif // REG_SPI_BASE
-# endif  // ESP_IDF_VERSION_MAJOR < 5
-
-#else
-# define SPI_HOST    SPI1_HOST
-# define HSPI_HOST   SPI2_HOST
-#if SOC_SPI_PERIPH_NUM > 2
-# define VSPI_HOST   SPI3_HOST
-#else
-# define VSPI_HOST   SPI2_HOST /* No SPI3_host */
-#endif
-# define VSPI        SPI
-
-// #if ESP_IDF_VERSION_MAJOR < 5
-// // fix a bug in esp-idf 4.4 for esp32c3
-// #ifndef REG_SPI_BASE
-// #define REG_SPI_BASE(i)     (DR_REG_SPI1_BASE + (((i)>1) ? (((i)* 0x1000) + 0x20000) : (((~(i)) & 1)* 0x1000 )))
-// // SPI_MOSI_DLEN_REG is not defined anymore in esp32c3, instead use SPI_MS_DLEN_REG
-# define SPI_MOSI_DLEN_REG(x) SPI_MS_DLEN_REG(x)
-
-// #endif // REG_SPI_BASE
-// #endif //ESP_IDF_VERSION_MAJOR < 5
-
-
+# define FSPI_HOST   SPI2_HOST  // ESP32C2, C3, C5, C6, C61, H2, S2, S3, P4 - SPI 2 bus
+# if SOC_SPI_PERIPH_NUM > 2
+#  define HSPI_HOST   SPI3_HOST // ESP32S2, S3, P4 - SPI 3 bus
+# else
+# endif
+# define VSPI_HOST    FSPI_HOST // Alias for older code
 #endif // TARGET
 
 
 #ifndef CONFIG_SOC_WIFI_HE_SUPPORT
-#if CONFIG_IDF_TARGET_ESP32C5 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32C61 
-#define CONFIG_SOC_WIFI_HE_SUPPORT 1
-#else
-#define CONFIG_SOC_WIFI_HE_SUPPORT 0
-#endif
-#endif
+# if CONFIG_IDF_TARGET_ESP32C5 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32C61
+#  define CONFIG_SOC_WIFI_HE_SUPPORT 1
+# else
+#  define CONFIG_SOC_WIFI_HE_SUPPORT 0
+# endif // if CONFIG_IDF_TARGET_ESP32C5 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32C61
+#endif // ifndef CONFIG_SOC_WIFI_HE_SUPPORT
 
 #ifndef CONFIG_SOC_WIFI_SUPPORT_5G
-#if CONFIG_IDF_TARGET_ESP32C5
-#define CONFIG_SOC_WIFI_SUPPORT_5G 1
-#else
-#define CONFIG_SOC_WIFI_SUPPORT_5G 0
-#endif
-#endif
+# if CONFIG_IDF_TARGET_ESP32C5
+#  define CONFIG_SOC_WIFI_SUPPORT_5G 1
+# else
+#  define CONFIG_SOC_WIFI_SUPPORT_5G 0
+# endif // if CONFIG_IDF_TARGET_ESP32C5
+#endif // ifndef CONFIG_SOC_WIFI_SUPPORT_5G

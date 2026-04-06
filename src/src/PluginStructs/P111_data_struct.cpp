@@ -5,17 +5,18 @@
 # include "../ESPEasyCore/ESPEasyRules.h"
 # include "../PluginStructs/P111_data_struct.h"
 # include "../Helpers/PrintToString.h"
+# include "../Helpers/Hardware_SPI.h"
 
 // Needed also here for PlatformIO's library finder as the .h file
 // is in a directory which is excluded in the src_filter
 
 # include <MFRC522.h>
 
-P111_data_struct::P111_data_struct(int8_t  csPin,
+P111_data_struct::P111_data_struct(taskIndex_t taskIndex,
+                                   int8_t  csPin,
                                    int8_t  rstPin,
-                                   int8_t  irqPin,
-                                   uint8_t spi_bus)
-  : mfrc522(nullptr), _csPin(csPin), _rstPin(rstPin), _irqPin(irqPin), _spi_bus(spi_bus)
+                                   int8_t  irqPin)
+  : mfrc522(nullptr), _csPin(csPin), _rstPin(rstPin), _irqPin(irqPin), _taskIndex(taskIndex)
 {}
 
 P111_data_struct::~P111_data_struct() {
@@ -30,10 +31,15 @@ P111_data_struct::~P111_data_struct() {
 void P111_data_struct::init() {
   delete mfrc522;
 
+  # ifdef ESP32
+  auto spi_ptr = getSPIBusForTask(_taskIndex);
+  if (!spi_ptr) { return; }
+  #endif
+
   // Instantiate a MFRC522
   mfrc522 = new (std::nothrow) MFRC522(_csPin, _rstPin
                                        # ifdef ESP32
-                                       , 0 == _spi_bus ? SPI : SPIe
+                                       , *spi_ptr
                                        # endif // ifdef ESP32
                                        );
 

@@ -5,10 +5,6 @@
 \*********************************************************************************************/
 #include "../../../ESPEasy_common.h"
 
-#include <memory> // For std::unique_ptr
-#include <new>    // for std::nothrow
-
-#include "../../../src/Globals/Plugins.h"
 #include "../../../src/Helpers/Memory.h"
 
 namespace ESPEasy {
