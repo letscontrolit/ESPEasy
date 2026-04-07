@@ -575,6 +575,31 @@ void handle_json()
                 }
               }
 
+#if FEATURE_P043_CLK_TIMES_JSON
+              if (Settings.getPluginID_for_task(TaskIndex).value == 43) {
+                taskWriter->write({ (F("OnOff")), Settings.TaskDevicePluginConfig[TaskIndex][(6)] });
+                auto timesWriter = taskWriter->createChildArray(F("Times"));
+
+                if (timesWriter)
+                {
+                  int count = Settings.TaskDevicePluginConfig[TaskIndex][7];
+                  const int16_t offset = (validGpio(Settings.TaskDevicePin[1][TaskIndex]) ||
+                                          (count == 1)) ? 1 : 0;
+
+                  for (int x = 0; x < count; x++) {
+                    auto timeWriter = timesWriter->createChild();
+                    long value      = Cache.getTaskDevicePluginConfigLong(TaskIndex, x);
+                    int  val        = ExtraTaskSettings.TaskDevicePluginConfig[x] - offset;
+
+                    if (timeWriter) {
+                      timeWriter->write({ F("Time"),       timeLong2String(value) });
+                      timeWriter->write({ F("Value"),    val });
+                    }
+                  }
+                }
+              }
+#endif // FEATURE_P043_CLK_TIMES_JSON
+
 #if FEATURE_PLUGIN_STATS && FEATURE_CHART_JS
 
               if (showPluginStats && Device[DeviceIndex].PluginStats) {
