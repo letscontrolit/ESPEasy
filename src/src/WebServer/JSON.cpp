@@ -582,8 +582,8 @@ void handle_json()
 
                 if (timesWriter)
                 {
-                  int count = Settings.TaskDevicePluginConfig[TaskIndex][7];
-                  const int16_t offset = (validGpio(Settings.TaskDevicePin[1][TaskIndex]) ||
+                  const int count = Settings.TaskDevicePluginConfig[TaskIndex][7];
+                  const int offset = (validGpio(Settings.TaskDevicePin[1][TaskIndex]) ||
                                           (count == 1)) ? 1 : 0;
 
                   for (int x = 0; x < count; x++) {
