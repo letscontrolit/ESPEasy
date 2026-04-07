@@ -2,9 +2,12 @@
 
 #include "../Helpers/StringConverter.h"
 
+#include "../Globals/Settings.h"
+
 
 String SerialWriteBuffer_t::colorize(const String& str) const {
 #if FEATURE_COLORIZE_CONSOLE_LOGS
+  if (!Settings.ColorizeSerialLog()) return str;
   const __FlashStringHelper *format = F("%s");
 
   switch (_loglevel)

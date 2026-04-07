@@ -31,6 +31,15 @@
 # else // ifdef USE_LITTLEFS
 #  define CACHE_FILE_MAX_SIZE 24000
 # endif // ifdef USE_LITTLEFS
+
+
+#if CONFIG_SOC_RTC_FAST_MEM_SUPPORTED || CONFIG_SOC_RTC_SLOW_MEM_SUPPORTED
+  #define ESPEasy_RTC_ATTR  RTC_NOINIT_ATTR
+#else
+  #define ESPEasy_RTC_ATTR  DRAM_ATTR
+#endif
+
+
 #endif  // ifdef ESP32
 
 /*********************************************************************************************\

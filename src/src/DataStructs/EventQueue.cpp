@@ -1,11 +1,8 @@
 #include "../DataStructs/EventQueue.h"
 
-#include "../../ESPEasy_common.h"
-
 #include "../Globals/Settings.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/StringConverter.h"
-
 
 
 void EventQueueStruct::add(const String& event, bool deduplicate)

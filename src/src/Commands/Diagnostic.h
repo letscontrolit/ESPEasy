@@ -2,7 +2,6 @@
 #define COMMAND_DIAGNOSTIC_H
 
 #include <stdint.h>
-#include <map>
 
 #include "../../ESPEasy_common.h"
 

@@ -1,7 +1,5 @@
 #include "../Globals/NetworkState.h"
 
-#include "../../../ESPEasy_common.h"
-
 
 // Ethernet Connection status
 ESPEasy::net::NetworkMedium_t active_network_medium = ESPEasy::net::NetworkMedium_t::NotSet;

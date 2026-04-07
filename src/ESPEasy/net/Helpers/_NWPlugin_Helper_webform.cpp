@@ -1,14 +1,8 @@
 #include "../Helpers/_NWPlugin_Helper_webform.h"
 
-#include "../../../ESPEasy_common.h"
-
 #include "../../../src/DataStructs/ESPEasy_EventStruct.h"
 #include "../../../src/DataTypes/ESPEasy_plugin_functions.h"
-#include "../../../src/Globals/SecuritySettings.h"
 #include "../../../src/Globals/Settings.h"
-#include "../../../src/Helpers/Networking.h"
-#include "../../../src/WebServer/ESPEasy_WebServer.h"
-#include "../../../src/WebServer/Markup.h"
 #include "../../../src/WebServer/Markup_Forms.h"
 #include "../Globals/NWPlugins.h"
 #include "../Helpers/_NWPlugin_init.h"

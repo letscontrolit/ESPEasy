@@ -12,10 +12,10 @@
 # endif // if defined(ESP32)
 
 # include "../wifi/WiFiConnectionProtocol.h"
-# include "../DataStructs/WiFi_AP_Candidate.h"
 
-# include "../../../src/Helpers/LongTermTimer.h"
+# ifdef BOARD_HAS_SDIO_ESP_HOSTED
 # include "../../../src/Helpers/KeyValueWriter.h"
+#endif
 
 # ifdef ESP32
 #  define SOFTAP_STATION_COUNT  WiFi.AP.stationCount()
@@ -103,7 +103,7 @@ void    WifiDisconnect();
 bool    WiFiScanAllowed();
 void    WiFiScan_log_to_serial();
 
-void    setAPinternal(bool enable); // FIXME TD-er: Move to ESPEasyWifi_abstracted...
+bool    setAPinternal(bool enable); // FIXME TD-er: Move to ESPEasyWifi_abstracted...
 
 void    setUseStaticIP(bool enabled);
 bool    WiFiUseStaticIP();

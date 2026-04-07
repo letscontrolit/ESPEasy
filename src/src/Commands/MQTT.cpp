@@ -1,4 +1,3 @@
-#include "../../ESPEasy_common.h"
 #include "../Globals/MQTT.h"
 
 #if FEATURE_MQTT
@@ -13,7 +12,6 @@
 
 #include "../Globals/CPlugins.h"
 #include "../Globals/ESPEasy_Scheduler.h"
-#include "../Globals/Settings.h"
 
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/PeriodicalActions.h"

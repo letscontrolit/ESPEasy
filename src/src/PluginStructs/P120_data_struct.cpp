@@ -4,7 +4,7 @@
 
 # define P120_RAD_TO_DEG        57.295779f // 180.0/M_PI
 
-# include "../Globals/SPIe.h"
+# include "../Helpers/Hardware_SPI.h"
 
 P120_data_struct::P120_data_struct(uint8_t aSize)
   : _aSize(aSize)
@@ -237,11 +237,14 @@ bool P120_data_struct::init_sensor(struct EventStruct *event) {
     adxl345 = new (std::nothrow) ADXL345(_i2c_addr); // Init using I2C
   } else {
     # ifdef ESP32
-    const uint8_t spi_bus = Settings.getSPIBusForTask(event->TaskIndex);
+    auto spi_ptr = getSPIBusForTask(event->TaskIndex);
+    if (!spi_ptr) {
+      return false;
+    }
     # endif // ifdef ESP32
     adxl345 = new (std::nothrow) ADXL345(_cs_pin
                                          # ifdef ESP32
-                                         , 0 == spi_bus ? SPI : SPIe
+                                         , *spi_ptr
                                          # endif // ifdef ESP32
                                          ); // Init using SPI
   }

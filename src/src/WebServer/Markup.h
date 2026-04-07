@@ -2,11 +2,9 @@
 #define WEBSERVER_WEBSERVER_MARKUP_H
 
 #include "../WebServer/common.h"
-#include "../DataTypes/ProtocolIndex.h"
 #include "../DataTypes/CPluginID.h"
 #include "../ESPEasy/net/DataTypes/NWPluginID.h"
 #include "../DataTypes/PluginID.h"
-#include "../Globals/Plugins.h"
 #include "../Helpers/StringGenerator_GPIO.h"
 
 
@@ -141,11 +139,11 @@ void addRowLabel_copy(const String& label);
 
 void addRowLabel(LabelType::Enum label);
 
-void addRowLabelValue(LabelType::Enum label);
+void addRowLabelValue(LabelType::Enum label, bool extendedValue);
 
-void addRowLabelValues(const LabelType::Enum labels[]);
+void addRowLabelValues(const LabelType::Enum labels[], bool extendedValue = true);
 
-void addRowLabelValue_copy(LabelType::Enum label);
+void addRowLabelValue_copy(LabelType::Enum label, bool extendedValue = false);
 
 void addRowColspan(int colspan);
 

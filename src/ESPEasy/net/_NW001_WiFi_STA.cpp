@@ -11,27 +11,26 @@
 # define NWPLUGIN_NAME_001       "WiFi Station"
 
 # include "../../src/DataStructs/ESPEasy_EventStruct.h"
-# include "../../src/Globals/RTC.h"
 # include "../../src/Globals/SecuritySettings.h"
 # include "../../src/Globals/Settings.h"
-# include "../../src/Helpers/ESPEasy_Storage.h"
-# include "../../src/Helpers/PrintToString.h"
 # include "../../src/Helpers/StringConverter.h"
 # include "../../src/Helpers/StringGenerator_WiFi.h"
 # include "../../src/WebServer/ESPEasy_WebServer.h"
-# include "../../src/WebServer/HTML_Print.h"
-# include "../../src/WebServer/HTML_wrappers.h"
+# include "../../src/WebServer/KeyValueWriter_WebForm.h"
 # include "../../src/WebServer/Markup.h"
 # include "../../src/WebServer/Markup_Forms.h"
 # include "../../src/WebServer/common.h"
-# include "../net/ESPEasyNetwork.h"
-# include "../net/Globals/ESPEasyWiFiEvent.h"
-# include "../net/Globals/NWPlugins.h"
-# include "../net/Globals/WiFi_AP_Candidates.h"
-# include "../net/Helpers/_NWPlugin_Helper_webform.h"
 # include "../net/Helpers/_NWPlugin_init.h"
 # include "../net/NWPluginStructs/NW001_data_struct_WiFi_STA.h"
 # include "../net/wifi/ESPEasyWifi.h"
+#ifdef ESP8266
+# include "../net/ESPEasyNetwork.h"
+#endif
+
+#if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+# include "../../src/Helpers/ESPEasy_UnitOfMeasure.h"
+#endif
+
 
 # if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE
 #  include "../../src/WebServer/SecurityStruct_deviceSpecific_webform.h"
@@ -100,11 +99,15 @@ bool NWPlugin_001(NWPlugin::Function function, EventStruct *event, String& strin
 
     case NWPlugin::Function::NWPLUGIN_WEBSERVER_SHOULD_RUN:
     {
-# ifdef ESP32
-      success = WiFi.STA.connected();
-# else // ifdef ESP32
-      success = WiFi.isConnected();
-# endif // ifdef ESP32
+      ESPEasy::net::wifi::NW001_data_struct_WiFi_STA *NW_data =
+        static_cast<ESPEasy::net::wifi::NW001_data_struct_WiFi_STA *>(getNWPluginData(event->NetworkIndex));
+
+      if (NW_data) {
+        auto runtime_data = NW_data->getNWPluginData_static_runtime();
+        if (runtime_data) {
+          success = runtime_data->connected();
+        }
+      }
       break;
     }
 
@@ -313,7 +316,6 @@ bool NWPlugin_001(NWPlugin::Function function, EventStruct *event, String& strin
       }
       break;
     }
-#  ifndef LIMIT_BUILD_SIZE
     case NWPlugin::Function::NWPLUGIN_WEBFORM_SHOW_PORT:
     {
       if (event->kvWriter) {
@@ -321,7 +323,6 @@ bool NWPlugin_001(NWPlugin::Function function, EventStruct *event, String& strin
       }
       break;
     }
-#  endif // ifndef LIMIT_BUILD_SIZE
 # endif // ifdef BOARD_HAS_SDIO_ESP_HOSTED
     case NWPlugin::Function::NWPLUGIN_WEBFORM_SAVE:
     {

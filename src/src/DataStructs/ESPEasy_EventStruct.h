@@ -5,10 +5,11 @@
 
 #include "../DataTypes/ControllerIndex.h"
 #include "../DataTypes/EventValueSource.h"
+#include "../DataTypes/SensorVType.h"
 #include "../DataTypes/TaskIndex.h"
+
 #include "../DataTypes/NotifierIndex.h"
 #include "../ESPEasy/net/DataTypes/NetworkIndex.h"
-#include "../DataStructs/DeviceStruct.h"
 #include "../Helpers/KeyValueWriter.h"
 
 #ifdef ESP32
