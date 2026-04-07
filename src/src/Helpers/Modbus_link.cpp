@@ -109,6 +109,32 @@ bool ModbusLINK_struct::isInitialized() const {
   return _easySerial != nullptr;
 }
 
+bool ModbusLINK_struct::reconfigure(const ESPEasySerialPort port, 
+    const int16_t serial_rx, 
+    const int16_t serial_tx, 
+    int16_t baudrate, 
+    int8_t dere_pin, 
+    bool collision_detect)
+{
+  if (isInitialized()) {
+    if (_easySerial->getSerialPortType() == port) {
+      // Same port, just reconfigure
+      _easySerial->resetConfig(port, serial_rx, serial_tx);
+      _easySerial->begin(baudrate);
+      _dere_pin        = dere_pin;
+      _collision_detect = collision_detect;
+      return true;
+    }
+    else {
+      // Different port, need to reinitialize
+    }
+  }
+  else {
+    return init(port, serial_rx, serial_tx, baudrate, dere_pin, collision_detect);
+  }
+  return false;
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Provide a new transaction structure that can be used to build a Modbus request and queue it at this link
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

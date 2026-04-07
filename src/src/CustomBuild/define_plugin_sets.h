@@ -3792,13 +3792,6 @@ To create/register a plugin, you have to :
 #ifndef FEATURE_MODBUS_FAC
 #define FEATURE_MODBUS_FAC                    0
 #endif
-#ifndef FEATURE_MODBUS_INTERFACES_TAB // TODO Temporary, until P183 finished
-#ifdef USES_P183
-#define FEATURE_MODBUS_INTERFACES_TAB         1
-#else
-#define FEATURE_MODBUS_INTERFACES_TAB         0
-#endif
-#endif
 
 #ifndef FEATURE_CAN
 #define FEATURE_CAN                           0

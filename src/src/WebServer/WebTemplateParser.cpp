@@ -122,9 +122,9 @@ const __FlashStringHelper* getGpMenuIcon(uint8_t index) {
 #if FEATURE_SPI
     case MENU_INDEX_INTERFACES_SPI:    return ICON("SPI");
 #endif // if FEATURE_SPI
-#if FEATURE_MODBUS && FEATURE_MODBUS_INTERFACES_TAB
+#if FEATURE_MODBUS_FAC
     case MENU_INDEX_INTERFACES_MODBUS: return ICON("Modbus");
-#endif // if FEATURE_MODBUS
+#endif // if FEATURE_MODBUS_FAC
 #if FEATURE_CAN
     case MENU_INDEX_INTERFACES_CAN:    return ICON("CAN bus");
 #endif // if FEATURE_CAN
@@ -156,13 +156,13 @@ const __FlashStringHelper* getGpMenuLabel(uint8_t index) {
 #if FEATURE_SPI
     case MENU_INDEX_INTERFACES_SPI:
 #endif // if FEATURE_SPI
-#if FEATURE_MODBUS && FEATURE_MODBUS_INTERFACES_TAB
+#if FEATURE_MODBUS_FAC
     case MENU_INDEX_INTERFACES_MODBUS:
-#endif // if FEATURE_MODBUS
+#endif // if FEATURE_MODBUS_FAC
 #if FEATURE_CAN
     case MENU_INDEX_INTERFACES_CAN:
 #endif // if FEATURE_CAN
-#if FEATURE_I2C || FEATURE_SPI || (FEATURE_MODBUS && FEATURE_MODBUS_INTERFACES_TAB) || FEATURE_CAN
+#if FEATURE_I2C || FEATURE_SPI || FEATURE_MODBUS_FAC || FEATURE_CAN
       break; // No label, only an 'icon', for the second-level menu
 #endif // if FEATURE_I2C || FEATURE_SPI || FEATURE_MODBUS || FEATURE_CAN
 #if FEATURE_WRMBUS
@@ -193,9 +193,9 @@ const __FlashStringHelper* getGpMenuURL(uint8_t index) {
 #if FEATURE_SPI
     case MENU_INDEX_INTERFACES_SPI: return F("/interfaces_spi");
 #endif // if FEATURE_SPI
-#if FEATURE_MODBUS && FEATURE_MODBUS_INTERFACES_TAB
+#if FEATURE_MODBUS_FAC
     case MENU_INDEX_INTERFACES_MODBUS: return F("/interfaces_modbus");
-#endif // if FEATURE_MODBUS
+#endif // if FEATURE_MODBUS_FAC
 #if FEATURE_CAN
    case MENU_INDEX_INTERFACES_CAN: return F("/interfaces_can");
 #endif // if FEATURE_CAN
@@ -223,7 +223,7 @@ bool GpMenuVisible(uint8_t index) {
     case MENU_INDEX_INTERFACES: return MENU_INDEX_INTERFACES_VISIBLE;
     case MENU_INDEX_INTERFACES_I2C: return (1 == FEATURE_I2C);
     case MENU_INDEX_INTERFACES_SPI: return (1 == FEATURE_SPI);
-    case MENU_INDEX_INTERFACES_MODBUS: return (1 == FEATURE_MODBUS && 1 == FEATURE_MODBUS_INTERFACES_TAB);
+    case MENU_INDEX_INTERFACES_MODBUS: return (1 == FEATURE_MODBUS_FAC);
   #if defined(FEATURE_CAN)
     case MENU_INDEX_INTERFACES_CAN: return (1 == FEATURE_CAN);
   #endif // if defined(FEATURE_CAN)

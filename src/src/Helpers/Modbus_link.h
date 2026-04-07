@@ -87,7 +87,14 @@ struct ModbusLINK_struct  {
             int8_t                  dere_pin,
             bool                    collision_detect = false);
 
-  bool                        isInitialized() const;
+  bool  isInitialized() const;
+
+  bool  reconfigure(const ESPEasySerialPort port,
+                   const int16_t           serial_rx,
+                   const int16_t           serial_tx,
+                   int16_t                 baudrate,
+                   int8_t                  dere_pin,
+                   bool                    collision_detect = false);
 
   Modbus_RequestQueueElement* newTransaction(struct ModbusDEVICE_struct *device);
   bool                        freeTransaction(Modbus_RequestQueueElement *transaction);
