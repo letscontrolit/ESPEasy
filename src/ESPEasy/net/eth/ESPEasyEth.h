@@ -5,7 +5,6 @@
 
 #if FEATURE_ETHERNET
 
-# include "../DataStructs/NWPluginData_static_runtime.h"
 # include "../DataStructs/MAC_address.h"
 
 # include <IPAddress.h>

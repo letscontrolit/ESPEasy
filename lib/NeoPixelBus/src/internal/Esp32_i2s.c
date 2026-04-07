@@ -1,3 +1,4 @@
+#if ESP_IDF_VERSION_MAJOR <= 5
 // WARNING:  This file contains code that is more than likely already 
 // exposed from the Esp32 Arduino API.  It will be removed once integration is complete.
 //
@@ -499,3 +500,4 @@ size_t i2sWrite(uint8_t bus_num, uint8_t* data, size_t len, bool copy, bool free
 #endif //ESP_IDF_VERSION_MAJOR < 5
 #endif // defined(ARDUINO_ARCH_ESP32) 
 
+#endif

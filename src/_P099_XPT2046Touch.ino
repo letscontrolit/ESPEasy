@@ -241,7 +241,6 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      const uint8_t spi_bus = Settings.getSPIBusForTask(event->TaskIndex);
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P099_data_struct());
       P099_data_struct *P099_data = static_cast<P099_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -251,8 +250,7 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
                                                           false,
                                                           P099_CONFIG_THRESHOLD,
                                                           P099_CONFIG_X_RES,
-                                                          P099_CONFIG_Y_RES,
-                                                          spi_bus);
+                                                          P099_CONFIG_Y_RES);
 
       break;
     }
@@ -628,7 +626,6 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      const uint8_t spi_bus = Settings.getSPIBusForTask(event->TaskIndex);
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P099_data_struct());
       P099_data_struct *P099_data = static_cast<P099_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -641,8 +638,7 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
                                                           bitRead(P099_CONFIG_FLAGS, P099_FLAGS_SEND_Z),
                                                           bitRead(P099_CONFIG_FLAGS, P099_FLAGS_USE_CALIBRATION),
                                                           P099_CONFIG_X_RES,
-                                                          P099_CONFIG_Y_RES,
-                                                          spi_bus);
+                                                          P099_CONFIG_Y_RES);
 
       break;
     }

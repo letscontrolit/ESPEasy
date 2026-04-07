@@ -1,10 +1,5 @@
 #include "../Commands/GPIO.h"
 
-#include "../../ESPEasy_common.h"
-
-
-#include "../../ESPEasy-Globals.h"
-
 #include "../Commands/Common.h"
 #include "../DataStructs/PinMode.h"
 #include "../ESPEasyCore/Controller.h"
@@ -17,11 +12,11 @@
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/PortStatus.h"
 #include "../Helpers/Numerical.h"
+#include "../Helpers/Hardware_I2C.h"
 
 #if FEATURE_I2C_MULTIPLE
 #include "../Globals/Settings.h"
 #include "../Helpers/Hardware_device_info.h"
-#include "../Helpers/I2C_access.h"
 #endif // if FEATURE_I2C_MULTIPLE
 
 #if FEATURE_GPIO_USE_ESP8266_WAVEFORM

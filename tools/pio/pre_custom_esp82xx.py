@@ -22,6 +22,7 @@ if os.path.isfile('src/Custom.h'):
   custom_defines=["-DUSE_CUSTOM_H"]
 else:
   custom_defines=[
+    "-DESP8266",
     "-DCONTROLLER_SET_ALL",
     "-DNOTIFIER_SET_NONE",
     "-DPLUGIN_SET_NONE",
@@ -52,16 +53,16 @@ else:
 #    "-DUSES_P106",  # BME680
 #    "-DUSES_P107",  # SI1145 UV index
 
-    "-DUSES_P146",  # Cache Reader
+#    "-DUSES_P146",  # Cache Reader
 #    "-DUSES_P169",  # AS3935 Lightning Detector 
 
-    "-DUSES_C016",  # Cache Controller
+#    "-DUSES_C016",  # Cache Controller
 #    "-DUSES_C018",  # TTN/RN2483
 #   "-DUSES_C015",  # Blynk
 
     "-DFEATURE_MQTT_TLS=0",
     "-DFEATURE_EMAIL_TLS=0",
-#    "-DFEATURE_MDNS=1",
+    "-DFEATURE_MDNS=0",
 #    "-DFEATURE_SD=1",
     "-DFEATURE_EXT_RTC=1",
     "-DFEATURE_I2CMULTIPLEXER=1",

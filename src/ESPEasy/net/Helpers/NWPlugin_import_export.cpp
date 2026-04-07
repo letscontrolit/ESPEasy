@@ -13,10 +13,10 @@
 
 
 # ifdef USES_NW001
-#  include "../NWPluginStructs/NW001_data_struct_WiFi_STA.h"
+//#  include "../NWPluginStructs/NW001_data_struct_WiFi_STA.h"
 # endif
 # ifdef USES_NW002
-#  include "../NWPluginStructs/NW002_data_struct_WiFi_AP.h"
+//#  include "../NWPluginStructs/NW002_data_struct_WiFi_AP.h"
 # endif
 # ifdef USES_NW003
 #  include "../NWPluginStructs/NW003_data_struct_ETH_RMII.h"

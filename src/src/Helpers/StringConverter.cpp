@@ -9,23 +9,23 @@
 #include "../ESPEasyCore/ESPEasy_Log.h"
 
 #include "../Globals/Cache.h"
-#include "../Globals/CRCValues.h"
+//#include "../Globals/CRCValues.h"
 #include "../Globals/Device.h"
 #include "../../ESPEasy/net/Globals/ESPEasyWiFiEvent.h"
-#include "../Globals/ESPEasy_time.h"
-#include "../Globals/MQTT.h"
+//#include "../Globals/ESPEasy_time.h"
+//#include "../Globals/MQTT.h"
 #include "../Globals/Plugins.h"
 #include "../Globals/Settings.h"
 
 #include "../Helpers/Convert.h"
-#include "../Helpers/ESPEasy_Storage.h"
+//#include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Networking.h"
 #include "../Helpers/Numerical.h"
 #include "../Helpers/StringGenerator_System.h"
 #include "../Helpers/StringParser.h"
 #include "../Helpers/SystemVariables.h"
-#include "../Helpers/_Plugin_SensorTypeHelper.h"
+//#include "../Helpers/_Plugin_SensorTypeHelper.h"
 
 // -V::569
 

@@ -35,6 +35,27 @@
 #include <Stream.h>
 
 
+
+// Different versions of Stream/Print class have different virtual attributes.
+// Therefore we need to use the 'override' statement different for a few functions.
+
+#ifdef ESP8266  
+ #ifdef CORE_POST_3_0_0
+  #define READ_OVERRIDE        override
+  #define VERSION_DEP_OVERRIDE override
+ #else
+  #define READ_OVERRIDE        
+  #define VERSION_DEP_OVERRIDE 
+ #endif
+#endif
+#ifdef ESP32
+  #define READ_OVERRIDE        
+  #define VERSION_DEP_OVERRIDE override
+#endif
+
+
+
+
 // ESP82xx has 2 HW serial ports and option for several software serial ports.
 // Serial0:         RX: 3  TX: 1
 // Serial0 swapped  RX: 13 TX: 15
@@ -86,12 +107,12 @@ public:
 #endif // ifdef ESP32
 
   void   end();
-  int    peek(void);
+  int    peek(void) override;
   size_t write(uint8_t val) override;
   int    read(void) override;
-  int    read(uint8_t *buffer, size_t size);
+  int    read(uint8_t *buffer, size_t size) READ_OVERRIDE;
   int    available(void) override;
-  int    availableForWrite(void);
+  int    availableForWrite(void) VERSION_DEP_OVERRIDE;
   void   flush(void) override;
 
 
@@ -111,7 +132,7 @@ public:
 
   // HardwareSerial specific:
   size_t write(const uint8_t *buffer,
-               size_t         size);
+               size_t         size) override;
   size_t write(const char *buffer);
   int    getBaudRate() const;
 

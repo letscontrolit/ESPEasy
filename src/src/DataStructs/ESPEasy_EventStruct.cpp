@@ -1,13 +1,7 @@
 #include "../DataStructs/ESPEasy_EventStruct.h"
 
-#include "../../ESPEasy_common.h"
-
 #include "../CustomBuild/ESPEasyLimits.h"
-#include "../DataTypes/EventValueSource.h"
 #include "../Globals/Plugins.h"
-#include "../Globals/CPlugins.h"
-#include "../Globals/NPlugins.h"
-
 #include "../../_Plugin_Helper.h"
 
 EventStruct::EventStruct(taskIndex_t taskIndex) :

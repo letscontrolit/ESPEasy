@@ -11,15 +11,12 @@
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../ESPEasyCore/Serial.h"
 
-#include "../Globals/Device.h"
 #include "../Globals/ExtraTaskSettings.h"
 #include "../Globals/GlobalMapPortStatus.h"
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Settings.h"
 #include "../Globals/Statistics.h"
 
-#include "../Helpers/Convert.h"
-#include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/_Plugin_init.h"

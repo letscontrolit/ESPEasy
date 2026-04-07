@@ -250,9 +250,7 @@ boolean Plugin_141(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      const uint8_t spi_bus = Settings.getSPIBusForTask(event->TaskIndex);
-
-      if (Settings.isSPI_valid(spi_bus)) {
+      if (Settings.isSPI_validForTask(event->TaskIndex)) {
         initPluginTaskData(event->TaskIndex,
                            new (std::nothrow) P141_data_struct(P141_CONFIG_FLAG_GET_ROTATION,
                                                                P141_CONFIG_FLAG_GET_FONTSCALE,
@@ -266,8 +264,7 @@ boolean Plugin_141(uint8_t function, struct EventStruct *event, String& string)
                                                                ADAGFX_WHITE,
                                                                ADAGFX_BLACK,
                                                                bitRead(P141_CONFIG_FLAGS, P141_CONFIG_FLAG_BACK_FILL) == 0,
-                                                               bitRead(P141_CONFIG_FLAGS, P141_CONFIG_FLAG_INVERTED) == 1,
-                                                               spi_bus
+                                                               bitRead(P141_CONFIG_FLAGS, P141_CONFIG_FLAG_INVERTED) == 1
                                                                # if ADAGFX_FONTS_INCLUDED
                                                                ,
                                                                P141_CONFIG_DEFAULT_FONT

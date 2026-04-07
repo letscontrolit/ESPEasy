@@ -5,16 +5,10 @@
 #include "../WebServer/ESPEasy_WebServer.h"
 #include "../WebServer/HTML_wrappers.h"
 #include "../WebServer/Markup.h"
-#include "../WebServer/Markup_Forms.h"
-
-#include "../DataTypes/ESPEasy_plugin_functions.h"
+#include "../Helpers/_Plugin_init.h"
 
 #include "../Globals/ESPEasy_time.h"
 #include "../Globals/RamTracker.h"
-
-#include "../Globals/Device.h"
-
-#include "../Helpers/_Plugin_init.h"
 
 
 #define TIMING_STATS_THRESHOLD 100000
@@ -53,7 +47,7 @@ void handle_timingstats() {
   addRowLabel(F("Start Period"));
   struct tm startPeriod = node_time.addSeconds(node_time.local_tm, -1.0f * timespan, true, true);
   addHtml(formatDateTimeString(startPeriod, '-', ':', ' ', false));
-  addRowLabelValue(LabelType::LOCAL_TIME);
+  addRowLabelValue(LabelType::LOCAL_TIME, false);
   addRowLabel(F("Time span"));
   addHtmlFloat(timespan);
   addHtml(F(" sec"));

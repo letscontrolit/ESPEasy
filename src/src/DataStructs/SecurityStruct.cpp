@@ -1,9 +1,7 @@
 #include "../DataStructs/SecurityStruct.h"
 
-#include "../../ESPEasy_common.h"
 #include "../CustomBuild/ESPEasyLimits.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
-#include "../Globals/CPlugins.h"
 
 #include "../Globals/SecuritySettings.h"
 
