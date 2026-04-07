@@ -15,13 +15,14 @@
 # include "../../../src/WebServer/Markup_Forms.h"
 # include "../../../src/WebServer/ESPEasy_key_value_store_webform.h"
 
-# include "../Globals/NetworkState.h"
-# include "../Helpers/_NWPlugin_Helper_webform.h"
+# if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+# include "../../../src/Helpers/ESPEasy_UnitOfMeasure.h"
+# endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+
+
 # include <ESPEasySerialPort.h>
 # include <PPP.h>
-
-// # include <esp_modem_api.h>
-// #include <esp_modem_c_api_types.h>
+# include <NetworkManager.h>
 
 # define NW_PLUGIN_ID  5
 # define NW_PLUGIN_INTERFACE   PPP

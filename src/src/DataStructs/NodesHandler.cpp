@@ -1,9 +1,8 @@
 #include "../DataStructs/NodesHandler.h"
 
-#include "../../ESPEasy_common.h"
 
 #if FEATURE_ESPEASY_P2P
-#include "../../ESPEasy-Globals.h"
+//#include "../../ESPEasy-Globals.h"
 
 #ifdef USES_ESPEASY_NOW
 #include "../Globals/ESPEasy_now_peermanager.h"
@@ -18,23 +17,15 @@
 #include "../ESPEasyCore/Controller.h"
 #endif
 
-#include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../../ESPEasy/net/ESPEasyNetwork.h"
 
 #include "../Globals/ESPEasy_time.h"
-#include "../../ESPEasy/net/Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/MQTT.h"
-#include "../../ESPEasy/net/Globals/NetworkState.h"
-#include "../Globals/RTC.h"
 #include "../Globals/Settings.h"
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/Misc.h"
-#include "../Helpers/PeriodicalActions.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_System.h"
-
-#include "../../ESPEasy/net/wifi/ESPEasyWifi.h"
-
 
 #define ESPEASY_NOW_ALLOWED_AGE_NO_TRACEROUTE  35000
 

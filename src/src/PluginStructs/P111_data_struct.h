@@ -6,8 +6,6 @@
 
 # include <MFRC522.h>
 
-# include "../Globals/SPIe.h"
-
 # define P111_CS_PIN            PIN(0)
 # define P111_RST_PIN           PIN(1)
 # define P111_IRQ_PIN           PIN(2)
@@ -34,10 +32,10 @@ enum class P111_initPhases : uint8_t {
 };
 
 struct P111_data_struct : public PluginTaskData_base {
-  P111_data_struct(int8_t  csPin,
+  P111_data_struct(taskIndex_t taskIndex,
+                   int8_t  csPin,
                    int8_t  rstPin,
-                   int8_t  irqPin,
-                   uint8_t spi_bus);
+                   int8_t  irqPin);
   P111_data_struct() = delete;
   virtual ~P111_data_struct();
 
@@ -58,8 +56,7 @@ private:
   String      getCardName();
   uint8_t     readCardStatus(uint64_t *key,
                              bool     *removedTag);
-  bool        reset(int8_t csPin,
-                    int8_t resetPin);
+  bool        reset(int8_t csPin, int8_t resetPin);
   uint8_t     readPassiveTargetID(uint8_t *uid,
                                   uint8_t *uidLength);
 
@@ -70,7 +67,7 @@ private:
   int8_t  _csPin;
   int8_t  _rstPin;
   int8_t  _irqPin;
-  uint8_t _spi_bus;
+  taskIndex_t _taskIndex;
 
   uint8_t         errorCount   = 0;
   bool            removedState = true; // On startup, there will usually not be a tag nearby

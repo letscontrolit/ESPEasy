@@ -4,7 +4,6 @@
 
 #include "../DataTypes/NetworkIndex.h"
 
-#include <vector>
 
 namespace ESPEasy {
 namespace net {

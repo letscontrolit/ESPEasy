@@ -3,12 +3,11 @@
 #include "../WebServer/ESPEasy_WebServer.h"
 #include "../WebServer/HTML_wrappers.h"
 #include "../WebServer/Markup.h"
-#include "../WebServer/Markup_Forms.h"
 
-#include "../DataStructs/PinMode.h"
 #include "../Globals/GlobalMapPortStatus.h"
 #include "../Helpers/Hardware_GPIO.h"
 #include "../Helpers/PortStatus.h"
+#include "../Helpers/StringConverter.h"
 
 #ifdef ESP32
 # include <esp32-hal-periman.h>

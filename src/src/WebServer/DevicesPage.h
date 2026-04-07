@@ -10,8 +10,6 @@
 #include "../DataTypes/TaskIndex.h"
 #include "../DataTypes/PluginID.h"
 
-#include "../Static/WebStaticData.h"
-
 
 void handle_devices();
 

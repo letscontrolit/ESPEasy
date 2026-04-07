@@ -2,17 +2,17 @@
 
 #ifdef USES_NW002
 
+# ifdef ESP32
 # include "../../../src/Globals/Settings.h"
-
-# include "../../../src/Helpers/ESPEasy_time_calc.h"
-# include "../../../src/Helpers/LongTermOnOffTimer.h"
-# include "../../../src/Helpers/StringConverter.h"
+#endif
 
 # include "../wifi/ESPEasyWifi.h"
 
 # ifdef ESP32
 #  include <esp_wifi.h>
 #  include <esp_wifi_ap_get_sta_list.h>
+#  include <NetworkEvents.h>
+#  include <NetworkManager.h>
 # endif // ifdef ESP32
 
 # define NW_PLUGIN_ID  2

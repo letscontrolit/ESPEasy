@@ -16,29 +16,30 @@ String Command_Provisioning_Dispatcher(struct EventStruct *event,
 
   if (equals(cmd, F("config"))) {
     return Command_Provisioning_Config();
-  } else
-  if (equals(cmd, F("firmware"))) {
+  } 
+  else if (equals(cmd, F("firmware"))) {
     return Command_Provisioning_Firmware(event, Line);
-  } else
-  # if FEATURE_NOTIFIER
-  if (equals(cmd, F("notification"))) {
-    return Command_Provisioning_Notification();
-  } else
-  # endif // if FEATURE_NOTIFIER
-  if (equals(cmd, F("provision"))) {
-    return Command_Provisioning_Provision();
-  } else
-  if (equals(cmd, F("rules"))) {
-    return Command_Provisioning_Rules(event);
-  } else
-  if (equals(cmd, F("security"))) {
-    return Command_Provisioning_Security();
-#if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE
-  } else
-  if (equals(cmd, F("devsecurity"))) {
-    return Command_Provisioning_DeviceSecurity();
-#endif // if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE
   }
+  # if FEATURE_NOTIFIER
+  else if (equals(cmd, F("notification"))) {
+    return Command_Provisioning_Notification();
+  }
+  # endif // if FEATURE_NOTIFIER
+  else if (equals(cmd, F("provision"))) {
+    return Command_Provisioning_Provision();
+  } 
+  else if (equals(cmd, F("rules"))) {
+    return Command_Provisioning_Rules(event);
+  } 
+  else if (equals(cmd, F("security"))) {
+    return Command_Provisioning_Security();
+  }
+#if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE
+  else if (equals(cmd, F("devsecurity"))) {
+    return Command_Provisioning_DeviceSecurity();
+  }
+#endif // if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE
+  
   return return_command_failed_flashstr();
 }
 

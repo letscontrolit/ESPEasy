@@ -1,13 +1,11 @@
 #include "../Commands/SDCARD.h"
 
-#include "../../ESPEasy_common.h"
 #include "../Commands/Common.h"
 
 
 #if FEATURE_SD
 
 # include "../ESPEasyCore/Serial.h"
-# include "../Globals/Settings.h"
 # include "../Helpers/Hardware_SPI.h"
 # include "../Helpers/StringConverter.h"
 

@@ -2,6 +2,8 @@
 
 #ifdef USES_P116
 
+#include "../Helpers/Hardware_SPI.h"
+
 /****************************************************************************
  * ST77xx_type_toString: Display-value for the device selected
  ***************************************************************************/
@@ -128,8 +130,7 @@ P116_data_struct::P116_data_struct(ST77xx_type_e       device,
                                    String              commandTrigger,
                                    uint16_t            fgcolor,
                                    uint16_t            bgcolor,
-                                   bool                textBackFill,
-                                   uint8_t             spi_bus
+                                   bool                textBackFill
                                    # if                ADAGFX_FONTS_INCLUDED
                                    ,
                                    const uint8_t       defaultFontId
@@ -137,7 +138,7 @@ P116_data_struct::P116_data_struct(ST77xx_type_e       device,
                                    )
   : _device(device), _rotation(rotation), _fontscaling(fontscaling), _textmode(textmode), _backlightPin(backlightPin),
   _backlightPercentage(backlightPercentage), _displayTimer(displayTimer), _displayTimeout(displayTimer),
-  _commandTrigger(commandTrigger), _fgcolor(fgcolor), _bgcolor(bgcolor), _textBackFill(textBackFill), _spi_bus(spi_bus)
+  _commandTrigger(commandTrigger), _fgcolor(fgcolor), _bgcolor(bgcolor), _textBackFill(textBackFill)
   # if ADAGFX_FONTS_INCLUDED
   , _defaultFontId(defaultFontId)
   # endif // if ADAGFX_FONTS_INCLUDED
@@ -171,6 +172,10 @@ bool P116_data_struct::plugin_init(struct EventStruct *event) {
     addLog(LOG_LEVEL_INFO, F("ST77xx: Init start."));
     uint8_t initRoptions = 0xFF;
 
+    #ifdef ESP32
+    auto spi_ptr = getSPIBusForTask(event->TaskIndex);
+    if (!spi_ptr) return false;
+    #endif
     switch (_device) {
       case ST77xx_type_e::ST7735s_128x128:
 
@@ -235,7 +240,7 @@ bool P116_data_struct::plugin_init(struct EventStruct *event) {
         }
 
         # ifdef ESP32
-        st7735 = new (std::nothrow) Adafruit_ST7735(0 == _spi_bus ? &SPI : &SPIe, PIN(0), PIN(1), PIN(2));
+        st7735 = new (std::nothrow) Adafruit_ST7735(spi_ptr, PIN(0), PIN(1), PIN(2));
         # endif // ifdef ESP32
         # ifdef ESP8266
         st7735 = new (std::nothrow) Adafruit_ST7735(PIN(0), PIN(1), PIN(2));
@@ -258,7 +263,7 @@ bool P116_data_struct::plugin_init(struct EventStruct *event) {
       # endif // if P116_EXTRA_ST7789
       {
         # ifdef ESP32
-        st7789 = new (std::nothrow) Adafruit_ST7789(0 == _spi_bus ? &SPI : &SPIe, PIN(0), PIN(1), PIN(2));
+        st7789 = new (std::nothrow) Adafruit_ST7789(spi_ptr, PIN(0), PIN(1), PIN(2));
         # endif // ifdef ESP32
         # ifdef ESP8266
         st7789 = new (std::nothrow) Adafruit_ST7789(PIN(0), PIN(1), PIN(2));
@@ -285,7 +290,7 @@ bool P116_data_struct::plugin_init(struct EventStruct *event) {
       case ST77xx_type_e::ST7796s_320x480:
       {
         # ifdef ESP32
-        st7796 = new (std::nothrow) Adafruit_ST7796S_kbv(0 == _spi_bus ? &SPI : &SPIe, PIN(0), PIN(1), PIN(2));
+        st7796 = new (std::nothrow) Adafruit_ST7796S_kbv(spi_ptr, PIN(0), PIN(1), PIN(2));
         # endif // ifdef ESP32
         # ifdef ESP8266
         st7796 = new (std::nothrow) Adafruit_ST7796S_kbv(PIN(0), PIN(1), PIN(2));
