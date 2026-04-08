@@ -4557,8 +4557,14 @@ To create/register a plugin, you have to :
 #endif // if !FEATURE_SPI && !FEATURE_I2C && !FEATURE_MODBUS && !FEATURE_CAN && !FEATURE_WRMBUS && !FEATURE_WIMBUS
 
 
-#if defined(FEATURE_P043_CLK_TIMES_JSON) && !defined(USES_P043)
-  #undef FEATURE_P043_CLK_TIMES_JSON
+#ifndef FEATURE_P043_CLK_TIMES_JSON
+  #define FEATURE_P043_CLK_TIMES_JSON (defined(PLUGIN_BUILD_MAX_ESP32) ? 1 : 0)
 #endif
+
+#if defined(FEATURE_P043_CLK_TIMES_JSON) && defined(USES_P043)
+  # ifndef FEATURE_ADDITIONAL_JSON_FROM_PLUGIN
+    #  define FEATURE_ADDITIONAL_JSON_FROM_PLUGIN 1
+  # endif
+#endif // if defined(FEATURE_P043_CLK_TIMES_JSON) && defined(USES_P043)
 
 #endif // CUSTOMBUILD_DEFINE_PLUGIN_SETS_H

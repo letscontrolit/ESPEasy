@@ -30,6 +30,7 @@
 #define FEATURE_JSON_EVENT              0  // Generates an event with the values of a JSON repsonse of an HTTP call. Keys are stored in json.keys one key per line (e.g.: Body.Data.DAY_ENERGY.Values.1)
 // #define FEATURE_SD                   1  // Enable SD card support
 // #define FEATURE_DOWNLOAD             1  // Enable downloading a file from an url
+#define FEATURE_P043_CLK_TIMES_JSON     1  // When defined, Plugin 043 will add the time settings to the JSON output
 
 #ifdef BUILD_GIT
 # undef BUILD_GIT

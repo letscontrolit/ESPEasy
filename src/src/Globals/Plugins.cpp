@@ -992,6 +992,9 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
 
     // Call to specific task not interacting with hardware
     case PLUGIN_GET_CONFIG_VALUE:
+#if FEATURE_ADDITIONAL_JSON_FROM_PLUGIN
+    case PLUGIN_TASK_JSON:
+#endif //FEATURE_ADDITIONAL_JSON_FROM_PLUGIN
     case PLUGIN_GET_DEVICEVALUENAMES:
     case PLUGIN_GET_DEVICEGPIONAMES:
     case PLUGIN_WEBFORM_SAVE:

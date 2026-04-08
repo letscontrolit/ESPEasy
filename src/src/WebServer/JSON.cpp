@@ -575,30 +575,14 @@ void handle_json()
                 }
               }
 
-#if FEATURE_P043_CLK_TIMES_JSON
-              if (Settings.getPluginID_for_task(TaskIndex).value == 43) {
-                taskWriter->write({ (F("OnOff")), Settings.TaskDevicePluginConfig[TaskIndex][(6)] });
-                auto timesWriter = taskWriter->createChildArray(F("Times"));
+# if FEATURE_ADDITIONAL_JSON_FROM_PLUGIN
 
-                if (timesWriter)
-                {
-                  const int count = Settings.TaskDevicePluginConfig[TaskIndex][7];
-                  const int offset = (validGpio(Settings.TaskDevicePin[1][TaskIndex]) ||
-                                          (count == 1)) ? 1 : 0;
-
-                  for (int x = 0; x < count; x++) {
-                    auto timeWriter = timesWriter->createChild();
-                    long value      = Cache.getTaskDevicePluginConfigLong(TaskIndex, x);
-                    int  val        = ExtraTaskSettings.TaskDevicePluginConfig[x] - offset;
-
-                    if (timeWriter) {
-                      timeWriter->write({ F("Time"),       timeLong2String(value) });
-                      timeWriter->write({ F("Value"),    val });
-                    }
-                  }
-                }
-              }
-#endif // FEATURE_P043_CLK_TIMES_JSON
+              EventStruct TempEvent(TaskIndex);
+              TempEvent.Par1 = reinterpret_cast<intptr_t>(taskWriter.get());
+              
+              String dummy;
+              PluginCall(PLUGIN_TASK_JSON, &TempEvent, dummy);
+# endif // FEATURE_ADDITIONAL_JSON_FROM_PLUGIN
 
 #if FEATURE_PLUGIN_STATS && FEATURE_CHART_JS
 
