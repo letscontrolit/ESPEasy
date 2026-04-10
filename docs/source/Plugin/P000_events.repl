@@ -72,6 +72,30 @@
 
    "
    "
+   ``System#BootCause``
+   Added: 2026-03-29
+   Triggered at boot time.
+   ","
+
+   .. code-block:: none
+
+        on System#BootCause do
+          LogEntry,'Bootcause: %eventvalue1%'
+        endon
+
+   Possible bootcauses can be:
+
+   * 0: Manual Reboot
+   * 1: Cold Boot
+   * 2: Deep Sleep
+   * 3: Soft Reboot
+   * 10: External Watchdog
+   * 11: SW Watchdog
+   * 12: Exception
+   * 20: PWR Unstable
+
+   "
+   "
    ``System#BootMode``
    Added: 2021-10-18
   
@@ -103,6 +127,19 @@
    N.B.2 Do not pull GPIO-2 high when GPIO-0 is low for programming mode.
 
    See 'Boot Strapping Pins' documentation for the boot strapping pins for all ESP32-series chips.
+
+   "
+   "
+   ``System#GPIOWake``
+   Added: 2026-03-29
+   Triggered at boot time.
+   ","
+
+   .. code-block:: none
+
+        on System#GPIOWake do
+          LogEntry,'GPIO that caused the wakeup: %eventvalue1%'
+        endon
 
    "
    "

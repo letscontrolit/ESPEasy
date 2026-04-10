@@ -4557,3 +4557,12 @@ To create/register a plugin, you have to :
 #endif // if !FEATURE_SPI && !FEATURE_I2C && !FEATURE_MODBUS && !FEATURE_CAN && !FEATURE_WRMBUS && !FEATURE_WIMBUS
 
 #endif // CUSTOMBUILD_DEFINE_PLUGIN_SETS_H
+
+#if defined(ESP32)
+#if SOC_PM_SUPPORT_EXT1_WAKEUP
+#define FEATURE_PIN_WAKEUP 1
+#else // if no EXT1_WAKEUP support, we can use GPIO wakeup 
+      // (TODO:  -add per-pin trigger level control for GPIO wakeup)
+#define FEATURE_PIN_WAKEUP 2
+#endif
+#endif

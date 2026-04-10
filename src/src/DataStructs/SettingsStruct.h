@@ -371,11 +371,22 @@ private:
     , int8_t& index_high
     #endif
     ) const;
-  
+
 public:
 
   PinBootState getPinBootState(int8_t gpio_pin) const;
   void setPinBootState(int8_t gpio_pin, PinBootState state);
+
+#if FEATURE_PIN_WAKEUP
+    // --- Wake GPIO mask handling ---
+  uint64_t getWakeGpioMask() const;
+  void     setWakeGpioMask(uint64_t mask);
+
+  inline bool wakeOnHigh() { return VariousBits_3.wakeOnHigh_ckd; }
+  inline void setWakeOnHigh(bool value) { VariousBits_3.wakeOnHigh_ckd = value; }
+  inline bool getWakePulls() { return VariousBits_3.disableWakePulls; }
+  inline void setWakePulls(bool value) { VariousBits_3.disableWakePulls = value; }
+#endif // if FEATURE_PIN_WAKEUP
 
 #if FEATURE_SPI
   bool getSPI_pinsForTask(taskIndex_t TaskIndex,
@@ -607,7 +618,10 @@ public:
   int8_t        SPI1_SCLK_pin = -1;
   int8_t        SPI1_MISO_pin = -1;
   int8_t        SPI1_MOSI_pin = -1;
-  unsigned int  OLD_TaskDeviceID[N_TASKS - 8] = {0};  // UNUSED: this can be reused
+  uint32_t      wakePin_bitmask_lLo = 0;
+  uint32_t      wakePin_bitmask_lHi = 0;
+
+  unsigned int OLD_TaskDeviceID[N_TASKS - 10] = {0};  // UNUSED: this can be reused
 
   // FIXME TD-er: When used on ESP8266, this conversion union may not work
   // It might work as it is 32-bit in size.

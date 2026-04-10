@@ -101,3 +101,52 @@ If the board supports PSRAM, it hides GPIO-26
 (GPIO-26 is missing from the range, as it can not be used if PSRAM is present)
 
 Overview of the GPIO pin mapping of ESP32-S2 (link to Espressif documentation): `ESP32-S2 Saola1 <https://docs.espressif.com/projects/esp-idf/en/latest/esp32s2/_images/esp32-s2_saola1-pinout.jpg>`_
+
+--------------------
+GPIO wake from sleep
+--------------------
+
+.. note::
+          This feature is only available on ESP32 devices.
+
+Supported GPIO pins can be selected to wake the unit from deep sleep.
+For ESP32 devices with EXT1 wake-up support, the internal RTC-Resistors can be disabled globally and it applies to **all** selected pins.
+The signal level (HIGH or LOW) is configured globally and applies to **all** selected pins.
+GPIO wake-up on newer devices supports per-pin trigger level configuration, but this comes at the cost of higher power consumption.
+**TODO:**   Integrate per-pin trigger level selection for GPIO wake-up.
+
+When the unit wakes up from deep sleep, an event is generated with the GPIO number that caused the wakeup.
+``"EVENT: System#GPIOWake=X"``, where ``X`` is the GPIO number.
+
+Make sure to add a pull-up or pull-down resistor to the selected GPIO pin(s) when needed, to avoid false wakeups.
+(some GPIO pins have internal pull-up or pull-down resistors, but not all of them, and the internal pull-up/down may not be sufficient for stable operation in all cases)
+For **GPIO Wake-up** all internal pull-up/down resistors should work. No need to add them anywhere as this is done automatically.
+
+.. note::
+
+   Depending on the ESP32 variant, two different wake-up mechanisms are used.
+
+   **EXT1 Wake-up (RTC)**
+
+   If ``SOC_PM_SUPPORT_EXT1_WAKEUP`` is available, EXT1 wake-up is used (e.g. ESP32 classic, ESP32-S2, ESP32-S3, ESP32-C6, ESP32-H2):
+
+   - Only works on RTC-capable pins
+   - Very low power (RTC domain)
+
+   **GPIO Wake-up**
+
+   On platforms without EXT1 support (e.g. ESP32-C3), GPIO wake-up is used:
+
+   - Works on more pins (not RTC-limited)
+   - Slightly higher power usage (HP domain)
+
+   **Summary**
+
+   - EXT1: preferred, low power
+   - GPIO wake-up: fallback for newer chips, more flexible but less efficient
+
+   The firmware automatically selects the correct method at compile time.
+
+.. warning::
+        When using this feature, be aware that if you are also using a GPIO in rules (e.g., Monitor,GPIO,8) or in a Plugin Task (P001), you might get an event at wakeup if the button is pressed slightly too long, which can cause unexpected behavior.
+        If this is unwanted, take precautions such as monitoring the GPIO a bit later after boot (e.g., with a timer), or disabling the corresponding task and enabling it later after boot (e.g., with a timer) to avoid this.

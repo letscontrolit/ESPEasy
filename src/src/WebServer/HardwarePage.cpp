@@ -21,6 +21,10 @@
 //#include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_GPIO.h"
 
+# ifdef FEATURE_PIN_WAKEUP
+#include "../../_Plugin_Helper.h"
+#include "driver/rtc_io.h"
+# endif 
 
 // ********************************************************************************
 // Web Interface hardware page
@@ -63,6 +67,25 @@ void handle_hardware() {
       }
       ++gpio;
     }
+    
+    #  if FEATURE_PIN_WAKEUP
+    gpio = 0;
+    uint64_t wakeGpioMask = 0;
+    Settings.setWakeOnHigh(isFormItemChecked(F("WoHi")));  // Wake on HIGH or LOW
+    #if FEATURE_PIN_WAKEUP == 1
+    Settings.setWakePulls(isFormItemChecked(F("WakePulls")));  // disable internal pulls for wakeup pins
+    #endif
+    while (gpio <= MAX_GPIO) {
+      if (esp_sleep_is_valid_wakeup_gpio((gpio_num_t)gpio)) {
+        String checkboxId = strformat(F("WoL%d"), gpio);
+        bitWrite(wakeGpioMask, gpio, isFormItemChecked(checkboxId));
+      }
+      ++gpio;
+    }
+    Settings.setWakeGpioMask(wakeGpioMask); // save the bitmask
+    setupGpioWakeup(wakeGpioMask); //attach gpios for wakeup
+    #  endif // if FEATURE_PIN_WAKEUP
+
     error += SaveSettings();
     addHtmlError(error);
   }
@@ -112,10 +135,41 @@ void handle_hardware() {
 #endif // if FEATURE_SD
 
   addFormSubHeader(F("GPIO boot states"));
-
+  bool expandBootStates{};
+  int gpio = 0;
+  while (!expandBootStates && gpio <= MAX_GPIO) {
+    expandBootStates = Settings.getPinBootState(gpio) != PinBootState::Default_state;
+    ++gpio;
+  }
+  addFormDetailsStart(expandBootStates);
+  
   for (int gpio = 0; gpio <= MAX_GPIO; ++gpio) {
     addFormPinStateSelect(gpio, static_cast<int>(Settings.getPinBootState(gpio)));
   }
+  addFormDetailsEnd();
+
+ #  if FEATURE_PIN_WAKEUP
+  #if FEATURE_PIN_WAKEUP == 1
+  addFormSubHeader(F("EXT1 Wake-up Pins"));
+  #else
+  addFormSubHeader(F("GPIO Wake-up"));
+  #endif
+  addFormDetailsStart(Settings.getWakeGpioMask() != 0);
+  #if FEATURE_PIN_WAKEUP == 1
+  addFormCheckBox(F("Disable internal pulls"), F("WakePulls"), Settings.getWakePulls());
+  #endif
+  addFormCheckBox(F("Wake on HIGH"), F("WoHi"), Settings.wakeOnHigh());
+  #if FEATURE_PIN_WAKEUP == 1
+  addFormNote(F("(default: Wake on LOW) Add an external Pull-Resistor if needed!"));
+  #else
+  addFormNote(F("(default: Wake on LOW) No external pull-up/down resistors are needed"));
+  #endif
+  for (int gpio = 0; gpio <= MAX_GPIO; ++gpio) {
+    addFormPinWakeSelect(gpio, Settings.getWakeGpioMask());
+  }
+  addFormDetailsEnd();
+  #  endif // if FEATURE_PIN_WAKEUP
+
   addFormSeparator(2);
 
   html_TR_TD();

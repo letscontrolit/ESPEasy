@@ -561,6 +561,13 @@ void ESPEasy_setup()
     String event = F("System#Wake");
     rulesProcessing(event); // TD-er: Process events in the setup() now.
   }
+
+  if (Settings.UseRules)
+  {
+    String event = F("System#BootCause=");
+    event += lastBootCause;
+    rulesProcessing(event); // TD-er: Process events in the setup() now.
+  }
   #ifdef ESP32
 
   if (Settings.UseRules)
@@ -588,6 +595,21 @@ void ESPEasy_setup()
     event += bitRead(gpio_strap, 5);
     rulesProcessing(event);
   }
+
+  #  if FEATURE_PIN_WAKEUP
+  if (Settings.UseRules)
+  {
+    int8_t wakePin = getWakeupGPIO();
+
+    if (wakePin >= 0) {
+      String event = F("System#GPIOWake=");
+      event += wakePin;
+      rulesProcessing(event);
+    }
+    setupGpioWakeup(Settings.getWakeGpioMask());
+  }
+  #  endif // if FEATURE_PIN_WAKEUP
+
   #endif // ifdef ESP32
 
   #if FEATURE_REPORTING

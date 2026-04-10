@@ -639,6 +639,22 @@ void addFormPinStateSelect(int gpio, int choice)
 }
 
 // ********************************************************************************
+// Add a GPIO wake select list
+// ********************************************************************************
+#  if FEATURE_PIN_WAKEUP
+void addFormPinWakeSelect(int gpio, uint64_t wakeGpioMask){
+    if (esp_sleep_is_valid_wakeup_gpio((gpio_num_t)gpio)) {
+      // Check if this GPIO is part of the wake mask
+      bool checked = bitRead(wakeGpioMask, gpio);
+      String checkboxId = strformat(F("WoL%d"), gpio);
+      String label      = strformat(F("Wake from GPIO-%d"), gpio);
+
+      addFormCheckBox(label, checkboxId, checked);
+    }
+  }
+# endif 
+
+// ********************************************************************************
 // Retrieve return values from form/checkbox.
 // ********************************************************************************
 int getFormItemInt(const __FlashStringHelper * key, int defaultValue) {
