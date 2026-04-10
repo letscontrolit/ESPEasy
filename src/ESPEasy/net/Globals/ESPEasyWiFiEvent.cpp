@@ -1,7 +1,5 @@
 #include "../Globals/ESPEasyWiFiEvent.h"
 
-#include "../../../ESPEasy_common.h"
-
 #if FEATURE_WIFI
 
 # ifdef ESP8266

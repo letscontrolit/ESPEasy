@@ -9,8 +9,6 @@
 # include "IthoCC1101.h"
 # include "IthoPacket.h"
 
-# include "../Globals/SPIe.h"
-
 # define P118_DEBUG_LOG          // Enable for some (extra) logging
 # ifndef P118_FEATURE_ORCON
 #  define P118_FEATURE_ORCON   1 // Enable use of Orcon commands
@@ -65,8 +63,7 @@ public:
   P118_data_struct(int8_t  csPin,
                    int8_t  irqPin,
                    bool    logData,
-                   bool    rfLog,
-                   uint8_t spi_bus);
+                   bool    rfLog);
 
   P118_data_struct() = delete;
   virtual ~P118_data_struct();
@@ -111,7 +108,6 @@ private:
   int8_t  _irqPin = -1;
   bool    _log    = false;
   bool    _rfLog  = false;
-  uint8_t _spi_bus;
 
   PLUGIN_118_ExtraSettingsStruct _ExtraSettings;
 

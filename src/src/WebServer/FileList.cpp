@@ -3,16 +3,13 @@
 #include "../WebServer/ESPEasy_WebServer.h"
 #include "../WebServer/HTML_wrappers.h"
 #include "../WebServer/AccessControl.h"
-#include "../WebServer/Markup.h"
 #include "../WebServer/Markup_Buttons.h"
 
 #include "../ESPEasyCore/ESPEasyRules.h"
 
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Numerical.h"
-
-#include "../../ESPEasy_common.h"
-
+#include "../Helpers/StringConverter.h"
 
 
 #ifdef USES_C016

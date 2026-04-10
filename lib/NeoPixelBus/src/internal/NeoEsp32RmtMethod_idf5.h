@@ -403,7 +403,12 @@ public:
         ESP_ERROR_CHECK( rmt_disable(_channel.RmtChannelNumber));
         ESP_ERROR_CHECK( rmt_del_channel(_channel.RmtChannelNumber));
 
+        #if ESP_IDF_VERSION_MAJOR < 6
         gpio_matrix_out(_pin, 0x100, false, false);
+        #else
+        gpio_reset_pin((gpio_num_t)_pin);
+//        pinMatrixOutAttach(_pin, 0x100, false, false);
+        #endif
         pinMode(_pin, INPUT);
 
         free(_dataEditing);
@@ -457,8 +462,13 @@ public:
         config.resolution_hz = RMT_LED_STRIP_RESOLUTION_HZ; // 1 MHz tick resolution, i.e., 1 tick = 1 µs
         config.trans_queue_depth = 2;           // set the number of transactions that can pend in the background
         config.intr_priority = 0;
+        #if ESP_IDF_VERSION_MAJOR < 6
         config.flags.io_loop_back = 0;
         config.flags.io_od_mode = 0;
+        #else
+        config.flags.allow_pd = 0;
+        config.flags.init_level = 0;
+        #endif
         config.flags.invert_out = false;        // do not invert output signal
         config.flags.with_dma = NEOESP32_RMT_FLAGS_WITH_DMA; 
 

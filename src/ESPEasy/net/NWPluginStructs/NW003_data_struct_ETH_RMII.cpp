@@ -7,20 +7,17 @@
 
 # include "../../../src/Globals/Settings.h"
 
-# include "../../../src/Helpers/ESPEasy_time_calc.h"
 # include "../../../src/Helpers/Hardware_GPIO.h"
-# include "../../../src/Helpers/LongTermOnOffTimer.h"
 # include "../../../src/Helpers/StringConverter.h"
 
 # include "../../../src/WebServer/Markup.h"
 # include "../../../src/WebServer/Markup_Forms.h"
+# include "../../../src/WebServer/KeyValueWriter_WebForm.h"
 # include "../../../src/WebServer/ESPEasy_key_value_store_webform.h"
-
-# include "../Globals/NetworkState.h"
 
 # include "../Helpers/NW_info_writer.h"
 
-# include "../eth/ESPEasyEth.h"
+# include "../ESPEasyNetwork.h"
 
 # define NW_PLUGIN_ID  3
 
@@ -488,9 +485,9 @@ void NW003_data_struct_ETH_RMII::ethPrintSettings() {
       log += F(" Eth Clock mode: ");
       log += ESPEasy::net::toString(ETH_ClockMode);
       log += strformat(F(" MDC: %d MIO: %d PWR: %d"),
-                       _kvs->getValueAsInt(NW003_KEY_ETH_PIN_MDC),
-                       _kvs->getValueAsInt(NW003_KEY_ETH_PIN_MDIO),
-                       _kvs->getValueAsInt(NW003_KEY_ETH_PIN_POWER));
+                       static_cast<int>(_kvs->getValueAsInt(NW003_KEY_ETH_PIN_MDC)),
+                       static_cast<int>(_kvs->getValueAsInt(NW003_KEY_ETH_PIN_MDIO)),
+                       static_cast<int>(_kvs->getValueAsInt(NW003_KEY_ETH_PIN_POWER)));
       addLogMove(LOG_LEVEL_INFO, log);
     }
   }

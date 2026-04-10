@@ -95,7 +95,12 @@ void NWPluginData_static_runtime::mark_start()
 
   if (!_netif) { return; }
 
-  _netif->setHostname(NetworkCreateRFCCompliantHostname().c_str());
+  const String hostname = strformat(
+    F("%s-%s"),
+    NetworkCreateRFCCompliantHostname().c_str(), 
+    _eventInterfaceName.c_str());
+
+  _netif->setHostname(hostname.c_str());
 # if FEATURE_USE_IPV6
   _netif->enableIPv6(_enableIPv6);
 # endif

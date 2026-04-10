@@ -34,18 +34,18 @@ public:
 
   virtual ~KeyValueWriter_WebForm();
 
-  virtual void              write();
+  virtual void              write() override;
 
-  virtual void              write(const KeyValueStruct& kv);
+  virtual void              write(const KeyValueStruct& kv) override;
 
   // Create writer of the same derived type, with this set as parent
-  virtual UP_KeyValueWriter createChild();
-  virtual UP_KeyValueWriter createChild(const String& header);
-  virtual UP_KeyValueWriter createChildArray(const String& header);
+  virtual UP_KeyValueWriter createChild() override;
+  virtual UP_KeyValueWriter createChild(const String& header) override;
+  virtual UP_KeyValueWriter createChildArray(const String& header) override;
 
   // Create new writer of the same derived type, without parent
-  virtual UP_KeyValueWriter createNew();
-  virtual UP_KeyValueWriter createNew(const String& header);
+  virtual UP_KeyValueWriter createNew() override;
+  virtual UP_KeyValueWriter createNew(const String& header) override;
 
   virtual bool allowHTML() const override;
 

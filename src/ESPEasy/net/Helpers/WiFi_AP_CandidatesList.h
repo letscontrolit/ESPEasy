@@ -3,9 +3,7 @@
 #include "../../../ESPEasy_common.h"
 
 #include "../DataStructs/WiFi_AP_Candidate.h"
-#include "../../../src/Helpers/LongTermOnOffTimer.h"
 
-#include <list>
 
 #define WiFi_CONNECT_ATTEMPTS  1
 
@@ -15,8 +13,6 @@ namespace ESPEasy {
 namespace net {
 namespace wifi {
 
-
-typedef std::list<WiFi_AP_Candidate>::const_iterator WiFi_AP_Candidate_const_iterator;
 
 struct WiFi_AP_CandidatesList {
   WiFi_AP_CandidatesList();
@@ -107,12 +103,12 @@ public:
 
 private:
 
-  std::list<WiFi_AP_Candidate>candidates;
+  WiFi_AP_Candidate_List_t candidates;
 
-  std::list<WiFi_AP_Candidate>known;
+  WiFi_AP_Candidate_List_t known;
 
-  std::list<WiFi_AP_Candidate>scanned;
-  std::list<WiFi_AP_Candidate>scanned_new;
+  WiFi_AP_Candidate_List_t scanned;
+  WiFi_AP_Candidate_List_t scanned_new;
 
   WiFi_AP_Candidate_const_iterator known_it;
 

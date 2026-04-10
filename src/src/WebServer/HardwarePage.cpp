@@ -18,7 +18,7 @@
 #include "../Helpers/Hardware_GPIO.h"
 #include "../Helpers/I2C_access.h"
 #include "../Helpers/SPI_Helper.h"
-#include "../Helpers/StringConverter.h"
+//#include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_GPIO.h"
 
 # ifdef FEATURE_PIN_WAKEUP

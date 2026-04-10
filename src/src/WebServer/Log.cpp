@@ -3,9 +3,7 @@
 #ifdef WEBSERVER_LOG
 
 #include "../WebServer/ESPEasy_WebServer.h"
-#include "../WebServer/404.h"
 #include "../WebServer/HTML_wrappers.h"
-#include "../WebServer/JSON.h"
 #include "../WebServer/Markup.h"
 #include "../WebServer/Markup_Buttons.h"
 #include "../WebServer/Markup_Forms.h"
@@ -16,6 +14,7 @@
 #include "../Globals/Logging.h"
 #include "../Globals/Settings.h"
 #include "../Helpers/ESPEasy_time_calc.h"
+#include "../Helpers/KeyValueWriter_JSON.h"
 #include "../Static/WebStaticData.h"
 
 // ********************************************************************************

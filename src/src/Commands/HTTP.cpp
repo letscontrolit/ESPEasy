@@ -1,7 +1,5 @@
 #include "../Commands/HTTP.h"
 
-#include "../../ESPEasy_common.h"
-
 #include "../Commands/Common.h"
 
 #include "../DataStructs/ControllerSettingsStruct.h"
@@ -12,10 +10,7 @@
 
 #include "../Globals/Settings.h"
 
-#include "../Helpers/_CPlugin_Helper.h"
-#include "../Helpers/Misc.h"
 #include "../Helpers/Networking.h"
-#include "../Helpers/StringParser.h"
 
 #if FEATURE_SEND_TO_HTTP || FEATURE_POST_TO_HTTP || FEATURE_PUT_TO_HTTP
 const __FlashStringHelper* httpEmitToHTTP(struct EventStruct        *event,
