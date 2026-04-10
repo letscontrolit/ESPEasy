@@ -275,7 +275,7 @@ The same for the plugins you need.
 
 The file is built in the ``.pio/build/....`` directory right under the main repository directory (the one with the platformio.ini in it)
 
-Instead of modifying ``pre_custom_esp82xx.py`` (or any of the ``pre_custom_esp32.py`` files for that matter), one can also copy ``src/Custom-sample.h`` to ``src/Custom.h`` and make the desired changed in this file. This file is excluded from Github, so can be adjusted to your own requirements. When the Custom.h file is there (mind the uppercase C!), it will be used by the build scripts instead of the defaults set by ``pre_custom_esp82xx.py`` (or ``pre_custom_esp32.py``).
+Instead of modifying ``pre_custom_esp82xx.py`` (or any of the ``pre_custom_esp32*.py`` files for that matter), one can also copy ``src/Custom-sample.h`` to ``src/Custom.h`` and make the desired changed in this file. This file is excluded from git, so can be adjusted to your own requirements. When the ``Custom.h`` file is available (mind the uppercase C!), it will be used by the ``custom`` build scripts instead of the defaults set by ``pre_custom_esp82xx.py`` (or ``pre_custom_esp32*.py``).
 
 In the freshly copied ``Custom.h`` you will find all available plugins and features available in ESPEasy, and also you can enable or disable some settings to be used on a clean (empty flash) install.
 
@@ -797,7 +797,7 @@ For those that want to test the code from a pull request, created by someone els
 
     git pull upstream pull/<prnumber>/head
 
-5. Build the desired PIO environment, or add the (new?) plugin to your Custom.h file to create your local Custom build. Like described above, you can also add a plugin to the ``pre_custom_esp82xx.py`` or ``pre_custom_esp32.py`` Python scripts (when *not* having a Custom.h file, as that will be used for any Custom build first).
+5. Build the desired PIO environment, or add the (new?) plugin to your Custom.h file to create your local Custom build. Like described above, you can also add a plugin to the ``pre_custom_esp82xx.py`` or ``pre_custom_esp32*.py`` Python scripts (when *not* having a Custom.h file, as that will be used for any Custom build first).
 
 6. To update your local code after the PR has been updated on github, repeat step **3.** and **4.** within the branch created in step **2.** active (``git checkout pulls/<prnumber>``).
 
