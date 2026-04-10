@@ -5,7 +5,7 @@
 
 #ifdef USES_C012
 
-#include "../Globals/CPlugins.h"
+#include "../DataTypes/ControllerIndex.h"
 
 
 controllerIndex_t firstEnabledBlynk_ControllerIndex();

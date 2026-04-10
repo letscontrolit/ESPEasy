@@ -2,31 +2,24 @@
 
 #if FEATURE_WIFI
 
-# include "../../../ESPEasy-Globals.h"
-# include "../../../src/DataStructs/TimingStats.h"
-# include "../../net/ESPEasyNetwork.h"
-# include "../../../src/ESPEasyCore/ESPEasy_Log.h"
-# include "../../../src/ESPEasyCore/Serial.h"
-# include "../../../src/Globals/EventQueue.h"
-# include "../../../src/Globals/Nodes.h"
-# include "../../../src/Globals/RTC.h"
-# include "../../../src/Globals/SecuritySettings.h"
-# include "../../../src/Globals/Services.h"
-# include "../../../src/Globals/Settings.h"
-# include "../Globals/WiFi_AP_Candidates.h"
-# include "../../../src/Helpers/ESPEasy_time_calc.h"
-# include "../../../src/Helpers/ESPEasy_UnitOfMeasure.h"
-# include "../../../src/Helpers/Hardware_defines.h"
-# include "../../../src/Helpers/Misc.h"
-# include "../../../src/Helpers/Networking.h"
-# include "../../../src/Helpers/StringConverter.h"
-# include "../../../src/Helpers/StringGenerator_WiFi.h"
-# include "../../../src/Helpers/StringProvider.h"
 # include "../Globals/ESPEasyWiFi.h"
-# include "../Globals/ESPEasyWiFiEvent.h"
-# include "../Globals/NetworkState.h"
+# include "../Globals/WiFi_AP_Candidates.h"
 # include "../wifi/ESPEasyWifi_abstracted.h"
+# include "../../net/ESPEasyNetwork.h"
+# include "../../../src/ESPEasyCore/Serial.h"
+# include "../../../src/Globals/Settings.h"
+# include "../../../src/Helpers/ESPEasy_time_calc.h"
+# include "../../../src/Helpers/StringConverter.h"
 
+#if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+# include "../../../src/Helpers/ESPEasy_UnitOfMeasure.h"
+#endif
+
+#ifdef ESP8266
+# ifndef BUILD_NO_DEBUG
+#include "../../../src/Helpers/StringGenerator_WiFi.h"
+#endif
+#endif
 
 # ifdef ESP32
 #  include <WiFiGeneric.h>
@@ -316,7 +309,9 @@ bool write_WiFi_Hosted_MCU_pins(KeyValueWriter*writer)
           writer->write(kv);
         } else {
           KeyValueStruct freq(F("SDIO Freq"), psdio_config->clock_freq_khz / 1000);
+#if FEATURE_TASKVALUE_UNIT_OF_MEASURE
           freq.setUnit(UOM_MHz);
+#endif
           writer->write(freq);
           writer->write({ F("SDIO D0"), psdio_config->pin_d0.pin });
           writer->write({ F("SDIO D1"), psdio_config->pin_d1.pin });
@@ -447,7 +442,7 @@ void WiFiScan_log_to_serial()
 
     int i = 0;
 
-    for (auto it = WiFi_AP_Candidates.scanned_begin(); it != WiFi_AP_Candidates.scanned_end(); ++it)
+    for (WiFi_AP_Candidate_const_iterator it = WiFi_AP_Candidates.scanned_begin(); it != WiFi_AP_Candidates.scanned_end(); ++it)
     {
       ++i;
 
@@ -463,7 +458,7 @@ void WiFiScan_log_to_serial()
 }
 
 // Only internal scope
-void setAPinternal(bool enable)   { doSetAPinternal(enable); }
+bool setAPinternal(bool enable)   { return doSetAPinternal(enable); }
 
 void setUseStaticIP(bool enabled) { doSetUseStaticIP(enabled); }
 

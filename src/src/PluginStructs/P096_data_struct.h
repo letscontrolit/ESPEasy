@@ -4,8 +4,6 @@
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P096
 
-# include "../Globals/SPIe.h"
-
 # include <Adafruit_GFX.h>             // include Adafruit graphics library
 # include <LOLIN_EPD.h>                // include Adafruit Lolin eInk/ePaper library
 
@@ -112,7 +110,6 @@ public:
                    uint8_t             fontscaling,
                    AdaGFXTextPrintMode textmode,
                    String              commandTrigger,
-                   uint8_t             spi_bus,
                    uint16_t            fgcolor      = ADAGFX_WHITE,
                    uint16_t            bgcolor      = ADAGFX_BLACK,
                    AdaGFXColorDepth    colorDepth   = AdaGFXColorDepth::Monochrome,
@@ -149,7 +146,6 @@ private:
   uint8_t             _fontscaling;
   AdaGFXTextPrintMode _textmode;
   String              _commandTrigger;
-  uint8_t             _spi_bus;
   uint16_t            _fgcolor;
   uint16_t            _bgcolor;
   AdaGFXColorDepth    _colorDepth;

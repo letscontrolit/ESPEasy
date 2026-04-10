@@ -100,8 +100,8 @@ void CheckRunningServices() {
 #endif // if FEATURE_WIFI
 
 #if FEATURE_MDNS
-  set_mDNS();
-  #endif
+  update_mDNS();
+#endif
 }
 
 uint64_t NetworkConnectDuration_ms()

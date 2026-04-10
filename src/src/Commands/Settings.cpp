@@ -1,7 +1,5 @@
 #include "../Commands/Settings.h"
 
-#include "../../ESPEasy_common.h"
-
 #include "../Commands/Common.h"
 
 #include "../CustomBuild/CompiletimeDefines.h"

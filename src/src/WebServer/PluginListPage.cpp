@@ -7,6 +7,7 @@
 # include "../WebServer/HTML_wrappers.h"
 
 # include "../_Plugin_Helper.h"
+# include "../Helpers/_CPlugin_init.h"
 # if FEATURE_NOTIFIER
 #  include "../Globals/NPlugins.h"
 #  include "../DataTypes/NPluginID.h"
@@ -15,7 +16,6 @@
 #  include "../ESPEasy/net/DataTypes/NetworkDriverIndex.h"
 # endif // ifdef WEBSERVER_NETWORK
 # include "../DataStructs/ProtocolStruct.h"
-# include "../Helpers/_CPlugin_Helper.h"
 
 void handle_pluginlist() {
   # ifndef BUILD_NO_RAM_TRACKER

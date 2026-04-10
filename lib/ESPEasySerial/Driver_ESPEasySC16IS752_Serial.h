@@ -19,10 +19,10 @@ public:
 
   void   begin(long speed);
   void   end();
-  int    peek(void);
+  int    peek(void) override;
   size_t write(uint8_t val) override;
   size_t write(const uint8_t *buffer,
-               size_t         size);
+               size_t         size) override;
   int    read(void) override;
   size_t readBytes(char  *buffer,
                    size_t size) override;

@@ -59,7 +59,7 @@ boolean Plugin_172(uint8_t function, struct EventStruct *event, String& string)
       P154_data_struct *P154_P172_data =
         static_cast<P154_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      success = (nullptr != P154_P172_data && P154_P172_data->begin(false));
+      success = (nullptr != P154_P172_data && P154_P172_data->begin(event, false));
       break;
     }
 

@@ -4,13 +4,10 @@
 # include "../DataStructs/WiFi_AP_Candidates_NVS.h"
 #endif
 
-#include "../Globals/ESPEasyWiFiEvent.h"
-
 #include "../../../src/ESPEasyCore/ESPEasy_Log.h"
 #include "../../../src/Globals/RTC.h"
 #include "../../../src/Globals/SecuritySettings.h"
 #include "../../../src/Globals/Settings.h"
-#include "../../../src/Helpers/Misc.h"
 #include "../../../src/Helpers/StringConverter.h"
 
 #if defined(ESP8266)

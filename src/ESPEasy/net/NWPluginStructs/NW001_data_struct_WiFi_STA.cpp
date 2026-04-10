@@ -2,11 +2,7 @@
 
 #ifdef USES_NW001
 
-# include "../../../src/Globals/Settings.h"
-
-# include "../../../src/Helpers/ESPEasy_time_calc.h"
-# include "../../../src/Helpers/LongTermOnOffTimer.h"
-# include "../../../src/Helpers/StringConverter.h"
+# include "../../../src/DataTypes/ESPEasy_plugin_functions.h"
 # include "../../../src/WebServer/HTML_wrappers.h"
 # include "../../../src/WebServer/Markup.h"
 
