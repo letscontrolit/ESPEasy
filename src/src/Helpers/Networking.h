@@ -16,11 +16,10 @@
 #endif // ifdef ESP32
 #endif
 
+#if FEATURE_HTTP_TLS
+#include "../DataTypes/TLS_types.h"
+#endif // if FEATURE_HTTP_TLS
 
-/*********************************************************************************************\
-   Syslog client
-\*********************************************************************************************/
-void sendSyslog(uint8_t logLevel, const String& message);
 
 
 #if FEATURE_ESPEASY_P2P
@@ -28,7 +27,7 @@ void sendSyslog(uint8_t logLevel, const String& message);
 /*********************************************************************************************\
    Update UDP port (ESPEasy propiertary protocol)
 \*********************************************************************************************/
-void updateUDPport();
+void updateUDPport(bool force);
 
 
 /*********************************************************************************************\
@@ -54,6 +53,36 @@ String formatUnitToIPAddress(uint8_t unit, uint8_t formatCode);
 IPAddress getIPAddressForUnit(uint8_t unit);
 
 /*********************************************************************************************\
+   Get Name for specific unit
+\*********************************************************************************************/
+String getNameForUnit(uint8_t unit);
+
+/*********************************************************************************************\
+   Get Age for specific unit
+\*********************************************************************************************/
+long getAgeForUnit(uint8_t unit);
+
+/*********************************************************************************************\
+   Get Build for specific unit
+\*********************************************************************************************/
+uint16_t getBuildnrForUnit(uint8_t unit);
+
+/*********************************************************************************************\
+   Get Load for specific unit
+\*********************************************************************************************/
+float getLoadForUnit(uint8_t unit);
+
+/*********************************************************************************************\
+   Get nodeType for specific unit
+\*********************************************************************************************/
+uint8_t getTypeForUnit(uint8_t unit);
+
+/*********************************************************************************************\
+   Get nodeTypeString for specific unit
+\*********************************************************************************************/
+String getTypeStringForUnit(uint8_t unit);
+
+/*********************************************************************************************\
    Send UDP message to specific unit (unit 255=broadcast)
 \*********************************************************************************************/
 void sendUDP(uint8_t unit, const uint8_t *data, uint8_t size);
@@ -77,7 +106,7 @@ void sendSysInfoUDP(uint8_t repeats);
 /********************************************************************************************\
    Respond to HTTP XML requests for SSDP information
  \*********************************************************************************************/
-void SSDP_schema(WiFiClient& client);
+void SSDP_schema();
 
 /********************************************************************************************\
    Global SSDP stuff
@@ -218,7 +247,11 @@ String send_via_http(const String& logIdentifier,
                      const String& header,
                      const String& postStr,
                      int         & httpCode,
-                     bool          must_check_reply);
+                     bool          must_check_reply
+                     #if FEATURE_HTTP_TLS
+                     , TLS_types   tlsType = TLS_types::NoTLS
+                     #endif // if FEATURE_HTTP_TLS
+                    );
 #endif // FEATURE_HTTP_CLIENT
 
 #if FEATURE_DOWNLOAD
@@ -238,9 +271,6 @@ bool downloadFirmware(const String& url, String& file_save, String& user, String
 String joinUrlFilename(const String& url, String& filename);
 
 #endif // if FEATURE_DOWNLOAD
-
-
-
 
 
 

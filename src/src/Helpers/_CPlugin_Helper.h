@@ -8,13 +8,13 @@
 #include "../ControllerQueue/DelayQueueElements.h" // Also forward declaring the do_process_cNNN_delay_queue
 #include "../DataStructs/ControllerSettingsStruct.h"
 #include "../ESPEasyCore/Controller.h"
-#include "../ESPEasyCore/ESPEasyNetwork.h"
+#include "../../ESPEasy/net/ESPEasyNetwork.h"
 #include "../Globals/CPlugins.h"
 #include "../Globals/ESPEasy_Scheduler.h"
 #include "../Globals/Services.h"
 #include "../Helpers/_CPlugin_init.h"
 #include "../Helpers/Misc.h"
-#include "../Helpers/Network.h"
+#include "../Helpers/NetworkStatusLED.h"
 #include "../Helpers/Networking.h"
 #include "../Helpers/Numerical.h"
 #include "../Helpers/StringConverter.h"
@@ -33,19 +33,17 @@ bool safeReadStringUntil(Stream     & input,
 
 
 #ifndef BUILD_NO_DEBUG
-void log_connecting_to(const __FlashStringHelper * prefix, int controller_number, ControllerSettingsStruct& ControllerSettings);
+void log_connecting_to(const __FlashStringHelper * prefix, cpluginID_t cpluginID, ControllerSettingsStruct& ControllerSettings);
 #endif // ifndef BUILD_NO_DEBUG
 
-void log_connecting_fail(const __FlashStringHelper * prefix, int controller_number);
-
-bool count_connection_results(bool success, const __FlashStringHelper * prefix, int controller_number, unsigned long connect_start_time);
+bool count_connection_results(bool success, const __FlashStringHelper * prefix, cpluginID_t cpluginID, uint64_t statisticsTimerStart);
 
 #if FEATURE_HTTP_CLIENT
-bool try_connect_host(int controller_number, WiFiUDP& client, ControllerSettingsStruct& ControllerSettings);
+bool try_connect_host(cpluginID_t cpluginID, WiFiUDP& client, ControllerSettingsStruct& ControllerSettings);
 
-bool try_connect_host(int controller_number, WiFiClient& client, ControllerSettingsStruct& ControllerSettings);
+bool try_connect_host(cpluginID_t cpluginID, WiFiClient& client, ControllerSettingsStruct& ControllerSettings);
 
-bool try_connect_host(int controller_number, WiFiClient& client, ControllerSettingsStruct& ControllerSettings, const __FlashStringHelper * loglabel);
+bool try_connect_host(cpluginID_t cpluginID, WiFiClient& client, ControllerSettingsStruct& ControllerSettings, const __FlashStringHelper * loglabel);
 
 // Use "client.available() || client.connected()" to read all lines from slow servers.
 // See: https://github.com/esp8266/Arduino/pull/5113
@@ -54,7 +52,7 @@ bool client_available(WiFiClient& client);
 
 
 
-String send_via_http(int                             controller_number,
+String send_via_http(int                             cpluginID,
                      const ControllerSettingsStruct& ControllerSettings,
                      controllerIndex_t               controller_idx,
                      const String                  & uri,

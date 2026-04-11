@@ -22,11 +22,12 @@ struct AHTx_Status {
   const uint8_t status;
 };
 
-AHTx_Device::AHTx_Device(uint8_t addr, AHTx_device_type type) :
+AHTx_Device::AHTx_Device(uint8_t addr, AHTx_device_type type, bool altInit) :
   i2cAddress(addr),
   device_type(type),
   last_hum_val(0.0f),
-  last_temp_val(0.0f) {}
+  last_temp_val(0.0f),
+  alt_init(altInit) {}
 
 const __FlashStringHelper * AHTx_Device::getDeviceName() const {
   switch (device_type) {
@@ -38,8 +39,11 @@ const __FlashStringHelper * AHTx_Device::getDeviceName() const {
 }
 
 bool AHTx_Device::initialize() {
-  const uint8_t cmd_init = (device_type == AHTx_device_type::AHT10_DEVICE) ? 0xE1 : 0xBE;
+  const uint8_t cmd_init = (AHTx_device_type::AHT10_DEVICE == device_type) ? 0xE1 : 0xBE;
 
+  if ((AHTx_device_type::AHT10_DEVICE == device_type) && alt_init) {
+    return I2C_write8(i2cAddress, 0xBA); // Soft reset only
+  }
   return I2C_write16_reg(i2cAddress, cmd_init, 0x0800);
 }
 
@@ -92,8 +96,8 @@ bool AHTx_Device::readData() {
   return true;
 }
 
-P105_data_struct::P105_data_struct(uint8_t addr, AHTx_device_type dev) :
-  device(addr, dev),
+P105_data_struct::P105_data_struct(uint8_t addr, AHTx_device_type dev, bool altInit) :
+  device(addr, dev, altInit),
   state(AHTx_state::AHTx_Uninitialized),
   last_measurement(0),
   trigger_time(0) {}
@@ -111,18 +115,11 @@ bool P105_data_struct::updateMeasurements(taskIndex_t task_index) {
   const unsigned long current_time = millis();
 
   if (!initialized()) {
-    String log;
-    log.reserve(30);
-
     if (!device.initialize()) {
-      log += getDeviceName();
-      log += F(" : unable to initialize");
-      addLogMove(LOG_LEVEL_ERROR, log);
+      addLogMove(LOG_LEVEL_ERROR, strformat(F("%s : unable to initialize"), getDeviceName().c_str()));
       return false;
     }
-    log  = getDeviceName();
-    log += F(" : initialized");
-    addLogMove(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, strformat(F("%s : initialized"), getDeviceName().c_str()));
 
     trigger_time = current_time;
     state        = AHTx_state::AHTx_Trigger_measurement;
@@ -158,30 +155,22 @@ bool P105_data_struct::updateMeasurements(taskIndex_t task_index) {
     last_measurement = current_time;
     state            = AHTx_state::AHTx_New_values;
 
-    #ifndef BUILD_NO_DEBUG
+    # ifndef BUILD_NO_DEBUG
+
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) { // Log raw measuerd values only on level DEBUG
-      String log;
-      log.reserve(50);                        // Prevent re-allocation
-      log += getDeviceName();
-      log += F(" : humidity ");
-      log += device.getHumidity();
-      log += F("% temperature ");
-      log += device.getTemperature();
-      log += 'C';
-      addLogMove(LOG_LEVEL_DEBUG, log);
+      addLogMove(LOG_LEVEL_DEBUG, strformat(F("%s : humidity %.2f%% temperature %.2fC"),
+                                            getDeviceName().c_str(),
+                                            device.getHumidity(),
+                                            device.getTemperature()));
     }
-    #endif
+    # endif // ifndef BUILD_NO_DEBUG
 
     return true;
   }
 
   if (timePassedSince(trigger_time) > 1000) {
     // should not happen
-    String log;
-    log.reserve(15); // Prevent re-allocation
-    log += getDeviceName();
-    log += F(" : reset");
-    addLogMove(LOG_LEVEL_ERROR, log);
+    addLogMove(LOG_LEVEL_ERROR, strformat(F("%s : reset"), getDeviceName().c_str()));
     device.softReset();
 
     state = AHTx_state::AHTx_Uninitialized;

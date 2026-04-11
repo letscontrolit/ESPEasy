@@ -235,16 +235,40 @@
 #define DDM_IMPORT_REACTIVE_ENERGY                    0x0400                    //  kVArh       |    1    |
 //---------------------------------------------------------------------------------------------------------
 
-//---------------------------------------------------------------------------------------------------------
-//      REGISTERS LIST FOR DEVNAME DEVICE                                                                 |
-//---------------------------------------------------------------------------------------------------------
-//      REGISTER NAME                                 REGISTER ADDRESS              UNIT        | DEVNAME |
-//---------------------------------------------------------------------------------------------------------
-//#define DEVNAME_VOLTAGE                             0x0000                    //  V           |    1    |
-//#define DEVNAME_CURRENT                             0x0002                    //  A           |    1    |
-//#define DEVNAME_POWER                               0x0004                    //  W           |    1    |
-//---------------------------------------------------------------------------------------------------------
-
+//-------------------------------------------------------------------------------------------------------------
+//      REGISTERS LIST FOR TAC2100 DEVICE                                                                     |
+//-------------------------------------------------------------------------------------------------------------
+//      REGISTER NAME                                 REGISTER ADDRESS              UNIT            | TAC2100 |
+//-------------------------------------------------------------------------------------------------------------
+#define TAC2100_PHASE_1_VOLTAGE                           0x0000                    //  V           |    1    |  
+#define TAC2100_PHASE_1_CURRENT                           0x0006                    //  A           |    1    |
+#define TAC2100_PHASE_1_POWER                             0x000C                    //  W           |    1    |
+#define TAC2100_PHASE_1_APPARENT_POWER                    0x0012                    //  VA          |    1    |
+#define TAC2100_PHASE_1_REACTIVE_POWER                    0x0018                    //  VAr         |    1    |
+#define TAC2100_PHASE_1_POWER_FACTOR                      0x001E                    //              |    1    |
+#define TAC2100_PHASE_1_ANGLE                             0x0024                    //  Degrees     |    1    |
+#define TAC2100_FREQUENCY                                 0x0030                    //  Hz          |    1    |
+#define TAC2100_IMPORT_ACTIVE_ENERGY                      0x0500                    //  kWh/MWh     |    1    |
+#define TAC2100_EXPORT_ACTIVE_ENERGY                      0x0502                    //  kWh/MWh     |    1    |
+#define TAC2100_IMPORT_REACTIVE_ENERGY                    0x0508                    //  kVArh/MVArh |    1    |
+#define TAC2100_EXPORT_REACTIVE_ENERGY                    0x050A                    //  kVArh/MVArh |    1    |
+#define TAC2100_TOTAL_SYSTEM_POWER_DEMAND                 0x008C                    //  W           |    1    |
+#define TAC2100_MAXIMUM_TOTAL_SYSTEM_POWER_DEMAND         0x00A2                    //  W           |    1    |
+#define TAC2100_CURRENT_SYSTEM_POSITIVE_POWER_DEMAND      0x009A                    //  W           |    1    |
+#define TAC2100_MAXIMUM_SYSTEM_POSITIVE_POWER_DEMAND      0x00B0                    //  W           |    1    |
+#define TAC2100_CURRENT_SYSTEM_REVERSE_POWER_DEMAND       0x009C                    //  W           |    1    |
+#define TAC2100_MAXIMUM_SYSTEM_REVERSE_POWER_DEMAND       0x00B2                    //  W           |    1    |
+#define TAC2100_PHASE_1_CURRENT_DEMAND                    0x0092                    //  A           |    1    |
+#define TAC2100_MAXIMUM_PHASE_1_CURRENT_DEMAND            0x00A8                    //  A           |    1    |
+#define TAC2100_TOTAL_ACTIVE_ENERGY                       0x0504                    //  kWh         |    1    |
+#define TAC2100_TOTAL_REACTIVE_ENERGY                     0x050C                    //  kVArh       |    1    |
+#define TAC2100_REACTIVE_POWER_DEMAND                     0x008E                    //  VAr         |    1    |
+#define TAC2100_APPARENT_POWER_DEMAND                     0x0090                    //  VA          |    1    |
+#define TAC2100_MAX_REACTIVE_POWER_DEMAND                 0x00A4                    //  VAr         |    1    |
+#define TAC2100_MAX_APPARENT_POWER_DEMAND                 0x00A6                    //  VA          |    1    |
+#define TAC2100_NATURE_OF_LOAD                            0x004E                    //              |    1    |
+//TAC2100_NATURE_OF_LOAD: (Resistive=1, inductive=2, capacitive=3, Non Load=4)                                |
+//-------------------------------------------------------------------------------------------------------------
 
 //---------------------------------------------------------------------------------------------------------
 //      REGISTERS LIST FOR DEVICE SETTINGS                                                                |

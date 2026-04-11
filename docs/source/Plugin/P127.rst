@@ -13,7 +13,9 @@ Type: |P127_type|
 
 Name: |P127_name|
 
-Status: |P127_status|
+Status ESP32: |P127_status|
+
+Status ESP8266: |P127_status_lb|
 
 GitHub: |P127_github|_
 
@@ -59,10 +61,7 @@ Device Settings
 
 * **Altitude**: To compensate for local air pressure, the altitude relative to sea-level of the location where the sensor is installed can be entered. As usual for this type of setting, the altitude is registered in ``meter``.
 
-Data Acquisition
-^^^^^^^^^^^^^^^^
-
-The Data Acquisition, Send to Controller and Interval settings are standard available configuration items. Send to Controller is only visible when one or more Controllers are configured.
+.. include:: DataAcquisition.repl
 
 * **Interval** By default, Interval will be set to 60 sec. The minimum value allowed is 1 sec. but for measuring CO2 values, that don't change very quickly, reasonable values could be between 10 and 300 sec.
 

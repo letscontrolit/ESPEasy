@@ -6,6 +6,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery
  * 2023-04-10 tonhuisman: Minor corrections
  * 2023-04-09 tonhuisman: Adopt to latest mega branch changes as the plugin is last changed some years ago
  * 2023-04-09 tonhuisman: Migrate plugin from ESPEasyPluginPlayground to mega branch
@@ -13,16 +14,16 @@
 
 #include "_Plugin_Helper.h"
 
-#define PLUGIN_152
-#define PLUGIN_ID_152         152
-#define PLUGIN_NAME_152       "Output - ESP32 DAC"
-#define PLUGIN_VALUENAME1_152 "Output"
+#if defined(SOC_DAC_SUPPORTED) && SOC_DAC_SUPPORTED
 
-#define P152_DAC_VALUE        UserVar[event->BaseVarIndex]
+# define PLUGIN_152
+# define PLUGIN_ID_152         152
+# define PLUGIN_NAME_152       "Output - ESP32 DAC"
+# define PLUGIN_VALUENAME1_152 "Output"
 
-#if !(defined(ESP32_CLASSIC) || defined(ESP32S2))
-# error P152 ESP32 DAC not supported on this CPU type!
-#endif // if !(defined(ESP32_CLASSIC) || defined(ESP32S2))
+# define P152_DAC_VALUE        UserVar[event->BaseVarIndex]
+# define P152_SET_DAC_VALUE(x) UserVar.setFloat(event->TaskIndex, 0, x)
+
 
 boolean Plugin_152(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -32,14 +33,13 @@ boolean Plugin_152(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_152;
-      Device[deviceCount].Type               = DEVICE_TYPE_SINGLE;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_SINGLE;
-      Device[deviceCount].Custom             = true;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = 1;
+      auto& dev = Device[++deviceCount];
+      dev.Number        = PLUGIN_ID_152;
+      dev.Type          = DEVICE_TYPE_SINGLE;
+      dev.VType         = Sensor_VType::SENSOR_TYPE_SINGLE;
+      dev.Custom        = true;
+      dev.FormulaOption = true;
+      dev.ValueCount    = 1;
       break;
     }
 
@@ -54,6 +54,15 @@ boolean Plugin_152(uint8_t function, struct EventStruct *event, String& string)
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_152));
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_ANALOG_ONLY);
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
 
     case PLUGIN_WEBFORM_LOAD:
     {
@@ -94,7 +103,7 @@ boolean Plugin_152(uint8_t function, struct EventStruct *event, String& string)
 
         if (getDAC_gpio_info(CONFIG_PIN1, dac) && (dac == event->Par1)) {
           int value = min(255, max(0, event->Par2)); // Limit value
-          P152_DAC_VALUE = value;
+          P152_SET_DAC_VALUE(value);
           dacWrite(CONFIG_PIN1, value);              // Set output value
           addLog(LOG_LEVEL_INFO,
                  formatGpioName_DAC(CONFIG_PIN1) +
@@ -120,5 +129,7 @@ boolean Plugin_152(uint8_t function, struct EventStruct *event, String& string)
 
   return success;
 }
+
+#endif // if defined(SOC_DAC_SUPPORTED) && SOC_DAC_SUPPORTED
 
 #endif // USES_P152

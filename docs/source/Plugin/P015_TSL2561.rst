@@ -74,10 +74,8 @@ Sensor
 * **Send sensor to sleep**: Have it checked in order to save the unit from wear, especially good if you do measurements with long intervals in between.
 * **Enable 16x Gain**: Have it checked in order to get higher readings in low light areas.
 
-Data acquisition
-^^^^^^^^^^^^^^^^
+.. include:: DataAcquisition.repl
 
-* **Send to controller** 1..3: Check which controller (if any) you want to publish to. All or no controller can be used.
 * **Interval**: How often should the task publish its value (5..15 seconds is normal).
 
 Indicators (recommended settings)

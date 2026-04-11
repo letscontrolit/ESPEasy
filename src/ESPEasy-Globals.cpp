@@ -11,7 +11,7 @@ boolean printToWebJSON = false;
 
 
 
-unsigned long timermqtt_interval = 250;
+unsigned long timermqtt_interval = 100;
 unsigned long lastSend = 0;
 unsigned long lastWeb = 0;
 

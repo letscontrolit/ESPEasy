@@ -1,0 +1,53 @@
+.. csv-table::
+    :header: "Command Syntax", "Extra information"
+    :widths: 20, 30
+
+    "
+    | Commands to control the AXP2101 port voltages & states.
+    ","
+    | **Attention**: Commands will fail if the selected port is 'Protected' or 'Disabled' according to the selected Predefined device configuration.
+    "
+    "
+    | ``axp,readchip``
+
+    ","
+    | List the current values as configured in the chip. The logging level must be set to ``INFO``. This data can be used to configure additional predefined devices.
+    "
+    "
+    | ``axp,voltage,<port>,<voltage>``
+
+    | ``port`` one of the available ports.
+    | ``voltage`` range: 0..<max_port_voltage> mV.
+    ","
+    | Set selected port to the specified voltage. When set to 0 mV the port will be turned off.
+    | Ports of the AXP2101: ``DCDC1`` .. ``DCDC4``, ``ALDO1`` .. ``ALDO4``, ``BLDO1``, ``BLDO2``, ``DLDO1``, ``DLDO2`` or ``CPULDOS``.
+
+    | The max port voltage depends on the selected port, and is available in the technical documentation of the AXP2101.
+    "
+    "
+    | ``axp,on,<port>``
+
+    | ``port`` one of the available ports.
+    ","
+    | Set the selected AXP2101 port ON.
+    | Ports of the AXP2101: ``DCDC1`` .. ``DCDC4``, ``ALDO1`` .. ``ALDO4``, ``BLDO1``, ``BLDO2``, ``DLDO1``, ``DLDO2`` or ``CPULDOS``.
+    "
+    "
+    | ``axp,off,<port>``
+
+    | ``port`` one of the available ports.
+    ","
+    | Set the selected AXP2101 port OFF.
+    | Ports of the AXP2101: ``DCDC1`` .. ``DCDC4``, ``ALDO1`` .. ``ALDO4``, ``BLDO1``, ``BLDO2``, ``DLDO1``, ``DLDO2`` or ``CPULDOS``.
+    "
+    "
+    | ``axp,percentage,<port>,<percentage>``
+
+    | ``port`` one of the available Ports.
+    | ``percentage``: 0 (off/low) or 1..100%
+    ","
+    | Set the selected port to Off for 0%, or On in range <min_range>..<max_range> for 1..100%.
+    | Ports of the AXP2101: ``DCDC1`` .. ``DCDC4``, ``ALDO1`` .. ``ALDO4``, ``BLDO1``, ``BLDO2``, ``DLDO1``, ``DLDO2`` or ``CPULDOS``.
+
+    | The min and max port voltages depend on the selected port, and are available in the technical documentation of the AXP2101.
+    "

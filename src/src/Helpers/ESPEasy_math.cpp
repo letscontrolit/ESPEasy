@@ -1,4 +1,8 @@
 #include "../Helpers/ESPEasy_math.h"
+#ifndef BUILD_NO_DEBUG
+#include "../ESPEasyCore/ESPEasy_Log.h"
+#include "../Helpers/StringConverter.h"
+#endif // ifndef BUILD_NO_DEBUG
 
 #include <Arduino.h> 
 // Need to include Arduino.h first, then cmath
@@ -6,11 +10,11 @@
 #include <cmath>
 
 #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
-constexpr double ESPEASY_DOUBLE_EPSILON     = ESPEASY_DOUBLE_EPSILON_FACTOR *  std::numeric_limits<double>::epsilon();
-constexpr double ESPEASY_DOUBLE_EPSILON_NEG = -1.0 * ESPEASY_DOUBLE_EPSILON_FACTOR *  std::numeric_limits<double>::epsilon();
+constexpr double ESPEASY_DOUBLE_EPSILON     = ESPEASY_DOUBLE_EPSILON_FACTOR * std::numeric_limits<double>::epsilon();
+constexpr double ESPEASY_DOUBLE_EPSILON_NEG = -1.0 * ESPEASY_DOUBLE_EPSILON_FACTOR * std::numeric_limits<double>::epsilon();
 #endif
-constexpr float  ESPEASY_FLOAT_EPSILON      = std::numeric_limits<float>::epsilon();
-constexpr float  ESPEASY_FLOAT_EPSILON_NEG  = -1.0f * std::numeric_limits<float>::epsilon();
+constexpr float  ESPEASY_FLOAT_EPSILON      = ESPEASY_FLOAT_EPSILON_FACTOR * std::numeric_limits<float>::epsilon();
+constexpr float  ESPEASY_FLOAT_EPSILON_NEG  = -1.0f * ESPEASY_FLOAT_EPSILON_FACTOR * std::numeric_limits<float>::epsilon();
 
 #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
 int maxNrDecimals_fpType(const double& value)
@@ -37,92 +41,138 @@ int maxNrDecimals_fpType(const float& value)
   return res;
 }
 
+uint64_t computeDecimalFactorForDecimals(int nrDecimals)
+{
+  uint64_t factor = 1;
+  while (nrDecimals > 0) {
+    factor *= 10;
+    --nrDecimals;
+  }
+  return factor;
+}
+
+#if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+double estimateDoubleEpsilon(const double& a, const double& b)
+{
+  return std::max(std::abs(a), std::abs(b)) * ESPEASY_DOUBLE_EPSILON;
+}
+#endif
+float estimateEpsilon(const float& a, const float& b)
+{
+  return std::max(std::abs(a), std::abs(b)) * ESPEASY_FLOAT_EPSILON;
+}
+
+
 #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
 bool approximatelyEqual(const double& a, const double& b) {
-  return approximatelyEqual(a, b, ESPEASY_DOUBLE_EPSILON);
+  return approximatelyEqual(a, b, estimateDoubleEpsilon(a, b));
 }
 #endif
 
 bool approximatelyEqual(const float& a, const float& b) {
-  return approximatelyEqual(a, b, ESPEASY_FLOAT_EPSILON);
+  return approximatelyEqual(a, b, estimateEpsilon(a, b));
 }
 
 #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
-bool approximatelyEqual(const double& a, const double& b, double epsilon)
+bool approximatelyEqual(const double& a, const double& b, double estimatedEpsilon)
 {
-  return std::abs(a - b) <= ((std::abs(a) < std::abs(b) ? std::abs(b) : std::abs(a)) * epsilon);
+  return std::abs(a - b) <= estimatedEpsilon;
 }
 #endif
 
-bool approximatelyEqual(const float& a, const float& b, float epsilon)
+bool approximatelyEqual(const float& a, const float& b, float estimatedEpsilon)
 {
-  return std::abs(a - b) <= ((std::abs(a) < std::abs(b) ? std::abs(b) : std::abs(a)) * epsilon);
+  return std::abs(a - b) <= estimatedEpsilon;
 }
 
 #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
 bool definitelyGreaterThan(const double& a, const double& b) {
-  return definitelyGreaterThan(a, b, ESPEASY_DOUBLE_EPSILON);
+  return definitelyGreaterThan(a, b, estimateDoubleEpsilon(a, b));
 }
 #endif
 
 bool definitelyGreaterThan(const float& a, const float& b) {
-  return definitelyGreaterThan(a, b, ESPEASY_FLOAT_EPSILON);
+  return definitelyGreaterThan(a, b, estimateEpsilon(a, b));
 }
 
 #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
-bool definitelyGreaterThan(const double& a, const double& b, double epsilon)
+bool definitelyGreaterThan(const double& a, const double& b, double estimatedEpsilon)
 {
-  return (a - b) > ((std::abs(a) < std::abs(b) ? std::abs(b) : std::abs(a)) * epsilon);
+  #ifndef BUILD_NO_DEBUG
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    addLog(LOG_LEVEL_DEBUG, strformat(F("definitelyGreaterThan double a:%f b:%f ep:%.8g"),
+                                      a, b, estimatedEpsilon));
+  }
+  #endif // ifndef BUILD_NO_DEBUG
+  return (a - b) > estimatedEpsilon;
 }
 #endif
 
-bool definitelyGreaterThan(const float& a, const float& b, float epsilon)
+bool definitelyGreaterThan(const float& a, const float& b, float estimatedEpsilon)
 {
-  return (a - b) > ((std::abs(a) < std::abs(b) ? std::abs(b) : std::abs(a)) * epsilon);
+  #ifndef BUILD_NO_DEBUG
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    addLog(LOG_LEVEL_DEBUG, strformat(F("definitelyGreaterThan float a:%f b:%f ep:%.8g"),
+                                      a, b, estimatedEpsilon));
+  }
+  #endif // ifndef BUILD_NO_DEBUG
+  return (a - b) > estimatedEpsilon;
 }
 
 #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
 bool definitelyLessThan(const double& a, const double& b) {
-  return definitelyLessThan(a, b, ESPEASY_DOUBLE_EPSILON);
+  return definitelyLessThan(a, b, estimateDoubleEpsilon(a, b));
 }
 #endif
 
 bool definitelyLessThan(const float& a, const float& b) {
-  return definitelyLessThan(a, b, ESPEASY_FLOAT_EPSILON);
+  return definitelyLessThan(a, b, estimateEpsilon(a, b));
 }
 
 #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
-bool definitelyLessThan(const double& a, const double& b, double epsilon)
+bool definitelyLessThan(const double& a, const double& b, double estimatedEpsilon)
 {
-  return (b - a) > ((std::abs(a) < std::abs(b) ? std::abs(b) : std::abs(a)) * epsilon);
+  #ifndef BUILD_NO_DEBUG
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    addLog(LOG_LEVEL_DEBUG, strformat(F("definitelyLessThan double a:%f b:%f ep:%.8g"),
+                                      a, b, estimatedEpsilon));
+  }
+  #endif // ifndef BUILD_NO_DEBUG
+  return (b - a) > estimatedEpsilon;
 }
 #endif
 
-bool definitelyLessThan(const float& a, const float& b, float epsilon)
+bool definitelyLessThan(const float& a, const float& b, float estimatedEpsilon)
 {
-  return (b - a) > ((std::abs(a) < std::abs(b) ? std::abs(b) : std::abs(a)) * epsilon);
+  #ifndef BUILD_NO_DEBUG
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    addLog(LOG_LEVEL_DEBUG, strformat(F("definitelyLessThan float a:%f b:%f ep:%.8g"),
+                                      a, b, estimatedEpsilon));
+  }
+  #endif // ifndef BUILD_NO_DEBUG
+  return (b - a) > estimatedEpsilon;
 }
 
 #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
 bool essentiallyEqual(const double& a, const double& b) {
-  return essentiallyEqual(a, b, ESPEASY_DOUBLE_EPSILON);
+  return essentiallyEqual(a, b, estimateDoubleEpsilon(a, b));
 }
 #endif
 
 bool essentiallyEqual(const float& a, const float& b) {
-  return essentiallyEqual(a, b, ESPEASY_FLOAT_EPSILON);
+  return essentiallyEqual(a, b, estimateEpsilon(a, b));
 }
 
 #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
-bool essentiallyEqual(const double& a, const double& b, double epsilon)
+bool essentiallyEqual(const double& a, const double& b, double estimatedEpsilon)
 {
-  return std::abs(a - b) <= ((std::abs(a) > std::abs(b) ? std::abs(b) : std::abs(a)) * epsilon);
+  return std::abs(a - b) <= estimatedEpsilon;
 }
 #endif
 
-bool essentiallyEqual(const float& a, const float& b, float epsilon)
+bool essentiallyEqual(const float& a, const float& b, float estimatedEpsilon)
 {
-  return std::abs(a - b) <= ((std::abs(a) > std::abs(b) ? std::abs(b) : std::abs(a)) * epsilon);
+  return std::abs(a - b) <= estimatedEpsilon;
 }
 
 #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
@@ -282,3 +332,18 @@ double sqrt(const double x)
 
 
 #endif
+
+ESPEASY_RULES_FLOAT_TYPE mapADCtoFloat(ESPEASY_RULES_FLOAT_TYPE float_value,
+                                       ESPEASY_RULES_FLOAT_TYPE adc1,
+                                       ESPEASY_RULES_FLOAT_TYPE adc2,
+                                       ESPEASY_RULES_FLOAT_TYPE out1,
+                                       ESPEASY_RULES_FLOAT_TYPE out2)
+{
+  // FIXME TD-er: When ADC1/2 are equal, shouldn't we just output either out1, out2 or some average of those?
+  if (!approximatelyEqual(adc1, adc2))
+  {
+    const ESPEASY_RULES_FLOAT_TYPE normalized = (float_value - adc1) / (adc2 - adc1);
+    float_value = normalized * (out2 - out1) + out1;
+  }
+  return float_value;
+}

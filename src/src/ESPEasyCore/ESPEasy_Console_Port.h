@@ -17,9 +17,9 @@
 #endif
 
 
-#define CONSOLE_INPUT_BUFFER_SIZE          128
-
 struct EspEasy_Console_Port {
+
+  EspEasy_Console_Port(LogDestination log_destination);
   ~EspEasy_Console_Port();
 
   operator bool() const;
@@ -29,9 +29,6 @@ struct EspEasy_Console_Port {
 
   void endPort();
 
-  void addToSerialBuffer(char c);
-  void addToSerialBuffer(const String& line);
-  void addNewlineToSerialBuffer();
   bool process_serialWriteBuffer();
 
   bool process_consoleInput(uint8_t SerialInByte);
@@ -39,9 +36,8 @@ struct EspEasy_Console_Port {
   String getPortDescription() const;
 
   int SerialInByteCounter{};
-  char InputBuffer_Serial[CONSOLE_INPUT_BUFFER_SIZE + 2]{};
+  char *InputBuffer_Serial{};
   SerialWriteBuffer_t _serialWriteBuffer;
-
 
 #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
   ESPeasySerial *_serial       = nullptr;

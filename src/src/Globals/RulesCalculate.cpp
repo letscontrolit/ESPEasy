@@ -2,6 +2,7 @@
 
 #include "../DataStructs/TimingStats.h"
 #include "../Helpers/Numerical.h"
+#include "../Helpers/StringConverter.h"
 #include "../Helpers/StringConverter_Numerical.h"
 
 RulesCalculate_t RulesCalculate{};
@@ -9,13 +10,19 @@ RulesCalculate_t RulesCalculate{};
 /*******************************************************************************************
 * Helper functions to actually interact with the rules calculation functions.
 * *****************************************************************************************/
-int CalculateParam(const String& TmpStr) {
-  int returnValue = 0;
+int64_t CalculateParam(const String& TmpStr, int64_t errorValue) {
+  int64_t returnValue = errorValue;
+
+  if (TmpStr.length() == 0) {
+    return returnValue;
+  }
 
   // Minimize calls to the Calulate function.
   // Only if TmpStr starts with '=' then call Calculate(). Otherwise do not call it
   if (TmpStr[0] != '=') {
-    validIntFromString(TmpStr, returnValue);
+    if (!validInt64FromString(TmpStr, returnValue)) {
+      return errorValue;
+    }
   } else {
     ESPEASY_RULES_FLOAT_TYPE param{};
 
@@ -26,26 +33,48 @@ int CalculateParam(const String& TmpStr) {
 #ifndef BUILD_NO_DEBUG
 
       if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-        String log = F("CALCULATE PARAM: ");
-        log += TmpStr;
-        log += F(" = ");
-        log += roundf(param);
-        addLogMove(LOG_LEVEL_DEBUG, log);
+        addLogMove(LOG_LEVEL_DEBUG,
+                   strformat(F("CALCULATE PARAM: %s = %.6g"), TmpStr.c_str(), roundf(param)));
       }
 #endif // ifndef BUILD_NO_DEBUG
+      // return integer only as it's valid only for variable indices and device/task id
+      #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+      return round(param);
+      #else
+      return roundf(param);
+      #endif
     }
-    returnValue = roundf(param); // return integer only as it's valid only for device and task id
   }
   return returnValue;
 }
 
-CalculateReturnCode Calculate(const String& input,
-                              ESPEASY_RULES_FLOAT_TYPE      & result)
+CalculateReturnCode Calculate_preProcessed(const String            & preprocessd_input,
+                                           ESPEASY_RULES_FLOAT_TYPE& result)
 {
   START_TIMER;
   CalculateReturnCode returnCode = RulesCalculate.doCalculate(
-    RulesCalculate_t::preProces(input).c_str(),
+    preprocessd_input.c_str(),
     &result);
+
+  STOP_TIMER(COMPUTE_STATS);
+  return returnCode;
+}
+
+CalculateReturnCode Calculate(const String& input,
+                              ESPEASY_RULES_FLOAT_TYPE& result
+                              #if           FEATURE_STRING_VARIABLES
+                              , const bool  logStringErrors
+                              #endif // if FEATURE_STRING_VARIABLES
+                              )
+{
+  CalculateReturnCode returnCode = Calculate_preProcessed(
+    RulesCalculate_t::preProces(input),
+    result);
+
+  #ifndef LIMIT_BUILD_SIZE
+  # if FEATURE_STRING_VARIABLES
+  bool skipError = false;
+  # endif // if FEATURE_STRING_VARIABLES
 
   if (isError(returnCode)) {
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
@@ -63,32 +92,43 @@ CalculateReturnCode Calculate(const String& input,
           break;
         case CalculateReturnCode::ERROR_UNKNOWN_TOKEN:
           log += F("Unknown token");
+          # if FEATURE_STRING_VARIABLES
+          skipError = !logStringErrors;
+          # endif // if FEATURE_STRING_VARIABLES
           break;
         case CalculateReturnCode::ERROR_TOKEN_LENGTH_EXCEEDED:
-          log += String(F("Exceeded token length (")) + TOKEN_LENGTH + ')';
+          log += strformat(F("Exceeded token length (%d)"), TOKEN_LENGTH);
+          # if FEATURE_STRING_VARIABLES
+          skipError = !logStringErrors;
+          # endif // if FEATURE_STRING_VARIABLES
           break;
         case CalculateReturnCode::OK:
           // Already handled, but need to have all cases here so the compiler can warn if we're missing one.
           break;
       }
 
-      #ifndef BUILD_NO_DEBUG
-      log += F(" input: ");
-      log += input;
-      log += F(" = ");
+      # if FEATURE_STRING_VARIABLES
 
-      const bool trimTrailingZeros = true;
-#if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
-      log += doubleToString(result, 6, trimTrailingZeros);
-#else
-      log += floatToString(result, 6, trimTrailingZeros);
-#endif
-      #endif // ifndef BUILD_NO_DEBUG
+      if (!skipError)
+      # endif // if FEATURE_STRING_VARIABLES
+      {
+        # ifndef BUILD_NO_DEBUG
+        log += F(" input: ");
+        log += input;
+        log += F(" = ");
 
-      addLogMove(LOG_LEVEL_ERROR, log);
+        const bool trimTrailingZeros = true;
+        #  if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+        log += doubleToString(result, 6, trimTrailingZeros);
+        #  else // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+        log += floatToString(result, 6, trimTrailingZeros);
+        #  endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+        # endif // ifndef BUILD_NO_DEBUG
+
+        addLogMove(LOG_LEVEL_ERROR, log);
+      }
     }
   }
-  STOP_TIMER(COMPUTE_STATS);
+  #endif // ifndef LIMIT_BUILD_SIZE
   return returnCode;
 }
-

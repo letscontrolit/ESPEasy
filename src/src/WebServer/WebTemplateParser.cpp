@@ -13,9 +13,7 @@
 #include "../Static/WebStaticData.h"
 
 #include "../WebServer/HTML_wrappers.h"
-#include "../WebServer/LoadFromFS.h"
 
-#include "../../ESPEasy_common.h"
 
 // Determine what pages should be visible
 #ifndef MENU_INDEX_MAIN_VISIBLE
@@ -23,31 +21,76 @@
 #endif // ifndef MENU_INDEX_MAIN_VISIBLE
 
 #ifndef MENU_INDEX_CONFIG_VISIBLE
+#ifdef WEBSERVER_CONFIG
   # define MENU_INDEX_CONFIG_VISIBLE true
+#else
+  # define MENU_INDEX_CONFIG_VISIBLE false
+#endif
 #endif // ifndef MENU_INDEX_CONFIG_VISIBLE
 
+#ifndef MENU_INDEX_NETWORK_VISIBLE
+#ifdef WEBSERVER_NETWORK
+  # define MENU_INDEX_NETWORK_VISIBLE true
+#else
+  # define MENU_INDEX_NETWORK_VISIBLE false
+#endif
+#endif // ifndef MENU_INDEX_NETWORK_VISIBLE
+
+
 #ifndef MENU_INDEX_CONTROLLERS_VISIBLE
+#ifdef WEBSERVER_CONTROLLERS
   # define MENU_INDEX_CONTROLLERS_VISIBLE true
+#else
+  # define MENU_INDEX_CONTROLLERS_VISIBLE false
+#endif
 #endif // ifndef MENU_INDEX_CONTROLLERS_VISIBLE
 
 #ifndef MENU_INDEX_HARDWARE_VISIBLE
+#ifdef WEBSERVER_HARDWARE
   # define MENU_INDEX_HARDWARE_VISIBLE true
+#else
+  # define MENU_INDEX_HARDWARE_VISIBLE false
+#endif
 #endif // ifndef MENU_INDEX_HARDWARE_VISIBLE
 
+#ifndef MENU_INDEX_INTERFACES_VISIBLE
+#ifdef WEBSERVER_INTERFACES
+  # define MENU_INDEX_INTERFACES_VISIBLE true
+#else
+  # define MENU_INDEX_INTERFACES_VISIBLE false
+#endif
+#endif
+
 #ifndef MENU_INDEX_DEVICES_VISIBLE
+#ifdef WEBSERVER_DEVICES
   # define MENU_INDEX_DEVICES_VISIBLE true
+#else
+  # define MENU_INDEX_DEVICES_VISIBLE false
+#endif
 #endif // ifndef MENU_INDEX_DEVICES_VISIBLE
 
 #ifndef MENU_INDEX_RULES_VISIBLE
+#ifdef WEBSERVER_RULES
   # define MENU_INDEX_RULES_VISIBLE true
+#else
+  # define MENU_INDEX_RULES_VISIBLE false
+#endif
 #endif // ifndef MENU_INDEX_RULES_VISIBLE
 
 #ifndef MENU_INDEX_NOTIFICATIONS_VISIBLE
+#if FEATURE_NOTIFIER
   # define MENU_INDEX_NOTIFICATIONS_VISIBLE true
+#else
+  # define MENU_INDEX_NOTIFICATIONS_VISIBLE false
+#endif
 #endif // ifndef MENU_INDEX_NOTIFICATIONS_VISIBLE
 
 #ifndef MENU_INDEX_TOOLS_VISIBLE
+#ifdef WEBSERVER_TOOLS
   # define MENU_INDEX_TOOLS_VISIBLE true
+#else
+  # define MENU_INDEX_TOOLS_VISIBLE false
+#endif
 #endif // ifndef MENU_INDEX_TOOLS_VISIBLE
 
 
@@ -61,29 +104,75 @@ uint8_t navMenuIndex = MENU_INDEX_MAIN;
 
 // See https://github.com/letscontrolit/ESPEasy/issues/1650
 const __FlashStringHelper* getGpMenuIcon(uint8_t index) {
+
+  #define ICON(code) F(code "&#xFE0E;")
+
   switch (index) {
-    case MENU_INDEX_MAIN: return F("&#8962;");
-    case MENU_INDEX_CONFIG: return F("&#9881;");
-    case MENU_INDEX_CONTROLLERS: return F("&#128172;");
-    case MENU_INDEX_HARDWARE: return F("&#128204;");
-    case MENU_INDEX_DEVICES: return F("&#128268;");
-    case MENU_INDEX_RULES: return F("&#10740;");
-    case MENU_INDEX_NOTIFICATIONS: return F("&#9993;");
-    case MENU_INDEX_TOOLS: return F("&#128295;");
+    case MENU_INDEX_MAIN:          return ICON("&#8962;");
+    case MENU_INDEX_CONFIG:        return ICON("&#9881;");
+    case MENU_INDEX_NETWORK:       return ICON("&#127760;"); // Alternative &#128423; (not working on Apple) 
+    case MENU_INDEX_CONTROLLERS:   return ICON("&#9990;");
+    case MENU_INDEX_HARDWARE:      return ICON("&#9783;");
+    case MENU_INDEX_INTERFACES:    return ICON("&#10057;");
+#if FEATURE_I2C
+    case MENU_INDEX_INTERFACES_I2C:    return ICON("I&sup2;C");
+#endif // if FEATURE_I2C
+#if FEATURE_SPI
+    case MENU_INDEX_INTERFACES_SPI:    return ICON("SPI");
+#endif // if FEATURE_SPI
+#if FEATURE_MODBUS && FEATURE_MODBUS_INTERFACES_TAB
+    case MENU_INDEX_INTERFACES_MODBUS: return ICON("Modbus");
+#endif // if FEATURE_MODBUS
+#if FEATURE_CAN
+    case MENU_INDEX_INTERFACES_CAN:    return ICON("CAN bus");
+#endif // if FEATURE_CAN
+#if FEATURE_WRMBUS
+    case MENU_INDEX_INTERFACES_WRMBUS: return ICON("mBus");
+#endif // if FEATURE_WRMBUS
+#if FEATURE_WIMBUS
+    case MENU_INDEX_INTERFACES_WIMBUS: return ICON("w-mBus");
+#endif // if FEATURE_WIMBUS
+    case MENU_INDEX_DEVICES:       return ICON("&#10070;");
+    case MENU_INDEX_RULES:         return ICON("&#10740;");
+    case MENU_INDEX_NOTIFICATIONS: return ICON("&#9993;");
+    case MENU_INDEX_TOOLS:         return ICON("&#9888;");
   }
   return F("");
 }
 
 const __FlashStringHelper* getGpMenuLabel(uint8_t index) {
   switch (index) {
-    case MENU_INDEX_MAIN: return F("Main");
-    case MENU_INDEX_CONFIG: return F("Config");
-    case MENU_INDEX_CONTROLLERS: return F("Controllers");
-    case MENU_INDEX_HARDWARE: return F("Hardware");
-    case MENU_INDEX_DEVICES: return F("Devices");
-    case MENU_INDEX_RULES: return F("Rules");
-    case MENU_INDEX_NOTIFICATIONS: return F("Notifications");
-    case MENU_INDEX_TOOLS: return F("Tools");
+    case MENU_INDEX_MAIN:              return F("Main");
+    case MENU_INDEX_CONFIG:            return F("Config");
+    case MENU_INDEX_NETWORK:           return F("Network");
+    case MENU_INDEX_CONTROLLERS:       return F("Controllers");
+    case MENU_INDEX_HARDWARE:          return F("Hardware");
+    case MENU_INDEX_INTERFACES:        return F("Interfaces");
+#if FEATURE_I2C
+    case MENU_INDEX_INTERFACES_I2C:
+#endif // if FEATURE_I2C
+#if FEATURE_SPI
+    case MENU_INDEX_INTERFACES_SPI:
+#endif // if FEATURE_SPI
+#if FEATURE_MODBUS && FEATURE_MODBUS_INTERFACES_TAB
+    case MENU_INDEX_INTERFACES_MODBUS:
+#endif // if FEATURE_MODBUS
+#if FEATURE_CAN
+    case MENU_INDEX_INTERFACES_CAN:
+#endif // if FEATURE_CAN
+#if FEATURE_I2C || FEATURE_SPI || (FEATURE_MODBUS && FEATURE_MODBUS_INTERFACES_TAB) || FEATURE_CAN
+      break; // No label, only an 'icon', for the second-level menu
+#endif // if FEATURE_I2C || FEATURE_SPI || FEATURE_MODBUS || FEATURE_CAN
+#if FEATURE_WRMBUS
+    case MENU_INDEX_INTERFACES_WRMBUS: return F("(wired)");
+#endif // if FEATURE_WRMBUS
+#if FEATURE_WIMBUS
+    case MENU_INDEX_INTERFACES_WIMBUS: return F("(wireless)");
+#endif // if FEATURE_WIMBUS
+    case MENU_INDEX_DEVICES:           return F("Devices");
+    case MENU_INDEX_RULES:             return F("Rules");
+    case MENU_INDEX_NOTIFICATIONS:     return F("Notifications");
+    case MENU_INDEX_TOOLS:             return F("Tools");
   }
   return F("");
 }
@@ -92,8 +181,28 @@ const __FlashStringHelper* getGpMenuURL(uint8_t index) {
   switch (index) {
     case MENU_INDEX_MAIN: return F("/");
     case MENU_INDEX_CONFIG: return F("/config");
+    case MENU_INDEX_NETWORK: return F("/network");
     case MENU_INDEX_CONTROLLERS: return F("/controllers");
     case MENU_INDEX_HARDWARE: return F("/hardware");
+    case MENU_INDEX_INTERFACES: return F("/interfaces");
+#if FEATURE_I2C
+    case MENU_INDEX_INTERFACES_I2C: return F("/interfaces_i2c");
+#endif // if FEATURE_I2C
+#if FEATURE_SPI
+    case MENU_INDEX_INTERFACES_SPI: return F("/interfaces_spi");
+#endif // if FEATURE_SPI
+#if FEATURE_MODBUS && FEATURE_MODBUS_INTERFACES_TAB
+    case MENU_INDEX_INTERFACES_MODBUS: return F("/interfaces_modbus");
+#endif // if FEATURE_MODBUS
+#if FEATURE_CAN
+   case MENU_INDEX_INTERFACES_CAN: return F("/interfaces_can");
+#endif // if FEATURE_CAN
+#if FEATURE_WRMBUS
+   case MENU_INDEX_INTERFACES_WRMBUS: return F("/interfaces_wrmbus");
+#endif // if FEATURE_WRMBUS
+#if FEATURE_WIMBUS
+   case MENU_INDEX_INTERFACES_WIMBUS: return F("/interfaces_wimbus");
+#endif // if FEATURE_WIMBUS
     case MENU_INDEX_DEVICES: return F("/devices");
     case MENU_INDEX_RULES: return F("/rules");
     case MENU_INDEX_NOTIFICATIONS: return F("/notifications");
@@ -106,12 +215,48 @@ bool GpMenuVisible(uint8_t index) {
   switch (index) {
     case MENU_INDEX_MAIN: return MENU_INDEX_MAIN_VISIBLE;
     case MENU_INDEX_CONFIG: return MENU_INDEX_CONFIG_VISIBLE;
+    case MENU_INDEX_NETWORK: return MENU_INDEX_NETWORK_VISIBLE;
     case MENU_INDEX_CONTROLLERS: return MENU_INDEX_CONTROLLERS_VISIBLE;
     case MENU_INDEX_HARDWARE: return MENU_INDEX_HARDWARE_VISIBLE;
+    case MENU_INDEX_INTERFACES: return MENU_INDEX_INTERFACES_VISIBLE;
+    case MENU_INDEX_INTERFACES_I2C: return (1 == FEATURE_I2C);
+    case MENU_INDEX_INTERFACES_SPI: return (1 == FEATURE_SPI);
+    case MENU_INDEX_INTERFACES_MODBUS: return (1 == FEATURE_MODBUS && 1 == FEATURE_MODBUS_INTERFACES_TAB);
+  #if defined(FEATURE_CAN)
+    case MENU_INDEX_INTERFACES_CAN: return (1 == FEATURE_CAN);
+  #endif // if defined(FEATURE_CAN)
+  #if defined(FEATURE_WRMBUS)
+    case MENU_INDEX_INTERFACES_WRMBUS: return (1 == FEATURE_WRMBUS);
+  #endif // if defined(FEATURE_WRMBUS)
+  #if defined(FEATURE_WIMBUS)
+    case MENU_INDEX_INTERFACES_WIMBUS: return (1 == FEATURE_WIMBUS);
+  #endif // if defined(FEATURE_WIMBUS)
     case MENU_INDEX_DEVICES: return MENU_INDEX_DEVICES_VISIBLE;
     case MENU_INDEX_RULES: return MENU_INDEX_RULES_VISIBLE;
     case MENU_INDEX_NOTIFICATIONS: return MENU_INDEX_NOTIFICATIONS_VISIBLE;
     case MENU_INDEX_TOOLS: return MENU_INDEX_TOOLS_VISIBLE;
+  }
+  return false;
+}
+
+bool isGpMenuSecondLevel(uint8_t index) {
+  switch (index) {
+    case MENU_INDEX_MAIN:
+    case MENU_INDEX_CONFIG:
+    case MENU_INDEX_NETWORK:
+    case MENU_INDEX_CONTROLLERS:
+    case MENU_INDEX_HARDWARE:
+    case MENU_INDEX_INTERFACES:
+    case MENU_INDEX_DEVICES:
+    case MENU_INDEX_RULES:
+    case MENU_INDEX_NOTIFICATIONS:
+    case MENU_INDEX_TOOLS: return false;
+    case MENU_INDEX_INTERFACES_WIMBUS:
+    case MENU_INDEX_INTERFACES_WRMBUS:
+    case MENU_INDEX_INTERFACES_CAN:
+    case MENU_INDEX_INTERFACES_MODBUS:
+    case MENU_INDEX_INTERFACES_SPI:
+    case MENU_INDEX_INTERFACES_I2C: return true;
   }
   return false;
 }
@@ -131,7 +276,7 @@ bool WebTemplateParser::process(const char c) {
           } else if (Tail == contentVarFound) {
             processVarName();
           }
-          varName = String();
+          free_string(varName);
         }
       }
       break;
@@ -225,7 +370,7 @@ void WebTemplateParser::getErrorNotifications() {
       const protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(x);
 
       if (Settings.ControllerEnabled[x] &&
-          validProtocolIndex(ProtocolIndex) && 
+          validProtocolIndex(ProtocolIndex) &&
           getProtocolStruct(ProtocolIndex).usesMQTT) {
         ++nrMQTTenabled;
       }
@@ -268,20 +413,26 @@ void WebTemplateParser::getWebPageTemplateVar(const String& varName)
       {
         serve_favicon();
 
-        // if (MENU_INDEX_SETUP == navMenuIndex) {
-        //  // Serve embedded CSS
-        //  serve_CSS_inline();
-        // } else {
+        /*
+                bool defaultCssServed = false;
+
+                if (MENU_INDEX_SETUP == navMenuIndex) {
+                  // Serve embedded CSS
+                  defaultCssServed = serve_CSS_inline();
+                }
+                if (!defaultCssServed) {
+         */
         serve_CSS(CSSfiles_e::ESPEasy_default);
 
-        // }
+        //        }
     #if FEATURE_RULES_EASY_COLOR_CODE
+
         if (!Settings.DisableRulesCodeCompletion() &&
-          (MENU_INDEX_RULES == navMenuIndex ||
-            MENU_INDEX_CUSTOM_PAGE == navMenuIndex)) {
+            ((MENU_INDEX_RULES == navMenuIndex) ||
+             (MENU_INDEX_CUSTOM_PAGE == navMenuIndex))) {
           serve_CSS(CSSfiles_e::EasyColorCode_codemirror);
         }
-    #endif
+    #endif // if FEATURE_RULES_EASY_COLOR_CODE
         return;
       }
       break;
@@ -322,9 +473,10 @@ void WebTemplateParser::getWebPageTemplateVar(const String& varName)
     #endif // if FEATURE_CHART_JS
 
     #if FEATURE_RULES_EASY_COLOR_CODE
+
         if (!Settings.DisableRulesCodeCompletion() &&
-           (MENU_INDEX_RULES == navMenuIndex ||
-            MENU_INDEX_CUSTOM_PAGE == navMenuIndex)) {
+            ((MENU_INDEX_RULES == navMenuIndex) ||
+             (MENU_INDEX_CUSTOM_PAGE == navMenuIndex))) {
           html_add_Easy_color_code_script();
         }
     #endif // if FEATURE_RULES_EASY_COLOR_CODE
@@ -353,9 +505,20 @@ void WebTemplateParser::getWebPageTemplateVar(const String& varName)
 
       if (equals(varName, F("menu")))
       {
-        addHtml(F("<div class='menubar'>"));
+        uint8_t menuLoops = 1;
+        uint8_t minMenu = 0;
+        uint8_t maxMenu = MENU_MAX_INDEX_SHOWN;
+        uint8_t navAltIndex = MENU_INDEX_IGNORE;
+        if (isGpMenuSecondLevel(navMenuIndex)) {
+          // if (navMenuIndex >= MENU_MIN_INTERFACES_SHOWN && navMenuIndex <= MENU_MAX_INTERFACES_SHOWN) { // Enable check if more menus with sub-tab menus are added
+            navAltIndex = MENU_INDEX_INTERFACES;
+          // }
+          menuLoops = 2;
+        }
+        while (menuLoops > 0) {
+        addHtml(strformat(F("<div class='menubar%c'>"), minMenu != 0 ? '2' : ' '));
 
-        for (uint8_t i = 0; i < 8; i++)
+        for (uint8_t i = minMenu; i <= maxMenu; i++)
         {
           if (!GpMenuVisible(i)) {
             // hide menu item
@@ -373,7 +536,7 @@ void WebTemplateParser::getWebPageTemplateVar(const String& varName)
 #endif // if !FEATURE_NOTIFIER
 
           addHtml(F("<a "));
-          addHtmlAttribute(F("class"), (i == navMenuIndex) ? F("menu active") : F("menu"));
+          addHtmlAttribute(F("class"), ((i == navMenuIndex) || (i == navAltIndex)) ? F("menu active") : F("menu"));
           addHtmlAttribute(F("href"),  getGpMenuURL(i));
           addHtml('>');
           addHtml(getGpMenuIcon(i));
@@ -383,6 +546,14 @@ void WebTemplateParser::getWebPageTemplateVar(const String& varName)
         }
 
         addHtml(F("</div>"));
+        if (isGpMenuSecondLevel(navMenuIndex)) {
+          // if (navMenuIndex >= MENU_MIN_INTERFACES_SHOWN && navMenuIndex <= MENU_MAX_INTERFACES_SHOWN) { // Enable check if more menus with sub-tab menus are added
+            minMenu = MENU_MIN_INTERFACES_SHOWN;
+            maxMenu = MENU_MAX_INTERFACES_SHOWN;
+          // }
+        }
+        --menuLoops;
+        }
         return;
       }
       else if (equals(varName, F("meta"))) {

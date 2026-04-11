@@ -6,6 +6,8 @@
 P151_data_struct::~P151_data_struct() {}
 
 bool P151_data_struct::plugin_read(struct EventStruct *event) {
+  // FIXME TD-er: When used on ESP8266, this conversion union may not work
+  // It might work as it is 32-bit in size.
   union Honeywell_struct {
     struct {
       uint32_t dummy       : 5;
@@ -82,8 +84,8 @@ bool P151_data_struct::fetch_last_sample(struct EventStruct *event) {
     }
     _pressure += P151_PRESSURE_MIN;
 
-    UserVar[event->BaseVarIndex]     = _pressure;
-    UserVar[event->BaseVarIndex + 1] = ((_rawTemperature * 200.0f) / 2047.0f) - 50.0f;
+    UserVar.setFloat(event->TaskIndex, 0, _pressure);
+    UserVar.setFloat(event->TaskIndex, 1, ((_rawTemperature * 200.0f) / 2047.0f) - 50.0f);
     _updated                         = false;
     return true;
   }

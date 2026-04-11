@@ -21,18 +21,15 @@ bool P114_data_struct::read_sensor(float& _UVA, float& _UVB, float& _UVIndex) {
   # ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    String log;
-    log.reserve(48);
-    log  = F("VEML6075: i2caddress: 0x");
-    log += String(i2cAddress, HEX);
-    log += F(", initialized: ");
-    log += String(initialised ? F("true") : F("false"));
-    addLogMove(LOG_LEVEL_DEBUG, log);
+    addLogMove(LOG_LEVEL_DEBUG,
+               strformat(F("VEML6075: i2caddress: 0x%02x, initialized: %s"),
+                         i2cAddress,
+                         String(initialised ? F("true") : F("false")).c_str()));
   }
   # endif // ifndef BUILD_NO_DEBUG
 
   if (initialised) {
-    for (int j = 0; j < 5; j++) {
+    for (int j = 0; j < 5; ++j) {
       UVData[j] = I2C_read16_LE_reg(i2cAddress, VEML6075_UVA_DATA + j);
     }
 
@@ -51,9 +48,7 @@ bool P114_data_struct::read_sensor(float& _UVA, float& _UVB, float& _UVIndex) {
     # ifndef BUILD_NO_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-      String log = F("VEML6075: IT raw: 0x");
-      log += String(IT + 1, HEX);
-      addLogMove(LOG_LEVEL_DEBUG, log);
+      addLogMove(LOG_LEVEL_DEBUG, strformat(F("VEML6075: IT raw: 0x%02x"), IT + 1));
     }
     # endif // ifndef BUILD_NO_DEBUG
     return true;

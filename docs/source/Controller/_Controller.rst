@@ -18,26 +18,26 @@ Controller Plugins
 ==================
 
 .. csv-table::
-   :header: "Plugin name", "Plugin status", "Plugin number"
-   :widths: 10, 8, 5
+   :header: "Plugin name", "ESP32 Plugin status", "ESP8266 Plugin status", "Plugin number"
+   :widths: 9, 6, 6, 3
 
-   ":ref:`C001_page`","|C001_status|","C001"
-   ":ref:`C002_page`","|C002_status|","C002"
-   ":ref:`C003_page`","|C003_status|","C003"
-   ":ref:`C004_page`","|C004_status|","C004"
-   ":ref:`C005_page`","|C005_status|","C005"
-   ":ref:`C006_page`","|C006_status|","C006"
-   ":ref:`C007_page`","|C007_status|","C007"
-   ":ref:`C008_page`","|C008_status|","C008"
-   ":ref:`C009_page`","|C009_status|","C009"
-   ":ref:`C010_page`","|C010_status|","C010"
-   ":ref:`C011_page`","|C011_status|","C011"
-   ":ref:`C012_page`","|C012_status|","C012"
-   ":ref:`C013_page`","|C013_status|","C013"
-   ":ref:`C014_page`","|C014_status|","C014"
-   ":ref:`C016_page`","|C016_status|","C016"
-   ":ref:`C017_page`","|C017_status|","C017"
-   ":ref:`C018_page`","|C018_status|","C018"
+   ":ref:`C001_page`","|C001_status|","|C001_status_lb|","C001"
+   ":ref:`C002_page`","|C002_status|","|C002_status_lb|","C002"
+   ":ref:`C003_page`","|C003_status|","|C003_status_lb|","C003"
+   ":ref:`C004_page`","|C004_status|","|C004_status_lb|","C004"
+   ":ref:`C005_page`","|C005_status|","|C005_status_lb|","C005"
+   ":ref:`C006_page`","|C006_status|","|C006_status_lb|","C006"
+   ":ref:`C007_page`","|C007_status|","|C007_status_lb|","C007"
+   ":ref:`C008_page`","|C008_status|","|C008_status_lb|","C008"
+   ":ref:`C009_page`","|C009_status|","|C009_status_lb|","C009"
+   ":ref:`C010_page`","|C010_status|","|C010_status_lb|","C010"
+   ":ref:`C011_page`","|C011_status|","|C011_status_lb|","C011"
+   ":ref:`C012_page`","|C012_status|","|C012_status_lb|","C012"
+   ":ref:`C013_page`","|C013_status|","|C013_status_lb|","C013"
+   ":ref:`C014_page`","|C014_status|","|C014_status_lb|","C014"
+   ":ref:`C016_page`","|C016_status|","|C016_status_lb|","C016"
+   ":ref:`C017_page`","|C017_status|","|C017_status_lb|","C017"
+   ":ref:`C018_page`","|C018_status|","|C018_status_lb|","C018"
 
 
 Controller Parameters
@@ -51,6 +51,10 @@ Generic fields
 - **Controller Hostname/IP**  - The address to reach the selected service
 - **Controller Port** - TCP/UDP Port number (0...65536)
 - **Enabled** - Whether or not the controller is active.
+
+When **TLS** is included in the build, some of the Controllers have a setting to enable a TLS option. For HTTP-based controller protocols, this usually expects the port to adjusted from 80 to 443, but of course any custom port can be used. For MQTT controllers, the port is automatically updated from 1883 (No TLS) to 8883 when a TLS-enabled setting is selected.
+
+- **Use TLS** - Select the desired TLS type. The available options depend on what's implemented, and will change when development progresses. The default setting is **No TLS**. 
 
 Send queue parameters
 ---------------------
@@ -75,6 +79,28 @@ before WiFi connection is made or during lost connection.
   Be careful when setting the timeout too high.
   For almost all controllers, sending data is a blocking call, so it may halt execution of other code on the node.
   With timouts longer than 2 seconds, the ESP may reboot as the software watchdog may step in.
+
+TLS configuration
+-----------------
+
+Added: 2024-10-02
+
+Some protocols like MQTT may use TLS to provide a secure connection to the host.
+Where the default port for not encrypted connections to a MQTT broker is port 1883, its TLS counterpart is by default using port 8883.
+
+.. note:: The current (2024-10-02) implementation does only allow to set to use TLS for MQTT controllers. There is not yet a proper validation of the used certificate.
+
+Future implementations will add various ways to validate the used certificates using:
+
+- Root CA, allowing to validate whether a certificate was signed by a known certificate authority (CA).
+- Fingerprint, check whether a certificate is still the same as before.
+- Check whether a certificate has expired.
+
+To summarize, the current implementation does allow to encrypt the connection to the MQTT broker.
+However a man-in-the-middle attack is still perfectly possible as the used certificates are not validated.
+
+This does make using it extremely simple as even self-signed certificates can be used.
+However do not consider this to be a 'secure' method since some attacker can redirect to another host and serve some false certificate.
 
 
 

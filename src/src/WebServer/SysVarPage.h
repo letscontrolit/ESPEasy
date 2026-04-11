@@ -12,7 +12,9 @@
 void handle_sysvars();
 
 void addSysVar_html(const __FlashStringHelper * input);
+void addSysVar_html_specialChar(const __FlashStringHelper * input);
 void addSysVar_html(const String& input);
+void addSysVar_html(String input, bool isSpecialChar);
 
 #endif // WEBSERVER_SYSVARS
 

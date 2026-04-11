@@ -58,9 +58,9 @@ bool P042_data_struct::plugin_init(struct EventStruct *event) {
 }
 
 bool P042_data_struct::plugin_read(struct EventStruct *event) {
-  UserVar[event->BaseVarIndex]     = Candle_red << 16 | Candle_green << 8 | Candle_blue;
-  UserVar[event->BaseVarIndex + 1] = Candle_bright;
-  UserVar[event->BaseVarIndex + 2] = static_cast<float>(Candle_type);
+  UserVar.setFloat(event->TaskIndex, 0, Candle_red << 16 | Candle_green << 8 | Candle_blue);
+  UserVar.setFloat(event->TaskIndex, 1, Candle_bright);
+  UserVar.setFloat(event->TaskIndex, 2, static_cast<float>(Candle_type));
 
   return true;
 }

@@ -9,10 +9,10 @@
 #include "../WebServer/Markup_Forms.h"
 
 #include "../Helpers/OTA.h"
+#include "../Helpers/StringConverter.h"
 
 #include "../../ESPEasy-Globals.h"
 
-# include "../Commands/InternalCommands.h"
 # include "../Helpers/WebServer_commandHelper.h"
 
 // ********************************************************************************
@@ -37,7 +37,7 @@ void handle_tools() {
 
   addFormSubHeader(F("Command"));
   html_TR_TD();
-  addHtml(F("<TR><TD colspan='2'>"));
+  addRowColspan(2);
   addHtml(F("<input "));
   addHtmlAttribute(F("style"), F("width: 98%"));
   addHtmlAttribute(F("type"),  F("text"));
@@ -47,16 +47,17 @@ void handle_tools() {
 
   html_TR_TD();
   addSubmitButton();
-  addHelpButton(F("ESPEasy_Command_Reference"));
+  // addHelpButton(F("ESPEasy_Command_Reference")); // Old documentation is just that: Old and out-dated.
   addRTDHelpButton(F("Reference/Command.html"));
   html_TR_TD();
 
   if (printWebString.length() > 0)
   {
-    addHtml(F("<TR><TD colspan='2'>Command Output<BR><textarea readonly rows='10' wrap='on'>"));
+    addRowColspan(2);
+    addHtml(F("Command Output<BR><textarea readonly rows='10' wrap='on'>"));
     addHtml(printWebString);
     addHtml(F("</textarea>"));
-    printWebString = String();
+    free_string(printWebString);
   }
 
 
@@ -76,7 +77,9 @@ void handle_tools() {
   addWideButtonPlusDescription(F("advanced"),    F("Advanced"),     F("Open advanced settings"));
   # endif // ifdef WEBSERVER_ADVANCED
 
+  # ifdef WEBSERVER_JSON
   addWideButtonPlusDescription(F("json"),        F("Show JSON"),    F("Open JSON output"));
+  # endif
 
   # ifdef WEBSERVER_METRICS
   addWideButtonPlusDescription(F("metrics"),        F("Show Metrics"),    F("Open Prometheus Metrics"));
@@ -94,10 +97,17 @@ void handle_tools() {
   addWideButtonPlusDescription(F("sysvars"), F("System Variables"), F("Show all system variables and conversions"));
   # endif // ifdef WEBSERVER_SYSVARS
 
+  #if FEATURE_PLUGIN_LIST
+  addWideButtonPlusDescription(F("pluginlist"), F("Included Plugins"), F("Show all plugins that are included in this build"));
+  #endif // if FEATURE_PLUGIN_LIST
+
   addFormSubHeader(F("Wifi"));
 
   addWideButtonPlusDescription(F("/?cmd=wificonnect"),    F("Connect"),    F("Connects to known Wifi network"));
   addWideButtonPlusDescription(F("/?cmd=wifidisconnect"), F("Disconnect"), F("Disconnect from wifi network"));
+  # ifdef WEBSERVER_SETUP
+  addWideButtonPlusDescription(F("setup"),                F("Setup WiFi"), F("WiFi setup page"));
+  #endif // ifdef WEBSERVER_SETUP
 
   # ifdef WEBSERVER_WIFI_SCANNER
   addWideButtonPlusDescription(F("wifiscanner"),          F("Scan"),       F("Scan for wifi networks"));
@@ -112,8 +122,22 @@ void handle_tools() {
   addFormSubHeader(F("Settings"));
 
   addWideButtonPlusDescription(F("upload"), F("Load"), F("Loads a settings file"));
-  addFormNote(F("(File MUST be renamed to \"config.dat\" before upload!)"));
-  addWideButtonPlusDescription(F("download"), F("Save"), F("Saves a settings file"));
+  addFormNote(F("(File MUST be renamed to \"config.dat\" before upload!"
+                #if FEATURE_TARSTREAM_SUPPORT
+                " Or a .tar file containing \"config.dat\" and other files can be uploaded"
+                #endif // if FEATURE_TARSTREAM_SUPPORT
+                ")"));
+  addWideButtonPlusDescription(F("download"), F("Save"),
+                               # if FEATURE_TARSTREAM_SUPPORT
+                               F("Save all configuration in a single .tar archive")
+                               # else // if FEATURE_TARSTREAM_SUPPORT
+                               F("Saves a settings file")
+                               # endif // if FEATURE_TARSTREAM_SUPPORT
+                               );
+  #if FEATURE_TARSTREAM_SUPPORT
+  addWideButtonPlusDescription(F("backup"), F("Backup files"), F("Save all files as a .tar archive"));
+  addWideButtonPlusDescription(F("backupnup"), F("Backup w/o credentials"), F("Save all files as a .tar archive but exclude usernames & passwords"));
+  #endif // if FEATURE_TARSTREAM_SUPPORT
 
 # ifdef WEBSERVER_NEW_UI
   #  if defined(ESP8266)
@@ -138,7 +162,7 @@ void handle_tools() {
       addFormSubHeader(F("Firmware"));
       html_TR_TD_height(30);
       addWideButton(F("update"), F("Update Firmware"), EMPTY_STRING, otaEnabled);
-      addHelpButton(F("EasyOTA"));
+      addHelpButton(F("RTDTools/Tools.html#id1"));
       html_TD();
       addHtml(F("Load a new firmware "));
 
@@ -161,10 +185,16 @@ void handle_tools() {
   }
 # endif     // if defined(ESP8266)
 
+  # if defined(WEBSERVER_FILELIST) || defined(WEBSERVER_FACTORY_RESET) || defined(FEATURE_SETTINGS_ARCHIVE) || defined(FEATURE_SD)
   addFormSubHeader(F("Filesystem"));
+  # endif // if defined(WEBSERVER_FILELIST) || defined(WEBSERVER_FACTORY_RESET) || defined(FEATURE_SETTINGS_ARCHIVE) || defined(FEATURE_SD)
 
+  # ifdef WEBSERVER_FILELIST
   addWideButtonPlusDescription(F("filelist"),         F("File browser"),     F("Show files on internal flash file system"));
+  # endif // ifdef WEBSERVER_FILELIST
+  # ifdef WEBSERVER_FACTORY_RESET
   addWideButtonPlusDescription(F("/factoryreset"),    F("Factory Reset"),    F("Select pre-defined configuration or full erase of settings"));
+  # endif // ifdef WEBSERVER_FACTORY_RESET
   # if FEATURE_SETTINGS_ARCHIVE
   addWideButtonPlusDescription(F("/settingsarchive"), F("Settings Archive"), F("Download settings from some archive"));
   # endif // if FEATURE_SETTINGS_ARCHIVE
@@ -176,7 +206,7 @@ void handle_tools() {
   html_end_form();
   sendHeadandTail_stdtemplate(_TAIL);
   TXBuffer.endStream();
-  printWebString = String();
+  free_string(printWebString);
   printToWeb     = false;
 }
 

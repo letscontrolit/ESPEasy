@@ -2,7 +2,7 @@
 
 #ifdef USES_P096
 
-# include "../Helpers/Hardware.h"
+#include "../Helpers/Hardware_SPI.h"
 
 /****************************************************************************
  * EPD_type_toString: Display-value for the device selected
@@ -121,21 +121,46 @@ bool P096_data_struct::plugin_init(struct EventStruct *event) {
   bool success = false;
 
   if (nullptr == eInkScreen) {
+    # ifdef ESP32
+    auto spi_ptr = getSPIBusForTask(event->TaskIndex);
+    if (!spi_ptr) {
+      addLog(LOG_LEVEL_ERROR, F("EPD  : No SPI configured"));
+      return false;
+    }
+    #endif
+
+
     addLog(LOG_LEVEL_INFO, F("EPD  : Init start."));
 
     switch (_display) {
       case EPD_type_e::EPD_IL3897:
-        eInkScreen = new (std::nothrow) LOLIN_IL3897(_xpix, _ypix, PIN(1), PIN(2), PIN(0), PIN(3));  // HSPI
+        eInkScreen = new (std::nothrow) LOLIN_IL3897(_xpix, _ypix, PIN(1), PIN(2), PIN(0), PIN(3)
+                                                     # ifdef ESP32
+                                                     , *spi_ptr
+                                                     # endif // ifdef ESP32
+                                                     ); // HSPI
         break;
       case EPD_type_e::EPD_UC8151D:
-        eInkScreen = new (std::nothrow) LOLIN_UC8151D(_xpix, _ypix, PIN(1), PIN(2), PIN(0), PIN(3)); // HSPI
+        eInkScreen = new (std::nothrow) LOLIN_UC8151D(_xpix, _ypix, PIN(1), PIN(2), PIN(0), PIN(3)
+                                                      # ifdef ESP32
+                                                      , *spi_ptr
+                                                      # endif // ifdef ESP32
+                                                      ); // HSPI
         break;
       case EPD_type_e::EPD_SSD1680:
-        eInkScreen = new (std::nothrow) LOLIN_SSD1680(_xpix, _ypix, PIN(1), PIN(2), PIN(0), PIN(3)); // HSPI
+        eInkScreen = new (std::nothrow) LOLIN_SSD1680(_xpix, _ypix, PIN(1), PIN(2), PIN(0), PIN(3)
+                                                      # ifdef ESP32
+                                                      , *spi_ptr
+                                                      # endif // ifdef ESP32
+                                                      ); // HSPI
         break;
       # if P096_USE_WAVESHARE_2IN7
       case EPD_type_e::EPD_WS2IN7:
-        eInkScreen = new (std::nothrow) Waveshare_2in7(_xpix, _ypix, PIN(1), PIN(2), PIN(0), PIN(3)); // HSPI
+        eInkScreen = new (std::nothrow) Waveshare_2in7(_xpix, _ypix, PIN(1), PIN(2), PIN(0), PIN(3)
+                                                       #  ifdef ESP32
+                                                       , *spi_ptr
+                                                       #  endif // ifdef ESP32
+                                                       ); // HSPI
         break;
       # endif // if P096_USE_WAVESHARE_2IN7
       case EPD_type_e::EPD_MAX:
@@ -155,7 +180,11 @@ bool P096_data_struct::plugin_init(struct EventStruct *event) {
                                                         _fgcolor,
                                                         _bgcolor,
                                                         true,
-                                                        _textBackFill);
+                                                        _textBackFill
+                                                        #  if ADAGFX_FONTS_INCLUDED
+                                                        , P096_CONFIG_DEFAULT_FONT
+                                                        #  endif // if ADAGFX_FONTS_INCLUDED
+                                                        );
       #  if P096_USE_EXTENDED_SETTINGS
 
       if (nullptr != gfxHelper) {
@@ -284,8 +313,8 @@ bool P096_data_struct::plugin_read(struct EventStruct *event) {
       gfxHelper->setColumnRowMode(bitRead(P096_CONFIG_FLAGS, P096_CONFIG_FLAG_USE_COL_ROW)); // Restore column mode
       int16_t curX, curY;
       gfxHelper->getCursorXY(curX, curY);                                                    // Get current X and Y coordinates,
-      UserVar[event->BaseVarIndex]     = curX;                                               // and put into Values
-      UserVar[event->BaseVarIndex + 1] = curY;
+      UserVar.setFloat(event->TaskIndex, 0, curX);                                           // and put into Values
+      UserVar.setFloat(event->TaskIndex, 1, curY);
 
       eInkScreen->display();
       eInkScreen->clearBuffer();
@@ -358,11 +387,9 @@ bool P096_data_struct::plugin_write(struct EventStruct *event, const String& str
       success                         = true;
     }
     else if (equals(arg1, F("inv"))) {
-      String arg2 = parseString(string, 3);
-      int    nArg2;
+      const int nArg2 = event->Par2;
 
-      if (validIntFromString(arg2, nArg2) &&
-          (nArg2 >= 0) &&
+      if ((nArg2 >= 0) &&
           (nArg2 <= 1)) {
         eInkScreen->invertDisplay(nArg2);
         eInkScreen->display();
@@ -372,11 +399,9 @@ bool P096_data_struct::plugin_write(struct EventStruct *event, const String& str
     else if (equals(arg1, F("rot"))) {
       ///control?cmd=epdcmd,rot,0
       // not working to verify
-      String arg2 = parseString(string, 3);
-      int    nArg2;
+      const int nArg2 = event->Par2;
 
-      if (validIntFromString(arg2, nArg2) &&
-          (nArg2 >= 0)) {
+      if ((nArg2 >= 0)) {
         eInkScreen->setRotation(nArg2 % 4);
         eInkScreen->display();
         success = true;
@@ -415,8 +440,8 @@ bool P096_data_struct::plugin_write(struct EventStruct *event, const String& str
       if (success) {
         int16_t curX, curY;
         gfxHelper->getCursorXY(curX, curY); // Get current X and Y coordinates, and put into Values
-        UserVar[event->BaseVarIndex]     = curX;
-        UserVar[event->BaseVarIndex + 1] = curY;
+        UserVar.setFloat(event->TaskIndex, 0, curX);
+        UserVar.setFloat(event->TaskIndex, 1, curY);
       }
     }
   }

@@ -1,0 +1,21 @@
+.. csv-table::
+   :header: "Event", "Example"
+   :widths: 30, 20
+
+   "
+   ``<TaskName>#Swipe,<gesture>``
+
+   ``<gesture>`` values:
+
+   * ``0``: None
+   * ``1``: Left
+   * ``2``: Right
+   * ``3``: Up
+   * ``4``: Down
+   * ``5``: Near (towards the sensor)
+   * ``6``: Far (away from the sensor)
+   ","
+   Will trigger when the configuration option **Separate Gesture events** is enabled.
+
+   These values are the same for the ``Gesture`` value when that is used.
+   "

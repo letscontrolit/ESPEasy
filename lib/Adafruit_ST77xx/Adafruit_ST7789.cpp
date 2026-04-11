@@ -76,6 +76,167 @@ static const uint8_t PROGMEM
     ST77XX_DISPON ,   ST_CMD_DELAY, //  9: Main screen turn on, no args, delay
       10 };                          //    10 ms delay
 
+#if ST7789_EXTRA_INIT
+static const uint8_t PROGMEM        // Source: https://github.com/Xinyuan-LilyGO/TTGO-T-Display
+  alt1_st7789[] =  {                // Init commands for 7789 screens Alternative 1
+    21,                             //  21 commands in list:
+    ST77XX_SLPOUT, ST_CMD_DELAY,    //  1: Out of sleep mode, no args, w/delay
+      120,                          //      120 ms delay
+    ST77XX_NORON, ST_CMD_DELAY,     //  2: Normal display on, no args, w/delay
+      10,                           //     10 ms delay
+    ST77XX_MADCTL, 1,               //  3: Mem access ctrl (directions), 1 arg:
+      0x08,                         //     Row/col addr, bottom-top refresh
+    0xB6, 2,                        //  4: ?JXL240 datasheet?
+      0x0A, 0x82,
+    ST77XX_COLMOD, 1+ ST_CMD_DELAY, //  5: Set color mode, 1 arg + delay:
+      0x55,                         //     16-bit color
+      10,                           //     10 ms delay
+    ST77XX_PORCTRL, 5,              //  6: Porch control, Framerate setting
+      0x0c, 0x0c, 0x00, 0x33, 0x33,
+    ST77XX_GCTRL, 1,                //  7: Gate control, Voltages VGH/VGL
+      0x35,
+    ST77XX_VCOMS, 1,                //  8: Power settings
+      0x28,
+    ST77XX_LCMCTRL, 1,              //  9: LCM Control
+      0x0C,
+    ST77XX_VDVVRHEN, 2,             // 10: VDV & VRH command enable
+      0x01, 0xFF,
+    ST77XX_VRHS, 1,                 // 11: VRH set
+      0x10,
+    ST77XX_VDVSET, 1,               // 12: VDV set
+      0x20,
+    ST77XX_FRCTR2, 1,               // 13: FR Control 2
+      0x0F,
+    ST77XX_PWCTRL1, 2,              // 14: Power Control 1
+      0xA4, 0xA1,
+    ST77XX_PVGAMCTRL, 14,           // 15: Positive Voltage Gamma control
+      0xD0, 0x00, 0x02, 0x07, 0x0A, 0x28, 0x32, 0x44, 0x42, 0x06, 0x0E, 0x12, 0x14, 0x17,
+    ST77XX_NVGAMCTRL, 14,           // 16: Negative Voltage Gamma control
+      0xD0, 0x00, 0x02, 0x07, 0x0A, 0x28, 0x31, 0x54, 0x47, 0x0E, 0x1C, 0x17, 0x1B, 0x1E,
+    ST77XX_INVON, ST_CMD_DELAY,     // 17: hack
+      10,
+    ST77XX_CASET  , 4,              // 18: Column addr set, 4 args, no delay:
+      0x00,
+      0,              //     XSTART = 0
+      0,
+      240,            //     XEND = 240
+    ST77XX_RASET  , 4,              // 19: Row addr set, 4 args, no delay:
+      0x00,
+      0,              //     YSTART = 0
+      320>>8,
+      320&0xFF,       //     YEND = 320
+    ST77XX_INVON, ST_CMD_DELAY,     // 20: Normal display on, no args, w/delay
+      10,                           //     10 ms delay
+    ST77XX_DISPON, ST_CMD_DELAY,    // 21: Main screen turn on, no args, delay
+      255                           //     120 ms delay
+  };
+
+static const uint8_t PROGMEM        // Source: https://github.com/Bodmer/TFT_eSPI (ST7789_init.h, _NOT_ INIT_SEQUENCE_3)
+  alt2_st7789[] =  {                // Init commands for 7789 screens Alternative 2
+    21,                             //  21 commands in list:
+    ST77XX_SLPOUT, ST_CMD_DELAY,    //  1: Out of sleep mode, no args, w/delay
+      120,                          //      120 ms delay
+    ST77XX_NORON, ST_CMD_DELAY,     //  2: Normal display on, no args, w/delay
+      10,                           //     10 ms delay
+    ST77XX_MADCTL, 1,               //  3: Mem access ctrl (directions), 1 arg:
+      0x08,                         //     Row/col addr, bottom-top refresh
+    0xB6, 2,                        //  4: ?JXL240 datasheet?
+      0x0A, 0x82,
+    ST77XX_RAMCTRL, 2,              //  5: RAM control
+      0x00, 0xE0,                   //     5 to 6-bit conversion: r0 = r5, b0 = b5
+    ST77XX_COLMOD, 1+ ST_CMD_DELAY, //  6: Set color mode, 1 arg + delay:
+      0x55,                         //     16-bit color
+      10,                           //     10 ms delay
+    ST77XX_PORCTRL, 5,              //  7: Porch control, Framerate setting
+      0x0c, 0x0c, 0x00, 0x33, 0x33,
+    ST77XX_GCTRL, 1,                //  8: Gate control, Voltages VGH/VGL
+      0x35,
+    ST77XX_VCOMS, 1,                //  9: Power settings
+      0x28,
+    ST77XX_LCMCTRL, 1,              // 10: LCM Control
+      0x0C,
+    ST77XX_VDVVRHEN, 2,             // 11: VDV & VRH command enable
+      0x01, 0xFF,
+    ST77XX_VRHS, 1,                 // 12: VRH set
+      0x10,
+    ST77XX_VDVSET, 1,               // 13: VDV set
+      0x20,
+    ST77XX_FRCTR2, 1,               // 14: FR Control 2
+      0x0F,
+    ST77XX_PWCTRL1, 2,              // 15: Power Control 1
+      0xA4, 0xA1,
+    ST77XX_PVGAMCTRL, 14,           // 16: Positive Voltage Gamma control
+      0xD0, 0x00, 0x02, 0x07, 0x0A, 0x28, 0x32, 0x44, 0x42, 0x06, 0x0E, 0x12, 0x14, 0x17,
+    ST77XX_NVGAMCTRL, 14,           // 17: Negative Voltage Gamma control
+      0xD0, 0x00, 0x02, 0x07, 0x0A, 0x28, 0x31, 0x54, 0x47, 0x0E, 0x1C, 0x17, 0x1B, 0x1E,
+    ST77XX_INVON, ST_CMD_DELAY,     // 18: hack
+      10,
+    ST77XX_CASET  , 4,              // 19: Column addr set, 4 args, no delay:
+      0x00,
+      0,              //     XSTART = 0
+      0,
+      239,            //     XEND = 239
+    ST77XX_RASET  , 4,              // 20: Row addr set, 4 args, no delay:
+      0x00,
+      0,              //     YSTART = 0
+      319>>8,
+      319&0xFF,       //     YEND = 319
+    ST77XX_DISPON, ST_CMD_DELAY,    // 21: Main screen turn on, no args, delay
+      120                           //     120 ms delay
+  };
+
+static const uint8_t PROGMEM        // Source: https://github.com/Bodmer/TFT_eSPI (ST7789_init.h, _WITH_ INIT_SEQUENCE_3)
+  alt3_st7789[] =  {                // Init commands for 7789 screens Alternative 2
+    18,                             //  18 commands in list:
+    ST77XX_SLPOUT, ST_CMD_DELAY,    //  1: Out of sleep mode, no args, w/delay
+      120,                          //      120 ms delay
+    ST77XX_NORON, ST_CMD_DELAY,     //  2: Normal display on, no args, w/delay
+      10,                           //     10 ms delay
+    ST77XX_MADCTL, 1,               //  3: Mem access ctrl (directions), 1 arg:
+      0x08,                         //     Row/col addr, bottom-top refresh
+    0xB6, 2,                        //  4: ?JXL240 datasheet?
+      0x0A, 0x82,
+    ST77XX_COLMOD, 1+ ST_CMD_DELAY, //  5: Set color mode, 1 arg + delay:
+      0x55,                         //     16-bit color
+      10,                           //     10 ms delay
+    ST77XX_PORCTRL, 5,              //  6: Porch control, Framerate setting
+      0x0c, 0x0c, 0x00, 0x33, 0x33,
+    ST77XX_GCTRL, 1,                //  7: Gate control, Voltages VGH/VGL
+      0x75,
+    ST77XX_VCOMS, 1,                //  8: Power settings
+      0x28,
+    ST77XX_LCMCTRL, 1,              //  9: LCM Control
+      0x2C,
+    ST77XX_VDVVRHEN, 1,             // 10: VDV & VRH command enable
+      0x01,
+    ST77XX_VRHS, 1,                 // 11: VRH set
+      0x1F,
+    ST77XX_FRCTR2, 1,               // 12: FR Control 2
+      0x13,
+    ST77XX_PWCTRL1, 1,              // 13: Power Control 1
+      0xA7,
+    ST77XX_PWCTRL1, 2,              // 14: Power Control 1
+      0xA4, 0xA1,
+    0xD6, 1,                        // 15: ?
+      0xA1,
+    ST77XX_PVGAMCTRL, 14,           // 16: Positive Voltage Gamma control
+      0xF0, 0x05, 0x0A, 0x06, 0x06, 0x03, 0x2B, 0x32, 0x43, 0x36, 0x11, 0x10, 0x2B, 0x32,
+    ST77XX_NVGAMCTRL, 14,           // 17: Negative Voltage Gamma control
+      0xF0, 0x08, 0x0C, 0x0B, 0x09, 0x24, 0x2B, 0x22, 0x43, 0x38, 0x15, 0x16, 0x2F, 0x37,
+    // ST77XX_CASET  , 4,              // 18: Column addr set, 4 args, no delay:
+    //   0x00,
+    //   0,              //     XSTART = 0
+    //   0,
+    //   239,            //     XEND = 239
+    // ST77XX_RASET  , 4,              // 19: Row addr set, 4 args, no delay:
+    //   0x00,
+    //   0,              //     YSTART = 0
+    //   319>>8,
+    //   319&0xFF,       //     YEND = 319
+    ST77XX_DISPON, ST_CMD_DELAY,    // 18: Main screen turn on, no args, delay
+      120                           //     120 ms delay
+  };
+#endif // if ST7789_EXTRA_INIT
 // clang-format on
 
 /**************************************************************************/
@@ -88,7 +249,7 @@ static const uint8_t PROGMEM
                    the defines only, the values are NOT the same!)
 */
 /**************************************************************************/
-void Adafruit_ST7789::init(uint16_t width, uint16_t height, uint8_t mode) {
+void Adafruit_ST7789::init(uint16_t width, uint16_t height, uint8_t mode, uint8_t init_seq) {
   // Save SPI data mode. commonInit() calls begin() (in Adafruit_ST77xx.cpp),
   // which in turn calls initSPI() (in Adafruit_SPITFT.cpp), passing it the
   // value of spiMode. It's done this way because begin() really should not
@@ -100,6 +261,8 @@ void Adafruit_ST7789::init(uint16_t width, uint16_t height, uint8_t mode) {
   spiMode = mode;
   // (Might get added similarly to other display types as needed on a
   // case-by-case basis.)
+
+  _init_seq = init_seq;
 
   commonInit(NULL);
 
@@ -123,7 +286,18 @@ void Adafruit_ST7789::init(uint16_t width, uint16_t height, uint8_t mode) {
   windowWidth = width;
   windowHeight = height;
 
-  displayInit(generic_st7789);
+  const uint8_t *init_ = generic_st7789;
+
+  #if ST7789_EXTRA_INIT
+  if (1 == _init_seq) {
+    init_ = alt1_st7789;
+  } else if (2 == _init_seq) {
+    init_ = alt2_st7789;
+  } else if (3 == _init_seq) {
+    init_ = alt3_st7789;
+  }
+  #endif // if ST7789_EXTRA_INIT
+  displayInit(init_);
   setRotation(0);
 }
 
@@ -140,28 +314,64 @@ void Adafruit_ST7789::setRotation(uint8_t m) {
 
   switch (rotation) {
   case 0:
-    madctl = ST77XX_MADCTL_MX | ST77XX_MADCTL_MY | ST77XX_MADCTL_RGB;
+    #if ST7789_EXTRA_INIT
+    if (_init_seq > 0) {
+      madctl    = ST77XX_MADCTL_BGR;
+      _colstart = 52;
+      _rowstart = 40;
+    } else
+    #endif // if ST7789_EXTRA_INIT
+    {
+      madctl = ST77XX_MADCTL_MX | ST77XX_MADCTL_MY | ST77XX_MADCTL_RGB;
+    }
     _xstart = _colstart;
     _ystart = _rowstart;
     _width = windowWidth;
     _height = windowHeight;
     break;
   case 1:
-    madctl = ST77XX_MADCTL_MY | ST77XX_MADCTL_MV | ST77XX_MADCTL_RGB;
+    #if ST7789_EXTRA_INIT
+    if (_init_seq > 0) {
+      madctl    = ST77XX_MADCTL_MX | ST77XX_MADCTL_MV | ST77XX_MADCTL_BGR;
+      _colstart = 40;
+      _rowstart = 53;
+    } else
+    #endif // if ST7789_EXTRA_INIT
+    {
+      madctl = ST77XX_MADCTL_MY | ST77XX_MADCTL_MV | ST77XX_MADCTL_RGB;
+    }
     _xstart = _rowstart;
     _ystart = _colstart;
     _height = windowWidth;
     _width = windowHeight;
     break;
   case 2:
-    madctl = ST77XX_MADCTL_RGB;
+    #if ST7789_EXTRA_INIT
+    if (_init_seq > 0) {
+      madctl     = ST77XX_MADCTL_MX | ST77XX_MADCTL_MY | ST77XX_MADCTL_RGB;
+      _colstart2 = 53;
+      _rowstart2 = 40;
+    } else
+    #endif // if ST7789_EXTRA_INIT
+    {
+      madctl = ST77XX_MADCTL_RGB;
+    }
     _xstart = _colstart2;
     _ystart = _rowstart2;
     _width = windowWidth;
     _height = windowHeight;
     break;
   case 3:
-    madctl = ST77XX_MADCTL_MX | ST77XX_MADCTL_MV | ST77XX_MADCTL_RGB;
+    #if ST7789_EXTRA_INIT
+    if (_init_seq > 0) {
+      madctl     = ST77XX_MADCTL_MV | ST77XX_MADCTL_MY | ST77XX_MADCTL_BGR;
+      _colstart2 = 40;
+      _rowstart2 = 52;
+    } else
+    #endif // if ST7789_EXTRA_INIT
+    {
+      madctl = ST77XX_MADCTL_MX | ST77XX_MADCTL_MV | ST77XX_MADCTL_RGB;
+    }
     _xstart = _rowstart2;
     _ystart = _colstart2;
     _height = windowWidth;

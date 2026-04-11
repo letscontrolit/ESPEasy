@@ -8,6 +8,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported for Neopixel)
  * 2023-10-26 tonhuisman: Apply NeoPixelBus_wrapper as replacement for Adafruit_NeoPixel library
  * 2023-10 tonhuisman: Add changelog.
  */
@@ -36,20 +37,15 @@ boolean Plugin_070(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_070;
-      Device[deviceCount].Type               = DEVICE_TYPE_SINGLE;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_TRIPLE;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = false;
-      Device[deviceCount].ValueCount         = 3;
-      Device[deviceCount].SendDataOption     = false;
-      Device[deviceCount].TimerOption        = false;
-      Device[deviceCount].GlobalSyncOption   = false;
+      auto& dev = Device[++deviceCount];
+      dev.Number     = PLUGIN_ID_070;
+      dev.Type       = DEVICE_TYPE_SINGLE;
+      dev.VType      = Sensor_VType::SENSOR_TYPE_TRIPLE;
+      dev.ValueCount = 3;
+      dev.setPin1Direction(gpio_direction::gpio_output);
 
       // FIXME TD-er: Not sure if access to any existing task data is needed when saving
-      Device[deviceCount].ExitTaskBeforeSave = false;
+      dev.ExitTaskBeforeSave = false;
       break;
     }
 
@@ -66,6 +62,15 @@ boolean Plugin_070(uint8_t function, struct EventStruct *event, String& string)
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[2], PSTR(PLUGIN_VALUENAME3_070));
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_NONE); // Not yet supported
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
 
     case PLUGIN_GET_DEVICEGPIONAMES:
     {
@@ -141,54 +146,34 @@ boolean Plugin_070(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WRITE:
     {
-      String lowerString = string;
-      lowerString.toLowerCase();
-      String command = parseString(lowerString, 1);
-      String param1  = parseString(lowerString, 2);
-      String param2  = parseString(lowerString, 3);
-      String param3  = parseString(lowerString, 4);
+      const String command = parseString(string, 1);
 
       P070_data_struct *P070_data = static_cast<P070_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if ((nullptr != P070_data) && (equals(command, F("clock")))) {
-        int val_Mode;
+        int32_t val_{};
 
-        if (validIntFromString(param1, val_Mode)) {
-          if ((val_Mode > -1) && (val_Mode < 2)) {
-            P070_data->display_enabled = val_Mode;
-            PCONFIG(0)                 = P070_data->display_enabled;
-          }
-        }
-        int val_Bright;
-
-        if (validIntFromString(param2, val_Bright)) {
-          if ((val_Bright > -1) && (val_Bright < 256)) {
-            P070_data->brightness = val_Bright;
-            PCONFIG(1)            = P070_data->brightness;
-          }
-        }
-        int val_Marks;
-
-        if (validIntFromString(param3, val_Marks)) {
-          if ((val_Marks > -1) && (val_Marks < 256)) {
-            P070_data->brightness_hour_marks = val_Marks;
-            PCONFIG(2)                       = P070_data->brightness_hour_marks;
+        if (validIntFromString(parseString(string, 2), val_)) {
+          if ((val_ > -1) && (val_ < 2)) {
+            P070_data->display_enabled = val_;
+            PCONFIG(0)                 = val_;
           }
         }
 
-        /*        //Command debuging routine
-                  String log = F("Clock: ");
-                  addLog(LOG_LEVEL_INFO,log);
-                  log = F("   Enabled = ");
-                  log += param1;
-                  addLog(LOG_LEVEL_INFO,log);
-                  log = F("   Brightness = ");
-                  log += param2;
-                  addLog(LOG_LEVEL_INFO,log);
-                  log = F("   Marks = ");
-                  log += param3;
-                  addLog(LOG_LEVEL_INFO,log);
-         */
+        if (validIntFromString(parseString(string, 3), val_)) {
+          if ((val_ > -1) && (val_ < 256)) {
+            P070_data->brightness = val_;
+            PCONFIG(1)            = val_;
+          }
+        }
+
+        if (validIntFromString(parseString(string, 4), val_)) {
+          if ((val_ > -1) && (val_ < 256)) {
+            P070_data->brightness_hour_marks = val_;
+            PCONFIG(2)                       = val_;
+          }
+        }
+
         success = true;
       }
       break;
@@ -199,9 +184,9 @@ boolean Plugin_070(uint8_t function, struct EventStruct *event, String& string)
       P070_data_struct *P070_data = static_cast<P070_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P070_data) {
-        UserVar[event->BaseVarIndex]     = P070_data->display_enabled;
-        UserVar[event->BaseVarIndex + 1] = P070_data->brightness;
-        UserVar[event->BaseVarIndex + 2] = P070_data->brightness_hour_marks;
+        UserVar.setFloat(event->TaskIndex, 0, P070_data->display_enabled);
+        UserVar.setFloat(event->TaskIndex, 1, P070_data->brightness);
+        UserVar.setFloat(event->TaskIndex, 2, P070_data->brightness_hour_marks);
 
         success = true;
       }

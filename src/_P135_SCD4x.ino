@@ -5,7 +5,12 @@
 // ########################## Plugin 135: Gases - SCD4x CO2, Humidity, Temperature #######################
 // #######################################################################################################
 
-/**
+/** Changelog:
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery
+ * 2024-08-16 tonhuisman: Disable 'factoryreset' command by default, to protect the innocent. There is a higher than 99.999% chance you
+ *                        want something else than a reset to factory defaults and 400 ppm! If you do, then create a Custom build with
+ *                        the matching feature-flag enabled.
+ * 2024-04-27 tonhuisman: Fix bug that sensor settings can only be retrieved if measuring is stopped
  * 2023-11-23 tonhuisman: Add Device flag for I2CMax100kHz as this sensor won't work at 400 kHz
  * 2022-08-28 tonhuisman: Include 'CO2' in plugin name, to be in line with other CO2 plugins
  * 2022-08-24 tonhuisman: Removed [TESTING] tag
@@ -38,19 +43,16 @@ boolean Plugin_135(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_135;
-      Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_TRIPLE;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = 3;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].PluginStats        = true;
-      Device[deviceCount].I2CMax100kHz       = true; // Max 100 kHz allowed/supported
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_135;
+      dev.Type           = DEVICE_TYPE_I2C;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_TRIPLE;
+      dev.FormulaOption  = true;
+      dev.ValueCount     = 3;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
+      dev.PluginStats    = true;
+      dev.I2CMax100kHz   = true; // Max 100 kHz allowed/supported
 
       break;
     }
@@ -70,6 +72,17 @@ boolean Plugin_135(uint8_t function, struct EventStruct *event, String& string)
 
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_CO2_ONLY);
+      event->Par2 = static_cast<int>(Sensor_VType::SENSOR_TYPE_HUM_ONLY);
+      event->Par3 = static_cast<int>(Sensor_VType::SENSOR_TYPE_TEMP_ONLY);
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
 
     case PLUGIN_I2C_HAS_ADDRESS:
     {
@@ -103,9 +116,12 @@ boolean Plugin_135(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(scd4x_sensor_type_e::SCD4x_SENSOR_SCD40),
           static_cast<int>(scd4x_sensor_type_e::SCD4x_SENSOR_SCD41),
         };
-        addFormSelector(F("Sensor model"), F("ptype"), 2, sensorTypes, sensorTypeOptions, P135_SENSOR_TYPE, true);
+        constexpr size_t optionCount = NR_ELEMENTS(sensorTypeOptions);
+        FormSelectorOptions selector(optionCount, sensorTypes, sensorTypeOptions);
+        selector.reloadonchange = true;
+        selector.addFormSelector(F("Sensor model"), F("ptype"), P135_SENSOR_TYPE);
         # ifndef LIMIT_BUILD_SIZE
-        addFormNote(F("Page will reload on change."));
+        // addFormNote(F("Page will reload on change."));
         # endif // ifndef LIMIT_BUILD_SIZE
       }
 

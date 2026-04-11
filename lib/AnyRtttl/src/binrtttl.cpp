@@ -121,16 +121,16 @@ uint16_t getBpmsCount()
   return gNoteBpmsCount;
 }
 
-BPM_INDEX findBpmIndex(RTTTL_BPM n)
-{
-  for(BPM_INDEX i=0; i<gNoteBpmsCount; i++)
-  {
-    if (getBpmFromIndex(i) == n)
-    {
-      return i;
-    }
-  }
-  return INVALID_BPM_INDEX;
-}
+// BPM_INDEX findBpmIndex(RTTTL_BPM n)
+// {
+//   for(BPM_INDEX i=0; i<gNoteBpmsCount; i++)
+//   {
+//     if (getBpmFromIndex(i) == n)
+//     {
+//       return i;
+//     }
+//   }
+//   return INVALID_BPM_INDEX;
+// }
 
 }; //anyrtttl namespace

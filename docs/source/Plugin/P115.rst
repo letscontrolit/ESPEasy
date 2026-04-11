@@ -13,7 +13,9 @@ Type: |P115_type|
 
 Name: |P115_name|
 
-Status: |P115_status|
+Status ESP32: |P115_status|
+
+Status ESP8266: |P115_status_lb|
 
 GitHub: |P115_github|_
 
@@ -56,6 +58,8 @@ Device Settings
 **Alert threshold** : Set the MAX1704x's percentage threshold that will trigger an alert.
 
 **Send Event on Alert** : Send an event, to be used in rules, when the alert is set.  This can be cleared with ``max1704xclearalert``
+
+.. include:: DataAcquisition.repl
 
 Values
 ^^^^^^

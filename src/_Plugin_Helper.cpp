@@ -9,7 +9,6 @@
 #include "src/Globals/Cache.h"
 #include "src/Globals/Plugins.h"
 #include "src/Globals/Settings.h"
-#include "src/Globals/SecuritySettings.h"
 #include "src/Helpers/Misc.h"
 #include "src/Helpers/StringParser.h"
 
@@ -39,13 +38,19 @@ void clearPluginTaskData(taskIndex_t taskIndex) {
   }
 }
 
-void initPluginTaskData(taskIndex_t taskIndex, PluginTaskData_base *data) {
+bool initPluginTaskData(taskIndex_t taskIndex, PluginTaskData_base *data) {
   if (!validTaskIndex(taskIndex)) {
     if (data != nullptr) {
       delete data;
     }
-    return;
+    return false;
   }
+
+  // 2nd heap may have been active to allocate the PluginTaskData, but here we need to keep the default heap active
+  # ifdef USE_SECOND_HEAP
+  HeapSelectDram ephemeral;
+  # endif // ifdef USE_SECOND_HEAP
+
 
   clearPluginTaskData(taskIndex);
 
@@ -71,6 +76,7 @@ void initPluginTaskData(taskIndex_t taskIndex, PluginTaskData_base *data) {
       delete data;
     }
   }
+  return getPluginTaskData(taskIndex) != nullptr;
 }
 
 PluginTaskData_base* getPluginTaskData(taskIndex_t taskIndex) {

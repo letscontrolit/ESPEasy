@@ -22,9 +22,12 @@
    For following devices just a pull up resistor is needed if the device is used stand alone:
          UVR1611, UVR61-3 and ESR21
 
+    * 2025-06-14 tonhuisman: Add support for Custom Value Type per task value
+    @tonhuisman 2025-01-12 Add support for MQTT AutoDiscovery (not supported yet for DL-bus)
+
     @tonhuisman 2022-09-24 Optimizations, suppress some logging for stressed builds
 
-    @uwekaditz 2022-09-04 CHG: #ifdef INPUT_PULLDOWN and all its dependencies removed 
+    @uwekaditz 2022-09-04 CHG: #ifdef INPUT_PULLDOWN and all its dependencies removed
     @uwekaditz 2022-05-04 CHG: Logging reduced for LIMIT_BUILD_SIZE
 
     @tonhuisman 2022-03-26 Add support for UVR42 (Very similar to an UVR31, has 1 extra sensor value and 1 extra digital value)
@@ -68,7 +71,7 @@
 
 # include "src/PluginStructs/P092_data_struct.h"
 
-# include "src/ESPEasyCore/ESPEasyNetwork.h"
+# include "ESPEasy/net/ESPEasyNetwork.h"
 
 # define PLUGIN_092
 # define PLUGIN_ID_092         92
@@ -90,19 +93,16 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_092;
-      Device[deviceCount].Type               = DEVICE_TYPE_SINGLE;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_SINGLE;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = false;
-      Device[deviceCount].ValueCount         = 1;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].DecimalsOnly       = true;
-      Device[deviceCount].PluginStats        = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_092;
+      dev.Type           = DEVICE_TYPE_SINGLE;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_SINGLE;
+      dev.ValueCount     = 1;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
+      dev.DecimalsOnly   = true;
+      dev.PluginStats    = true;
+      dev.CustomVTypeVar = true;
       break;
     }
 
@@ -117,6 +117,22 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_092));
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER || FEATURE_CUSTOM_TASKVAR_VTYPE
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      #  if FEATURE_CUSTOM_TASKVAR_VTYPE
+
+      for (uint8_t i = 0; i < event->Par5; ++i) {
+        event->ParN[i] = ExtraTaskSettings.getTaskVarCustomVType(i);  // Custom/User selection
+      }
+      #  else // if FEATURE_CUSTOM_TASKVAR_VTYPE
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_NONE); // Not yet supported
+      #  endif // if FEATURE_CUSTOM_TASKVAR_VTYPE
+      success = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER || FEATURE_CUSTOM_TASKVAR_VTYPE
 
     case PLUGIN_WEBFORM_LOAD:
     {
@@ -142,25 +158,29 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(eP092pinmode::ePPM_Input),
           static_cast<int>(eP092pinmode::ePPM_InputPullUp)
         };
-        addFormSelector(F("Pin mode"), F("ppinmode"), 2, options, optionValues, choice);
+        const FormSelectorOptions selector(NR_ELEMENTS(options), options, optionValues);
+        selector.addFormSelector(F("Pin mode"), F("ppinmode"), choice);
       }
       {
-        const __FlashStringHelper *Devices[P092_DLbus_DeviceCount] = {
+        const __FlashStringHelper *Devices[] = {
           F("ESR21"),
           F("UVR31"),
           F("UVR42"),
           F("UVR1611"),
           F("UVR 61-3 (up to v8.2)"),
           F("UVR 61-3 (v8.3 or higher)") };
-        const int DevTypes[P092_DLbus_DeviceCount] = { 21, 31, 42, 1611, 6132, 6133 };
+        const int DevTypes[]         = { 21, 31, 42, 1611, 6132, 6133 };
+        constexpr size_t optionCount = NR_ELEMENTS(Devices);
 
-        addFormSelector(F("DL-Bus Type"), F("pdlbtype"), P092_DLbus_DeviceCount, Devices, DevTypes, nullptr, PCONFIG(0), true);
+        FormSelectorOptions selector(optionCount, Devices, DevTypes);
+        selector.reloadonchange = true;
+        selector.addFormSelector(F("DL-Bus Type"), F("pdlbtype"), PCONFIG(0));
       }
       {
         int P092_ValueType, P092_ValueIdx;
         P092_Last_DLB_Pin = CONFIG_PIN1;
-        const String plugin_092_DefValueName                  = F(PLUGIN_VALUENAME1_092);
-        const int    P092_OptionTypes[P092_DLbus_OptionCount] = {
+        const String plugin_092_DefValueName = F(PLUGIN_VALUENAME1_092);
+        const int    P092_OptionTypes[]      = {
           // Index der Variablen
           0, // F("None")
           1, // F("Sensor")
@@ -171,7 +191,8 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
           6, // F("Heat power (kW)")
           7  // F("Heat meter (MWh)")
         };
-        const __FlashStringHelper *Options[P092_DLbus_OptionCount] = {
+        constexpr size_t optionCount         = NR_ELEMENTS(P092_OptionTypes);
+        const __FlashStringHelper *Options[] = {
           F("None"),
           F("Sensor"),
           F("Ext. sensor"),
@@ -182,18 +203,18 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
           F("Heat meter (MWh)")
         };
 
-        uint8_t P092_MaxIdx[P092_DLbus_OptionCount];
-
-        // Calculation of the max indices for each sensor type
-        // default indizes for UVR31
-        P092_MaxIdx[0] = 0;      // None
-        P092_MaxIdx[1] = 3;      // Sensor
-        P092_MaxIdx[2] = 0;      // Ext. sensor
-        P092_MaxIdx[3] = 1;      // Digital output
-        P092_MaxIdx[4] = 0;      // Speed step
-        P092_MaxIdx[5] = 0;      // Analog output
-        P092_MaxIdx[6] = 0;      // Heat power (kW)
-        P092_MaxIdx[7] = 0;      // Heat meter (MWh)
+        uint8_t P092_MaxIdx[] {
+          // Calculation of the max indices for each sensor type
+          // default indizes for UVR31
+          0, // None
+          3, // Sensor
+          0, // Ext. sensor
+          1, // Digital output
+          0, // Speed step
+          0, // Analog output
+          0, // Heat power (kW)
+          0, // Heat meter (MWh)
+        };
 
         switch (PCONFIG(0)) {
           case 21:               // ESR21
@@ -238,14 +259,9 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
         P092_ValueType = PCONFIG(1) >> 8;
         P092_ValueIdx  = PCONFIG(1) & 0x00FF;
 
-        addFormSelector(plugin_092_DefValueName,
-                        F("pValue"),
-                        P092_DLbus_OptionCount,
-                        Options,
-                        P092_OptionTypes,
-                        nullptr,
-                        P092_ValueType,
-                        true);
+        FormSelectorOptions selector(optionCount, Options, P092_OptionTypes);
+        selector.reloadonchange = true;
+        selector.addFormSelector(plugin_092_DefValueName, F("pValue"), P092_ValueType);
 
         if (P092_MaxIdx[P092_ValueType] > 1) {
           int CurIdx = P092_ValueIdx;
@@ -262,7 +278,7 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
         }
       }
 
-      UserVar[event->BaseVarIndex] = NAN;
+      UserVar.setFloat(event->TaskIndex, 0, NAN);
 
       success = true;
       break;
@@ -288,8 +304,8 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
         P092_OptionValueDecimals[6] = 2;
       }
 
-      int OptionIdx = getFormItemInt(F("pValue"));
-      int CurIdx    = getFormItemInt(F("pIdx"));
+      const int OptionIdx = getFormItemInt(F("pValue"));
+      int CurIdx          = getFormItemInt(F("pIdx"));
 
       if (CurIdx < 1) {
         CurIdx = 1;
@@ -324,13 +340,13 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
         String log = F("PLUGIN_WEBFORM_SAVE :");
         log += F(" DLB_Pin:");
         log += CONFIG_PIN1;
-        log += F(" DLbus_MinPulseWidth:");
+        log += F(" MinPulseWidth:");
         log += P092_data->P092_DataSettings.DLbus_MinPulseWidth;
-        log += F(" DLbus_MaxPulseWidth:");
+        log += F(" MaxPulseWidth:");
         log += P092_data->P092_DataSettings.DLbus_MaxPulseWidth;
-        log += F(" DLbus_MinDoublePulseWidth:");
+        log += F(" MinDoublePulseWidth:");
         log += P092_data->P092_DataSettings.DLbus_MinDoublePulseWidth;
-        log += F(" DLbus_MaxDoublePulseWidth:");
+        log += F(" MaxDoublePulseWidth:");
         log += P092_data->P092_DataSettings.DLbus_MaxDoublePulseWidth;
         log += F(" IdxSensor:");
         log += P092_data->P092_DataSettings.IdxSensor;
@@ -390,14 +406,15 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
         addLogMove(LOG_LEVEL_INFO, log);
       }
       # endif // PLUGIN_092_DEBUG
-      UserVar[event->BaseVarIndex] = NAN;
-      success                      = true;
+      UserVar.setFloat(event->TaskIndex, 0, NAN);
+      success = true;
       break;
     }
 
     case PLUGIN_INIT:
     {
 # ifndef P092_LIMIT_BUILD_SIZE
+
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         addLogMove(LOG_LEVEL_INFO, concat(F("PLUGIN_092_INIT Task:"), event->TaskIndex));
       }
@@ -413,6 +430,8 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
 # ifndef P092_LIMIT_BUILD_SIZE
           addLog(LOG_LEVEL_INFO, F("Create P092_data_struct ..."));
 # endif // ifndef P092_LIMIT_BUILD_SIZE
+
+          // FIXME TD-er: This is a really odd and overly complex way to handle this.
 
           P092_data = new (std::nothrow) P092_data_struct();
           initPluginTaskData(event->TaskIndex, P092_data);
@@ -442,22 +461,16 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
         P092_init = true;
       }
 
-      success                      = true;
-      UserVar[event->BaseVarIndex] = NAN;
+      success = true;
+      UserVar.setFloat(event->TaskIndex, 0, NAN);
       break;
     }
 
     case PLUGIN_ONCE_A_SECOND:
     {
-      if (!NetworkConnected()) {
-        return false;
-      }
-
-      if (!P092_init) {
-        return false;
-      }
-
-      if (nullptr == P092_data) {
+      if (!ESPEasy::net::NetworkConnected()
+          || !P092_init
+          || (nullptr == P092_data)) {
         return false;
       }
 
@@ -465,7 +478,7 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
         // on a CHANGE on the data pin P092_Pin_changed is called
         P092_data->DLbus_Data->attachDLBusInterrupt();
 # ifndef P092_LIMIT_BUILD_SIZE
-       addLog(LOG_LEVEL_INFO, F("P092 ISR set"));
+        addLog(LOG_LEVEL_INFO, F("P092 ISR set"));
 # endif // ifndef P092_LIMIT_BUILD_SIZE
       }
 
@@ -490,6 +503,7 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
         if (success) {
           P092_data->P092_LastReceived = millis();
 # ifndef P092_LIMIT_BUILD_SIZE
+
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             addLogMove(LOG_LEVEL_INFO, concat(F("Received data OK TI:"), event->TaskIndex));
           }
@@ -513,12 +527,13 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_READ:
     {
 # ifndef P092_LIMIT_BUILD_SIZE
+
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         addLogMove(LOG_LEVEL_INFO, concat(F("PLUGIN_092_READ Task:"), event->TaskIndex));
       }
 # endif // ifndef P092_LIMIT_BUILD_SIZE
 
-      if (!NetworkConnected()) {
+      if (!ESPEasy::net::NetworkConnected()) {
         // too busy for DLbus while wifi connect is running
         addLog(LOG_LEVEL_ERROR, F("## P092_read: Error DL-Bus: WiFi not connected!"));
         return false;
@@ -536,12 +551,9 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
 
       if (P092_data->DLbus_Data->ISR_DLB_Pin != CONFIG_PIN1) {
         if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-          String log;
-          log += F("## P092_read: Error DL-Bus: Device Pin setting not correct! DLB_Pin:");
-          log += P092_data->DLbus_Data->ISR_DLB_Pin;
-          log += F(" Setting:");
-          log += CONFIG_PIN1;
-          addLogMove(LOG_LEVEL_ERROR, log);
+          addLogMove(LOG_LEVEL_ERROR,
+                     strformat(F("## P092_read: Error DL-Bus: Device Pin setting not correct! DLB_Pin:%d Setting:%d"),
+                               P092_data->DLbus_Data->ISR_DLB_Pin, CONFIG_PIN1));
         }
         return false;
       }
@@ -572,7 +584,7 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
         int CurIdx    = PCONFIG(1) & 0x00FF;
 
         if (P092_data->P092_GetData(OptionIdx, CurIdx, &P092_ReadData)) {
-          UserVar[event->BaseVarIndex] = P092_ReadData.value;
+          UserVar.setFloat(event->TaskIndex, 0, P092_ReadData.value);
         }
         else {
           addLog(LOG_LEVEL_ERROR, F("## P092_read: Error: No readings!"));

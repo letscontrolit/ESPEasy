@@ -60,6 +60,10 @@ else:
     "-DUSES_C018",  # TTN/RN2483
 #   "-DUSES_C015",  # Blynk
 
+    "-DUSES_N001",  # E-mail
+
+    "-DFEATURE_MQTT_TLS=1",
+    "-DFEATURE_EMAIL_TLS=1",
     "-DFEATURE_EXT_RTC=1",
     "-DFEATURE_SD=1",
     "-DFEATURE_I2CMULTIPLEXER=1",
@@ -68,16 +72,20 @@ else:
     "-DFEATURE_PLUGIN_STATS=1",
     "-DFEATURE_CHART_JS=1",
 
+    "-DTESTING_FEATURE_USE_IPV6",
+
     "-DFEATURE_SETTINGS_ARCHIVE=1",
+    "-DFEATURE_DEFINE_SERIAL_CONSOLE_PORT=1",
     "-DFEATURE_ESPEASY_P2P=1",
-    "-DFEATURE_CUSTOM_PROVISIONING=1"
+    "-DFEATURE_CUSTOM_PROVISIONING=1",
+    "-DDISABLE_SC16IS752_SPI"
   ]
 
 
 
 my_flags = env.ParseFlags(env['BUILD_FLAGS'])
 my_defines = my_flags.get("CPPDEFINES")
-env.Append(BUILD_FLAGS=custom_defines)
+env.Append(CXXFLAGS=custom_defines)
 #defines = {k: v for (k, v) in my_defines}
 
 print("\u001b[32m Custom PIO configuration check \u001b[0m")

@@ -15,17 +15,20 @@ def clear_concat_cpp_files(path_to_concat):
         os.rmdir(cpp_path_out)
 
 
-def clear_all_concat_cpp_files(source, target, env):
+def remove_concat_cpp_files(paths_to_remove_concat_files):
     print("\u001b[32m Remove temp concatenated files \u001b[0m")
-    clear_concat_cpp_files('./src/src/Commands')
-    clear_concat_cpp_files('./src/src/ControllerQueue')
-    clear_concat_cpp_files('./src/src/DataStructs')
-    clear_concat_cpp_files('./src/src/DataTypes')
-    clear_concat_cpp_files('./src/src/Globals')
-    clear_concat_cpp_files('./src/src/Helpers')
-    clear_concat_cpp_files('./src/src/PluginStructs')
-    clear_concat_cpp_files('./src/src/WebServer')
+    for path_to_remove in paths_to_remove_concat_files:
+        clear_concat_cpp_files(path_to_remove)
     print("\u001b[32m ------------------------------ \u001b[0m")
 
 
-#env.AddPostAction("$BUILD_DIR/${PROGNAME}.bin", [clear_all_concat_cpp_files])
+remove_concat_cpp_files(['./src/src/Commands',
+                         './src/src/ControllerQueue',
+                         './src/src/DataStructs',
+                         './src/src/DataTypes',
+                         './src/src/ESPEasyCore',
+                         './src/src/Globals',
+                         './src/src/Helpers',
+                         './src/src/PluginStructs',
+                         './src/src/WebServer'])
+

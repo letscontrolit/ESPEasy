@@ -29,11 +29,7 @@ public:
                                        uint8_t                   value_count);
 
 
-#ifdef USE_SECOND_HEAP
-  SimpleQueueElement_formatted_Strings(const SimpleQueueElement_formatted_Strings& rval) = default;
-#else // ifdef USE_SECOND_HEAP
   SimpleQueueElement_formatted_Strings(const SimpleQueueElement_formatted_Strings& rval) = delete;
-#endif // ifdef USE_SECOND_HEAP
 
   SimpleQueueElement_formatted_Strings(SimpleQueueElement_formatted_Strings&& rval);
 
@@ -43,15 +39,15 @@ public:
   // For controllers that only send a single value per request and thus need to keep track of the number of values already sent.
   bool                      checkDone(bool succesfull) const;
 
-  size_t                    getSize() const;
+  size_t                    getSize() const override;
 
-  bool                      isDuplicate(const Queue_element_base& other) const;
+  bool                      isDuplicate(const Queue_element_base& other) const override;
 
-  const UnitMessageCount_t* getUnitMessageCount() const {
+  const UnitMessageCount_t* getUnitMessageCount() const override {
     return nullptr;
   }
 
-  UnitMessageCount_t* getUnitMessageCount() {
+  UnitMessageCount_t* getUnitMessageCount() override {
     return nullptr;
   }
 

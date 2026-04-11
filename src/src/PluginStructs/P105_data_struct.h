@@ -23,7 +23,8 @@ class AHTx_Device {
 public:
 
   AHTx_Device(uint8_t          addr,
-              AHTx_device_type type);
+              AHTx_device_type type,
+              bool             altInit);
   AHTx_Device() = delete;
 
   const __FlashStringHelper* getDeviceName() const;
@@ -48,11 +49,13 @@ protected:
   const AHTx_device_type device_type;
   float last_hum_val  = 0.0f;
   float last_temp_val = 0.0f;
+  bool alt_init       = false;
 };
 
 struct P105_data_struct : public PluginTaskData_base {
   P105_data_struct(uint8_t          addr,
-                   AHTx_device_type dev);
+                   AHTx_device_type dev,
+                   bool             altInit);
   P105_data_struct()          = delete;
   virtual ~P105_data_struct() = default;
 

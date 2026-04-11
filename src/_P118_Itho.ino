@@ -15,28 +15,34 @@
 //			better to change this value in the Itho-lib code and compile it yourself
 //			svollebreggt, 13-2-2021 - Now uses rewirtten library made by arjenhiemstra:
 // https://github.com/arjenhiemstra/IthoEcoFanRFT
-//			svollebregt, 11-2021 - Code improvements
-//			tonhuisman, 27-12-2021 - Add setting for CS pin
-//			tonhuisman, 27-12-2021 - Split into P118_data_struct to enable multiple instances, reduce memory footprint
-//								   - Allow 3 simultaneous instances, each using an interrupt and CS
-//								   - Remove unused code, reformat source using Uncrustify
-//			tonhuisman, 28-12-2021 - Move interrupt handling to Plugin_data_struct, lifting the limit on nr. of plugins
-//      tonhuisman, 03-01-2022 - Review source after structural-crash report, fix interrupt handler
-//      tonhuisman, 21-06-2022 - Minor improvements
-//      tonhuisman, 10-08-2022 - Fix bugs, add 3 second limit to formerly perpetual while loops in IthoCC1101 library
-//                               Restructure source somewhat, rename variables, clean up stuff generally
-//      tonhuisman, 11-08-2022 - Fix issue with ESP32 support, the MISO pin was predefined, but not matching the ESPEasy
-//                               actual configuration.
-//                               Added time-out check (5s) to initialization, usually an indication of incorrect hardware
-//                               configuration, defective or disconnected board.
-//                               Reduced time-out checks in IthoCC1101 library to 1 second (from 3)
-//                               Improved display of GPIO pins in Devices page
-//      tonhuisman, 18-08-2022 - Merge Orcon related code from PR #4099 (https://github.com/letscontrolit/ESPEasy/pull/4099)
-//                               Orcon code can be partially disabled by setting P118_FEATURE_ORCON 0 in P118_data_struc.h
-//                               Support for orcon must be enabled in settings, to avoid possible interference with Itho.
-//                               Re-enabled timer support for Orcon, as it is only a status update, NOT a ventilator update
-//      tonhuisman, 18-09-2022 - Hide Debug log option in device configuration when Debug log is not available.
-//      tonhuisman, 05-03-2023 - Deprecate 'state' command, and add support for 'itho' as the main command
+
+/** Changelog:
+ * 2025-08-13 tonhuisman: Enable use of secondary SPI bus
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported for ITHO)
+ *                        Changelog is reverted and reformatted!
+ * 05-03-2023 tonhuisman: Deprecate 'state' command, and add support for 'itho' as the main command
+ * 18-09-2022 tonhuisman: Hide Debug log option in device configuration when Debug log is not available.
+ * 18-08-2022 tonhuisman: Merge Orcon related code from PR #4099 (https://github.com/letscontrolit/ESPEasy/pull/4099)
+ *                        Orcon code can be partially disabled by setting P118_FEATURE_ORCON 0 in P118_data_struc.h
+ *                        Support for orcon must be enabled in settings, to avoid possible interference with Itho.
+ *                        Re-enabled timer support for Orcon, as it is only a status update, NOT a ventilator update
+ * 11-08-2022 tonhuisman: Fix issue with ESP32 support, the MISO pin was predefined, but not matching the ESPEasy
+ *                        actual configuration.
+ *                        Added time-out check (5s) to initialization, usually an indication of incorrect hardware
+ *                        configuration, defective or disconnected board.
+ *                        Reduced time-out checks in IthoCC1101 library to 1 second (from 3)
+ *                        Improved display of GPIO pins in Devices page
+ * 10-08-2022 tonhuisman: Fix bugs, add 3 second limit to formerly perpetual while loops in IthoCC1101 library
+ *                        Restructure source somewhat, rename variables, clean up stuff generally
+ * 21-06-2022 tonhuisman: Minor improvements
+ * 03-01-2022 tonhuisman: Review source after structural-crash report, fix interrupt handler
+ * 28-12-2021 tonhuisman: Move interrupt handling to Plugin_data_struct, lifting the limit on nr. of plugins
+ * 27-12-2021 tonhuisman: Split into P118_data_struct to enable multiple instances, reduce memory footprint
+ *								        Allow 3 simultaneous instances, each using an interrupt and CS
+ *								        Remove unused code, reformat source using Uncrustify
+ * 27-12-2021 tonhuisman: Add setting for CS pin
+ * 11-2021 svollebregt: Code improvements
+ */
 
 // Recommended to disable RF receive logging to minimize code execution within interrupts
 
@@ -124,18 +130,13 @@ boolean Plugin_118(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_118;
-      Device[deviceCount].Type               = DEVICE_TYPE_SPI2;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_TRIPLE;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = false;
-      Device[deviceCount].ValueCount         = 3;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = false;
-      Device[deviceCount].TimerOptional      = true;
-      Device[deviceCount].GlobalSyncOption   = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_118;
+      dev.Type           = DEVICE_TYPE_SPI2;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_TRIPLE;
+      dev.ValueCount     = 3;
+      dev.SendDataOption = true;
+      dev.SpiBusSelect   = true;
       break;
     }
 
@@ -160,13 +161,21 @@ boolean Plugin_118(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_NONE); // Not yet supported
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
+
     case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
     {
-      string  = F("GDO2: ");
-      string += formatGpioLabel(P118_IRQPIN, false);
-      string += event->String1;
-      string += F("CSN: ");
-      string += formatGpioLabel(P118_CSPIN, false);
+      string = strformat(F("GDO2: %s%sCSN: %s"),
+                         formatGpioLabel(P118_IRQPIN, false).c_str(),
+                         event->String1.c_str(),
+                         formatGpioLabel(P118_CSPIN,  false).c_str());
       success = true;
       break;
     }
@@ -198,8 +207,10 @@ boolean Plugin_118(uint8_t function, struct EventStruct *event, String& string)
         P118_data_struct *P118_data = static_cast<P118_data_struct *>(getPluginTaskData(event->TaskIndex));
 
         success = (nullptr != P118_data) && P118_data->plugin_init(event);
+      # ifndef BUILD_NO_DEBUG
       } else {
         addLog(LOG_LEVEL_ERROR, F("ITHO: CS pin not correctly configured, plugin can not start!"));
+      # endif // ifndef BUILD_NO_DEBUG
       }
 
       break;
@@ -283,8 +294,15 @@ boolean Plugin_118(uint8_t function, struct EventStruct *event, String& string)
       addFormNumericBox(F("Device ID byte 1"), F("pdevid1"), P118_CONFIG_DEVID1, 0, 255);
       addFormNumericBox(F("Device ID byte 2"), F("pdevid2"), P118_CONFIG_DEVID2, 0, 255);
       addFormNumericBox(F("Device ID byte 3"), F("pdevid3"), P118_CONFIG_DEVID3, 0, 255);
-      addFormNote(F("Device ID of your ESP, should not be the same as your neighbours ;-). "
-                    "Defaults to 10,87,81 which corresponds to the old Itho library"));
+      addFormNote(F("Device ID of your ESP"
+                    # ifndef BUILD_NO_DEBUG
+                    ", should not be the same as your neighbours ;-)"
+                    # endif // ifndef BUILD_NO_DEBUG
+                    ". Defaults to 10,87,81"
+                    # ifndef BUILD_NO_DEBUG
+                    " which corresponds to the old Itho library"
+                    # endif // ifndef BUILD_NO_DEBUG
+                    ));
       # if P118_FEATURE_ORCON
       addFormNote(F("For Orcon: This is the destination ID a.k.a. the ID of the Ventilation unit."));
 

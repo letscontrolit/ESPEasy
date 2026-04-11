@@ -32,7 +32,7 @@ void isrPin(void);
 
 bool XPT2046_Touchscreen::begin()
 {
-	SPI.begin();
+	// _spi.begin(); // ESPEasy already does this
 	pinMode(csPin, OUTPUT);
 	digitalWrite(csPin, HIGH);
 	if (255 != tirqPin) {
@@ -105,25 +105,25 @@ void XPT2046_Touchscreen::update()
 	uint32_t now = millis();
 	if (now - msraw < MSEC_THRESHOLD) return;
 	
-	SPI.beginTransaction(SPI_SETTING);
+	_spi.beginTransaction(SPI_SETTING);
 	digitalWrite(csPin, LOW);
-	SPI.transfer(0xB1 /* Z1 */);
-	int16_t z1 = SPI.transfer16(0xC1 /* Z2 */) >> 3;
+	_spi.transfer(0xB1 /* Z1 */);
+	int16_t z1 = _spi.transfer16(0xC1 /* Z2 */) >> 3;
 	int z = z1 + 4095;
-	int16_t z2 = SPI.transfer16(0x91 /* X */) >> 3;
+	int16_t z2 = _spi.transfer16(0x91 /* X */) >> 3;
 	z -= z2;
 	if (z >= Z_THRESHOLD) {
-		SPI.transfer16(0x91 /* X */);  // dummy X measure, 1st is always noisy
-		data[0] = SPI.transfer16(0xD1 /* Y */) >> 3;
-		data[1] = SPI.transfer16(0x91 /* X */) >> 3; // make 3 x-y measurements
-		data[2] = SPI.transfer16(0xD1 /* Y */) >> 3;
-		data[3] = SPI.transfer16(0x91 /* X */) >> 3;
+		_spi.transfer16(0x91 /* X */);  // dummy X measure, 1st is always noisy
+		data[0] = _spi.transfer16(0xD1 /* Y */) >> 3;
+		data[1] = _spi.transfer16(0x91 /* X */) >> 3; // make 3 x-y measurements
+		data[2] = _spi.transfer16(0xD1 /* Y */) >> 3;
+		data[3] = _spi.transfer16(0x91 /* X */) >> 3;
 	}
 	else data[0] = data[1] = data[2] = data[3] = 0;	// Compiler warns these values may be used unset on early exit.
-	data[4] = SPI.transfer16(0xD0 /* Y */) >> 3;	// Last Y touch power down
-	data[5] = SPI.transfer16(0) >> 3;
+	data[4] = _spi.transfer16(0xD0 /* Y */) >> 3;	// Last Y touch power down
+	data[5] = _spi.transfer16(0) >> 3;
 	digitalWrite(csPin, HIGH);
-	SPI.endTransaction();
+	_spi.endTransaction();
 	//Serial.printf("z=%d  ::  z1=%d,  z2=%d  ", z, z1, z2);
 	if (z < 0) z = 0;
 	if (z < Z_THRESHOLD) { //	if ( !touched ) {

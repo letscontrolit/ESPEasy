@@ -74,6 +74,8 @@ public:
 	 */
 	bool push(T value);
 
+	bool set(IT index, T value);
+
 	/**
 	 * Removes an element from the beginning of the buffer.
 	 * *WARNING* Calling this operation on an empty buffer has an unpredictable behaviour.

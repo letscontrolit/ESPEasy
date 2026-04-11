@@ -123,6 +123,14 @@ More uses of these system variables can be seen in the rules section and formula
 
        Does not have the ``+xm`` and ``-xh`` calculations that ``%sunrise%`` and ``%sunset%`` support.
      - 
+   * - ``%latitude%``
+     - 50.12345
+     - Configured Latitude (decimal degrees) as used for calculating the sunrise and sunset times.
+     - 
+   * - ``%longitude%``
+     - 50.12345
+     - Configured Longitude (decimal degrees) as used for calculating the sunrise and sunset times.
+     - 
    * - ``%lcltime_am%``
      - 2020-03-16 1:23:54 AM
      - Current date/time (AM/PM) if NTP is enabled (YYYY-MM-DD hh:mm:ss xM).
@@ -139,6 +147,10 @@ More uses of these system variables can be seen in the rules section and formula
      - 5 (05)
      - Current second (ss). ``%syssec%`` omits leading zeros.
      - Yes
+   * - ``%syssec_d%``
+     - 83682
+     - Seconds since midnight.
+     -
    * - ``%sysday%`` (``%sysday_0%``)
      - 7 (07)
      - Current day of month (DD). ``%sysday%`` omits leading zeros.
@@ -171,11 +183,21 @@ More uses of these system variables can be seen in the rules section and formula
      - +0100
      - System time-zone offset from UTC, using ``[+|-]HHMM`` format, + or -, hours and minutes both in 2 digits, zero-prefixed. Does take DST into account.
      - 
+   * - ``%systzoffset_s%``
+     - 3600
+     - System time-zone offset from UTC in seconds, + or -. Does take DST into account. (Added: 2025/06/01, not available in Limited builds)
+     - 
    * - ``%unixtime%``
      - 1521731277
      - Unix time (seconds since epoch, 1970-01-01 00:00:00)
        
        Example: 1521731277 = 2018-03-22 15:07:57
+     - Yes
+   * - ``%unixtime_lcl%``
+     - 1748813303
+     - Local Unix time (seconds since epoch, 1970-01-01 00:00:00) with Time-zone and DST applied. (Added: 2025/06/01, not available in Limited builds)
+       
+       Example: 1748813303 = 2025-06-01 21:28:32
      - Yes
    * - ``%uptime%``
      - 3244
@@ -343,6 +365,12 @@ The conversion always outputs a string, but not all of these can be converted ba
    * - mm to imperial: ``%c_mm2imp%(1900)``
      - mm to imperial: ``6'2.8"``
      - Millimeter to imperial units
+   * - Degrees to radians: ``%c_d2r%(22)``
+     - Degrees to radians: ``0.38``
+     - Degrees to radians
+   * - Radians to degrees: ``%c_r2d%(0.357)``
+     - Radians to degrees: ``20.45``
+     - Radians to degrees
    * - Mins to days: ``%c_m2day%(1900)``
      - Mins to days: ``1.32``
      - Minutes expressed in days
@@ -358,15 +386,127 @@ The conversion always outputs a string, but not all of these can be converted ba
    * - Secs to dhms: ``%c_s2dhms%(100000)``
      - Secs to dhms: ``1d03:46:40``
      - Seconds to days/hours/minutes/seconds notation
-   * - To HEX: ``%c_2hex%(100000)``
-     - To HEX: ``186A0``
-     - Convert integer value to HEX notation.  (Added: 2020/10/07)
+   * - Unix Timestamp to date/time: ``%c_ts2date%(1748813303)``
+     - Unix Timestamp to date/time: ``2025-06-01 21:28:32``
+     - Unix Timestamp to year-month-day hour:minute:second notation (Default ``%unixtime%`` is UTC)
+     
+       Optionally takes a second argument <> 0 to use AM/PM time notation.
+
+       ``%c_ts2date%(1748813303, 1)`` -> ``2025-06-01 09:28:32 PM``
+   * - Unix Timestamp to weekday: ``%c_ts2wday%(%unixtime_lcl%)``
+     - Unix Timestamp to weekday: ``2``
+     - Return the numeric weekday (dow) index, 0..6 (sun..sat), so it can be used with f.e. ``{lookup:%c_ts2wday%(%unixtime_lcl%):3:sunmontuewedthufrisat}`` to show a 3 character day name, that can easily be translated into your desired languag, and the length adjusted as desired.
+   * - Unix Timestamp to ISO date/time: ``%c_ts2date%(1748813303)``
+     - Unix Timestamp to ISO date/time: ``2025-06-01T21:28:32Z``
+     - Unix Timestamp to ISO 8601 yyyy-mm-ddThh:mm:ss[Z|+hh:mm] in 24 hour notation optionally including the system time-zone offset (Default ``%unixtime%`` is UTC)
+
+       Can optionally include the system configured Time-zone offset, as that's not available from a timestamp. Timestamp values should then be based on ``%unixtime_lcl%``.
+   * - Random(L,H): ``%c_random%(0, 1)``
+     - Random(L,H): ``0.123``
+     - Generate random number in the given range L ... H (Added: 2025/04/29)
+   * - To HEX: ``%c_2hex%(100000[,<minDigits>])``
+     - To HEX: ``186A0`` or with minDigits = 6 ``0186A0``
+     - Convert integer value to HEX notation.  (Added: 2020/10/07, 2025/05/25: optional minDigits)
    * - Unit to IP: ``%c_u2ip%(%unit%,0)``
      - Unit to IP: ``192.168.1.67``
      - Convert a (known) unit number to its IP Address. (Added: 2020/11/08)
 
        f_opt: for invalid IP: 0 = ``(IP unset)`` 1 = (empty string)  2 = ``0``
+   * - Unit to Name: ``%c_uname%(%unit%)``
+     - Unit to Name: ``ESP32DualR3``
+     - Convert to the name of the remote unit. (Added: 2024/04/21)
+   * - Unit to Age: ``%c_uage%(%unit%)``
+     - Unit to Age: ``11``
+     - Convert to the age (last received update via P2P) of the remote unit in seconds. (Added: 2024/04/21)
 
+       If the unit is not in the list of known nodes, then ``-1`` is returned.
+   * - Unit to Build: ``%c_ubuild%(%unit%)``
+     - Unit to Build: ``20812``
+     - Convert to the buildnr of the remote unit. (Added: 2024/04/21)
+   * - Unit to Build-string: ``%c_ubuildstr%(%unit%)``
+     - Unit to Build-string: ``20240421``
+     - Convert to the buildnr converted to date-format of the remote unit. (Added: 2024/04/21)
+
+       The date-format for buildnrs is available since build 20200, introduced on 2022-08-18. For older builds, the actual buildnumber is returned, f.e. 20117.
+   * - Unit to Load: ``%c_uload%(%unit%)``
+     - Unit to Load: ``27.34``
+     - Convert to the load percentage of the remote unit. (Added: 2024/04/21)
+   * - Unit to ESP-Type: ``%c_utype%(%unit%)``
+     - Unit to ESP-Type: ``33``
+     - Convert to the ESP-Type (numeric) of the remote unit. (Added: 2024/04/21)
+
+       This is the list of recognized types:
+
+       *  1 : ESP Easy (ESP8266)
+       * 17 : ESP Easy Mega (ESP8266)
+       * 33 : ESP Easy 32
+       * 34 : ESP Easy 32-S2
+       * 35 : ESP Easy 32-C3
+       * 36 : ESP Easy 32-S3
+       * 37 : ESP Easy 32-C2
+       * 38 : ESP Easy 32-H2
+       * 39 : ESP Easy 32-C6
+       *  5 : RPI Easy
+       * 65 : Arduino Easy
+       * 81 : Nano Easy
+   * - Unit to ESP-Type-string: ``%c_utypestr%(%unit%)``
+     - Unit to ESP-Type-string: ``ESP Easy 32``
+     - Convert to the ESP-Type (string) of the remote unit. (Added: 2024/04/21)
+
+       See ``%c_utype%(<unit>)`` for the names and numbers used.
+   * - Check if numeric value (test:'123'): ``%c_isnum%(test)``
+     - Check if numeric value (test:'123'): ``1``
+     - Check if the content of a string variable (set with ``LetStr`` command) contains a numeric value. 0 = false, 1 = true
+
+       (Added: 2025/05/25, only available when String Variables feature is included in the build)
+
+   * - Format (testf:'Out $6.2f M$g'): ``%c_strf%(testf,123.45,2)``
+     - Format 1 or 2 values using a format specification.
+     - For formatting values, similar to C ``printf`` function, only supporting floating point formatting specifiers, and using ``$`` instead of the '%' trigger character used by printf.
+     
+       (Added: 2025/05/27, only available when String Variables feature is included in the build)
+
+       Supported format specs: A string variable, containing 1 or 2 format specifiers. This format string must be set using the ``LetStr`` command in a string variable. Or alternatively, a direct format string can be provided, that must *not* be quoted, and *not* contain any commas.
+
+       ``$[flags][width][.precision]specifier``
+
+       ``specifier``:
+
+       * ``f``: Decimal floating point, lowercase
+       * ``F``: Decimal floating point, uppercase
+       * ``e``: Scientific notation (mantissa/exponent), lowercase
+       * ``E``: Scientific notation (mantissa/exponent), uppercase
+       * ``g``: Use the shortest representation, $e or $f
+       * ``G``: Use the shortest representation, $E or $F
+       * ``%``: Output a percent sign (this can also be achieved by using ``%%`` where the '%' is intended)
+
+       ``flags``:
+
+       * ``-``: Left-justify within the given field width
+       * ``+``: Forces to preceed the result with a plus or minus sign (+ or -) even for positive numbers
+       * ``#``: Forces the output to contain a decimal point even if no more digits follow
+       * ``0``: Left-pads the number with zeroes (0) instead of spaces when padding is specified
+
+       ``width``:
+
+       * ``(number)``: Minimum number of characters to be output, padded with spaces unless ``0`` flag is specified, not truncated when the output is wider
+
+       ``.precision``:
+
+       * ``.(number)``: For ``e``, ``E``, ``f`` and ``F`` specifiers, this is the number of digits to be printed after the decimal point (by default, this is 6). 
+       * ``.(number)``: For ``g`` and ``G`` specifiers, this is the maximum number of significant digits to be printed.
+
+       (This is a summary of the C ``printf`` specification, adjusted for this function. Other printf features are not, or only partially, supported!)
+
+       **Examples**:
+
+       Output a value with minimal decimals: ``$g`` This can be used for output of integer values as all ESPEasy internal values are of floating point nature.
+
+       Output a temperature with 1 decimal: ``$.1f {D}C``
+
+       Output humidity with a percent sign: ``$g$% RH`` (remove spaces to preserve some display-space)
+
+       .. warning:: If more than 2, or not listed here, format specifiers are used in the format string, then this may cause unexpected behavior of the ESP, because of out-of-bounds memory access!
 
 Task Formulas
 ^^^^^^^^^^^^^

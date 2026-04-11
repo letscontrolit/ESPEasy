@@ -42,7 +42,7 @@ struct ControllerCache_struct {
 
   void   resetpeek();
 
-  bool   peekDataAvailable() const;
+  bool   peekDataAvailable();
 
   int    getPeekFilePos(int& peekFileNr) const;
 

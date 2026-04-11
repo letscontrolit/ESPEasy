@@ -8,6 +8,9 @@
 // ###################################### stefan@clumsy.ch      ##########################################
 // #######################################################################################################
 
+/** Changelog:
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery
+ */
 
 # define PLUGIN_114
 # define PLUGIN_ID_114          114
@@ -27,18 +30,15 @@ boolean Plugin_114(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_114;
-      Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_TRIPLE;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = 3;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].PluginStats        = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_114;
+      dev.Type           = DEVICE_TYPE_I2C;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_TRIPLE;
+      dev.FormulaOption  = true;
+      dev.ValueCount     = 3;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
+      dev.PluginStats    = true;
       break;
     }
 
@@ -55,6 +55,17 @@ boolean Plugin_114(uint8_t function, struct EventStruct *event, String& string)
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[2], PSTR(PLUGIN_VALUENAME3_114));
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_UV_ONLY);
+      event->Par2 = static_cast<int>(Sensor_VType::SENSOR_TYPE_UV_ONLY);
+      event->Par3 = static_cast<int>(Sensor_VType::SENSOR_TYPE_UV_INDEX_ONLY);
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
 
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
@@ -83,11 +94,11 @@ boolean Plugin_114(uint8_t function, struct EventStruct *event, String& string)
     {
       {
         const __FlashStringHelper *optionsMode2[] = {
-          F("50 ms"),
-          F("100 ms"),
-          F("200 ms"),
-          F("400 ms"),
-          F("800 ms"),
+          F("50"),
+          F("100"),
+          F("200"),
+          F("400"),
+          F("800"),
         };
         const int optionValuesMode2[] = {
           P114_IT_50,
@@ -96,17 +107,20 @@ boolean Plugin_114(uint8_t function, struct EventStruct *event, String& string)
           P114_IT_400,
           P114_IT_800,
         };
-        addFormSelector(F("Integration Time"), F("it"), 5, optionsMode2, optionValuesMode2, PCONFIG(1));
+        constexpr size_t optionCount = NR_ELEMENTS(optionValuesMode2);
+        const FormSelectorOptions selector(optionCount, optionsMode2, optionValuesMode2);
+        selector.addFormSelector(F("Integration Time"), F("it"), PCONFIG(1));
+        addUnit(F("ms"));
       }
 
       {
-        const __FlashStringHelper *optionsMode3[2];
-        optionsMode3[0] = F("Normal Dynamic");
-        optionsMode3[1] = F("High Dynamic");
-        int optionValuesMode3[2];
-        optionValuesMode3[0] = 0;
-        optionValuesMode3[1] = 1;
-        addFormSelector(F("Dynamic Setting"), F("hd"), 2, optionsMode3, optionValuesMode3, PCONFIG(2));
+        const __FlashStringHelper *optionsMode3[] = {
+          F("Normal Dynamic"),
+          F("High Dynamic") }
+        ;
+        constexpr size_t optionCount = NR_ELEMENTS(optionsMode3);
+        const FormSelectorOptions selector(optionCount, optionsMode3);
+        selector.addFormSelector(F("Dynamic Setting"), F("hd"), PCONFIG(2));
       }
 
       success = true;
@@ -125,12 +139,7 @@ boolean Plugin_114(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P114_data_struct(PCONFIG(0), PCONFIG(1), PCONFIG(2) == 1));
-      P114_data_struct *P114_data =
-        static_cast<P114_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-      success = (nullptr != P114_data);
-
+      success = initPluginTaskData(event->TaskIndex, new (std::nothrow) P114_data_struct(PCONFIG(0), PCONFIG(1), PCONFIG(2) == 1));
       break;
     }
 
@@ -143,35 +152,22 @@ boolean Plugin_114(uint8_t function, struct EventStruct *event, String& string)
         return success;
       }
 
-      float UVA     = 0.0f;
-      float UVB     = 0.0f;
-      float UVIndex = 0.0f;
+      float UVA{};
+      float UVB{};
+      float UVIndex{};
 
       if (P114_data->read_sensor(UVA, UVB, UVIndex)) {
-        UserVar[event->BaseVarIndex]     = UVA;
-        UserVar[event->BaseVarIndex + 1] = UVB;
-        UserVar[event->BaseVarIndex + 2] = UVIndex;
+        UserVar.setFloat(event->TaskIndex, 0, UVA);
+        UserVar.setFloat(event->TaskIndex, 1, UVB);
+        UserVar.setFloat(event->TaskIndex, 2, UVIndex);
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          String log;
-
-          if (log.reserve(130)) {
-            String log = F("VEML6075: Address: 0x");
-            log += String(PCONFIG(0), HEX);
-            log += F(" / Integration Time: ");
-            log += PCONFIG(1);
-            log += F(" / Dynamic Mode: ");
-            log += PCONFIG(2);
-            log += F(" / divisor: ");
-            log += String(1 << (PCONFIG(1) - 1));
-            log += F(" / UVA: ");
-            log += UserVar[event->BaseVarIndex];
-            log += F(" / UVB: ");
-            log += UserVar[event->BaseVarIndex + 1];
-            log += F(" / UVIndex: ");
-            log += UserVar[event->BaseVarIndex + 2];
-            addLogMove(LOG_LEVEL_INFO, log);
-          }
+          addLogMove(LOG_LEVEL_INFO, strformat(F("VEML6075: Address: 0x%02x / Integration Time: %d / "
+                                                 "Dynamic Mode: %d / divisor: %d / UVA: %.2f / UVB: %.2f / UVIndex: %.2f"),
+                                               PCONFIG(0), PCONFIG(1), PCONFIG(2), 1 << (PCONFIG(1) - 1),
+                                               UserVar[event->BaseVarIndex],
+                                               UserVar[event->BaseVarIndex + 1],
+                                               UserVar[event->BaseVarIndex + 2]));
         }
 
         success = true;

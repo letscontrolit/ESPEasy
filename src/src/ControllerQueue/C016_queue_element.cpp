@@ -27,14 +27,14 @@ C016_queue_element::C016_queue_element(C016_queue_element&& other)
 }
 
 C016_queue_element::C016_queue_element(const struct EventStruct *event, uint8_t value_count) :
-  unixTime(event->timestamp),
+  unixTime(event->timestamp_sec),
   sensorType(event->sensorType),
   valueCount(value_count)
 {
   _controller_idx = event->ControllerIndex;
   _taskIndex      = event->TaskIndex;
   values.clear();
-  const TaskValues_Data_t* data = UserVar.getTaskValues_Data(event->TaskIndex);
+  const TaskValues_Data_t* data = UserVar.getRawTaskValues_Data(event->TaskIndex);
 
   if (data != nullptr) {
     for (uint8_t i = 0; i < value_count; ++i) {

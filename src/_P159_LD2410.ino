@@ -5,6 +5,11 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2025-06-14 tonhuisman: Add support for Custom Value Type per task value
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported yet for LD24xx)
+ * 2024-12-09 tonhuisman: Fix: Reduced max sensitivity to configure to 101, as the max value that vill be reported by the sensor is 100,
+ *                        so checking up to 100 was an off-by-one error.
+ * 2024-10-09 tonhuisman: Extend sensitivity max. value to 110 (experimental, was 100)
  * 2023-10-29 tonhuisman: Rework processing, allow Interval = 0, as now the events will be generated when a value changes,
  *                        but at most once per 100 msec, to not overload the ESP. Fixed the LD2410 library to work correctly
  *                        with the event-driven scheduler model of ESPEasy, instead of the continuous loop() run of Arduino
@@ -74,18 +79,19 @@ boolean Plugin_159(uint8_t function, struct EventStruct *event, String& string)
     {
       // This case defines the device characteristics
 
-      Device[++deviceCount].Number           = PLUGIN_ID_159;
-      Device[deviceCount].Type               = DEVICE_TYPE_SERIAL;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_SINGLE;
-      Device[deviceCount].ValueCount         = 4;
-      Device[deviceCount].OutputDataType     = Output_Data_type_t::Simple;
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].TimerOptional      = true;
-      Device[deviceCount].PluginStats        = true;
-      Device[deviceCount].ExitTaskBeforeSave = false; // Enable calling PLUGIN_WEBFORM_SAVE on the instantiated object
+      auto& dev = Device[++deviceCount];
+      dev.Number             = PLUGIN_ID_159;
+      dev.Type               = DEVICE_TYPE_SERIAL;
+      dev.VType              = Sensor_VType::SENSOR_TYPE_SINGLE;
+      dev.ValueCount         = 4;
+      dev.OutputDataType     = Output_Data_type_t::Simple;
+      dev.FormulaOption      = true;
+      dev.SendDataOption     = true;
+      dev.TimerOption        = true;
+      dev.TimerOptional      = true;
+      dev.PluginStats        = true;
+      dev.ExitTaskBeforeSave = false; // Enable calling PLUGIN_WEBFORM_SAVE on the instantiated object
+      dev.CustomVTypeVar     = true;
 
       break;
     }
@@ -131,6 +137,22 @@ boolean Plugin_159(uint8_t function, struct EventStruct *event, String& string)
 
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER || FEATURE_CUSTOM_TASKVAR_VTYPE
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      #  if FEATURE_CUSTOM_TASKVAR_VTYPE
+
+      for (uint8_t i = 0; i < event->Par5; ++i) {
+        event->ParN[i] = ExtraTaskSettings.getTaskVarCustomVType(i);  // Custom/User selection
+      }
+      #  else // if FEATURE_CUSTOM_TASKVAR_VTYPE
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_NONE); // Not yet supported
+      #  endif // if FEATURE_CUSTOM_TASKVAR_VTYPE
+      success = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER || FEATURE_CUSTOM_TASKVAR_VTYPE
 
     case PLUGIN_WEBFORM_SHOW_CONFIG:
     {
@@ -208,7 +230,7 @@ boolean Plugin_159(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       addFormSelector_YesNo(F("Engineering mode"), F("eng"), P159_GET_ENGINEERING_MODE, true);
-      addFormNote(F("When changing this setting the page will be reloaded"));
+      // addFormNote(F("When changing this setting the page will be reloaded"));
 
       addFormCheckBox(F("Generate Events only when changed"), F("diff"), P159_GET_UPDATE_DIFF_ONLY);
 
@@ -241,18 +263,15 @@ boolean Plugin_159(uint8_t function, struct EventStruct *event, String& string)
     }
     case PLUGIN_INIT:
     {
-      int8_t rxPin               = serialHelper_getRxPin(event);
-      int8_t txPin               = serialHelper_getTxPin(event);
-      ESPEasySerialPort portType = serialHelper_getSerialType(event);
+      const int8_t rxPin               = serialHelper_getRxPin(event);
+      const int8_t txPin               = serialHelper_getTxPin(event);
+      const ESPEasySerialPort portType = serialHelper_getSerialType(event);
 
       // Create the P159_data_struct object that will do all the sensor interaction
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P159_data_struct(portType,
-                                                                               rxPin,
-                                                                               txPin,
-                                                                               P159_GET_ENGINEERING_MODE == 1));
-      P159_data_struct *P159_data = static_cast<P159_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-      success = nullptr != P159_data;
+      success = initPluginTaskData(event->TaskIndex, new (std::nothrow) P159_data_struct(portType,
+                                                                                         rxPin,
+                                                                                         txPin,
+                                                                                         P159_GET_ENGINEERING_MODE == 1));
       addLog(LOG_LEVEL_INFO, concat(F("P159 : INIT, success: "), success ? 1 : 0));
 
       break;

@@ -1,0 +1,25 @@
+.. csv-table::
+    :header: "Config value", "Information"
+    :widths: 20, 30
+
+    "
+    ``[<taskname>#noisefloor]``
+    ","
+    Returns the current set Noise Floor threshold of the sensor.
+    "
+    "
+    ``[<taskname>#watchdog]``
+    ","
+    Returns the current set Watchdog threshold of the sensor.
+    "
+    "
+    ``[<taskname>#srej]``
+    ","
+    Returns the current set Spike Rejection threshold of the sensor.
+    "
+    "
+    ``[<taskname>#gain]``
+    ","
+    Returns the current active AFE gain factor of the sensor. (``0.30x`` ... ``3.34x``)
+    "
+

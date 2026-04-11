@@ -3,6 +3,13 @@
 
 # include "src/PluginStructs/P049_data_struct.h"
 
+/** Changelog:
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery
+ * 2025-01-03 tonhuisman: Small code size reductions
+ * 2024-01-04 tonhuisman: Add Device[].ExitBeforeSeve = false so ABC can be enabled during settings save
+ * 2024-01-04 tonhuisman: Start changelog, most recent change on top
+ */
+
 /*
 
    This plug in is written by Dmitry (rel22 ___ inbox.ru)
@@ -42,18 +49,16 @@ boolean Plugin_049(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_049;
-      Device[deviceCount].Type               = DEVICE_TYPE_SERIAL;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_TRIPLE;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = 3;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].PluginStats        = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number             = PLUGIN_ID_049;
+      dev.Type               = DEVICE_TYPE_SERIAL;
+      dev.VType              = Sensor_VType::SENSOR_TYPE_TRIPLE;
+      dev.FormulaOption      = true;
+      dev.ValueCount         = 3;
+      dev.SendDataOption     = true;
+      dev.TimerOption        = true;
+      dev.PluginStats        = true;
+      dev.ExitTaskBeforeSave = false;
       break;
     }
 
@@ -70,6 +75,16 @@ boolean Plugin_049(uint8_t function, struct EventStruct *event, String& string)
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[2], PSTR(PLUGIN_VALUENAME3_049));
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_CO2_ONLY);
+      event->Par2 = static_cast<int>(Sensor_VType::SENSOR_TYPE_TEMP_ONLY);
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
 
     case PLUGIN_GET_DEVICEGPIONAMES:
     {
@@ -88,9 +103,10 @@ boolean Plugin_049(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       {
-        const __FlashStringHelper *options[2] = { F("Normal"), F("ABC disabled") };
-        const int optionValues[2]             = { P049_ABC_enabled, P049_ABC_disabled };
-        addFormSelector(F("Auto Base Calibration"), F("abcdisable"), 2, options, optionValues, PCONFIG(0));
+        const __FlashStringHelper *options[] = { F("Normal"), F("ABC disabled") };
+        const int optionValues[]             = { P049_ABC_enabled, P049_ABC_disabled };
+        const FormSelectorOptions selector(NR_ELEMENTS(options), options, optionValues);
+        selector.addFormSelector(F("Auto Base Calibration"), F("abcdisable"), PCONFIG(0));
       }
       {
         const __FlashStringHelper *filteroptions[5] =
@@ -101,7 +117,8 @@ boolean Plugin_049(uint8_t function, struct EventStruct *event, String& string)
           PLUGIN_049_FILTER_FAST,
           PLUGIN_049_FILTER_MEDIUM,
           PLUGIN_049_FILTER_SLOW };
-        addFormSelector(F("Filter"), F("filter"), 5, filteroptions, filteroptionValues, PCONFIG(1));
+        const FormSelectorOptions selector(NR_ELEMENTS(filteroptions), filteroptions, filteroptionValues);
+        selector.addFormSelector(F("Filter"), F("filter"), PCONFIG(1));
       }
       P049_html_show_stats(event);
 
@@ -154,15 +171,15 @@ boolean Plugin_049(uint8_t function, struct EventStruct *event, String& string)
       if (nullptr == P049_data) {
         return success;
       }
-      bool expectReset  = false;
-      unsigned int ppm  = 0;
-      signed int   temp = 0;
-      unsigned int s    = 0;
-      float u           = 0;
+      bool expectReset   = false;
+      unsigned int ppm   = 0;
+      signed int   temp  = 0;
+      unsigned int s     = 0;
+      float u            = 0;
+      const bool mustLog = loglevelActiveFor(LOG_LEVEL_INFO);
 
       if (P049_data->read_ppm(ppm, temp, s, u)) {
-        const bool mustLog = loglevelActiveFor(LOG_LEVEL_INFO);
-        String     log;
+        String log;
 
         if (mustLog) {
           log = F("MHZ19: ");
@@ -191,10 +208,10 @@ boolean Plugin_049(uint8_t function, struct EventStruct *event, String& string)
           const int filterValue = PCONFIG(1);
 
           if (Plugin_049_Check_and_ApplyFilter(UserVar[event->BaseVarIndex], ppm, s, filterValue, log)) {
-            UserVar[event->BaseVarIndex]     = ppm;
-            UserVar[event->BaseVarIndex + 1] = temp;
-            UserVar[event->BaseVarIndex + 2] = u;
-            success                          = true;
+            UserVar.setFloat(event->TaskIndex, 0, ppm);
+            UserVar.setFloat(event->TaskIndex, 1, temp);
+            UserVar.setFloat(event->TaskIndex, 2, u);
+            success = true;
           } else {
             success = false;
           }
@@ -217,29 +234,26 @@ boolean Plugin_049(uint8_t function, struct EventStruct *event, String& string)
             P049_data->ABC_MustApply = false;
           }
         }
-
+#ifndef BUILD_NO_DEBUG
         if (mustLog) {
           // Log values in all cases
-          log += F("PPM value: ");
-          log += ppm;
-          log += F(" Temp/S/U values: ");
-          log += temp;
-          log += '/';
-          log += s;
-          log += '/';
-          log += u;
-          addLogMove(LOG_LEVEL_INFO, log);
+          addLog(LOG_LEVEL_INFO,
+                 strformat(F("PPM value: %d Temp/S/U values: %d/%d/%.2f"),
+                           ppm, temp, s, u));
         }
+#endif
         break;
 
         // #ifdef ENABLE_DETECTION_RANGE_COMMANDS
         // Sensor responds with 0x99 whenever we send it a measurement range adjustment
       } else if (P049_data->receivedCommandAcknowledgement(expectReset))  {
+#ifndef BUILD_NO_DEBUG
         addLog(LOG_LEVEL_INFO, F("MHZ19: Received command acknowledgment! "));
 
         if (expectReset) {
           addLog(LOG_LEVEL_INFO, F("Expecting sensor reset..."));
         }
+#endif
         success = false;
         break;
 
@@ -247,11 +261,12 @@ boolean Plugin_049(uint8_t function, struct EventStruct *event, String& string)
 
         // log verbosely anything else that the sensor reports
       } else {
-        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          String log = F("MHZ19: Unknown response:");
-          log += P049_data->getBufferHexDump();
-          addLogMove(LOG_LEVEL_INFO, log);
+#ifndef BUILD_NO_DEBUG
+        if (mustLog) {
+          addLog(LOG_LEVEL_INFO,
+                 concat(F("MHZ19: Unknown response:"), P049_data->getBufferHexDump()));
         }
+#endif
 
         // Check for stable reads and allow unstable reads the first 3 minutes after reset.
         if ((P049_data->nrUnknownResponses > 10) && P049_data->initTimePassed) {

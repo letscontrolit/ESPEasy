@@ -84,16 +84,10 @@ boolean Plugin_079(uint8_t function, struct EventStruct *event, String& string)
 
   switch (function) {
     case PLUGIN_DEVICE_ADD: {
-      Device[++deviceCount].Number           = PLUGIN_ID_079;
-      Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_NONE;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = false;
-      Device[deviceCount].ValueCount         = 0;
-      Device[deviceCount].SendDataOption     = false;
-      Device[deviceCount].TimerOption        = false;
+      auto& dev = Device[++deviceCount];
+      dev.Number   = PLUGIN_ID_079;
+      dev.Type     = DEVICE_TYPE_I2C;
+      dev.VType    = Sensor_VType::SENSOR_TYPE_NONE;
       break;
     }
 
@@ -130,7 +124,9 @@ boolean Plugin_079(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(P079_BoardType::WemosMotorshield),
           static_cast<int>(P079_BoardType::LolinMotorshield)
         };
-        addFormSelector(F("Motor Shield Type"), F("shield_type"), 2, options, indices, SHIELD_VER_PCFG_P079);
+        constexpr size_t optionCount = NR_ELEMENTS(indices);
+        const FormSelectorOptions selector(optionCount, options, indices);
+        selector.addFormSelector(F("Motor Shield Type"), F("shield_type"), SHIELD_VER_PCFG_P079);
       }
 
       if (Plugin_079_MotorShield_type == P079_BoardType::WemosMotorshield) {
@@ -274,19 +270,19 @@ boolean Plugin_079(uint8_t function, struct EventStruct *event, String& string)
             parse_error  = true;
           }
 
-          if (paramDirection.equalsIgnoreCase(F("Stop"))) {
+          if (equals(paramDirection, F("stop"))) {
             motor_dir = MOTOR_STATES::MOTOR_STOP;
           }
-          else if (paramDirection.equalsIgnoreCase(F("Forward"))) {
+          else if (equals(paramDirection, F("forward"))) {
             motor_dir = MOTOR_STATES::MOTOR_FWD;
           }
-          else if ((paramDirection.equalsIgnoreCase(F("Backward")))) {
+          else if (equals(paramDirection, F("backward"))) {
             motor_dir = MOTOR_STATES::MOTOR_REV;
           }
-          else if (paramDirection.equalsIgnoreCase(F("Standby"))) {
+          else if (equals(paramDirection, F("standby"))) {
             motor_dir = MOTOR_STATES::MOTOR_STBY;
           }
-          else if (paramDirection.equalsIgnoreCase(F("Brake"))) {
+          else if (equals(paramDirection, F("brake"))) {
             motor_dir = MOTOR_STATES::MOTOR_BRAKE;
           }
           else {
@@ -315,7 +311,7 @@ boolean Plugin_079(uint8_t function, struct EventStruct *event, String& string)
             if ((motor_speed < 0) || (motor_speed > 100)) {
               motor_speed = 100;
               # ifdef VERBOSE_P079
-              addLog(LOG_LEVEL_INFO, ModeStr + F(": Warning, invalid speed: Now using 100"));
+              addLog(LOG_LEVEL_INFO, strformat(F("%s: Warning, invalid speed: Now using 100"), ModeStr));
               # endif // ifdef VERBOSE_P079
             }
           }
@@ -391,19 +387,14 @@ boolean Plugin_079(uint8_t function, struct EventStruct *event, String& string)
             }
           }
         }
-
+#ifndef BUILD_NO_DEBUG
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          ModeStr += F(": Addr=");
-          ModeStr += formatToHex(I2C_ADDR_PCFG_P079);
-          ModeStr += F(": Mtr=");
-          ModeStr += paramMotor;
-          ModeStr += F(", Dir=");
-          ModeStr += paramDirection;
-          ModeStr += F(", Spd=");
-          ModeStr += paramSpeed;
-          addLogMove(LOG_LEVEL_INFO, ModeStr);
+          addLog(LOG_LEVEL_INFO,
+                 strformat(F("%s: Addr=0x%02x: Mtr=%s, Dir=%s, Spd=%s"),
+                           ModeStr.c_str(), I2C_ADDR_PCFG_P079, paramMotor.c_str(),
+                           paramDirection.c_str(), paramSpeed.c_str()));
         }
-
+#endif
         success = true;
       }
       break;

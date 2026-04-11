@@ -7,6 +7,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery
  * 2023-02-25 tonhuisman: Make Interval optional, and also disable the added feature P013_FEATURE_INTERVALEVENT, as setting Interval
  *                        to 0 is effectively the same. (Small code reduction)
  *                        Changed second value label for Combined mode to State
@@ -32,7 +33,7 @@
 # include "src/PluginStructs/P013_data_struct.h"
 
 // map of sensors
-std::map<unsigned int, std::shared_ptr<NewPing> > P_013_sensordefs;
+std::map<unsigned int, std::unique_ptr<NewPing> > P_013_sensordefs;
 
 // Forward declarations
 float                      Plugin_013_read(struct EventStruct *event);
@@ -47,17 +48,17 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number         = PLUGIN_ID_013;
-      Device[deviceCount].Type             = DEVICE_TYPE_DUAL;
-      Device[deviceCount].VType            = Sensor_VType::SENSOR_TYPE_SINGLE;
-      Device[deviceCount].Ports            = 0;
-      Device[deviceCount].FormulaOption    = true;
-      Device[deviceCount].ValueCount       = 1;
-      Device[deviceCount].SendDataOption   = true;
-      Device[deviceCount].TimerOption      = true;
-      Device[deviceCount].TimerOptional    = true;
-      Device[deviceCount].GlobalSyncOption = true;
-      Device[deviceCount].PluginStats      = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_013;
+      dev.Type           = DEVICE_TYPE_DUAL;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_SINGLE;
+      dev.FormulaOption  = true;
+      dev.ValueCount     = 1;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
+      dev.TimerOptional  = true;
+      dev.PluginStats    = true;
+      dev.setPin1Direction(gpio_direction::gpio_output);
 
       break;
     }
@@ -101,6 +102,16 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
     }
     # endif // if P013_FEATURE_COMBINED_MODE
 
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_DISTANCE_ONLY);
+      event->Par2 = static_cast<int>(Sensor_VType::SENSOR_TYPE_SWITCH);
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
+
     case PLUGIN_SET_DEFAULTS:
     {
       P013_FILTER_SIZE = P013_DEFAULT_FILTER_SIZE;
@@ -130,13 +141,9 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
           F("Combined"),
           # endif // if P013_FEATURE_COMBINED_MODE
         };
-        addFormSelector(F("Mode"), F("pmode"),
-                        # if P013_FEATURE_COMBINED_MODE
-                        3
-                        # else // if P013_FEATURE_COMBINED_MODE
-                        2
-                        # endif // if P013_FEATURE_COMBINED_MODE
-                        , optionsOpMode, optionValuesOpMode, P013_OPERATINGMODE);
+        constexpr size_t optionCount = NR_ELEMENTS(optionValuesOpMode);
+        const FormSelectorOptions selector(optionCount, optionsOpMode, optionValuesOpMode);
+        selector.addFormSelector(F("Mode"), F("pmode"), P013_OPERATINGMODE);
       }
 
       if ((P013_OPERATINGMODE == OPMODE_STATE)
@@ -154,21 +161,25 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
       addUnit(strUnit);
 
       {
-        const int optionValuesUnit[2] = { UNIT_CM, UNIT_INCH };
+        const int optionValuesUnit[] = { UNIT_CM, UNIT_INCH };
         const __FlashStringHelper *optionsUnit[] {
           F("Metric"),
           F("Imperial"),
         };
-        addFormSelector(F("Unit"), F("pUnit"), 2, optionsUnit, optionValuesUnit, P013_MEASURINGUNIT);
+        constexpr size_t optionCount = NR_ELEMENTS(optionValuesUnit);
+        const FormSelectorOptions selector(optionCount, optionsUnit, optionValuesUnit);
+        selector.addFormSelector(F("Unit"), F("pUnit"), P013_MEASURINGUNIT);
       }
 
       {
-        const int optionValuesFilter[2] = { FILTER_NONE, FILTER_MEDIAN };
+        const int optionValuesFilter[] = { FILTER_NONE, FILTER_MEDIAN };
         const __FlashStringHelper *optionsFilter[] {
           F("None"),
           F("Median"),
         };
-        addFormSelector(F("Filter"), F("fltr"), 2, optionsFilter, optionValuesFilter, P013_FILTERTYPE);
+        constexpr size_t optionCount = NR_ELEMENTS(optionValuesFilter);
+        const FormSelectorOptions selector(optionCount, optionsFilter, optionValuesFilter);
+        selector.addFormSelector(F("Filter"), F("fltr"),  P013_FILTERTYPE);
       }
 
       // enable filtersize option if filter is used,
@@ -240,47 +251,34 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
 
       // create sensor instance and add to std::map
       P_013_sensordefs.erase(event->TaskIndex);
-      P_013_sensordefs[event->TaskIndex] = std::shared_ptr<NewPing>(new NewPing(P013_TRIGGER_PIN,
+      P_013_sensordefs[event->TaskIndex] = std::unique_ptr<NewPing>(new NewPing(P013_TRIGGER_PIN,
                                                                                 P013_ECHO_PIN,
                                                                                 max_distance_cm,
                                                                                 P013_TRIGGER_WIDTH));
       success = true;
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        String log = F("ULTRASONIC : TaskNr: ");
-        log += event->TaskIndex + 1;
-        log += F(" TrigPin: ");
-        log += P013_TRIGGER_PIN;
-        log += F(" IRQ_Pin: ");
-        log += P013_ECHO_PIN;
+        String log = strformat(F("ULTRASONIC : TaskNr: %d TrigPin: %d IRQ_Pin: %d "), event->TaskIndex + 1, P013_TRIGGER_PIN, P013_ECHO_PIN);
 
         if (nullptr != P_013_sensordefs[event->TaskIndex]) { // Initialization successful
           # if P013_EXTENDED_LOG
-          log += F(" width [usec]: ");
-          log += P013_TRIGGER_WIDTH;
-          log += F(" max dist ");
-          log += (P013_MEASURINGUNIT == UNIT_CM) ? F("[cm]: ") : F("[inch]: ");
-          log += P013_MAX_DISTANCE;
-
-          log += F(" max echo: ");
-          log += P_013_sensordefs[event->TaskIndex]->getMaxEchoTime();
-          log += F(" Filter: ");
+          log += strformat(F("width [usec]: %d max dist %s %d max echo: %d Filter: "), P013_TRIGGER_WIDTH,
+                           String((P013_MEASURINGUNIT == UNIT_CM) ? F("[cm]: ") : F("[inch]: ")).c_str(), P013_MAX_DISTANCE,
+                           P_013_sensordefs[event->TaskIndex]->getMaxEchoTime());
 
           if (P013_FILTERTYPE == FILTER_NONE) {
             log += F("none");
           }
           else if (P013_FILTERTYPE == FILTER_MEDIAN) {
-            log += F("Median size: ");
-            log += P013_FILTER_SIZE;
+            log += strformat(F("Median size: %d"), P013_FILTER_SIZE);
           } else {
             log += F("invalid!");
           }
 
-          log += F(" nr_tasks: ");
-          log += P_013_sensordefs.size();
+          log += strformat(F(" nr_tasks: %d"), P_013_sensordefs.size());
           # endif // if P013_EXTENDED_LOG
         } else {
-          log    += F(" CONSTRUCTOR FAILED!");
+          log    += F("CONSTRUCTOR FAILED!");
           success = false; // Initialization failed
         }
         addLogMove(LOG_LEVEL_INFO, log);
@@ -303,21 +301,17 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
           # endif // if P013_FEATURE_COMBINED_MODE
           ) {
         const float value = Plugin_013_read(event);
-        UserVar[event->BaseVarIndex] = value;
+        UserVar.setFloat(event->TaskIndex, 0, value);
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          String log = F("ULTRASONIC : TaskNr: ");
-          log += event->TaskIndex + 1;
+          String log = strformat(F("ULTRASONIC : TaskNr: %d "), event->TaskIndex + 1);
           # if P013_EXTENDED_LOG
-          log += F(" Distance: ");
-          log += formatUserVarNoCheck(event->TaskIndex, 0);
-          log += ' ';
-          log += (P013_MEASURINGUNIT == UNIT_CM) ? F("cm") : F("inch");
+          log += strformat(F("Distance: %s %s"), formatUserVarNoCheck(event, 0).c_str(),
+                           String((P013_MEASURINGUNIT == UNIT_CM) ? F("cm") : F("inch")).c_str());
           # endif // if P013_EXTENDED_LOG
 
           if (essentiallyEqual(value, NO_ECHO)) {
-            log += F(" Error: ");
-            log += Plugin_013_getErrorStatusString(event);
+            log += concat(F("Error: "), Plugin_013_getErrorStatusString(event));
           }
 
           addLogMove(LOG_LEVEL_INFO, log);
@@ -352,21 +346,18 @@ boolean                    Plugin_013(uint8_t function, struct EventStruct *even
 
         if (state != switchstate[event->TaskIndex]) {
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-            String log = F("ULTRASONIC : TaskNr: ");
-            log += event->TaskIndex + 1;
+            String log = strformat(F("ULTRASONIC : TaskNr: %d "), event->TaskIndex + 1);
 
             if (value != NO_ECHO) {
-              log += F(" state: ");
-              log += state;
+              log += concat(F("state: "), state);
             } else {
-              log += F(" Error: ");
-              log += Plugin_013_getErrorStatusString(event);
+              log += concat(F("Error: "), Plugin_013_getErrorStatusString(event));
             }
             addLogMove(LOG_LEVEL_INFO, log);
           }
           switchstate[event->TaskIndex] = state;
-          UserVar[event->BaseVarIndex]  = state;
-          event->sensorType             = Sensor_VType::SENSOR_TYPE_SWITCH;
+          UserVar.setFloat(event->TaskIndex, 0, state);
+          event->sensorType = Sensor_VType::SENSOR_TYPE_SWITCH;
           sendData(event);
         }
       }
@@ -447,11 +438,11 @@ const __FlashStringHelper* Plugin_013_getErrorStatusString(struct EventStruct *e
     }
 
     case NewPing::STATUS_ECHO_START_TIMEOUT_50ms: { // 4
-      return F("Error, no echo start whithin 50 ms");
+      return F("Error, no echo start within 50 ms");
     }
 
     case NewPing::STATUS_ECHO_START_TIMEOUT_DISTANCE: { // 5
-      return F("Error, no echo start whithin time for max. distance");
+      return F("Error, no echo start within time for max. distance");
     }
 
     case NewPing::STATUS_MAX_DISTANCE_EXCEEDED: { // 3

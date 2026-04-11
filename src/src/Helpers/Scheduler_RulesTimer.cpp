@@ -25,7 +25,7 @@ static bool checkRulesTimerIndex(unsigned int timerIndex) {
   return true;
 }
 
-bool ESPEasy_Scheduler::setRulesTimer(unsigned long msecFromNow, unsigned int timerIndex, int recurringCount) {
+bool ESPEasy_Scheduler::setRulesTimer(unsigned long msecFromNow, unsigned int timerIndex, int recurringCount, bool startImmediately) {
   if (!checkRulesTimerIndex(timerIndex)) { return false; }
 
   const RulesTimerID timerID(timerIndex);
@@ -33,7 +33,7 @@ bool ESPEasy_Scheduler::setRulesTimer(unsigned long msecFromNow, unsigned int ti
   const systemTimerStruct timer_data(recurringCount, msecFromNow, timerIndex);
 
   systemTimers[timerID.mixed_id] = timer_data;
-  setNewTimerAt(timerID, millis() + msecFromNow);
+  setNewTimerAt(timerID, millis() + (startImmediately ? 10 : msecFromNow));
   return true;
 }
 
@@ -86,7 +86,9 @@ bool ESPEasy_Scheduler::pause_rules_timer(unsigned long timerIndex) {
   auto it = systemTimers.find(timerID.mixed_id);
 
   if (it == systemTimers.end()) {
+    #ifndef LIMIT_BUILD_SIZE
     addLog(LOG_LEVEL_INFO, F("TIMER: no timer set"));
+    #endif
     return false;
   }
 
@@ -94,7 +96,9 @@ bool ESPEasy_Scheduler::pause_rules_timer(unsigned long timerIndex) {
 
   if (msecTimerHandler.getTimerForId(timerID.mixed_id, timer)) {
     if (it->second.isPaused()) {
+      #ifndef LIMIT_BUILD_SIZE
       addLog(LOG_LEVEL_INFO, F("TIMER: already paused"));
+      #endif
     } else {
       // Store remainder of interval
       const long timeLeft = timePassedSince(timer) * -1;

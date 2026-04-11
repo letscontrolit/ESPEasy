@@ -191,8 +191,9 @@ protected:
 
 public:
 
-  CC1101(int8_t CSpin   = PIN_SPI_SS,
-         int8_t MISOpin = MISO);
+  CC1101(int8_t    CSpin   = PIN_SPI_SS,
+         int8_t    MISOpin = MISO,
+         SPIClass& spi     = SPI);
   virtual ~CC1101();
 
   // spi
@@ -230,6 +231,7 @@ private:
 
   int8_t _CSpin = PIN_SPI_SS;
   int8_t _MISOpin;
+  SPIClass& _spi = SPI;
 
 protected:
 

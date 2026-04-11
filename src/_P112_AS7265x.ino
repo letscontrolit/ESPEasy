@@ -10,9 +10,14 @@
 // based on this library: https://github.com/sparkfun/SparkFun_AS7265x_Arduino_Library
 // this code is based on 29 Mar 2019-03-29 version of the above library
 //
-// 2023-04-28 tonhuisman: Remove [Development] tag
-// 2021-03-29 heinemannj: Initial commit
-//
+
+/** Changelog:
+ * 2025-06-14 tonhuisman: Add support for Custom Value Type per task value
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported yet for AS7265x)
+ *                        Update changelog
+ * 2023-04-28 tonhuisman: Remove [Development] tag
+ * 2021-03-29 heinemannj: Initial commit
+ */
 
 # include "src/PluginStructs/P112_data_struct.h"
 
@@ -32,20 +37,17 @@ boolean Plugin_112(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_112;
-      Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_TRIPLE;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].ValueCount         = 3;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = false;
-      Device[deviceCount].DecimalsOnly       = true;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].OutputDataType     = Output_Data_type_t::All;
-      Device[deviceCount].PluginStats        = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_112;
+      dev.Type           = DEVICE_TYPE_I2C;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_TRIPLE;
+      dev.ValueCount     = 3;
+      dev.DecimalsOnly   = true;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
+      dev.OutputDataType = Output_Data_type_t::All;
+      dev.PluginStats    = true;
+      dev.CustomVTypeVar = true;
       break;
     }
 
@@ -62,6 +64,22 @@ boolean Plugin_112(uint8_t function, struct EventStruct *event, String& string)
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[2], PSTR(PLUGIN_VALUENAME3_112));
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER || FEATURE_CUSTOM_TASKVAR_VTYPE
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      #  if FEATURE_CUSTOM_TASKVAR_VTYPE
+
+      for (uint8_t i = 0; i < event->Par5; ++i) {
+        event->ParN[i] = ExtraTaskSettings.getTaskVarCustomVType(i);  // Custom/User selection
+      }
+      #  else // if FEATURE_CUSTOM_TASKVAR_VTYPE
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_NONE); // Not yet supported
+      #  endif // if FEATURE_CUSTOM_TASKVAR_VTYPE
+      success = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER || FEATURE_CUSTOM_TASKVAR_VTYPE
 
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
@@ -110,7 +128,7 @@ boolean Plugin_112(uint8_t function, struct EventStruct *event, String& string)
         // sensor.setGain(AS7265X_GAIN_64X);
         const __FlashStringHelper *optionsMode[] = {
           F("1x"),
-          F("3.7x (default)"),
+          F("3.7x"),
           F("16x"),
           F("64x"),
         };
@@ -120,19 +138,22 @@ boolean Plugin_112(uint8_t function, struct EventStruct *event, String& string)
           AS7265X_GAIN_16X,
           AS7265X_GAIN_64X,
         };
-        addFormSelector(F("Gain"), F("Gain"), 4, optionsMode, optionValuesMode, PCONFIG_LONG(0));
+        constexpr size_t optionCount = NR_ELEMENTS(optionValuesMode);
+        FormSelectorOptions selector(optionCount, optionsMode, optionValuesMode);
+        selector.default_index = AS7265X_GAIN_37X;
+        selector.addFormSelector(F("Gain"), F("Gain"), PCONFIG_LONG(0));
       }
       {
         // Integration cycles from 0 (2.78ms) to 255 (711ms)
         // sensor.setIntegrationCycles(49); //Default: 50*2.8ms = 140ms per reading
         // sensor.setIntegrationCycles(1);  //2*2.8ms = 5.6ms per reading
         const __FlashStringHelper *optionsMode2[] = {
-          F("2.8 ms"),
-          F("28 ms"),
-          F("56 ms"),
-          F("140 ms"),
-          F("280 ms"),
-          F("711 ms (default)"),
+          F("2.8"),
+          F("28"),
+          F("56"),
+          F("140"),
+          F("280"),
+          F("711"),
         };
         const int optionValuesMode2[] = {
           0,
@@ -142,9 +163,15 @@ boolean Plugin_112(uint8_t function, struct EventStruct *event, String& string)
           99,
           254,
         };
-        addFormSelector(F("Integration Time"), F("IntegrationTime"), 6, optionsMode2, optionValuesMode2, PCONFIG_LONG(1));
+        constexpr size_t optionCount = NR_ELEMENTS(optionValuesMode2);
+        FormSelectorOptions selector(optionCount, optionsMode2, optionValuesMode2);
+        selector.default_index = 254; // "711"
+        selector.addFormSelector(F("Integration Time"), F("IntegrationTime"), PCONFIG_LONG(1));
+        addUnit(F("ms"));
       }
+      # ifndef BUILD_NO_DEBUG
       addFormNote(F("Raw Readings shall not reach the upper limit of 65535 (Sensor Saturation)."));
+      # endif // ifndef BUILD_NO_DEBUG
 
       addFormSubHeader(F("LED settings"));
       addFormCheckBox(F("Blue"), PCONFIG_LABEL(0), PCONFIG(0));
@@ -155,10 +182,10 @@ boolean Plugin_112(uint8_t function, struct EventStruct *event, String& string)
         // sensor.setIndicatorCurrent(AS7265X_INDICATOR_CURRENT_LIMIT_4MA);
         // sensor.setIndicatorCurrent(AS7265X_INDICATOR_CURRENT_LIMIT_8MA); //Default
         const __FlashStringHelper *optionsMode3[] = {
-          F("1 mA"),
-          F("2 mA"),
-          F("4 mA"),
-          F("8 mA (default)"),
+          F("1"),
+          F("2"),
+          F("4"),
+          F("8"),
         };
         const int optionValuesMode3[] = {
           AS7265X_INDICATOR_CURRENT_LIMIT_1MA,
@@ -166,10 +193,16 @@ boolean Plugin_112(uint8_t function, struct EventStruct *event, String& string)
           AS7265X_INDICATOR_CURRENT_LIMIT_4MA,
           AS7265X_INDICATOR_CURRENT_LIMIT_8MA,
         };
-        addFormSelector(EMPTY_STRING, PCONFIG_LABEL(1), 4, optionsMode3, optionValuesMode3, PCONFIG(1));
+        constexpr size_t optionCount = NR_ELEMENTS(optionValuesMode3);
+        FormSelectorOptions selector(optionCount, optionsMode3, optionValuesMode3);
+        selector.default_index = AS7265X_INDICATOR_CURRENT_LIMIT_8MA;
+        selector.addFormSelector(EMPTY_STRING, PCONFIG_LABEL(1), PCONFIG(1));
+        addUnit(F("mA"));
       }
       addHtml(F(" Current Limit"));
+      # ifndef BUILD_NO_DEBUG
       addFormNote(F("Activate Status LEDs only for debugging purpose."));
+      # endif // ifndef BUILD_NO_DEBUG
 
       {
         // White LED has max forward current of 120mA
@@ -178,10 +211,10 @@ boolean Plugin_112(uint8_t function, struct EventStruct *event, String& string)
         // sensor.setBulbCurrent(AS7265X_LED_CURRENT_LIMIT_50MA, AS7265x_LED_WHITE);   //Allowed
         // sensor.setBulbCurrent(AS7265X_LED_CURRENT_LIMIT_100MA, AS7265x_LED_WHITE);  //Allowed
         const __FlashStringHelper *optionsMode4[] = {
-          F("12.5 mA (default)"),
-          F("25 mA"),
-          F("50 mA"),
-          F("100 mA"),
+          F("12.5"),
+          F("25"),
+          F("50"),
+          F("100"),
         };
         const int optionValuesMode4[] = {
           AS7265X_LED_CURRENT_LIMIT_12_5MA,
@@ -189,7 +222,11 @@ boolean Plugin_112(uint8_t function, struct EventStruct *event, String& string)
           AS7265X_LED_CURRENT_LIMIT_50MA,
           AS7265X_LED_CURRENT_LIMIT_100MA,
         };
-        addFormSelector(F("White"), PCONFIG_LABEL(2), 4, optionsMode4, optionValuesMode4, PCONFIG(2));
+        constexpr size_t optionCount = NR_ELEMENTS(optionValuesMode4);
+        FormSelectorOptions selector(optionCount, optionsMode4, optionValuesMode4);
+        selector.default_index = AS7265X_LED_CURRENT_LIMIT_12_5MA;
+        selector.addFormSelector(F("White"), PCONFIG_LABEL(2), PCONFIG(2));
+        addUnit(F("mA"));
       }
       addHtml(F(" Current Limit"));
 
@@ -200,16 +237,20 @@ boolean Plugin_112(uint8_t function, struct EventStruct *event, String& string)
         // sensor.setBulbCurrent(AS7265X_LED_CURRENT_LIMIT_50MA, AS7265x_LED_IR);      //Allowed
         // sensor.setBulbCurrent(AS7265X_LED_CURRENT_LIMIT_100MA, AS7265x_LED_IR-bad); //Not allowed
         const __FlashStringHelper *optionsMode5[] = {
-          F("12.5 mA (default)"),
-          F("25 mA"),
-          F("50 mA"),
+          F("12.5"),
+          F("25"),
+          F("50"),
         };
         const int optionValuesMode5[] = {
           AS7265X_LED_CURRENT_LIMIT_12_5MA,
           AS7265X_LED_CURRENT_LIMIT_25MA,
           AS7265X_LED_CURRENT_LIMIT_50MA,
         };
-        addFormSelector(F("IR"), PCONFIG_LABEL(3), 3, optionsMode5, optionValuesMode5, PCONFIG(3));
+        constexpr size_t optionCount = NR_ELEMENTS(optionValuesMode5);
+        FormSelectorOptions selector(optionCount, optionsMode5, optionValuesMode5);
+        selector.default_index = AS7265X_LED_CURRENT_LIMIT_12_5MA;
+        selector.addFormSelector(F("IR"), PCONFIG_LABEL(3), PCONFIG(3));
+        addUnit(F("mA"));
       }
 
       {
@@ -218,9 +259,13 @@ boolean Plugin_112(uint8_t function, struct EventStruct *event, String& string)
         // sensor.setBulbCurrent(AS7265X_LED_CURRENT_LIMIT_25MA, AS7265x_LED_UV-bad);  //Not allowed
         // sensor.setBulbCurrent(AS7265X_LED_CURRENT_LIMIT_50MA, AS7265x_LED_UV-bad);  //Not allowed
         // sensor.setBulbCurrent(AS7265X_LED_CURRENT_LIMIT_100MA, AS7265x_LED_UV-bad); //Not allowed
-        const __FlashStringHelper *optionsMode6[] = { F("12.5 mA (default)") };
+        const __FlashStringHelper *optionsMode6[] = { F("12.5") };
         const int optionValuesMode6[]             = { AS7265X_LED_CURRENT_LIMIT_12_5MA };
-        addFormSelector(F("UV"), PCONFIG_LABEL(4), 1, optionsMode6, optionValuesMode6, PCONFIG(4));
+        constexpr size_t optionCount              = NR_ELEMENTS(optionValuesMode6);
+        FormSelectorOptions selector(optionCount, optionsMode6, optionValuesMode6);
+        selector.default_index = AS7265X_LED_CURRENT_LIMIT_12_5MA;
+        selector.addFormSelector(F("UV"), PCONFIG_LABEL(4), PCONFIG(4));
+        addUnit(F("mA"));
       }
       addFormNote(F("Control Gain and Integration Time after any change to avoid Sensor Saturation!"));
 
@@ -239,13 +284,13 @@ boolean Plugin_112(uint8_t function, struct EventStruct *event, String& string)
       PCONFIG_LONG(0) = getFormItemInt(F("Gain"));
       PCONFIG_LONG(1) = getFormItemInt(F("IntegrationTime"));
       PCONFIG(0)      = isFormItemChecked(PCONFIG_LABEL(0));
-      PCONFIG(1)      = getFormItemInt(PCONFIG_LABEL(1));
-      PCONFIG(2)      = getFormItemInt(PCONFIG_LABEL(2));
-      PCONFIG(3)      = getFormItemInt(PCONFIG_LABEL(3));
-      PCONFIG(4)      = getFormItemInt(PCONFIG_LABEL(4));
-      PCONFIG(5)      = isFormItemChecked(PCONFIG_LABEL(5));
-      PCONFIG(6)      = isFormItemChecked(PCONFIG_LABEL(6));
-      success         = true;
+
+      for (int i = 1; i <= 4; ++i) {
+        PCONFIG(i) = getFormItemInt(PCONFIG_LABEL(i));
+      }
+      PCONFIG(5) = isFormItemChecked(PCONFIG_LABEL(5));
+      PCONFIG(6) = isFormItemChecked(PCONFIG_LABEL(6));
+      success    = true;
       break;
     }
 
@@ -281,25 +326,13 @@ boolean Plugin_112(uint8_t function, struct EventStruct *event, String& string)
           P112_data->sensor.setBulbCurrent(PCONFIG(4), AS7265x_LED_UV);
 
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-            String log = F("AS7265X: AMS Device Type: 0x");
-            log += P112_data->sensor.getDeviceType();
-            addLogMove(LOG_LEVEL_INFO, log);
-
-            log  = F("AS7265X: AMS Hardware Version: 0x");
-            log += P112_data->sensor.getHardwareVersion();
-            addLogMove(LOG_LEVEL_INFO, log);
-
-            log  = F("AS7265X: AMS Major Firmware Version: 0x");
-            log += P112_data->sensor.getMajorFirmwareVersion();
-            addLogMove(LOG_LEVEL_INFO, log);
-
-            log  = F("AS7265X: AMS Patch Firmware Version: 0x");
-            log += P112_data->sensor.getPatchFirmwareVersion();
-            addLogMove(LOG_LEVEL_INFO, log);
-
-            log  = F("AS7265X: AMS Build Firmware Version: 0x");
-            log += P112_data->sensor.getBuildFirmwareVersion();
-            addLogMove(LOG_LEVEL_INFO, log);
+            addLogMove(LOG_LEVEL_INFO, strformat(
+                         F("AS7265X: AMS Device Type: 0x%X HW ver: 0x%X FW ver: %X.%X.%X"),
+                         P112_data->sensor.getDeviceType(),
+                         P112_data->sensor.getHardwareVersion(),
+                         P112_data->sensor.getMajorFirmwareVersion(),
+                         P112_data->sensor.getPatchFirmwareVersion(),
+                         P112_data->sensor.getBuildFirmwareVersion()));
           }
 
           success = true;
@@ -382,10 +415,10 @@ boolean Plugin_112(uint8_t function, struct EventStruct *event, String& string)
             case 18:
               queueEvent(event->TaskIndex, 940, PCONFIG(6) ? P112_data->sensor.getCalibratedL() : P112_data->sensor.getL());
 
-              P112_data->MeasurementStatus     = 0; // FIXME Why is this only executed for case 18?
-              UserVar[event->BaseVarIndex + 2] = 0;
+              P112_data->MeasurementStatus = 0; // FIXME Why is this only executed for case 18?
+              UserVar.setFloat(event->TaskIndex, 2, 0);
 
-              if (PCONFIG(0))                       // Blue Status LED
+              if (PCONFIG(0))                   // Blue Status LED
               {
                 P112_data->sensor.enableIndicator();
               }
@@ -402,7 +435,7 @@ boolean Plugin_112(uint8_t function, struct EventStruct *event, String& string)
 
       if (P112_data->MeasurementStatus == 0) {
         if (P112_data->begin()) {
-          UserVar[event->BaseVarIndex + 2] = 1;
+          UserVar.setFloat(event->TaskIndex, 2, 1);
 
           P112_data->sensor.disableIndicator(); // Blue Status LEDs Off
 
@@ -422,8 +455,8 @@ boolean Plugin_112(uint8_t function, struct EventStruct *event, String& string)
           //
           P112_data->sensor.setMeasurementMode(AS7265X_MEASUREMENT_MODE_6CHAN_ONE_SHOT);
 
-          UserVar[event->BaseVarIndex + 0] = P112_data->sensor.getTemperature();
-          UserVar[event->BaseVarIndex + 1] = P112_data->sensor.getTemperatureAverage();
+          UserVar.setFloat(event->TaskIndex, 0, P112_data->sensor.getTemperature());
+          UserVar.setFloat(event->TaskIndex, 1, P112_data->sensor.getTemperatureAverage());
         }
       }
       success = true;

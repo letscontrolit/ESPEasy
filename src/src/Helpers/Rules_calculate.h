@@ -10,7 +10,11 @@
 #define STACK_SIZE 10 // was 50
 #define TOKEN_MAX 20
 
+#if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+#define TOKEN_LENGTH 40
+#else
 #define TOKEN_LENGTH 25
+#endif
 #define OPERATOR_STACK_SIZE 32
 
 enum class CalculateReturnCode : uint8_t{
@@ -49,13 +53,28 @@ enum class UnaryOperator : uint8_t {
   ArcCos,    // Arc Cosine (radian)
   ArcCos_d,  // Arc Cosine (degree)
   ArcTan,    // Arc Tangent (radian)
-  ArcTan_d   // Arc Tangent (degree)
+  ArcTan_d,  // Arc Tangent (degree)
+  Map,       // Map (value, lowFrom, highFrom, lowTo, highTo) (not really unary...)
+  MapC,      // Map (value, lowFrom, highFrom, lowTo, highTo) and clamp to lowTo/highTo
 };
+
+#if !defined(LIMIT_BUILD_SIZE) && FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
+enum class BinaryOperator : uint8_t {
+  
+  ArcTan2 = 220u,   // Arc Tangent 2 (radian)
+  ArcTan2_d, // Arc Tangent 2 (degrees)
+  FMod, // Float-modulo
+};
+#endif // if !defined(LIMIT_BUILD_SIZE) && FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
 
 void   preProcessReplace(String      & input,
                          UnaryOperator op);
 bool   angleDegree(UnaryOperator op);
 const __FlashStringHelper* toString(UnaryOperator op);
+#if !defined(LIMIT_BUILD_SIZE) && FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
+bool   angleDegree(BinaryOperator op);
+const __FlashStringHelper* toString(BinaryOperator op);
+#endif // if !defined(LIMIT_BUILD_SIZE) && FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
 
 class RulesCalculate_t {
 private:
@@ -68,11 +87,18 @@ private:
   // @param oc  Previous character
   // @param c   Current character
   bool                is_number(char oc,
-                                char c);
+                                char c,
+                                char pc);
 
   bool                is_operator(char c);
 
   bool                is_unary_operator(char c);
+
+  #if !defined(LIMIT_BUILD_SIZE) && FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
+  bool                is_binary_operator(char c);
+  #endif // if !defined(LIMIT_BUILD_SIZE) && FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
+
+  bool                is_quinary_operator(char c);
 
   CalculateReturnCode push(ESPEASY_RULES_FLOAT_TYPE value);
 
@@ -85,20 +111,34 @@ private:
   ESPEASY_RULES_FLOAT_TYPE apply_unary_operator(char   op,
                               ESPEASY_RULES_FLOAT_TYPE first);
 
+  #if !defined(LIMIT_BUILD_SIZE) && FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
+  ESPEASY_RULES_FLOAT_TYPE apply_binary_operator(char                     op,
+                                                 ESPEASY_RULES_FLOAT_TYPE first,
+                                                 ESPEASY_RULES_FLOAT_TYPE second);
+  #endif // if !defined(LIMIT_BUILD_SIZE) && FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
+
+  ESPEASY_RULES_FLOAT_TYPE apply_quinary_operator(char op, 
+                                                  ESPEASY_RULES_FLOAT_TYPE first,
+                                                  ESPEASY_RULES_FLOAT_TYPE second,
+                                                  ESPEASY_RULES_FLOAT_TYPE third,
+                                                  ESPEASY_RULES_FLOAT_TYPE fourth,
+                                                  ESPEASY_RULES_FLOAT_TYPE fifth);
+
   //  char              * next_token(char *linep);
 
   CalculateReturnCode RPNCalculate(char *token);
 
   // operators
   // precedence   operators         associativity
-  // 3            !                 right to left
+  // 4            !                 right to left
+  // 3            ^                 left to right
   // 2            * / %             left to right
-  // 1            + - ^             left to right
+  // 1            + -               left to right
   int          op_preced(const char c);
 
   bool         op_left_assoc(const char c);
 
-  unsigned int op_arg_count(const char c);
+  // unused: unsigned int op_arg_count(const char c);
 
 public:
 

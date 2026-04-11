@@ -4,7 +4,7 @@
 #include "../../ESPEasy_common.h"
 #if FEATURE_ESPEASY_P2P
 
-#include "../DataStructs/MAC_address.h"
+#include "../../ESPEasy/net/DataStructs/MAC_address.h"
 #include "../DataStructs/NodeStruct.h"
 #include "../DataStructs/NTP_candidate.h"
 
@@ -115,8 +115,8 @@ public:
 
 #endif // ifdef USES_ESPEASY_NOW
 
-  bool getUnixTime(double &unix_time, uint8_t& unit) const {
-    return _ntp_candidate.getUnixTime(unix_time, unit);
+  timeSource_t getUnixTime(double &unix_time, int32_t& wander, uint8_t& unit) const {
+    return _ntp_candidate.getUnixTime(unix_time, wander, unit);
   }
 
 

@@ -13,7 +13,9 @@ Type: |P112_type|
 
 Name: |P112_name|
 
-Status: |P112_status|
+Status ESP32: |P112_status|
+
+Status ESP8266: |P112_status_lb|
 
 GitHub: |P112_github|_
 
@@ -25,6 +27,8 @@ Supported hardware
 ------------------
 
 |P112_usedby|
+
+.. include:: DataAcquisition.repl
 
 .. Commands available
 .. ^^^^^^^^^^^^^^^^^^

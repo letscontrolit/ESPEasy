@@ -13,7 +13,9 @@ Type: |P009_type|
 
 Name: |P009_name|
 
-Status: |P009_status|
+Status ESP32: |P009_status|
+
+Status ESP8266: |P009_status_lb|
 
 GitHub: |P009_github|_
 
@@ -36,6 +38,8 @@ Supported hardware
 .. image:: P009_MCP23017Module.png
 
 The chip can be used on specifically designed hardware, or a generic module can be used. These are available from several sources.
+
+.. include:: MCP23017_rev_d.repl
 
 |P009_usedby|
 
@@ -108,10 +112,9 @@ Advanced event management
 
 * **Use safe button (slower)**: This effectively adds an extra De-bounce delay and sends event value ``4`` when reached.
 
-Data Acquisition
-^^^^^^^^^^^^^^^^
+.. include:: DeviceClass_binary.repl
 
-This group of settings, **Single event with all values**, **Send to Controller** and **Interval** settings are standard available configuration items. Send to Controller is only visible when one or more Controllers are configured.
+.. include:: DataAcquisition.repl
 
 * **Interval** By default, Interval will be set to 60 sec. It is the frequency used to read sensor values and send these to any Controllers configured for this device.
 

@@ -149,9 +149,15 @@
     "
     Dec","
     :red:`Internal`","
-    Decrement the value of variable n (1..INT_MAX) by 1 or an optional value.
+    Decrement the value of variable n (1..INT_MAX), or use a variable name, by 1 or an optional value.
 
-    ``Dec,<n>[,<value>]`` (``value`` = 1 by default)
+    ``Dec,<n|varname>[,<value>]`` (``value`` = 1 by default)
+
+    Examples:
+
+    ``Dec,1,4``
+
+    ``Dec,angle,0.005``
     
     See also ``Let`` and ``Inc``."
     "
@@ -207,6 +213,14 @@
 
     ``ExecuteRules,<filename>``"
     "
+    FactoryReset","
+    :red:`Internal`","
+    Reset config to factory default. Caution, all settings will be lost!
+
+    |changed| 2024-08-10: Renamed ``Reset`` command to ``FactoryReset`` to avoid accidentally wiping the configuration when ``Reboot`` was the intended action...
+
+    ``FactoryReset``"
+    "
     Gateway","
     :red:`Internal`","
     Get or set the gateway configuration
@@ -232,24 +246,50 @@
     :red:`Internal`","
     Run I2C scanner to find connected I2C chips. Output will be sent to the serial port.
 
-    ``I2Cscanner``
+    ``I2Cscanner[,1]``
     
+    Added: 2024-06-14:
+    With the optional debug argument ``1`` provided, the returned I2C status (error) code will be listed for *all* tested I2C addresses.
+
+    Added: 2024-06-14:
+    Scan is performed at the Low I2C speed configured (default 100 kHz). When having an I2C multiplexer configured, all channels of the multiplexer will also be scanned.
+
     Example output:
 
     .. code-block:: none
 
-     4500043 : Info  : Command: i2cscanner
+     >i2cscanner
+     Standard I2C bus
      I2C  : Found 0x3c
      I2C  : Found 0x40
      I2C  : Found 0x5a
+
+     >i2cscanner,1
+     Standard I2C bus
+     I2C  : Error 2 at 0x01
+     I2C  : Error 2 at 0x02
+     I2C  : Error 2 at 0x03
+     ...
+     I2C  : Error 2 at 0x3f
+     I2C  : Found 0x40
+     I2C  : Error 2 at 0x41
+     ...
+     I2C  : Error 2 at 0x7e
+     I2C  : Error 2 at 0x7f
 
     "
     "
     Inc","
     :red:`Internal`","
-    Increment the value of variable n (1..INT_MAX) by 1 or an optional value.
+    Increment the value of variable n (1..INT_MAX), or use a variable name, by 1 or an optional value.
 
-    ``Inc,<n>[,<value>]`` (``value`` = 1 by default)
+    ``Inc,<n|varname>[,<value>]`` (``value`` = 1 by default)
+
+    Example:
+
+    ``Inc,1,0.002``
+
+    ``Inc,border,2``
     
     See also ``Let`` and ``Dec``."
     "
@@ -263,11 +303,29 @@
     
     Example output: ``IP:192.168.10.86(DHCP)``"
     "
+    Latitude","
+    :red:`Internal`","
+    Set the latitude for the unit, that's used when calculation the sunrise/sunset times.
+
+    ``Latitude[,<degrees>]``
+
+    Range: -90 .. 90 (decimal, negative is southern hemisphere)
+
+    When no argument is provided, the current setting is shown.
+
+    See also ``Longitude``."
+    "
     Let","
     :red:`Internal`","
-    Set the value of variable n (1..INT_MAX).
+    Set the value of variable n (1..INT_MAX), or use a variable name.
 
-    ``Let,<n>,<value>``
+    ``Let,<n|varname>,<value>``
+
+    Examples:
+
+    ``Let,1,10.5``
+
+    ``Let,border,3``
     
     See also ``Inc`` and ``Dec``."
     "
@@ -297,6 +355,18 @@
     Display status information about all ports
 
     ``LogPortStatus``"
+    "
+    Longitude","
+    :red:`Internal`","
+    Set the longitude for the unit, that's used when calculation the sunrise/sunset times.
+
+    ``Longitude[,<degrees>]``
+
+    Range: -180 .. 180 (decimal, negative is west of the prime meridian)
+
+    When no argument is provided, the current setting is shown.
+
+    See also ``Latitude``."
     "
     LoopTimerSet
 
@@ -328,6 +398,15 @@
     See also ``TimerSet``.
 
     N.B. the timernr is shared between ``TimerSet`` and ``LoopTimerSet``"
+    "
+    LoopTimerSetAndRun
+    
+    LoopTimerSetAndRun_ms","
+    Set a Loop-Timer using ``LoopTimerSet`` or ``LoopTimerSet_ms`` and immediately run the first iteration.
+
+    If a ``<nr of loops>`` value > 0 is included in the command, that count is decremented by 1 for the first iteration, as expected.
+    
+    Useful for setting a keep-alive timer, and also send the initial keep-alive signal immediately."
     "
     meminfo","
     :red:`Internal`","
@@ -363,6 +442,18 @@
 
     ``Name,<new name>``"
     "
+    Notify","
+    :green:`Rules`","
+    Trigger a notification. Requires the notifier at the numbered index (1..3) to be enabled.
+
+    Optionally include the message body (quoted) and subject (quoted) to be passed. NB: The buzzer doesn't support a message body or subject.
+
+    Syntax: ``Notify,<notifier>[,<message>[,<subject>]]``
+
+    Example:
+
+    ``Notify,1,'The temperature is currently [ds#temp] degrees!','Temperature warning'``"
+    "
     NTPHost[,<host-name_or_ip>]","
     :red:`Internal`","
     Set the name of the NTP-host
@@ -370,6 +461,23 @@
     ``NTPHost,192.168.1.1`` -> Set an IP for the NTP host (local NTP server)
     
     ``NTPHost,""`` or ``NTPHost,`` -> Clear the NTP host so a default host from pool.ntp.org will be used. (As second argument *is* provided but empty.)"
+    "
+    OWScan","
+    :red:`Internal`","
+    Scan for & list 1-wire (One Wire = OW) devices on a GPIO pin.
+
+    Syntax: ``owscan,<rx-pin>[,<txpin>]``
+
+    If no separate TX pin is provided, the RX pin will be used as the TX pin too, as is the normal behavior for 1-wire communication. The separate TX pin is used on a Shelly device when adding the Shelly Temperature add-on (RX = GPIO-0 and TX = GPIO-3).
+
+    Example:
+
+    .. code-block:: none
+
+      >owscan,5
+      01-6e-56-8c-01-00-00-84 [DS1990A]    
+
+    "
     "
     Password","
     :red:`Internal`","
@@ -437,41 +545,65 @@
     Added: 2023-01-15
     "
     "
-    ProvisionConfig","
+    PostToHTTPS","
+    :green:`Rules`","
+    Like ``PostToHTTP`` but using a TLS connection, by default on port 443
+
+    NB: No certificate validation is done!"
+    "
+    Provision,Config","
     :red:`Internal`","
     Fetch ``config.dat`` as configured in the Provisioning configuration (see Settings Archive)
 
-    ``ProvisionConfig``"
+    ``Provision,Config``"
     "
-    ProvisionSecurity","
+    Provision,Security","
     :red:`Internal`","
     Fetch ``security.dat`` as configured in the Provisioning configuration (see Settings Archive)
 
-    ``ProvisionSecurity``"
+    ``Provision,Security``"
     "
-    ProvisionNotification","
+    Provision,DevSecurity","
+    :red:`Internal`","
+    Fetch ``devsecurity.dat`` as configured in the Provisioning configuration (see Settings Archive)
+
+    ``Provision,DevSecurity``"
+    "
+    Provision,Notification","
     :red:`Internal`","
     Fetch ``notification.dat`` as configured in the Provisioning configuration (see Settings Archive)
 
-    ``ProvisionNotification``"
+    ``Provision,Notification``"
     "
-    ProvisionProvision","
+    Provision,Provision","
     :red:`Internal`","
     Fetch ``provisioning.dat`` as configured in the Provisioning configuration (see Settings Archive)
 
-    ``ProvisionProvision``"
+    ``Provision,Provision``"
     "
-    ProvisionRules","
+    Provision,Rules","
     :red:`Internal`","
     Fetch ``rulesN.txt`` as configured in the Provisioning configuration (see Settings Archive)
 
-    ``ProvisionRules,1`` to fetch ``rules1.txt`` "
+    ``Provision,Rules,1`` to fetch ``rules1.txt`` "
+    "
+    Provision,Firmware","
+    :red:`Internal`","
+    Fetch a new firmware binary, and flash it on the unit, as configured in the Provisioning configuration (see Settings Archive)
+
+    ``Provision,Firmware,<url-to-firmware-file>`` to fetch and install the specified .bin file from the specified url."
     "
     Publish","
     :green:`Rules`","
-    Send command using MQTT broker service. Uses the first enabled MQTT Controller.
+    Send command using MQTT broker service. The 'Will Retain' option as configured in the MQTT Controller settings is used. Uses the first enabled MQTT Controller.
 
     ``Publish,<topic>[,<payload>]``"
+    "
+    PublishR","
+    :green:`Rules`","
+    Send command using MQTT broker service, with the MQTT 'Will Retain' flag enabled. Uses the first enabled MQTT Controller.
+
+    ``PublishR,<topic>[,<payload>]``"
     "
     PutToHTTP","
     :green:`Rules`","
@@ -532,6 +664,12 @@
     Added: 2023-04-17
     "
     "
+    PutToHTTPS","
+    :green:`Rules`","
+    Like ``PutToHTTP`` but using a TLS connection, by default on port 443
+
+    NB: No certificate validation is done!"
+    "
     Reboot","
     :red:`Internal`","
     Reboot the ESP
@@ -539,10 +677,9 @@
     ``Reboot``"
     "
     Reset","
-    :red:`Internal`","
-    Reset config to factory default. Caution, all settings will be lost!
-
-    ``Reset``"
+    :gray:`Renamed`","
+    |changed| 2024-08-10: Renamed ``Reset`` command to ``FactoryReset``.
+    "
     "
     Reset Flash Write Counter","
     :red:`Internal`","
@@ -607,11 +744,26 @@
     On completion of the command, the returned status code can be handled in a generated event, f.e. ``http#hostname=404`` for not found error, or ``http#hostname=200`` for success.
     "
     "
+    SendToHTTPS","
+    :green:`Rules`","
+    Like ``SendToHTTP`` but using a TLS connection, by default on port 443
+
+    NB: No certificate validation is done!"
+    "
     SendToUDP","
     :green:`Rules`","
     Send command to other network device using UDP (non-ESP Easy units)
 
     ``SendToUDP,<IP address>,<Portnumber>,<command>``"
+    "
+    SendToUDPMix","
+    :green:`Rules`","
+    Send command to other network device using UDP (non-ESP Easy units) and allow for binary data to be sent.
+
+    ``SendToUDPMix,<IP address>,<Portnumber>,'<content to send>'``
+    
+    ``<content to send>``: Text and/or hex byte(s) (having 0x prefix) that will be sent (nearly) unprocessed. Only the regular variable replacements will be applied before sending the content to the remote device. The content has to be quoted if it contains commas or spaces. When using multiple parts, parts that have spaces or commas must *also* be quoted, and use a different quote character!
+    "
     "
     Settings","
     :red:`Internal`","
@@ -694,6 +846,104 @@
     Set values on a **Dummy Task** (device) and run/execute the task/device, to manually force an update/read of the task.
 
     ``TaskValueSetAndRun,<task nr/task name>,<value nr/value name>,<value/formula>``"
+    "
+    TaskValueSetDerived","
+    :green:`Rules`","
+    Define a Derived value for a task. A Derived value is an extra value, available for the device, that can return a calculated result, based on any variable available in the system.
+
+    ``TaskValueSetDerived,<task nr/task name>,<value name>,<formula>[,<UnitOfMeasure>][,<VType>]`` (Added: 2025/05/31, only available when String Variables feature is included in the build)
+    
+    ``<task nr/task name>``: Either a task number or a task name, for the task to add the derived value to.
+
+    ``<value name>``: A name for the derived value, numbers can not be used, only by name.
+
+    ``<formula>``: The formula to calculate and return as the value for the derived value. The content of the formula should be escaped, else the rules processor will fill the current values, instead of during retrieval of the derived value. Formulas often contain spaces or commas, if so they have to be quoted. See examples.
+
+    ``<UnitOfMeasure>``: An optional Unit of Measure to be appended after the value. Must be quoted if it contains spaces or commas. Not case-sensitive, 'official' value will be used if the Unit of Measure selector is included in the build. (Added:2025/06/08)
+
+    ``<VType>``: The ValueType to be used for MQTT AutoDiscovery. The same values as available in the Value Type combobox on the Device configuration page can be used (not case-sensitive, 'official' value will be used) (Added: 2025/06/19)
+
+    **Examples:**
+
+    In ``On System#Boot Do`` you can add the definition for a derived value, here we have a BME task, where we want to add a DewPoint value and a value for degrees Fahrenheit. All symbols used for addressing conversions, functions and variables, like ``%``, ``{``, ``}``, ``[`` and ``]`` are escaped by using a ``\``.
+
+    ``TaskValueSetDerived,BME,DewPoint,'\%c_dew_th\%(\[BME#temperature\],\[BME#humidity\])'``
+
+    ``TaskValueSetDerived,BME,Fahrenheit,'\%c_c2f\%(\[BME#temperature\])'``
+    
+    In other places, like rules, and in Display tasks, you can now use ``[BME#DewPoint]`` and ``[BME#Fahrenheit]`` to retrieve the freshly calculated result of the formulas. NB: If the value doesn't get updated, most likely the formula wasn't escaped properly, and the *calculated result* is stored in memory, instead of the formula.
+
+    Derived values can be shown on the Devices overview page, and included in the ``/json`` output, by enabling the **Show derived values** checkbox in the device configuration. The value will be included in event generation if the per-task **Event & Log derived values** checkbox is enabled.
+    "
+    "
+    TaskValueSetPresentation","
+    :green:`Rules`","
+    Define a presentation formula for a task. The presentation result will be used when displaying the devices values on the Devices overview page, and as the ``Value`` in the ``/json`` output, as that's used for refreshing the Devices page.
+
+    ``TaskValueSetPresentation,<task nr/task name>,<value name>,<formula>`` (Added: 2025/05/31, only available when String Variables feature is included in the build)
+    
+    ``<task nr/task name>``: Either a task number or a task name, for the task to add the presentation formula to.
+
+    ``<value name>``: The name for the value to apply the presentation on, numbers can not be used, only by name. Existing plugin value names and Derived value names can be used.
+
+    ``<formula>``: The formula to calculate and return as the display for the addressed value. Use the ``%value%`` placeholder to insert the current Value, this can be used multiple times if needed. The content of the formula should probably be escaped, as the rules processor might fill the current values, instead of during retrieval of the presentation value, though this can be used to expand f.e. string variables only once. Formulas often contain spaces or commas, if so they have to be quoted. See examples.
+
+    .. note:: NB: The Presentation set using this command doesn't alter the values retrieved by using the ``[<TaskName>#<ValueName>]`` variable reference in rules!
+
+    **Examples:**
+
+    ``TaskValueSetPresentation,bme,Temperature,'%value% {D}C'``
+
+    ``TaskValueSetPresentation,bme,Humidity,'%value%% RH'``
+
+    ``TaskValueSetPresentation,bme,Pressure,'%value% mBar'``
+
+    ``TaskValueSetPresentation,bme,DewPoint,'%value% {D}C'``
+
+    ``TaskValueSetPresentation,bme,Fahrenheit,'%value% {D}F'``
+
+    Here we define a presentation formula for all values, including the Derived values, of the BME task.
+
+    If the **Show derived values** checkbox is enabled, it could look like this for a BME280 task:
+
+    .. image:: TaskValueSetPresentation_BME280.png
+
+    **Change presentation from numeric to text:**
+
+    For another device, there is a numeric presentation of a climate system that should be presented in readable text:
+
+    In ``On System#Boot Do`` this line is added, setting a string with the mapping from numeric to text:
+
+    ``LetStr,FHC,'Undefined     Fan  &#128168;Heat &#128293;Cool &#129482;' // 14 characters per item``
+
+    And also:
+
+    ``TaskValueSetPresentation,dummy,Run_cycle,'\{lookup:%value%:14:`\[str#FHC\]`\} (%value%)'``
+
+    This uses the ``LookUp`` string function to convert the numeric value to a string, including an unicode smiley, representing the corresponding state. The presentation formula also shows the numeric value for the more technical inclined user.
+
+    .. image:: TaskValueSetPresentation_LookUp.png
+
+    Derived values for Cool, Fan and Heat have also been added as illustration.
+
+    This example also shows that the Derived values (all below Run_cycle) are presented in alphabetic order, not case-sensitive.
+
+    **Present extra values for Sysinfo plugin**:
+
+    In ``On System#Boot Do`` we add:
+
+    ``TaskValueSetDerived,sysinfo,InternalTemp,\[sysinfo#internaltemp\]``
+
+    ``TaskValueSetPresentation,sysinfo,InternalTemp,'%value% {D}C \%c_c2f\%(%value%) {D}F'``
+
+    This adds the Derived value for InternalTemp, that maps to the existing Get Config value ``[SysInfo#InternalTemp]``, but as that value has higher priority than the Derived value, it's not overwritten by the formula for the Derived value, but it still causes this value to be presented on the Devices page (adding a ``TaskValueSetPresentation`` doesn't, as that must also be applied to existing Task values).
+
+    The formula for ``TaskDeviceSetPresentation`` shows both the Celcius and Fahrenheit temperatures, applying the available conversion for that.
+
+    .. image:: TaskValueSetPresentation_Sysinfo.png
+
+    A simplified version of ``TaskValueSetPresentation`` is available, directly in the Formula field of a plugin (if that's available): Place a ``$`` as the first character in the Formula field, and the rest of the field will be used as a Presentation formula. The available space there is quite limited, that's why this ``TaskValueSetPresentation`` command was added. The direct value in the Formula field *overrides* the formula set via this command, though.
+    "
     "
     TimerPause","
     :green:`Rules`","
@@ -785,9 +1035,9 @@
     "
     WifiAPMode","
     :red:`Internal`","
-    Force the unit into AP mode.
+    Force the unit into AP mode or turn AP mode off.
 
-    ``WifiAPMode``"
+    ``WifiAPMode,<on|off|1|0>``"
     "
     WifiConnect","
     :red:`Internal`","

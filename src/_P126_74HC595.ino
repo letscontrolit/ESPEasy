@@ -7,6 +7,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported for Shift registers)
  * 2022-02-27 tonhuisman: Rename plugin title to Output - Shift registers (74HC595)
  * 2022-02-25 tonhuisman: Again rename commands, now using separate prefix shiftout and the rest of the previous command as subcommand.
  * 2022-02-24 tonhuisman: Further update changing 74hc commands to 74hc595.
@@ -79,15 +80,11 @@ boolean Plugin_126(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_126;
-      Device[deviceCount].Type               = DEVICE_TYPE_TRIPLE;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_QUAD;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = false;
-      Device[deviceCount].DecimalsOnly       = false;
-      Device[deviceCount].ValueCount         =
+      auto& dev = Device[++deviceCount];
+      dev.Number     = PLUGIN_ID_126;
+      dev.Type       = DEVICE_TYPE_TRIPLE;
+      dev.VType      = Sensor_VType::SENSOR_TYPE_QUAD;
+      dev.ValueCount =
       # if P126_MAX_CHIP_COUNT <= 4
         1
       # elif P126_MAX_CHIP_COUNT <= 8
@@ -98,9 +95,13 @@ boolean Plugin_126(uint8_t function, struct EventStruct *event, String& string)
         4
       # endif // if P126_MAX_CHIP_COUNT <= 4
       ;
-      Device[deviceCount].SendDataOption = true;
-      Device[deviceCount].TimerOption    = true;
-      Device[deviceCount].TimerOptional  = true;
+      dev.SendDataOption   = true;
+      dev.TimerOption      = true;
+      dev.TimerOptional    = true;
+      dev.HasFormatUserVar = true;
+      dev.setPin1Direction(gpio_direction::gpio_output);
+      dev.setPin2Direction(gpio_direction::gpio_output);
+      dev.setPin3Direction(gpio_direction::gpio_output);
 
       break;
     }
@@ -119,6 +120,15 @@ boolean Plugin_126(uint8_t function, struct EventStruct *event, String& string)
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[3], PSTR(PLUGIN_VALUENAME4_126));
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_NONE); // Not yet supported
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
 
     case PLUGIN_SET_DEFAULTS:
     {
@@ -148,9 +158,7 @@ boolean Plugin_126(uint8_t function, struct EventStruct *event, String& string)
                         P126_CONFIG_CHIP_COUNT,
                         1,                    // Minimum is 1 chip
                         P126_MAX_CHIP_COUNT); // Max chip count
-      String unit = F("Daisychained 1..");
-      unit += P126_MAX_CHIP_COUNT;
-      addUnit(unit);
+      addUnit(concat(F("Daisychained 1.."), P126_MAX_CHIP_COUNT));
 
       addFormNumericBox(F("Offset for display"),
                         F("offset"),
@@ -167,8 +175,10 @@ boolean Plugin_126(uint8_t function, struct EventStruct *event, String& string)
         F("Decimal &amp; hex/bin"),
         F("Decimal only"),
         F("Hex/bin only") };
-      const int outputValues[] = { P126_OUTPUT_BOTH, P126_OUTPUT_DEC_ONLY, P126_OUTPUT_HEXBIN };
-      addFormSelector(F("Output selection"), F("output"), 3, outputOptions, outputValues, P126_CONFIG_FLAGS_GET_OUTPUT_SELECTION);
+      const int outputValues[]     = { P126_OUTPUT_BOTH, P126_OUTPUT_DEC_ONLY, P126_OUTPUT_HEXBIN };
+      constexpr size_t optionCount = NR_ELEMENTS(outputValues);
+      const FormSelectorOptions selector(optionCount, outputOptions, outputValues);
+      selector.addFormSelector(F("Output selection"), F("output"), P126_CONFIG_FLAGS_GET_OUTPUT_SELECTION);
 
       addFormCheckBox(F("Restore Values on warm boot"), F("valrestore"), P126_CONFIG_FLAGS_GET_VALUES_RESTORE);
 
@@ -207,7 +217,7 @@ boolean Plugin_126(uint8_t function, struct EventStruct *event, String& string)
 
       // Reset State_A..D values when changing the offset
       if ((previousOffset != P126_CONFIG_SHOW_OFFSET) && P126_CONFIG_FLAGS_GET_VALUES_RESTORE) {
-        for (uint8_t varNr = 0; varNr < VARS_PER_TASK; varNr++) {
+        for (uint8_t varNr = 0; varNr < VARS_PER_TASK; ++varNr) {
           UserVar.setUint32(event->TaskIndex, varNr, 0u);
         }
         # ifdef P126_DEBUG_LOG
@@ -256,7 +266,6 @@ boolean Plugin_126(uint8_t function, struct EventStruct *event, String& string)
         success = P126_data->plugin_read(event); // Get state
       }
 
-
       break;
     }
 
@@ -296,14 +305,14 @@ boolean Plugin_126(uint8_t function, struct EventStruct *event, String& string)
       {
         String state, label;
         state.reserve(40);
-        String abcd = F("ABCDEFGH");                                                                // In case anyone dares to extend
+        const String abcd = F("ABCDEFGH");                                                          // In case anyone dares to extend
                                                                                                     // VARS_PER_TASK to 8...
         const uint16_t endCheck = P126_CONFIG_CHIP_COUNT + (P126_CONFIG_CHIP_COUNT == 255 ? 3 : 4); // 4(.0) = nr of bytes in an uint32_t.
         const uint16_t maxVar   = min(static_cast<uint8_t>(VARS_PER_TASK), static_cast<uint8_t>(ceil(P126_CONFIG_CHIP_COUNT / 4.0)));
         uint8_t dotInsert;
         uint8_t dotOffset;
 
-        for (uint16_t varNr = 0; varNr < maxVar; varNr++) {
+        for (uint16_t varNr = 0; varNr < maxVar; ++varNr) {
           if (P126_CONFIG_FLAGS_GET_VALUES_DISPLAY) {
             label     = F("Bin");
             state     = F("0b");
@@ -315,9 +324,7 @@ boolean Plugin_126(uint8_t function, struct EventStruct *event, String& string)
             dotInsert = 4;
             dotOffset = 3;
           }
-          label += F(" State_");
-          label += abcd.substring(varNr, varNr + 1);
-          label += ' ';
+          label += strformat(F(" State_%s "), abcd.substring(varNr, varNr + 1).c_str());
 
           label += min(255, P126_CONFIG_SHOW_OFFSET + (4 * varNr) + 4);  // Limited to max 255 chips
           label += '_';
@@ -326,7 +333,7 @@ boolean Plugin_126(uint8_t function, struct EventStruct *event, String& string)
           if ((P126_CONFIG_SHOW_OFFSET + (4 * varNr) + 4) <= endCheck) { // Only show if still in range
             state += P126_ul2stringFixed(UserVar.getUint32(event->TaskIndex, varNr), P126_CONFIG_FLAGS_GET_VALUES_DISPLAY ? BIN : HEX);
 
-            for (uint8_t i = 0; i < 3; i++, dotInsert += dotOffset) {    // Insert readability separators
+            for (uint8_t i = 0; i < 3; ++i, dotInsert += dotOffset) {    // Insert readability separators
               state = state.substring(0, dotInsert) + '.' + state.substring(dotInsert);
             }
             pluginWebformShowValue(event->TaskIndex, VARS_PER_TASK + varNr, label, state, true);

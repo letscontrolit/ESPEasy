@@ -2,8 +2,6 @@
 
 #ifdef USES_P032
 
-#include "../Globals/I2Cdev.h"
-
 
 enum
 {
@@ -88,16 +86,18 @@ void P032_data_struct::readout() {
   D1 = read_adc(MS5xxx_CMD_ADC_D1 + MS5xxx_CMD_ADC_4096);
 
   // calculate 1st order pressure and temperature (MS5611 1st order algorithm)
-  dT                 = D2 - ms5611_prom[5] * static_cast<ESPEASY_RULES_FLOAT_TYPE>(1 << 8);
-  Offset             = ms5611_prom[2] * static_cast<ESPEASY_RULES_FLOAT_TYPE>(1 << 16) + dT * ms5611_prom[4] / static_cast<ESPEASY_RULES_FLOAT_TYPE>(1 << 7);
-  SENS               = ms5611_prom[1] * static_cast<ESPEASY_RULES_FLOAT_TYPE>(1 << 15) + dT * ms5611_prom[3] / static_cast<ESPEASY_RULES_FLOAT_TYPE>(1 << 8);
+  dT     = D2 - ms5611_prom[5] * static_cast<ESPEASY_RULES_FLOAT_TYPE>(1 << 8);
+  Offset = ms5611_prom[2] *
+           static_cast<ESPEASY_RULES_FLOAT_TYPE>(1 << 16) + dT * ms5611_prom[4] / static_cast<ESPEASY_RULES_FLOAT_TYPE>(1 << 7);
+  SENS = ms5611_prom[1] *
+         static_cast<ESPEASY_RULES_FLOAT_TYPE>(1 << 15) + dT * ms5611_prom[3] / static_cast<ESPEASY_RULES_FLOAT_TYPE>(1 << 8);
   ms5611_temperature = (2000 + (dT * ms5611_prom[6]) / static_cast<ESPEASY_RULES_FLOAT_TYPE>(1 << 23));
 
   // perform higher order corrections
   ESPEASY_RULES_FLOAT_TYPE T2 = 0., OFF2 = 0., SENS2 = 0.;
 
   if (ms5611_temperature < 2000) {
-    T2    = dT * dT / static_cast<ESPEASY_RULES_FLOAT_TYPE>(1 << 31);
+    T2 = dT * dT / static_cast<ESPEASY_RULES_FLOAT_TYPE>(1 << 31);
     const ESPEASY_RULES_FLOAT_TYPE temp_20deg = ms5611_temperature - 2000;
     OFF2  = 5.0 * temp_20deg * temp_20deg / static_cast<ESPEASY_RULES_FLOAT_TYPE>(1 << 1);
     SENS2 = 5.0 * temp_20deg * temp_20deg / static_cast<ESPEASY_RULES_FLOAT_TYPE>(1 << 2);
@@ -112,8 +112,8 @@ void P032_data_struct::readout() {
   ms5611_temperature -= T2;
   Offset             -= OFF2;
   SENS               -= SENS2;
-  ms5611_pressure     = (((D1 * SENS) / static_cast<ESPEASY_RULES_FLOAT_TYPE>(1 << 21) - Offset) / static_cast<ESPEASY_RULES_FLOAT_TYPE>(1 << 15));
+  ms5611_pressure     =
+    (((D1 * SENS) / static_cast<ESPEASY_RULES_FLOAT_TYPE>(1 << 21) - Offset) / static_cast<ESPEASY_RULES_FLOAT_TYPE>(1 << 15));
 }
-
 
 #endif // ifdef USES_P032

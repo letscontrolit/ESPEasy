@@ -14,7 +14,9 @@ Type: |P121_type|
 
 Name: |P121_name|
 
-Status: |P121_status|
+Status ESP32: |P121_status|
+
+Status ESP8266: |P121_status_lb|
 
 GitHub: |P121_github|_
 
@@ -54,6 +56,8 @@ Device Settings
 ^^^^^^^^^^^^^^^
 
 * **DeclinationAngle**: In degree. For getting the heading a correction value need to be entered. Determine the value at https://www.magnetic-declination.com/. If set to 0.00 the direction is slightly off.
+
+.. include:: DataAcquisition.repl
 
 Values
 ^^^^^^

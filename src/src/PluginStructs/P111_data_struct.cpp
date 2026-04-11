@@ -2,19 +2,28 @@
 
 #ifdef USES_P111
 
+# include "../ESPEasyCore/ESPEasyRules.h"
 # include "../PluginStructs/P111_data_struct.h"
+# include "../Helpers/PrintToString.h"
+# include "../Helpers/Hardware_SPI.h"
 
 // Needed also here for PlatformIO's library finder as the .h file
 // is in a directory which is excluded in the src_filter
 
 # include <MFRC522.h>
 
-P111_data_struct::P111_data_struct(int8_t csPin,
-                                   int8_t rstPin)
-  : mfrc522(nullptr), _csPin(csPin), _rstPin(rstPin)
+P111_data_struct::P111_data_struct(taskIndex_t taskIndex,
+                                   int8_t  csPin,
+                                   int8_t  rstPin,
+                                   int8_t  irqPin)
+  : mfrc522(nullptr), _csPin(csPin), _rstPin(rstPin), _irqPin(irqPin), _taskIndex(taskIndex)
 {}
 
 P111_data_struct::~P111_data_struct() {
+  if (validGpio(_irqPin)) {
+    detachInterrupt(digitalPinToInterrupt(_irqPin));
+  }
+
   delete mfrc522;
   mfrc522 = nullptr;
 }
@@ -22,30 +31,52 @@ P111_data_struct::~P111_data_struct() {
 void P111_data_struct::init() {
   delete mfrc522;
 
-  mfrc522 = new (std::nothrow) MFRC522(_csPin, _rstPin); // Instantiate a MFRC522
+  # ifdef ESP32
+  auto spi_ptr = getSPIBusForTask(_taskIndex);
+  if (!spi_ptr) { return; }
+  #endif
+
+  // Instantiate a MFRC522
+  mfrc522 = new (std::nothrow) MFRC522(_csPin, _rstPin
+                                       # ifdef ESP32
+                                       , *spi_ptr
+                                       # endif // ifdef ESP32
+                                       );
 
   if (mfrc522 != nullptr) {
-    mfrc522->PCD_Init();                                 // Initialize MFRC522 reader
+    mfrc522->PCD_Init();                                        // Initialize MFRC522 reader
+    mfrc522->PCD_WriteRegister(MFRC522::ComIEnReg, 0b10100000); // enable receiver interrupt
+    mfrc522->PCD_WriteRegister(MFRC522::DivIEnReg, 0x80);       // Set as CMOS output pin
     initPhase = P111_initPhases::Ready;
+
+    if (validGpio(_irqPin)) {
+      pinMode(_irqPin, INPUT);
+
+      attachInterruptArg(
+        digitalPinToInterrupt(_irqPin),
+        reinterpret_cast<void (*)(void *)>(mfrc522_interrupt),
+        this, FALLING);
+    }
   }
 }
 
 /**
  * read status and tag
  */
-uint8_t P111_data_struct::readCardStatus(uint32_t *key,
+uint8_t P111_data_struct::readCardStatus(uint64_t *key,
                                          bool     *removedTag) {
   if (initPhase != P111_initPhases::Ready) { // No read during reset
     return P111_ERROR_RESET_BUSY;
   }
 
   uint8_t error = P111_NO_ERROR;
-  uint8_t uid[] = { 0, 0, 0, 0, 0, 0, 0 };
+  uint8_t uid[] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
   uint8_t uidLength;
 
   error = readPassiveTargetID(uid, &uidLength);
 
-  switch (error) {
+  switch (error)
+  {
     case P111_ERROR_READ: // Read error
     {
       errorCount++;
@@ -78,9 +109,10 @@ uint8_t P111_data_struct::readCardStatus(uint32_t *key,
       return P111_ERROR_RESET_BUSY;
     }
   }
-  uint32_t tmpKey = uid[0];
+  uint64_t tmpKey = uid[0];
 
-  for (uint8_t i = 1; i < 4; i++) {
+  for (uint8_t i = 1; i < uidLength && i < sizeof(uid); i++) {
+    // FIXME TD-er: 10-byte UID will not fit in an uint64_t
     tmpKey <<= 8;
     tmpKey  += uid[i];
   }
@@ -92,9 +124,7 @@ uint8_t P111_data_struct::readCardStatus(uint32_t *key,
 /**
  * Returns last read card (type) name
  */
-String P111_data_struct::getCardName() {
-  return mfrc522->PICC_GetTypeName(mfrc522->PICC_GetType(mfrc522->uid.sak));
-}
+String P111_data_struct::getCardName() { return mfrc522->PICC_GetTypeName(mfrc522->PICC_GetType(mfrc522->uid.sak)); }
 
 /*********************************************************************************************\
 * MFRC522 init
@@ -111,15 +141,20 @@ String P111_data_struct::getCardName() {
 * - phase = Ready
 * - exit true, assuming initialization succeeds
 \*********************************************************************************************/
-bool P111_data_struct::reset(int8_t csPin,
-                             int8_t resetPin) {
+bool   P111_data_struct::reset(int8_t csPin,
+                               int8_t resetPin) {
   if ((resetPin != -1) &&
       (initPhase == P111_initPhases::Ready)) {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log = F("MFRC522: Reset on pin: ");
-      log += resetPin;
-      addLogMove(LOG_LEVEL_INFO, log);
+      addLogMove(
+        LOG_LEVEL_INFO,
+        concat(F("MFRC522: Reset on pin: "), resetPin));
     }
+
+    init();
+    return true;
+
+    // FIXME TD-er: Remove the rest of this function.
     pinMode(resetPin, OUTPUT);
     digitalWrite(resetPin, LOW);
     timeToWait = 100;
@@ -139,7 +174,9 @@ bool P111_data_struct::reset(int8_t csPin,
   pinMode(csPin, OUTPUT);
   digitalWrite(csPin, LOW);
 
-  mfrc522->PCD_Init(csPin, resetPin); // Init MFRC522 module
+  mfrc522->PCD_Init(csPin, resetPin);                         // Init MFRC522 module
+  mfrc522->PCD_WriteRegister(MFRC522::ComIEnReg, 0b10100000); // enable receiver interrupt
+  mfrc522->PCD_WriteRegister(MFRC522::DivIEnReg, 0x80);       // Set as CMOS output pin
 
   // If you set Antenna Gain to Max it will increase reading distance
   mfrc522->PCD_SetAntennaGain(mfrc522->RxGain_max);
@@ -202,18 +239,41 @@ uint8_t P111_data_struct::readPassiveTargetID(uint8_t *uid,
   // Until we support 7 uint8_t PICCs
   addLog(LOG_LEVEL_INFO, F("MFRC522: Scanned PICC's UID"));
 
-  for (uint8_t i = 0; i < 4; i++) { //
+  for (uint8_t i = 0; i < mfrc522->uid.size; i++) { //
     uid[i] = mfrc522->uid.uidByte[i];
   }
-  *uidLength = 4;
+  *uidLength = mfrc522->uid.size;
+
+
+  # ifndef BUILD_NO_DEBUG
+
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG))
+  {
+    PrintToString p2str;
+    mfrc522->PICC_DumpToSerial(&(mfrc522->uid), p2str);
+
+    if (p2str.length()) {
+      addLog(LOG_LEVEL_DEBUG, concat(F("MFRC522: "), p2str.get()));
+    }
+  }
+  # endif // ifndef BUILD_NO_DEBUG
+
+
   mfrc522->PICC_HaltA(); // Stop reading
   return P111_NO_ERROR;
+}
+
+void P111_data_struct::mfrc522_interrupt(P111_data_struct *self)
+{
+  self->_irq_pin_time_micros = getMicros64();
 }
 
 /*********************************************************************************************
  * Handle regular read and reset processing
  ********************************************************************************************/
-bool P111_data_struct::plugin_ten_per_second(struct EventStruct *event) {
+bool P111_data_struct::plugin_ten_per_second(struct EventStruct *event) { return loop(event); }
+
+bool P111_data_struct::loop(struct EventStruct *event) {
   bool success = false;
 
   if (((initPhase == P111_initPhases::ResetDelay1) || // Whichever handler comes first
@@ -225,18 +285,24 @@ bool P111_data_struct::plugin_ten_per_second(struct EventStruct *event) {
     return success;
   }
 
-  counter++;          // This variable replaces a static variable in the original implementation
+  counter++; // This variable replaces a static variable in the original implementation
+  const bool ComIrqReg_bits = (mfrc522->PCD_ReadRegister(MFRC522::ComIrqReg) & (1 << 5)) != 0;
+  mfrc522->PCD_WriteRegister(MFRC522::ComIrqReg, 0x34);
 
-  if (counter == 3) { // Only every 3rd 0.1 second we do a read
+  if ((counter >= 5) || ComIrqReg_bits) { // Only every 3rd 0.1 second we do a read
     counter = 0;
 
-    uint32_t key        = P111_NO_KEY;
+    uint64_t key        = P111_NO_KEY;
     bool     removedTag = false;
     const uint8_t error = readCardStatus(&key, &removedTag);
 
     if (error == P111_NO_ERROR) {
-      const uint32_t old_key = UserVar.getSensorTypeLong(event->TaskIndex);
-      bool new_key           = false;
+# if FEATURE_EXTENDED_TASK_VALUE_TYPES
+      const uint64_t old_key = UserVar.getUint64(event->TaskIndex, 0);
+# else
+      const uint64_t old_key = UserVar.getSensorTypeLong(event->TaskIndex, 0);
+# endif // if FEATURE_EXTENDED_TASK_VALUE_TYPES
+      bool new_key = false;
 
       # ifdef P111_USE_REMOVAL
 
@@ -245,33 +311,66 @@ bool P111_data_struct::plugin_ten_per_second(struct EventStruct *event) {
       }
       # endif // P111_USE_REMOVAL
 
-      if ((old_key != key) && (key != P111_NO_KEY)) {
-        UserVar.setSensorTypeLong(event->TaskIndex, key);
-        new_key = true;
-      }
+      if (old_key != key) {
+        if (key != P111_NO_KEY) {
+# if FEATURE_EXTENDED_TASK_VALUE_TYPES
+          UserVar.setUint64(event->TaskIndex, 0, key);
+# else
+          UserVar.setSensorTypeLong(event->TaskIndex, 0, key);
+# endif // if FEATURE_EXTENDED_TASK_VALUE_TYPES
+          new_key = true;
 
-      if (loglevelActiveFor(LOG_LEVEL_INFO) && (key != P111_NO_KEY)) {
-        String log = F("MFRC522: ");
+          if (Settings.UseRules)
+          {
+            // Event values:
+            // - Full tag UID
+            // - Least significant 32 bit (byte 0 .. 3)
+            // - Extra bytes of 7-byte UID (byte 4 .. 6)
+            // - Extra bytes of 10-byte UID (byte 7 .. 9)
 
-        if (new_key) {
-          log += F("New Tag: ");
-        } else {
-          log += F("Old Tag: ");
+            // TODO TD-er: No support yet for 10 byte UIDs
+
+            // TD-er: Process event of read key now.
+            rulesProcessing(strformat(
+                              F("%s#taguid=%s,%s,%s"),
+                              getTaskDeviceName(event->TaskIndex).c_str(),
+                              formatULLtoHex(key, 1).c_str(),
+                              formatToHex(static_cast<uint32_t>(key & 0xFFFFFFFF),       1).c_str(),
+                              formatToHex(static_cast<uint32_t>((key >> 32) & 0xFFFFFF), 1).c_str())
+                            );
+          }
+
+
+          if (loglevelActiveFor(LOG_LEVEL_INFO) && (key != P111_NO_KEY)) {
+            String log = F("MFRC522: ");
+
+            if (new_key) {
+              log += F("New Tag: ");
+            } else {
+              log += F("Old Tag: ");
+            }
+            log += formatULLtoHex_decimal(key);
+
+            if (!removedTag) {
+              log += F(" card: ");
+              log += getCardName();
+            }
+            addLogMove(LOG_LEVEL_INFO, log);
+          }
+
+          if (new_key && !removedTag) { // Removal event sent from PLUGIN_TIMER_IN, if any
+            sendData(event);
+          }
+          Scheduler.setPluginTaskTimer(P111_REMOVALTIMEOUT, event->TaskIndex, event->Par1);
+          success = true;
+        } 
+        if (removedTag && Settings.UseRules) {
+          // TD-er: Process event of read key now.
+          rulesProcessing(concat(
+                            getTaskDeviceName(event->TaskIndex),
+                            F("#tagremoved")));
         }
-        log += key;
-
-        if (!removedTag) {
-          log += F(" card: ");
-          log += getCardName();
-        }
-        addLogMove(LOG_LEVEL_INFO, log);
       }
-
-      if (new_key && !removedTag) { // Removal event sent from PLUGIN_TIMER_IN, if any
-        sendData(event);
-      }
-      Scheduler.setPluginTaskTimer(P111_REMOVALTIMEOUT, event->TaskIndex, event->Par1);
-      success = true;
     }
   }
   return success;
@@ -280,7 +379,7 @@ bool P111_data_struct::plugin_ten_per_second(struct EventStruct *event) {
 /*********************************************************************************************
  * Handle timers instead of using delay()
  ********************************************************************************************/
-bool P111_data_struct::plugin_fifty_per_second() {
+bool P111_data_struct::plugin_fifty_per_second(struct EventStruct *event) {
   if ((initPhase == P111_initPhases::ResetDelay1) ||
       (initPhase == P111_initPhases::ResetDelay2)) {
     timeToWait -= 20; // milliseconds
@@ -297,7 +396,58 @@ bool P111_data_struct::plugin_fifty_per_second() {
       }
     }
   }
+
+  if (_irq_pin_time_micros > _last_served_irq_pin_time_micros) {
+    _last_served_irq_pin_time_micros = _irq_pin_time_micros;
+
+    // addLog(LOG_LEVEL_INFO, F("P111: acting on interrupt"));
+    loop(event);
+  }
+
   return true;
+}
+
+String P111_data_struct::PCD_getVersion(uint8_t& v) {
+  v = 0xFF;
+
+  if (mfrc522) {
+    v = mfrc522->PCD_ReadRegister(MFRC522::VersionReg);
+
+    if ((v != 0xFF) && (v != 0)) {
+      // Human readable version.
+      String res = concat(formatToHex(v, 2), F(" = "));
+
+      switch (v)
+      {
+        case 0xb2:
+          res += F("FM17522_1");
+          break;
+        case 0x88:
+          res += F("FM17522");
+          break;
+        case 0x89:
+          res += F("FM17522E");
+          break;
+        case 0x90:
+          res += F("v0.0");
+          break;
+        case 0x91:
+          res += F("v1.0");
+          break;
+        case 0x92:
+          res += F("v2.0");
+          break;
+        case 0x12:
+          res += F("counterfeit chip");
+          break;
+        default:
+          res += F("(unknown)");
+          break;
+      }
+      return res;
+    }
+  }
+  return EMPTY_STRING;
 }
 
 #endif // ifdef USES_P111

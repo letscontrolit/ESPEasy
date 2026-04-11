@@ -5,7 +5,10 @@
 
 #ifdef USES_C018
 
-# include <rn2xx3.h>
+#include <rn2xx3_status.h>
+
+class rn2xx3;
+class ESPeasySerial;
 
 
 struct C018_data_struct {

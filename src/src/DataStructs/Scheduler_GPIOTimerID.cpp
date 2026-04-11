@@ -5,7 +5,7 @@
 GPIOTimerID::GPIOTimerID(uint8_t GPIOType, uint8_t pinNumber, int Par1) :
   SchedulerTimerID(SchedulerTimerType_e::GPIO_timer)
 {
-  id = (Par1 << 16) + (pinNumber << 8) + GPIOType;
+  setId((Par1 << 16) + (pinNumber << 8) + GPIOType);
 }
 
 

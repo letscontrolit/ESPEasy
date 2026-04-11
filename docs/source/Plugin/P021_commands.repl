@@ -23,6 +23,22 @@
         Using this command, either from rules, via http or mqtt, the **Hysteresis** of the plugin can be changed. If the new value differs from the currently set hysteresis, the settings are saved.
         "
         "
+        ``config,task,<taskname>,Remote,<value|calculation>``
+
+        Value: {A valid numeric (bool) value }
+
+        ","
+        Using this command, either from rules, via http or mqtt, the remote control state of the plugin can be changed. When result is true and control mode is remote the Output will be set to active. When result is false local control algorithm is used. This value is never saved.
+        "
+        "
+        ``levelcontrol,Remote,[0|1]``
+
+        Value: {**0** or **1** }
+
+        ","
+        Using this command, either from rules, via http or mqtt, the remote control state of the plugin can be changed. If the value is **1** and control mode is remote the Output will be set to active. If the value is **0** local control algorithm is used. This value is never saved.
+        "
+        "
         ``[<taskname>#GetLevel]``
         ","
         Not a real command, but this plugin supports the ``GetLevel`` Config function, to retrieve the **Set Value** from the settings, by using the pseudo value ``GetLevel``.

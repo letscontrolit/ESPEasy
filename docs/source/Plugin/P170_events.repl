@@ -1,0 +1,18 @@
+.. csv-table::
+    :header: "Event", "Extra information"
+    :widths: 20, 30
+
+    "
+    | ``<taskname>#LowLevel=<level>``
+
+    | ``<level>``: Current level value.
+    ","
+    | This event is generated if the level goes below the set **Trigger on Low level** value (5..100 mm), and is repeated every **Interval** seconds (or 1 sec. if Interval is 0). When **Trigger only once** is set, only a single event will be generated, until the measured level rises above the configured level and goes below that again.
+    "
+    "
+    | ``<taskname>#HighLevel=<level>``
+
+    | ``<level>``: Current level value.
+    ","
+    | This event is generated if the level rises above the set **Trigger on High level** value (5..100 mm), and is repeated every **Interval** seconds (or 1 sec. if Interval is 0). When **Trigger only once** is set, only a single event will be generated, until the measured level goes below the configured level and rises above that again.
+    "

@@ -7,25 +7,38 @@
 // #######################################################################################################
 
 
-// History:
-// 2023-02-27 tonhuisman: Implement support for getting config values, see AdafruitGFX_Helper.h changelog for details
-// 2022-07-06 tonhuisman: Add support for ST7735sv M5Stack StickC (Inverted colors)
-// 2021-11-16 tonhuisman: P116: Change state from Development to Testing
-// 2021-11-08 tonhuisman: Add support for function PLUGIN_GET_DISPLAY_PARAMETERS for retrieving the display parameters
-//                        as implemented by FT6206 touchscreen plugin. Added ST77xx_type_toResolution
-// 2021-11-06 tonhuisman: P116: Add support for ST7796s 320x480 displays
-//                        Changed name of plugin to 'Display - ST77xx TFT' (was 'Display - ST7735/ST7789 TFT')
-// 2021-08-16 tonhuisman: P116: Add default color settings
-// 2021-08-16 tonhuisman: P116: Reorder some device configuration options, add backlight command (triggerCmd option)
-// 2021-08-15 tonhuisman: P116: Make CursorX/CursorY coordinates available as Values (no events are generated!)
-//                        P116: Use more features of AdafruitGFX_helper
-//                        AdafruitGFX: Apply 'Text Print Mode' options
-// 2021-08 tonhuisman: Refactor into AdafruitGFX_helper
-// 2021-08 tonhuisman: Continue development, added new features, font scaling, display limits, extra text lines
-//                     update to current ESPEasy state/style of development, make multi-instance possible
-// 2020-08 tonhuisman: Adaptations for multiple ST77xx chips, ST7735s, ST7789vw (shelved temporarily)
-//                     Added several features like display button, rotation
-// 2020-04 WDS (Wolfdieter): initial plugin for ST7735, based on P012
+/** History:
+ * 2025-08-29 tonhuisman: Fix GPIO pin display on Devices page, no default GPIO pins for ESP32
+ * 2025-08-12 tonhuisman: Enable use of secondary SPI bus
+ * 2025-06-11 tonhuisman: Add support for ST7789v3/ST7735 display with 170x320 resolution
+ * 2025-02-20 tonhuisman: Add support for ST7735 display with 172x320 resolution
+ * 2024-05-04 tonhuisman: Add Default font selection setting, if AdafruitGFX_Helper fonts are included
+ * 2024-03-17 tonhuisman: Add support for another alternative initialization for ST7735 displays, as the display controller
+ *                        used on the LilyGO TTGO T-Display (16 MB) seems to be a ST7735, despite being documented as ST7789
+ *                        By default (also) only enabled on ESP32 builds
+ *                        Disabled the ST7789 alternatives for now, as that's not verified on any hardware
+ * 2024-03-09 tonhuisman: Add support for alternative initialization sequences for ST7789 displays, like used on
+ *                        some LilyGO models like the TTGO T-Display (16 MB Flash), and possibly the T-Display S3
+ *                        By default only enabled on ESP32 builds
+ * 2023-02-27 tonhuisman: Implement support for getting config values, see AdafruitGFX_Helper.h changelog for details
+ * 2022-07-06 tonhuisman: Add support for ST7735sv M5Stack StickC (Inverted colors)
+ * 2021-11-16 tonhuisman: P116: Change state from Development to Testing
+ * 2021-11-08 tonhuisman: Add support for function PLUGIN_GET_DISPLAY_PARAMETERS for retrieving the display parameters
+ *                        as implemented by FT6206 touchscreen plugin. Added ST77xx_type_toResolution
+ * 2021-11-06 tonhuisman: P116: Add support for ST7796s 320x480 displays
+ *                        Changed name of plugin to 'Display - ST77xx TFT' (was 'Display - ST7735/ST7789 TFT')
+ * 2021-08-16 tonhuisman: P116: Add default color settings
+ * 2021-08-16 tonhuisman: P116: Reorder some device configuration options, add backlight command (triggerCmd option)
+ * 2021-08-15 tonhuisman: P116: Make CursorX/CursorY coordinates available as Values (no events are generated!)
+ *                        P116: Use more features of AdafruitGFX_helper
+ *                        AdafruitGFX: Apply 'Text Print Mode' options
+ * 2021-08 tonhuisman: Refactor into AdafruitGFX_helper
+ * 2021-08 tonhuisman: Continue development, added new features, font scaling, display limits, extra text lines
+ *                     update to current ESPEasy state/style of development, make multi-instance possible
+ * 2020-08 tonhuisman: Adaptations for multiple ST77xx chips, ST7735s, ST7789vw (shelved temporarily)
+ *                     Added several features like display button, rotation
+ * 2020-04 WDS (Wolfdieter): initial plugin for ST7735, based on P012
+ */
 
 # define PLUGIN_116
 # define PLUGIN_ID_116         116
@@ -43,17 +56,14 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_116;
-      Device[deviceCount].Type               = DEVICE_TYPE_SPI3;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_NONE;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = false;
-      Device[deviceCount].ValueCount         = 2;
-      Device[deviceCount].SendDataOption     = false;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].TimerOptional      = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number        = PLUGIN_ID_116;
+      dev.Type          = DEVICE_TYPE_SPI3;
+      dev.VType         = Sensor_VType::SENSOR_TYPE_NONE;
+      dev.ValueCount    = 2;
+      dev.TimerOption   = true;
+      dev.TimerOptional = true;
+      dev.SpiBusSelect  = true;
       break;
     }
 
@@ -78,40 +88,34 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # ifndef LIMIT_BUILD_SIZE
     case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
     {
-      string  = F("CS: ");
-      string += formatGpioLabel(PIN(0), false);
-      string += event->String1; // contains the NewLine sequence
-      string += F("DC: ");
-      string += formatGpioLabel(PIN(1), false);
-      string += event->String1;
-      string += F("RES: ");
-      string += formatGpioLabel(PIN(2), false);
-      string += event->String1;
-      string += F("Btn: ");
-      string += formatGpioLabel(P116_CONFIG_BUTTON_PIN, false);
-      string += event->String1;
-      string += F("Bckl: ");
-      string += formatGpioLabel(P116_CONFIG_BACKLIGHT_PIN, false);
+      const char *separator = event->String1.c_str(); // contains the NewLine sequence
+      string = strformat(
+        F("%sCS: %s%sDC: %s%s RES: %s%sBtn: %s%sBckl: %s"),
+        separator,
+        formatGpioLabel(PIN(0),                    false).c_str(),
+        separator,
+        formatGpioLabel(PIN(1),                    false).c_str(),
+        separator,
+        formatGpioLabel(PIN(2),                    false).c_str(),
+        separator,
+        formatGpioLabel(P116_CONFIG_BUTTON_PIN,    false).c_str(),
+        separator,
+        formatGpioLabel(P116_CONFIG_BACKLIGHT_PIN, false).c_str());
       success = true;
       break;
     }
+    # endif // ifndef LIMIT_BUILD_SIZE
 
     case PLUGIN_SET_DEFAULTS:
     {
-      # ifdef ESP32
-
-      if (Settings.InitSPI == 2) { // When using ESP32 H(ardware-)SPI
-        PIN(0) = P116_TFT_CS_HSPI;
-      } else {
-        PIN(0) = P116_TFT_CS;
-      }
-      # else // ifdef ESP32
+      # ifdef ESP8266
       PIN(0) = P116_TFT_CS;
-      # endif // ifdef ESP32
-      PIN(1)                        = P116_TFT_DC;
-      PIN(2)                        = P116_TFT_RST;
+      PIN(1) = P116_TFT_DC;
+      PIN(2) = P116_TFT_RST;
+      # endif // ifdef ESP8266
       P116_CONFIG_BUTTON_PIN        = -1;  // No button connected
       P116_CONFIG_BACKLIGHT_PIN     = P116_BACKLIGHT_PIN;
       P116_CONFIG_BACKLIGHT_PERCENT = 100; // Percentage backlight
@@ -144,10 +148,22 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
           ST77xx_type_toString(ST77xx_type_e::ST7735s_128x160),
           ST77xx_type_toString(ST77xx_type_e::ST7735s_80x160),
           ST77xx_type_toString(ST77xx_type_e::ST7735s_80x160_M5),
+          # if P116_EXTRA_ST7735
+          ST77xx_type_toString(ST77xx_type_e::ST7735s_135x240),
+          ST77xx_type_toString(ST77xx_type_e::ST7735s_172x320),
+          ST77xx_type_toString(ST77xx_type_e::ST77xxs_170x320),
+          ST77xx_type_toString(ST77xx_type_e::ST77xxs_240x320),
+          ST77xx_type_toString(ST77xx_type_e::ST77xxs_240x280),
+          # endif // if P116_EXTRA_ST7735
           ST77xx_type_toString(ST77xx_type_e::ST7789vw_240x320),
           ST77xx_type_toString(ST77xx_type_e::ST7789vw_240x240),
           ST77xx_type_toString(ST77xx_type_e::ST7789vw_240x280),
           ST77xx_type_toString(ST77xx_type_e::ST7789vw_135x240),
+          # if P116_EXTRA_ST7789
+          ST77xx_type_toString(ST77xx_type_e::ST7789vw1_135x240),
+          ST77xx_type_toString(ST77xx_type_e::ST7789vw2_135x240),
+          ST77xx_type_toString(ST77xx_type_e::ST7789vw3_135x240),
+          # endif // if P116_EXTRA_ST7789
           ST77xx_type_toString(ST77xx_type_e::ST7796s_320x480)
         };
         const int optionValues4[] = {
@@ -155,19 +171,29 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(ST77xx_type_e::ST7735s_128x160),
           static_cast<int>(ST77xx_type_e::ST7735s_80x160),
           static_cast<int>(ST77xx_type_e::ST7735s_80x160_M5),
+          # if P116_EXTRA_ST7735
+          static_cast<int>(ST77xx_type_e::ST7735s_135x240),
+          static_cast<int>(ST77xx_type_e::ST7735s_172x320),
+          static_cast<int>(ST77xx_type_e::ST77xxs_170x320),
+          static_cast<int>(ST77xx_type_e::ST77xxs_240x320),
+          static_cast<int>(ST77xx_type_e::ST77xxs_240x280),
+          # endif // if P116_EXTRA_ST7735
           static_cast<int>(ST77xx_type_e::ST7789vw_240x320),
           static_cast<int>(ST77xx_type_e::ST7789vw_240x240),
           static_cast<int>(ST77xx_type_e::ST7789vw_240x280),
           static_cast<int>(ST77xx_type_e::ST7789vw_135x240),
+          # if P116_EXTRA_ST7789
+          static_cast<int>(ST77xx_type_e::ST7789vw1_135x240),
+          static_cast<int>(ST77xx_type_e::ST7789vw2_135x240),
+          static_cast<int>(ST77xx_type_e::ST7789vw3_135x240),
+          # endif // if P116_EXTRA_ST7789
           static_cast<int>(ST77xx_type_e::ST7796s_320x480)
         };
-        constexpr int optCount4 = sizeof(optionValues4) / sizeof(optionValues4[0]);
-        addFormSelector(F("TFT display model"),
-                        F("type"),
-                        optCount4,
-                        options4,
-                        optionValues4,
-                        P116_CONFIG_FLAG_GET_TYPE);
+        constexpr int optCount4 = NR_ELEMENTS(optionValues4);
+        const FormSelectorOptions selector(optCount4, options4, optionValues4);
+        selector.addFormSelector(F("TFT display model"),
+                                 F("type"),
+                                 P116_CONFIG_FLAG_GET_TYPE);
       }
 
       addFormSubHeader(F("Layout"));
@@ -175,6 +201,10 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
       AdaGFXFormRotation(F("rotate"), P116_CONFIG_FLAG_GET_ROTATION);
 
       AdaGFXFormTextPrintMode(F("mode"), P116_CONFIG_FLAG_GET_MODE);
+
+      # if ADAGFX_FONTS_INCLUDED
+      AdaGFXFormDefaultFont(F("deffont"), P116_CONFIG_DEFAULT_FONT);
+      # endif // if ADAGFX_FONTS_INCLUDED
 
       AdaGFXFormFontScaling(F("fontscale"), P116_CONFIG_FLAG_GET_FONTSCALE);
 
@@ -195,13 +225,13 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(P116_CommandTrigger::st7789),
           static_cast<int>(P116_CommandTrigger::st7796)
         };
-        constexpr int cmdCount = sizeof(commandTriggerOptions) / sizeof(commandTriggerOptions[0]);
-        addFormSelector(F("Write Command trigger"),
-                        F("commandtrigger"),
-                        cmdCount,
-                        commandTriggers,
-                        commandTriggerOptions,
-                        P116_CONFIG_FLAG_GET_CMD_TRIGGER);
+        constexpr int cmdCount = NR_ELEMENTS(commandTriggerOptions);
+        FormSelectorOptions selector(cmdCount, commandTriggers, commandTriggerOptions);
+        selector.default_index = 1;
+        selector.addFormSelector(
+          F("Write Command trigger"),
+          F("commandtrigger"),
+          P116_CONFIG_FLAG_GET_CMD_TRIGGER);
         # ifndef LIMIT_BUILD_SIZE
         addFormNote(F("Select the command that is used to handle commands for this display."));
         # endif // ifndef LIMIT_BUILD_SIZE
@@ -223,17 +253,18 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
                                   P116_CONFIG_GET_COLOR_FOREGROUND,
                                   F("backgroundcolor"),
                                   P116_CONFIG_GET_COLOR_BACKGROUND);
+      {
+        String strings[P116_Nlines];
+        LoadCustomTaskSettings(event->TaskIndex, strings, P116_Nlines, 0);
 
-      String strings[P116_Nlines];
-      LoadCustomTaskSettings(event->TaskIndex, strings, P116_Nlines, 0);
+        uint16_t remain = DAT_TASKS_CUSTOM_SIZE + DAT_TASKS_CUSTOM_EXTENSION_SIZE;
 
-      uint16_t remain = DAT_TASKS_CUSTOM_SIZE;
-
-      for (uint8_t varNr = 0; varNr < P116_Nlines; varNr++) {
-        addFormTextBox(concat(F("Line "), varNr + 1), getPluginCustomArgName(varNr), strings[varNr], P116_Nchars);
-        remain -= (strings[varNr].length() + 1);
+        for (uint8_t varNr = 0; varNr < P116_Nlines; ++varNr) {
+          addFormTextBox(concat(F("Line "), varNr + 1), getPluginCustomArgName(varNr), strings[varNr], P116_Nchars);
+          remain -= (strings[varNr].length() + 1);
+        }
+        addUnit(concat(F("Remaining: "), remain));
       }
-      addUnit(concat(F("Remaining: "), remain));
 
       success = true;
       break;
@@ -245,18 +276,23 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
       P116_CONFIG_DISPLAY_TIMEOUT   = getFormItemInt(F("timer"));
       P116_CONFIG_BACKLIGHT_PIN     = getFormItemInt(F("backlight"));
       P116_CONFIG_BACKLIGHT_PERCENT = getFormItemInt(F("backpercentage"));
+      # if ADAGFX_FONTS_INCLUDED
+      P116_CONFIG_DEFAULT_FONT = getFormItemInt(F("deffont"));
+      # endif // if ADAGFX_FONTS_INCLUDED
 
       uint32_t lSettings = 0;
+      uint16_t _type     = getFormItemInt(F("type"));
       bitWrite(lSettings, P116_CONFIG_FLAG_NO_WAKE,       !isFormItemChecked(F("NoDisplay")));    // Bit 0 NoDisplayOnReceivingText,
                                                                                                   // reverse logic, default=checked!
       bitWrite(lSettings, P116_CONFIG_FLAG_INVERT_BUTTON, isFormItemChecked(F("buttonInverse"))); // Bit 1 buttonInverse
       bitWrite(lSettings, P116_CONFIG_FLAG_CLEAR_ON_EXIT, isFormItemChecked(F("clearOnExit")));   // Bit 2 ClearOnExit
       bitWrite(lSettings, P116_CONFIG_FLAG_USE_COL_ROW,   isFormItemChecked(F("colrow")));        // Bit 3 Col/Row addressing
 
-      set4BitToUL(lSettings, P116_CONFIG_FLAG_MODE,        getFormItemInt(F("mode")));            // Bit 4..7 Text print mode
-      set4BitToUL(lSettings, P116_CONFIG_FLAG_ROTATION,    getFormItemInt(F("rotate")));          // Bit 8..11 Rotation
-      set4BitToUL(lSettings, P116_CONFIG_FLAG_FONTSCALE,   getFormItemInt(F("fontscale")));       // Bit 12..15 Font scale
-      set4BitToUL(lSettings, P116_CONFIG_FLAG_TYPE,        getFormItemInt(F("type")));            // Bit 16..19 Hardwaretype
+      set4BitToUL(lSettings, P116_CONFIG_FLAG_MODE,      getFormItemInt(F("mode")));              // Bit 4..7 Text print mode
+      set4BitToUL(lSettings, P116_CONFIG_FLAG_ROTATION,  getFormItemInt(F("rotate")));            // Bit 8..11 Rotation
+      set4BitToUL(lSettings, P116_CONFIG_FLAG_FONTSCALE, getFormItemInt(F("fontscale")));         // Bit 12..15 Font scale
+      set4BitToUL(lSettings, P116_CONFIG_FLAG_TYPE,      _type);                                  // Bit 16..19 Hardwaretype
+      set2BitToUL(lSettings, P116_CONFIG_FLAG_TYPE2, (_type >> 4));                               // Bit 29..30 Hardwaretype extension
       set4BitToUL(lSettings, P116_CONFIG_FLAG_CMD_TRIGGER, getFormItemInt(F("commandtrigger")));  // Bit 20..23 Command trigger
 
       bitWrite(lSettings, P116_CONFIG_FLAG_BACK_FILL, !isFormItemChecked(F("backfill")));         // Bit 28 Back fill text (inv)
@@ -272,17 +308,18 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
       uint16_t bgcolor = AdaGFXparseColor(color);
 
       P116_CONFIG_COLORS = fgcolor | (bgcolor << 16); // Store as a single setting
+      {
+        String strings[P116_Nlines];
 
-      String strings[P116_Nlines];
+        for (uint8_t varNr = 0; varNr < P116_Nlines; ++varNr) {
+          strings[varNr] = webArg(getPluginCustomArgName(varNr));
+        }
 
-      for (uint8_t varNr = 0; varNr < P116_Nlines; varNr++) {
-        strings[varNr] = webArg(getPluginCustomArgName(varNr));
-      }
+        const String error = SaveCustomTaskSettings(event->TaskIndex, strings, P116_Nlines, 0);
 
-      const String error = SaveCustomTaskSettings(event->TaskIndex, strings, P116_Nlines, 0);
-
-      if (!error.isEmpty()) {
-        addHtmlError(error);
+        if (!error.isEmpty()) {
+          addHtmlError(error);
+        }
       }
 
       success = true;
@@ -305,7 +342,7 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      if (Settings.InitSPI != 0) {
+      if (Settings.isSPI_validForTask(event->TaskIndex)) {
         initPluginTaskData(event->TaskIndex,
                            new (std::nothrow) P116_data_struct(static_cast<ST77xx_type_e>(P116_CONFIG_FLAG_GET_TYPE),
                                                                P116_CONFIG_FLAG_GET_ROTATION,
@@ -318,7 +355,12 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
                                                                                               P116_CONFIG_FLAG_GET_CMD_TRIGGER)),
                                                                P116_CONFIG_GET_COLOR_FOREGROUND,
                                                                P116_CONFIG_GET_COLOR_BACKGROUND,
-                                                               bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_BACK_FILL) == 0));
+                                                               bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_BACK_FILL) == 0
+                                                               # if ADAGFX_FONTS_INCLUDED
+                                                               ,
+                                                               P116_CONFIG_DEFAULT_FONT
+                                                               # endif // if ADAGFX_FONTS_INCLUDED
+                                                               ));
         P116_data_struct *P116_data = static_cast<P116_data_struct *>(getPluginTaskData(event->TaskIndex));
 
         success = (nullptr != P116_data) && P116_data->plugin_init(event); // Start the display

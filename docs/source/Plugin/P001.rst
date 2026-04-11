@@ -13,7 +13,9 @@ Type: |P001_type|
 
 Name: |P001_name|
 
-Status: |P001_status|
+Status ESP32: |P001_status|
+
+Status ESP8266: |P001_status_lb|
 
 GitHub: |P001_github|_
 
@@ -24,6 +26,9 @@ Supported hardware
 ------------------
 
 |P001_usedby|
+
+
+.. include:: DeviceClass_binary.repl
 
 Commands available
 ------------------

@@ -13,7 +13,9 @@ Type: |P159_type|
 
 Name: |P159_name|
 
-Status: |P159_status|
+Status ESP32: |P159_status|
+
+Status ESP8266: |P159_status_lb|
 
 GitHub: |P159_github|_
 
@@ -27,6 +29,8 @@ Description
 Detecting (human) presence can be achieved in several ways, like via IR detection sensors, or a light-beam that's interrupted by someone passing. But these sensors have quite some limitations, like limited sensitivity, no information about the distance, or weather a person is there but not moving.
 
 The limitations of these existing sensors are not applicable when using radar-based presence detection, and since some time, rather affordable radar human-presence detectors are available. These are available with 5 GHz, 10 GHz, 24 GHz and 60 GHz radar frequency transmitter/receiver chips. Because of the accuracy and range, achievable with 24 GHz sensors, these are quite popular, so support has been added to ESPEasy.
+Some notes about "false positive" detections: based on our test and experience some false positive presence detections can happens. For example if the sensor is near to plant, the movement of leaves can be incorrectly translated as presence detection; also electric cables in front of the sensor can provide noise to the sensor. To avoid false positive presence detection try to leave the sensor as free from obstacles as possible.
+
 
 Some examples of these sensors:
 
@@ -137,18 +141,15 @@ After checking the checkbox to enabled state, the settings will be available imm
 * **Idle seconds**: The number of seconds the *Presence* stays active after presence is removed, can be set here. Default value 5 sec. max. value is 65535 sec.
 * **Max. Moving gates**: The number of active gates for detecting Moving presence. Range 2 .. 8.
 * **Max. Stationary gates**: The number of active gates for detecting Stationary presence. Range 2 .. 8.
-* **Sensitivity, Gate 0 .. 8**: For each type of detection, the sensitivity treshold can be set, range 0 .. 100, where 0 is the most sensitive, and 100 means it won't trigger, as that's the max. value that will be reported.
+* **Sensitivity, Gate 0 .. 8**: For each type of detection, the sensitivity treshold can be set, range 0 .. 101, where 0 is the most sensitive, and 101 means it won't trigger, as 100 is the max. value that will be reported.
 
-For each gate the distance range in meters is also shown. When the highest enabled Gate is less that the default 8, then only up to that gate-number is shown and configurable.
+For each gate the distance range in meters is also shown. When the highest enabled Gate is less than the default 8, then only up to that gate-number is shown and configurable.
 
 If the **Modify sensor settings** checkbox is checked when submitting the page, the settings are sent to the sensor, and the sensor will be restarted to activate them. The configured values are persistently stored in the LD2410 sensor.
 
 Might the configuration not be set correctly, and changing them again doesn't seem to work, then resetting the sensor, by issuing the ``ld2410,factoryreset`` command while the task is enabled and the sensor connected, the factory defaults will be restored. (See the list of supported commands, below.)
 
-Data Acquisition
-^^^^^^^^^^^^^^^^
-
-This group of settings, **Single event with all values** and **Send to Controller** settings are standard available configuration items. Send to Controller is only visible when one or more Controllers are configured.
+.. include:: DataAcquisition.repl
 
 * **Interval** By default, Interval will be set to 0 sec. as this is optional for this device. The data will be collected and optionally sent to any configured controllers using this interval. For sending the values to the enabled controller(s), the command ``TaskRun,<taskName|taskNr>`` can be used.
 

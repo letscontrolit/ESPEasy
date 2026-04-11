@@ -6,6 +6,8 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2025-01-23 tonhuisman: Implement support for MQTT AutoDiscovery
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported yet for SGP4x)
  * 2023-05-07 tonhuisman: Make Temperature and Humidity compensation selection independent, so if either setting is configured
  *                        it will still be applied, with the other value using the default. Minor UI improvement.
  * 2023-05-02 tonhuisman: Fix Low-power measurement, introducing a new State for reading the second measurement only
@@ -50,18 +52,15 @@ boolean Plugin_147(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_147;
-      Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_SINGLE;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = 2;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].PluginStats        = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_147;
+      dev.Type           = DEVICE_TYPE_I2C;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_SINGLE;
+      dev.FormulaOption  = true;
+      dev.ValueCount     = 2;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
+      dev.PluginStats    = true;
 
       break;
     }
@@ -87,6 +86,16 @@ boolean Plugin_147(uint8_t function, struct EventStruct *event, String& string)
       success     = true;
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_TVOC_ONLY);
+      event->Par2 = static_cast<int>(Sensor_VType::SENSOR_TYPE_NOX_ONLY);
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
 
     case PLUGIN_I2C_HAS_ADDRESS:
     {
@@ -121,12 +130,19 @@ boolean Plugin_147(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(P147_sensor_e::SGP40),
           static_cast<int>(P147_sensor_e::SGP41),
         };
-        addFormSelector(F("Sensor model"), F("ptype"), 2, sensorTypes, sensorTypeOptions, P147_SENSOR_TYPE, true);
-        addFormNote(F("Page will reload on change."));
+        constexpr size_t optionCount = NR_ELEMENTS(sensorTypeOptions);
+        FormSelectorOptions selector(optionCount, sensorTypes, sensorTypeOptions);
+        selector.reloadonchange = true;
+        selector.addFormSelector(F("Sensor model"), F("ptype"), P147_SENSOR_TYPE);
+        # ifndef BUILD_NO_DEBUG
+        // addFormNote(F("Page will reload on change."));
+        # endif // ifndef BUILD_NO_DEBUG
       }
 
       addFormSelector_YesNo(F("Use Compensation"), F("comp"), P147_GET_USE_COMPENSATION, true);
-      addFormNote(F("Page will reload on change."));
+      # ifndef BUILD_NO_DEBUG
+      // addFormNote(F("Page will reload on change."));
+      # endif // ifndef BUILD_NO_DEBUG
 
       if (P147_GET_USE_COMPENSATION) {
         addRowLabel(F("Temperature Task"));
@@ -161,7 +177,7 @@ boolean Plugin_147(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      int prevSensor = P147_SENSOR_TYPE;
+      const int prevSensor = P147_SENSOR_TYPE;
       P147_SENSOR_TYPE       = getFormItemInt(F("ptype"));
       P147_LOW_POWER_MEASURE = isFormItemChecked(F("plow")) ? 1 : 0;
       P147_SET_USE_COMPENSATION(getFormItemInt(F("comp")));

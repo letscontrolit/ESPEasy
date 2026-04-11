@@ -1,0 +1,20 @@
+.. csv-table::
+    :header: "Config value", "Information"
+    :widths: 20, 30
+
+    "
+    ``[<taskname>#D.<port>]``
+
+    ``<port>`` : Range 0..13, corresponding with D0..D13 on the PME.
+    ","
+    Returns the current status (0/1) from the requested Digital port (pin) of the Pro Mini Extender.
+    "
+    "
+    ``[<taskname>#A.<port>]``
+
+    ``<port>`` : Range 0..3 and 6..7, corresponding with A0..A7 on the PME.
+    ","
+    Returns the current value (0..1023) at the requested Analog port (pin) of the Pro Mini Extender.
+
+    Port A4 and A5 should be avoided, as that's occupied by the I2C connection at the PME. There is no check in the code to block those pins!
+    "

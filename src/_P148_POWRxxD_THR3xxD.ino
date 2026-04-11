@@ -39,18 +39,12 @@ boolean Plugin_148(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_148;
-      Device[deviceCount].Type               = DEVICE_TYPE_CUSTOM0;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_NONE;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = false;
-      Device[deviceCount].ValueCount         = 0;
-      Device[deviceCount].SendDataOption     = false;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].TimerOptional      = true;
-      Device[deviceCount].GlobalSyncOption   = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number        = PLUGIN_ID_148;
+      dev.Type          = DEVICE_TYPE_CUSTOM0;
+      dev.VType         = Sensor_VType::SENSOR_TYPE_NONE;
+      dev.TimerOption   = true;
+      dev.TimerOptional = true;
       break;
     }
 
@@ -127,8 +121,8 @@ boolean Plugin_148(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(P148_data_struct::Tm1621Device::THR3xxD)
         };
         constexpr size_t nrElements = NR_ELEMENTS(optionValues);
-
-        addFormSelector(F("Device Template"), F("devtmpl"), nrElements, options, optionValues, P148_DEVICE_SELECTOR);
+        const FormSelectorOptions selector(nrElements, options, optionValues);
+        selector.addFormSelector(F("Device Template"), F("devtmpl"), P148_DEVICE_SELECTOR);
         addFormNote(F("GPIO settings will be ignored when selecting other than 'Custom'"));
       }
 
@@ -147,9 +141,9 @@ boolean Plugin_148(uint8_t function, struct EventStruct *event, String& string)
       html_TR_TD();
 
       addHtml(F("<label class='nosave'>&nbsp;<input "));
-      addHtmlAttribute(F("type"), F("checkbox"));
-      addHtmlAttribute(F("id"),   F("nosave"));
-      addHtmlAttribute(F("name"), F("nosave"));
+      addHtmlAttribute(F("type"),  F("checkbox"));
+      addHtmlAttribute(F("id"),    F("nosave"));
+      addHtmlAttribute(F("name"),  F("nosave"));
       addHtmlAttribute(F("style"), F("display:none"));
       addHtml(F("><span class='checkmark'></span></label>"));
 
@@ -235,66 +229,7 @@ boolean Plugin_148(uint8_t function, struct EventStruct *event, String& string)
         static_cast<P148_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P148_data) {
-        const String command = parseString(string, 1);
-
-        if (equals(command, F("tm1621"))) {
-          const String subcommand = parseString(string, 2);
-
-          if (equals(subcommand, F("raw"))) {
-            // Write raw data to the display
-            // Typical use case: testing fonts
-            const String rawdata_str = parseString(string, 3);
-            uint64_t     rawdata;
-
-            if (validUInt64FromString(rawdata_str, rawdata)) {
-              success = true;
-              P148_data->writeRawData(rawdata);
-            }
-          } else if (equals(subcommand, F("writerow"))) {
-            // tm1621write,<rownr>,<string>
-            const bool firstrow = event->Par2 <= 1;
-            P148_data->setUnit(P148_data_struct::Tm1621UnitOfMeasure::None, firstrow);
-            P148_data->writeString(firstrow, parseString(string, 4));
-            success = true;
-          } else if (equals(subcommand, F("write"))) {
-            // tm1621write,<string1>,<string2>
-            P148_data->setUnit(P148_data_struct::Tm1621UnitOfMeasure::None);
-            const String str1 = parseString(string, 3);
-            const String str2 = parseString(string, 4);
-
-            if (str2.isEmpty()) {
-              P148_data->writeString(true, str1);
-            } else {
-              P148_data->writeStrings(str1, str2);
-            }
-            success = true;
-          } else if (equals(subcommand, F("voltamp"))) {
-            // tm1621voltamp,<volt>,<amp>
-            P148_data->setUnit(P148_data_struct::Tm1621UnitOfMeasure::Volt_Amp);
-            P148_data->writeStrings(parseString(string, 3), parseString(string, 4));
-            success = true;
-          } else if (equals(subcommand, F("energy"))) {
-            // tm1621energy,<kWh>,<Watt>
-            P148_data->setUnit(P148_data_struct::Tm1621UnitOfMeasure::kWh_Watt);
-            P148_data->writeStrings(parseString(string, 3), parseString(string, 4));
-            success = true;
-          } else if (equals(subcommand, F("celcius"))) {
-            // tm1621celcius,<temperture>
-            P148_data->setUnit(P148_data_struct::Tm1621UnitOfMeasure::Celsius, true);
-            P148_data->writeString(true, parseString(string, 3));
-            success = true;
-          } else if (equals(subcommand, F("fahrenheit"))) {
-            // tm1621fahrenheit,<temperture>
-            P148_data->setUnit(P148_data_struct::Tm1621UnitOfMeasure::Fahrenheit, true);
-            P148_data->writeString(true, parseString(string, 3));
-            success = true;
-          } else if (equals(subcommand, F("humidity"))) {
-            // tm1621humidity,<%humidity>
-            P148_data->setUnit(P148_data_struct::Tm1621UnitOfMeasure::Humidity, false);
-            P148_data->writeString(false, parseString(string, 3));
-            success = true;
-          }
-        }
+        success = P148_data->plugin_write(event, string);
       }
 
       break;

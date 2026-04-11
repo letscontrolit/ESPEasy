@@ -22,6 +22,7 @@ if os.path.isfile('src/Custom.h'):
   custom_defines=["-DUSE_CUSTOM_H"]
 else:
   custom_defines=[
+    "-DESP8266",
     "-DCONTROLLER_SET_ALL",
     "-DNOTIFIER_SET_NONE",
     "-DPLUGIN_SET_NONE",
@@ -34,6 +35,7 @@ else:
     "-DUSES_P028",  # BME280
     "-DUSES_P033",  # Dummy
     "-DUSES_P036",  # FrameOLED
+    "-DUSES_P037",  # MQTT Import
     "-DUSES_P045",  # MPU6050
     "-DUSES_P049",  # MHZ19
     "-DUSES_P052",  # SenseAir
@@ -43,7 +45,7 @@ else:
     "-DUSES_P081",  # Cron
     "-DUSES_P082",  # GPS
 #   "-DUSES_P085",  # AcuDC24x
-    "-DUSES_P098",  # PWM motor
+#    "-DUSES_P098",  # PWM motor
 #   "-DUSES_P100",  # Pulse Counter - DS2423
 #   "-DUSES_P087",  # Serial Proxy
 #   "-DUSES_P094",  # CUL Reader
@@ -51,21 +53,31 @@ else:
 #    "-DUSES_P106",  # BME680
 #    "-DUSES_P107",  # SI1145 UV index
 
-    "-DUSES_P146",  # Cache Reader
+#    "-DUSES_P146",  # Cache Reader
+#    "-DUSES_P169",  # AS3935 Lightning Detector 
 
-    "-DUSES_C016",  # Cache Controller
-    "-DUSES_C018",  # TTN/RN2483
+#    "-DUSES_C016",  # Cache Controller
+#    "-DUSES_C018",  # TTN/RN2483
 #   "-DUSES_C015",  # Blynk
 
-#    "-DFEATURE_MDNS=1",
+    "-DFEATURE_MQTT_TLS=0",
+    "-DFEATURE_EMAIL_TLS=0",
+    "-DFEATURE_MDNS=0",
 #    "-DFEATURE_SD=1",
     "-DFEATURE_EXT_RTC=1",
     "-DFEATURE_I2CMULTIPLEXER=1",
     "-DFEATURE_TRIGONOMETRIC_FUNCTIONS_RULES=1",
-    "-DFEATURE_CUSTOM_PROVISIONING=1",
+#    "-DFEATURE_CUSTOM_PROVISIONING=1",
     "-DFEATURE_DEFINE_SERIAL_CONSOLE_PORT=0",
 
     "-DFEATURE_ESPEASY_P2P=1",
+    "-DEMBED_ESPEASY_DEFAULT_MIN_CSS",
+
+#    "-DPLUGIN_STATS_NR_ELEMENTS=30",
+    "-DFEATURE_PLUGIN_STATS=0",
+    "-DFEATURE_CHART_JS=0",
+
+#    "-DFEATURE_ADC_VCC=1",
 
     "-DFEATURE_SETTINGS_ARCHIVE=1",
     "-DDISABLE_SC16IS752_SPI"
@@ -73,7 +85,7 @@ else:
 
 my_flags = env.ParseFlags(env['BUILD_FLAGS'])
 my_defines = my_flags.get("CPPDEFINES")
-env.Append(BUILD_FLAGS=custom_defines)
+env.Append(CXXFLAGS=custom_defines)
 #defines = {k: v for (k, v) in my_defines}
 
 print("\u001b[32m Custom PIO configuration check \u001b[0m")

@@ -1,12 +1,7 @@
 #include "../WebServer/Metrics.h"
-#include "../WebServer/ESPEasy_WebServer.h"
-#include "../../ESPEasy-Globals.h"
+
 #include "../Commands/Diagnostic.h"
-#include "../ESPEasyCore/ESPEasyNetwork.h"
-#include "../ESPEasyCore/ESPEasyWifi.h"
 #include "../../_Plugin_Helper.h"
-#include "../Helpers/ESPEasyStatistics.h"
-#include "../Static/WebStaticData.h"
 
 #ifdef WEBSERVER_METRICS
 
@@ -82,6 +77,18 @@ void handle_metrics() {
   addHtml(getValue(LabelType::NUMBER_RECONNECTS));
   addHtml('\n');
 
+  # if FEATURE_INTERNAL_TEMPERATURE
+
+  // CPU Temperature
+  addHtml(prefixHELP);
+  addHtml(F("cpu_temperature Level of CPU temperature in Celcius\n"));
+  addHtml(prefixTYPE);
+  addHtml(F("cpu_temperature gauge\n"));
+  addHtml(F("espeasy_cpu_temperature "));
+  addHtml(getValue(LabelType::INTERNAL_TEMPERATURE));
+  addHtml('\n');
+  # endif // if FEATURE_INTERNAL_TEMPERATURE
+
   // devices
   handle_metrics_devices();
 
@@ -116,15 +123,22 @@ void handle_metrics_devices() {
 
           if (!customValues) {
             const uint8_t valueCount = getValueCountForTask(x);
+            struct EventStruct TempEvent(x);
 
             for (uint8_t varNr = 0; varNr < valueCount; varNr++) {
               if (validPluginID_fullcheck(Settings.getPluginID_for_task(x))) {
                 addHtml(F("espeasy_device_"));
                 addHtml(deviceName);
                 addHtml(F("{valueName=\""));
-                addHtml(getTaskValueName(x, varNr));
+                addHtml(Cache.getTaskDeviceValueName(x, varNr));
                 addHtml(F("\"} "));
-                addHtml(formatUserVarNoCheck(x, varNr));
+                const String value(formatUserVarNoCheck(&TempEvent, varNr));
+
+                if (value.isEmpty()) {
+                  addHtml('0'); // Return 0 for not-set values
+                } else {
+                  addHtml(value);
+                }
                 addHtml('\n');
               }
             }

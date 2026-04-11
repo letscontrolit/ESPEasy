@@ -1,29 +1,33 @@
 #include "../DataStructs/Web_StreamingBuffer.h"
 
-#include "../DataStructs/tcp_cleanup.h"
 #include "../DataTypes/ESPEasyTimeSource.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
-#include "../ESPEasyCore/ESPEasyNetwork.h"
 
 // FIXME TD-er: Should keep a pointer to the webserver as a member, not use the global defined one.
 #include "../Globals/Services.h"
 
 #include "../Helpers/ESPEasy_time_calc.h"
-#include "../Helpers/Convert.h"
 #include "../Helpers/StringConverter.h"
 
-#include "../../ESPEasy_common.h"
+#ifdef ESP8266
+#include "../../../src/ESPEasy/net/Helpers/tcp_cleanup_ESP8266.h"
+#endif
 
 #ifdef ESP8266
 #define CHUNKED_BUFFER_SIZE         512
 #else 
-#define CHUNKED_BUFFER_SIZE         4096
+#define CHUNKED_BUFFER_SIZE         1200
 #endif
 
 Web_StreamingBuffer::Web_StreamingBuffer(void) : lowMemorySkip(false),
   initialRam(0), beforeTXRam(0), duringTXRam(0), finalRam(0), maxCoreUsage(0),
   maxServerUsage(0), sentBytes(0), flashStringCalls(0), flashStringData(0)
 {
+  // Make sure this is allocated on the DRAM since access to primary heap is faster
+  # ifdef USE_SECOND_HEAP
+  HeapSelectDram ephemeral;
+  # endif // ifdef USE_SECOND_HEAP
+
   buf.reserve(CHUNKED_BUFFER_SIZE + 50);
   buf.clear();
 }
@@ -126,6 +130,10 @@ Web_StreamingBuffer& Web_StreamingBuffer::addFlashString(PGM_P str, int length) 
 }
 
 Web_StreamingBuffer& Web_StreamingBuffer::addString(const String& a) {
+  # ifdef USE_SECOND_HEAP
+  HeapSelectDram ephemeral;
+  # endif // ifdef USE_SECOND_HEAP
+
   if (lowMemorySkip) { return *this; }
   const unsigned int length = a.length();
   if (length == 0) { return *this; }
@@ -143,14 +151,16 @@ Web_StreamingBuffer& Web_StreamingBuffer::addString(const String& a) {
 
   unsigned int pos = 0;
   while (pos < length) {
-    if (flush_step == 0) {
+    if (flush_step <= 0) {
       flush();
       flush_step = CHUNKED_BUFFER_SIZE;
     } else {
-      // Just copy per byte instead of using substring as substring needs to allocate memory.
-      this->buf += a[pos];
-      ++pos;
-      --flush_step;
+      const int remaining = length - pos;
+      const int fetchLength = flush_step >= remaining ? remaining : flush_step;
+      const char* ch = a.begin() + pos;
+      this->buf.concat(ch, static_cast<unsigned int>(fetchLength));
+      pos += fetchLength;
+      flush_step -= fetchLength;
     }
   }
   return *this;
@@ -183,19 +193,23 @@ void Web_StreamingBuffer::startStream(const __FlashStringHelper * origin, int ht
   startStream(false, F("text/html"), origin, httpCode);
 }
 
-void Web_StreamingBuffer::startStream(const __FlashStringHelper * content_type, const __FlashStringHelper * origin, int httpCode) {
-  startStream(false, content_type, origin, httpCode);
+void Web_StreamingBuffer::startStream(const __FlashStringHelper * content_type,
+                                      const __FlashStringHelper * origin, 
+                                      int httpCode, 
+                                      bool cacheable) {
+  startStream(false, content_type, origin, httpCode, cacheable);
 }
 
 
 void Web_StreamingBuffer::startJsonStream() {
-  startStream(true, F("application/json"), F("*"));
+  startStream(false, F("application/json"), F(""));
 }
 
 void Web_StreamingBuffer::startStream(bool allowOriginAll, 
                                       const __FlashStringHelper * content_type, 
                                       const __FlashStringHelper * origin,
-                                      int httpCode) {
+                                      int httpCode,
+                                      bool cacheable) {
   #ifdef USE_SECOND_HEAP
   HeapSelectDram ephemeral;
   #endif
@@ -206,6 +220,10 @@ void Web_StreamingBuffer::startStream(bool allowOriginAll,
   sentBytes    = 0;
   buf.clear();
   buf.reserve(CHUNKED_BUFFER_SIZE);
+  web_server.client().setNoDelay(true);
+#ifdef ESP32
+  web_server.client().setSSE(false);
+#endif
   
   if (beforeTXRam < 3000) {
     lowMemorySkip = true;
@@ -215,7 +233,7 @@ void Web_StreamingBuffer::startStream(bool allowOriginAll,
       #endif // if defined(ESP8266)
     return;
   } else {
-    sendHeaderBlocking(allowOriginAll, content_type, origin, httpCode);
+    sendHeaderBlocking(allowOriginAll, content_type, origin, httpCode, cacheable);
   }
 }
 
@@ -253,7 +271,7 @@ void Web_StreamingBuffer::endStream() {
     buf.clear();
     sendContentBlocking(buf);
 
-    web_server.client().flush();
+    web_server.client().PR_9453_FLUSH_TO_CLEAR();
 
     finalRam = ESP.getFreeHeap();
 
@@ -274,9 +292,13 @@ void Web_StreamingBuffer::endStream() {
       addLog(LOG_LEVEL_ERROR, concat("Webpage skipped: low memory: ", finalRam));
     lowMemorySkip = false;
   }
+
+  delay(5);
+  web_server.client().stop();
+  #ifdef ESP8266
+  tcpCleanup();
+  #endif
 }
-
-
 
 
 void Web_StreamingBuffer::sendContentBlocking(String& data) {
@@ -289,12 +311,10 @@ void Web_StreamingBuffer::sendContentBlocking(String& data) {
   const uint32_t length   = data.length();
 #ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_DEV)) {
-    String log;
-    log += F("sendcontent free: ");
-    log += ESP.getFreeHeap();
-    log += F(" chunk size:");
-    log += length;
-    addLogMove(LOG_LEVEL_DEBUG_DEV, log);
+    addLogMove(LOG_LEVEL_DEBUG_DEV, strformat(
+      F("sendcontent free: %u  chunk size: %u"), 
+      ESP.getFreeHeap(), 
+      length));
   }
 #endif // ifndef BUILD_NO_DEBUG
   const uint32_t freeBeforeSend = ESP.getFreeHeap();
@@ -316,19 +336,24 @@ void Web_StreamingBuffer::sendContentBlocking(String& data) {
   if (length > 0) { web_server.sendContent(data); }
   web_server.sendContent("\r\n");
 #else // ESP8266 2.4.0rc2 and higher and the ESP32 webserver supports chunked http transfer
-  unsigned int timeout = 100;
-
+  #if defined(ESP8266) && defined(USE_SECOND_HEAP)
+  {
+    HeapSelectIram ephemeral;
+    web_server.sendContent(data);
+  }
+  #else
   web_server.sendContent(data);
+  #endif
 
-  if (data.length() > CHUNKED_BUFFER_SIZE) {
-    data = String(); // Clear also allocated memory
+  if (data.length() > (CHUNKED_BUFFER_SIZE + 1)) {
+    free_string(data); // Clear also allocated memory
   } else {
     data.clear();
   }
 
-  const uint32_t beginWait = millis();
+  const uint32_t timeout = millis() + 100;
   while ((!data.reserve(CHUNKED_BUFFER_SIZE) || (ESP.getFreeHeap() < 4000 /*freeBeforeSend*/ )) &&
-         !timeOutReached(beginWait + timeout)) {
+         !timeOutReached(timeout)) {
     if (ESP.getFreeHeap() < duringTXRam) {
       duringTXRam = ESP.getFreeHeap();
     }
@@ -342,13 +367,14 @@ void Web_StreamingBuffer::sendContentBlocking(String& data) {
 #endif // if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
 
   sentBytes += length;
-  delay(0);
+  delay(1);
 }
 
 void Web_StreamingBuffer::sendHeaderBlocking(bool allowOriginAll, 
                                              const String& content_type, 
                                              const String& origin,
-                                             int httpCode) {
+                                             int httpCode,
+                                             bool cacheable) {
   #ifdef USE_SECOND_HEAP
   HeapSelectDram ephemeral;
   #endif
@@ -357,7 +383,7 @@ void Web_StreamingBuffer::sendHeaderBlocking(bool allowOriginAll,
   checkRAM(F("sendHeaderBlocking"));
   #endif
   
-  web_server.client().flush();
+  web_server.client().PR_9453_FLUSH_TO_CLEAR();
 
 #if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
   web_server.setContentLength(CONTENT_LENGTH_UNKNOWN);
@@ -374,14 +400,24 @@ void Web_StreamingBuffer::sendHeaderBlocking(bool allowOriginAll,
   const uint32_t freeBeforeSend = ESP.getFreeHeap();
 
   const uint32_t beginWait = millis();
-  web_server.setContentLength(CONTENT_LENGTH_UNKNOWN);
-  web_server.sendHeader(F("Cache-Control"), F("no-cache"));
 
+  web_server.setContentLength(CONTENT_LENGTH_UNKNOWN);
+  if (!cacheable)
+    web_server.sendHeader(F("Cache-Control"), F("no-cache"));
+
+#if ESP_IDF_VERSION_MAJOR>4
+  if (origin.equals("*")) {
+    web_server.enableCORS(true);
+  } else
+#endif
   if (origin.length() > 0) {
+#if ESP_IDF_VERSION_MAJOR>4
+    web_server.enableCORS(false);
+#endif
     web_server.sendHeader(F("Access-Control-Allow-Origin"), origin);
   }
   web_server.send(httpCode, content_type, EMPTY_STRING);
-
+#ifdef ESP8266
   // dont wait on 2.3.0. Memory returns just too slow.
   while ((ESP.getFreeHeap() < freeBeforeSend) &&
          !timeOutReached(beginWait + timeout)) {
@@ -390,6 +426,7 @@ void Web_StreamingBuffer::sendHeaderBlocking(bool allowOriginAll,
     #endif
     delay(1);
   }
+#endif
 #endif // if defined(ESP8266) && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
   delay(0);
 }

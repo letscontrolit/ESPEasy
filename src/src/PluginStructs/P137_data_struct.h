@@ -78,11 +78,12 @@ enum class P137_GPIOBootState_e: uint8_t { // Will be applied by subtracting 1 !
 };
 
 enum class P137_PredefinedDevices_e : uint8_t {
-  Unselected     = 0u,
-  M5Stack_StickC = 1u,
-  M5Stack_Core2  = 2u,
-  LilyGO_TBeam   = 3u,
-  UserDefined    = 99u // Keep as last
+  Unselected         = 0u,
+  M5Stack_StickC     = 1u,
+  M5Stack_Core2      = 2u,
+  LilyGO_TBeam       = 3u,
+  M5Stack_StickCPlus = 4u,
+  UserDefined        = 99u // Keep as last
 };
 
 int16_t                    P137_settingToValue(uint16_t data,
@@ -95,6 +96,9 @@ const __FlashStringHelper* toString(const P137_valueOptions_e value,
                                     bool                      displayString = true);
 const __FlashStringHelper* toString(const P137_GPIOBootState_e value);
 const __FlashStringHelper* toString(const P137_PredefinedDevices_e device);
+#  if FEATURE_MQTT_DISCOVER
+int                        Plugin_137_QueryVType(uint8_t value_nr);
+#  endif // if FEATURE_MQTT_DISCOVER
 
 struct P137_data_struct : public PluginTaskData_base {
 public:

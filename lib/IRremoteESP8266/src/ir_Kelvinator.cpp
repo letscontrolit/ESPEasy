@@ -540,7 +540,7 @@ bool IRrecv::decodeKelvinator(decode_results *results, uint16_t offset,
     offset += used;
     pos += 4;
 
-    // Command data footer (3 bits, B010)
+    // Command data footer (3 bits, 0b010)
     data_result = matchData(
         &(results->rawbuf[offset]), kKelvinatorCmdFooterBits,
         kKelvinatorBitMark, kKelvinatorOneSpace,

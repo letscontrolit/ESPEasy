@@ -10,9 +10,6 @@
 // ********************************************************************************
 void handle_hardware();
 
-#if FEATURE_PLUGIN_PRIORITY
-bool isI2CPriorityTaskActive();
-#endif // if FEATURE_PLUGIN_PRIORITY
 #endif // ifdef WEBSERVER_HARDWARE
 
-#endif
+#endif // ifndef WEBSERVER_WEBSERVER_HARDWAREPAGE_H

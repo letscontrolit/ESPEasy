@@ -12,13 +12,13 @@ struct EventStruct;
 
 deviceIndex_t getDeviceIndex_from_PluginID(pluginID_t pluginID);
 pluginID_t getPluginID_from_DeviceIndex(deviceIndex_t deviceIndex);
-bool validDeviceIndex_init(deviceIndex_t deviceIndex);
+bool do_check_validDeviceIndex(deviceIndex_t deviceIndex);
 
 // Array containing "DeviceIndex" alfabetically sorted.
 deviceIndex_t getDeviceIndex_sorted(deviceIndex_t deviceIndex);
 
 
-boolean PluginCall(deviceIndex_t deviceIndex, uint8_t function, struct EventStruct *event, String& string);
+boolean do_PluginCall(deviceIndex_t deviceIndex, uint8_t function, struct EventStruct *event, String& string);
 
 // Get the sizeof() in number of bits for the number of actually included plugins in the build
 unsigned getNrBitsDeviceIndex();
@@ -390,10 +390,7 @@ void PluginInit(bool priorityOnly = false);
 #endif
 
 #ifdef USES_P089
-  #ifdef ESP8266
-  // FIXME TD-er: Support Ping plugin for ESP32
   ADDPLUGIN_H(089)
-  #endif
 #endif
 
 #ifdef USES_P090
@@ -425,9 +422,7 @@ void PluginInit(bool priorityOnly = false);
 #endif
 
 #ifdef USES_P097
-  #if defined(ESP32) && !defined(ESP32C3)
   ADDPLUGIN_H(097) // Touch (ESP32)
-  #endif
 #endif
 
 #ifdef USES_P098
@@ -717,7 +712,7 @@ void PluginInit(bool priorityOnly = false);
 #ifdef USES_P169
   ADDPLUGIN_H(169)
 #endif
-
+ 
 #ifdef USES_P170
   ADDPLUGIN_H(170)
 #endif

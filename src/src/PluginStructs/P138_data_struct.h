@@ -11,7 +11,7 @@
 # define P138_CONFIG_BASE         0 // Uses PCONFIG(0)..PCONFIG(3) to store the selection for 4 output values
 # define P138_SENSOR_TYPE_INDEX   (P138_CONFIG_BASE + VARS_PER_TASK)
 # define P138_NR_OUTPUT_VALUES    getValueCountFromSensorType(static_cast<Sensor_VType>(PCONFIG(P138_SENSOR_TYPE_INDEX)))
-# define P138_CONFIG_DECIMALS     PCONFIG(P138_CONFIG_BASE + VARS_PER_TASK + 1)
+# define P138_CONFIG_DECIMALS     PCONFIG(P138_SENSOR_TYPE_INDEX + 1)
 
 # define P138_CONFIG_FLAGS        PCONFIG_ULONG(0)
 # define P138_FLAG_POWERCHANGE    0 // Flag 0: Send event on PowerChange event
@@ -28,6 +28,9 @@ enum class P138_valueOptions_e : uint8_t {
 
 const __FlashStringHelper* toString(const P138_valueOptions_e value,
                                     bool                      displayString = true);
+# if FEATURE_MQTT_DISCOVER
+int                        Plugin_138_QueryVType(uint8_t value_nr);
+# endif // if FEATURE_MQTT_DISCOVER
 
 struct P138_data_struct : public PluginTaskData_base {
 public:
@@ -47,7 +50,7 @@ private:
 
   arduino::ip5306 *_ip5306 = nullptr;
 
-  bool isInitialized() {
+  bool isInitialized() const {
     return nullptr != _ip5306;
   }
 

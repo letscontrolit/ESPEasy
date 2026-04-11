@@ -7,8 +7,11 @@
 // #################################### Plugin 137: AXP192 Powermanagement ###############################
 // #######################################################################################################
 
-/**
- * Changelog:
+/** Changelog:
+ * 2025-01-21 tonhuisman: Bugfix: commands axp,ldo2,x to axp,dcdc3,x weren't working as intended
+ * 2025-01-18 tonhuisman: Add predefined config settings for M5Stack StickC Plus units
+ * 2025-01-18 tonhuisman: Implement support for MQTT AutoDiscovery
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported yet for AXP192)
  * 2022-12-27 tonhuisman: Add predefined config settings for LilyGO T-Beam LoRa units
  * 2022-12-07 tonhuisman: Re-order device configuration to use PLUGIN_WEBFORM_LOAD_OUTPUT_SELECTOR
  *                        Enable PluginStats feature
@@ -81,24 +84,25 @@ boolean Plugin_137(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number       = PLUGIN_ID_137;
-      Device[deviceCount].Type           = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType          = Sensor_VType::SENSOR_TYPE_QUAD;
-      Device[deviceCount].OutputDataType = Output_Data_type_t::Simple;
-      Device[deviceCount].PowerManager   = true; // So it can be started before SPI is initialized
-      Device[deviceCount].FormulaOption  = true;
-      Device[deviceCount].ValueCount     = 4;
-      Device[deviceCount].SendDataOption = true;
-      Device[deviceCount].TimerOption    = true;
-      Device[deviceCount].TimerOptional  = true;
-      Device[deviceCount].PluginStats    = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_137;
+      dev.Type           = DEVICE_TYPE_I2C;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_QUAD;
+      dev.OutputDataType = Output_Data_type_t::Simple;
+      dev.PowerManager   = true; // So it can be started before SPI is initialized
+      dev.FormulaOption  = true;
+      dev.ValueCount     = 4;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
+      dev.TimerOptional  = true;
+      dev.PluginStats    = true;
       break;
     }
 
     case PLUGIN_PRIORITY_INIT:
     {
       #  ifndef BUILD_NO_DEBUG
-      addLogMove(LOG_LEVEL_DEBUG, F("P137: PLUGIN_PRIORITY_INIT"));
+      addLog(LOG_LEVEL_DEBUG, F("P137: PLUGIN_PRIORITY_INIT"));
       #  endif // ifndef BUILD_NO_DEBUG
       success = Settings.isPowerManagerTask(event->TaskIndex); // Are we the PowerManager task?
       break;
@@ -137,20 +141,28 @@ boolean Plugin_137(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    #  if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      success = getDiscoveryVType(event, Plugin_137_QueryVType, P137_CONFIG_BASE, event->Par5);
+      break;
+    }
+    #  endif // if FEATURE_MQTT_DISCOVER
+
     case PLUGIN_I2C_HAS_ADDRESS:
     {
       success =  event->Par1 == I2C_AXP192_DEFAULT_ADDRESS;
       break;
     }
 
-    # if FEATURE_I2C_GET_ADDRESS
+    #  if FEATURE_I2C_GET_ADDRESS
     case PLUGIN_I2C_GET_ADDRESS:
     {
       event->Par1 = I2C_AXP192_DEFAULT_ADDRESS;
       success     = true;
       break;
     }
-    # endif // if FEATURE_I2C_GET_ADDRESS
+    #  endif // if FEATURE_I2C_GET_ADDRESS
 
     case PLUGIN_SET_DEFAULTS:
     {
@@ -180,6 +192,7 @@ boolean Plugin_137(uint8_t function, struct EventStruct *event, String& string)
           toString(P137_PredefinedDevices_e::M5Stack_StickC),
           toString(P137_PredefinedDevices_e::M5Stack_Core2),
           toString(P137_PredefinedDevices_e::LilyGO_TBeam),
+          toString(P137_PredefinedDevices_e::M5Stack_StickCPlus),
           toString(P137_PredefinedDevices_e::UserDefined) // keep last and at 99 !!
         };
         const int predefinedValues[] = {
@@ -187,21 +200,21 @@ boolean Plugin_137(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(P137_PredefinedDevices_e::M5Stack_StickC),
           static_cast<int>(P137_PredefinedDevices_e::M5Stack_Core2),
           static_cast<int>(P137_PredefinedDevices_e::LilyGO_TBeam),
+          static_cast<int>(P137_PredefinedDevices_e::M5Stack_StickCPlus),
           static_cast<int>(P137_PredefinedDevices_e::UserDefined) }; // keep last and at 99 !!
-        addFormSelector(F("Predefined device configuration"), F("predef"),
-                        sizeof(predefinedValues) / sizeof(int),
-                        predefinedNames, predefinedValues, 0, !Settings.isPowerManagerTask(event->TaskIndex));
+        constexpr size_t optionCount = NR_ELEMENTS(predefinedValues);
+        FormSelectorOptions selector(optionCount, predefinedNames, predefinedValues);
+        selector.reloadonchange = !Settings.isPowerManagerTask(event->TaskIndex);
+        selector.addFormSelector(F("Predefined device configuration"), F("predef"), 0);
 
-        if (!Settings.isPowerManagerTask(event->TaskIndex)) {
-          addFormNote(F("Page will reload when selection is changed."));
-        }
+        // if (!Settings.isPowerManagerTask(event->TaskIndex)) {
+        //   addFormNote(F("Page will reload when selection is changed."));
+        // }
 
-        if (static_cast<P137_PredefinedDevices_e>(P137_CURRENT_PREDEFINED) != P137_PredefinedDevices_e::Unselected) {
-          String note;
-          note.reserve(55);
-          note += F("Last selected: ");
-          note += toString(static_cast<P137_PredefinedDevices_e>(P137_CURRENT_PREDEFINED));
-          addFormNote(note);
+        const P137_PredefinedDevices_e current_ = static_cast<P137_PredefinedDevices_e>(P137_CURRENT_PREDEFINED);
+
+        if (current_ != P137_PredefinedDevices_e::Unselected) {
+          addFormNote(concat(F("Last selected: "), toString(current_)));
         }
       }
       const __FlashStringHelper *notConnected = F("N/C - Unused");
@@ -260,24 +273,22 @@ boolean Plugin_137(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(P137_GPIOBootState_e::PWM),
         };
         const String bootStateAttributes[] = {
-          F(""),
-          F(""),
-          F(""),
+          EMPTY_STRING,
+          EMPTY_STRING,
+          EMPTY_STRING,
           F("disabled"),
           F("disabled"),
         };
+        constexpr size_t optionCount = NR_ELEMENTS(bootStateValues);
 
-        for (int i = 0; i < 5; i++) { // GPIO0..4
+        for (int i = 0; i < 5; ++i) { // GPIO0..4
           const String id = concat(F("pgpio"), i);
           addRowLabel(concat(F("Initial state GPIO"), i));
-          addSelector(id, sizeof(bootStateValues) / sizeof(int),
-                      bootStates, bootStateValues, bootStateAttributes,
-                      get3BitFromUL(P137_CONFIG_FLAGS, i * 3),
-                      false, !bitRead(P137_CONFIG_DISABLEBITS, i + 3), F("")
-                      #  if FEATURE_TOOLTIPS
-                      , EMPTY_STRING
-                      #  endif // if FEATURE_TOOLTIPS
-                      );
+          FormSelectorOptions selector(
+            optionCount, bootStates, bootStateValues, bootStateAttributes);
+          selector.enabled = !bitRead(P137_CONFIG_DISABLEBITS, i + 3);
+          selector.clearClassName();
+          selector.addSelector(id, get3BitFromUL(P137_CONFIG_FLAGS, i * 3));
 
           if (bitRead(P137_CONFIG_DISABLEBITS, i + 3)) {
             addUnit(notConnected);
@@ -335,12 +346,13 @@ boolean Plugin_137(uint8_t function, struct EventStruct *event, String& string)
         static_cast<int>(P137_valueOptions_e::DCDC2),
         static_cast<int>(P137_valueOptions_e::DCDC3),
       };
+      constexpr size_t optionCount = NR_ELEMENTS(valValues);
 
-      for (uint8_t i = 0; i < P137_NR_OUTPUT_VALUES; i++) {
+      for (uint8_t i = 0; i < P137_NR_OUTPUT_VALUES; ++i) {
         sensorTypeHelper_loadOutputSelector(event,
                                             P137_CONFIG_BASE + i,
                                             i,
-                                            sizeof(valValues) / sizeof(int),
+                                            optionCount,
                                             valOptions,
                                             valValues);
       }
@@ -351,7 +363,7 @@ boolean Plugin_137(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      for (uint8_t i = 0; i < P137_NR_OUTPUT_VALUES; i++) {
+      for (uint8_t i = 0; i < P137_NR_OUTPUT_VALUES; ++i) {
         sensorTypeHelper_saveOutputSelector(event, P137_CONFIG_BASE + i, i,
                                             toString(static_cast<P137_valueOptions_e>(PCONFIG(P137_CONFIG_BASE + i)), false));
       }
@@ -362,13 +374,13 @@ boolean Plugin_137(uint8_t function, struct EventStruct *event, String& string)
                             P137_valueToSetting(getFormItemInt(F("pldo3")), P137_CONST_MAX_LDO);
       P137_REG_LDOIO = P137_valueToSetting(getFormItemInt(F("ldoiovolt")), P137_CONST_MAX_LDOIO);
 
-      for (int i = 0; i < 5; i++) { // GPIO0..4
+      for (int i = 0; i < 5; ++i) { // GPIO0..4
         P137_SET_GPIO_FLAGS(i, getFormItemInt(concat(F("pgpio"), i)));
       }
 
       P137_CONFIG_DECIMALS    = getFormItemInt(F("decimals"));
       P137_CONFIG_PREDEFINED  = getFormItemInt(F("predef"));
-      P137_CONFIG_DISABLEBITS = getFormItemInt(F("pbits"), static_cast<int>(P137_CONFIG_DISABLEBITS)); // Keep previous value if not found
+      P137_CONFIG_DISABLEBITS = getFormItemInt(F("pbits"), P137_CONFIG_DISABLEBITS); // Keep previous value if not found
 
       success = true;
       break;
@@ -380,20 +392,15 @@ boolean Plugin_137(uint8_t function, struct EventStruct *event, String& string)
 
       if (nullptr != P137_init) {
         #  ifndef BUILD_NO_DEBUG
-        addLogMove(LOG_LEVEL_INFO, F("P137: Already initialized, skipped."));
+        addLog(LOG_LEVEL_INFO, F("P137: Already initialized, skipped."));
         #  endif // ifndef BUILD_NO_DEBUG
         // has been initialized so nothing to do here
         success = true; // Still was successful (to keep plugin enabled!)
       } else {
         #  ifndef BUILD_NO_DEBUG
-        addLogMove(LOG_LEVEL_DEBUG, F("P137: PLUGIN_INIT"));
+        addLog(LOG_LEVEL_DEBUG, F("P137: PLUGIN_INIT"));
         #  endif // ifndef BUILD_NO_DEBUG
-        initPluginTaskData(event->TaskIndex, new (std::nothrow) P137_data_struct(event));
-        P137_data_struct *P137_data = static_cast<P137_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-        if (nullptr != P137_data) {
-          success = true;
-        }
+        success = initPluginTaskData(event->TaskIndex, new (std::nothrow) P137_data_struct(event));
       }
 
       break;

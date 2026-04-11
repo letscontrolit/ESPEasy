@@ -1,0 +1,44 @@
+.. csv-table::
+        :header: "Command", "Extra information"
+        :widths: 20, 30
+
+        "
+        ``serialsend,<content to send>``
+
+        ``<content to send>``: Text that will be sent (nearly) unprocessed. Only the regular variable replacements will be applied before sending the content to the serial port.
+        ","
+        Using this command, either from rules, via http or mqtt, the text that is provided as content is completely sent to the serial port. No extra data is added, other than any (system) variables that are included, being replaced.
+        "
+        "
+        ``ser2netclientsend,<content to send>``
+
+        ``<content to send>``: Text that will be sent (nearly) unprocessed. Only the regular variable replacements will be applied before sending the content to the network client.
+        ","
+        This command will only send data to the network client, when there is an active connection.
+
+        Using this command, either from rules, via http or mqtt, the text that is provided as content is completely sent to the network client. No extra data is added, other than any (system) variables that are included, being replaced.
+        "
+        "
+        ``serialsendmix,'<content to send>'[,...]``
+
+        ``<content to send>``: Text and/or hex byte(s) (having 0x prefix) that will be sent (nearly) unprocessed. Only the regular variable replacements will be applied before sending the content to the serial port.
+        ","
+
+        This command requires quotes to be used if spaces or commas are part of the content.
+
+        Any data can be sent, even if it can not be typed in a text content, by specifying that as a separate argument: ``serialsendmix,'text, optionally including spaces or commas',0xXX,'0xXXxx XX,xx-XX:xx'``
+
+        ``'text, optionally including spaces or commas'``: Any text content to be sent to the serial port. Can contain variables. Quotes are only required if spaces or commas (separators) are used.
+
+        ``0xXX``: A single character in hexadecimal notation (range: 0x00..0xFF), that is appended to the data to send.
+
+        ``'0xXXxx XX,xx-XX:xx'``: A sequence of hexadecimal values (range: 0x00..0xFF), that *can* be separated by a space, comma, dash, colon, semicolon or period, or are just entered adjecent. Only the first 2 characters should be ``0x`` or ``0X``, the rest is interpreted as hex bytes, and appended to the string to send. Quotes are only required if space or comma separators are used.
+        Using this command, either from rules, via http or mqtt, the text that is provided as content is completely sent to the serial port. No extra data is added, other than any (system) variables that are included, being replaced.
+        "
+        "
+        ``serialsend_test,'<content to place in serial buffer>'``
+
+        ``<content to place in serial buffer>``: Text that will be put into the serial buffer (nearly) unprocessed. Only the regular variable replacements will be applied before sending the content to the serial port.
+        ","
+        This command is intended for testing as if data was received via serial. After placing the data in the buffer, the regular handling of that data is initiated.
+        "

@@ -1,0 +1,210 @@
+#!/usr/bin/env python
+
+# builds_overview.py
+#
+#############################################################################################################
+# This script parses all documentation substitution files to determine in what builds a plugin is available
+# Collection A..H, Display A..B, Climate A..B, Energy and Neopixel, IR and IRext get Normal plugins injected
+# Collection, Notify and Network plugins are also injected into Collection A..H
+# All plugins get injected into MAX build set
+# Some build sets have exceptions for plugins not available
+# The output generation order is determined by how they are ordered in list 'buildColors'
+# When adding or removing a build set, this script may need adjustments!
+
+# Changelog:
+# 2026-03-12 tonhuisman: Separate status for ESP32 and ESP8266 (_lb suffix)
+# 2025-10-05 tonhuisman: Adjustments for Display A and Display B split
+# 2025-10-01 tonhuisman: Include Notify and Network plugins, ignore not available files, parse NWxxx also
+# 2024-05-04 tonhuisman: Working and documented
+# 2024-04-28 tonhuisman: Initial script
+
+import os
+import re
+import json
+
+# Must be a subfolder of source, as the included filenames have a ../ prefix!
+basePath = "source/_templates/"
+
+# Gather data
+allBuilds = {}
+allBuilds_lb = {}
+
+# Not mentioned as a build in documentation, implicit
+appendBuilds = {'MAX'}
+
+# What build set to add plugins also
+appendAlso = {
+  'NORMAL': {'CLIMATE', 'COLLECTION A', 'COLLECTION B', 'COLLECTION C', 'COLLECTION D', 'COLLECTION E', 'COLLECTION F', 'COLLECTION G', 'COLLECTION H', 'DISPLAY A', 'DISPLAY B', 'ENERGY', 'IR', 'IRext', 'NEOPIXEL'},
+  'COLLECTION': {'COLLECTION A', 'COLLECTION B', 'COLLECTION C', 'COLLECTION D', 'COLLECTION E', 'COLLECTION F', 'COLLECTION G', 'COLLECTION H'},
+  'DISPLAY': {'DISPLAY A', 'DISPLAY B'},
+  'CLIMATE': {'CLIMATE A', 'CLIMATE B'}
+  }
+
+# Ignore these, not real build sets
+excludeBuilds = {'DEVELOPMENT', 'RETIRED'}
+
+# Plugins not included
+excludePlugins = {
+  'CLIMATE A': {'P007', 'P008', 'P009', 'P017', 'P022', 'P027', 'P030', 'P035', 'P040', 'P041', 'P042', 'P045'},
+  'CLIMATE B': {'P007', 'P008', 'P009', 'P017', 'P022', 'P027', 'P030', 'P035', 'P040', 'P041', 'P042', 'P045'},
+  'DISPLAY A': {'P038', 'P041', 'P042', 'P070'},
+  'DISPLAY B': {'P012', 'P023', 'P038', 'P041', 'P042', 'P057', 'P070', 'P075', 'P104'},
+  # 'MAX': {''},
+  # 'NEOPIXEL': {''},
+  # 'ENERGY': {''},
+  'NORMAL': {'P016', 'P035'},
+}
+
+# This list determines the order and color of the build sets to include in the generated output
+buildColors = {
+  'NORMAL': 'green',
+  'COLLECTION A': 'yellow',
+  'COLLECTION B': 'yellow',
+  'COLLECTION C': 'yellow',
+  'COLLECTION D': 'yellow',
+  'COLLECTION E': 'yellow',
+  'COLLECTION F': 'yellow',
+  'COLLECTION G': 'yellow',
+  'COLLECTION H': 'yellow',
+  'CLIMATE A': 'yellow',
+  'CLIMATE B': 'yellow',
+  'DISPLAY A': 'yellow',
+  'DISPLAY B': 'yellow',
+  'ENERGY': 'yellow',
+  'IR': 'yellow',
+  'IRext': 'yellow',
+  'NEOPIXEL': 'yellow',
+  'MAX': 'yellow',
+}
+
+# Add/update a single plugin in the list
+def addOnePlugin(build, plugin, pluginName, with_lb = False):
+  if not build in allBuilds:
+    allBuilds[build] = {}
+  allBuilds[build].update({plugin: pluginName})
+  if not build in allBuilds_lb:
+    allBuilds_lb[build] = {}
+  if with_lb:
+    allBuilds_lb[build].update({plugin: pluginName})
+
+# Add a plugin to all builds it should go in
+def addToAllBuilds(plugin, pluginName, builds:dict, builds_lb:dict):
+  for b in appendBuilds:
+    if not b in builds:
+      builds += {b}
+  for b in builds:
+    if b:
+      includeIt = True
+      # builds to ignore
+      if b in excludeBuilds:
+        includeIt = False
+      # plugins per build to ignore
+      if includeIt and b in excludePlugins:
+        if plugin in excludePlugins[b]:
+          includeIt = False
+      if includeIt:
+        addOnePlugin(b, plugin, pluginName, b in builds_lb)
+        # Add in other builds too?
+        if b in appendAlso:
+          for n in appendAlso[b]:
+            if includeIt and n in excludePlugins:
+              if plugin in excludePlugins[n]:
+                includeIt = False
+            # Except when not to be included
+            if includeIt:
+              addOnePlugin(n, plugin, pluginName, b in builds_lb)
+
+# Parse a single substitution file
+def parseSingleSubstitutionFile(fileName):
+  filepath = os.path.relpath(os.path.join(basePath, fileName), '.')
+  if not os.path.isfile(filepath):
+    return
+  # print(filepath) # For debugging
+  pfile = open(filepath, "r")
+  # Start empty
+  plugin = ""
+  pluginName = ""
+  builds = []
+  builds_lb = []
+  while True:
+    line = pfile.readline()
+    if not line:
+      break
+    # Parse into label, plugin ID, description and up to 5 separate builds (current max.),
+    # append "(?:[^`]+`([^`]+)`)?" to regex for an extra build, if needed
+    m = re.search(r"[^|]\|((?:NW|[PCN])(\d{3}))([^\|]+)\|[^`]+`([^`]+)`(?:[^`]+`([^`]+)`)?(?:[^`]+`([^`]+)`)?(?:[^`]+`([^`]+)`)?(?:[^`]+`([^`]+)`)?", line)
+    if m:
+      if m.group(3) == "_typename": # the typename substitution should be before _status...
+        if plugin != "" and plugin != m.group(1): # Changed plugin ID, store current
+          addToAllBuilds(plugin, pluginName, builds, builds_lb)
+        plugin = m.group(1)
+        pluginName = m.group(4)        
+
+      if m.group(3) == "_status":
+        builds = [m.group(4), m.group(5), m.group(6), m.group(7), m.group(8)]
+      if m.group(3) == "_status_lb":
+        builds_lb = [m.group(4), m.group(5), m.group(6), m.group(7), m.group(8)]
+  pfile.close()
+  if plugin != "": # Store last one too
+    addToAllBuilds(plugin, pluginName, builds, builds_lb)
+    
+# Parse all .. include :: files
+def parseSubstitutionFiles(rootFile):
+  rfile = open(basePath + rootFile, "r")
+  while True:
+    line = rfile.readline()
+    if not line:
+      break
+    m = re.search(r"[^:]+::(.*)", line)
+    fn = m.group(1).strip()
+    if fn and fn != "":
+      parseSingleSubstitutionFile(fn)
+  rfile.close()
+
+# Sort Plugins on top, anything else below that
+def sortPluginsBeforeControllers(pluginid):
+  if pluginid[0] != 'P':
+    return pluginid.lower()[0] # Lowercase sorts after uppercase, so P goes first
+  return pluginid[0]
+
+# Generate the output
+def generateBuildOverview(fileName):
+  filepath = os.path.relpath(os.path.join(basePath, fileName), '.')
+  
+  print('Writing build sets overview to:', filepath)
+
+  output = open(filepath, "w")
+  output.write('Plugins per build set\n')
+  output.write('=====================\n')
+  output.write('\n')
+  for b in buildColors:
+    if b in allBuilds:
+      output.write('Build set:  :' + buildColors[b] + ':`' + b + '`\n')
+      output.write('---------------------------------------------\n')
+      output.write('\n')
+      output.write('.. collapse:: Details...\n')
+      output.write('\n')
+      output.write('   .. csv-table::\n')
+      output.write('      :header: "Plugin name", "ESP32", "ESP8266", "Plugin number"\n')
+      output.write('      :widths: 10, 3, 3, 3\n')
+      output.write('\n')
+      for p in sorted(allBuilds[b], key=sortPluginsBeforeControllers):
+        output.write('      ":ref:`' + p + '_page`", "✓", "' + ('✓' if p in allBuilds_lb[b] else '') + '", "' + p + '"\n')
+      output.write('\n')
+  output.close()
+
+# Main entrypoint
+print('Parsing substitutions for build sets...')
+# Parse all Plugin substitutions
+parseSubstitutionFiles('../Plugin/_plugin_substitutions.repl')
+# Parse all Controller substitutions
+parseSingleSubstitutionFile('../Controller/_controller_substitutions.repl')
+# Parse all Notify substitutions
+parseSingleSubstitutionFile('../Notify/_notify_substitutions_n00x.repl')
+# Parse all Network substitutions
+parseSingleSubstitutionFile('../Network/_network_substitutions.repl')
+
+# Generate output
+generateBuildOverview('../Plugin/_plugin_sets_overview.repl')
+
+# print(json.dumps(allBuilds,indent=2,sort_keys=True)) # For debugging

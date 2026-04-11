@@ -9,6 +9,7 @@ const char arkanoid[] PROGMEM = "Arkanoid:d=4,o=5,b=140:8g6,16p,16g.6,2a#6,32p,8
 const char mario[] PROGMEM = "mario:d=4,o=5,b=140:16e6,16e6,32p,8e6,16c6,8e6,8g6,8p,8g,8p,8c6,16p,8g,16p,8e,16p,8a,8b,16a#,8a,16g.,16e6,16g6,8a6,16f6,8g6,8e6,16c6,16d6,8b,16p,8c6,16p,8g,16p,8e,16p,8a,8b,16a#,8a,16g.,16e6,16g6,8a6,16f6,8g6,8e6,16c6,16d6,8b,8p,16g6,16f#6,16f6,16d#6,16p,16e6,16p,16g#,16a,16c6,16p,16a,16c6,16d6,8p,16g6,16f#6,16f6,16d#6,16p,16e6,16p,16c7,16p,16c7,16c7,p,16g6,16f#6,16f6,16d#6,16p,16e6,16p,16g#,16a,16c6,16p,16a,16c6,16d6,8p,16d#6,8p,16d6,8p,16c6";
 // James Bond theme defined in inline code below (also stored in flash memory) 
 
+#ifdef ESP32
 // tone() and noTone() are not implemented for Arduino core for the ESP32
 // See https://github.com/espressif/arduino-esp32/issues/980
 // and https://github.com/espressif/arduino-esp32/issues/1720
@@ -24,17 +25,19 @@ void esp32Tone(uint8_t pin, unsigned int frq, unsigned long duration) {
 }
 
 void esp32ToneSetup(uint8_t pin) {
-  ledcSetup(0, 1000, 10); // resolution always seems to be 10bit, no matter what is given
-  ledcAttachPin(pin, 0);
+  ledcAttach(pin, 1000, 10); // resolution always seems to be 10bit, no matter what is given
 }
+#endif
 
 void setup() {
   pinMode(BUZZER_PIN, OUTPUT);
 
+#ifdef ESP32
   // setup AnyRtttl for ESP32
   esp32ToneSetup(BUZZER_PIN);
   anyrtttl::setToneFunction(&esp32Tone);
   anyrtttl::setNoToneFunction(&esp32NoTone);
+#endif
 
   Serial.begin(115200);
 

@@ -325,7 +325,7 @@ Typical uses in ESPEasy where an interrupt of a GPIO pin is used are:
 Pins used for RMII Ethernet PHY
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. include:: ../Reference/Ethernet_PHY_ESP32.rst
+.. include:: ../Reference/RMII_Ethernet_PHY_ESP32.rst
 
 
 Best pins to use on ESP32-C3
@@ -366,8 +366,13 @@ ESP32-C3 SPI flash pins
 
 Pins connected to flash or PSRAM should not be used for anything else.
 
+On boards with embedded flash, these pins cannot be used:
+
 * GPIO-11: Flash voltage selector
 * GPIO-12 ... -17: Connected to flash
+
+On boards with external flash, GPIO-11, GPIO-12 and GPIO-13 can be selected.
+However special care should be taken as some boards can still have these pins wired to the flash chip.
 
 .. note:: By default VDD_SPI is the power supply pin for embedded flash or external flash.  It can only be used as GPIO-11 only when the chip is connected to an external flash, and this flash is powered by an external power supply.
 
@@ -607,6 +612,21 @@ ESP32-C2 (ESP8684)
 * GPIO-8: Enable or disable ROM messages printing
 
 The strapping combination of GPIO-8 = 0 and GPIO-9 = 0 is invalid and will trigger unexpected behavior.
+
+
+ESP32-C5
+~~~~~~~~
+
+* GPIO-26 ... 28: "Select Bootloader Mode" pin
+* GPIO-27: Enable or disable ROM messages printing
+* GPIO-7: JTAG signal source
+* GPIO-2: MTMS, used to select crystal frequency in non-standard boot mode
+
+
+GPIO-2 is only used when the crystal frequency isn't explicitly set via efuses (which should not happen).
+
+GPIO-25 and -3 are used to set SDIO sampling and driving clock edge.
+However this is also never used as SDIO mode means no flash and the chip is connected to a CPU and used as WiFi card.
 
 
 ESP32-C6

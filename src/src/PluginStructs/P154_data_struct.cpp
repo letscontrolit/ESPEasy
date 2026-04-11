@@ -1,6 +1,8 @@
 #include "../PluginStructs/P154_data_struct.h"
 
-#ifdef USES_P154
+#if defined(USES_P154) || defined(USES_P172)
+
+#include "../Helpers/Hardware_SPI.h"
 
 # define P154_BMP3_CHIP_ID     0x50
 # define P154_BMP390_CHIP_ID   0x60
@@ -8,13 +10,31 @@
 
 P154_data_struct::P154_data_struct(struct EventStruct *event) :
   i2cAddress(P154_I2C_ADDR),
-  elevation(P154_ALTITUDE)
+  elevation(P154_ALTITUDE),
+  csPin(PIN(0))
 {}
 
-bool P154_data_struct::begin()
+bool P154_data_struct::begin(struct EventStruct *event, bool _i2cMode)
 {
-  if (!bmp.begin_I2C(i2cAddress)) {
+  i2cMode = _i2cMode;
+
+  if (i2cMode && !bmp.begin_I2C(i2cAddress)) {
     return false;
+  }
+  if (!i2cMode) {
+# ifdef ESP32
+    auto spi_ptr = getSPIBusForTask(event->TaskIndex);
+    if (!spi_ptr) {
+      return false;
+    }
+#endif
+    if (!bmp.begin_SPI(csPin
+                      # ifdef ESP32
+                      , spi_ptr
+                      # endif // ifdef ESP32
+                      )) {
+      return false;
+    }
   }
 
   // Set up oversampling and filter initialization
@@ -48,17 +68,40 @@ bool P154_data_struct::read(float& temp, float& pressure)
   return true;
 }
 
-bool P154_data_struct::webformLoad(struct EventStruct *event)
-{
-  addRowLabel(F("Detected Sensor Type"));
-  const uint8_t chipID = I2C_read8_reg(P154_I2C_ADDR, 0);
+uint32_t P154_data_struct::chipID() {
+  return bmp.chipID();
+}
 
-  if (chipID == P154_BMP3_CHIP_ID) {
-    addHtml(F("BMP38x"));
-  } else if (chipID == P154_BMP390_CHIP_ID) {
-    addHtml(F("BMP390"));
+bool P154_data_struct::webformLoad(struct EventStruct *event,
+                                   bool                _i2cMode)
+{
+  uint32_t chipID{};
+  bool     chipIDvalid = _i2cMode;
+
+  if (_i2cMode) {
+    chipID = I2C_read8_reg(P154_I2C_ADDR, 0);
+  # ifdef USES_P172
   } else {
-    addHtmlInt(chipID);
+    P154_data_struct *P154_P172_data =
+      static_cast<P154_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+    if (nullptr != P154_P172_data) {
+      chipID      = P154_P172_data->chipID();
+      chipIDvalid = true;
+    }
+  # endif // ifdef USES_P172
+  }
+
+  if (chipIDvalid) {
+    addRowLabel(F("Detected Sensor Type"));
+
+    if (chipID == P154_BMP3_CHIP_ID) {
+      addHtml(F("BMP38x"));
+    } else if (chipID == P154_BMP390_CHIP_ID) {
+      addHtml(F("BMP390"));
+    } else {
+      addHtmlInt(chipID);
+    }
   }
 
   addFormNumericBox(F("Altitude"), F("elev"), P154_ALTITUDE);
@@ -73,4 +116,4 @@ bool P154_data_struct::webformSave(struct EventStruct *event)
   return true;
 }
 
-#endif // ifdef USES_P154
+#endif // if defined(USES_P154) || defined(USES_P172)

@@ -5,8 +5,8 @@
 
 
 # include "../WebServer/HTML_wrappers.h"
-# include "../WebServer/ESPEasy_WebServer.h"
 # include "../Helpers/WebServer_commandHelper.h"
+# include "../Helpers/StringConverter.h"
 
 # include "../../ESPEasy-Globals.h"
 
@@ -41,7 +41,7 @@ void handle_control() {
 
   TXBuffer.endStream();
 
-  printWebString = String();
+  free_string(printWebString);
   printToWeb     = false;
   printToWebJSON = false;
 }

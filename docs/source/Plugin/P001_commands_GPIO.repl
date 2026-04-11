@@ -11,7 +11,7 @@ Supported hardware: |P000_usedby_GPIO|
   "
   ``GPIO,<GPIO>,<state>``
 
-  GPIO: 0 ... 16
+  GPIO: 0 ... <max supported GPIO pin>
 
   State:
 
@@ -28,12 +28,12 @@ Supported hardware: |P000_usedby_GPIO|
   "
   ``GPIOtoggle,<GPIO>``
 
-  GPIO: 0 ... 16
+  GPIO: 0 ... <max supported GPIO pin>
 
   ","
   **Toggle on/off.**.
   Toggle the current (output) state of the given GPIO pin.
-  When executed, it changes the pin mode to output.
+  When executed, it changes the pin mode to output, for output-capable GPIO pins.
   "
   "
   ``LongPulse,<GPIO>,<state>,<duration>``
@@ -130,7 +130,9 @@ Supported hardware: |P000_usedby_GPIO|
   "
   ``Servo,<servo ID>,<GPIO>,<position>``
 
-  GPIO: 0 ... **15**
+  ESP8266 GPIO: 0 ... **15**
+
+  ESP32 GPIO: All GPIO pins with output capabilities
 
   Servo: 1/2
 
@@ -149,7 +151,7 @@ Supported hardware: |P000_usedby_GPIO|
   "
   ``Monitor,G,<GPIO>``
 
-  GPIO: 0 ... 16
+  GPIO: 0 ... <max supported GPIO pin>
   ","
   **To monitor a GPIO state.**
   By the use of the command you will receive events when the GPIO state of that pin is changed from 1 to 0 and from 0 to 1.
@@ -157,7 +159,7 @@ Supported hardware: |P000_usedby_GPIO|
   "
   ``UnMonitor,G,<GPIO>``
 
-  GPIO: 0 ... 16
+  GPIO: 0 ... <max supported GPIO pin>
   ","
   **To cancel the monitor of a GPIO state.**
   By the use of the command you will stop receiving events when the GPIO state of that pin is changed from 1 to 0 and from 0 to 1.
@@ -165,7 +167,7 @@ Supported hardware: |P000_usedby_GPIO|
   "
   ``Status,G,<GPIO>``
 
-  GPIO: 0 ... 16
+  GPIO: 0 ... <max supported GPIO pin>
   ","
   **Returns the status of a pin.**
   By the use of the command you will receive the status of the relevant pin.

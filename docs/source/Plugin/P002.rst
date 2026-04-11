@@ -13,7 +13,9 @@ Type: |P002_type|
 
 Name: |P002_name|
 
-Status: |P002_status|
+Status ESP32: |P002_status|
+
+Status ESP8266: |P002_status_lb|
 
 GitHub: |P002_github|_
 
@@ -74,7 +76,7 @@ ESP32
 ^^^^^
 
 All ESP32 versions allow for changing the range per pin (channel) by setting some attentuation resistor active.
-The default active attentuation is 11 dB, which allows for a maximum input voltage of 3.1V
+The default active attentuation is 12 dB, which allows for a maximum input voltage of 3.1V
 Upto roughly 2.5V the ADC does show a nearly linear response.
 
 Suggested ranges ESP32:
@@ -91,7 +93,7 @@ Suggested ranges ESP32:
   |   ESP32  +-------------+-----------------+
   |          |       6     |    150 ~ 1750   |
   |          +-------------+-----------------+
-  |          |      11     |    150 ~ 2450   |
+  |          |      12     |    150 ~ 2450   |
   +----------+-------------+-----------------+
   |          |       0     |      0 ~  750   |
   |          +-------------+-----------------+
@@ -99,7 +101,7 @@ Suggested ranges ESP32:
   | ESP32-S2 +-------------+-----------------+
   |          |       6     |      0 ~ 1300   |
   |          +-------------+-----------------+
-  |          |      11     |      0 ~ 2500   |
+  |          |      12     |      0 ~ 2500   |
   +----------+-------------+-----------------+
 
 N.B. The ESP32 cannot measure down to 0V. The minimum Voltage depends on the set attenuation.
@@ -437,9 +439,11 @@ Change log
 .. versionchanged:: 2.0
   ...
 
-  |improved| 2020-04-25  Added support for ESP32 ADC pins + Hall Effect Sensor.
-  |improved| 2022-07-11  Added ESP32 Factory calibration, multipoint processing, binning and charts.
   |improved| 2022-07-27  Improved resolution when using ESP32 Factory Calibration.
+
+  |improved| 2022-07-11  Added ESP32 Factory calibration, multipoint processing, binning and charts.
+
+  |improved| 2020-04-25  Added support for ESP32 ADC pins + Hall Effect Sensor.
 
 .. versionadded:: 1.0
   ...

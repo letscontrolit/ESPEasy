@@ -182,6 +182,14 @@ int ESPeasySerial::read(void)
   return _serialPort->read();
 }
 
+int ESPeasySerial::read(uint8_t *buffer, size_t size)
+{
+  if (!isValid()) {
+    return -1;
+  }
+  return _serialPort->read(buffer, size);
+}
+
 int ESPeasySerial::available(void)
 {
   if (!isValid()) {
@@ -236,6 +244,22 @@ void ESPeasySerial::setDebugOutput(bool enable)
   if (isValid()) {
     _serialPort->setDebugOutput(enable);
   }
+}
+
+size_t ESPeasySerial::setRxBufferSize(size_t new_size)
+{
+  if (isValid()) {
+    return _serialPort->setRxBufferSize(new_size);
+  }
+  return 0;
+}
+
+size_t ESPeasySerial::setTxBufferSize(size_t new_size)
+{
+  if (isValid()) {
+    return _serialPort->setTxBufferSize(new_size);
+  }
+  return 0;
 }
 
 bool ESPeasySerial::isTxEnabled(void)

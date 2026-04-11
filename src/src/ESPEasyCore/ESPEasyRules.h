@@ -9,10 +9,12 @@
 #include "../CustomBuild/ESPEasyLimits.h"
 
 
+#ifdef WEBSERVER_NEW_RULES
 
 String EventToFileName(const String& eventName);
 
 String FileNameToEvent(const String& fileName);
+#endif
 
 void   checkRuleSets();
 
@@ -43,7 +45,7 @@ bool rulesProcessingFile(const String& fileName,
  \*********************************************************************************************/
 
 bool get_next_inner_bracket(const String& line,
-                            int         & startIndex,
+                            unsigned int& startIndex,
                             int         & closingIndex,
                             char          closingBracket);
 

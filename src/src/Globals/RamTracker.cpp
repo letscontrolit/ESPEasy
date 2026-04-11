@@ -94,9 +94,22 @@ checkRAM_values::checkRAM_values() {
 }
 
 bool checkRAM_values::mustContinue() const {
-  return Settings.EnableRAMTracking() || 
-         freeStack <= lowestFreeStack ||
-         freeRAM <= lowestRAM;
+  // Here we simply check to see if it is desired to continue creating a description string.
+  // When no description string is created, it would still be nice to get some idea of the lowest stack/ram while we're here.
+  if (Settings.EnableRAMTracking()) {
+    return freeStack <= lowestFreeStack ||
+           freeRAM <= lowestRAM;
+  }
+
+  if (freeStack <= lowestFreeStack) {
+    lowestFreeStack = freeStack;
+  }
+
+  if (freeRAM <= lowestRAM)
+  {
+    lowestRAM = freeRAM;
+  }
+  return false;
 }
 
 void checkRAM(const checkRAM_values & values, const String& descr)
@@ -143,7 +156,7 @@ RamTracker::RamTracker(void) {
   writePtr = 0;
 
   for (int i = 0; i < TRACES; i++) {
-    traces[i] = String();
+    free_string(traces[i]);
     tracesMemory[i] = 0xffffffff; // init with best case memory values, so they get replaced if memory goes lower
   }
 
@@ -159,7 +172,7 @@ void RamTracker::registerRamState(const String& s) {   // store function
   int bestCase = bestCaseTrace();                      // find best case memory trace
 
   if (ESP.getFreeHeap() < tracesMemory[bestCase]) {    // compare to current memory value
-    traces[bestCase] = String();
+    free_string(traces[bestCase]);
     readPtr          = writePtr + 1;                   // read out buffer, oldest value first
 
     if (readPtr >= TRACEENTRIES) { 
@@ -197,7 +210,7 @@ void RamTracker::getTraceBuffer() {
       retval += ' ';
       retval += traces[i];
       addLogMove(LOG_LEVEL_DEBUG_DEV, retval);
-      retval = String();
+      retval.clear();
     }
   }
 #endif // ifndef BUILD_NO_DEBUG

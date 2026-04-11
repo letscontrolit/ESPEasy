@@ -41,7 +41,7 @@ enum class P127_initPhases : uint8_t {
 struct P127_data_struct : public PluginTaskData_base {
   P127_data_struct(const int8_t   i2caddr,
                    const uint16_t alt);
-  P127_data_struct() = delete;
+  P127_data_struct()          = delete;
   virtual ~P127_data_struct() = default;
   bool     init();
   bool     checkData();
@@ -63,9 +63,9 @@ private:
   int32_t         timeToWait = 0;
   P127_initPhases initPhase  = P127_initPhases::Undefined;
 
-  const int8_t   _i2cAddress;
-  uint16_t _alt;
-  uint16_t _co2 = 0;
+  const int8_t _i2cAddress;
+  uint16_t     _alt;
+  uint16_t     _co2 = 0;
 };
 
 #endif // ifdef USES_P127

@@ -248,7 +248,7 @@ class OLEDDisplay : public Print {
     void drawLogBuffer(uint16_t x, uint16_t y);
 
     // Implementent needed function to be compatible with Print class
-    size_t write(uint8_t c);
+    size_t write(uint8_t c) override;
     size_t write(const char* s);
 
     uint8_t            *buffer = NULL;
@@ -258,6 +258,17 @@ class OLEDDisplay : public Print {
     #endif
 
   protected:
+
+#ifdef OLEDDISPLAY_DOUBLE_BUFFER
+    // Get bounding box of changed pixels
+    // @retval True when there have been pixels changed    
+    bool getChangedBoundingBox(
+      uint8_t& minBoundX, 
+      uint8_t& minBoundY, 
+      uint8_t& maxBoundX, 
+      uint8_t& maxBoundY);
+#endif
+
 
     OLEDDISPLAY_TEXT_ALIGNMENT   textAlignment = TEXT_ALIGN_LEFT;
     OLEDDISPLAY_COLOR            color         = WHITE;

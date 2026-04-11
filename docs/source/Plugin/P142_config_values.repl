@@ -1,0 +1,39 @@
+.. csv-table::
+    :header: "Config value", "Information"
+    :widths: 20, 30
+
+    "
+    | ``[<taskname>#Angle]``
+    ","
+    | Returns the angle, either in degrees or radians, depending on the **Output range** setting.
+    "
+    "
+    | ``[<taskname>#Magnitude]``
+    ","
+    | Returns the current magnetic strength sensed. No unit was provided in the sensor documentation.
+    "
+    "
+    | ``[<taskname>#Rpm]``
+    ","
+    | The rotational speed, if any. Only applicable if used as a rotational sensor.
+    "
+    "
+    | ``[<taskname>#ReadAngle]``
+    ","
+    | The filtered angle value in 0..4095 step range, with Angle offset, Start position and Max position applied.
+    "
+    "
+    | ``[<taskname>#RawAngle]``
+    ","
+    | The unfiltered angle value in 0..4095 step range.
+    "
+    "
+    | ``[<taskname>#agc]``
+    ","
+    | An automatic gain control is applied, this value returns the current value. When operating the sensor on 5V (an I2C level converter should be used then) the AGC range is 0..255, when operating on 3.3V the AGC range is 0..128.
+    "
+    "
+    | ``[<taskname>#Hasmagnet]``
+    ","
+    | The state of an available magnet (0 = no magnet, 1 = magnet detected).
+    "

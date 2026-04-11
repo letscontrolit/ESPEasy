@@ -1,14 +1,15 @@
 #include "../DataStructs/NodesHandler.h"
 
-#include "../../ESPEasy_common.h"
 
 #if FEATURE_ESPEASY_P2P
-#include "../../ESPEasy-Globals.h"
+//#include "../../ESPEasy-Globals.h"
 
 #ifdef USES_ESPEASY_NOW
 #include "../Globals/ESPEasy_now_peermanager.h"
 #include "../Globals/ESPEasy_now_state.h"
 #endif
+
+#include "../Globals/EventQueue.h"
 
 #include "../DataTypes/NodeTypeID.h"
 
@@ -16,18 +17,15 @@
 #include "../ESPEasyCore/Controller.h"
 #endif
 
-#include "../ESPEasyCore/ESPEasy_Log.h"
-#include "../ESPEasyCore/ESPEasyNetwork.h"
-#include "../ESPEasyCore/ESPEasyWifi.h"
+#include "../../ESPEasy/net/ESPEasyNetwork.h"
+
 #include "../Globals/ESPEasy_time.h"
-#include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/MQTT.h"
-#include "../Globals/NetworkState.h"
-#include "../Globals/RTC.h"
 #include "../Globals/Settings.h"
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/Misc.h"
-#include "../Helpers/PeriodicalActions.h"
+#include "../Helpers/StringConverter.h"
+#include "../Helpers/StringGenerator_System.h"
 
 #define ESPEASY_NOW_ALLOWED_AGE_NO_TRACEROUTE  35000
 
@@ -63,10 +61,20 @@ bool NodesHandler::addNode(const NodeStruct& node)
       ++it;
     }
   }
+  bool ntp_candidate_updated = false;
   {
     _nodes_mutex.lock();
-    _nodes[node.unit] = node;
-    _ntp_candidate.set(node);
+    {
+      #ifdef USE_SECOND_HEAP
+      // FIXME TD-er: Must check whether this is working well as the NodesMap is a std::map
+      HeapSelectIram ephemeral;
+      #endif
+      _nodes[node.unit] = node;
+    }
+    // Make sure to set first as NTP candidate, as it was set to time since
+    // last time sync by the sender node before sending.
+    ntp_candidate_updated = _ntp_candidate.set(node);
+    // Now set lastUpdated so we can keep track of its age.
     _nodes[node.unit].lastUpdated = millis();
     if (node.getRSSI() >= 0 && rssi < 0) {
       _nodes[node.unit].setRSSI(rssi);
@@ -82,14 +90,45 @@ bool NodesHandler::addNode(const NodeStruct& node)
   }
 
   // Check whether the current time source is considered "worse" than received from p2p node.
-  if (!node_time.systemTimePresent() || 
-      node_time.timeSource > timeSource_t::ESPEASY_p2p_UDP ||
-      ((node_time.timeSource == timeSource_t::ESPEASY_p2p_UDP) &&
-       (timePassedSince(node_time.lastSyncTime_ms) > EXT_TIME_SOURCE_MIN_UPDATE_INTERVAL_MSEC) )) {
-    double unixTime;
-    uint8_t unit;
-    if (_ntp_candidate.getUnixTime(unixTime, unit)) {
-      node_time.setExternalTimeSource(unixTime, timeSource_t::ESPEASY_p2p_UDP, unit);
+  if (!node_time.systemTimePresent() ||
+      (node_time.getTimeSource() > timeSource_t::ESPEASY_p2p_UDP) ||
+      (timePassedSince(node_time.lastSyncTime_ms) > EXT_TIME_SOURCE_MIN_UPDATE_INTERVAL_MSEC)) {
+    double  unixTime{};
+    uint8_t unit                  = 0;
+    int32_t wander                = -1;
+    const timeSource_t timeSource = _ntp_candidate.getUnixTime(unixTime, wander, unit);
+
+    if (timeSource != timeSource_t::No_time_source) {
+      bool shouldUpdate = false;
+
+      if (!node_time.systemTimePresent()) {
+        if (timeSource < timeSource_t::ESP_now_peer || getUptimeMinutes() > 0) {
+          // After 1 minute we should have had at least 2 loops of p2p nodes announcing their time source.
+          // Though no need to wait longer if we already got a good source
+          shouldUpdate = true;
+        }
+      } else if (ntp_candidate_updated) {
+        // Got a better time source
+        shouldUpdate = true;
+      }
+
+      if (shouldUpdate) {
+        node_time.setExternalTimeSource_withTimeWander(unixTime, timeSource, wander, unit);
+      }
+    }
+  }
+
+  if (isNewNode) {
+    if (Settings.UseRules && (node.unit != 0))
+    {
+      // Generate event announcing new p2p node
+      // TODO TD-er: Maybe also add other info like ESP type, IP-address, etc?
+      eventQueue.addMove(strformat(
+                           F("p2pNode#Connected=%d,'%s','%s'"),
+                           node.unit,
+                           node.getNodeName().c_str(),
+                           formatSystemBuildNr(node.build).c_str()
+                           ));
     }
   }
 
@@ -107,12 +146,12 @@ bool NodesHandler::addNode(const NodeStruct& node, const ESPEasy_now_traceroute_
   }
 
   ESPEasy_now_peermanager.addPeer(node.ESPEasy_Now_MAC(), node.channel);  
-
+#ifndef BUILD_NO_DEBUG
   if (!node.isThisNode()) {
     if (traceRoute.getDistance() != 255) {
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log;
-        if (log.reserve(80)) {
+        if (reserve_special(log, 80)) {
           log  = F(ESPEASY_NOW_NAME);
           log += F(": Node: ");
           log += String(node.unit);
@@ -123,6 +162,7 @@ bool NodesHandler::addNode(const NodeStruct& node, const ESPEasy_now_traceroute_
       }
     } else {}
   }
+#endif
   return isNewNode;
 }
 #endif
@@ -224,9 +264,7 @@ const NodeStruct* NodesHandler::getPreferredNode_notMatching(uint8_t unit_nr) co
 }
 
 const NodeStruct * NodesHandler::getPreferredNode_notMatching(const MAC_address& not_matching) const {
-  MAC_address this_mac;
-
-  WiFi.macAddress(this_mac.mac);
+  MAC_address this_mac = ESPEasy::net::NetworkMacAddress();
   const NodeStruct *thisNode = getNodeByMac(this_mac);
   const NodeStruct *reject   = getNodeByMac(not_matching);
 
@@ -347,17 +385,20 @@ void NodesHandler::updateThisNode() {
   NodeStruct thisNode;
 
   // Set local data
-  WiFi.macAddress(thisNode.sta_mac);
+  {
+    MAC_address mac = ESPEasy::net::NetworkMacAddress();
+    mac.get(thisNode.sta_mac);
+  }
   WiFi.softAPmacAddress(thisNode.ap_mac);
   {
-    const bool addIP = NetworkConnected();
+    const bool addIP = ESPEasy::net::NetworkConnected();
     #ifdef USES_ESPEASY_NOW
     if (use_EspEasy_now) {
       thisNode.useAP_ESPEasyNow = 1;
     }
     #endif
     if (addIP) {
-      const IPAddress localIP = NetworkLocalIP();
+      const IPAddress localIP = ESPEasy::net::NetworkLocalIP();
 
       for (uint8_t i = 0; i < 4; ++i) {
         thisNode.ip[i] = localIP[i];
@@ -367,7 +408,7 @@ void NodesHandler::updateThisNode() {
   #ifdef USES_ESPEASY_NOW
   thisNode.channel = getESPEasyNOW_channel();
   #else
-  thisNode.channel = WiFiEventData.usedChannel;
+  thisNode.channel = WiFi.channel(); //WiFiEventData.usedChannel;
   #endif
   if (thisNode.channel == 0) {
     thisNode.channel = WiFi.channel();
@@ -386,9 +427,9 @@ void NodesHandler::updateThisNode() {
   } else {
     thisNode.load = load_int;
   }
-  thisNode.timeSource = static_cast<uint8_t>(node_time.timeSource);
+  thisNode.timeSource = static_cast<uint8_t>(node_time.getTimeSource());
 
-  switch (node_time.timeSource) {
+  switch (node_time.getTimeSource()) {
     case timeSource_t::No_time_source:
       thisNode.lastUpdated = (1 << 30);
       break;
@@ -461,6 +502,12 @@ void NodesHandler::updateThisNode() {
   }
   thisNode.distance = _distance;
 
+  #if FEATURE_USE_IPV6
+  thisNode.hasIPv4 = thisNode.IP() != INADDR_NONE;
+  thisNode.hasIPv6_mac_based_link_local = ESPEasy::net::is_IPv6_link_local_from_MAC(thisNode.sta_mac);
+  thisNode.hasIPv6_mac_based_link_global = ESPEasy::net::is_IPv6_global_from_MAC(thisNode.sta_mac);
+  #endif
+
   #ifdef USES_ESPEASY_NOW
   addNode(thisNode, thisTraceRoute);
   if (thisNode.distance == 0) {
@@ -473,10 +520,9 @@ void NodesHandler::updateThisNode() {
 }
 
 const NodeStruct * NodesHandler::getThisNode() {
-  node_time.now();
+//  node_time.now();
   updateThisNode();
-  MAC_address this_mac;
-  WiFi.macAddress(this_mac.mac);
+  MAC_address this_mac = ESPEasy::net::NetworkMacAddress();
   return getNodeByMac(this_mac.mac);
 }
 
@@ -527,6 +573,11 @@ bool NodesHandler::refreshNodeList(unsigned long max_age_allowed, unsigned long&
       }
       #endif
       if (mustErase) {
+        if (Settings.UseRules && it->second.unit != 0)
+        {
+          // Add event about removing node from nodeslist.
+          eventQueue.addMove(strformat(F("p2pNode#Disconnected=%d"), it->second.unit));
+        }
         {
           _nodes_mutex.lock();
           it          = _nodes.erase(it);
@@ -558,7 +609,7 @@ bool NodesHandler::isEndpoint() const
   }
   #endif
 
-  if (!NetworkConnected()) return false;
+  if (!ESPEasy::net::NetworkConnected()) return false;
 
   return false;
 }
@@ -566,14 +617,14 @@ bool NodesHandler::isEndpoint() const
 #ifdef USES_ESPEASY_NOW
 uint8_t NodesHandler::getESPEasyNOW_channel() const
 {
-  if (active_network_medium == NetworkMedium_t::WIFI && NetworkConnected()) {
+  if (active_network_medium == ESPEasy::net::NetworkMedium_t::WIFI && ESPEasy::net::NetworkConnected()) {
     return WiFi.channel();
   }
-  if (Settings.ForceESPEasyNOWchannel > 0) {
-    return Settings.ForceESPEasyNOWchannel;
+  if (Settings.WiFiAP_channel > 0) {
+    return Settings.WiFiAP_channel;
   }
   if (isEndpoint()) {
-    if (active_network_medium == NetworkMedium_t::WIFI) {
+    if (active_network_medium == ESPEasy::net::NetworkMedium_t::WIFI) {
       return WiFi.channel();
     }
   }
@@ -583,7 +634,7 @@ uint8_t NodesHandler::getESPEasyNOW_channel() const
       return preferred->channel;
     }
   }
-  return WiFiEventData.usedChannel;
+  return WiFi.channel(); // WiFiEventData.usedChannel;
 }
 #endif
 

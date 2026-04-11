@@ -2,6 +2,12 @@
 
 #include "../CustomBuild/ESPEasy_buildinfo.h"
 
+#ifdef ESP32
+#if __has_include("CompiletimeDefines_generated.h")
+#include "../CustomBuild/CompiletimeDefines_generated.h"
+#endif
+#endif
+
 // This file will be "patched" at compiletime by
 // tools/pio/generate-compiletime-defines.py
 // Therefore this one may not include ESPEasy_common.h
@@ -18,8 +24,10 @@
 // *INDENT-OFF*
 
 // Need to add quotes around defines as the PIO build tools make it hard to include the string quotes.
+#ifndef STRINGIFY
 #define STRINGIFY(s) STRINGIFY1(s)
 #define STRINGIFY1(s) #s
+#endif
 // Uncrustify must not be used on macros, but we're now done, so turn Uncrustify on again.
 // *INDENT-ON*
 
@@ -37,6 +45,7 @@ uint16_t get_build_nr() {
 
 const __FlashStringHelper* get_binary_filename() {
  #ifndef SET_BUILD_BINARY_FILENAME
+  #pragma message ( "Build firmware filename is not set" )
   return F("firmware.bin");
  #else // ifndef SET_BUILD_BINARY_FILENAME
   return F(SET_BUILD_BINARY_FILENAME);
@@ -55,6 +64,8 @@ uint32_t get_build_unixtime() {
   #ifdef SET_BUILD_UNIXTIME
   return SET_BUILD_UNIXTIME;
   #else
+  #pragma message ( "Build (Unix)time not set" )
+
   // Return some Unix time which we know is in the (somewhat recent) past
   return 1664582400; // Sat Oct 01 2022 00:00:00 GMT+0000
   #endif
@@ -64,6 +75,7 @@ const __FlashStringHelper * get_build_date_RFC1123() {
 #ifdef SET_BUILD_TIME_RFC1123
   return F(SET_BUILD_TIME_RFC1123);
 #else
+  #pragma message ( "Build date in RFC1123 notation is not set" )
   return F("-1");
 #endif
 }
@@ -80,6 +92,7 @@ const __FlashStringHelper* get_build_origin() {
 
 const __FlashStringHelper* get_build_platform() {
  #ifndef SET_BUILD_PLATFORM
+  #pragma message ( "Build platform not set" )
   return F("");
   #else // ifndef SET_BUILD_PLATFORM
   return F(SET_BUILD_PLATFORM);

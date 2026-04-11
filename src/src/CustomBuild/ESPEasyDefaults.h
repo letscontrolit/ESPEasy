@@ -4,9 +4,14 @@
 // Needed to make sure Custom.h is used.
 #include "../../ESPEasy_common.h"
 
-#include "../DataTypes/NetworkMedium.h"
+#include "../../ESPEasy/net/DataTypes/NetworkMedium.h"
+
 
 #include "../Helpers/Hardware_defines.h"
+
+#ifdef ESP32P4
+#include <pins_arduino.h>
+#endif
 
 // ********************************************************************************
 //   User specific configuration
@@ -33,8 +38,21 @@
 #ifndef DEFAULT_AP_SUBNET
 #define DEFAULT_AP_SUBNET   255,255,255,0       // Enter IP address (comma separated) for AP (config) mode
 #endif
+#ifndef DEFAULT_AP_DNS
+#define DEFAULT_AP_DNS      1,1,1,1             // Cloudflare DNS: 1.1.1.1 and 1.0.0.1
+                                                // Alternatives
+                                                // Cleanbrowsing: 185.228.168.9 and 185.228.169.9
+                                                // Google Public DNS: 8.8.8.8 and 8.8.4.4
+                                                // Quad9:  9.9.9.9 and 149.112.112.112
+                                                // OpenDNS: 208.67.222.222 and 208.67.220.220
+                                                // Comodo Secure DNS: 8.26.56.26 and 8.20.247.20
+#endif
 #ifndef DEFAULT_AP_KEY
 #define DEFAULT_AP_KEY      "configesp"         // Enter network WPA key for AP (config) mode
+#endif
+
+#ifndef DEFAULT_AP_FALLBACK_MINIMAL_ON_TIME_SEC
+#define DEFAULT_AP_FALLBACK_MINIMAL_ON_TIME_SEC  60  // Minimal time to leave the AP on to allow a user to connect to it for entering setup
 #endif
 
 // --- Wifi Client Mode -----------------------------------------------------------------------------
@@ -119,8 +137,8 @@
 #define DEFAULT_SEND_TO_HTTP_ACK         false // Wait for ack with SendToHttp command.
 #endif
 
-#ifndef DEFAULT_AP_DONT_FORCE_SETUP                       
-#define DEFAULT_AP_DONT_FORCE_SETUP      false // Allow optional usage of Sensor without WIFI avaiable  // When set you can use the Sensor in AP-Mode without beeing forced to /setup                                                 
+#ifndef DEFAULT_AP_FORCE_SETUP                       
+#define DEFAULT_AP_FORCE_SETUP       true  // When set, start Captive Portal to redirect user to web interface when connecting to AP
 #endif
 
 #ifndef DEFAULT_DONT_ALLOW_START_AP
@@ -143,7 +161,7 @@
 #define DEFAULT_CONTROLLER_PASS    ""                                       // Default controller Password
 #endif
 #ifndef DEFAULT_CONTROLLER_TIMEOUT
-#define DEFAULT_CONTROLLER_TIMEOUT 100
+#define DEFAULT_CONTROLLER_TIMEOUT 500
 #endif
 
 // using a default template, you also need to set a DEFAULT PROTOCOL to a suitable MQTT protocol !
@@ -220,6 +238,12 @@
 #define DEFAULT_PIN_I2C_SDA              -1                // Undefined
 #endif
 #endif
+#ifndef DEFAULT_PIN_I2C2_SDA
+#define DEFAULT_PIN_I2C2_SDA             -1                // Undefined
+#endif
+#ifndef DEFAULT_PIN_I2C3_SDA
+#define DEFAULT_PIN_I2C3_SDA             -1                // Undefined
+#endif
 #ifndef DEFAULT_PIN_I2C_SCL
 #ifdef ESP8266
 #define DEFAULT_PIN_I2C_SCL              5
@@ -227,6 +251,12 @@
 #ifdef ESP32
 #define DEFAULT_PIN_I2C_SCL              -1                // Undefined
 #endif
+#endif
+#ifndef DEFAULT_PIN_I2C2_SCL
+#define DEFAULT_PIN_I2C2_SCL             -1                // Undefined
+#endif
+#ifndef DEFAULT_PIN_I2C3_SCL
+#define DEFAULT_PIN_I2C3_SCL             -1                // Undefined
 #endif
 #ifndef DEFAULT_I2C_CLOCK_SPEED
 #define DEFAULT_I2C_CLOCK_SPEED          400000            // Use 100 kHz if working with old I2C chips
@@ -249,29 +279,61 @@
 #define DEFAULT_PIN_RESET_BUTTON         (-1)
 #endif
 #ifndef DEFAULT_ETH_PHY_ADDR
+#ifdef ESP32P4
+#define DEFAULT_ETH_PHY_ADDR             ETH_PHY_ADDR
+#else
 #define DEFAULT_ETH_PHY_ADDR             0
 #endif
+#endif
 #ifndef DEFAULT_ETH_PHY_TYPE
-#define DEFAULT_ETH_PHY_TYPE             EthPhyType_t::LAN8710
+#if FEATURE_ETHERNET
+#ifdef ESP32P4
+#define DEFAULT_ETH_PHY_TYPE             ESPEasy::net::EthPhyType_t::TLK110
+#else
+#define DEFAULT_ETH_PHY_TYPE             ESPEasy::net::EthPhyType_t::notSet
+#endif
+#else
+#define DEFAULT_ETH_PHY_TYPE             0
+#endif
 #endif
 #ifndef DEFAULT_ETH_PIN_MDC
-#define DEFAULT_ETH_PIN_MDC              23
+#ifdef ESP32P4
+#define DEFAULT_ETH_PIN_MDC              ETH_PHY_MDC
+#else
+#define DEFAULT_ETH_PIN_MDC              -1
+#endif
 #endif
 #ifndef DEFAULT_ETH_PIN_MDIO
-#define DEFAULT_ETH_PIN_MDIO             18
+#ifdef ESP32P4
+#define DEFAULT_ETH_PIN_MDIO             ETH_PHY_MDIO
+#else
+#define DEFAULT_ETH_PIN_MDIO             -1
+#endif
 #endif
 #ifndef DEFAULT_ETH_PIN_POWER
+#ifdef ESP32P4
+#define DEFAULT_ETH_PIN_POWER            ETH_PHY_POWER
+#else
 #define DEFAULT_ETH_PIN_POWER            -1
 #endif
+#endif
 #ifndef DEFAULT_ETH_CLOCK_MODE
-#define DEFAULT_ETH_CLOCK_MODE           EthClockMode_t::Ext_crystal_osc
+# if CONFIG_ETH_USE_ESP32_EMAC && FEATURE_ETHERNET
+#ifdef ESP32P4
+#define DEFAULT_ETH_CLOCK_MODE           ESPEasy::net::EthClockMode_t::Ext_crystal
+#else
+#define DEFAULT_ETH_CLOCK_MODE           static_cast<ESPEasy::net::EthClockMode_t>(0)
+#endif
+#else
+#define DEFAULT_ETH_CLOCK_MODE           (0)
+#endif
 #endif
 #ifndef DEFAULT_NETWORK_MEDIUM
-  #if FEATURE_ETHERNET
-    #define DEFAULT_NETWORK_MEDIUM       NetworkMedium_t::Ethernet
-  #else
-    #define DEFAULT_NETWORK_MEDIUM       NetworkMedium_t::WIFI
-  #endif
+#ifdef ESP32P4
+  #define DEFAULT_NETWORK_MEDIUM       ESPEasy::net::NetworkMedium_t::Ethernet
+#else
+  #define DEFAULT_NETWORK_MEDIUM       ESPEasy::net::NetworkMedium_t::WIFI
+#endif
 #endif
 #ifndef DEFAULT_JSON_BOOL_WITHOUT_QUOTES
 #define DEFAULT_JSON_BOOL_WITHOUT_QUOTES false
@@ -291,7 +353,7 @@
 #endif
 
 #ifndef DEFAULT_USE_RULES
-#define DEFAULT_USE_RULES                       false   // (true|false) Enable Rules?
+#define DEFAULT_USE_RULES                       true   // (true|false) Enable Rules?
 #endif
 #ifndef DEFAULT_RULES_OLDENGINE
 #define DEFAULT_RULES_OLDENGINE                true
@@ -374,6 +436,26 @@
 #define DEFAULT_SYNC_UDP_PORT                   8266                    // Used for ESPEasy p2p. (IANA registered port: 8266)
 #endif
 
+
+// Factory Reset defaults
+#ifndef DEFAULT_FACTORY_RESET_KEEP_UNIT_NAME
+#define DEFAULT_FACTORY_RESET_KEEP_UNIT_NAME    true
+#endif
+#ifndef DEFAULT_FACTORY_RESET_KEEP_WIFI
+#define DEFAULT_FACTORY_RESET_KEEP_WIFI         true
+#endif
+#ifndef DEFAULT_FACTORY_RESET_KEEP_NETWORK
+#define DEFAULT_FACTORY_RESET_KEEP_NETWORK      true
+#endif
+#ifndef DEFAULT_FACTORY_RESET_KEEP_NTP_DST
+#define DEFAULT_FACTORY_RESET_KEEP_NTP_DST      true
+#endif
+#ifndef DEFAULT_FACTORY_RESET_KEEP_CONSOLE_LOG
+#define DEFAULT_FACTORY_RESET_KEEP_CONSOLE_LOG  true
+#endif
+
+
+
 // --- Defaults to be used for custom automatic provisioning builds ------------------------------------
 #if FEATURE_CUSTOM_PROVISIONING
   #ifndef DEFAULT_FACTORY_DEFAULT_DEVICE_MODEL
@@ -439,6 +521,17 @@
 #ifndef GITHUB_RELEASES_LINK_SUFFIX
 # define GITHUB_RELEASES_LINK_SUFFIX "</a>"
 #endif
+
+
+#if FEATURE_STRING_VARIABLES
+# define TASK_VALUE_DERIVED_PREFIX_TEMPLATE       "_%s_%s-derived" // Includes a not-allowed varname character (-) to prevent undesired manipulation via LetStr
+# define TASK_VALUE_UOM_PREFIX_TEMPLATE           "_%s_%s-uom"
+# define TASK_VALUE_NAME_PREFIX_TEMPLATE          "_%s_%s-name"
+# define TASK_VALUE_VTYPE_PREFIX_TEMPLATE         "_%s_%s-vtype"
+# define TASK_VALUE_PRESENTATION_PREFIX_TEMPLATE  "_%s_%s-presentation"
+# define TASK_VALUE_PRESENTATION_PREFIX_STRING    "$" // Keep these string and char prefixes the same!
+# define TASK_VALUE_PRESENTATION_PREFIX_CHAR      '$'
+#endif // if FEATURE_STRING_VARIABLES
 
 
 // --- We define the default features to be enabled here

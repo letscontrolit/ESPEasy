@@ -2,7 +2,7 @@
 
 
 #if FEATURE_TIMING_STATS
-
+#ifdef WEBSERVER_NEW_UI
 #include "../DataStructs/TimingStats.h"
 #include "../WebServer/ESPEasy_WebServer.h"
 #include "../Helpers/Convert.h"
@@ -10,8 +10,8 @@
 
 
 void stream_json_timing_stats(const TimingStats& stats, long timeSinceLastReset) {
-  uint64_t minVal, maxVal;
-  uint64_t  count = stats.getMinMax(minVal, maxVal);
+  uint32_t minVal, maxVal;
+  uint32_t  count = stats.getMinMax(minVal, maxVal);
   float call_per_sec = static_cast<float>(count) / static_cast<float>(timeSinceLastReset) * 1000.0f;
 
   json_number(F("count"), ull2String(count));
@@ -139,5 +139,5 @@ void jsonStatistics(bool clearStats) {
   }
 }
 
-
+#endif
 #endif // if FEATURE_TIMING_STATS

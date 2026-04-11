@@ -5,7 +5,6 @@
 
 #include "../WebServer/ESPEasy_WebServer.h"
 #include "../WebServer/HTML_wrappers.h"
-#include "../WebServer/JSON.h"
 #include "../WebServer/Markup.h"
 #include "../WebServer/Markup_Buttons.h"
 #include "../WebServer/Markup_Forms.h"
@@ -131,7 +130,7 @@ void addPreDefinedConfigSelector() {
         model == active_model);
     }
   }
-  addSelector_Foot();
+  addSelector_Foot(true);
 }
 
 #ifdef WEBSERVER_NEW_UI

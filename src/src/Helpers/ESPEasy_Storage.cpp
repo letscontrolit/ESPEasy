@@ -12,35 +12,39 @@
 #include "../DataTypes/SPI_options.h"
 
 #if FEATURE_MQTT
-#include "../ESPEasyCore/Controller.h"
-#endif
+# include "../ESPEasyCore/Controller.h"
+#endif // if FEATURE_MQTT
 #include "../ESPEasyCore/ESPEasy_Log.h"
-#include "../ESPEasyCore/ESPEasyNetwork.h"
-#include "../ESPEasyCore/ESPEasyWifi.h"
+#include "../../ESPEasy/net/ESPEasyNetwork.h"
+#include "../../ESPEasy/net/wifi/ESPEasyWifi.h"
+
 #include "../ESPEasyCore/Serial.h"
 
 #include "../Globals/CRCValues.h"
 #include "../Globals/Cache.h"
 #include "../Globals/Device.h"
-#include "../Globals/ESPEasyWiFiEvent.h"
+#include "../../ESPEasy/net/Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/ESPEasy_Scheduler.h"
 #include "../Globals/ESPEasy_time.h"
 #include "../Globals/EventQueue.h"
 #include "../Globals/ExtraTaskSettings.h"
-#include "../Globals/NetworkState.h"
+#include "../../ESPEasy/net/Globals/NetworkState.h"
 #include "../Globals/Plugins.h"
 #include "../Globals/RTC.h"
 #include "../Globals/ResetFactoryDefaultPref.h"
+#include "../Globals/RuntimeData.h"
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Settings.h"
-#include "../Globals/WiFi_AP_Candidates.h"
+#include "../../ESPEasy/net/Globals/WiFi_AP_Candidates.h"
 
 #include "../Helpers/ESPEasyRTC.h"
 #include "../Helpers/ESPEasy_checks.h"
 #include "../Helpers/ESPEasy_FactoryDefault.h"
+#include "../Helpers/ESPEasy_NVS_Helper.h"
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/FS_Helper.h"
 #include "../Helpers/Hardware.h"
+#include "../Helpers/Hardware_device_info.h"
 #include "../Helpers/Memory.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Networking.h"
@@ -48,23 +52,29 @@
 #include "../Helpers/PeriodicalActions.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringParser.h"
+#if FEATURE_MQTT
+#include "../Helpers/_CPlugin_Helper.h"
+#endif
 
 #if FEATURE_RTC_CACHE_STORAGE
 # include "../Globals/C016_ControllerCache.h"
-#endif
+#endif // if FEATURE_RTC_CACHE_STORAGE
 
 #ifdef ESP32
-#include <esp_partition.h>
+# include <esp_partition.h>
+#ifndef ESP32P4
+#  include <esp_phy_init.h>
 #endif
 
-#ifdef ESP32
+
 String patch_fname(const String& fname) {
   if (fname.startsWith(F("/"))) {
     return fname;
   }
   return String('/') + fname;
 }
-#endif
+
+#endif // ifdef ESP32
 
 /********************************************************************************************\
    file system error handling
@@ -73,6 +83,7 @@ String patch_fname(const String& fname) {
 String FileError(int line, const char *fname)
 {
   String log = strformat(F("FS   : Error while reading/writing %s in %d"), fname, line);
+
   addLog(LOG_LEVEL_ERROR, log);
   return log;
 }
@@ -93,7 +104,7 @@ String flashGuard()
 {
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("flashGuard"));
-  #endif
+  #endif // ifndef BUILD_NO_RAM_TRACKER
 
   if (RTC.flashDayCounter > MAX_FLASHWRITES_PER_DAY)
   {
@@ -123,41 +134,68 @@ String appendToFile(const String& fname, const uint8_t *data, unsigned int size)
   return EMPTY_STRING;
 }
 
-bool fileExists(const __FlashStringHelper * fname)
+bool fileExists(const __FlashStringHelper *fname)
 {
   return fileExists(String(fname));
 }
 
+bool fileExists(const __FlashStringHelper *fname, FileDestination_e& destination)
+{
+  return fileExists(String(fname), destination);
+}
+
 bool fileExists(const String& fname) {
+  FileDestination_e dummy;
+  return fileExists(fname, dummy);
+}
+
+bool fileExists(const String& fname, FileDestination_e& destination) {
   #ifdef USE_SECOND_HEAP
   HeapSelectDram ephemeral;
-  #endif
+  #endif // ifdef USE_SECOND_HEAP
 
   const String patched_fname = patch_fname(fname);
-  auto search = Cache.fileExistsMap.find(patched_fname);
+  auto search                = Cache.fileExistsMap.find(patched_fname);
+  destination                = FileDestination_e::ANY;
+
   if (search != Cache.fileExistsMap.end()) {
-    return search->second;
+    destination = static_cast<FileDestination_e>(search->second - 1);
+    return search->second != 0;
   }
   bool res = ESPEASY_FS.exists(patched_fname);
+  if (res) {
+    destination = FileDestination_e::FLASH;
+  }
+
   #if FEATURE_SD
+
   if (!res) {
     res = SD.exists(patched_fname);
+    if (res) {
+      destination = FileDestination_e::SD;
+    }
   }
-  #endif
+  #endif // if FEATURE_SD
+
   // Only keep track of existing files or non-existing filenames that may be requested several times.
   // Not the non-existing files from the cache controller
   #if FEATURE_RTC_CACHE_STORAGE
-  if (res || !isCacheFile(patched_fname)) 
-  #endif
+
+  if (res || !isCacheFile(patched_fname))
+  #endif // if FEATURE_RTC_CACHE_STORAGE
   {
-    Cache.fileExistsMap[patched_fname] = res;
+    Cache.fileExistsMap.emplace(
+      std::make_pair(
+        patched_fname,
+        res ? (static_cast<uint8_t>(destination) + 1) : 0));
   }
+
   if (Cache.fileCacheClearMoment == 0) {
-    if (node_time.timeSource == timeSource_t::No_time_source) {
+    if (node_time.getTimeSource() == timeSource_t::No_time_source) {
       // use some random value as we don't have a time yet
       Cache.fileCacheClearMoment = HwRandom();
     } else {
-      Cache.fileCacheClearMoment = node_time.now();
+      Cache.fileCacheClearMoment = node_time.getLocalUnixTime();
     }
   }
   return res;
@@ -166,11 +204,13 @@ bool fileExists(const String& fname) {
 fs::File tryOpenFile(const String& fname, const String& mode, FileDestination_e destination) {
   START_TIMER;
   fs::File f;
+
   if (fname.isEmpty() || equals(fname, '/')) {
     return f;
   }
 
-  bool exists = fileExists(fname);
+  FileDestination_e where = FileDestination_e::ANY;
+  const bool exists = fileExists(fname, where);
 
   if (!exists) {
     if (equals(mode, 'r')) {
@@ -178,15 +218,16 @@ fs::File tryOpenFile(const String& fname, const String& mode, FileDestination_e 
     }
     clearFileCaches();
   }
-  if ((destination == FileDestination_e::ANY) || (destination == FileDestination_e::FLASH)) {
+
+  if (where != FileDestination_e::SD && ((destination == FileDestination_e::ANY) || (destination == FileDestination_e::FLASH))) {
     f = ESPEASY_FS.open(patch_fname(fname), mode.c_str());
   }
-  #  if FEATURE_SD
+  #if FEATURE_SD
 
-  if (!f && ((destination == FileDestination_e::ANY) || (destination == FileDestination_e::SD))) {
+  if ((!f || where == FileDestination_e::SD) && ((destination == FileDestination_e::ANY) || (destination == FileDestination_e::SD))) {
     f = SD.open(patch_fname(fname).c_str(), mode.c_str());
   }
-  #  endif // if FEATURE_SD
+  #endif // if FEATURE_SD
 
 
   STOP_TIMER(TRY_OPEN_FILE);
@@ -195,11 +236,13 @@ fs::File tryOpenFile(const String& fname, const String& mode, FileDestination_e 
 
 bool fileMatchesTaskSettingsType(const String& fname) {
   const String config_dat_file = patch_fname(getFileName(FileType::CONFIG_DAT));
+
   return config_dat_file.equalsIgnoreCase(patch_fname(fname));
 }
 
 bool tryRenameFile(const String& fname_old, const String& fname_new, FileDestination_e destination) {
   clearFileCaches();
+
   if (fileExists(fname_old) && !fileExists(fname_new)) {
     if (fileMatchesTaskSettingsType(fname_old)) {
       clearAllCaches();
@@ -207,10 +250,12 @@ bool tryRenameFile(const String& fname_old, const String& fname_new, FileDestina
       clearAllButTaskCaches();
     }
     bool res = false;
+
     if ((destination == FileDestination_e::ANY) || (destination == FileDestination_e::FLASH)) {
       res = ESPEASY_FS.rename(patch_fname(fname_old), patch_fname(fname_new));
     }
     #if FEATURE_SD && defined(ESP32) // FIXME ESP8266 SDClass doesn't support rename
+
     if (!res && ((destination == FileDestination_e::ANY) || (destination == FileDestination_e::SD))) {
       res = SD.rename(patch_fname(fname_old), patch_fname(fname_new));
     }
@@ -224,24 +269,34 @@ bool tryDeleteFile(const String& fname, FileDestination_e destination) {
   if (fname.length() > 0)
   {
     #if FEATURE_RTC_CACHE_STORAGE
-    if (isCacheFile(fname)) {
+    const bool cacheFile = isCacheFile(fname);
+
+    if (cacheFile) {
       ControllerCache.closeOpenFiles();
     }
-    #endif
+    #endif // if FEATURE_RTC_CACHE_STORAGE
+
     if (fileMatchesTaskSettingsType(fname)) {
       clearAllCaches();
     } else {
       clearAllButTaskCaches();
     }
     bool res = false;
+
     if ((destination == FileDestination_e::ANY) || (destination == FileDestination_e::FLASH)) {
       res = ESPEASY_FS.remove(patch_fname(fname));
     }
     #if FEATURE_SD
+
     if (!res && ((destination == FileDestination_e::ANY) || (destination == FileDestination_e::SD))) {
       res = SD.remove(patch_fname(fname));
     }
-    #endif
+    #endif // if FEATURE_SD
+#ifndef BUILD_NO_DEBUG
+    if (!res) {
+      addLog(LOG_LEVEL_ERROR, concat(F("Del  : Could not delete "), patch_fname(fname)));
+    }
+#endif
 
     // A call to GarbageCollection() will at most erase a single block. (e.g. 8k block size)
     // A deleted file may have covered more than a single block, so try to clear multiple blocks.
@@ -250,6 +305,14 @@ bool tryDeleteFile(const String& fname, FileDestination_e destination) {
     while (retries > 0 && GarbageCollection()) {
       --retries;
     }
+#if FEATURE_RTC_CACHE_STORAGE
+/*
+    if (cacheFile) {
+      ControllerCache.updateRTC_filenameCounters();
+      // FIXME TD-er: Tell Cache Reader a file has been deleted
+    }
+*/
+#endif
     return res;
   }
   return false;
@@ -266,7 +329,7 @@ bool BuildFixes()
   }
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("BuildFixes"));
-  #endif
+  #endif // ifndef BUILD_NO_RAM_TRACKER
   serialPrintln(F("\nBuild changed!"));
 
   if (Settings.Build < 145)
@@ -276,17 +339,21 @@ bool BuildFixes()
 
   if (Settings.Build < 20101)
   {
+    #ifdef LIMIT_BUILD_SIZE
     serialPrintln(F("Fix reset Pin"));
+    #endif // ifdef LIMIT_BUILD_SIZE
     Settings.Pin_Reset = -1;
   }
 
   if (Settings.Build < 20102) {
     // Settings were 'mangled' by using older version
     // Have to patch settings to make sure no bogus data is being used.
+    #ifdef LIMIT_BUILD_SIZE
     serialPrintln(F("Fix settings with uninitalized data or corrupted by switching between versions"));
-    Settings.UseRTOSMultitasking       = false;
-    Settings.Pin_Reset                 = -1;
-    Settings.SyslogFacility            = DEFAULT_SYSLOG_FACILITY;
+    #endif // ifdef LIMIT_BUILD_SIZE
+    Settings.UseRTOSMultitasking              = false;
+    Settings.Pin_Reset                        = -1;
+    Settings.SyslogFacility                   = DEFAULT_SYSLOG_FACILITY;
     Settings.MQTTUseUnitNameAsClientId_unused = DEFAULT_MQTT_USE_UNITNAME_AS_CLIENTID;
   }
 
@@ -294,27 +361,33 @@ bool BuildFixes()
     Settings.ResetFactoryDefaultPreference = 0;
     Settings.OldRulesEngine(DEFAULT_RULES_OLDENGINE);
   }
+
   if (Settings.Build < 20105) {
     Settings.I2C_clockSpeed = DEFAULT_I2C_CLOCK_SPEED;
   }
+
   if (Settings.Build <= 20106) {
     // ClientID is now defined in the controller settings.
     #if FEATURE_MQTT
     controllerIndex_t controller_idx = firstEnabledMQTT_ControllerIndex();
+
     if (validControllerIndex(controller_idx)) {
-      MakeControllerSettings(ControllerSettings); //-V522
+      MakeControllerSettings(ControllerSettings); // -V522
+
       if (AllocatedControllerSettings()) {
         LoadControllerSettings(controller_idx, *ControllerSettings);
 
         String clientid;
+
         if (Settings.MQTTUseUnitNameAsClientId_unused) {
           clientid = F("%sysname%");
+
           if (Settings.appendUnitToHostname()) {
             clientid += F("_%unit%");
           }
         }
         else {
-          clientid  = F("ESPClient_%mac%");
+          clientid = F("ESPClient_%mac%");
         }
         safe_strncpy(ControllerSettings->ClientID, clientid, sizeof(ControllerSettings->ClientID));
 
@@ -325,50 +398,62 @@ bool BuildFixes()
     }
     #endif // if FEATURE_MQTT
   }
+
   if (Settings.Build < 20107) {
     Settings.WebserverPort = 80;
   }
+
   if (Settings.Build < 20108) {
 #ifdef ESP32
-  // Ethernet related settings are never used on ESP8266
-    Settings.ETH_Phy_Addr   = DEFAULT_ETH_PHY_ADDR;
-    Settings.ETH_Pin_mdc    = DEFAULT_ETH_PIN_MDC;
-    Settings.ETH_Pin_mdio   = DEFAULT_ETH_PIN_MDIO;
-    Settings.ETH_Pin_power  = DEFAULT_ETH_PIN_POWER;
-    Settings.ETH_Phy_Type   = DEFAULT_ETH_PHY_TYPE;
-    Settings.ETH_Clock_Mode = DEFAULT_ETH_CLOCK_MODE;
-#endif
-    Settings.NetworkMedium  = DEFAULT_NETWORK_MEDIUM;
+
+    // Ethernet related settings are never used on ESP8266
+    Settings.ETH_Phy_Addr      = DEFAULT_ETH_PHY_ADDR;
+    Settings.ETH_Pin_mdc_cs    = DEFAULT_ETH_PIN_MDC;
+    Settings.ETH_Pin_mdio_irq  = DEFAULT_ETH_PIN_MDIO;
+    Settings.ETH_Pin_power_rst = DEFAULT_ETH_PIN_POWER;
+    Settings.ETH_Phy_Type      = DEFAULT_ETH_PHY_TYPE;
+    Settings.ETH_Clock_Mode    = DEFAULT_ETH_CLOCK_MODE;
+#endif // ifdef ESP32
+    Settings.NetworkMedium = DEFAULT_NETWORK_MEDIUM;
   }
+
   if (Settings.Build < 20109) {
     Settings.SyslogPort = 514;
   }
+
   if (Settings.Build < 20110) {
-    Settings.I2C_clockSpeed_Slow = DEFAULT_I2C_CLOCK_SPEED_SLOW;
+    Settings.I2C_clockSpeed_Slow  = DEFAULT_I2C_CLOCK_SPEED_SLOW;
     Settings.I2C_Multiplexer_Type = I2C_MULTIPLEXER_NONE;
     Settings.I2C_Multiplexer_Addr = -1;
+
     for (taskIndex_t x = 0; x < TASKS_MAX; x++) {
       Settings.I2C_Multiplexer_Channel[x] = -1;
     }
     Settings.I2C_Multiplexer_ResetPin = -1;
   }
+
   if (Settings.Build < 20111) {
     #ifdef ESP32
     constexpr uint8_t maxStatesesp32 = NR_ELEMENTS(Settings.PinBootStates_ESP32);
+
     for (uint8_t i = 0; i < maxStatesesp32; ++i) {
       Settings.PinBootStates_ESP32[i] = 0;
     }
-    #endif
+    #endif // ifdef ESP32
   }
+
   if (Settings.Build < 20112) {
-    Settings.WiFi_TX_power = 70; // 70 = 17.5dBm. unit: 0.25 dBm
-    Settings.WiFi_sensitivity_margin = 3; // Margin in dBm on top of sensitivity.
+    Settings.WiFi_TX_power           = 70; // 70 = 17.5dBm. unit: 0.25 dBm
+    Settings.WiFi_sensitivity_margin = 5;  // Margin in dBm on top of sensitivity.
   }
+
   if (Settings.Build < 20113) {
-    Settings.NumberExtraWiFiScans = 0;
+    Settings.ConnectFailRetryCount = 0;
   }
+
   if (Settings.Build < 20114) {
     #ifdef USES_P003
+
     // P003_Pulse was always using the pull-up, now it is a setting.
     constexpr pluginID_t PLUGIN_ID_P003_PULSE(3);
 
@@ -377,16 +462,18 @@ bool BuildFixes()
         Settings.TaskDevicePin1PullUp[taskIndex] = true;
       }
     }
-    #endif
+    #endif // ifdef USES_P003
   }
+
   if (Settings.Build < 20115) {
-    if (Settings.InitSPI != static_cast<int>(SPI_Options_e::UserDefined)) { // User-defined SPI pins set to None
+    if (Settings.InitSPI != static_cast<int>(SPI_Options_e::UserDefined_VSPI)) { // User-defined SPI pins set to None
       Settings.SPI_SCLK_pin = -1;
       Settings.SPI_MISO_pin = -1;
       Settings.SPI_MOSI_pin = -1;
     }
   }
   #ifdef USES_P053
+
   if (Settings.Build < 20116) {
     // Added PWR button, init to "-none-"
     constexpr pluginID_t PLUGIN_ID_P053_PMSx003(53);
@@ -396,15 +483,87 @@ bool BuildFixes()
         Settings.TaskDevicePluginConfig[taskIndex][3] = -1;
       }
     }
+
     // Remove PeriodicalScanWiFi
     // Reset to default 0 for future use.
-    bitWrite(Settings.VariousBits1, 15, 0);
+    Settings.VariousBits_1.unused_15 = 0;
   }
-  #endif
+  #endif // ifdef USES_P053
+
+  if (Settings.Build <= 21066) { // 2024-12-31
+    // (MQTT) Keep Alive time-out is now defined in the controller settings.
+    #if FEATURE_MQTT
+    for (controllerIndex_t controller_idx = 0; controller_idx < CONTROLLER_MAX; ++controller_idx) {
+    // controllerIndex_t controller_idx = firstEnabledMQTT_ControllerIndex();
+      const protocolIndex_t protocol_idx = getProtocolIndex_from_ControllerIndex(controller_idx);
+
+    if (validProtocolIndex(protocol_idx) && getProtocolStruct(protocol_idx).usesMQTT) {
+      MakeControllerSettings(ControllerSettings); // -V522
+
+      if (AllocatedControllerSettings()) {
+        LoadControllerSettings(controller_idx, *ControllerSettings);
+
+        // Used to be hardcoded at 10 sec., now default 60 sec. and configurable
+        ControllerSettings->KeepAliveTime = CONTROLLER_KEEP_ALIVE_TIME_DFLT;
+        SaveControllerSettings(controller_idx, *ControllerSettings);
+      }
+    }
+    }
+    #endif // if FEATURE_MQTT
+  }
+
+  if (Settings.Build <= 21156) { // 2025-03-31
+    // PR #5235 Add 2nd and 3rd I2C Bus
+    if ((Settings.Pin_i2c2_sda == 0) &&
+        (Settings.Pin_i2c2_scl == 0)) {
+      Settings.Pin_i2c2_sda = DEFAULT_PIN_I2C2_SDA;
+      Settings.Pin_i2c2_scl = DEFAULT_PIN_I2C2_SCL;
+    }
+    if ((Settings.Pin_i2c3_sda == 0) &&
+        (Settings.Pin_i2c3_scl == 0)) {
+      Settings.Pin_i2c3_sda = DEFAULT_PIN_I2C3_SDA;
+      Settings.Pin_i2c3_scl = DEFAULT_PIN_I2C3_SCL;
+    }
+    if ((Settings.I2C2_clockSpeed == 0) &&
+        (Settings.I2C2_clockSpeed_Slow == 0)) {
+      Settings.I2C2_clockSpeed = DEFAULT_I2C_CLOCK_SPEED;
+      Settings.I2C2_clockSpeed_Slow = DEFAULT_I2C_CLOCK_SPEED_SLOW;
+    }
+    if ((Settings.I2C3_clockSpeed == 0) &&
+        (Settings.I2C3_clockSpeed_Slow == 0)) {
+      Settings.I2C3_clockSpeed = DEFAULT_I2C_CLOCK_SPEED;
+      Settings.I2C3_clockSpeed_Slow = DEFAULT_I2C_CLOCK_SPEED_SLOW;
+    }
+    if ((Settings.I2C2_Multiplexer_Type == 0) &&
+        (Settings.I2C2_Multiplexer_Addr == 0) &&
+        (Settings.I2C2_Multiplexer_ResetPin == 0)) {
+      Settings.I2C2_Multiplexer_Type = I2C_MULTIPLEXER_NONE;
+      Settings.I2C2_Multiplexer_Addr = -1;
+      Settings.I2C2_Multiplexer_ResetPin = -1;
+    }
+    if ((Settings.I2C3_Multiplexer_Type == 0) &&
+        (Settings.I2C3_Multiplexer_Addr == 0) &&
+        (Settings.I2C3_Multiplexer_ResetPin == 0)) {
+      Settings.I2C3_Multiplexer_Type = I2C_MULTIPLEXER_NONE;
+      Settings.I2C3_Multiplexer_Addr = -1;
+      Settings.I2C3_Multiplexer_ResetPin = -1;
+    }
+  }
+
+  if (Settings.Build <= 21303) { // 2025-08-25
+    // Add second SPI bus
+    if ((Settings.SPI1_SCLK_pin == 0) &&
+        (Settings.SPI1_MISO_pin == 0) &&
+        (Settings.SPI1_MOSI_pin == 0) ){
+      Settings.SPI1_SCLK_pin = -1;
+      Settings.SPI1_MISO_pin = -1;
+      Settings.SPI1_MOSI_pin = -1;
+    }
+  }
 
   // Starting 2022/08/18
   // Use get_build_nr() value for settings transitions.
-  // This value will also be shown when building using PlatformIO, when showing the  Compile time defines 
+  // This value will also be shown when building using PlatformIO, when showing the  Compile time defines
   Settings.Build      = get_build_nr();
   Settings.StructSize = sizeof(Settings);
 
@@ -422,22 +581,29 @@ void fileSystemCheck()
 {
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("fileSystemCheck"));
-  #endif
+  #endif // ifndef BUILD_NO_RAM_TRACKER
   addLog(LOG_LEVEL_INFO, F("FS   : Mounting..."));
 #if defined(ESP32) && defined(USE_LITTLEFS)
-  if (getPartionCount(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_SPIFFS) != 0 
+
+  if ((getPartionCount(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_SPIFFS) != 0)
       && ESPEASY_FS.begin())
-#else
+#else // if defined(ESP32) && defined(USE_LITTLEFS)
+
   if (ESPEASY_FS.begin())
-#endif
+#endif // if defined(ESP32) && defined(USE_LITTLEFS)
   {
     clearAllCaches();
+
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log = F("FS   : Mount successful, used ");
-      log += SpiffsUsedBytes();
-      log += F(" bytes of ");
-      log += SpiffsTotalBytes();
-      addLogMove(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, strformat(
+                   F("FS   : "
+#ifdef USE_LITTLEFS
+                     "LittleFS"
+#else // ifdef USE_LITTLEFS
+                     "SPIFFS"
+#endif // ifdef USE_LITTLEFS
+                     " mount successful, used %u bytes of %u"),
+                   SpiffsUsedBytes(), SpiffsTotalBytes()));
     }
 
     // Run garbage collection before any file is open.
@@ -447,16 +613,17 @@ void fileSystemCheck()
       --retries;
     }
 
-    fs::File f = tryOpenFile(SettingsType::getSettingsFileName(SettingsType::Enum::BasicSettings_Type).c_str(), "r");
-    if (f) { 
-      f.close(); 
+    fs::File f = tryOpenFile(SettingsType::getSettingsFileName(SettingsType::Enum::BasicSettings_Type), "r");
+
+    if (f) {
+      f.close();
     } else {
       ResetFactory(false);
     }
   }
   else
   {
-    const __FlashStringHelper * log = F("FS   : Mount failed");
+    const __FlashStringHelper *log = F("FS   : Mount failed");
     serialPrintln(log);
     addLog(LOG_LEVEL_ERROR, log);
     ResetFactory();
@@ -464,17 +631,109 @@ void fileSystemCheck()
 }
 
 bool FS_format() {
-  #ifdef USE_LITTLEFS
-    #ifdef ESP32
-    const bool res = ESPEASY_FS.begin(true);
-    ESPEASY_FS.end();
-    return res;
-    #else
-    return ESPEASY_FS.format();
-    #endif
-  #else
+#ifdef USE_LITTLEFS
+# ifdef ESP32
+  const bool res = ESPEASY_FS.begin(true);
+  ESPEASY_FS.end();
+  return res;
+# else // ifdef ESP32
   return ESPEASY_FS.format();
+# endif // ifdef ESP32
+#else // ifdef USE_LITTLEFS
+  return ESPEASY_FS.format();
+
+#endif // ifdef USE_LITTLEFS
+}
+
+#ifdef ESP32
+// Max. 15 char keys for RF calibration marked keys
+# define ESPEASY_RF_CAL_NVS_NAMESPACE  "ESPEasyRFcal"
+# define RF_CAL_NVS_PREF_KEY       "RfCalIDFver"
+uint32_t getWiFi_CalibrationVersion()
+{
+  ESPEasy_NVS_Helper preferences;
+  if (preferences.begin(F(ESPEASY_RF_CAL_NVS_NAMESPACE))) {
+    uint32_t res{};
+    if (preferences.getPreference(F(RF_CAL_NVS_PREF_KEY), res)) {
+      return res;
+    }
+  }
+  return 0;
+}
+
+bool setWiFi_CalibrationVersion() {
+  // Store used IDF version in NVS
+  const uint32_t idfVersion = ESP_IDF_VERSION;
+  ESPEasy_NVS_Helper preferences;
+  if (preferences.begin(F(ESPEASY_RF_CAL_NVS_NAMESPACE))) {
+    preferences.setPreference(F(RF_CAL_NVS_PREF_KEY), idfVersion);
+    return true;
+  }
+  return false;
+}
+
+String formatIdfVersion(uint32_t idfVer) {
+  return strformat(
+    F("%u.%u.%u"),
+    (idfVer >> 16) & 0xFF,
+    (idfVer >> 8) & 0xFF,
+    (idfVer) & 0xFF);
+}
+
+bool check_and_update_WiFi_Calibration() {
+  const uint32_t RFcal_idfVersion = getWiFi_CalibrationVersion();
+  const uint32_t idfVersion = ESP_IDF_VERSION;
+
+  if (RFcal_idfVersion == idfVersion) {
+    // No need to wipe RF calibration
+    addLog(LOG_LEVEL_INFO, strformat(
+      F("RF Cal: last calibration done with ESP-IDF %s"),
+      formatIdfVersion(idfVersion).c_str()));
+    return false;
+  }
+  if (RFcal_idfVersion) {
+    addLog(LOG_LEVEL_INFO, strformat(
+      F("RF Cal: last calibration with ESP-IDF %s, re-calibrating with ESP-IDF %s"),
+      formatIdfVersion(RFcal_idfVersion).c_str(),
+      formatIdfVersion(idfVersion).c_str()));
+  } else {
+    addLog(LOG_LEVEL_INFO, strformat(
+      F("RF Cal: last calibration unknown, (re-)calibrating with ESP-IDF %s"),
+      formatIdfVersion(idfVersion).c_str()));
+  }
+  return Erase_WiFi_Calibration();
+}
+#endif
+
+bool Erase_WiFi_Calibration() {
+  #ifdef ESP8266
+  ESPEasy::net::wifi::WifiDisconnect();
+  ESPEasy::net::wifi::setWifiMode(WIFI_OFF);
+  if (!ESP.eraseConfig())
+    return false;
+  #ifndef LIMIT_BUILD_SIZE
+  addLog(LOG_LEVEL_INFO, F("WiFi : Erased WiFi calibration data"));
   #endif
+  #endif
+
+  #ifdef ESP32
+  # ifndef SOC_WIFI_SUPPORTED
+  return false;
+  #else
+  ESPEasy::net::wifi::WifiDisconnect();
+  ESPEasy::net::wifi::setWifiMode(WIFI_OFF);
+  // Make sure power is stable, so wait a bit longer
+  delay(1000);
+  esp_phy_erase_cal_data_in_nvs();
+  addLog(LOG_LEVEL_INFO, F("WiFi : Erased WiFi calibration data"));
+  delay(200);
+  esp_phy_load_cal_and_init();
+  addLog(LOG_LEVEL_INFO, F("WiFi : Performed WiFi RF calibration"));
+  delay(200);  
+  setWiFi_CalibrationVersion();
+  #endif
+  #endif
+  return true;
 }
 
 #ifdef ESP32
@@ -483,7 +742,7 @@ bool FS_format() {
 
 int getPartionCount(uint8_t pType, uint8_t pSubType) {
   esp_partition_type_t partitionType       = static_cast<esp_partition_type_t>(pType);
-  esp_partition_subtype_t subtype          = static_cast<esp_partition_subtype_t>(pSubType);
+  esp_partition_subtype_t  subtype         = static_cast<esp_partition_subtype_t>(pSubType);
   esp_partition_iterator_t _mypartiterator = esp_partition_find(partitionType, subtype, NULL);
   int nrPartitions                         = 0;
 
@@ -496,19 +755,18 @@ int getPartionCount(uint8_t pType, uint8_t pSubType) {
   return nrPartitions;
 }
 
-
-#endif
+#endif // ifdef ESP32
 
  #ifdef ESP8266
 bool clearPartition(ESP8266_partition_type ptype) {
   uint32_t address;
-  int32_t size;
-  int32_t sector = getPartitionInfo(ESP8266_partition_type::rf_cal, address, size);
+  int32_t  size;
+  int32_t  sector = getPartitionInfo(ESP8266_partition_type::rf_cal, address, size);
+
   while (size > 0) {
-    if (!ESP.flashEraseSector(sector)) return false;
+    if (!ESP.flashEraseSector(sector)) { return false; }
     ++sector;
     size -= SPI_FLASH_SEC_SIZE;
-
   }
   return true;
 }
@@ -521,7 +779,7 @@ bool clearWiFiSDKpartition() {
   return clearPartition(ESP8266_partition_type::wifi);
 }
 
-#endif
+#endif // ifdef ESP8266
 
 
 /********************************************************************************************\
@@ -534,9 +792,9 @@ bool GarbageCollection() {
   START_TIMER;
 
   if (ESPEASY_FS.gc()) {
-#ifndef BUILD_NO_DEBUG
+# ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_INFO, F("FS   : Success garbage collection"));
-#endif
+# endif // ifndef BUILD_NO_DEBUG
     STOP_TIMER(FS_GC_SUCCESS);
     return true;
   }
@@ -556,8 +814,8 @@ String SaveSettings(bool forFactoryReset)
 {
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("SaveSettings"));
-  #endif
-  String     err;
+  #endif // ifndef BUILD_NO_RAM_TRACKER
+  String err;
   {
     Settings.StructSize = sizeof(Settings);
 
@@ -571,32 +829,37 @@ String SaveSettings(bool forFactoryReset)
     }
 
     if (!COMPUTE_STRUCT_CHECKSUM_UPDATE(SettingsStruct, Settings)
-    /*
-    computeChecksum(
-        Settings.md5,
-        reinterpret_cast<uint8_t *>(&Settings),
-        sizeof(SettingsStruct),
-        offsetof(SettingsStruct, md5))
-    */
+
+        /*
+           computeChecksum(
+            Settings.md5,
+            reinterpret_cast<uint8_t *>(&Settings),
+            sizeof(SettingsStruct),
+            offsetof(SettingsStruct, md5))
+         */
         ) {
-      err = SaveToFile(SettingsType::getSettingsFileName(SettingsType::Enum::BasicSettings_Type).c_str(), 0, reinterpret_cast<const uint8_t *>(&Settings), sizeof(Settings));
-    } 
-#ifndef BUILD_NO_DEBUG    
+      err = SaveToFile(SettingsType::getSettingsFileName(SettingsType::Enum::BasicSettings_Type).c_str(),
+                       0,
+                       reinterpret_cast<const uint8_t *>(&Settings),
+                       sizeof(Settings));
+    }
+#ifndef BUILD_NO_DEBUG
     else {
       addLog(LOG_LEVEL_INFO, F("Skip saving settings, not changed"));
     }
-#endif
+#endif // ifndef BUILD_NO_DEBUG
   }
 
   if (err.length()) {
     return err;
   }
 
-#ifndef BUILD_MINIMAL_OTA
+#ifndef LIMIT_BUILD_SIZE
+
   // Must check this after saving, or else it is not possible to fix multiple
   // issues which can only corrected on different pages.
   if (!SettingsCheck(err)) { return err; }
-#endif
+#endif 
 
   //  }
 
@@ -606,7 +869,7 @@ String SaveSettings(bool forFactoryReset)
 }
 
 String SaveSecuritySettings(bool forFactoryReset) {
-  String     err;
+  String err;
 
   SecuritySettings.validate();
   memcpy(SecuritySettings.ProgmemMd5, CRCValues.runTimeMD5, 16);
@@ -617,81 +880,118 @@ String SaveSecuritySettings(bool forFactoryReset) {
 
   if (SecuritySettings.updateChecksum()) {
     // Settings have changed, save to file.
-    err = SaveToFile(SettingsType::getSettingsFileName(SettingsType::Enum::SecuritySettings_Type).c_str(), 0, reinterpret_cast<const uint8_t *>(&SecuritySettings), sizeof(SecuritySettings));
+    err = SaveToFile(SettingsType::getSettingsFileName(SettingsType::Enum::SecuritySettings_Type).c_str(),
+                     0,
+                     reinterpret_cast<const uint8_t *>(&SecuritySettings),
+                     sizeof(SecuritySettings));
 
     // Security settings are saved, may be update of WiFi settings or hostname.
-    if (!forFactoryReset && !NetworkConnected()) {
-      if (SecuritySettings.hasWiFiCredentials() && active_network_medium == NetworkMedium_t::WIFI) {
-        WiFiEventData.wifiConnectAttemptNeeded = true;
-        WiFi_AP_Candidates.force_reload(); // Force reload of the credentials and found APs from the last scan
-        resetWiFi();
-        AttemptWiFiConnect();
+    if (!forFactoryReset) {
+      if (SecuritySettings.hasWiFiCredentials() && (active_network_medium == ESPEasy::net::NetworkMedium_t::WIFI)) {
+        ESPEasy::net::wifi::WiFi_AP_Candidates.force_reload(); // Force reload of the credentials and found APs from the last scan
+        if (!ESPEasy::net::NetworkConnected()) {
+//          WiFiEventData.wifiConnectAttemptNeeded = true;
+          ESPEasy::net::wifi::resetWiFi();
+          String dummy;
+          ESPEasy::net::NWPluginCall(
+            NWPlugin::Function::NWPLUGIN_CREDENTIALS_CHANGED, 0, dummy);
+        }
       }
     }
-  } 
+  }
 #ifndef BUILD_NO_DEBUG
   else {
     addLog(LOG_LEVEL_INFO, F("Skip saving SecuritySettings, not changed"));
   }
-#endif
+#endif // ifndef BUILD_NO_DEBUG
 
   // FIXME TD-er: How to check if these have changed?
   if (forFactoryReset) {
     ExtendedControllerCredentials.clear();
+#if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE
+    SecuritySettings_deviceSpecific.clear();
+#endif
   }
 
   ExtendedControllerCredentials.save();
-  if (!forFactoryReset)
+#if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE
+  SecuritySettings_deviceSpecific.save();
+#endif
+
+  if (!forFactoryReset) {
     afterloadSettings();
+  }
   return err;
 }
 
 void afterloadSettings() {
   ExtraTaskSettings.clear(); // make sure these will not contain old settings.
 
+  if ((Settings.Version != VERSION) || (Settings.PID != ESP_PROJECT_PID)) {
+    // Not valid settings, so do not continue
+    return;
+  }
+
   // Load ResetFactoryDefaultPreference from provisioning.dat if available.
   // FIXME TD-er: Must actually move content of Provisioning.dat to NVS and then delete file
   uint32_t pref_temp = Settings.ResetFactoryDefaultPreference;
+
   #ifdef ESP32
+
   if (pref_temp == 0) {
     if (ResetFactoryDefaultPreference.getPreference() == 0) {
       // Try loading from NVS
-      ResetFactoryDefaultPreference.init();
+      ESPEasy_NVS_Helper preferences;
+      ResetFactoryDefaultPreference.init(preferences);
       pref_temp = ResetFactoryDefaultPreference.getPreference();
     }
   }
-  #endif
+  #endif // ifdef ESP32
   #if FEATURE_CUSTOM_PROVISIONING
+
   if (fileExists(getFileName(FileType::PROVISIONING_DAT))) {
     MakeProvisioningSettings(ProvisioningSettings);
+
     if (ProvisioningSettings.get()) {
       loadProvisioningSettings(*ProvisioningSettings);
+
       if (ProvisioningSettings->matchingFlashSize()) {
-        if (pref_temp == 0 && ProvisioningSettings->ResetFactoryDefaultPreference.getPreference() != 0)
+        if ((pref_temp == 0) && (ProvisioningSettings->ResetFactoryDefaultPreference.getPreference() != 0)) {
           pref_temp = ProvisioningSettings->ResetFactoryDefaultPreference.getPreference();
+        }
       }
     }
   }
-  #endif
+  #endif // if FEATURE_CUSTOM_PROVISIONING
 
   // TODO TD-er: Try to get the information from more locations to make it more persistent
   // Maybe EEPROM location?
 
 
   ResetFactoryDefaultPreference_struct pref(pref_temp);
+
   if (modelMatchingFlashSize(pref.getDeviceModel())) {
     ResetFactoryDefaultPreference = pref_temp;
   }
   applyFactoryDefaultPref();
   Scheduler.setEcoMode(Settings.EcoPowerMode());
   #ifdef ESP32
-  setCpuFrequencyMhz(Settings.EcoPowerMode() ? 80 : 240);
+  #if !defined(CORE32SOLO1) && !defined(ESP32P4)
+  setCpuFrequencyMhz(Settings.EcoPowerMode() ? getCPU_MinFreqMHz() : getCPU_MaxFreqMHz());
   #endif
+  #endif // ifdef ESP32
 
   if (!Settings.UseRules) {
     eventQueue.clear();
   }
-  CheckRunningServices(); // To update changes in hostname.
+  node_time.applyTimeZone();
+  #ifdef ESP8266
+  WiFi.hostname(ESPEasy::net::NetworkCreateRFCCompliantHostname().c_str());
+  #endif
+  #ifdef ESP32
+  // FIXME TD-er: Must also update hostname on other interfaces for ESP32
+  #endif
+  ESPEasy::net::CheckRunningServices(); // To update changes in hostname.
 }
 
 /********************************************************************************************\
@@ -702,15 +1002,19 @@ String LoadSettings()
   clearAllButTaskCaches();
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("LoadSettings"));
-  #endif
+  #endif // ifndef BUILD_NO_RAM_TRACKER
 
   uint8_t oldSettingsChecksum[16] = { 0 };
   memcpy(oldSettingsChecksum, Settings.md5, 16);
 
 
-  String  err;
+  String err;
 
-  err = LoadFromFile(SettingsType::getSettingsFileName(SettingsType::Enum::BasicSettings_Type).c_str(), 0, reinterpret_cast<uint8_t *>(&Settings), sizeof(SettingsStruct));
+  err =
+    LoadFromFile(SettingsType::getSettingsFileName(SettingsType::Enum::BasicSettings_Type).c_str(),
+                 0,
+                 reinterpret_cast<uint8_t *>(&Settings),
+                 sizeof(SettingsStruct));
 
   if (memcmp(oldSettingsChecksum, Settings.md5, 16) != 0) {
     // File has changed, so need to flush all task caches.
@@ -722,35 +1026,44 @@ String LoadSettings()
   }
 
   if (!BuildFixes()) {
-
     #ifndef BUILD_NO_DEBUG
+
     if (COMPUTE_STRUCT_CHECKSUM(SettingsStruct, Settings)) {
-      addLog(LOG_LEVEL_INFO,  F("CRC  : Settings CRC           ...OK"));
-    } else{
-      addLog(LOG_LEVEL_ERROR, F("CRC  : Settings CRC           ...FAIL"));
+      addLog(LOG_LEVEL_INFO, concat(F("CRC  : Settings CRC"), F("...OK")));
+    } else {
+      addLog(LOG_LEVEL_ERROR, concat(F("CRC  : Settings CRC"), F("...FAIL")));
     }
-    #endif
+    #endif // ifndef BUILD_NO_DEBUG
   }
 
   Settings.validate();
   initSerial();
 
-  err = LoadFromFile(SettingsType::getSettingsFileName(SettingsType::Enum::SecuritySettings_Type).c_str(), 0, reinterpret_cast<uint8_t *>(&SecuritySettings), sizeof(SecurityStruct));
+  err =
+    LoadFromFile(SettingsType::getSettingsFileName(SettingsType::Enum::SecuritySettings_Type).c_str(),
+                 0,
+                 reinterpret_cast<uint8_t *>(&SecuritySettings),
+                 sizeof(SecurityStruct));
 
 #ifndef BUILD_NO_DEBUG
+
   if (SecuritySettings.checksumMatch()) {
-    addLog(LOG_LEVEL_INFO, F("CRC  : SecuritySettings CRC   ...OK "));
+    addLog(LOG_LEVEL_INFO, concat(F("CRC  : SecuritySettings CRC"), F("...OK ")));
 
     if (memcmp(SecuritySettings.ProgmemMd5, CRCValues.runTimeMD5, 16) != 0) {
       addLog(LOG_LEVEL_INFO, F("CRC  : binary has changed since last save of Settings"));
     }
   }
   else {
-    addLog(LOG_LEVEL_ERROR, F("CRC  : SecuritySettings CRC   ...FAIL"));
+    addLog(LOG_LEVEL_ERROR, concat(F("CRC  : SecuritySettings CRC"), F("...FAIL")));
   }
-#endif
+#endif // ifndef BUILD_NO_DEBUG
 
   ExtendedControllerCredentials.load();
+#if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE
+  SecuritySettings_deviceSpecific.load();
+#endif
+
 
   //  setupStaticIPconfig();
   // FIXME TD-er: Must check if static/dynamic IP was changed and trigger a reconnect? Or is a reboot better when changing those settings?
@@ -758,8 +1071,6 @@ String LoadSettings()
   SecuritySettings.validate();
   return err;
 }
-
-
 
 /********************************************************************************************\
    Disable Plugin, based on bootFailedCount
@@ -782,15 +1093,15 @@ uint8_t disablePlugin(uint8_t bootFailedCount) {
 uint8_t disableAllPlugins(uint8_t bootFailedCount) {
   if (bootFailedCount > 0) {
     --bootFailedCount;
+
     for (taskIndex_t i = 0; i < TASKS_MAX; ++i) {
-        // Disable temporarily as unit crashed
-        // FIXME TD-er: Should this be stored?
-        Settings.TaskDeviceEnabled[i] = false;
+      // Disable temporarily as unit crashed
+      // FIXME TD-er: Should this be stored?
+      Settings.TaskDeviceEnabled[i] = false;
     }
   }
   return bootFailedCount;
 }
-
 
 /********************************************************************************************\
    Disable Controller, based on bootFailedCount
@@ -811,13 +1122,13 @@ uint8_t disableController(uint8_t bootFailedCount) {
 uint8_t disableAllControllers(uint8_t bootFailedCount) {
   if (bootFailedCount > 0) {
     --bootFailedCount;
+
     for (controllerIndex_t i = 0; i < CONTROLLER_MAX; ++i) {
       Settings.ControllerEnabled[i] = false;
     }
   }
   return bootFailedCount;
 }
-
 
 /********************************************************************************************\
    Disable Notification, based on bootFailedCount
@@ -839,13 +1150,45 @@ uint8_t disableNotification(uint8_t bootFailedCount) {
 uint8_t disableAllNotifications(uint8_t bootFailedCount) {
   if (bootFailedCount > 0) {
     --bootFailedCount;
+
     for (uint8_t i = 0; i < NOTIFICATION_MAX; ++i) {
-        Settings.NotificationEnabled[i] = false;
+      Settings.NotificationEnabled[i] = false;
     }
   }
   return bootFailedCount;
 }
-#endif
+
+#endif // if FEATURE_NOTIFIER
+
+/********************************************************************************************\
+   Disable Network Interfaces, based on bootFailedCount
+ \*********************************************************************************************/
+uint8_t disableNetwork(uint8_t bootFailedCount)
+{
+  for (ESPEasy::net::networkIndex_t i = 0; i < NETWORK_MAX && bootFailedCount > 0; ++i) {
+    if (Settings.getNetworkEnabled(i)) {
+      --bootFailedCount;
+
+      if (bootFailedCount == 0) {
+        Settings.setNetworkEnabled(i, false);
+      }
+    }
+  }
+  return bootFailedCount;
+}
+
+uint8_t disableAllNetworkss(uint8_t bootFailedCount)
+{
+    if (bootFailedCount > 0) {
+    --bootFailedCount;
+
+    for (ESPEasy::net::networkIndex_t i = 0; i < NETWORK_MAX; ++i) {
+      Settings.setNetworkEnabled(i, false);
+    }
+  }
+  return bootFailedCount;
+}
+
 
 /********************************************************************************************\
    Disable Rules, based on bootFailedCount
@@ -858,37 +1201,39 @@ uint8_t disableRules(uint8_t bootFailedCount) {
   return bootFailedCount;
 }
 
-
 bool getAndLogSettingsParameters(bool read, SettingsType::Enum settingsType, int index, int& offset, int& max_size) {
 #ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG_DEV)) {
     String log = read ? F("Read") : F("Write");
-    log += F(" settings: ");
-    log += SettingsType::getSettingsTypeString(settingsType);
-    log += F(" index: ");
-    log += index;
+    log += concat(F(" settings: "), SettingsType::getSettingsTypeString(settingsType));
+    log += concat(F(" index: "), index);
     addLogMove(LOG_LEVEL_DEBUG_DEV, log);
   }
 #endif // ifndef BUILD_NO_DEBUG
   return SettingsType::getSettingsParameters(settingsType, index, offset, max_size);
 }
 
-
 /********************************************************************************************\
    Load array of Strings from Custom settings
    Use maxStringLength = 0 to optimize for size (strings will be concatenated)
  \*********************************************************************************************/
-String LoadStringArray(SettingsType::Enum settingsType, int index, String strings[], uint16_t nrStrings, uint16_t maxStringLength, uint32_t offset_in_block)
+String LoadStringArray(SettingsType::Enum settingsType,
+                       int                index,
+                       String             strings[],
+                       uint16_t           nrStrings,
+                       uint16_t           maxStringLength,
+                       uint32_t           offset_in_block)
 {
   int offset, max_size;
+
   if (!SettingsType::getSettingsParameters(settingsType, index, offset, max_size))
   {
     #ifndef BUILD_NO_DEBUG
     return F("Invalid index for custom settings");
-    #else
-    return F("Save error");
-    #endif
+    #else // ifndef BUILD_NO_DEBUG
+    return F("Load error");
+    #endif // ifndef BUILD_NO_DEBUG
   }
 
   const uint32_t bufferSize = 128;
@@ -896,7 +1241,7 @@ String LoadStringArray(SettingsType::Enum settingsType, int index, String string
   // FIXME TD-er: For now stack allocated, may need to be heap allocated?
   if (maxStringLength >= bufferSize) { return F("Max 128 chars allowed"); }
 
-  char buffer[bufferSize] = {0};
+  char buffer[bufferSize] = { 0 };
 
   String   result;
   uint32_t readPos       = offset_in_block;
@@ -904,22 +1249,16 @@ String LoadStringArray(SettingsType::Enum settingsType, int index, String string
   uint32_t stringCount   = 0;
 
   const uint16_t estimatedStringSize = maxStringLength > 0 ? maxStringLength : bufferSize;
-  String   tmpString;
-  {
-    #ifdef USE_SECOND_HEAP
-    // Store each string in 2nd heap
-    HeapSelectIram ephemeral;
-    #endif
-    tmpString.reserve(estimatedStringSize);
-  }
+  String tmpString;
+  tmpString.reserve(estimatedStringSize);
   {
     while (stringCount < nrStrings && static_cast<int>(readPos) < max_size) {
       const uint32_t readSize = std::min(bufferSize, max_size - readPos);
       result += LoadFromFile(settingsType,
-                            index,
-                            reinterpret_cast<uint8_t *>(&buffer),
-                            readSize,
-                            readPos);
+                             index,
+                             reinterpret_cast<uint8_t *>(&buffer),
+                             readSize,
+                             readPos);
 
       for (uint32_t i = 0; i < readSize && stringCount < nrStrings; ++i) {
         const uint32_t curPos = readPos + i;
@@ -930,13 +1269,14 @@ String LoadStringArray(SettingsType::Enum settingsType, int index, String string
               // Specific string length, so we have to set the next string position.
               nextStringPos += maxStringLength;
             }
-            #ifdef USE_SECOND_HEAP
-            // Store each string in 2nd heap
-            HeapSelectIram ephemeral;
-            #endif
+            if (!tmpString.isEmpty()) {
+              move_special(strings[stringCount], std::move(tmpString));
+            } else {
+              free_string(strings[stringCount]);
+            }
 
-            strings[stringCount] = tmpString;
-            tmpString = String();
+            // Do not allocate tmpString on 2nd heap as byte access on 2nd heap is much slower
+            // We're appending per byte, so better prefer speed for short lived objects
             tmpString.reserve(estimatedStringSize);
             ++stringCount;
           } else {
@@ -949,9 +1289,8 @@ String LoadStringArray(SettingsType::Enum settingsType, int index, String string
   }
 
   if ((!tmpString.isEmpty()) && (stringCount < nrStrings)) {
-    result              += F("Incomplete custom settings for index ");
-    result              += (index + 1);
-    strings[stringCount] = tmpString;
+    result += concat(F("Incomplete custom settings for index "), index + 1);
+    move_special(strings[stringCount], std::move(tmpString));
   }
   return result;
 }
@@ -960,25 +1299,32 @@ String LoadStringArray(SettingsType::Enum settingsType, int index, String string
    Save array of Strings from Custom settings
    Use maxStringLength = 0 to optimize for size (strings will be concatenated)
  \*********************************************************************************************/
-String SaveStringArray(SettingsType::Enum settingsType, int index, const String strings[], uint16_t nrStrings, uint16_t maxStringLength, uint32_t posInBlock)
+String SaveStringArray(SettingsType::Enum settingsType,
+                       int                index,
+                       const String       strings[],
+                       uint16_t           nrStrings,
+                       uint16_t           maxStringLength,
+                       uint32_t           posInBlock)
 {
   // FIXME TD-er: Must add some check to see if the existing data has changed before saving.
   int offset, max_size;
+
   if (!SettingsType::getSettingsParameters(settingsType, index, offset, max_size))
   {
     #ifndef BUILD_NO_DEBUG
     return F("Invalid index for custom settings");
-    #else
+    #else // ifndef BUILD_NO_DEBUG
     return F("Save error");
-    #endif
+    #endif // ifndef BUILD_NO_DEBUG
   }
 
   #ifdef ESP8266
   uint16_t bufferSize = 256;
-  #endif
+  #endif // ifdef ESP8266
   #ifdef ESP32
   uint16_t bufferSize = 1024;
-  #endif
+  #endif // ifdef ESP32
+
   if (bufferSize > max_size) {
     bufferSize = max_size;
   }
@@ -1008,7 +1354,8 @@ String SaveStringArray(SettingsType::Enum settingsType, int index, const String 
     }
 
     int bufpos = 0;
-    for ( ; bufpos < bufferSize && stringCount < nrStrings; ++bufpos) {
+
+    for (; bufpos < bufferSize && stringCount < nrStrings; ++bufpos) {
       if (stringReadPos == 0) {
         // We're at the start of a string
         curStringLength = strings[stringCount].length();
@@ -1049,13 +1396,19 @@ String SaveStringArray(SettingsType::Enum settingsType, int index, const String 
     writePos += bufpos;
   }
 
+  #if FEATURE_EXTENDED_CUSTOM_SETTINGS
+
+  if ((SettingsType::Enum::CustomTaskSettings_Type == settingsType) &&
+      ((writePos - posInBlock) <= DAT_TASKS_CUSTOM_SIZE)) { // Not needed, so can be deleted
+    DeleteExtendedCustomTaskSettingsFile(settingsType, index);
+  }
+  #endif // if FEATURE_EXTENDED_CUSTOM_SETTINGS
+
   if ((writePos >= max_size) && (stringCount < nrStrings)) {
     result += F("Error: Not all strings fit in custom settings.");
   }
   return result;
 }
-
-
 
 /********************************************************************************************\
    Save Task settings to file system
@@ -1064,14 +1417,14 @@ String SaveTaskSettings(taskIndex_t TaskIndex)
 {
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("SaveTaskSettings"));
-  #endif
+  #endif // ifndef BUILD_NO_RAM_TRACKER
 
   if (ExtraTaskSettings.TaskIndex != TaskIndex) {
     #ifndef BUILD_NO_DEBUG
     return F("SaveTaskSettings taskIndex does not match");
-    #else
+    #else // ifndef BUILD_NO_DEBUG
     return F("Save error");
-    #endif
+    #endif // ifndef BUILD_NO_DEBUG
   }
 
   START_TIMER
@@ -1080,30 +1433,33 @@ String SaveTaskSettings(taskIndex_t TaskIndex)
   if (!Cache.matchChecksumExtraTaskSettings(TaskIndex, ExtraTaskSettings.computeChecksum())) {
     // Clear task device value names before saving, will generate again when loading them later.
     ExtraTaskSettings.clearDefaultTaskDeviceValueNames();
-    ExtraTaskSettings.validate(); // Validate before saving will reduce nr of saves as it is more likely to not have changed the next time it will be saved.
+    ExtraTaskSettings.validate(); // Validate before saving will reduce nr of saves as it is more likely to not have changed the next time
+                                  // it will be saved.
 
     // Call to validate() may have changed the content, so re-compute the checksum.
-    // This is how it is now stored, so we can now also update the 
+    // This is how it is now stored, so we can now also update the
     // ExtraTaskSettings cache. This may prevent a reload.
     Cache.updateExtraTaskSettingsCache_afterLoad_Save();
 
     err = SaveToFile(SettingsType::Enum::TaskSettings_Type,
-                            TaskIndex,
-                            reinterpret_cast<const uint8_t *>(&ExtraTaskSettings),
-                            sizeof(struct ExtraTaskSettingsStruct));
+                     TaskIndex,
+                     reinterpret_cast<const uint8_t *>(&ExtraTaskSettings),
+                     sizeof(struct ExtraTaskSettingsStruct));
 
-#if !defined(PLUGIN_BUILD_MINIMAL_OTA) && !defined(ESP8266_1M)
+#ifndef LIMIT_BUILD_SIZE
     if (err.isEmpty()) {
       err = checkTaskSettings(TaskIndex);
     }
-#endif
-  } 
+#endif // if !defined(PLUGIN_BUILD_MINIMAL_OTA) && !defined(ESP8266_1M)
+
+    // FIXME TD-er: Is this still needed as it is also cleared on PLUGIN_INIT and PLUGIN_EXIT?
+    UserVar.clear_computed(ExtraTaskSettings.TaskIndex);
+  }
 #ifndef LIMIT_BUILD_SIZE
   else {
     addLog(LOG_LEVEL_INFO, F("Skip saving task settings, not changed"));
-
   }
-#endif
+#endif // ifndef LIMIT_BUILD_SIZE
   STOP_TIMER(SAVE_TASK_SETTINGS);
   return err;
 }
@@ -1116,6 +1472,7 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
   if (ExtraTaskSettings.TaskIndex == TaskIndex) {
     return EMPTY_STRING; // already loaded
   }
+
   if (!validTaskIndex(TaskIndex)) {
     return EMPTY_STRING; // Un-initialized task index.
   }
@@ -1123,24 +1480,26 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
 
   ExtraTaskSettings.clear();
   const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(TaskIndex);
+
   if (!validDeviceIndex(DeviceIndex)) {
     // No need to load from storage, as there is no plugin assigned to this task.
     ExtraTaskSettings.TaskIndex = TaskIndex; // Needed when an empty task was requested
 
     // FIXME TD-er: Do we need to keep a cache of an empty task?
-    // Maybe better to do this? 
-    Cache.clearTaskCache(TaskIndex); 
-//    Cache.updateExtraTaskSettingsCache_afterLoad_Save();
+    // Maybe better to do this?
+    Cache.clearTaskCache(TaskIndex);
+
+    //    Cache.updateExtraTaskSettingsCache_afterLoad_Save();
     return EMPTY_STRING;
   }
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("LoadTaskSettings"));
-  #endif
+  #endif // ifndef BUILD_NO_RAM_TRACKER
 
   const String result = LoadFromFile(
-    SettingsType::Enum::TaskSettings_Type, 
-    TaskIndex, 
-    reinterpret_cast<uint8_t *>(&ExtraTaskSettings), 
+    SettingsType::Enum::TaskSettings_Type,
+    TaskIndex,
+    reinterpret_cast<uint8_t *>(&ExtraTaskSettings),
     sizeof(struct ExtraTaskSettingsStruct));
 
   // After loading, some settings may need patching.
@@ -1150,10 +1509,10 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
     // Nr of decimals cannot be configured, so set them to 0 just to be sure.
     for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
       ExtraTaskSettings.TaskDeviceValueDecimals[i] = 0;
-    }      
+    }
   }
   loadDefaultTaskValueNames_ifEmpty(TaskIndex);
-  
+
   ExtraTaskSettings.validate();
   Cache.updateExtraTaskSettingsCache_afterLoad_Save();
   STOP_TIMER(LOAD_TASK_SETTINGS);
@@ -1167,7 +1526,7 @@ bool   _CDN_url_loaded = false;
 
 String get_CDN_url_custom() {
   if (!_CDN_url_loaded) {
-    String strings[] = {EMPTY_STRING};
+    String strings[] = { EMPTY_STRING };
 
     LoadStringArray(
       SettingsType::Enum::CdnSettings_Type, 0,
@@ -1178,9 +1537,10 @@ String get_CDN_url_custom() {
   return _CDN_url_cache;
 }
 
-void set_CDN_url_custom(const String &url) {
+void set_CDN_url_custom(const String& url) {
   _CDN_url_cache = url;
   _CDN_url_cache.trim();
+
   if (!_CDN_url_cache.isEmpty() && !_CDN_url_cache.endsWith(F("/"))) {
     _CDN_url_cache.concat('/');
   }
@@ -1203,6 +1563,7 @@ void set_CDN_url_custom(const String &url) {
     SettingsType::Enum::CdnSettings_Type, 0,
     strings, NR_ELEMENTS(strings), 255, 0);
 }
+
 #endif // if FEATURE_ALTERNATIVE_CDN_URL
 
 /********************************************************************************************\
@@ -1212,7 +1573,7 @@ String SaveCustomTaskSettings(taskIndex_t TaskIndex, const uint8_t *memAddress, 
 {
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("SaveCustomTaskSettings"));
-  #endif
+  #endif // ifndef BUILD_NO_RAM_TRACKER
   return SaveToFile(SettingsType::Enum::CustomTaskSettings_Type, TaskIndex, memAddress, datasize, posInBlock);
 }
 
@@ -1224,18 +1585,14 @@ String SaveCustomTaskSettings(taskIndex_t TaskIndex, String strings[], uint16_t 
 {
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("SaveCustomTaskSettings"));
-  #endif
+  #endif // ifndef BUILD_NO_RAM_TRACKER
   return SaveStringArray(
     SettingsType::Enum::CustomTaskSettings_Type, TaskIndex,
     strings, nrStrings, maxStringLength, posInBlock);
 }
 
 String getCustomTaskSettingsError(uint8_t varNr) {
-  String error = F("Error: Text too long for line ");
-
-  error += varNr + 1;
-  error += '\n';
-  return error;
+  return strformat(F("Error: Text too long for line %d\n"), varNr + 1);
 }
 
 /********************************************************************************************\
@@ -1255,7 +1612,7 @@ String LoadCustomTaskSettings(taskIndex_t TaskIndex, uint8_t *memAddress, int da
   START_TIMER;
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("LoadCustomTaskSettings"));
-  #endif
+  #endif // ifndef BUILD_NO_RAM_TRACKER
   String result = LoadFromFile(SettingsType::Enum::CustomTaskSettings_Type, TaskIndex, memAddress, datasize, offset_in_block);
   STOP_TIMER(LOAD_CUSTOM_TASK_STATS);
   return result;
@@ -1270,10 +1627,10 @@ String LoadCustomTaskSettings(taskIndex_t TaskIndex, String strings[], uint16_t 
   START_TIMER;
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("LoadCustomTaskSettings"));
-  #endif
+  #endif // ifndef BUILD_NO_RAM_TRACKER
   String result = LoadStringArray(SettingsType::Enum::CustomTaskSettings_Type,
-                           TaskIndex,
-                           strings, nrStrings, maxStringLength, offset_in_block);
+                                  TaskIndex,
+                                  strings, nrStrings, maxStringLength, offset_in_block);
   STOP_TIMER(LOAD_CUSTOM_TASK_STATS);
   return result;
 }
@@ -1285,7 +1642,7 @@ String SaveControllerSettings(controllerIndex_t ControllerIndex, ControllerSetti
 {
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("SaveControllerSettings"));
-  #endif
+  #endif // ifndef BUILD_NO_RAM_TRACKER
 
   START_TIMER;
 
@@ -1296,16 +1653,16 @@ String SaveControllerSettings(controllerIndex_t ControllerIndex, ControllerSetti
   if (checksum == (Cache.controllerSettings_checksums[ControllerIndex])) {
 #ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_INFO, concat(F("Skip saving ControllerSettings: "), checksum.toString()));
-#endif
+#endif // ifndef BUILD_NO_DEBUG
     return EMPTY_STRING;
   }
   const String res = SaveToFile(SettingsType::Enum::ControllerSettings_Type, ControllerIndex,
-                    reinterpret_cast<const uint8_t *>(&controller_settings), sizeof(controller_settings));
+                                reinterpret_cast<const uint8_t *>(&controller_settings), sizeof(controller_settings));
 
   Cache.controllerSettings_checksums[ControllerIndex] = checksum;
   #ifdef ESP32
   Cache.setControllerSettings(ControllerIndex, controller_settings);
-  #endif
+  #endif // ifdef ESP32
   STOP_TIMER(SAVE_CONTROLLER_SETTINGS);
 
   return res;
@@ -1315,16 +1672,18 @@ String SaveControllerSettings(controllerIndex_t ControllerIndex, ControllerSetti
    Load Controller settings to file system
  \*********************************************************************************************/
 String LoadControllerSettings(controllerIndex_t ControllerIndex, ControllerSettingsStruct& controller_settings) {
+  if (!validControllerIndex(ControllerIndex)) return EMPTY_STRING;
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("LoadControllerSettings"));
-  #endif
+  #endif // ifndef BUILD_NO_RAM_TRACKER
   START_TIMER
   #ifdef ESP32
+
   if (Cache.getControllerSettings(ControllerIndex, controller_settings)) {
     STOP_TIMER(LOAD_CONTROLLER_SETTINGS_C);
     return EMPTY_STRING;
   }
-  #endif
+  #endif // ifdef ESP32
   String result =
     LoadFromFile(SettingsType::Enum::ControllerSettings_Type, ControllerIndex,
                  reinterpret_cast<uint8_t *>(&controller_settings), sizeof(controller_settings));
@@ -1334,7 +1693,7 @@ String LoadControllerSettings(controllerIndex_t ControllerIndex, ControllerSetti
   Cache.controllerSettings_checksums[ControllerIndex] = controller_settings.computeChecksum();
   #ifdef ESP32
   Cache.setControllerSettings(ControllerIndex, controller_settings);
-  #endif
+  #endif // ifdef ESP32
   STOP_TIMER(LOAD_CONTROLLER_SETTINGS);
   return result;
 }
@@ -1346,7 +1705,7 @@ String ClearCustomControllerSettings(controllerIndex_t ControllerIndex)
 {
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("ClearCustomControllerSettings"));
-  #endif
+  #endif // ifndef BUILD_NO_RAM_TRACKER
 
   // addLog(LOG_LEVEL_DEBUG, F("Clearing custom controller settings"));
   return ClearInFile(SettingsType::Enum::CustomControllerSettings_Type, ControllerIndex);
@@ -1359,7 +1718,7 @@ String SaveCustomControllerSettings(controllerIndex_t ControllerIndex, const uin
 {
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("SaveCustomControllerSettings"));
-  #endif
+  #endif // ifndef BUILD_NO_RAM_TRACKER
   return SaveToFile(SettingsType::Enum::CustomControllerSettings_Type, ControllerIndex, memAddress, datasize);
 }
 
@@ -1370,25 +1729,27 @@ String LoadCustomControllerSettings(controllerIndex_t ControllerIndex, uint8_t *
 {
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("LoadCustomControllerSettings"));
-  #endif
+  #endif // ifndef BUILD_NO_RAM_TRACKER
   return LoadFromFile(SettingsType::Enum::CustomControllerSettings_Type, ControllerIndex, memAddress, datasize);
 }
 
-
 #if FEATURE_CUSTOM_PROVISIONING
+
 /********************************************************************************************\
    Save Provisioning Settings
  \*********************************************************************************************/
 String saveProvisioningSettings(ProvisioningStruct& ProvisioningSettings)
 {
-  String     err;
+  String err;
 
   ProvisioningSettings.validate();
   memcpy(ProvisioningSettings.ProgmemMd5, CRCValues.runTimeMD5, 16);
+
   if (!COMPUTE_STRUCT_CHECKSUM_UPDATE(ProvisioningStruct, ProvisioningSettings))
   {
     // Settings have changed, save to file.
-    err = SaveToFile_trunc(getFileName(FileType::PROVISIONING_DAT, 0).c_str(), 0, (uint8_t *)&ProvisioningSettings, sizeof(ProvisioningStruct));
+    err =
+      SaveToFile_trunc(getFileName(FileType::PROVISIONING_DAT, 0).c_str(), 0, (uint8_t *)&ProvisioningSettings, sizeof(ProvisioningStruct));
   }
   return err;
 }
@@ -1398,8 +1759,13 @@ String saveProvisioningSettings(ProvisioningStruct& ProvisioningSettings)
  \*********************************************************************************************/
 String loadProvisioningSettings(ProvisioningStruct& ProvisioningSettings)
 {
-  String err = LoadFromFile(getFileName(FileType::PROVISIONING_DAT, 0).c_str(), 0, (uint8_t *)&ProvisioningSettings, sizeof(ProvisioningStruct));
-#ifndef BUILD_NO_DEBUG
+  String err = LoadFromFile(getFileName(FileType::PROVISIONING_DAT, 0).c_str(),
+                            0,
+                            (uint8_t *)&ProvisioningSettings,
+                            sizeof(ProvisioningStruct));
+
+# ifndef BUILD_NO_DEBUG
+
   if (COMPUTE_STRUCT_CHECKSUM(ProvisioningStruct, ProvisioningSettings))
   {
     addLog(LOG_LEVEL_INFO, F("CRC  : ProvisioningSettings CRC   ...OK "));
@@ -1411,22 +1777,23 @@ String loadProvisioningSettings(ProvisioningStruct& ProvisioningSettings)
   else {
     addLog(LOG_LEVEL_ERROR, F("CRC  : ProvisioningSettings CRC   ...FAIL"));
   }
-#endif
+# endif // ifndef BUILD_NO_DEBUG
   ProvisioningSettings.validate();
   return err;
 }
 
-#endif
+#endif // if FEATURE_CUSTOM_PROVISIONING
 
 #if FEATURE_NOTIFIER
+
 /********************************************************************************************\
    Save Controller settings to file system
  \*********************************************************************************************/
 String SaveNotificationSettings(int NotificationIndex, const uint8_t *memAddress, int datasize)
 {
-  #ifndef BUILD_NO_RAM_TRACKER
+  # ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("SaveNotificationSettings"));
-  #endif
+  # endif // ifndef BUILD_NO_RAM_TRACKER
   return SaveToFile(SettingsType::Enum::NotificationSettings_Type, NotificationIndex, memAddress, datasize);
 }
 
@@ -1435,12 +1802,124 @@ String SaveNotificationSettings(int NotificationIndex, const uint8_t *memAddress
  \*********************************************************************************************/
 String LoadNotificationSettings(int NotificationIndex, uint8_t *memAddress, int datasize)
 {
-  #ifndef BUILD_NO_RAM_TRACKER
+  # ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("LoadNotificationSettings"));
-  #endif
+  # endif // ifndef BUILD_NO_RAM_TRACKER
   return LoadFromFile(SettingsType::Enum::NotificationSettings_Type, NotificationIndex, memAddress, datasize);
 }
+
 #endif
+
+
+/********************************************************************************************\
+   Handle certificate files on the file system.
+   The content will be stripped from unusable character like quotes, spaces etc.
+ \*********************************************************************************************/
+#if FEATURE_TLS
+static inline bool is_base64(char c) {
+  return (isalnum(c) || (c == '+') || (c == '/'));
+}
+
+bool cleanupCertificate(String & certificate, bool &changed)
+{
+  changed = false;
+  // "-----BEGIN CERTIFICATE-----" positions in dash_pos[0] and dash_pos[1]
+  // "-----END CERTIFICATE-----"   positions in dash_pos[2] and dash_pos[3]
+  int dash_pos[4] = { 0 };
+  int last_pos = 0;
+  for (int i = 0; i < 4 && last_pos != -1; ++i) {
+    dash_pos[i] = certificate.indexOf(F("-----"), last_pos);
+    last_pos = dash_pos[i] + 5;
+//    addLog(LOG_LEVEL_INFO, String(F(" dash_pos: ")) + String(dash_pos[i]));
+  }
+  if (last_pos == -1) return false;
+
+  int read_pos = dash_pos[1] + 5; // next char after "-----BEGIN CERTIFICATE-----"
+  String newCert;
+  newCert.reserve((dash_pos[3] + 6) - dash_pos[0]);
+
+  // "-----BEGIN CERTIFICATE-----" 
+  newCert += certificate.substring(dash_pos[0], read_pos); 
+
+  char last_char = certificate[read_pos - 1];
+  for (; read_pos < dash_pos[2]; ++read_pos) {
+    const char c = certificate[read_pos];
+    if ((c == 'n' && last_char == '\\') || (c == '\n')) {
+      if (!newCert.endsWith(String('\n'))) {
+        newCert += '\n';
+      }
+    } else if (is_base64(c) || c == '=') {
+      newCert += c;
+    }
+    last_char = c;
+  }
+
+  // "-----END CERTIFICATE-----" 
+  newCert += certificate.substring(dash_pos[2], dash_pos[3] + 5);
+  newCert += '\n';
+
+  changed = !certificate.equals(newCert);
+  certificate = std::move(newCert);
+  return true;
+}
+
+String SaveCertificate(const String& fname, const String& certificate)
+{
+  return SaveToFile(fname.c_str(), 0, (const uint8_t *)certificate.c_str(), certificate.length() + 1);
+}
+
+String LoadCertificate(const String& fname, String& certificate, bool cleanup)
+{
+  bool changed = false;
+  if (fileExists(fname)) {
+    fs::File f = tryOpenFile(fname, "r");
+    SPIFFS_CHECK(f, fname.c_str());
+    #ifndef BUILD_NO_DEBUG
+    String log = F("LoadCertificate: ");
+    log += fname;
+    #else
+    String log = F("LoadCertificate error");
+    #endif
+
+    certificate.clear();
+
+    if (!certificate.reserve(f.size())) {
+      #ifndef BUILD_NO_DEBUG
+      log += F(" ERROR, Out of memory");
+      #endif
+      addLog(LOG_LEVEL_ERROR, log);
+      f.close();
+      return log;
+    }
+    bool done = false;
+    while (f.available() && !done) { 
+      const char c = (char)f.read(); 
+      if (c == '\0') {
+        done = true;
+      } else {
+        certificate += c;
+      }
+    }
+    f.close();
+
+    if (cleanup) {
+      if (!cleanupCertificate(certificate, changed)) {
+        certificate.clear();
+        #ifndef BUILD_NO_DEBUG
+        log += F(" ERROR, Invalid certificate format");
+        #endif
+        addLog(LOG_LEVEL_ERROR, log);
+        return log;
+      } else if (changed) {
+        //return SaveCertificate(fname, certificate);
+      }
+    }
+  }
+
+  return EMPTY_STRING;
+}
+#endif
+
 /********************************************************************************************\
    Init a file with zeros on file system
  \*********************************************************************************************/
@@ -1448,7 +1927,7 @@ String InitFile(const String& fname, int datasize)
 {
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("InitFile"));
-  #endif
+  #endif // ifndef BUILD_NO_RAM_TRACKER
   FLASH_GUARD();
 
   fs::File f = tryOpenFile(fname, "w");
@@ -1474,7 +1953,7 @@ String InitFile(SettingsType::Enum settingsType)
 
 String InitFile(SettingsType::SettingsFileEnum file_type)
 {
-  return InitFile(SettingsType::getSettingsFileName(file_type), 
+  return InitFile(SettingsType::getSettingsFileName(file_type),
                   SettingsType::getInitFileSize(file_type));
 }
 
@@ -1483,7 +1962,9 @@ String InitFile(SettingsType::SettingsFileEnum file_type)
  \*********************************************************************************************/
 String SaveToFile(const char *fname, int index, const uint8_t *memAddress, int datasize)
 {
-  return doSaveToFile(fname, index, memAddress, datasize, "r+");
+  return doSaveToFile(
+    fname, index, memAddress, datasize,
+    fileExists(fname) ? "r+" : "w+");
 }
 
 String SaveToFile_trunc(const char *fname, int index, const uint8_t *memAddress, int datasize)
@@ -1495,43 +1976,37 @@ String SaveToFile_trunc(const char *fname, int index, const uint8_t *memAddress,
 String doSaveToFile(const char *fname, int index, const uint8_t *memAddress, int datasize, const char *mode)
 {
 #ifndef BUILD_NO_DEBUG
-#ifndef ESP32
+# ifndef ESP32
 
   if (allocatedOnStack(memAddress)) {
-    String log = F("SaveToFile: ");
-    log += fname;
-    log += F(" ERROR, Data allocated on stack");
-    addLog(LOG_LEVEL_ERROR, log);
+    addLog(LOG_LEVEL_ERROR, strformat(F("SaveToFile: %s ERROR, Data allocated on stack"), fname));
 
     //    return log;  // FIXME TD-er: Should this be considered a breaking error?
   }
-#endif // ifndef ESP32
-#endif
+# endif // ifndef ESP32
+#endif  // ifndef BUILD_NO_DEBUG
 
   if (index < 0) {
     #ifndef BUILD_NO_DEBUG
-    String log = F("SaveToFile: ");
-    log += fname;
-    log += F(" ERROR, invalid position in file");
-    #else
-    String log = F("Save error");
-    #endif
+    const String log = strformat(F("SaveToFile: %s ERROR, invalid position in file"), fname);
+    #else // ifndef BUILD_NO_DEBUG
+    const String log = F("Save error");
+    #endif // ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_ERROR, log);
     return log;
   }
   START_TIMER;
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("SaveToFile"));
-  #endif
+  #endif // ifndef BUILD_NO_RAM_TRACKER
   FLASH_GUARD();
-  
+
   #ifndef BUILD_NO_DEBUG
+
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("SaveToFile: free stack: ");
-    log += getCurrentFreeStack();
-    addLogMove(LOG_LEVEL_INFO, log);
+    addLog(LOG_LEVEL_INFO, concat(F("SaveToFile: free stack: "),  getCurrentFreeStack()));
   }
-  #endif
+  #endif // ifndef BUILD_NO_DEBUG
   delay(1);
   unsigned long timer = millis() + 50;
   fs::File f          = tryOpenFile(fname, mode);
@@ -1539,7 +2014,9 @@ String doSaveToFile(const char *fname, int index, const uint8_t *memAddress, int
   if (f) {
     clearAllButTaskCaches();
     SPIFFS_CHECK(f,                          fname);
-    SPIFFS_CHECK(f.seek(index, fs::SeekSet), fname);
+    if (index > 0) {
+      SPIFFS_CHECK(f.seek(index, fs::SeekSet), fname);
+    }
     const uint8_t *pointerToByteToSave = memAddress;
 
     for (int x = 0; x < datasize; x++)
@@ -1562,38 +2039,28 @@ String doSaveToFile(const char *fname, int index, const uint8_t *memAddress, int
     }
     f.close();
     #ifndef BUILD_NO_DEBUG
+
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log;
-      log.reserve(48);
-      log += F("FILE : Saved ");
-      log += fname;
-      log += F(" offset: ");
-      log += index;
-      log += F(" size: ");
-      log += datasize;
-      addLogMove(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, strformat(F("FILE : Saved %s offset: %d size: %d"), fname, index, datasize));
     }
-    #endif
+    #endif // ifndef BUILD_NO_DEBUG
   } else {
     #ifndef BUILD_NO_DEBUG
-    String log = F("SaveToFile: ");
-    log += fname;
-    log += F(" ERROR, Cannot save to file");
-    #else
-    String log = F("Save error");
-    #endif
+    const String log = strformat(F("SaveToFile: %s ERROR, Cannot save to file"), fname);
+    #else // ifndef BUILD_NO_DEBUG
+    const String log = F("Save error");
+    #endif // ifndef BUILD_NO_DEBUG
 
     addLog(LOG_LEVEL_ERROR, log);
     return log;
   }
   STOP_TIMER(SAVEFILE_STATS);
   #ifndef BUILD_NO_DEBUG
+
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("SaveToFile: free stack after: ");
-    log += getCurrentFreeStack();
-    addLogMove(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, concat(F("SaveToFile: free stack after: "), getCurrentFreeStack()));
   }
-  #endif
+  #endif // ifndef BUILD_NO_DEBUG
 
   // OK
   return EMPTY_STRING;
@@ -1606,12 +2073,10 @@ String ClearInFile(const char *fname, int index, int datasize)
 {
   if (index < 0) {
     #ifndef BUILD_NO_DEBUG
-    String log = F("ClearInFile: ");
-    log += fname;
-    log += F(" ERROR, invalid position in file");
-    #else
-    String log = F("Save error");
-    #endif
+    const String log = strformat(F("ClearInFile: %s ERROR, invalid position in file"), fname);
+    #else // ifndef BUILD_NO_DEBUG
+    const String log = F("Save error");
+    #endif // ifndef BUILD_NO_DEBUG
 
     addLog(LOG_LEVEL_ERROR, log);
     return log;
@@ -1619,7 +2084,7 @@ String ClearInFile(const char *fname, int index, int datasize)
 
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("ClearInFile"));
-  #endif
+  #endif // ifndef BUILD_NO_RAM_TRACKER
   FLASH_GUARD();
 
   fs::File f = tryOpenFile(fname, "r+");
@@ -1636,12 +2101,10 @@ String ClearInFile(const char *fname, int index, int datasize)
     f.close();
   } else {
     #ifndef BUILD_NO_DEBUG
-    String log = F("ClearInFile: ");
-    log += fname;
-    log += F(" ERROR, Cannot save to file");
-    #else
-    String log = F("Save error");
-    #endif
+    const String log = strformat(F("ClearInFile: %s ERROR, Cannot save to file"), fname);
+    #else // ifndef BUILD_NO_DEBUG
+    const String log = F("Save error");
+    #endif // ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_ERROR, log);
     return log;
   }
@@ -1657,12 +2120,10 @@ String LoadFromFile(const char *fname, int offset, uint8_t *memAddress, int data
 {
   if (offset < 0) {
     #ifndef BUILD_NO_DEBUG
-    String log = F("LoadFromFile: ");
-    log += fname;
-    log += F(" ERROR, invalid position in file");
-    #else
-    String log = F("Load error");
-    #endif
+    const String log = strformat(F("LoadFromFile: %s ERROR, invalid position in file"), fname);
+    #else // ifndef BUILD_NO_DEBUG
+    const String log = F("Load error");
+    #endif // ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_ERROR, log);
     return log;
   }
@@ -1670,14 +2131,15 @@ String LoadFromFile(const char *fname, int offset, uint8_t *memAddress, int data
   START_TIMER;
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("LoadFromFile"));
-  #endif
-  
+  #endif // ifndef BUILD_NO_RAM_TRACKER
+
   fs::File f = tryOpenFile(fname, "r");
-  SPIFFS_CHECK(f,                            fname);
+  SPIFFS_CHECK(f, fname);
   const int fileSize = f.size();
+
   if (fileSize > offset) {
-    SPIFFS_CHECK(f.seek(offset, fs::SeekSet),  fname);
-    
+    SPIFFS_CHECK(f.seek(offset, fs::SeekSet), fname);
+
     if (fileSize < (offset + datasize)) {
       const int newdatasize = datasize + offset - fileSize;
 
@@ -1696,41 +2158,80 @@ String LoadFromFile(const char *fname, int offset, uint8_t *memAddress, int data
   return EMPTY_STRING;
 }
 
+String LoadFromFile(const char *fname, String& data, int offset)
+{
+  fs::File f = tryOpenFile(fname, "r");
+  SPIFFS_CHECK(f, fname);
+  #ifndef BUILD_NO_DEBUG
+  String log = F("LoadFromFile: ");
+  log += fname;
+  #else
+  String log = F("Load error");
+  #endif
+
+  if (!f || offset < 0 || (offset >= static_cast<int>(f.size()))) {
+    #ifndef BUILD_NO_DEBUG
+    log += F(" ERROR, invalid position in file");
+    #endif
+    addLog(LOG_LEVEL_ERROR, log);
+    return log;
+  }
+  delay(0);
+  START_TIMER;
+  #ifndef BUILD_NO_RAM_TRACKER
+  checkRAM(F("LoadFromFile"));
+  #endif
+  
+  SPIFFS_CHECK(f.seek(offset, fs::SeekSet),  fname);
+  if (f) {
+    if (!data.reserve(f.size() - offset)) {
+      #ifndef BUILD_NO_DEBUG
+      log += F(" ERROR, Out of memory");
+      #endif
+      addLog(LOG_LEVEL_ERROR, log);
+      f.close();
+      return log;
+    }
+
+    while (f.available()) { data += (char)f.read(); }
+    f.close();
+  }
+  
+
+  STOP_TIMER(LOADFILE_STATS);
+  delay(0);
+
+  return EMPTY_STRING;
+}
+
 /********************************************************************************************\
    Wrapper functions to handle errors in accessing settings
  \*********************************************************************************************/
 String getSettingsFileIndexRangeError(bool read, SettingsType::Enum settingsType, int index) {
   if (settingsType >= SettingsType::Enum::SettingsType_MAX) {
-    String error = F("Unknown settingsType: ");
-    error += static_cast<int>(settingsType);
-    return error;
+    return concat(F("Unknown settingsType: "), static_cast<int>(settingsType));
   }
   String error = read ? F("Load") : F("Save");
+
   #ifndef BUILD_NO_DEBUG
   error += SettingsType::getSettingsTypeString(settingsType);
-  error += F(" index out of range: ");
-  error += index;
-  #else
+  error += concat(F(" index out of range: "), index);
+  #else // ifndef BUILD_NO_DEBUG
   error += F(" error");
-  #endif
+  #endif // ifndef BUILD_NO_DEBUG
   return error;
 }
 
 String getSettingsFileDatasizeError(bool read, SettingsType::Enum settingsType, int index, int datasize, int max_size) {
   String error = read ? F("Load") : F("Save");
+
   #ifndef BUILD_NO_DEBUG
   error += SettingsType::getSettingsTypeString(settingsType);
-  error += '(';
-  error += index;
-  error += F(") datasize(");
-  error += datasize;
-  error += F(") > max_size(");
-  error += max_size;
-  error += ')';
-  #else
+  error += strformat(F("(%d) datasize(%d) > max_size(%d)"), index, datasize, max_size);
+  #else // ifndef BUILD_NO_DEBUG
   error += F(" error");
-  #endif
-  
+  #endif // ifndef BUILD_NO_DEBUG
+
   return error;
 }
 
@@ -1745,8 +2246,42 @@ String LoadFromFile(SettingsType::Enum settingsType, int index, uint8_t *memAddr
   if ((datasize + offset_in_block) > max_size) {
     return getSettingsFileDatasizeError(read, settingsType, index, datasize, max_size);
   }
-  const String fname = SettingsType::getSettingsFileName(settingsType);
-  return LoadFromFile(fname.c_str(), (offset + offset_in_block), memAddress, datasize);
+
+  int dataOffset = 0;
+
+  #if FEATURE_EXTENDED_CUSTOM_SETTINGS
+  int taskIndex = INVALID_TASK_INDEX; // Use base filename
+
+  if ((SettingsType::Enum::CustomTaskSettings_Type == settingsType) &&
+      ((offset_in_block + datasize) > DAT_TASKS_CUSTOM_SIZE)) {
+    if (offset_in_block < DAT_TASKS_CUSTOM_SIZE) { // block starts in regular Custom config: Load first part
+      const String fname = SettingsType::getSettingsFileName(settingsType);
+      dataOffset = DAT_TASKS_CUSTOM_SIZE - offset_in_block;
+      const String res = LoadFromFile(fname.c_str(), offset + offset_in_block, memAddress, dataOffset);
+
+      if (!res.isEmpty()) { return res; } // Error occurred?
+
+      datasize       -= dataOffset;
+      offset_in_block = DAT_TASKS_CUSTOM_SIZE;
+    }
+    const String fname = SettingsType::getSettingsFileName(settingsType, index);
+
+    if (fileExists(fname)) { // Do we have a task-specific extension stored?
+      if (offset_in_block >= DAT_TASKS_CUSTOM_SIZE) {
+        offset_in_block -= DAT_TASKS_CUSTOM_SIZE;
+      }
+      offset    = 0;
+      taskIndex = index; // Use task-specific filename
+    }
+  }
+  #endif // if FEATURE_EXTENDED_CUSTOM_SETTINGS
+
+  const String fname = SettingsType::getSettingsFileName(settingsType
+                                                         #if FEATURE_EXTENDED_CUSTOM_SETTINGS
+                                                         , taskIndex
+                                                         #endif // if FEATURE_EXTENDED_CUSTOM_SETTINGS
+                                                         );
+  return LoadFromFile(fname.c_str(), (offset + offset_in_block), memAddress + dataOffset, datasize);
 }
 
 String SaveToFile(SettingsType::Enum settingsType, int index, const uint8_t *memAddress, int datasize, int posInBlock) {
@@ -1760,14 +2295,65 @@ String SaveToFile(SettingsType::Enum settingsType, int index, const uint8_t *mem
   if ((datasize > max_size) || ((posInBlock + datasize) > max_size)) {
     return getSettingsFileDatasizeError(read, settingsType, index, datasize, max_size);
   }
-  const String fname = SettingsType::getSettingsFileName(settingsType);
-  if (!fileExists(fname)) {
-    InitFile(settingsType);
+
+  int dataOffset = 0;
+
+  #if FEATURE_EXTENDED_CUSTOM_SETTINGS
+  int taskIndex = INVALID_TASK_INDEX;                      // Use base filename
+
+  if ((SettingsType::Enum::CustomTaskSettings_Type == settingsType) &&
+      (posInBlock + datasize > (DAT_TASKS_CUSTOM_SIZE))) { // max_size already handled above
+    if (posInBlock < DAT_TASKS_CUSTOM_SIZE) {              // Partial in regular config.dat, save that part first
+      const String fname = SettingsType::getSettingsFileName(settingsType);
+      dataOffset = (DAT_TASKS_CUSTOM_SIZE - posInBlock);   // Bytes to keep 'local'
+      # ifndef BUILD_NO_DEBUG
+      const String styp = SettingsType::getSettingsTypeString(settingsType);
+
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        addLog(LOG_LEVEL_INFO, strformat(F("ExtraSaveToFile: %s file: %s size: %d pos: %d"),
+                                         styp.c_str(), fname.c_str(), dataOffset, posInBlock));
+      }
+      # endif // ifndef BUILD_NO_DEBUG
+      const String res = SaveToFile(fname.c_str(), offset + posInBlock, memAddress, dataOffset);
+
+      if (!res.isEmpty()) { return res; } // Error occurred
+
+      datasize  -= dataOffset;
+      posInBlock = 0;
+    } else {
+      posInBlock -= DAT_TASKS_CUSTOM_SIZE;
+    }
+    offset    = 0;     // Start of the extension file
+    taskIndex = index; // Use task-specific filename
   }
-#ifndef BUILD_NO_DEBUG
-  addLog(LOG_LEVEL_INFO, concat(F("SaveToFile: "), SettingsType::getSettingsTypeString(settingsType)) + concat(F(" index: "), index));
-#endif
-  return SaveToFile(fname.c_str(), offset + posInBlock, memAddress, datasize);
+  #endif // if FEATURE_EXTENDED_CUSTOM_SETTINGS
+
+  const String fname = SettingsType::getSettingsFileName(settingsType
+                                                         #if FEATURE_EXTENDED_CUSTOM_SETTINGS
+                                                         , taskIndex
+                                                         #endif // if FEATURE_EXTENDED_CUSTOM_SETTINGS
+                                                         );
+
+  if (!fileExists(fname)) {
+    #if FEATURE_EXTENDED_CUSTOM_SETTINGS
+
+    if (!validTaskIndex(taskIndex)) {
+    #endif // if FEATURE_EXTENDED_CUSTOM_SETTINGS
+    InitFile(settingsType);
+    #if FEATURE_EXTENDED_CUSTOM_SETTINGS
+  } else {
+    InitFile(fname, DAT_TASKS_CUSTOM_EXTENSION_SIZE); // Initialize task-specific file
+  }
+    #endif // if FEATURE_EXTENDED_CUSTOM_SETTINGS
+  }
+  #ifndef BUILD_NO_DEBUG
+
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    addLog(LOG_LEVEL_INFO, concat(F("SaveToFile: "), SettingsType::getSettingsTypeString(settingsType)) +
+           strformat(F(" file: %s task: %d"), fname.c_str(), index + 1));
+  }
+  #endif // ifndef BUILD_NO_DEBUG
+  return SaveToFile(fname.c_str(), offset + posInBlock, memAddress + dataOffset, datasize);
 }
 
 String ClearInFile(SettingsType::Enum settingsType, int index) {
@@ -1777,9 +2363,38 @@ String ClearInFile(SettingsType::Enum settingsType, int index) {
   if (!getAndLogSettingsParameters(read, settingsType, index, offset, max_size)) {
     return getSettingsFileIndexRangeError(read, settingsType, index);
   }
+  #if FEATURE_EXTENDED_CUSTOM_SETTINGS
+
+  if (SettingsType::Enum::CustomTaskSettings_Type == settingsType) {
+    max_size = DAT_TASKS_CUSTOM_SIZE; // Don't also wipe the external size inside the config.dat file...
+    DeleteExtendedCustomTaskSettingsFile(settingsType, index);
+  }
+  #endif // if FEATURE_EXTENDED_CUSTOM_SETTINGS
+
   const String fname = SettingsType::getSettingsFileName(settingsType);
   return ClearInFile(fname.c_str(), offset, max_size);
 }
+
+#if FEATURE_EXTENDED_CUSTOM_SETTINGS
+bool DeleteExtendedCustomTaskSettingsFile(SettingsType::Enum settingsType, int index) {
+  if ((SettingsType::Enum::CustomTaskSettings_Type == settingsType) && validTaskIndex(index)) {
+    const String fname = SettingsType::getSettingsFileName(settingsType, index);
+
+    if (fileExists(fname)) {
+      const bool deleted = tryDeleteFile(fname); // Don't need the extension file anymore, so delete it
+      # ifndef BUILD_NO_DEBUG
+
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        addLog(LOG_LEVEL_INFO, concat(F("CustomTaskSettings: Removing no longer needed file: "), fname));
+      }
+      # endif // ifndef BUILD_NO_DEBUG
+      return deleted;
+    }
+  }
+  return false;
+}
+
+#endif // if FEATURE_EXTENDED_CUSTOM_SETTINGS
 
 /********************************************************************************************\
    Check file system area settings
@@ -1788,7 +2403,7 @@ int SpiffsSectors()
 {
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("SpiffsSectors"));
-  #endif
+  #endif // ifndef BUILD_NO_RAM_TRACKER
   #if defined(ESP8266)
     # ifdef CORE_POST_2_6_0
   uint32_t _sectorStart = ((uint32_t)&_FS_start - 0x40200000) / SPI_FLASH_SEC_SIZE;
@@ -1821,6 +2436,7 @@ size_t SpiffsUsedBytes() {
 
 size_t SpiffsTotalBytes() {
   static size_t result = 1; // Do not output 0, this may be used in divisions.
+
   if (result == 1) {
     #ifdef ESP32
     result = ESPEASY_FS.totalBytes();
@@ -1836,9 +2452,10 @@ size_t SpiffsTotalBytes() {
 
 size_t SpiffsBlocksize() {
   static size_t result = 1;
+
   if (result == 1) {
     #ifdef ESP32
-    result = 8192;        // Just assume 8k, since we cannot query it
+    result = 8192; // Just assume 8k, since we cannot query it
     #endif // ifdef ESP32
     #ifdef ESP8266
     fs::FSInfo fs_info;
@@ -1851,9 +2468,10 @@ size_t SpiffsBlocksize() {
 
 size_t SpiffsPagesize() {
   static size_t result = 1;
+
   if (result == 1) {
     #ifdef ESP32
-    result = 256;        // Just assume 256, since we cannot query it
+    result = 256; // Just assume 256, since we cannot query it
     #endif // ifdef ESP32
     #ifdef ESP8266
     fs::FSInfo fs_info;
@@ -1865,7 +2483,7 @@ size_t SpiffsPagesize() {
 }
 
 size_t SpiffsFreeSpace() {
-  int freeSpace = SpiffsTotalBytes() - SpiffsUsedBytes();
+  int freeSpace          = SpiffsTotalBytes() - SpiffsUsedBytes();
   const size_t blocksize = SpiffsBlocksize();
 
   if (freeSpace < static_cast<int>(2 * blocksize)) {
@@ -1881,6 +2499,7 @@ bool SpiffsFull() {
 }
 
 #if FEATURE_RTC_CACHE_STORAGE
+
 /********************************************************************************************\
    Handling cached data
  \*********************************************************************************************/
@@ -1888,18 +2507,16 @@ String createCacheFilename(unsigned int count) {
   String fname;
 
   fname.reserve(16);
-  #ifdef ESP32
+  # ifdef ESP32
   fname = '/';
-  #endif // ifdef ESP32
-  fname += F("cache_");
-  fname += String(count);
-  fname += F(".bin");
+  # endif // ifdef ESP32
+  fname += strformat(F("cache_%d.bin"), count);
   return fname;
 }
 
 // Match string with an integer between '_' and ".bin"
 int getCacheFileCountFromFilename(const String& fname) {
-  if (!isCacheFile(fname)) return -1;
+  if (!isCacheFile(fname)) { return -1; }
   int startpos = fname.indexOf('_');
 
   if (startpos < 0) { return -1; }
@@ -1908,7 +2525,7 @@ int getCacheFileCountFromFilename(const String& fname) {
   if (endpos < 0) { return -1; }
 
   //  String digits = fname.substring(startpos + 1, endpos);
-  int result;
+  int32_t result;
 
   if (validIntFromString(fname.substring(startpos + 1, endpos), result)) {
     return result;
@@ -1926,7 +2543,7 @@ bool getCacheFileCounters(uint16_t& lowest, uint16_t& highest, size_t& filesizeH
   lowest          = 65535;
   highest         = 0;
   filesizeHighest = 0;
-#ifdef ESP8266
+# ifdef ESP8266
   fs::Dir dir = ESPEASY_FS.openDir(F("cache"));
 
   while (dir.next()) {
@@ -1944,8 +2561,8 @@ bool getCacheFileCounters(uint16_t& lowest, uint16_t& highest, size_t& filesizeH
       }
     }
   }
-#endif // ESP8266
-#ifdef ESP32
+# endif // ESP8266
+# ifdef ESP32
   fs::File root = ESPEASY_FS.open(F("/"));
   fs::File file = root.openNextFile();
 
@@ -1953,6 +2570,7 @@ bool getCacheFileCounters(uint16_t& lowest, uint16_t& highest, size_t& filesizeH
   {
     if (!file.isDirectory()) {
       const String fname(file.name());
+
       if (fname.startsWith(F("/cache")) || fname.startsWith(F("cache"))) {
         int count = getCacheFileCountFromFilename(fname);
 
@@ -1965,16 +2583,18 @@ bool getCacheFileCounters(uint16_t& lowest, uint16_t& highest, size_t& filesizeH
             highest         = count;
             filesizeHighest = file.size();
           }
-#ifndef BUILD_NO_DEBUG
+#  ifndef BUILD_NO_DEBUG
         } else {
-          addLog(LOG_LEVEL_INFO, concat(F("RTC  : Cannot get count from: "), fname));
-#endif
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            addLog(LOG_LEVEL_INFO, concat(F("RTC  : Cannot get count from: "), fname));
+          }
+#  endif // ifndef BUILD_NO_DEBUG
         }
       }
     }
     file = root.openNextFile();
   }
-#endif // ESP32
+# endif // ESP32
 
   if (lowest <= highest) {
     return true;
@@ -1983,7 +2603,8 @@ bool getCacheFileCounters(uint16_t& lowest, uint16_t& highest, size_t& filesizeH
   highest = 0;
   return false;
 }
-#endif
+
+#endif // if FEATURE_RTC_CACHE_STORAGE
 
 /********************************************************************************************\
    Get partition table information
@@ -1996,9 +2617,7 @@ String getPartitionType(uint8_t pType, uint8_t pSubType) {
   if (partitionType == ESP_PARTITION_TYPE_APP) {
     if ((partitionSubType >= ESP_PARTITION_SUBTYPE_APP_OTA_MIN) &&
         (partitionSubType < ESP_PARTITION_SUBTYPE_APP_OTA_MAX)) {
-      String result = F("OTA partition ");
-      result += (partitionSubType - ESP_PARTITION_SUBTYPE_APP_OTA_MIN);
-      return result;
+      return concat(F("OTA partition "), partitionSubType - ESP_PARTITION_SUBTYPE_APP_OTA_MIN);
     }
 
     switch (partitionSubType) {
@@ -2020,35 +2639,23 @@ String getPartitionType(uint8_t pType, uint8_t pSubType) {
       case ESP_PARTITION_SUBTYPE_DATA_COREDUMP: return F("COREDUMP");
       case ESP_PARTITION_SUBTYPE_DATA_ESPHTTPD: return F("ESPHTTPD");
       case ESP_PARTITION_SUBTYPE_DATA_FAT:      return F("FAT");
-      case ESP_PARTITION_SUBTYPE_DATA_SPIFFS:   
-        #ifdef USE_LITTLEFS
+      case ESP_PARTITION_SUBTYPE_DATA_SPIFFS:
+        # ifdef USE_LITTLEFS
         return F("LittleFS");
-        #else
+        # else // ifdef USE_LITTLEFS
         return F("SPIFFS");
-        #endif
+        # endif // ifdef USE_LITTLEFS
       default: break;
     }
   }
-  String result = F("Unknown(");
-  result += partitionSubType;
-  result += ')';
-  return result;
+  return strformat(F("Unknown(%d)"), partitionSubType);
 }
 
 String getPartitionTableHeader(const String& itemSep, const String& lineEnd) {
-  String result;
+  const char *itemSep_str = itemSep.c_str();
 
-  result += F("Address");
-  result += itemSep;
-  result += F("Size");
-  result += itemSep;
-  result += F("Label");
-  result += itemSep;
-  result += F("Partition Type");
-  result += itemSep;
-  result += F("Encrypted");
-  result += lineEnd;
-  return result;
+  return strformat(F("Address%sSize%sLabel%sPartition Type%sEncrypted%s"),
+                   itemSep_str, itemSep_str, itemSep_str, itemSep_str, lineEnd.c_str());
 }
 
 String getPartitionTable(uint8_t pType, const String& itemSep, const String& lineEnd) {
@@ -2059,16 +2666,18 @@ String getPartitionTable(uint8_t pType, const String& itemSep, const String& lin
   if (_mypartiterator) {
     do {
       const esp_partition_t *_mypart = esp_partition_get(_mypartiterator);
-      result += formatToHex(_mypart->address);
-      result += itemSep;
-      result += formatToHex_decimal(_mypart->size, 1024);
-      result += itemSep;
-      result += _mypart->label;
-      result += itemSep;
-      result += getPartitionType(_mypart->type, _mypart->subtype);
-      result += itemSep;
-      result += (_mypart->encrypted ? F("Yes") : F("-"));
-      result += lineEnd;
+      const char *itemSep_str        = itemSep.c_str();
+      result += strformat(F("%x%s%s%s%s%s%s%s%s%s"),
+                          _mypart->address,
+                          itemSep_str,
+                          formatToHex_decimal(_mypart->size, 1024).c_str(),
+                          itemSep_str,
+                          _mypart->label,
+                          itemSep_str,
+                          getPartitionType(_mypart->type, _mypart->subtype).c_str(),
+                          itemSep_str,
+                          String(_mypart->encrypted ? F("Yes") : F("-")).c_str(),
+                          lineEnd.c_str());
     } while ((_mypartiterator = esp_partition_next(_mypartiterator)) != nullptr);
   }
   esp_partition_iterator_release(_mypartiterator);
@@ -2080,13 +2689,8 @@ String getPartitionTable(uint8_t pType, const String& itemSep, const String& lin
 #if FEATURE_DOWNLOAD
 String downloadFileType(const String& url, const String& user, const String& pass, FileType::Enum filetype, unsigned int filenr)
 {
-  if (!getDownloadFiletypeChecked(filetype, filenr)) {
-    // Not selected, so not downloaded
-    return F("Not Allowed");
-  }
-
   String filename = getFileName(filetype, filenr);
-  String fullUrl = joinUrlFilename(url, filename);
+  String fullUrl  = joinUrlFilename(url, filename);
   String error;
 
   if (ResetFactoryDefaultPreference.deleteFirst()) {
@@ -2099,8 +2703,8 @@ String downloadFileType(const String& url, const String& user, const String& pas
     }
   } else {
     if (fileExists(filename)) {
-      String filename_bak = filename;
-      filename_bak += F("_bak");
+      const String filename_bak = strformat(F("%s_bak"), filename.c_str());
+
       if (fileExists(filename_bak)) {
         if (!ResetFactoryDefaultPreference.delete_Bak_Files() || !tryDeleteFile(filename_bak)) {
           return F("Could not rename to _bak");
@@ -2108,8 +2712,7 @@ String downloadFileType(const String& url, const String& user, const String& pas
       }
 
       // Must download it to a tmp file.
-      String tmpfile = filename;
-      tmpfile += F("_tmp");
+      const String tmpfile = strformat(F("%s_tmp"), filename.c_str());
 
       if (!downloadFile(fullUrl, tmpfile, user, pass, error)) {
         return error;
@@ -2139,7 +2742,70 @@ String downloadFileType(const String& url, const String& user, const String& pas
   return error;
 }
 
+# if defined(ESP8266)
+void deleteBakFiles()
+{
+  fs::Dir dir = ESPEASY_FS.openDir("");
+
+  while (dir.next())
+  {
+    const String fname = dir.fileName();
+    if (fname.endsWith(F("_bak"))) {
+      if (tryDeleteFile(fname)) {
+        delay(1);
+      }
+    }
+  }
+}
+#endif
+#ifdef ESP32
+void deleteBakFiles()
+{
+  fs::File root = ESPEASY_FS.open("/");
+  fs::File file = root.openNextFile();
+
+  while (file)
+  {
+    if (!file.isDirectory()) {
+      const String fname = file.name();
+      // Need to open next file or else we cannot delete the file
+      file = root.openNextFile();
+
+      if (fname.endsWith(F("_bak"))) {
+        addLog(LOG_LEVEL_INFO, concat(F("Del  : Delete _bak file: "), fname));
+        if (tryDeleteFile(fname)) {
+          delay(1);
+        }
+      }
+    } else {
+      file = root.openNextFile();
+    }
+  }
+}
+#endif
+
 #endif // if FEATURE_DOWNLOAD
+
+bool validateUploadConfigDat(const uint8_t *buf) {
+  bool result = false;
+  struct TempStruct {
+    unsigned long PID;
+    int           Version;
+  } Temp;
+
+  for (unsigned int x = 0; x < sizeof(struct TempStruct); x++) {
+    memcpy(reinterpret_cast<uint8_t *>(&Temp) + x, &buf[x], 1);
+  }
+  #ifndef BUILD_NO_DEBUG
+  addLog(LOG_LEVEL_INFO, strformat(F("Validate config.dat, Version: %d = %d, PID: %d = %d"),
+                                   Temp.Version, VERSION, Temp.PID, ESP_PROJECT_PID));
+  #endif // ifndef BUILD_NO_DEBUG
+
+  if ((Temp.Version == VERSION) && (Temp.PID == ESP_PROJECT_PID)) {
+    result = true;
+  }
+  return result;
+}
 
 #if FEATURE_CUSTOM_PROVISIONING
 
@@ -2167,6 +2833,7 @@ String downloadFileType(FileType::Enum filetype, unsigned int filenr)
     }
   }
   String res = downloadFileType(url, user, pass, filetype, filenr);
+
   clearAllCaches();
   return res;
 }

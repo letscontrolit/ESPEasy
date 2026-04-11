@@ -185,4 +185,9 @@ Dallas_SensorData P004_data_struct::get_sensor_data(uint8_t index) const {
   return res;
 }
 
+int P004_data_struct::measure_rise_time() const {
+  return Dallas_measure_rise_time(_gpio_rx, _gpio_tx);
+}
+
+
 #endif // ifdef USES_P004

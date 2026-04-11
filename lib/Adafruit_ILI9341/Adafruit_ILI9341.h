@@ -43,8 +43,6 @@
 #include <Adafruit_SPITFT_Macros.h>
 #include <SPI.h>
 
-// #define ILI9341_ENABLE_ILI948X  ///< Enable ILI9486 and ILI9488 support, MUST reflect a similar #define in P095_data_struct.h !
-
 #define ILI9341_TFTWIDTH 240    ///< ILI9341 max TFT width
 #define ILI9341_TFTHEIGHT 320   ///< ILI9341 max TFT height
 
@@ -130,6 +128,8 @@
 
 #define ILI_TYPE_9341           0  // MUST match with enum class ILI9xxx_type_e in P095_data_struct.h !
 #define ILI_TYPE_9342           1
+#define ILI_TYPE_9342_2         12 // !! ONLY enabled on ESP32 for size reasons !!
+#define ILI_TYPE_9342_3         13 // !! ONLY enabled on ESP32 for size reasons !!
 #define ILI_TYPE_9481           2
 #define ILI_TYPE_9481_CPT29     3
 #define ILI_TYPE_9481_PVI35     4
@@ -138,10 +138,6 @@
 #define ILI_TYPE_9481_RGB       7
 #define ILI_TYPE_9481_CMI7      8
 #define ILI_TYPE_9481_CMI8      9
-#ifdef ILI9341_ENABLE_ILI948X
-# define ILI_TYPE_9486          10
-# define ILI_TYPE_9488          11
-#endif // ifndef ILI9341_ENABLE_ILI948X
 
 /**************************************************************************/
 
@@ -167,8 +163,8 @@ public:
 
 #if !defined(ESP8266)
 
-  // Adafruit_ILI9341(SPIClass *spiClass, int8_t dc, int8_t cs = -1,
-  //                  int8_t rst = -1);
+  Adafruit_ILI9341(SPIClass *spiClass, int8_t dc, int8_t cs = -1,
+                   int8_t rst = -1, uint8_t model = 0, uint16_t w = 0, uint16_t h = 0);
 #endif // end !ESP8266
   // Adafruit_ILI9341(tftBusWidth busWidth, int8_t d0, int8_t wr, int8_t dc,
   //                  int8_t cs = -1, int8_t rst = -1, int8_t rd = -1);

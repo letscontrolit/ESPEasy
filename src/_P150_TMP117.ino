@@ -6,6 +6,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery
  * 2023-04-15 tonhuisman: Correctly apply configuration bits (clear first), add optional low-level logging, improve configuration page
  * 2023-04-13 tonhuisman: Switch to check the sensor once a second, and read when data is available, return last value every interval
  *                        Make one-shot mode work as intended, one-shot is started from last read, so based on the interval
@@ -32,18 +33,15 @@ boolean Plugin_150(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_150;
-      Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_DUAL;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = 2;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].PluginStats        = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_150;
+      dev.Type           = DEVICE_TYPE_I2C;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_DUAL;
+      dev.FormulaOption  = true;
+      dev.ValueCount     = 2;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
+      dev.PluginStats    = true;
 
       break;
     }
@@ -79,6 +77,14 @@ boolean Plugin_150(uint8_t function, struct EventStruct *event, String& string)
 
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      success = getDiscoveryVType(event, Plugin_QueryVType_Temperature, 255, event->Par5);
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
 
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
@@ -120,7 +126,9 @@ boolean Plugin_150(uint8_t function, struct EventStruct *event, String& string)
     {
       addFormNumericBox(F("Temperature offset"), F("offset"), P150_TEMPERATURE_OFFSET);
       addUnit(F("x 0.1C"));
+      # ifndef BUILD_NO_DEBUG
       addFormNote(F("Offset in units of 0.1 degree Celsius!"));
+      # endif // ifndef BUILD_NO_DEBUG
 
       {
         const __FlashStringHelper *averagingCaptions[] = {
@@ -135,7 +143,9 @@ boolean Plugin_150(uint8_t function, struct EventStruct *event, String& string)
           P150_AVERAGING_32_SAMPLES,
           P150_AVERAGING_64_SAMPLES,
         };
-        addFormSelector(F("Averaging"), F("avg"), 4, averagingCaptions, averagingOptions, P150_GET_CONF_AVERAGING);
+        constexpr size_t optionCount = NR_ELEMENTS(averagingOptions);
+        const FormSelectorOptions selector(optionCount, averagingCaptions, averagingOptions);
+        selector.addFormSelector(F("Averaging"), F("avg"), P150_GET_CONF_AVERAGING);
       }
 
       {
@@ -147,8 +157,13 @@ boolean Plugin_150(uint8_t function, struct EventStruct *event, String& string)
           P150_CONVERSION_CONTINUOUS,
           P150_CONVERSION_ONE_SHOT,
         };
-        addFormSelector(F("Conversion mode"), F("conv"), 2, conversionCaptions, conversionOptions, P150_GET_CONF_CONVERSION_MODE, true);
-        addFormNote(F("Changing this setting will save and reload this page."));
+        constexpr size_t optionCount = NR_ELEMENTS(conversionOptions);
+        FormSelectorOptions selector(optionCount, conversionCaptions, conversionOptions);
+        selector.reloadonchange = true;
+        selector.addFormSelector(F("Conversion mode"), F("conv"), P150_GET_CONF_CONVERSION_MODE);
+        # ifndef BUILD_NO_DEBUG
+        // addFormNote(F("Changing this setting will save and reload this page."));
+        # endif // ifndef BUILD_NO_DEBUG
       }
 
       if (P150_GET_CONF_CONVERSION_MODE == P150_CONVERSION_CONTINUOUS) {
@@ -172,13 +187,17 @@ boolean Plugin_150(uint8_t function, struct EventStruct *event, String& string)
           P150_CYCLE_8_SEC,
           P150_CYCLE_16_SEC,
         };
-        addFormSelector(F("Continuous conversion cycle time"), F("cycle"), 8, cycleCaptions, cycleOptions, P150_GET_CONF_CYCLE_BITS);
+        constexpr size_t optionCount = NR_ELEMENTS(cycleOptions);
+        const FormSelectorOptions selector(optionCount, cycleCaptions, cycleOptions);
+        selector.addFormSelector(F("Continuous conversion cycle time"), F("cycle"), P150_GET_CONF_CYCLE_BITS);
       }
 
       addFormSubHeader(F("Output"));
 
       addFormSelector_YesNo(F("Enable 'Raw' value"), F("raw"), P150_GET_OPT_ENABLE_RAW ? 1 : 0, true);
-      addFormNote(F("Changing this setting will save and reload this page."));
+      # ifndef BUILD_NO_DEBUG
+      // addFormNote(F("Changing this setting will save and reload this page."));
+      # endif // ifndef BUILD_NO_DEBUG
 
       addFormCheckBox(F("Log measured values (INFO)"),  F("log"),  P150_GET_OPT_ENABLE_LOG);
 

@@ -1,0 +1,7 @@
+.. note:: Due to technical reasons, the **MCP23017 rev. D** chip no longer has (official) Input capability on the ``GPA7`` and ``GPB7`` pins!
+
+Following `this news article <https://hackaday.com/2023/02/03/mcp23017-went-through-shortage-hell-lost-two-inputs/>`_, the MCP23017 I2C chip, since **revision D** released around 2022, might possibly no longer accept signals reliably for Input on the ``GPA7`` and ``GPB7`` pins. Other sources (links no longer available) suggest these pins have had issues taking input signals since at least 2014, so your milage may vary! (Output is still working as usual on these pins.)
+
+This may have impact on the use of this board/chip with this plugin when using a MCP23017 rev. D.
+
+Possible alternatives are using an older revision of this chip, or switching to a different chip, like PCF8574 (8 I/O pins), PCF8575 (16 I/O pins, external pull-up), 74HC165 (Input only), 74HC595 (Output only).

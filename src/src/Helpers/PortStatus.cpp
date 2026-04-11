@@ -3,12 +3,14 @@
 #include "../DataStructs/PinMode.h"
 #include "../Globals/GlobalMapPortStatus.h"
 
+#include "../Helpers/StringConverter.h"
+
 #include "../../ESPEasy-Globals.h"
 
 
 #ifdef ESP32
 
-#include "../Helpers/Hardware.h"
+#include "../Helpers/Hardware_PWM.h"
 
 void checkAndClearPWM(uint32_t key) {
   if (existPortStatus(key)) {
@@ -208,7 +210,7 @@ String getPinStateJSON(bool search, uint32_t key, const String& log, int16_t noS
   if (!search || found)
   {
     String reply;
-    reply.reserve(128);
+    reserve_special(reply, 128);
     reply += F("{\n\"log\": \"");
     {
       // truncate to 25 chars, max MQTT message size = 128 including header...

@@ -5,16 +5,10 @@
 #include "../WebServer/ESPEasy_WebServer.h"
 #include "../WebServer/HTML_wrappers.h"
 #include "../WebServer/Markup.h"
-#include "../WebServer/Markup_Forms.h"
-
-#include "../DataTypes/ESPEasy_plugin_functions.h"
+#include "../Helpers/_Plugin_init.h"
 
 #include "../Globals/ESPEasy_time.h"
 #include "../Globals/RamTracker.h"
-
-#include "../Globals/Device.h"
-
-#include "../Helpers/_Plugin_init.h"
 
 
 #define TIMING_STATS_THRESHOLD 100000
@@ -28,16 +22,23 @@ void handle_timingstats() {
   sendHeadandTail_stdtemplate(_HEAD);
   html_table_class_multirow();
   html_TR();
-  html_table_header(F("Description"));
-  html_table_header(F("Function"));
-  html_table_header(F("#calls"));
-  html_table_header(F("call/sec"));
-  html_table_header(F("duty (%)"));
-  html_table_header(F("min (ms)"));
-  html_table_header(F("Avg (ms)"));
-  html_table_header(F("max (ms)"));
+  {
+    const __FlashStringHelper * headers[] = {
+      F("Description"),
+      F("Function"),
+      F("#calls"),
+      F("call/sec"),
+      F("duty (%)"),
+      F("min (ms)"),
+      F("Avg (ms)"),
+      F("max (ms)")};
+    for (unsigned int i = 0; i < NR_ELEMENTS(headers); ++i) {
+      html_table_header(headers[i]);
+    }
+  }
 
-  const long timeSinceLastReset = stream_timing_statistics(true);
+
+  const int32_t timeSinceLastReset = stream_timing_statistics(true);
   html_end_table();
 
   html_table_class_normal();
@@ -46,7 +47,7 @@ void handle_timingstats() {
   addRowLabel(F("Start Period"));
   struct tm startPeriod = node_time.addSeconds(node_time.local_tm, -1.0f * timespan, true, true);
   addHtml(formatDateTimeString(startPeriod, '-', ':', ' ', false));
-  addRowLabelValue(LabelType::LOCAL_TIME);
+  addRowLabelValue(LabelType::LOCAL_TIME, false);
   addRowLabel(F("Time span"));
   addHtmlFloat(timespan);
   addHtml(F(" sec"));
@@ -61,7 +62,7 @@ void handle_timingstats() {
 // ********************************************************************************
 // HTML table formatted timing statistics
 // ********************************************************************************
-void format_using_threshhold(unsigned long value) {
+void format_using_threshhold(uint32_t value) {
   float value_msec = value / 1000.0f;
 
   if (value > TIMING_STATS_THRESHOLD) {
@@ -71,9 +72,9 @@ void format_using_threshhold(unsigned long value) {
   }
 }
 
-void stream_html_timing_stats(const TimingStats& stats, long timeSinceLastReset) {
-  uint64_t minVal, maxVal;
-  const uint64_t c = stats.getMinMax(minVal, maxVal);
+void stream_html_timing_stats(const TimingStats& stats, int32_t timeSinceLastReset) {
+  uint32_t minVal, maxVal;
+  const uint32_t c = stats.getMinMax(minVal, maxVal);
 
   html_TD();
   addHtmlInt(c);
@@ -105,8 +106,8 @@ void stream_html_timing_stats(const TimingStats& stats, long timeSinceLastReset)
   format_using_threshhold(maxVal);
 }
 
-long stream_timing_statistics(bool clearStats) {
-  const long timeSinceLastReset = timePassedSince(timingstats_last_reset);
+int32_t stream_timing_statistics(bool clearStats) {
+  const int32_t timeSinceLastReset = timePassedSince(timingstats_last_reset);
 
   for (auto& x: pluginStats) {
     if (!x.second.isEmpty()) {

@@ -2,13 +2,15 @@
 
 #ifdef USES_P118
 
+#include "../Helpers/Hardware_SPI.h"
+
 // **************************************************************************/
 // Constructor
 // **************************************************************************/
-P118_data_struct::P118_data_struct(int8_t csPin,
-                                   int8_t irqPin,
-                                   bool   logData,
-                                   bool   rfLog)
+P118_data_struct::P118_data_struct(int8_t  csPin,
+                                   int8_t  irqPin,
+                                   bool    logData,
+                                   bool    rfLog)
   : _csPin(csPin), _irqPin(irqPin), _log(logData), _rfLog(rfLog) {}
 
 // **************************************************************************/
@@ -22,6 +24,10 @@ P118_data_struct::~P118_data_struct() {
 bool P118_data_struct::plugin_init(struct EventStruct *event) {
   bool success = false;
 
+  auto spi_ptr = getSPIBusForTask(event->TaskIndex);
+  if (!spi_ptr) return false;
+
+
   LoadCustomTaskSettings(event->TaskIndex, (uint8_t *)&_ExtraSettings, sizeof(_ExtraSettings));
   # ifdef P118_DEBUG_LOG
   addLog(LOG_LEVEL_INFO, F("ITHO: Extra Settings PLUGIN_118 loaded"));
@@ -30,9 +36,14 @@ bool P118_data_struct::plugin_init(struct EventStruct *event) {
   int8_t   spi_pins[3];
   uint32_t startInit = 0;
 
-  if (Settings.getSPI_pins(spi_pins) && validGpio(spi_pins[1])) {
+  if (Settings.getSPI_pinsForTask(event->TaskIndex, spi_pins) && 
+      validGpio(spi_pins[1])) {
     startInit = millis();
-    _rf       = new (std::nothrow) IthoCC1101(_csPin, spi_pins[1]); // Pass CS and MISO
+    _rf       = new (std::nothrow) IthoCC1101(_csPin, spi_pins[1]
+                                              # ifdef ESP32
+                                              , *spi_ptr // defaults and SPI bus for ESP32 only
+                                              # endif // ifdef ESP32
+                                              );                           // Pass CS and MISO
   } else {
     addLog(LOG_LEVEL_ERROR, F("ITHO: SPI configuration not correct!"));
   }
@@ -48,11 +59,12 @@ bool P118_data_struct::plugin_init(struct EventStruct *event) {
     _rf->init();
 
     const long duration = timePassedSince(startInit);
+
     if (duration > P118_TIMEOUT_LIMIT) {
       if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-      addLogMove(LOG_LEVEL_ERROR, strformat(
-        F("ITHO: Init duration was: %d msec. suggesting that the CC1101 board is not (correctly) connected."),
-         duration));
+        addLogMove(LOG_LEVEL_ERROR, strformat(
+                     F("ITHO: Init duration was: %d msec. suggesting that the CC1101 board is not (correctly) connected."),
+                     duration));
       }
       success = false;
     }
@@ -63,7 +75,9 @@ bool P118_data_struct::plugin_init(struct EventStruct *event) {
                            reinterpret_cast<void (*)(void *)>(ISR_ithoCheck),
                            this,
                            FALLING);
+        # ifndef BUILD_NO_DEBUG
         addLog(LOG_LEVEL_INFO, F("ITHO: Interrupts enabled."));
+        # endif // ifndef BUILD_NO_DEBUG
       } else {
         addLog(LOG_LEVEL_ERROR, F("ITHO: Interrupt pin disabled, sending is OK, not receiving data!"));
       }
@@ -142,15 +156,15 @@ bool P118_data_struct::plugin_read(struct EventStruct *event) {
 }
 
 bool P118_data_struct::plugin_write(struct EventStruct *event, const String& string) {
-  bool   success = false;
-  String cmd     = parseString(string, 1);
+  bool success     = false;
+  const String cmd = parseString(string, 1);
 
-  bool stateCmd = equals(cmd, F("state"));
+  const bool stateCmd = equals(cmd, F("state"));
 
   if (equals(cmd, F("itho")) || stateCmd) {
     # ifndef BUILD_NO_DEBUG
 
-    if (stateCmd) { addLogMove(LOG_LEVEL_ERROR, F("ITHO: Command 'state' is deprecated, use 'itho' instead, see documentation.")); }
+    if (stateCmd) { addLog(LOG_LEVEL_ERROR, F("ITHO: Command 'state' is deprecated, use 'itho' instead, see documentation.")); }
     # endif // ifndef BUILD_NO_DEBUG
     success = true;
 
@@ -411,13 +425,13 @@ void P118_data_struct::ITHOcheck() {
   # endif // ifndef BUILD_NO_DEBUG
 
   if (_rf->checkForNewPacket()) {
-    IthoCommand cmd = _rf->getLastCommand();
-    String Id       = _rf->getLastIDstr();
+    const IthoCommand cmd = _rf->getLastCommand();
+    const String Id       = _rf->getLastIDstr();
 
     if (_rfLog && loglevelActiveFor(LOG_LEVEL_INFO)) {
       addLogMove(LOG_LEVEL_INFO, strformat(
-        F("ITHO: Received from ID: %s ; raw cmd: %d"), 
-        Id.c_str(),  cmd));
+                   F("ITHO: Received from ID: %s ; raw cmd: %d"),
+                   Id.c_str(),  cmd));
     }
 
     // Move check here to prevent function calling within ISR
@@ -600,9 +614,7 @@ void P118_data_struct::ITHOcheck() {
       }
     } else {
       if (_dbgLog) {
-        log += F("Device-ID: ");
-        log += Id;
-        log += F(" IGNORED");
+        log += strformat(F("Device-ID: %s IGNORED"), Id.c_str());
       }
     }
 
@@ -616,37 +628,26 @@ void P118_data_struct::ITHOcheck() {
 }
 
 void P118_data_struct::PublishData(struct EventStruct *event) {
-  UserVar[event->BaseVarIndex]     = _State;
-  UserVar[event->BaseVarIndex + 1] = _Timer;
-  UserVar[event->BaseVarIndex + 2] = _LastIDindex;
+  UserVar.setFloat(event->TaskIndex, 0, _State);
+  UserVar.setFloat(event->TaskIndex, 1, _Timer);
+  UserVar.setFloat(event->TaskIndex, 2, _LastIDindex);
 
   # ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    String log = F("State: ");
-
-    log += UserVar[event->BaseVarIndex];
-    addLog(LOG_LEVEL_DEBUG, log);
-    log.clear();
-    log += F("Timer: ");
-    log += UserVar[event->BaseVarIndex + 1];
-    addLog(LOG_LEVEL_DEBUG, log);
-    log.clear();
-    log += F("LastIDindex: ");
-    log += UserVar[event->BaseVarIndex + 2];
-    addLogMove(LOG_LEVEL_DEBUG, log);
+    addLog(LOG_LEVEL_DEBUG, concat(F("State: "), formatUserVarNoCheck(event, 0)));
+    addLog(LOG_LEVEL_DEBUG, concat(F("Timer: "), formatUserVarNoCheck(event, 1)));
+    addLog(LOG_LEVEL_DEBUG, concat(F("LastIDindex: "), formatUserVarNoCheck(event, 2)));
   }
   # endif // ifndef BUILD_NO_DEBUG
 }
 
 void P118_data_struct::PluginWriteLog(const String& command) {
-  String log = F("Send Itho"
-                 # if P118_FEATURE_ORCON
-                 "/Orcon"
-                 # endif // if P118_FEATURE_ORCON
-                 " command for: ");
-
-  log += command;
+  String log = concat(F("Send Itho"
+                        # if P118_FEATURE_ORCON
+                        "/Orcon"
+                        # endif // if P118_FEATURE_ORCON
+                        " command for: "), command);
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     addLog(LOG_LEVEL_INFO, log);

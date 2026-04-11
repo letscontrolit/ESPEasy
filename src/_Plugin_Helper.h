@@ -35,15 +35,22 @@
 #include "src/Helpers/ESPEasy_time_calc.h"
 #include "src/Helpers/I2C_access.h"
 #include "src/Helpers/Hardware.h"
+#include "src/Helpers/Hardware_GPIO.h"
+#include "src/Helpers/Hardware_PWM.h"
 #include "src/Helpers/Misc.h"
 #include "src/Helpers/Numerical.h"
 #include "src/Helpers/PortStatus.h"
+#include "src/Helpers/PrintToString.h"
 #include "src/Helpers/StringConverter.h"
 #include "src/Helpers/StringGenerator_GPIO.h"
 #include "src/Helpers/StringGenerator_Plugin.h"
 #include "src/Helpers/StringParser.h"
 #include "src/Helpers/_Plugin_SensorTypeHelper.h"
 #include "src/Helpers/_Plugin_Helper_serial.h"
+
+#if FEATURE_MQTT_DISCOVER
+#include "src/Helpers/_CPlugin_Helper_mqtt.h"
+#endif // if FEATURE_MQTT_DISCOVER
 
 #if FEATURE_PLUGIN_STATS
 #include "src/PluginStructs/_StatsOnly_data_struct.h"
@@ -90,6 +97,9 @@
 
 extern PluginTaskData_base *Plugin_task_data[TASKS_MAX];
 
+// Try to allocate in PSRAM or 2nd heap if possible
+#define special_initPluginTaskData(I, T)  void * ptr = special_calloc(1, sizeof(T)); if (ptr) { initPluginTaskData(I, new (ptr) T()); }
+
 String PCONFIG_LABEL(int n);
 
 // ==============================================
@@ -100,7 +110,7 @@ void                 resetPluginTaskData();
 
 void                 clearPluginTaskData(taskIndex_t taskIndex);
 
-void                 initPluginTaskData(taskIndex_t          taskIndex,
+bool                 initPluginTaskData(taskIndex_t          taskIndex,
                                         PluginTaskData_base *data);
 
 PluginTaskData_base* getPluginTaskData(taskIndex_t taskIndex);

@@ -1,0 +1,37 @@
+.. csv-table::
+    :header: "Command Syntax", "Extra information"
+    :widths: 20, 30
+
+    "
+    ``as3935,clearstats``
+    ","
+    Clear statistics in the sensor, like lightning strike counts and intermediate values used to estimate the distance of the storm front.
+    "
+    "
+    ``as3935,calibrate``
+    ","
+    Perform calibration of all oscillators in the sensor.
+    "
+    "
+    ``as3935,setgain,<value>``
+    ","
+    Set the AFE gain to given value.
+    Input can either be the internal sensor register value of ``10`` ... ``18`` or a floating point value signifying the gain factor.
+    This latter one will then be matched to the closest matching internal register value. 
+    The floating point factor values range from ``0.30x`` ... ``3.34x`` .
+    "
+    "
+    ``as3935,setnf,<value>``
+    ","
+    Set the Noise Floor threshold to given value.
+    "
+    "
+    ``as3935,setwd,<value>``
+    ","
+    Set the Watchdog threshold to given value.
+    "
+    "
+    ``as3935,setsrej,<value>``
+    ","
+    Set Spike Rejection threshold to given value.
+    "

@@ -13,13 +13,10 @@
 #include "../WebServer/Markup_Forms.h"
 
 #include "../ESPEasyCore/ESPEasyRules.h"
-#include "../ESPEasyCore/Serial.h"
 
 #include "../Globals/Settings.h"
 #include "../Helpers/ESPEasy_Storage.h"
-#include "../Helpers/Numerical.h"
 #include "../Helpers/StringConverter.h"
-#include "../Static/WebStaticData.h"
 
 #include <FS.h>
 
@@ -33,27 +30,26 @@ void handle_rules() {
 
   if (!isLoggedIn() || !Settings.UseRules) { return; }
   navMenuIndex = MENU_INDEX_RULES;
-  const uint8_t rulesSet = getFormItemInt(F("set"), 1);
+  const int rulesSet = getFormItemInt(F("set"), 1);
 
-  # if defined(ESP8266)
-  String fileName = F("rules");
-  # endif // if defined(ESP8266)
-  # if defined(ESP32)
-  String fileName = F("/rules");
-  # endif // if defined(ESP32)
-  fileName += rulesSet;
-  fileName += F(".txt");
+  const String fileName = strformat(
+    #ifdef ESP8266
+    F("rules%d.txt")
+    #else
+    F("/rules%d.txt")
+    #endif
+    , rulesSet);
 
   String error;
 
   // Make sure file exists
   if (!fileExists(fileName))
   {
+#ifndef BUILD_NO_DEBUG
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log = F("Rules : Create new file: ");
-      log += fileName;
-      addLogMove(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, concat(F("Rules : Create new file: %s"), fileName));
     }
+#endif
     fs::File f = tryOpenFile(fileName, "w");
 
     if (f) { f.close(); }
@@ -74,28 +70,26 @@ void handle_rules() {
   addHtml(F("<form id='rulesselect' name='rulesselect' method='get'>"));
   {
     // Place combo box in its own scope to release these arrays as soon as possible
-    uint8_t choice = rulesSet;
+    int choice = rulesSet;
     String  options[RULESETS_MAX];
     int     optionValues[RULESETS_MAX];
 
     for (uint8_t x = 0; x < RULESETS_MAX; x++)
     {
-      options[x]      = F("Rules Set ");
-      options[x]     += x + 1;
+      options[x]      = concat(F("Rules Set "), x+1);
       optionValues[x] = x + 1;
     }
 
-    addSelector_reloadOnChange(
-      F("set"),
+    FormSelectorOptions selector(
       RULESETS_MAX,
       options,
-      optionValues,
-      nullptr,
-      choice,
-      F("return rules_set_onchange(rulesselect)"),
-      true,
-      F("wide"));
-    addHelpButton(F("Tutorial_Rules"));
+      optionValues);
+
+    selector.onChangeCall = F("return rules_set_onchange(rulesselect)");
+    selector.addSelector(
+      F("set"),
+      choice);
+    // addHelpButton(F("Tutorial_Rules")); // Old documentation is just that: Old and out-dated.
     addRTDHelpButton(F("Rules/Rules.html"));
   }
 
@@ -148,7 +142,7 @@ void handle_rules_new() {
 
   // Pagionation of rules list
   const int rulesListPageSize = 25;
-  int startIdx                = 0;
+  int32_t startIdx            = 0;
 
   const String fstart = webArg(F("start"));
 
@@ -196,7 +190,7 @@ void handle_rules_new() {
       if (fi.isDirectory)
       {
         addHtml(F("</TD><TD></TD><TD></TD><TD>"));
-        addSaveButton(String(F("/rules/backup?directory=")) + URLEncode(fi.Name)
+        addSaveButton(concat(F("/rules/backup?directory="), URLEncode(fi.Name))
                       , F("Backup")
                       );
       }
@@ -218,11 +212,11 @@ void handle_rules_new() {
 
         // Actions
         html_TD();
-        addSaveButton(String(F("/rules/backup?fileName=")) + encodedPath
+        addSaveButton(concat(F("/rules/backup?fileName="), encodedPath)
                       , F("Backup")
                       );
 
-        addDeleteButton(String(F("/rules/delete?fileName=")) + encodedPath
+        addDeleteButton(concat(F("/rules/delete?fileName="), encodedPath)
                         , F("Delete")
                         );
       }
@@ -249,13 +243,13 @@ void handle_rules_new() {
     int showIdx = startIdx - rulesListPageSize;
 
     if (showIdx < 0) { showIdx = 0; }
-    addButton(String(F("/rules?start=")) + String(showIdx)
+    addButton(concat(F("/rules?start="), showIdx)
               , F("Previous"));
   }
 
   if (hasMore && (count >= endIdx))
   {
-    addButton(String(F("/rules?start=")) + String(endIdx + 1)
+    addButton(concat(F("/rules?start="), endIdx + 1)
               , F("Next"));
   }
 
@@ -296,7 +290,7 @@ void handle_rules_backup() {
                                         {
                                           if (!Rule_Download(fi.Name))
                                           {
-                                            error += String(F("Invalid path: ")) + fi.Name;
+                                            error += concat(F("Invalid path: "), fi.Name);
                                           }
                                         }
                                         return true;
@@ -310,7 +304,7 @@ void handle_rules_backup() {
 
     if (!Rule_Download(fileName))
     {
-      error = String(F("Invalid path: ")) + fileName;
+      error = concat(F("Invalid path: "), fileName);
     }
   }
   else
@@ -365,7 +359,7 @@ void handle_rules_delete() {
   }
   else
   {
-    String error = String(F("Delete rule Invalid path: ")) + fileName;
+    String error = concat(F("Delete rule Invalid path: "), fileName);
     addLog(LOG_LEVEL_ERROR, error);
     TXBuffer.startStream();
     sendHeadandTail(F("TmplMsg"), _HEAD);
@@ -444,8 +438,8 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
 
       // Overwrite verification
       if (isEdit && isNew) {
-        error = String(F("There is another rule with the same name: "))
-                + fileName;
+        error = concat(F("There is another rule with the same name: "),
+                fileName);
         addLog(LOG_LEVEL_ERROR, error);
         isAddNew    = true;
         isOverwrite = true;
@@ -459,8 +453,8 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
       // Check rules size
       else if (rules.length() > RULES_MAX_SIZE)
       {
-        error = String(F("Data was not saved, exceeds web editor limit! "))
-                + fileName;
+        error = concat(F("Data was not saved, exceeds web editor limit! "),
+                fileName);
         addLog(LOG_LEVEL_ERROR, error);
       }
 
@@ -525,7 +519,7 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
     addHelpButton(F("Tutorial_Rules"));
 
     // load form data from flash
-    addHtml(F("<TR><TD colspan='2'>"));
+    addRowColspan(2);
 
     Rule_showRuleTextArea(fileName);
 
@@ -553,20 +547,14 @@ void Rule_showRuleTextArea(const String& fileName) {
   addHtml(F("<textarea id='rules' name='rules' rows='30' wrap='off'>"));
   size = streamFromFS(fileName, true);
   addHtml(F("</textarea>"));
-  addHtml(F("<script>initCM();</script>"));
+  #if FEATURE_RULES_EASY_COLOR_CODE
+  html_add_script(F("initCM();"), false);
+  #endif
 
   html_TR_TD();
-  {
-    addHtml(F("Current size: <span id='size'>"));
-    addHtmlInt(size);
-    addHtml(F("</span> characters (Max "));
-    addHtmlInt(RULES_MAX_SIZE);
-    addHtml(F(")"));
-  }
-
-  if (size > RULES_MAX_SIZE) {
-    addHtml(F("<span style=\"color:red\">Filesize exceeds web editor limit!</span>"));
-  }
+  addHtml(F("Current size: <span id='size'>"));
+  addHtmlInt(size);
+  addHtml(F("</span> characters"));
 }
 
 bool Rule_Download(const String& path)
@@ -582,11 +570,11 @@ bool Rule_Download(const String& path)
     addLog(LOG_LEVEL_ERROR, concat(F("Invalid path: "), path));
     return false;
   }
-  String filename = path + String(F(".txt"));
+  String filename = concat(path, F(".txt"));
   filename.replace(RULE_FILE_SEPARAROR, '_');
-  String str = String(F("attachment; filename=")) + filename;
+  String str = concat(F("attachment; filename="), filename);
   sendHeader(F("Content-Disposition"), str);
-  sendHeader(F("Cache-Control"),       F("max-age=3600, public"));
+  sendHeader(F("Cache-Control"),       F("public,max-age=3600"));
   sendHeader(F("Vary"),                "*");
   sendHeader(F("ETag"),                F("\"2.0.0\""));
 

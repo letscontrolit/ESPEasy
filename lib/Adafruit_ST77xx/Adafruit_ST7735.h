@@ -3,6 +3,22 @@
 
 #include "Adafruit_ST77xx.h"
 
+/**
+ * 2024-03-17 tonhuisman: Add additional initialization sequences for ST7735 displays, with the intention to get 'm working
+ *                        on some devices that seem to use peculiarly configured hardware like LiliGO TTGO T-Display (16MB flash),
+ *                        and possibly the T-Display S3
+ *                        By default only enabled on ESP32, unless -D ST7735_EXTRA_INIT=1 is defined, f.e. via the build script
+ */
+
+#ifndef ST7735_EXTRA_INIT // Enable setting from 'outside', like Platformio.ini
+# ifdef ESP8266
+#  define ST7735_EXTRA_INIT 0
+# endif // ifdef ESP8266
+# ifdef ESP32
+#  define ST7735_EXTRA_INIT 1
+# endif // ifdef ESP32
+#endif
+
 // some flags for initR() :(
 #define INITR_GREENTAB 0x00
 #define INITR_REDTAB 0x01
@@ -14,6 +30,11 @@
 #define INITR_MINI160x80 0x04
 #define INITR_HALLOWING 0x05
 #define INITR_GREENTAB160x80 0x06
+#define INITR_BLACKTAB135x240 0x07
+#define INITR_BLACKTAB172x320 0x08
+#define INITR_BLACKTAB170x320 0x09
+#define INITR_BLACKTAB240x320 0x0A
+#define INITR_BLACKTAB240x280 0x0B
 
 // Some register settings
 #define ST7735_MADCTL_BGR 0x08

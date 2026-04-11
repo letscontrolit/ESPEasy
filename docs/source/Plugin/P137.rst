@@ -13,7 +13,9 @@ Type: |P137_type|
 
 Name: |P137_name|
 
-Status: |P137_status|
+Status ESP32: |P137_status|
+
+Status ESP8266: |P137_status_lb|
 
 GitHub: |P137_github|_
 
@@ -64,6 +66,8 @@ Hardware outputs AXP192
 * *M5Stack Core2 (Default)* Settings for the M5Stack Core and Core2, and derived special models, hardware. This is the default predefined configuration.
 
 * *LilyGO T-Beam* Settings for the LilyGO T-Beam series of GPS/LoRa devices with optional OLed display.
+
+* *M5Stack StickC Plus* Settings for the M5Stack StickC Plus hardware. (Not applicable for the M5Stack StickC Plus 2, as that unit doesn't have an AXP192 power management controller).
 
 * *User defined* To be able to configure are available output pins the User defined option is available, f.e. when using a custom designed, or not yet supported, hardware setup.
 
@@ -134,10 +138,7 @@ Available options:
 
 .. note:: Not all options hold usable values for all boards, some may even be not connected. Check the board documentation for available values.
 
-Data Acquisition
-^^^^^^^^^^^^^^^^
-
-This group of settings, **Single event with all values**, **Send to Controller** and **Interval** settings are standard available configuration items. Send to Controller is only visible when one or more Controllers are configured.
+.. include:: DataAcquisition.repl
 
 **Interval** By default, Interval will be set to 0 sec. as it is optional. When set > 0 it is the frequency used to read sensor values and send these to any Controllers configured for this device.
 

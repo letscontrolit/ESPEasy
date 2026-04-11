@@ -1,0 +1,12 @@
+.. csv-table::
+    :header: "Event", "Extra information"
+    :widths: 20, 30
+
+    "
+    | ``<taskname>#ChargingState=<old_state>,<new_state>``
+
+    | ``new_state`` / ``old_state``: ``-1`` (Discharging), ``0`` (Standby) or ``1`` (Charging).
+
+    ","
+    | Event generated when the **Generate events** checkbox is enabled.
+    "

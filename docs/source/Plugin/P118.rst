@@ -13,7 +13,9 @@ Type: |P118_type|
 
 Name: |P118_name|
 
-Status: |P118_status|
+Status ESP32: |P118_status|
+
+Status ESP8266: |P118_status_lb|
 
 GitHub: |P118_github|_
 
@@ -80,10 +82,7 @@ Remote RF Controls
 
 * **Enable Orcon support**: Enables the extra protocol for the Orcon brand of ventilation units, that use the same protocol, but with a different command set. To avoid possible interference, it is disabled by default.
 
-Data Acquisition
-^^^^^^^^^^^^^^^^
-
-This group of settings, **Single event with all values** and **Send to Controller** settings are standard available configuration items. Send to Controller is only visible when one or more Controllers are configured.
+.. include:: DataAcquisition.repl
 
 Values
 ^^^^^^

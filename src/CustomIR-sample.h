@@ -24,6 +24,9 @@
 // Set flags to enable (1) or disable (0) the DECODE_ and/or SEND_ feature for a specific IR device
 // To limit ESPEasy build-size you can disable DECODE_ or SEND_ flags for devices not needed
 
+// Decode any arbitrary IR message into a 32-bit code value:
+// #define DECODE_HASH 0 // Instead of decoding using a standard encoding scheme, This will give a unique value for each different code (probably), for most code systems
+
 // SEND-ONLY protocols:
 // #define SEND_GLOBALCACHE 0 // Is used by many sending protocols, so should probably be left to default
 // #define SEND_PRONTO 0
@@ -34,6 +37,7 @@
 // Standard: Use defaults for up to library version 2.8.2
 // Change as desired after copying CustomIR-sample.h to CustomIR.h
 
+// #define DECODE_HASH 0
 // #define DECODE_RC5 0
 // #define SEND_RC5 0
 // #define DECODE_RC6 0

@@ -20,15 +20,15 @@ float minutesToDay(int minutes);
 
 String minutesToDayHour(int minutes);
 
-String minutesToHourMinute(int minutes);
-
 String minutesToDayHourMinute(int minutes);
 
 String minutesToHourColonMinute(int minutes);
 
-String secondsToDayHourMinuteSecond(int seconds);
+String secondsToDayHourMinuteSecond(int seconds, bool useHMS = false);
+String secondsToDayHourMinuteSecond_ms(int64_t systemMicros, bool useHMS = false);
 
-String format_msec_duration(int64_t duration);
+String format_msec_duration(int64_t duration, bool useHMS = false);
+String format_msec_duration_HMS(int64_t duration);
 
 // Compute the dew point temperature, given temperature and humidity (temp in Celsius)
 // Formula: http://www.ajdesigner.com/phphumidity/dewpoint_equation_dewpoint_temperature.php

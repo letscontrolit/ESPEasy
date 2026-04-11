@@ -9,6 +9,9 @@
 # define P025_CONFIG_REGISTER      0x01
 
 
+P025_VARIOUS_BITS_t::P025_VARIOUS_BITS_t(int16_t value) : _regValue(value) {}
+
+
 const __FlashStringHelper* Plugin_025_valuename(uint8_t value_nr, bool displayString) {
   const __FlashStringHelper *strings[] {
     F("AIN0 - AIN1 (Differential)"),     F("AIN0_1"),
@@ -36,26 +39,35 @@ const __FlashStringHelper* toString(P025_sensorType sensorType)
          F("ADS1015") : F("ADS1115");
 }
 
-union P025_config_register {
-  struct {
-    uint16_t comp_que        : 2;
-    uint16_t comp_lat        : 1;
-    uint16_t comp_pol        : 1;
-    uint16_t compMode        : 1;
-    uint16_t datarate        : 3;
-    uint16_t mode            : 1;
-    uint16_t PGA             : 3;
-    uint16_t MUX             : 3;
-    uint16_t operatingStatus : 1;
+struct P025_config_register {
+  union {
+    struct {
+      uint16_t comp_que        : 2;
+      uint16_t comp_lat        : 1;
+      uint16_t comp_pol        : 1;
+      uint16_t compMode        : 1;
+      uint16_t datarate        : 3;
+      uint16_t mode            : 1;
+      uint16_t PGA             : 3;
+      uint16_t MUX             : 3;
+      uint16_t operatingStatus : 1;
+    };
+    uint16_t _regValue{};
   };
-  uint16_t _regval = 0x8000;
 
+  P025_config_register(uint16_t regval) : _regValue(regval) {}
 
-  P025_config_register(uint16_t regval) : _regval(regval) {}
+  void setRegval(uint16_t regval) {
+    _regValue = regval;
+  }
+
+  uint16_t getRegval() const {
+    return _regValue;
+  }
 
   String toString() const {
     return strformat(F("reg: %X OS: %d MUX: %d PGA: %d mode: %d DR: %d"),
-                     _regval, operatingStatus, MUX, PGA, mode, datarate
+                     getRegval(), operatingStatus, MUX, PGA, mode, datarate
                      );
   }
 };
@@ -78,7 +90,7 @@ P025_data_struct::P025_data_struct(struct EventStruct *event) {
 
   reg.datarate         = p025_variousBits.getSampleRate();
   reg.PGA              = P025_GAIN;
-  _configRegisterValue = reg._regval;
+  _configRegisterValue = reg.getRegval();
 
   _fullScaleFactor = 1.0f;
 
@@ -105,11 +117,11 @@ bool P025_data_struct::read(float& value, taskVarIndex_t index) const {
 
   reg.MUX = _mux[index];
 
-  if (!startMeasurement(_i2cAddress, reg._regval)) {
+  if (!startMeasurement(_i2cAddress, reg.getRegval())) {
     return false;
   }
 
-  if (!I2C_write16_reg(_i2cAddress, P025_CONFIG_REGISTER, reg._regval)) {
+  if (!I2C_write16_reg(_i2cAddress, P025_CONFIG_REGISTER, reg.getRegval())) {
 # ifndef BUILD_NO_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
@@ -221,7 +233,7 @@ bool P025_data_struct::startMeasurement(uint8_t i2cAddress, uint16_t configRegis
 
 long P025_data_struct::waitReady025(uint8_t i2cAddress)
 {
-  const uint64_t start   = getMicros64();
+  const uint32_t start   = micros();
   unsigned long  timeout = millis();
 
   bool is_ok = false;
@@ -245,7 +257,7 @@ long P025_data_struct::waitReady025(uint8_t i2cAddress)
     const bool ready = reg.operatingStatus == 1;
 
     if (ready && is_ok) {
-      const long res = usecPassedSince(start);
+      const long res = usecPassedSince_fast(start);
       const long sps = (res > 0) ? 1000000 / res : 0;
 # ifndef BUILD_NO_DEBUG
 
@@ -261,7 +273,7 @@ long P025_data_struct::waitReady025(uint8_t i2cAddress)
     delay(0);
 
     // Address Pointer Register is the same, so only need to read bytes again
-    reg._regval = I2C_read16(i2cAddress, &is_ok);
+    reg.setRegval(I2C_read16(i2cAddress, &is_ok));
   }
 
 # ifndef BUILD_NO_DEBUG
@@ -306,7 +318,8 @@ bool P025_data_struct::webformLoad(struct EventStruct *event)
     };
 
     constexpr size_t ADS1115_PGA_OPTIONS = NR_ELEMENTS(pgaOptions);
-    addFormSelector(F("Gain"), F("gain"), ADS1115_PGA_OPTIONS, pgaOptions, nullptr, P025_GAIN);
+    const FormSelectorOptions selector(ADS1115_PGA_OPTIONS, pgaOptions);
+    selector.addFormSelector(F("Gain"), F("gain"), P025_GAIN);
     addFormNote(F("Do not apply more than VDD + 0.3 V to the analog inputs of the device."));
   }
   {
@@ -321,8 +334,8 @@ bool P025_data_struct::webformLoad(struct EventStruct *event)
       F("860 / 3300"),
     };
     constexpr size_t NR_OPTIONS = NR_ELEMENTS(P025_SPSOptions);
-
-    addFormSelector(F("Sample Rate"), F("sps"), NR_OPTIONS, P025_SPSOptions, nullptr, p025_variousBits.getSampleRate());
+    const FormSelectorOptions selector(NR_OPTIONS, P025_SPSOptions);
+    selector.addFormSelector(F("Sample Rate"), F("sps"), p025_variousBits.getSampleRate());
     addUnit(F("SPS"));
     addFormNote(F("Lower values for ADS1115, higher values for ADS1015"));
 
@@ -350,7 +363,7 @@ bool P025_data_struct::webformLoad(struct EventStruct *event)
 
 bool P025_data_struct::webformSave(struct EventStruct *event)
 {
-  for (uint8_t i = 0; i < P025_NR_OUTPUT_VALUES; i++) {
+  for (uint8_t i = 0; i < P025_NR_OUTPUT_VALUES; ++i) {
     const uint8_t pconfigIndex = P025_PCONFIG_INDEX(i);
     const uint8_t choice       = PCONFIG(pconfigIndex);
     sensorTypeHelper_saveOutputSelector(event, pconfigIndex, i,
@@ -366,7 +379,7 @@ bool P025_data_struct::webformSave(struct EventStruct *event)
   p025_variousBits.setSampleRate(getFormItemInt(F("sps")));
   p025_variousBits.outputVolt = isFormItemChecked(F("volt"));
   p025_variousBits.cal        = isFormItemChecked(F("cal"));
-  P025_VARIOUS_BITS           = p025_variousBits.pconfigvalue;
+  P025_VARIOUS_BITS           = p025_variousBits.pconfigvalue();
 
   P025_CAL_ADC1 = getFormItemInt(F("adc1"));
   P025_CAL_OUT1 = getFormItemFloat(F("out1"));
@@ -381,7 +394,7 @@ bool P025_data_struct::webform_showConfig(struct EventStruct *event)
 {
   format_I2C_port_description(event->TaskIndex);
 
-  for (uint8_t i = 0; i < P025_NR_OUTPUT_VALUES; i++) {
+  for (uint8_t i = 0; i < P025_NR_OUTPUT_VALUES; ++i) {
     const uint8_t choice = PCONFIG(P025_PCONFIG_INDEX(i));
 
     if ((choice >= 0) && (choice < 8)) {

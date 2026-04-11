@@ -1,0 +1,24 @@
+.. csv-table::
+        :header: "Command", "Explanation"
+        :widths: 20, 30
+
+        "
+        ``MHZCalibrateZero``
+
+        ``MHZReset``
+
+        ``MHZABCEnable``
+
+        ``MHZABCDisable``
+
+        ","
+        Sets the zero point of the sensor (in this case 400ppm)
+
+        Reset to factory defaults
+
+        Enables automatic baseline calibration 
+
+        Disables automatic baseline calibration
+        "
+        
+       

@@ -7,6 +7,8 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2025-06-14 tonhuisman: Add support for Custom Value Type per task value
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported for Shift registers)
  * 2023-01-04 tonhuisman: Use DIRECT_pin GPIO functions for faster GPIO handling (mostly on ESP32), string optimization
  * 2022-08-05 tonhuisman: Fix issue with reading 8th bit of each byte (found during HW testing)
  *                        Reduce number of Values to match the selected number of chips/4. Small UI improvements.
@@ -43,16 +45,13 @@
 
 // TODO tonhuisman: ? Move to StringConverter ? though it is a bit specific, can also be used by P126
 String P129_ul2stringFixed(uint32_t value, uint8_t base) {
-  uint64_t val = static_cast<uint64_t>(value);
+  // Set bit just left of 32 bits so we will see the leading zeroes
+  const uint64_t val = static_cast<uint64_t>(value) | 0x100000000ull;
 
-  val &= 0x0ffffffff;     // Keep 32 bits
-  val |= 0x100000000;     // Set bit just left of 32 bits so we will see the leading zeroes
-  String valStr = ull2String(val, base);
-
-  valStr.remove(0, 1);    // Delete leading 1 we added
+  String valStr = ull2String(val, base).substring(1); // Delete leading 1 we added
 
   if (base == HEX) {
-    valStr.toUpperCase(); // uppercase hex for readability
+    valStr.toUpperCase();                             // uppercase hex for readability
   }
   return valStr;
 }
@@ -65,15 +64,11 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_129;
-      Device[deviceCount].Type               = DEVICE_TYPE_TRIPLE;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_QUAD;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = false;
-      Device[deviceCount].DecimalsOnly       = false;
-      Device[deviceCount].ValueCount         =
+      auto& dev = Device[++deviceCount];
+      dev.Number     = PLUGIN_ID_129;
+      dev.Type       = DEVICE_TYPE_TRIPLE;
+      dev.VType      = Sensor_VType::SENSOR_TYPE_QUAD;
+      dev.ValueCount =
       # if P129_MAX_CHIP_COUNT <= 4
         1
       # elif P129_MAX_CHIP_COUNT <= 8
@@ -84,9 +79,13 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
         4
       # endif // if P129_MAX_CHIP_COUNT <= 4
       ;
-      Device[deviceCount].SendDataOption = true; // No use in sending the Values to a controller
-      Device[deviceCount].TimerOption    = true; // Used to update the Devices page
-      Device[deviceCount].TimerOptional  = true;
+      dev.SendDataOption   = true; // No use in sending the Values to a controller
+      dev.TimerOption      = true; // Used to update the Devices page
+      dev.TimerOptional    = true;
+      dev.HasFormatUserVar = true;
+      dev.setPin2Direction(gpio_direction::gpio_output);
+      dev.setPin3Direction(gpio_direction::gpio_output);
+      dev.CustomVTypeVar = true;
 
       break;
     }
@@ -105,6 +104,22 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[3], PSTR(PLUGIN_VALUENAME4_129));
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER || FEATURE_CUSTOM_TASKVAR_VTYPE
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      #  if FEATURE_CUSTOM_TASKVAR_VTYPE
+
+      for (uint8_t i = 0; i < event->Par5; ++i) {
+        event->ParN[i] = ExtraTaskSettings.getTaskVarCustomVType(i);  // Custom/User selection
+      }
+      #  else // if FEATURE_CUSTOM_TASKVAR_VTYPE
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_NONE); // Not yet supported
+      #  endif // if FEATURE_CUSTOM_TASKVAR_VTYPE
+      success = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER || FEATURE_CUSTOM_TASKVAR_VTYPE
 
     case PLUGIN_SET_DEFAULTS:
     {
@@ -159,31 +174,31 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
       addFormSubHeader(F("Device configuration"));
 
       {
-        String chipCount[P129_MAX_CHIP_COUNT];
-        int    chipOption[P129_MAX_CHIP_COUNT];
+        // String chipCount[P129_MAX_CHIP_COUNT];
+        int chipOption[P129_MAX_CHIP_COUNT];
 
-        for (uint8_t i = 0; i < P129_MAX_CHIP_COUNT; i++) {
-          chipCount[i]  = String(i + 1);
+        for (uint8_t i = 0; i < P129_MAX_CHIP_COUNT; ++i) {
+          // chipCount[i]  = i + 1;
           chipOption[i] = i + 1;
         }
-        addFormSelector(F("Number of chips (Q7 &rarr; DS)"),
-                        F("chipcnt"),
-                        P129_MAX_CHIP_COUNT,
-                        chipCount,
-                        chipOption,
-                        P129_CONFIG_CHIP_COUNT,
-                        true);
+        FormSelectorOptions selector(P129_MAX_CHIP_COUNT, /*chipCount,*/ chipOption);
+        selector.reloadonchange = true;
+        selector.addFormSelector(
+          F("Number of chips (Q7 &rarr; DS)"), F("chipcnt"), P129_CONFIG_CHIP_COUNT);
         addUnit(concat(F("Daisychained 1.."), P129_MAX_CHIP_COUNT));
         # ifndef LIMIT_BUILD_SIZE
-        addFormNote(F("Changing the number of chips will reload the page and update the Event configuration."));
+        // addFormNote(F("Changing the number of chips will reload the page and update the Event configuration."));
         # endif // ifndef LIMIT_BUILD_SIZE
       }
 
       const __FlashStringHelper *frequencyOptions[] = {
         F("10/sec (100 msec)"),
         F("50/sec (20 msec)") };
-      const int frequencyValues[] = { P129_FREQUENCY_10, P129_FREQUENCY_50 };
-      addFormSelector(F("Sample frequency"), F("frequency"), 2, frequencyOptions, frequencyValues, P129_CONFIG_FLAGS_GET_READ_FREQUENCY);
+      const int frequencyValues[]  = { P129_FREQUENCY_10, P129_FREQUENCY_50 };
+      constexpr size_t optionCount = NR_ELEMENTS(frequencyValues);
+      const FormSelectorOptions selector(optionCount, frequencyOptions, frequencyValues);
+      selector.addFormSelector(
+        F("Sample frequency"), F("frequency"), P129_CONFIG_FLAGS_GET_READ_FREQUENCY);
 
       addFormSubHeader(F("Display and output"));
 
@@ -195,8 +210,10 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
         F("Decimal &amp; hex/bin"),
         F("Decimal only"),
         F("Hex/bin only") };
-      const int outputValues[] = { P129_OUTPUT_BOTH, P129_OUTPUT_DEC_ONLY, P129_OUTPUT_HEXBIN };
-      addFormSelector(F("Output selection"), F("outputsel"), 3, outputOptions, outputValues, P129_CONFIG_FLAGS_GET_OUTPUT_SELECTION);
+      const int outputValues[]     = { P129_OUTPUT_BOTH, P129_OUTPUT_DEC_ONLY, P129_OUTPUT_HEXBIN };
+      constexpr size_t outputCount = NR_ELEMENTS(outputValues);
+      const FormSelectorOptions selector_output(outputCount, outputOptions, outputValues);
+      selector_output.addFormSelector(F("Output selection"), F("outputsel"), P129_CONFIG_FLAGS_GET_OUTPUT_SELECTION);
 
       addFormCheckBox(F("Separate events per pin"), F("separate_events"), P129_CONFIG_FLAGS_GET_SEPARATE_EVENTS == 1);
 
@@ -219,18 +236,14 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
         uint64_t bits = 0;
         uint8_t  off  = 0;
 
-        for (uint8_t i = 0; i < P129_CONFIG_CHIP_COUNT; i++) {
+        for (uint8_t i = 0; i < P129_CONFIG_CHIP_COUNT; ++i) {
           if (i % 4 == 0) {
             bits = PCONFIG_ULONG(i / 4) & 0x0ffffffff;
             off  = 0;
             # ifndef P129_DEBUG_LOG
 
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-              String log = F("74HC165 Reading from: ");
-              log += (i / 4);
-              log += F(", bits: ");
-              log += P129_ul2stringFixed(bits, BIN);
-              addLog(LOG_LEVEL_INFO, log);
+              addLog(LOG_LEVEL_INFO, strformat(F("74HC165 Reading from: %d, bits: %s"), i / 4, P129_ul2stringFixed(bits, BIN).c_str()));
             }
             # endif // ifndef P129_DEBUG_LOG
           }
@@ -239,13 +252,13 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
           addHtmlInt(i + 1);
           html_TD();
 
-          for (uint8_t j = 0; j < 8; j++) {
+          for (uint8_t j = 0; j < 8; ++j) {
             html_TD();
             # if FEATURE_TOOLTIPS
             const String toolTip = strformat(
-              F("Chip %d port D %d, pin %d"), 
-              (i + 1), 
-              (7 - j), 
+              F("Chip %d port D %d, pin %d"),
+              (i + 1),
+              (7 - j),
               i * 8 + (8 - j));
             # endif // if FEATURE_TOOLTIPS
             addCheckBox(getPluginCustomArgName((i * 8 + (7 - j)) + 1), bitRead(bits, off * 8 + (7 - j)) == 1
@@ -286,13 +299,13 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
       uint64_t bits = 0;
       uint8_t  off  = 0;
 
-      for (uint8_t i = 0; i < P129_CONFIG_CHIP_COUNT; i++) {
+      for (uint8_t i = 0; i < P129_CONFIG_CHIP_COUNT; ++i) {
         if (i % 4 == 0) {
           bits = 0;
           off  = 0;
         }
 
-        for (uint8_t j = 0; j < 8; j++) {
+        for (uint8_t j = 0; j < 8; ++j) {
           bitWriteULL(bits, static_cast<uint64_t>(off * 8 + (7 - j)), isFormItemChecked(getPluginCustomArgName((i * 8 + (7 - j)) + 1))); // -V629
         }
         PCONFIG_ULONG(i / 4) = bits;
@@ -300,13 +313,10 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
         # ifndef P129_DEBUG_LOG
 
         if (loglevelActiveFor(LOG_LEVEL_INFO) && ((i % 4 == 3) || (i == P129_CONFIG_CHIP_COUNT))) {
-          String log = F("74HC165 Writing to: ");
-          log += (i / 4);
-          log += F(", offset: ");
-          log += (off * 8);
-          log += F(", bits: ");
-          log += P129_ul2stringFixed(bits, BIN);
-          addLog(LOG_LEVEL_INFO, log);
+          addLog(LOG_LEVEL_INFO, strformat(F("74HC165 Writing to: %d, offset: %d, bits: %s"),
+                                           i / 4,
+                                           off * 8,
+                                           P129_ul2stringFixed(bits, BIN).c_str()));
         }
         # endif // ifndef P129_DEBUG_LOG
         off++;
@@ -400,13 +410,13 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
       {
         String state, label;
         state.reserve(40);
-        String abcd             = F("ABCDEFGH");              // In case anyone dares to extend VARS_PER_TASK to 8...
+        const String   abcd     = F("ABCDEFGH");              // In case anyone dares to extend VARS_PER_TASK to 8...
         const uint16_t endCheck = P129_CONFIG_CHIP_COUNT + 4; // 4(.0) = nr of bytes in an uint32_t.
         const uint16_t maxVar   = min(static_cast<uint8_t>(VARS_PER_TASK), static_cast<uint8_t>(ceil(P129_CONFIG_CHIP_COUNT / 4.0f)));
         uint8_t dotInsert;
         uint8_t dotOffset;
 
-        for (uint16_t varNr = 0; varNr < maxVar; varNr++) {
+        for (uint16_t varNr = 0; varNr < maxVar; ++varNr) {
           if (P129_CONFIG_FLAGS_GET_VALUES_DISPLAY) {
             label     = F("Bin");
             state     = F("0b");
@@ -418,9 +428,7 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
             dotInsert = 4;
             dotOffset = 3;
           }
-          label += F(" State_");
-          label += abcd.substring(varNr, varNr + 1);
-          label += ' ';
+          label += strformat(F(" State_%s "), abcd.substring(varNr, varNr + 1).c_str());
 
           label += min(255, P129_CONFIG_SHOW_OFFSET + (4 * varNr) + 4);  // Limited to max 255 chips
           label += '_';
@@ -429,7 +437,7 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
           if ((P129_CONFIG_SHOW_OFFSET + (4 * varNr) + 4) <= endCheck) { // Only show if still in range
             state += P129_ul2stringFixed(UserVar.getUint32(event->TaskIndex, varNr), P129_CONFIG_FLAGS_GET_VALUES_DISPLAY ? BIN : HEX);
 
-            for (uint8_t i = 0; i < 3; i++, dotInsert += dotOffset) {    // Insert readability separators
+            for (uint8_t i = 0; i < 3; ++i, dotInsert += dotOffset) {    // Insert readability separators
               state = state.substring(0, dotInsert) + '.' + state.substring(dotInsert);
             }
             pluginWebformShowValue(event->TaskIndex, VARS_PER_TASK + varNr, label, state, true);

@@ -1,0 +1,41 @@
+.. csv-table::
+    :header: "Config value", "Information"
+    :widths: 20, 30
+
+    "
+    | ``[<taskname>#Temperature]``
+    ","
+    | Returns the last measured Temperature in degrees Celcius.
+    "
+    "
+    | ``[<taskname>#Humidity]``
+    ","
+    | Returns the last measured Humidity (%RH).
+    "
+    "
+    | ``[<taskname>#tVOC]``
+    ","
+    | Returns the last measured tVOC (total volatile organic compounds) value in range 0..500 index points. Measurement range 0..1000 ppm.
+    "
+    "
+    | ``[<taskname>#NOx]``
+    ","
+    | Returns the last measured NOx value (Nitrogen Oxides) value in range 0..500 index points.
+    "
+    "
+    | ``[<taskname>#PM1p0]``
+    
+    | ``[<taskname>#PM2p5]``
+
+    | ``[<taskname>#PM4p0]``
+
+    | ``[<taskname>#PM10p0]``
+
+    ","
+    | Returns the last measured Particle concentration in μg/m\ :sup:`3` for respectively 1.0 μm, 2.5 μm, 4.0 μm and 10.0 μm particle size.
+    "
+    "
+    | ``[<taskname>#Dewpoint]``
+    ","
+    | Returns the calculated Dew point, from the Temperature and Humidity values.
+    "

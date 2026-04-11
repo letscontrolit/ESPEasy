@@ -32,17 +32,28 @@
 #define MODE_INTERRUPT_MASK     0x03
 
 
+#if ESP_IDF_VERSION_MAJOR >= 5
+#include <atomic>
+
+typedef std::atomic<uint32_t> GPIO_PULSEHELPER_COUNTER_TYPE;
+#else
+typedef uint32_t GPIO_PULSEHELPER_COUNTER_TYPE;
+#endif
+
+
+
+
 // volatile counter variables for use in ISR
 struct pulseCounterISRdata_t {
   uint64_t      pulseTime              = 0; // time between previous and most recently counted edge/pulse
   uint64_t      currentStableStartTime = 0; // stores the start time of the current stable pulse.
   uint64_t      triggerTimestamp       = 0; // timestamp, when the signal change was detected in the ISR
-  unsigned long pulseCounter           = 0; // number of counted pulses within most recent data collection/sent interval
-  unsigned long pulseTotalCounter      = 0; // total number of pulses counted since last reset
+  GPIO_PULSEHELPER_COUNTER_TYPE pulseCounter           = 0; // number of counted pulses within most recent data collection/sent interval
+  GPIO_PULSEHELPER_COUNTER_TYPE pulseTotalCounter      = 0; // total number of pulses counted since last reset
   #ifdef PULSE_STATISTIC
 
   // debug/tuning variables for PULSE mode statistical logging
-  unsigned int Step0counter = 0; // counts how often step 0 was entered (volatile <- in ISR)
+  GPIO_PULSEHELPER_COUNTER_TYPE Step0counter = 0; // counts how often step 0 was entered (volatile <- in ISR)
   #endif // ifdef PULSE_STATISTIC
 
   bool initStepsFlags  = false;  // indicates that the pulse processing steps shall be initiated. One bit per task.
@@ -152,7 +163,6 @@ private:
   \*********************************************************************************************/
   void     processStablePulse(int      pinState,
                               uint64_t pulseChangeTime);
-
 
   volatile pulseCounterISRdata_t ISRdata;
   const pulseCounterConfig       config;

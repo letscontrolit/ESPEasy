@@ -32,7 +32,7 @@
     -----------------------------------------------------------------------*/
 #define BMP3XX_DEFAULT_ADDRESS (0x77) ///< The default I2C address
 /*=========================================================================*/
-#define BMP3XX_DEFAULT_SPIFREQ (1000000) ///< The default SPI Clock speed
+#define BMP3XX_DEFAULT_SPIFREQ (100000) ///< The default SPI Clock speed
 
 /** Adafruit_BMP3XX Class for both I2C and SPI usage.
  *  Wraps the Bosch library for Arduino usage

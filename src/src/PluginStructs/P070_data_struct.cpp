@@ -4,17 +4,13 @@
 
 
 P070_data_struct::~P070_data_struct() {
-  if (Plugin_070_pixels != nullptr) {
-    delete Plugin_070_pixels;
-    Plugin_070_pixels = nullptr;
-  }
+  delete Plugin_070_pixels;
+  Plugin_070_pixels = nullptr;
 }
 
 void P070_data_struct::reset() {
-  if (Plugin_070_pixels != nullptr) {
-    delete Plugin_070_pixels;
-    Plugin_070_pixels = nullptr;
-  }
+  delete Plugin_070_pixels;
+  Plugin_070_pixels = nullptr;
 }
 
 void P070_data_struct::init(struct EventStruct *event) {
@@ -43,9 +39,9 @@ void P070_data_struct::Clock_update()
   clearClock();              // turn off the LEDs
 
   if (display_enabled > 0) { // if the display is enabled, calculate the LEDs to turn on
-    int Hours   = node_time.hour();
-    int Minutes = node_time.minute();
-    int Seconds = node_time.second();
+    const int Hours   = node_time.hour();
+    const int Minutes = node_time.minute();
+    const int Seconds = node_time.second();
     timeToStrip(Hours, Minutes, Seconds);
   }
   Plugin_070_pixels->show(); // This sends the updated pixel color to the hardware.
@@ -53,7 +49,7 @@ void P070_data_struct::Clock_update()
 
 void P070_data_struct::calculateMarks()
 { // generate a list of the LEDs that have hour marks
-  for (int i = 0; i < 12; i++) {
+  for (int i = 0; i < 12; ++i) {
     marks[i] = 5 * i + (offset_12h_mark % 5);
   }
 
@@ -78,7 +74,7 @@ void P070_data_struct::calculateMarks()
 }
 
 void P070_data_struct::clearClock() {
-  for (int i = 0; i < NUMBER_LEDS; i++) {
+  for (int i = 0; i < NUMBER_LEDS; ++i) {
     Plugin_070_pixels->setPixelColor(i, Plugin_070_pixels->Color(0, 0, 0));
   }
 }
@@ -95,7 +91,7 @@ void P070_data_struct::timeToStrip(int hours, int minutes, int seconds) {
 
   if (seconds > 59) { seconds = seconds - 60; }
 
-  for (int i = 0; i < 14; i++) {                                                                      // set the hour marks as white;
+  for (int i = 0; i < 14; ++i) {                                                                      // set the hour marks as white;
     if ((marks[i] != hours) && (marks[i] != minutes) && (marks[i] != seconds) && (marks[i] != 255)) { // do not draw a mark there is a clock
                                                                                                       // hand in that position
       Plugin_070_pixels->setPixelColor(marks[i],
@@ -105,7 +101,7 @@ void P070_data_struct::timeToStrip(int hours, int minutes, int seconds) {
   uint32_t currentColor;
   uint8_t  r_val, g_val;                  // , b_val;
 
-  for (int i = 0; i < NUMBER_LEDS; i++) { // draw the clock hands, adding the colors together
+  for (int i = 0; i < NUMBER_LEDS; ++i) { // draw the clock hands, adding the colors together
     if (i == hours) {                     // hours hand is RED
       Plugin_070_pixels->setPixelColor(i, Plugin_070_pixels->Color(brightness, 0, 0));
     }

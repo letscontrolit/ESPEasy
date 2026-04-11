@@ -5,25 +5,31 @@
 
 #include "../DataTypes/ESPEasy_plugin_functions.h"
 
+#include "../DataTypes/ControllerIndex.h"
 #include "../DataTypes/CPluginID.h"
 #include "../DataTypes/ProtocolIndex.h"
 #include "../DataStructs/ProtocolStruct.h"
 
 struct EventStruct;
 
-protocolIndex_t getProtocolIndex_from_CPluginID_(cpluginID_t pluginID);
-cpluginID_t getCPluginID_from_ProtocolIndex_(protocolIndex_t protocolIndex);
-bool validProtocolIndex_init(protocolIndex_t protocolIndex);
+protocolIndex_t do_getProtocolIndex_from_CPluginID(cpluginID_t pluginID);
+cpluginID_t do_getCPluginID_from_ProtocolIndex(protocolIndex_t protocolIndex);
+bool do_check_validProtocolIndex(protocolIndex_t protocolIndex);
 
 cpluginID_t getHighestIncludedCPluginID();
 
 ProtocolStruct& getProtocolStruct(protocolIndex_t protocolIndex);
 
-bool CPluginCall(protocolIndex_t protocolIndex, CPlugin::Function Function, struct EventStruct *event, String& string);
+// Should only be called from CPluginCall, or maybe for very special occasions
+bool do_CPluginCall(protocolIndex_t protocolIndex, CPlugin::Function Function, struct EventStruct *event, String& string);
 
 
 void CPluginSetup();
 void CPluginInit();
+
+// Start or stop controller as how it is set in the Settings
+void CPlugin_Exit_Init(controllerIndex_t controllerIndex);
+
 
 // Macro to forward declare the CPlugin_NNN functions.
 // N.B. Some controllers also have a do_process_cNNN_delay_queue function.

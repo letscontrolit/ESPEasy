@@ -11,9 +11,12 @@
  */
 
 /** Changelog:
- * 2021-12-10, tonhuisman, Start SPI interface version of ADXL345 plugin, based on P120 ADXL345 I2C plugin
- *                         Using Sparkfun ADXL345 library
- *                         https://github.com/sparkfun/SparkFun_ADXL345_Arduino_Library
+ * 2025-08-13 tonhuisman: Enable use of secondary SPI bus
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported yet for Accelerometer)
+ *                        Use all relevant code from P120 (I2C variant of the same sensor)
+ * 2021-12-10 tonhuisman, Start SPI interface version of ADXL345 plugin, based on P120 ADXL345 I2C plugin
+ *                        Using Sparkfun ADXL345 library
+ *                        https://github.com/sparkfun/SparkFun_ADXL345_Arduino_Library
  *
  *************************************************************************************************************************/
 
@@ -38,17 +41,18 @@ boolean Plugin_125(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number       = PLUGIN_ID_125;
-      Device[deviceCount].Type           = DEVICE_TYPE_SPI;
-      Device[deviceCount].VType          = Sensor_VType::SENSOR_TYPE_TRIPLE;
-      Device[deviceCount].Ports          = 0;
-      Device[deviceCount].ValueCount     = 3;
-      Device[deviceCount].FormulaOption  = true;
-      Device[deviceCount].SendDataOption = true;
-      Device[deviceCount].TimerOption    = true;
-      Device[deviceCount].TimerOptional  = true;
-      Device[deviceCount].PluginStats    = true;
-      Device[deviceCount].OutputDataType = Output_Data_type_t::Simple;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_125;
+      dev.Type           = DEVICE_TYPE_SPI;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_TRIPLE;
+      dev.ValueCount     = 3;
+      dev.FormulaOption  = true;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
+      dev.TimerOptional  = true;
+      dev.PluginStats    = true;
+      dev.OutputDataType = Output_Data_type_t::Simple;
+      dev.SpiBusSelect   = true;
 
       break;
     }
@@ -56,26 +60,6 @@ boolean Plugin_125(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_GET_DEVICENAME:
     {
       string = F(PLUGIN_NAME_125);
-      break;
-    }
-
-    case PLUGIN_GET_DEVICEVALUENAMES: {
-      P120_data_struct::plugin_get_device_value_names(event);
-      break;
-    }
-
-    case PLUGIN_GET_DEVICEVALUECOUNT:
-    {
-      event->Par1 = P120_NR_OUTPUT_VALUES;
-      success     = true;
-      break;
-    }
-
-    case PLUGIN_GET_DEVICEVTYPE:
-    {
-      event->sensorType = static_cast<Sensor_VType>(PCONFIG(P120_SENSOR_TYPE_INDEX));
-      event->idx        = P120_SENSOR_TYPE_INDEX;
-      success           = true;
       break;
     }
 
@@ -107,37 +91,6 @@ boolean Plugin_125(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-    case PLUGIN_WEBFORM_LOAD_OUTPUT_SELECTOR:
-    {
-      success = P120_data_struct::plugin_webform_loadOutputSelector(event);
-      break;
-    }
-
-    case PLUGIN_WEBFORM_LOAD:
-    {
-      P120_data_struct *P120_data = new (std::nothrow) P120_data_struct(P120_AVERAGE_BUFFER);
-
-      if (nullptr != P120_data) {
-        P120_data->setSPI_CSpin(static_cast<int>(P120_CS_PIN));
-        success = P120_data->plugin_webform_load(event); // This shouldn't fail
-        delete P120_data;
-      }
-      break;
-    }
-
-    case PLUGIN_WEBFORM_SAVE:
-    {
-      P120_AVERAGE_BUFFER = getFormItemInt(F("average_buf"));
-
-      P120_data_struct *P120_data = new (std::nothrow) P120_data_struct(P120_AVERAGE_BUFFER);
-
-      if (nullptr != P120_data) {
-        P120_data->setSPI_CSpin(static_cast<int>(P120_CS_PIN));
-        success = P120_data->plugin_webform_save(event); // This shouldn't fail
-        delete P120_data;
-      }
-      break;
-    }
 
     case PLUGIN_INIT:
     {
@@ -152,55 +105,11 @@ boolean Plugin_125(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-    case PLUGIN_READ:
-    {
-      P120_data_struct *P120_data = static_cast<P120_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P120_data) {
-        success = P120_data->initialized();
-      }
-
-      break;
-    }
-
-    case PLUGIN_GET_CONFIG_VALUE:
-    {
-      P120_data_struct *P120_data =
-        static_cast<P120_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-      if (nullptr != P120_data) {
-        success = P120_data->plugin_get_config_value(event, string);
-      }
-      break;
-    }
-
-    case PLUGIN_ONCE_A_SECOND:
-    {
-      P120_data_struct *P120_data = static_cast<P120_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-      if (nullptr != P120_data) {
-        success = P120_data->read_data(event);
-      }
-
-      break;
-    }
-
-    case PLUGIN_TEN_PER_SECOND:
-    case PLUGIN_FIFTY_PER_SECOND:
-    {
-      if (((function == PLUGIN_TEN_PER_SECOND) && (P120_FREQUENCY == P120_FREQUENCY_10)) ||
-          ((function == PLUGIN_FIFTY_PER_SECOND) && (P120_FREQUENCY == P120_FREQUENCY_50))) {
-        P120_data_struct *P120_data = static_cast<P120_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-        if (nullptr != P120_data) {
-          success = P120_data->read_sensor(event);
-        }
-      }
-
-      break;
-    }
+    default: // Hand over further handling to P120
+      success = Plugin_120(function, event, string);
   } // switch
   return success;
-}   // function
+} // function
 
 #endif // ifdef USES_P125

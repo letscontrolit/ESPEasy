@@ -1,6 +1,7 @@
 #include "../Helpers/Convert.h"
 
 #include "../Helpers/StringConverter.h"
+#include "../Helpers/ESPEasy_time_calc.h"
 
 /*********************************************************************************************\
    Convert bearing in degree to bearing string
@@ -80,86 +81,86 @@ float minutesToDay(int minutes) {
 }
 
 String minutesToDayHour(int minutes) {
-  int  days  = minutes / 1440;
-  int  hours = (minutes % 1440) / 60;
-  char TimeString[8] = {0}; // 5 digits plus the null char minimum
-
-  sprintf_P(TimeString, PSTR("%d%c%02d%c"), days, 'd', hours, 'h');
-  return TimeString;
-}
-
-String minutesToHourMinute(int minutes) {
-  int  hours = (minutes % 1440) / 60;
-  int  mins  = (minutes % 1440) % 60;
-  char TimeString[20] = {0};
-
-  sprintf_P(TimeString, PSTR("%d%c%02d%c"), hours, 'h', mins, 'm');
-  return TimeString;
+  const int  days  = minutes / 1440;
+  const int  hours = (minutes % 1440) / 60;
+  return strformat(F("%dd%02dh"), days, hours);
 }
 
 String minutesToDayHourMinute(int minutes) {
-  int  days  = minutes / 1440;
-  int  hours = (minutes % 1440) / 60;
-  int  mins  = (minutes % 1440) % 60;
-  char TimeString[20] = {0};
-
-  sprintf_P(TimeString, PSTR("%d%c%02d%c%02d%c"), days, 'd', hours, 'h', mins, 'm');
-  return TimeString;
+  const int  days  = minutes / 1440;
+  const int  hours = (minutes % 1440) / 60;
+  const int  mins  = (minutes % 1440) % 60;
+  if (days == 0) {
+    return strformat(F("%02dh%02dm"), hours, mins);
+  }
+  return strformat(F("%dd%02dh%02dm"), days, hours, mins);
 }
 
 String minutesToHourColonMinute(int minutes) {
-  int  hours = (minutes % 1440) / 60;
-  int  mins  = (minutes % 1440) % 60;
-  char TimeString[8] = {0};
+  const int  hours = (minutes % 1440) / 60;
+  const int  mins  = (minutes % 1440) % 60;
 
-  sprintf_P(TimeString, PSTR("%02d%c%02d"), hours, ':', mins);
-  return TimeString;
+  return strformat(F("%02d:%02d"), hours, mins);
 }
 
-String secondsToDayHourMinuteSecond(int seconds) {
-  int  sec     = seconds % 60;
-  int  minutes = seconds / 60;
-  int  days    = minutes / 1440;
-  int  hours   = (minutes % 1440) / 60;
-  int  mins    = (minutes % 1440) % 60;
-  char TimeString[20] = {0};
-
-  sprintf_P(TimeString, PSTR("%d%c%02d%c%02d%c%02d"), days, 'd', hours, ':', mins, ':', sec);
-  return TimeString;
-}
-
-String format_msec_duration(int64_t duration) {
-  String result;
-
-  if (duration < 0) {
-    result   = '-';
-    duration = -1ll * duration;
-  }
-
-  if (duration < 10000ll) {
-    result += static_cast<int32_t>(duration);
-    result += F(" ms");
-    return result;
-  }
-  duration /= 1000ll;
-
-  if (duration < 3600ll) {
-    int sec     = duration % 60ll;
-    int minutes = duration / 60ll;
-
-    if (minutes > 0ll) {
-      result += minutes;
-      result += F(" m ");
+String secondsToDayHourMinuteSecond(int seconds, bool useHMS) {
+  const int  sec     = seconds % 60;
+  const int  minutes = seconds / 60;
+  const int  days    = minutes / 1440;
+  const int  min_day = (minutes % 1440);
+  const int  hours   = min_day / 60;
+  const int  mins    = min_day % 60;
+  if (days == 0) {
+    if (hours == 0 && useHMS) { 
+      return strformat(F("%dm%02ds"), mins, sec); 
     }
-    result += sec;
-    result += F(" s");
-    return result;
-  }
-  duration /= 60ll;
-
-  if (duration < 1440ll) { return minutesToHourMinute(duration); }
-  return minutesToDayHourMinute(duration);
+    return strformat(
+      useHMS ? F("%dh%02dm%02ds") : F("%02d:%02d:%02d"), 
+      hours, mins, sec);
+  } 
+  return strformat(
+    useHMS ? F("%dT%02dh%02dm%02ds") : F("%dT%02d:%02d:%02d"), 
+    days, hours, mins, sec);
 }
+
+String secondsToDayHourMinuteSecond_ms(int64_t systemMicros, bool useHMS) 
+{
+  if (systemMicros < 0ll) {
+    return concat('-', secondsToDayHourMinuteSecond_ms(-1ll*systemMicros, useHMS));
+  }
+
+  uint32_t usec{};
+  const uint32_t seconds = micros_to_sec_usec(systemMicros, usec);
+  return strformat(
+    F("%s.%03u"),
+    secondsToDayHourMinuteSecond(seconds, useHMS).c_str(),
+    usec / 1000ul);
+}
+
+String format_msec_duration(int64_t duration, bool useHMS) {
+  if (duration < 0ll) {
+    return concat('-', format_msec_duration(-1ll*duration, useHMS));
+  }
+  const uint32_t duration_s = duration / 1000ll;
+  const int32_t duration_ms = duration % 1000ll;
+
+  if (duration_s < 60) {
+    return strformat(
+      useHMS ? F("%02d.%03d sec") : F("%02d.%03d"),
+      duration_s,
+      duration_ms);
+  }
+  if (useHMS && duration_s > 60) {
+    // No need to show msec when time is over 1 minute
+    return secondsToDayHourMinuteSecond(duration_s, useHMS);
+  }
+  return strformat(
+    F("%s.%03d"),
+    secondsToDayHourMinuteSecond(duration_s, useHMS).c_str(),
+    duration_ms);
+}
+
+String format_msec_duration_HMS(int64_t duration) { return format_msec_duration(duration, true); }
 
 
 // Compute the dew point temperature, given temperature and humidity (temp in Celsius)

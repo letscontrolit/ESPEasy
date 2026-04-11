@@ -2,233 +2,240 @@
 
 #if FEATURE_CHART_JS
 
-#include "../Helpers/StringConverter.h"
-#include "../WebServer/HTML_wrappers.h"
+# include "../Helpers/KeyValueWriter_JSON.h"
+# include "../Helpers/StringConverter.h"
+# include "../WebServer/HTML_wrappers.h"
+# include "../WebServer/JSON.h"
 
-  ChartJS_title::ChartJS_title() {
-    align = F("center");
-  }
-
-  ChartJS_title::ChartJS_title(const String& titleText) : text(titleText) {
-    align = F("center");
-  }
-
-
-String ChartJS_title::toString() const {
-  String res;
-
-  if (text.isEmpty()) {
-    res = F("title: {display: false}");
-  } else {
-    res  = F("title: {display: true,align: '");
-    res += align;
-    res += F("',text:'");
-    res += text;
-    res += '\'';
-    res += '}';
-  }
-  return res;
-}
-
-String make_ChartJS_scale_options_singleAxis(
-  const String       & AxisType,
-  const ChartJS_title& AxisTitle)
-{
-  String res;
-
-  if (!AxisType.isEmpty()) {
-    res += F("type: '");
-    res += AxisType;
-    res += '\'';
-    res += ',';
-  }
-  res += AxisTitle.toString();
-  return res;
-}
-
-String make_ChartJS_scale_options(
-  const ChartJS_title& xAxisTitle,
-  const ChartJS_title& yAxisTitle,
-  const String       & xAxisType,
-  const String       & yAxisType)
-{
-  String res;
-
-  res  = F("scales: {x: {");
-  res += make_ChartJS_scale_options_singleAxis(xAxisType, xAxisTitle);
-  res += F("}, y: {");
-  res += make_ChartJS_scale_options_singleAxis(yAxisType, yAxisTitle);
-  res += '}';
-  res += '}';
-  return res;
-}
-
-void add_ChartJS_array(int          valueCount,
-                       const String array[])
+void add_ChartJS_array(KeyValueWriter& parent,
+                       int             valueCount,
+                       const String    array[])
 {
   for (int i = 0; i < valueCount; ++i) {
-    if (i != 0) {
-      addHtml(',');
-    }
-    addHtml(wrapIfContains(array[i], ' ', '"'));
+    parent.write({ EMPTY_STRING, array[i] });
   }
 }
 
-void add_ChartJS_array(int         valueCount,
-                       const float array[])
+void add_ChartJS_array(KeyValueWriter& parent,
+                       int             valueCount,
+                       const float     array[],
+                       uint8_t         nrDecimals)
 {
   for (int i = 0; i < valueCount; ++i) {
-    if (i != 0) {
-      addHtml(',');
-    }
-    addHtmlFloat(array[i], 3);
+    parent.write({ EMPTY_STRING, array[i], nrDecimals });
   }
 }
 
-void add_ChartJS_array(int       valueCount,
-                       const int array[])
+void add_ChartJS_array(KeyValueWriter& parent,
+                       int             valueCount,
+                       const int       array[])
 {
   for (int i = 0; i < valueCount; ++i) {
-    if (i != 0) {
-      addHtml(',');
-    }
-    addHtmlInt(array[i]);
+    parent.write({ EMPTY_STRING, array[i] });
   }
 }
 
-void add_ChartJS_chart_header(
+UP_KeyValueWriter add_ChartJS_chart_header(
   const __FlashStringHelper *chartType,
   const __FlashStringHelper *id,
-  const __FlashStringHelper *chartTitle,
-  int                        width,
-  int                        height,
-  const String             & options)
+  const ChartJS_title      & chartTitle,
+  ChartJS_options_scales   & options,
+  bool                       enableZoom,
+  size_t                     nrSamples,
+  bool                       onlyJSON)
 {
-  add_ChartJS_chart_header(chartType, String(id), String(chartTitle), width, height, options);
+  return add_ChartJS_chart_header(
+    chartType,
+    String(id),
+    chartTitle,
+    options,
+    enableZoom,
+    nrSamples,
+    onlyJSON);
 }
 
-void add_ChartJS_chart_header(
+UP_KeyValueWriter add_ChartJS_chart_header(
   const __FlashStringHelper *chartType,
   const String             & id,
-  const String             & chartTitle,
-  int                        width,
-  int                        height,
-  const String             & options)
+  const ChartJS_title      & chartTitle,
+  ChartJS_options_scales   & options,
+  bool                       enableZoom,
+  size_t                     nrSamples,
+  bool                       onlyJSON)
 {
-  addHtml(F("<canvas"));
-  addHtmlAttribute(F("id"),     id);
-  addHtmlAttribute(F("width"),  width);
-  addHtmlAttribute(F("height"), height);
-  addHtml(F("></canvas>"));
-  addHtml(F("<script>const "));
-  addHtml(id);
-  addHtml(F("c=document.getElementById('"));
-  addHtml(id);
-  addHtml(F("');const my_"));
-  addHtml(id);
-  addHtml(F("_C=new Chart("));
-  addHtml(id);
-  addHtml(F("c,{type:'"));
-  addHtml(chartType);
-  addHtml('\'', ',');
-  addHtml(F("options:{responsive:false,plugins:{legend:{position:'top',},title:{display:true,text:'"));
-  addHtml(chartTitle);
-  addHtml('\'', '}'); // end title
-  addHtml('}',  ','); // end plugins
+  if (!onlyJSON) {
+    addHtml(F("<div class=\"chart-container\" style=\"position: relative; height:40vh; width:95vw\">"));
+    addHtml(F("<canvas"));
+    addHtmlAttribute(F("id"),     id);
+    addHtml(F("></canvas>"));
+    addHtml(F("</div>"));
+    const char *id_c_str = id.c_str();
+    addHtml(strformat(
+              F("<script>"
+                "const %sc=document.getElementById('%s');"
+                "const my_%s_C=new Chart(%sc,\n"),
+              id_c_str,
+              id_c_str,
+              id_c_str,
+              id_c_str));
+  }
+  UP_KeyValueWriter_JSON chartJSON(new (std::nothrow) KeyValueWriter_JSON(true));
 
-  if (!options.isEmpty()) {
-    addHtml(options);
+  if (chartJSON) {
+    chartJSON->allowFormatOverrides(false);
+
+    if (!onlyJSON) {
+      chartJSON->setFooter(F("\n);</script>"));
+    }
+
+    add_ChartJS_chart_JSON_header(
+      *chartJSON,
+      chartType,
+      chartTitle,
+      options,
+      nrSamples,
+      enableZoom);
   }
 
-  addHtml(F("},")); // end options
-  addHtml(F("data:{labels:["));
+  return std::move(chartJSON);
+}
+
+void add_ChartJS_chart_JSON_header(
+  KeyValueWriter_JSON      & parent,
+  const __FlashStringHelper *chartType,
+  const ChartJS_title      & chartTitle,
+  ChartJS_options_scales   & options,
+  size_t                     nrSamples,
+  bool                       enableZoom)
+{
+  parent.write({ F("type"), chartType });
+  auto optionsArr = parent.createChild(F("options"));
+
+  if (optionsArr) {
+    const bool b_true(true);
+    const bool b_false(false);
+    optionsArr->write({ F("responsive"), b_true });
+    optionsArr->write({ F("maintainAspectRatio"), b_false });
+    {
+      auto plugins = optionsArr->createChild(F("plugins"));
+
+      if (plugins) {
+        {
+          auto legend = plugins->createChild(F("legend"));
+
+          if (legend) {
+            legend->write({ F("position"), F("top") });
+          }
+        }
+        plugins->write({ F("title"), chartTitle.toString() });
+
+        if (enableZoom) {
+          plugins->write({
+            F("zoom"),
+            F("{\"limits\":{"
+              "\"x\":{\"min\":\"original\",\"max\":\"original\",\"minRange\":1000}},"
+              "\"pan\":{\"enabled\":true,\"mode\":\"x\",\"modifierKey\":\"ctrl\"},"
+              "\"zoom\":{"
+              "\"wheel\":{\"enabled\":true},"
+              "\"drag\":{\"enabled\":true},"
+              "\"pinch\":{\"enabled\":true},"
+              "\"mode\":\"x\"}}"
+              ) });
+        }
+
+      }
+    }
+
+    if (nrSamples >= 60) {
+      // Default point radius = 3
+      // Typically when having > 64 samples, these points become really cluttered
+      // Thus it is best to reduce their radius.
+      const float radius = (enableZoom) ? 2.5f : 2.0f;
+      optionsArr->write({ F("elements"),
+                          strformat(
+                            F("{\"point\":{\"radius\":%.1f}}"),
+                            radius)
+                        });
+    }
+    options.toString(*optionsArr);
+  }
 }
 
 void add_ChartJS_chart_labels(
-  int       valueCount,
-  const int labels[]) {
-  add_ChartJS_array(valueCount, labels);
-  addHtml(F("],datasets:["));
+  KeyValueWriter& parent,
+  int             valueCount,
+  const int       labels[])
+{
+  auto labelsWriter = parent.createChildArray(F("labels"));
+
+  if (labelsWriter) {
+    add_ChartJS_array(*labelsWriter, valueCount, labels);
+  }
 }
 
 void add_ChartJS_chart_labels(
-  int          valueCount,
-  const String labels[])
+  KeyValueWriter& parent,
+  int             valueCount,
+  const String    labels[])
 {
-  add_ChartJS_array(valueCount, labels);
-  addHtml(F("],datasets:["));
+  auto labelsWriter = parent.createChildArray(F("labels"));
+
+  if (labelsWriter) {
+    add_ChartJS_array(*labelsWriter, valueCount, labels);
+  }
+}
+
+void add_ChartJS_scatter_data_point(
+  KeyValueWriter& parent,
+  float x, float y, uint8_t nrDecimalsX, uint8_t nrDecimalsY)
+{
+  auto element = parent.createChild();
+
+  if (element) {
+    element->write({ F("x"), x, nrDecimalsX });
+    element->write({ F("y"), y, nrDecimalsY });
+  }
 }
 
 void add_ChartJS_dataset(
-  const __FlashStringHelper *label,
-  const __FlashStringHelper *color,
-  const float                values[],
-  int                        valueCount,
-  bool                       hidden,
-  const String             & options)
+  KeyValueWriter              & datasets,
+  const ChartJS_dataset_config& config,
+  const float                   values[],
+  int                           valueCount,
+  uint8_t                       nrDecimals,
+  const String                & options)
 {
-  add_ChartJS_dataset_header(label, color);
-  add_ChartJS_array(valueCount, values);
-  add_ChartJS_dataset_footer(hidden, options);
+  auto dataset = datasets.createChild();
+
+  if (dataset) {
+    auto data = add_ChartJS_dataset_header(*dataset, config);
+
+    if (data) {
+      add_ChartJS_array(*data, valueCount, values, nrDecimals);
+    }
+  }
 }
 
-void add_ChartJS_dataset(
-  const String&              label,
-  const String&              color,
-  const float                values[],
-  int                        valueCount,
-  bool                       hidden,
-  const String             & options)
+UP_KeyValueWriter add_ChartJS_dataset_header(KeyValueWriter& dataset, const ChartJS_dataset_config& config)
 {
-  add_ChartJS_dataset_header(label, color);
-  add_ChartJS_array(valueCount, values);
-  add_ChartJS_dataset_footer(hidden, options);
-}
-
-
-void add_ChartJS_dataset_header(
-  const __FlashStringHelper *label,
-  const __FlashStringHelper *color) 
-{
-  add_ChartJS_dataset_header(String(label), String(color));
-}
-
-void add_ChartJS_dataset_header(
-  const String& label,
-  const String& color) 
-{
-  addHtml('{');
-  addHtml(F("label:'"));
-  addHtml(label);
-  addHtml('\'', ',');
-  addHtml(F("backgroundColor:'"));
-  addHtml(color);
-  addHtml('\'', ',');
-  addHtml(F("borderColor:'"));
-  addHtml(color);
-  addHtml('\'', ',');
-  addHtml(F("data:["));
-}
-
-
-
-void add_ChartJS_dataset_footer(bool hidden, const String& options) {
-  addHtml(']', ',');
-
-  if (hidden) {
-    addHtml(F("hidden:true,"));
+  if (!config.label.isEmpty()) {
+    dataset.write({ F("label"), config.label });
   }
 
-  if (!options.isEmpty()) {
-    addHtml(options);
-
-    //    if (!options.endsWith(F(","))) { addHtml(','); }
+  if (!config.color.isEmpty()) {
+    dataset.write({ F("backgroundColor"), config.color });
+    dataset.write({ F("borderColor"), config.color });
   }
 
-  addHtml('}', ',');
+  if (!config.axisID.isEmpty()) {
+    dataset.write({ F("yAxisID"), config.axisID });
+  }
+
+  if (config.hidden || config.displayConfig.showHidden()) {
+    dataset.write({ F("hidden"), true });
+  }
+
+  return dataset.createChildArray(F("data"));
 }
 
-void add_ChartJS_chart_footer() {
-  addHtml(F("]}});</script>"));
-}
 #endif // if FEATURE_CHART_JS

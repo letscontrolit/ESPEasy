@@ -51,21 +51,19 @@ boolean Plugin_122(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_DEVICE_ADD:
     {
       // This case defines the device characteristics
-      Device[++deviceCount].Number           = PLUGIN_ID_122;
-      Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_TEMP_HUM;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = 2;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].I2CNoDeviceCheck   = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number           = PLUGIN_ID_122;
+      dev.Type             = DEVICE_TYPE_I2C;
+      dev.VType            = Sensor_VType::SENSOR_TYPE_TEMP_HUM;
+      dev.FormulaOption    = true;
+      dev.ValueCount       = 2;
+      dev.SendDataOption   = true;
+      dev.TimerOption      = true;
+      dev.I2CNoDeviceCheck = true;
 
-      // Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].PluginStats    = true;
-      Device[deviceCount].OutputDataType = Output_Data_type_t::Default;
+      // dev.GlobalSyncOption   = true;
+      dev.PluginStats    = true;
+      dev.OutputDataType = Output_Data_type_t::Default;
       break;
     }
 
@@ -127,8 +125,6 @@ boolean Plugin_122(uint8_t function, struct EventStruct *event, String& string)
       // The user's selection will be stored in
       // PCONFIG(x) (custom configuration)
 
-      # define P122_RESOLUTION_OPTIONS 4
-
       const __FlashStringHelper *options[] = {
         F("Temp 14 bits / RH 12 bits"),
         F("Temp 13 bits / RH 10 bits"),
@@ -141,7 +137,9 @@ boolean Plugin_122(uint8_t function, struct EventStruct *event, String& string)
         P122_RESOLUTION_12T_08RH,
         P122_RESOLUTION_11T_11RH,
       };
-      addFormSelector(F("Resolution"), P122_RESOLUTION_LABEL, P122_RESOLUTION_OPTIONS, options, optionValues, P122_RESOLUTION);
+      constexpr size_t optionCount = NR_ELEMENTS(optionValues);
+      const FormSelectorOptions selector(optionCount, options, optionValues);
+      selector.addFormSelector(F("Resolution"), P122_RESOLUTION_LABEL, P122_RESOLUTION);
 
 # ifndef LIMIT_BUILD_SIZE
       P122_data_struct *P122_data = static_cast<P122_data_struct *>(getPluginTaskData(event->TaskIndex));
@@ -152,17 +150,18 @@ boolean Plugin_122(uint8_t function, struct EventStruct *event, String& string)
         uint32_t eidb;
         uint8_t  firmware;
         P122_data->getEID(eida, eidb, firmware);
-        String txt = F("CHIP ID:");
-        txt += formatToHex(eida);
-        txt += ',';
-        txt += formatToHex(eidb);
-        txt += F(" firmware=");
-        txt += String(firmware);
-#  ifdef PLUGIN_122_DEBUG
-        txt += F(" userReg= ");
-        txt += formatToHex(P122_data->getUserReg());
-#  endif // ifdef PLUGIN_122_DEBUG
-        addFormNote(txt);
+        addFormNote(strformat(F("CHIP ID:%s,%s firmware=%d"
+                              #  ifdef PLUGIN_122_DEBUG
+                                " userReg= %s"
+                              #  endif // ifdef PLUGIN_122_DEBUG
+                                ),
+                              formatToHex(eida).c_str(),
+                              formatToHex(eidb).c_str(),
+                              firmware
+                              #  ifdef PLUGIN_122_DEBUG
+                              , formatToHex(P122_data->getUserReg()).c_str()
+                              #  endif // ifdef PLUGIN_122_DEBUG
+                              ));
       }
 # endif // ifndef LIMIT_BUILD_SIZE
       success = true;
@@ -194,9 +193,9 @@ boolean Plugin_122(uint8_t function, struct EventStruct *event, String& string)
         P122_data->reset();
         success = true;
       }
-      UserVar[event->BaseVarIndex]     = NAN;
-      UserVar[event->BaseVarIndex + 1] = NAN;
-      UserVar[event->BaseVarIndex + 2] = NAN;
+      UserVar.setFloat(event->TaskIndex, 0, NAN);
+      UserVar.setFloat(event->TaskIndex, 1, NAN);
+      UserVar.setFloat(event->TaskIndex, 2, NAN);
       break;
     }
 
@@ -210,34 +209,28 @@ boolean Plugin_122(uint8_t function, struct EventStruct *event, String& string)
       {
         if (P122_data->inError())
         {
-          UserVar[event->BaseVarIndex]     = NAN;
-          UserVar[event->BaseVarIndex + 1] = NAN;
+          UserVar.setFloat(event->TaskIndex, 0, NAN);
+          UserVar.setFloat(event->TaskIndex, 1, NAN);
           addLog(LOG_LEVEL_ERROR, F("SHT2x: in Error!"));
         }
         else if (P122_data->newValues())
         {
-          UserVar[event->BaseVarIndex]     = P122_data->getTemperature();
-          UserVar[event->BaseVarIndex + 1] = P122_data->getHumidity();
+          UserVar.setFloat(event->TaskIndex, 0, P122_data->getTemperature());
+          UserVar.setFloat(event->TaskIndex, 1, P122_data->getHumidity());
           P122_data->startMeasurements(); // getting ready for another read cycle
         }
       }
 
       if (loglevelActiveFor(LOG_LEVEL_INFO))
       {
-        String log = F("P122: Temperature: ");
-        log += UserVar[event->BaseVarIndex + 0];
-        log += F(" Humidity: ");
-        log += UserVar[event->BaseVarIndex + 1];
-        addLog(LOG_LEVEL_INFO, log);
+        addLog(LOG_LEVEL_INFO,
+               strformat(F("P122: Temperature: %s Humidity: %s"),
+                         formatUserVarNoCheck(event, 0).c_str(),
+                         formatUserVarNoCheck(event, 1).c_str()
+                         ));
       }
       success = true;
       break;
-    }
-
-    case PLUGIN_ONCE_A_SECOND:
-    {
-      // code to be executed once a second. Tasks which do not require fast response can be added here
-      success = true;
     }
 
     case PLUGIN_TEN_PER_SECOND:
@@ -251,9 +244,10 @@ boolean Plugin_122(uint8_t function, struct EventStruct *event, String& string)
         P122_data->update(); // SHT2x FSM evaluation
       }
       success = true;
+      break;
     }
   } // switch
   return success;
 }   // function
 
-#endif  //USES_P122
+#endif  // USES_P122

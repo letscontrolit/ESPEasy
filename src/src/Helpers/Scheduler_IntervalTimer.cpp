@@ -313,11 +313,9 @@ void ESPEasy_Scheduler::process_interval_timer(SchedulerTimerID timerID, unsigne
       break;
 
     case SchedulerIntervalTimer_e::TIMER_C023_DELAY_QUEUE:
-      /*
        #ifdef USES_C023
             process_c023_delay_queue();
        #endif
-       */
       break;
 
     case SchedulerIntervalTimer_e::TIMER_C024_DELAY_QUEUE:

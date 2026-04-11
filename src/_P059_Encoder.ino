@@ -6,6 +6,12 @@
 // #################################### Plugin 059: Rotary Encoder #######################################
 // #######################################################################################################
 
+/** Changelog:
+ * 2025-06-14 tonhuisman: Add support for Custom Value Type per task value
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported for Rotary encoder)
+ * 2025-01-04 tonhuisman: Minor code cleanup
+ */
+
 // ESPEasy Plugin to process the quadrature encoder interface signals (e.g. rotary encoder)
 // written by Jochen Krapf (jk@nerd2nerd.org)
 
@@ -24,7 +30,7 @@
 
 # include <QEIx4.h>
 
-std::map<unsigned int, std::shared_ptr<QEIx4> > P_059_sensordefs;
+std::map<unsigned int, std::unique_ptr<QEIx4> > P_059_sensordefs;
 
 boolean Plugin_059(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -34,18 +40,15 @@ boolean Plugin_059(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_059;
-      Device[deviceCount].Type               = DEVICE_TYPE_TRIPLE;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_SWITCH;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = false;
-      Device[deviceCount].ValueCount         = 1;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].TimerOptional      = true;
-      Device[deviceCount].GlobalSyncOption   = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_059;
+      dev.Type           = DEVICE_TYPE_TRIPLE;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_SWITCH;
+      dev.ValueCount     = 1;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
+      dev.TimerOptional  = true;
+      dev.CustomVTypeVar = true;
       break;
     }
 
@@ -60,6 +63,22 @@ boolean Plugin_059(uint8_t function, struct EventStruct *event, String& string)
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_059));
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER || FEATURE_CUSTOM_TASKVAR_VTYPE
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      #  if FEATURE_CUSTOM_TASKVAR_VTYPE
+
+      for (uint8_t i = 0; i < event->Par5; ++i) {
+        event->ParN[i] = ExtraTaskSettings.getTaskVarCustomVType(i);  // Custom/User selection
+      }
+      #  else // if FEATURE_CUSTOM_TASKVAR_VTYPE
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_NONE); // Not yet supported
+      #  endif // if FEATURE_CUSTOM_TASKVAR_VTYPE
+      success = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER || FEATURE_CUSTOM_TASKVAR_VTYPE
 
     case PLUGIN_GET_DEVICEGPIONAMES:
     {
@@ -77,9 +96,10 @@ boolean Plugin_059(uint8_t function, struct EventStruct *event, String& string)
       }
 
       {
-        const __FlashStringHelper *options[3] = { F("1"), F("2"), F("4") };
-        int optionValues[3]                   = { 1, 2, 4 };
-        addFormSelector(F("Mode"), F("mode"), 3, options, optionValues, PCONFIG(0));
+        const int optionValues[]     = { 1, 2, 4 };
+        constexpr size_t optionCount = NR_ELEMENTS(optionValues);
+        const FormSelectorOptions selector(optionCount, optionValues);
+        selector.addFormSelector(F("Mode"), F("mode"), PCONFIG(0));
         addUnit(F("pulses per cycle"));
       }
 
@@ -107,7 +127,7 @@ boolean Plugin_059(uint8_t function, struct EventStruct *event, String& string)
 
       // create sensor instance and add to std::map
       P_059_sensordefs.erase(event->TaskIndex);
-      P_059_sensordefs[event->TaskIndex] = std::shared_ptr<QEIx4>(new QEIx4);
+      P_059_sensordefs[event->TaskIndex] = std::unique_ptr<QEIx4>(new QEIx4);
 
       P_059_sensordefs[event->TaskIndex]->begin(CONFIG_PIN1, CONFIG_PIN2, CONFIG_PIN3, PCONFIG(0));
       P_059_sensordefs[event->TaskIndex]->setLimit(PCONFIG_LONG(0), PCONFIG_LONG(1));
@@ -117,14 +137,14 @@ boolean Plugin_059(uint8_t function, struct EventStruct *event, String& string)
 
       String log = F("QEI  : GPIO: ");
 
-      for (uint8_t i = 0; i < 3; i++)
+      for (uint8_t i = 0; i < 3; ++i)
       {
-        int pin = PIN(i);
+        const int pin = PIN(i);
 
-        if (pin >= 0)
+        if (validGpio(pin))
         {
           // pinMode(pin, (Settings.TaskDevicePin1PullUp[event->TaskIndex]) ? INPUT_PULLUP : INPUT);
-          constexpr pluginID_t P059_PLUGIN_ID{PLUGIN_ID_059};
+          constexpr pluginID_t P059_PLUGIN_ID{ PLUGIN_ID_059 };
 
           const uint32_t key = createKey(P059_PLUGIN_ID, pin);
 
@@ -158,16 +178,13 @@ boolean Plugin_059(uint8_t function, struct EventStruct *event, String& string)
       {
         if (P_059_sensordefs[event->TaskIndex]->hasChanged())
         {
-          long c = P_059_sensordefs[event->TaskIndex]->read();
-          UserVar[event->BaseVarIndex] = c;
-          event->sensorType            = Sensor_VType::SENSOR_TYPE_SWITCH;
-
+          const long c = P_059_sensordefs[event->TaskIndex]->read();
+          UserVar.setFloat(event->TaskIndex, 0, c);
+#ifndef BUILD_NO_DEBUG
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-            String log = F("QEI  : ");
-            log += c;
-            addLogMove(LOG_LEVEL_INFO, log);
+            addLog(LOG_LEVEL_INFO, concat(F("QEI  : "), c));
           }
-
+#endif
           sendData(event);
         }
       }
@@ -179,7 +196,7 @@ boolean Plugin_059(uint8_t function, struct EventStruct *event, String& string)
     {
       if (P_059_sensordefs.count(event->TaskIndex) != 0)
       {
-        UserVar[event->BaseVarIndex] = P_059_sensordefs[event->TaskIndex]->read();
+        UserVar.setFloat(event->TaskIndex, 0, P_059_sensordefs[event->TaskIndex]->read());
       }
       success = true;
       break;
@@ -189,17 +206,17 @@ boolean Plugin_059(uint8_t function, struct EventStruct *event, String& string)
     {
       if (P_059_sensordefs.count(event->TaskIndex) != 0)
       {
-        String command = parseString(string, 1);
+        const String command = parseString(string, 1);
 
         if (equals(command, F("encwrite")))
         {
           if (event->Par1 >= 0)
           {
+#ifndef BUILD_NO_DEBUG
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-              String log = F("QEI  : ");
-              log += string;
-              addLogMove(LOG_LEVEL_INFO, log);
+              addLog(LOG_LEVEL_INFO, concat(F("QEI  : "), string));
             }
+#endif
             P_059_sensordefs[event->TaskIndex]->write(event->Par1);
             Scheduler.schedule_task_device_timer(event->TaskIndex, millis());
           }

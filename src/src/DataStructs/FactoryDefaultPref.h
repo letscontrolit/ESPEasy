@@ -12,12 +12,13 @@
 #endif // ifdef ESP32
 
 struct ResetFactoryDefaultPreference_struct {
-  ResetFactoryDefaultPreference_struct(uint32_t preference = 0);
+  ResetFactoryDefaultPreference_struct();
+  ResetFactoryDefaultPreference_struct(uint32_t preference);
 
   void set(uint32_t preference);
 
 #ifdef ESP32
-  bool init();
+  bool init(ESPEasy_NVS_Helper& preferences);
   bool from_NVS(ESPEasy_NVS_Helper& preferences);
 
   void to_NVS(ESPEasy_NVS_Helper& preferences) const;
@@ -44,8 +45,9 @@ private:
       uint32_t storeCredentials       : 1;
       uint32_t fetchProvisioningDat   : 1;
       uint32_t keepCustomCdnUrl       : 1;
+      uint32_t fetchDeviceSecurityDat : 1;
 
-      uint32_t unused : 5;
+      uint32_t unused : 4;
     }        bits;
     uint32_t _preference{};
   };
@@ -148,6 +150,17 @@ public:
   void fetchProvisioningDat(bool fetch) {
     bits.fetchProvisioningDat = fetch;
   }
+
+#if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE
+
+  bool fetchDeviceSecurityDat() const {
+    return bits.fetchDeviceSecurityDat;
+  }
+
+  void fetchDeviceSecurityDat(bool fetch) {
+    bits.fetchDeviceSecurityDat = fetch;
+  }
+#endif
 
   bool deleteFirst() const {
     return bits.deleteFirst;

@@ -63,6 +63,10 @@
 .menuselection {
   font-weight: bold;
 }
+summary {
+  font-weight: bold;
+  cursor: pointer;
+}
 img {
     max-width: 100%;
     height: auto;
@@ -100,7 +104,7 @@ h4 {
   color: #FFFFFF;
 }
 td, th {
-    border-bottom: : 1px solid #ddd;
+    border-bottom: 1px solid #ddd;
     padding: 8px;
 }
 tr:nth-child(even){background-color: #F2F2F2;}

@@ -11,7 +11,7 @@
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/_CPlugin_Helper.h"
 
-#include "../../ESPEasy_fdwdecl.h"
+//#include "../../ESPEasy_fdwdecl.h"
 
 
 controllerIndex_t firstEnabledBlynk_ControllerIndex() {
@@ -49,7 +49,7 @@ const __FlashStringHelper * Command_Blynk_Get(struct EventStruct *event, const c
 
       if (Blynk_get(blynkcommand, first_enabled_blynk_controller, &value))
       {
-        UserVar[(VARS_PER_TASK * (event->Par1 - 1)) + event->Par2 - 1] = value;
+        UserVar.setFloat((event->Par1 - 1), event->Par2 - 1, value);
       }
       else {
         return F("Error getting data");
@@ -176,7 +176,7 @@ bool Blynk_get(const String& command, controllerIndex_t controllerIndex, float *
   addLog(LOG_LEVEL_DEBUG, F("HTTP : closing connection (012)"));
   #endif
 
-  client.flush();
+  client.PR_9453_FLUSH_TO_CLEAR();
   client.stop();
 
   // important - backgroundtasks - free mem

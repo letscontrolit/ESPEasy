@@ -23,18 +23,15 @@ boolean Plugin_032(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_032;
-      Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_TEMP_BARO;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = 2;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].PluginStats        = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_032;
+      dev.Type           = DEVICE_TYPE_I2C;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_TEMP_BARO;
+      dev.FormulaOption  = true;
+      dev.ValueCount     = 2;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
+      dev.PluginStats    = true;
       break;
     }
 
@@ -54,10 +51,10 @@ boolean Plugin_032(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      const uint8_t i2cAddressValues[] = { 0x77, 0x76 };
+      const uint8_t i2cAddressValues[] = { 0x76, 0x77 };
 
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
-        addFormSelectorI2C(F("i2c_addr"), 2, i2cAddressValues, PCONFIG(0));
+        addFormSelectorI2C(F("i2c_addr"), 2, i2cAddressValues, PCONFIG(0), 0x77);
       } else {
         success = intArrayContains(2, i2cAddressValues, event->Par1);
       }
@@ -72,6 +69,14 @@ boolean Plugin_032(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
     # endif // if FEATURE_I2C_GET_ADDRESS
+
+    case PLUGIN_SET_DEFAULTS:
+    {
+      PCONFIG(0) = 0x77; // Default address
+
+      success = true;
+      break;
+    }
 
     case PLUGIN_WEBFORM_LOAD:
     {
@@ -91,11 +96,9 @@ boolean Plugin_032(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P032_data_struct(PCONFIG(0)));
-      P032_data_struct *P032_data =
-        static_cast<P032_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-      success = (nullptr != P032_data);
+      success = initPluginTaskData(
+        event->TaskIndex,
+        new (std::nothrow) P032_data_struct(PCONFIG(0)));
       break;
     }
 
@@ -109,25 +112,24 @@ boolean Plugin_032(uint8_t function, struct EventStruct *event, String& string)
           P032_data->read_prom();
           P032_data->readout();
 
-          UserVar[event->BaseVarIndex] = P032_data->ms5611_temperature / 100;
+          UserVar.setFloat(event->TaskIndex, 0, P032_data->ms5611_temperature / 100);
 
           const int elev = PCONFIG(1);
 
           if (elev != 0)
           {
-            UserVar[event->BaseVarIndex + 1] = pressureElevation(P032_data->ms5611_pressure, elev);
+            UserVar.setFloat(event->TaskIndex, 1, pressureElevation(P032_data->ms5611_pressure, elev));
           } else {
-            UserVar[event->BaseVarIndex + 1] = P032_data->ms5611_pressure;
+            UserVar.setFloat(event->TaskIndex, 1, P032_data->ms5611_pressure);
           }
-
+#ifndef BUILD_NO_DEBUG
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-            String log = F("MS5611  : Temperature: ");
-            log += formatUserVarNoCheck(event->TaskIndex, 0);
-            addLogMove(LOG_LEVEL_INFO, log);
-            log  = F("MS5611  : Barometric Pressure: ");
-            log += formatUserVarNoCheck(event->TaskIndex, 1);
-            addLogMove(LOG_LEVEL_INFO, log);
+            addLog(LOG_LEVEL_INFO,
+                   concat(F("MS5611  : Temperature: "), formatUserVarNoCheck(event, 0)));
+            addLog(LOG_LEVEL_INFO,
+                   concat(F("MS5611  : Barometric Pressure: "), formatUserVarNoCheck(event, 1)));
           }
+#endif
           success = true;
         }
       }

@@ -3,7 +3,7 @@
 
 #include "../../ESPEasy_common.h"
 
-struct pluginID_t {
+struct __attribute__((__packed__)) pluginID_t {
   pluginID_t() = default;
 
   pluginID_t(const pluginID_t& other)
@@ -21,6 +21,16 @@ struct pluginID_t {
     if (other <= 255) { res.value = other; }
 
     return res;
+  }
+
+  operator int() const
+  {
+    return value;
+  }
+
+  operator bool() const
+  {
+    return value != 0;
   }
 
   pluginID_t& operator=(const pluginID_t& other)

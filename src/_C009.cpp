@@ -1,9 +1,11 @@
 #include "src/Helpers/_CPlugin_Helper.h"
 #ifdef USES_C009
 
-#include "src/DataTypes/NodeTypeID.h"
-#include "src/Helpers/StringProvider.h"
-#include "src/CustomBuild/ESPEasy_buildinfo.h"
+# include "src/DataTypes/NodeTypeID.h"
+# include "src/Helpers/StringProvider.h"
+# include "src/Helpers/KeyValueWriter_JSON.h"
+
+# include "src/CustomBuild/ESPEasy_buildinfo.h"
 
 // #######################################################################################################
 // ########################### Controller Plugin 009: FHEM HTTP ##########################################
@@ -52,6 +54,9 @@ bool CPlugin_009(CPlugin::Function function, struct EventStruct *event, String& 
       proto.usesExtCreds = true;
       proto.usesID       = false;
       proto.defaultPort  = 8383;
+      # if FEATURE_HTTP_TLS
+      proto.usesTLS = true;
+      # endif // if FEATURE_HTTP_TLS
       break;
     }
 
@@ -80,8 +85,13 @@ bool CPlugin_009(CPlugin::Function function, struct EventStruct *event, String& 
           break;
         }
 
-        std::unique_ptr<C009_queue_element> element(new C009_queue_element(event));
-        success = C009_DelayHandler->addToQueue(std::move(element));
+        constexpr unsigned size = sizeof(C009_queue_element);
+        void *ptr               = special_calloc(1, size);
+
+        if (ptr != nullptr) {
+          UP_C009_queue_element  element(new (ptr) C009_queue_element(event));
+          success = C009_DelayHandler->addToQueue(std::move(element));
+        }
         Scheduler.scheduleNextDelayQueue(SchedulerIntervalTimer_e::TIMER_C009_DELAY_QUEUE, C009_DelayHandler->getNextScheduleTime());
       }
       break;
@@ -106,113 +116,86 @@ bool CPlugin_009(CPlugin::Function function, struct EventStruct *event, String& 
 
 // Uncrustify may change this into multi line, which will result in failed builds
 // *INDENT-OFF*
-bool do_process_c009_delay_queue(int controller_number, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
+bool do_process_c009_delay_queue(cpluginID_t cpluginID, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
   const C009_queue_element& element = static_cast<const C009_queue_element&>(element_base);
 // *INDENT-ON*
-  String jsonString;
+
   // Make an educated guess on the actual length, based on earlier requests.
   static size_t expectedJsonLength = 100;
+  PrintToString jsonPrint;
+  jsonPrint.reserve(expectedJsonLength);
   {
-    #ifdef USE_SECOND_HEAP
-    HeapSelectIram ephemeral;
-    #endif
-    // Reserve on the 2nd heap
-    if (!jsonString.reserve(expectedJsonLength)) {
-      // Not enough free memory
-      return false;
-    }
-  }
-  {
-    jsonString += '{';
+    KeyValueWriter_JSON mainLevelWriter(true, &jsonPrint);
     {
-      jsonString += to_json_object_value(F("module"),  F("ESPEasy"));
-      jsonString += ',';
-      jsonString += to_json_object_value(F("version"), F("1.04"));
-
-      // Create nested object "ESP" inside "data"
-      jsonString += ',';
-      jsonString += F("\"data\":{");
       {
-        jsonString += F("\"ESP\":{");
-        {
-          // Create nested objects in "ESP":
-          jsonString += to_json_object_value(F("name"), Settings.getName());
-          jsonString += ',';
-          jsonString += to_json_object_value(F("unit"), String(Settings.Unit));
-          jsonString += ',';
-          jsonString += to_json_object_value(F("version"), String(Settings.Version));
-          jsonString += ',';
-          jsonString += to_json_object_value(F("build"), String(Settings.Build));
-          jsonString += ',';
-          jsonString += to_json_object_value(F("build_notes"), F(BUILD_NOTES));
-          jsonString += ',';
-          jsonString += to_json_object_value(F("build_git"), getValue(LabelType::GIT_BUILD));
-          jsonString += ',';
-          jsonString += to_json_object_value(F("node_type_id"), String(NODE_TYPE_ID));
-          jsonString += ',';
-          jsonString += to_json_object_value(F("sleep"), String(Settings.deepSleep_wakeTime));
+        mainLevelWriter.write({F("module"),  F("ESPEasy")});
+        mainLevelWriter.write({F("version"), F("1.04")});
 
-          // embed IP, important if there is NAT/PAT
-          // char ipStr[20];
-          // IPAddress ip = NetworkLocalIP();
-          // sprintf_P(ipStr, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]);
-          jsonString += ',';
-          jsonString += to_json_object_value(F("ip"), formatIP(NetworkLocalIP()));
-        }
-        jsonString += '}'; // End "ESP"
-
-        jsonString += ',';
-
-        // Create nested object "SENSOR" json object inside "data"
-        jsonString += F("\"SENSOR\":{");
-        {
-          // char itemNames[valueCount][2];
-          for (uint8_t x = 0; x < element.valueCount; x++)
+        // Create nested object "ESP" inside "data"
+        auto data = mainLevelWriter.createChild(F("data"));
+        if (data) {
           {
-            // Each sensor value get an own object (0..n)
-            // sprintf(itemNames[x],"%d",x);
-            if (x != 0) {
-              jsonString += ',';
-            }
-
-            jsonString += '"';
-            jsonString += x;
-            jsonString += F("\":{");
+            auto esp = data->createChild(F("ESP"));
+            if (esp)
             {
-              jsonString += to_json_object_value(F("deviceName"), getTaskDeviceName(element._taskIndex));
-              jsonString += ',';
-              jsonString += to_json_object_value(F("valueName"), getTaskValueName(element._taskIndex, x));
-              jsonString += ',';
-              jsonString += to_json_object_value(F("type"), String(static_cast<int>(element.sensorType)));
-              jsonString += ',';
-              jsonString += to_json_object_value(F("value"), element.txt[x]);
-            }
-            jsonString += '}'; // End "sensor value N"
-          }
-        }
-        jsonString += '}';     // End "SENSOR"
-      }
-      jsonString += '}';       // End "data"
-    }
-    jsonString += '}';         // End JSON structure
-  }
+              // Create nested objects in "ESP":
+              esp->write({F("name"), Settings.getName()});
+              esp->write({F("unit"), static_cast<int>(Settings.Unit)});
+              esp->write({F("version"), static_cast<int>(Settings.Version)});
+              esp->write({F("build"), static_cast<int>(Settings.Build)});
+              esp->write({F("build_notes"), F(BUILD_NOTES)});
+              esp->write({F("build_git"), getValue(LabelType::GIT_BUILD)});
+              esp->write({F("node_type_id"), static_cast<int>(NODE_TYPE_ID)});
+              esp->write({F("sleep"), static_cast<int>(Settings.deepSleep_wakeTime)});
 
-  if (expectedJsonLength < jsonString.length()) {
-    expectedJsonLength = jsonString.length();
+              // embed IP, important if there is NAT/PAT
+              // char ipStr[20];
+              // IPAddress ip = ESPEasy::net::NetworkLocalIP();
+              // sprintf_P(ipStr, PSTR("%u.%u.%u.%u"), ip[0], ip[1], ip[2], ip[3]});
+              esp->write({F("ip"), formatIP(ESPEasy::net::NetworkLocalIP())});
+            }
+          } // End "ESP"
+          {
+            // Create nested object "SENSOR" json object inside "data"
+            auto sensor = data->createChild(F("SENSOR"));
+            if (sensor)
+            {
+              // char itemNames[valueCount][2];
+              for (uint8_t x = 0; x < element.valueCount; x++)
+              {
+                // Each sensor value get an own object (0..n)
+                // sprintf(itemNames[x],"%d",x);
+                auto val_x = sensor->createChild(String(x));
+                if (val_x) {
+                  val_x->write({F("deviceName"), getTaskDeviceName(element._taskIndex)});
+                  val_x->write({F("valueName"), Cache.getTaskDeviceValueName(element._taskIndex, x)});
+                  val_x->write({F("type"), static_cast<int>(element.sensorType)});
+                  val_x->write({F("value"), element.txt[x]});
+                }
+              } // End "sensor value N"          
+            }
+          } // End "SENSOR"
+        }
+      } // End "data"
+    }
+  } // End mainLevelWriter
+
+  if (expectedJsonLength < jsonPrint.get().length()) {
+    expectedJsonLength = jsonPrint.get().length();
   }
 
   // addLog(LOG_LEVEL_INFO, F("C009 Test JSON:"));
-  // addLog(LOG_LEVEL_INFO, jsonString);
+  // addLog(LOG_LEVEL_INFO, mainLevelWriter);
 
   int httpCode = -1;
   send_via_http(
-    controller_number,
+    cpluginID,
     ControllerSettings,
     element._controller_idx,
     F("/ESPEasy"),
     F("POST"),
     EMPTY_STRING,
-    jsonString,
+    jsonPrint.get(),
     httpCode);
   return (httpCode >= 100) && (httpCode < 300);
 }

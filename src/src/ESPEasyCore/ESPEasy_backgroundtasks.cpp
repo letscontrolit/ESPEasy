@@ -4,16 +4,17 @@
 
 #include "../../ESPEasy-Globals.h"
 #include "../DataStructs/TimingStats.h"
-#include "../ESPEasyCore/ESPEasyNetwork.h"
+#include "../../ESPEasy/net/ESPEasyNetwork.h"
 #include "../ESPEasyCore/Serial.h"
-#include "../Globals/NetworkState.h"
+#include "../../ESPEasy/net/Globals/NetworkState.h"
+#include "../Globals/Logging.h"
 #include "../Globals/Services.h"
 #include "../Globals/Settings.h"
 #if FEATURE_RTTTL && FEATURE_ANYRTTTL_LIB && FEATURE_ANYRTTTL_ASYNC
 #include "../Helpers/Audio.h"
 #endif // if FEATURE_RTTTL && FEATURE_ANYRTTTL_LIB && FEATURE_ANYRTTTL_ASYNC
 #include "../Helpers/ESPEasy_time_calc.h"
-#include "../Helpers/Network.h"
+#include "../Helpers/NetworkStatusLED.h"
 #include "../Helpers/Networking.h"
 
 
@@ -56,10 +57,10 @@ void backgroundtasks()
   lastRunBackgroundTasks = millis();
 
   START_TIMER
-  #if FEATURE_MDNS
-  const bool networkConnected = NetworkConnected();
+  #if FEATURE_MDNS || FEATURE_ESPEASY_P2P
+  const bool networkConnected = ESPEasy::net::NetworkConnected();
   #else
-  NetworkConnected();
+  ESPEasy::net::NetworkConnected();
   #endif
 
   runningBackgroundTasks = true;
@@ -74,15 +75,26 @@ void backgroundtasks()
    */
 
   process_serialWriteBuffer();
+  #if FEATURE_SYSLOG
+  syslogWriter.process();
+  #endif
+  Logging.loop();
 
   if (!UseRTOSMultitasking) {
     serial();
 
-    if (webserverRunning) {
+//    if (webserverRunning) {
+/*
+    {
+      START_TIMER
       web_server.handleClient();
+      STOP_TIMER(WEBSERVER_HANDLE_CLIENT);
     }
+*/
     #if FEATURE_ESPEASY_P2P
-    checkUDP();
+    if (networkConnected) {
+      checkUDP();
+    }
     #endif
   }
 

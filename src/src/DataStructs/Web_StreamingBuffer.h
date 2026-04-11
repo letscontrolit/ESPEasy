@@ -68,7 +68,10 @@ public:
 
   void startStream(const __FlashStringHelper * origin, int httpCode = 200);
 
-  void startStream(const __FlashStringHelper * content_type, const __FlashStringHelper * origin, int httpCode = 200);
+  void startStream(const __FlashStringHelper * content_type, 
+                   const __FlashStringHelper * origin, 
+                   int httpCode = 200, 
+                   bool cacheable=false);
 
   void startJsonStream();
 
@@ -77,7 +80,8 @@ private:
   void startStream(bool allowOriginAll, 
                    const __FlashStringHelper * content_type, 
                    const __FlashStringHelper * origin,
-                   int httpCode = 200);
+                   int httpCode = 200,
+                   bool cacheable=false);
 
   void trackTotalMem();
 
@@ -93,7 +97,8 @@ private:
   void sendHeaderBlocking(bool          allowOriginAll,
                           const String& content_type,
                           const String& origin,
-                          int httpCode);
+                          int httpCode, 
+                          bool cacheable);
 
 };
 

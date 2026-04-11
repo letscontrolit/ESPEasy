@@ -1,17 +1,29 @@
 #include "_Plugin_Helper.h"
 #ifdef USES_P018
 
-#include "src/Helpers/Hardware.h"
+# include "src/Helpers/Hardware.h"
 # include <GPIO_Direct_Access.h>
 
-//#######################################################################################################
-//#################################### Plugin 018: GP2Y10 ###############################################
-//#######################################################################################################
+// #######################################################################################################
+// #################################### Plugin 018: GP2Y10 ###############################################
+// #######################################################################################################
 
-#define PLUGIN_018
-#define PLUGIN_ID_018 18
-#define PLUGIN_NAME_018 "Dust - Sharp GP2Y10"
-#define PLUGIN_VALUENAME1_018 "Dust"
+/** Changelog:
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery
+ * 2025-01-03 tonhuisman: Small code size improvements, source formatted using Uncrustify
+ */
+
+# define PLUGIN_018
+# define PLUGIN_ID_018          18
+# define PLUGIN_NAME_018        "Dust - Sharp GP2Y10"
+# define PLUGIN_VALUENAME1_018  "Dust"
+
+# if FEATURE_MQTT_DISCOVER
+int Plugin_018_QueryVType(uint8_t value_nr) {
+  return static_cast<int>(Sensor_VType::SENSOR_TYPE_DUSTPM2_5_ONLY);
+}
+
+# endif // if FEATURE_MQTT_DISCOVER
 
 boolean Plugin_018_init = false;
 
@@ -22,74 +34,81 @@ boolean Plugin_018(uint8_t function, struct EventStruct *event, String& string)
   switch (function)
   {
     case PLUGIN_DEVICE_ADD:
-      {
-        Device[++deviceCount].Number = PLUGIN_ID_018;
-        Device[deviceCount].Type = DEVICE_TYPE_SINGLE;
-        Device[deviceCount].VType = Sensor_VType::SENSOR_TYPE_SINGLE;
-        Device[deviceCount].Ports = 0;
-        Device[deviceCount].PullUpOption = false;
-        Device[deviceCount].InverseLogicOption = false;
-        Device[deviceCount].FormulaOption = true;
-        Device[deviceCount].ValueCount = 1;
-        Device[deviceCount].SendDataOption = true;
-        Device[deviceCount].TimerOption = true;
-        Device[deviceCount].GlobalSyncOption = true;
-        Device[deviceCount].PluginStats = true;
-        break;
-      }
+    {
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_018;
+      dev.Type           = DEVICE_TYPE_SINGLE;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_SINGLE;
+      dev.FormulaOption  = true;
+      dev.ValueCount     = 1;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
+      dev.PluginStats    = true;
+      dev.setPin1Direction(gpio_direction::gpio_output);
+      break;
+    }
 
     case PLUGIN_GET_DEVICENAME:
-      {
-        string = F(PLUGIN_NAME_018);
-        break;
-      }
+    {
+      string = F(PLUGIN_NAME_018);
+      break;
+    }
 
     case PLUGIN_GET_DEVICEVALUENAMES:
-      {
-        strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_018));
-        break;
-      }
+    {
+      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_018));
+      break;
+    }
 
     case PLUGIN_GET_DEVICEGPIONAMES:
-      {
-        event->String1 = formatGpioName_output(F("LED"));
-        break;
-      }
+    {
+      event->String1 = formatGpioName_output(F("LED"));
+      break;
+    }
+
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      success = getDiscoveryVType(event, Plugin_018_QueryVType, 255, event->Par5);;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
 
     case PLUGIN_INIT:
-      {
-        Plugin_018_init = true;
-        pinMode(CONFIG_PIN1, OUTPUT);
-        DIRECT_pinWrite(CONFIG_PIN1, HIGH);
-        success = true;
-        break;
-      }
+    {
+      Plugin_018_init = true;
+      pinMode(CONFIG_PIN1, OUTPUT);
+      DIRECT_pinWrite(CONFIG_PIN1, HIGH);
+      success = true;
+      break;
+    }
 
 
     case PLUGIN_READ:
-      {
-        ISR_noInterrupts();
-        int value = 0;
+    {
+      ISR_noInterrupts();
+      int value = 0;
 
-        for (uint8_t x = 0; x < 25; x++) {
-          DIRECT_pinWrite(CONFIG_PIN1, LOW);
-          delayMicroseconds(280);
-          value = value + espeasy_analogRead(A0);
-          delayMicroseconds(40);
-          DIRECT_pinWrite(CONFIG_PIN1, HIGH);
-          delayMicroseconds(9680);
-        }
-        ISR_interrupts();
-        UserVar[event->BaseVarIndex] = value;
-
-        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          addLogMove(LOG_LEVEL_INFO, concat(F("GPY  : Dust value: "), value));
-        }
-
-        success = true;
-        break;
+      for (uint8_t x = 0; x < 25; ++x) {
+        DIRECT_pinWrite(CONFIG_PIN1, LOW);
+        delayMicroseconds(280);
+        value = value + espeasy_analogRead(A0);
+        delayMicroseconds(40);
+        DIRECT_pinWrite(CONFIG_PIN1, HIGH);
+        delayMicroseconds(9680);
       }
+      ISR_interrupts();
+      UserVar.setFloat(event->TaskIndex, 0, value);
+
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        addLogMove(LOG_LEVEL_INFO, concat(F("GPY  : Dust value: "), value));
+      }
+
+      success = true;
+      break;
+    }
   }
   return success;
 }
+
 #endif // USES_P018

@@ -27,6 +27,9 @@ bool CPlugin_001(CPlugin::Function function, struct EventStruct *event, String& 
       proto.usesExtCreds = true;
       proto.defaultPort  = 8080;
       proto.usesID       = true;
+      # if FEATURE_HTTP_TLS
+      proto.usesTLS = true;
+      # endif // if FEATURE_HTTP_TLS
       break;
     }
 
@@ -50,9 +53,10 @@ bool CPlugin_001(CPlugin::Function function, struct EventStruct *event, String& 
 
     case CPlugin::Function::CPLUGIN_PROTOCOL_SEND:
     {
-      if (C001_DelayHandler == nullptr || !validTaskIndex(event->TaskIndex)) {
+      if ((C001_DelayHandler == nullptr) || !validTaskIndex(event->TaskIndex)) {
         break;
       }
+
       if (C001_DelayHandler->queueFull(event->ControllerIndex)) {
         break;
       }
@@ -64,11 +68,11 @@ bool CPlugin_001(CPlugin::Function function, struct EventStruct *event, String& 
         String url;
         const size_t expectedSize = sensorType == Sensor_VType::SENSOR_TYPE_STRING ? 64 + event->String2.length() : 128;
 
-        if (url.reserve(expectedSize)) {
+        if (reserve_special(url, expectedSize)) {
           url = F("/json.htm?type=command&param=");
 
-          if (sensorType == Sensor_VType::SENSOR_TYPE_SWITCH ||
-              sensorType == Sensor_VType::SENSOR_TYPE_DIMMER) 
+          if ((sensorType == Sensor_VType::SENSOR_TYPE_SWITCH) ||
+              (sensorType == Sensor_VType::SENSOR_TYPE_DIMMER))
           {
             url += F("switchlight&idx=");
             url += event->idx;
@@ -100,9 +104,14 @@ bool CPlugin_001(CPlugin::Function function, struct EventStruct *event, String& 
           url += mapVccToDomoticz();
             # endif // if FEATURE_ADC_VCC
 
-          std::unique_ptr<C001_queue_element> element(new C001_queue_element(event->ControllerIndex, event->TaskIndex, std::move(url)));
+          constexpr unsigned size = sizeof(C001_queue_element);
+          void *ptr               = special_calloc(1, size);
 
-          success = C001_DelayHandler->addToQueue(std::move(element));
+          if (ptr != nullptr) {
+            UP_C001_queue_element element(new (ptr) C001_queue_element(event->ControllerIndex, event->TaskIndex, std::move(url)));
+
+            success = C001_DelayHandler->addToQueue(std::move(element));
+          }
           Scheduler.scheduleNextDelayQueue(SchedulerIntervalTimer_e::TIMER_C001_DELAY_QUEUE,
                                            C001_DelayHandler->getNextScheduleTime());
         }
@@ -129,28 +138,28 @@ bool CPlugin_001(CPlugin::Function function, struct EventStruct *event, String& 
 
 // Uncrustify may change this into multi line, which will result in failed builds
 // *INDENT-OFF*
-bool do_process_c001_delay_queue(int controller_number, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
+bool do_process_c001_delay_queue(cpluginID_t cpluginID, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
   const C001_queue_element& element = static_cast<const C001_queue_element&>(element_base);
 
 // *INDENT-ON*
   # ifndef BUILD_NO_DEBUG
 
-  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    addLog(LOG_LEVEL_DEBUG, element.txt);
-  }
+if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+  addLog(LOG_LEVEL_DEBUG, element.txt);
+}
   # endif // ifndef BUILD_NO_DEBUG
 
-  int httpCode = -1;
-  send_via_http(
-    controller_number,
-    ControllerSettings,
-    element._controller_idx,
-    element.txt,
-    F("GET"),
-    EMPTY_STRING,
-    EMPTY_STRING,
-    httpCode);
-  return (httpCode >= 100) && (httpCode < 300);
+int httpCode = -1;
+send_via_http(
+  cpluginID,
+  ControllerSettings,
+  element._controller_idx,
+  element.txt,
+  F("GET"),
+  EMPTY_STRING,
+  EMPTY_STRING,
+  httpCode);
+return (httpCode >= 100) && (httpCode < 300);
 }
 
 #endif // ifdef USES_C001

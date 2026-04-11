@@ -95,9 +95,9 @@ constexpr size_t UserVar_nrelements = VARS_PER_TASK * TASKS_MAX;
 
 // Since the global UserVar and RTC objects are defined "extern", they cannot be located in the RTC memory.
 // Thus we have to keep a copy here.
-RTC_NOINIT_ATTR RTCStruct RTC_tmp;
-RTC_NOINIT_ATTR uint32_t UserVar_RTC[UserVar_nrelements];
-RTC_NOINIT_ATTR uint32_t UserVar_checksum;
+ESPEasy_RTC_ATTR RTCStruct RTC_tmp;
+ESPEasy_RTC_ATTR uint32_t UserVar_RTC[UserVar_nrelements];
+ESPEasy_RTC_ATTR uint32_t UserVar_checksum;
 #endif
 
 
@@ -164,10 +164,11 @@ bool saveUserVarToRTC()
   // ESP32   Uses a temp structure which is mapped to the RTC address range.
   #if defined(ESP32)
   for (taskIndex_t task = 0; task < TASKS_MAX; ++task) {
-    const TaskValues_Data_t* taskValues = UserVar.getTaskValues_Data(task);
+    const TaskValues_Data_t* taskValues = UserVar.getRawTaskValues_Data(task);
     if (taskValues != nullptr) {
       for (uint8_t varNr = 0; varNr < VARS_PER_TASK; ++varNr) {
         const size_t index = (task * VARS_PER_TASK) + varNr;
+        constexpr bool raw = true;
         UserVar_RTC[index] = taskValues->getUint32(varNr);
       }
     }
@@ -199,7 +200,9 @@ bool readUserVarFromRTC()
     for (size_t i = 0; i < UserVar_nrelements; ++i) {
       const taskIndex_t taskIndex = i / VARS_PER_TASK;
       const uint8_t varNr = i % VARS_PER_TASK;
-      UserVar.setUint32(taskIndex, varNr, UserVar_RTC[i]);
+      // Store in raw form, so we don't apply formula as we don't really know what type is required.
+      TaskValues_Data_t* taskValues = UserVar.getRawTaskValues_Data(taskIndex);
+      taskValues->setUint32(varNr, UserVar_RTC[i]);
     }
     return true;
   }

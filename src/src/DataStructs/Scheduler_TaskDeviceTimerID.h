@@ -14,7 +14,7 @@ struct TaskDeviceTimerID : SchedulerTimerID {
 
   taskIndex_t getTaskIndex() const
   {
-    return static_cast<taskIndex_t>(id);
+    return static_cast<taskIndex_t>(getId());
   }
 
 #ifndef BUILD_NO_DEBUG

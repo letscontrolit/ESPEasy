@@ -7,11 +7,17 @@
 // ########################### Controller Plugin 002: Domoticz MQTT ######################################
 // #######################################################################################################
 
+/** Changelog:
+ * 2025-08-23 tonhuisman: Add 10/sec call to poll background connection process while not connected
+ * 2024-03-24 tonhuisman: Add support for 'Invert On/Off value' in P029 - Domoticz MQTT Helper
+ * 2024-03-24 tonhuisman: Start Changelog (newest on top)
+ */
+
 # define CPLUGIN_002
 # define CPLUGIN_ID_002         2
 # define CPLUGIN_NAME_002       "Domoticz MQTT"
 
-# include "src/Commands/InternalCommands.h"
+# include "src/Commands/ExecuteCommand.h"
 # include "src/ESPEasyCore/ESPEasyGPIO.h"
 # include "src/ESPEasyCore/ESPEasyRules.h"
 # include "src/Globals/Settings.h"
@@ -37,6 +43,9 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
       proto.usesExtCreds = true;
       proto.defaultPort  = 1883;
       proto.usesID       = true;
+      #if FEATURE_MQTT_TLS 
+      proto.usesTLS = true;
+      # endif // if FEATURE_MQTT_TLS
       break;
     }
 
@@ -85,15 +94,16 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
             constexpr pluginID_t PLUGIN_ID_DOMOTICZ_HELPER(29);
             # if defined(USES_P088)
             constexpr pluginID_t PLUGIN_ID_HEATPUMP_IR(88);
-            # endif
+            # endif // if defined(USES_P088)
+
             if (Settings.TaskDeviceEnabled[x] &&
                 (Settings.TaskDeviceSendData[ControllerID][x]
-                 || (Settings.getPluginID_for_task(x) == PLUGIN_ID_DOMOTICZ_HELPER)         // Domoticz helper doesn't have controller checkboxes...
+                 || (Settings.getPluginID_for_task(x) == PLUGIN_ID_DOMOTICZ_HELPER) // Domoticz helper doesn't have controller checkboxes...
                  # if defined(USES_P088)
-                 || (Settings.getPluginID_for_task(x) == PLUGIN_ID_HEATPUMP_IR)         // Heatpump IR doesn't have controller checkboxes...
+                 || (Settings.getPluginID_for_task(x) == PLUGIN_ID_HEATPUMP_IR)     // Heatpump IR doesn't have controller checkboxes...
                  # endif // if defined(USES_P088)
                 ) &&
-                (Settings.TaskDeviceID[ControllerID][x] == idx)) // get idx for our controller index
+                (Settings.TaskDeviceID[ControllerID][x] == idx))                    // get idx for our controller index
             {
               String action;
               bool   mustSendEvent = false;
@@ -101,26 +111,21 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
               switch (Settings.getPluginID_for_task(x).value) {
                 case 1: // temp solution, if input switch, update state
                 {
-                  action  = F("inputSwitchState,");
-                  action += x;
-                  action += ',';
-                  action += nvalue;
+                  action = strformat(F("gpio,%d,%d"), Settings.TaskDevicePin1[x], static_cast<int>(nvalue));
                   break;
                 }
                 case 29: // temp solution, if plugin 029, set gpio
                 {
-                  int baseVar = x * VARS_PER_TASK;
-
                   if (switchtype.equalsIgnoreCase(F("dimmer")))
                   {
                     mustSendEvent = true;
-                    int pwmValue = UserVar[baseVar];
+                    int32_t pwmValue = UserVar.getFloat(x, 0);
 
                     switch (static_cast<int>(nvalue))
                     {
                       case 0: // Off
-                        pwmValue         = 0;
-                        UserVar[baseVar] = pwmValue;
+                        pwmValue = 0;
+                        UserVar.setFloat(x, 0, pwmValue);
                         break;
                       case 1: // On
                       case 2: // Update dimmer value
@@ -129,49 +134,51 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
                         if (validIntFromString(svalue1, pwmValue)) {
                           pwmValue *= 10;
                         }
-                        UserVar[baseVar] = pwmValue;
+                        UserVar.setFloat(x, 0, pwmValue);
                         break;
                     }
 
                     if (checkValidPortRange(PLUGIN_GPIO, Settings.TaskDevicePin1[x])) {
-                      action  = F("pwm,");
-                      action += Settings.TaskDevicePin1[x];
-                      action += ',';
-                      action += pwmValue;
+                      action = strformat(F("pwm,%d,%d"), Settings.TaskDevicePin1[x], pwmValue);
                     }
                   } else {
-                    mustSendEvent    = true;
-                    UserVar[baseVar] = nvalue;
+                    mustSendEvent = true;
+                    int ivalue = static_cast<int>(nvalue);
+
+                    if (1 == Settings.TaskDevicePluginConfig[x][0]) { // PCONFIG(0) = Invert On/Off value
+                      ivalue = (1 == ivalue ? 0 : 1);
+                    }
+                    UserVar.setFloat(x, 0, ivalue);
 
                     if (checkValidPortRange(PLUGIN_GPIO, Settings.TaskDevicePin1[x])) {
-                      action  = F("gpio,");
-                      action += Settings.TaskDevicePin1[x];
-                      action += ',';
-                      action += static_cast<int>(nvalue);
+                      action = strformat(F("gpio,%d,%d"), Settings.TaskDevicePin1[x], ivalue);
                     }
                   }
                   break;
                 }
-# if defined(USES_P088)  // || defined(USES_P115)
-                case 88: // Send heatpump IR (P088) if IDX matches
-                  //                case 115:            // Send heatpump IR (P115) if IDX matches
+                # if defined(USES_P088)
+                case 88:                                      // Send heatpump IR (P088) if IDX matches
                 {
-                  action  = F("heatpumpir,");
-                  action += svalue1; // svalue1 is like 'gree,1,1,0,22,0,0'
+                  action = concat(F("heatpumpir,"), svalue1); // svalue1 is like 'gree,1,1,0,22,0,0'
                   break;
                 }
-# endif // USES_P088 || USES_P115
+                # endif // if defined(USES_P088)
                 default:
                   break;
               }
 
-              const bool validCommand = action.length() > 0;
-
-              if (validCommand) {
+              if (action.length() != 0) {
                 mustSendEvent = true;
 
                 // Try plugin and internal
-                ExecuteCommand(x, EventValueSource::Enum::VALUE_SOURCE_MQTT, action.c_str(), true, true, false);
+                ExecuteCommandArgs args(
+                  x,
+                  EventValueSource::Enum::VALUE_SOURCE_MQTT,
+                  action.c_str(),
+                  true,
+                  true,
+                  false);
+                ExecuteCommand(std::move(args), true);
               }
 
               if (mustSendEvent) {
@@ -198,19 +205,25 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
       if (event->idx != 0)
       {
         String json = serializeDomoticzJson(event);
-# ifndef BUILD_NO_DEBUG
+        # ifndef BUILD_NO_DEBUG
 
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
           addLogMove(LOG_LEVEL_DEBUG, concat(F("MQTT : "), json));
         }
-# endif // ifndef BUILD_NO_DEBUG
+        # endif // ifndef BUILD_NO_DEBUG
 
         String pubname = CPlugin_002_pubname;
         parseControllerVariables(pubname, event, false);
 
+        const bool taskRetained = Settings.SendRetainedTaskValues(event->TaskIndex, event->ControllerIndex);
+
         // Publish using move operator, thus pubname and json are empty after this call
-        success = MQTTpublish(event->ControllerIndex, event->TaskIndex, std::move(pubname), std::move(json), CPlugin_002_mqtt_retainFlag);
-      } // if ixd !=0
+        success = MQTTpublish(event->ControllerIndex,
+                              event->TaskIndex,
+                              std::move(pubname),
+                              std::move(json),
+                              CPlugin_002_mqtt_retainFlag || taskRetained);
+      } // if idx !=0
       else
       {
         addLog(LOG_LEVEL_ERROR, F("MQTT : IDX cannot be zero!"));
@@ -224,6 +237,14 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
       delay(0);
       break;
     }
+
+    # if FEATURE_MQTT_CONNECT_BACKGROUND
+    case CPlugin::Function::CPLUGIN_TEN_PER_SECOND:
+    {
+      MQTTConnectInBackground(CONTROLLER_MAX, true); // Report state
+      break;
+    }
+    # endif // if FEATURE_MQTT_CONNECT_BACKGROUND
 
     default:
       break;

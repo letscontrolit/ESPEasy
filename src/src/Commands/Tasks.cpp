@@ -1,12 +1,9 @@
 #include "../Commands/Tasks.h"
 
 
-#include "../../ESPEasy_common.h"
 #include "../../_Plugin_Helper.h"
 
 #include "../Commands/Common.h"
-
-#include "../DataStructs/TimingStats.h"
 
 #include "../ESPEasyCore/Controller.h"
 #include "../ESPEasyCore/Serial.h"
@@ -16,6 +13,9 @@
 #include "../Globals/RuntimeData.h"
 #include "../Globals/Settings.h"
 
+#if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+#include "../Helpers/ESPEasy_UnitOfMeasure.h"
+#endif
 #include "../Helpers/Misc.h"
 #include "../Helpers/Numerical.h"
 #include "../Helpers/StringConverter.h"
@@ -128,17 +128,48 @@ const __FlashStringHelper * taskValueSet(struct EventStruct *event, const char *
   EventStruct tmpEvent(taskIndex);
   if (GetArgv(Line, TmpStr1, 4)) {
     const Sensor_VType sensorType = tmpEvent.getSensorType();
+#if FEATURE_EXTENDED_TASK_VALUE_TYPES
+    bool done = false;
+    if (isUInt64OutputDataType(sensorType))
+    {
+      // Don't try to do calculations as storing as double will loose accuracy
+      uint64_t val{};
+      if (validUInt64FromString(TmpStr1, val)) {
+        done = true;
+        UserVar.setUint64(taskIndex, varNr, val);
+      }
+    } else if (isInt64OutputDataType(sensorType))
+    {
+      // Don't try to do calculations as storing as double will loose accuracy
+      int64_t val{};
+      if (validInt64FromString(TmpStr1, val)) {
+        done = true;
+        UserVar.setInt64(taskIndex, varNr, val);
+      }
+    } 
+    if (!done) {
+#endif
+      // FIXME TD-er: Must check if the value has to be computed and not convert to double when sensor type is 64 bit int.
 
-    // FIXME TD-er: Must check if the value has to be computed and not convert to double when sensor type is 64 bit int.
+      // Perform calculation with float result.
+      ESPEASY_RULES_FLOAT_TYPE result{};
 
-    // Perform calculation with float result.
-    ESPEASY_RULES_FLOAT_TYPE result{};
+      if (isError(Calculate(TmpStr1, result))) {
+        success = false;
+        return F("CALCULATION_ERROR");
+      }
+      #ifndef BUILD_NO_DEBUG
+      addLog(LOG_LEVEL_INFO, strformat(
+        F("taskValueSet: %s  taskindex: %d varNr: %d result: %f type: %d"),
+        Line,
+        taskIndex,
+        varNr, result, sensorType));
+      #endif
 
-    if (isError(Calculate(TmpStr1, result))) {
-      success = false;
-      return F("CALCULATION_ERROR");
+      UserVar.set(taskIndex, varNr, result, sensorType);
+#if FEATURE_EXTENDED_TASK_VALUE_TYPES
     }
-    UserVar.set(taskIndex, varNr, result, sensorType);
+#endif
   } else  {
     // TODO: Get Task description and var name
     serialPrintln(formatUserVarNoCheck(&tmpEvent, varNr));
@@ -230,6 +261,111 @@ const __FlashStringHelper * Command_Task_ValueSet(struct EventStruct *event, con
   return taskValueSet(event, Line, taskIndex, success);
 }
 
+#if FEATURE_STRING_VARIABLES
+const __FlashStringHelper * Command_Task_ValueSetDerived(struct EventStruct *event, const char *Line)
+{
+  return taskValueSetString(event, Line, F(TASK_VALUE_DERIVED_PREFIX_TEMPLATE), F(TASK_VALUE_UOM_PREFIX_TEMPLATE), F(TASK_VALUE_VTYPE_PREFIX_TEMPLATE));
+}
+
+const __FlashStringHelper * Command_Task_ValueSetPresentation(struct EventStruct *event, const char *Line)
+{
+  return taskValueSetString(event, Line, F(TASK_VALUE_PRESENTATION_PREFIX_TEMPLATE));
+}
+
+const __FlashStringHelper * taskValueSetString(struct EventStruct *event, const char *Line, const __FlashStringHelper * storageTemplate, const __FlashStringHelper * uomTemplate, const __FlashStringHelper * vTypeTemplate)
+{
+  String taskName;
+  taskIndex_t tmpTaskIndex = INVALID_TASK_INDEX;
+  if ((event->Par1 <= 0 || event->Par1 >= INVALID_TASK_INDEX) && GetArgv(Line, taskName, 2)) {
+    tmpTaskIndex = findTaskIndexByName(taskName, true);
+    if (tmpTaskIndex != INVALID_TASK_INDEX) {
+      event->Par1 = tmpTaskIndex + 1;
+    }
+  }
+  String valueName;
+  const bool hasValueName = GetArgv(Line, valueName, 3);
+  if ((event->Par2 <= 0 || event->Par2 >= VARS_PER_TASK) && event->Par1 - 1 != INVALID_TASK_INDEX && hasValueName)
+  {
+    uint8_t tmpVarNr = findDeviceValueIndexByName(valueName, event->Par1 - 1);
+    if (tmpVarNr != VARS_PER_TASK) {
+      event->Par2 = tmpVarNr + 1;
+    }
+  }
+
+  if (event->Par1 > 0 && validTaskIndex(event->Par1 - 1)) {
+    taskName = getTaskDeviceName(event->Par1 - 1); // Taskname must be valid
+  }
+
+  if (!hasValueName || (event->Par1 > 0 && validTaskIndex(event->Par1 - 1) && event->Par2 > 0 && validTaskVarIndex(event->Par2 - 1))) {
+    valueName = getTaskValueName(static_cast<taskIndex_t>(event->Par1 - 1), event->Par2 - 1); // Convert numeric var index into name
+  }
+  // addLog(LOG_LEVEL_INFO, strformat(F("TaskValueSetStorage: task: %s (%d), value: %s (%d), Line: %s"), taskName.c_str(), event->Par1, valueName.c_str(), event->Par2, Line)); // FIXME
+
+  String argument;
+  if (!taskName.isEmpty() && !valueName.isEmpty() && GetArgv(Line, argument, 4)) {
+    taskName.toLowerCase();
+    String orgValueName(valueName);
+    valueName.toLowerCase();
+    String key = strformat(storageTemplate, taskName.c_str(), valueName.c_str());
+    const String key2 = strformat(F(TASK_VALUE_NAME_PREFIX_TEMPLATE), taskName.c_str(), valueName.c_str());
+    setCustomStringVar(key, argument);
+    if (getCustomStringVar(key2).isEmpty() || argument.isEmpty()) {
+      setCustomStringVar(key2, argument.isEmpty() ? EMPTY_STRING : orgValueName);
+    }
+    if (uomTemplate != nullptr) { // We have a Unit of Measure template
+      if (GetArgv(Line, argument, 5)) { // check for extra argument holding UoM
+        key = strformat(uomTemplate, taskName.c_str(), valueName.c_str());
+        if (!argument.isEmpty()) {
+          #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+
+          uint8_t i = 1; // Index 0 is empty/None
+          String uom = toUnitOfMeasureName(i);
+          while (i < 255 && !uom.isEmpty()) {
+            if (argument.equalsIgnoreCase(uom)) {
+              setCustomStringVar(key, uom);
+              argument.clear();
+              break;
+            }
+            ++i;
+            uom = toUnitOfMeasureName(i);
+          }
+          if (!argument.isEmpty()) 
+          #endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+          {
+            setCustomStringVar(key, argument);
+          }
+        } else {
+          clearCustomStringVar(key);
+        }
+      }
+    }
+    if (vTypeTemplate != nullptr) { // We have a ValueType template
+      if (GetArgv(Line, argument, 6)) { // check for extra argument holding VType
+        key = strformat(vTypeTemplate, taskName.c_str(), valueName.c_str());
+        if (!argument.isEmpty()) {
+          constexpr uint8_t maxVType = static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_NOT_SET);
+
+          for (uint8_t i = 0; i < maxVType; ++i) {
+            const Sensor_VType vt = static_cast<Sensor_VType>(i);
+
+            if ((getValueCountFromSensorType(vt, false) == 1) &&
+                argument.equalsIgnoreCase(getSensorTypeLabel(vt))) {
+              setCustomStringVar(key, getSensorTypeLabel(vt)); // Set 'official' VType label
+              break;
+            }
+          }
+        } else {
+          clearCustomStringVar(key);
+        }
+      }
+    }
+    // addLog(LOG_LEVEL_INFO, strformat(F("TaskValueSetStorage: key: %s, argument: %s"), key.c_str(), argument.c_str())); // FIXME
+    return return_command_success_flashstr();
+  }
+  return return_command_failed_flashstr(); // taskValueSet(event, Line, taskIndex, success);
+}
+#endif
+
 const __FlashStringHelper * Command_Task_ValueToggle(struct EventStruct *event, const char *Line)
 {
   taskIndex_t  taskIndex;
@@ -258,11 +394,9 @@ const __FlashStringHelper * Command_Task_ValueSetAndRun(struct EventStruct *even
   const __FlashStringHelper * returnvalue = taskValueSet(event, Line, taskIndex, success);
   if (success)
   {
-    START_TIMER;
     struct EventStruct TempEvent(taskIndex);
     TempEvent.Source = event->Source;
     SensorSendTask(&TempEvent);
-    STOP_TIMER(SENSOR_SEND_TASK);
 
     return return_command_success_flashstr();
   }
@@ -280,7 +414,7 @@ const __FlashStringHelper * Command_ScheduleTask_Run(struct EventStruct *event, 
     return F("TASK_NOT_ENABLED");
   }
 
-  unsigned int msecFromNow = 0;
+  uint32_t msecFromNow = 0;
   String par3;
   if (GetArgv(Line, par3, 3)) {
     if (validUIntFromString(par3, msecFromNow)) {
@@ -301,17 +435,15 @@ const __FlashStringHelper * Command_Task_Run(struct EventStruct *event, const ch
   if (!Settings.TaskDeviceEnabled[taskIndex]) {
     return F("TASK_NOT_ENABLED");
   }
-  unsigned int unixTime = 0;
+  uint32_t unixTime = 0;
   String par3;
   if (GetArgv(Line, par3, 3)) {
     validUIntFromString(par3, unixTime);
   }
 
-  START_TIMER;
   struct EventStruct TempEvent(taskIndex);
   TempEvent.Source = event->Source;
   SensorSendTask(&TempEvent, unixTime);
-  STOP_TIMER(SENSOR_SEND_TASK);
 
   return return_command_success_flashstr();
 }

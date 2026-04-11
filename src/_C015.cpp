@@ -30,32 +30,35 @@
 # define CPLUGIN_015_RECONNECT_INTERVAL 60000
 
 # ifdef CPLUGIN_015_SSL
-  #ifdef ESP8266
-  #  include <BlynkSimpleEsp8266_SSL.h>
-  #endif
-  #ifdef ESP32
-  #  include <BlynkSimpleEsp32_SSL.h>
-  #endif
+  #  ifdef ESP8266
+  #   include <BlynkSimpleEsp8266_SSL.h>
+  #  endif
+  #  ifdef ESP32
+  #   include <BlynkSimpleEsp32_SSL.h>
+  #  endif
   #  define CPLUGIN_NAME_015       "Blynk SSL"
 
 // Current official blynk server thumbprint
   #  define CPLUGIN_015_DEFAULT_THUMBPRINT "FD C0 7D 8D 47 97 F7 E3 07 05 D3 4E E3 BB 8E 3D C0 EA BE 1C"
   #  define C015_LOG_PREFIX "BL (ssl): "
 # else // ifdef CPLUGIN_015_SSL
- #ifdef ESP8266
- #  include <BlynkSimpleEsp8266.h>
- #endif
- #ifdef ESP32
- #  include <BlynkSimpleEsp32.h>
- #endif
+ #  ifdef ESP8266
+ #   include <BlynkSimpleEsp8266.h>
+ #  endif
+ #  ifdef ESP32
+ #   include <BlynkSimpleEsp32.h>
+ #  endif
  #  define CPLUGIN_NAME_015       "Blynk"
  #  define C015_LOG_PREFIX "BL: "
 # endif // ifdef CPLUGIN_015_SSL
 
 
 // Forward declarations:
-boolean Blynk_send_c015(const String& value, int vPin, unsigned int clientTimeout);
-boolean Blynk_keep_connection_c015(int controllerIndex, ControllerSettingsStruct& ControllerSettings);
+boolean Blynk_send_c015(const String& value,
+                        int           vPin,
+                        unsigned int  clientTimeout);
+boolean Blynk_keep_connection_c015(int                       controllerIndex,
+                                   ControllerSettingsStruct& ControllerSettings);
 
 
 static unsigned long _C015_LastConnectAttempt[CONTROLLER_MAX] = { 0, 0, 0 };
@@ -119,7 +122,7 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
     # ifdef CPLUGIN_015_SSL
     case CPlugin::Function::CPLUGIN_WEBFORM_LOAD:
     {
-      char thumbprint[60] = {0};
+      char thumbprint[60] = { 0 };
       LoadCustomControllerSettings(event->ControllerIndex, reinterpret_cast<uint8_t *>(&thumbprint), sizeof(thumbprint));
 
       if (strlen(thumbprint) != 59) {
@@ -141,6 +144,7 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
 
           if (validProtocolIndex(ProtocolIndex)) {
             const cpluginID_t number = getCPluginID_from_ProtocolIndex(ProtocolIndex);
+
             if ((i != event->ControllerIndex) && (number == 15) && Settings.ControllerEnabled[i]) {
               success = false;
 
@@ -156,8 +160,8 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
         _C015_LastConnectAttempt[event->ControllerIndex] = 0;
 
           # ifdef CPLUGIN_015_SSL
-        char   thumbprint[60] = {0};
-        String error = F("Specify server thumbprint with exactly 59 symbols string like " CPLUGIN_015_DEFAULT_THUMBPRINT);
+        char   thumbprint[60] = { 0 };
+        String error          = F("Specify server thumbprint with exactly 59 symbols string like " CPLUGIN_015_DEFAULT_THUMBPRINT);
 
         if (!safe_strncpy(thumbprint, webArg("c015_thumbprint"), 60) || (strlen(thumbprint) != 59)) {
           addHtmlError(error);
@@ -173,6 +177,7 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
       if (C015_DelayHandler == nullptr) {
         break;
       }
+
       if (C015_DelayHandler->queueFull(event->ControllerIndex)) {
         break;
       }
@@ -184,14 +189,21 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
       // Collect the values at the same run, to make sure all are from the same sample
       uint8_t valueCount = getValueCountForTask(event->TaskIndex);
 
-      std::unique_ptr<C015_queue_element> element(new C015_queue_element(event, valueCount));
-      success = C015_DelayHandler->addToQueue(std::move(element));
+      constexpr unsigned size = sizeof(C015_queue_element);
+      void *ptr               = special_calloc(1, size);
+
+      if (ptr != nullptr) {
+        UP_C015_queue_element  element(new (ptr) C015_queue_element(event, valueCount));
+        success = C015_DelayHandler->addToQueue(std::move(element));
+      }
 
       if (success) {
         // Element was added.
         // Now we try to append to the existing element
         // and thus preventing the need to create a long string only to copy it to a queue element.
         C015_queue_element& element = static_cast<C015_queue_element&>(*(C015_DelayHandler->sendQueue.back()));
+
+        const String taskDeviceName = getTaskDeviceName(event->TaskIndex);
 
         for (uint8_t x = 0; x < valueCount; x++)
         {
@@ -200,40 +212,41 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
 
           if (!isvalid) {
             // send empty string to Blynk in case of error
-            formattedValue = String();
+            free_string(formattedValue);
           }
 
-          const String valueName = getTaskValueName(event->TaskIndex, x);
-          String valueFullName   = getTaskDeviceName(event->TaskIndex);
-          valueFullName += F(".");
-          valueFullName += valueName;
-          String vPinNumberStr = valueName.substring(1, 4);
-          int    vPinNumber    = vPinNumberStr.toInt();
+          const String valueName     = Cache.getTaskDeviceValueName(event->TaskIndex, x);
+          const String valueFullName = strformat(
+            F("%s.%s"),
+            taskDeviceName.c_str(),
+            valueName.c_str());
+          const String vPinNumberStr = valueName.substring(1, 4);
+          int vPinNumber             = vPinNumberStr.toInt();
 
           if ((vPinNumber < 0) || (vPinNumber > 255)) {
             vPinNumber = -1;
           }
+
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-            String log           = F(C015_LOG_PREFIX);
+            String log = F(C015_LOG_PREFIX);
             log += Blynk.connected() ? F("(online): ") : F("(offline): ");
 
             if ((vPinNumber > 0) && (vPinNumber < 256)) {
-              log += F("send ");
-              log += valueFullName;
-              log += F(" = ");
-              log += formattedValue;
-              log += F(" to blynk pin v");
-              log += vPinNumber;
+              log += strformat(
+                F("send %s = %s to blynk pin v%d"),
+                valueFullName.c_str(),
+                formattedValue.c_str(),
+                vPinNumber);
             } else {
-              log += F("error got vPin number for ");
-              log += valueFullName;
-              log += F(", got not valid value: ");
-              log += vPinNumberStr;
+              log += strformat(
+                F("error got vPin number for %s, got not valid value: %s"),
+                valueFullName.c_str(),
+                vPinNumberStr.c_str());
             }
             addLogMove(LOG_LEVEL_INFO, log);
           }
           element.vPin[x] = vPinNumber;
-          element.txt[x]  = formattedValue;
+          move_special(element.txt[x], std::move(formattedValue));
         }
       }
       Scheduler.scheduleNextDelayQueue(SchedulerIntervalTimer_e::TIMER_C015_DELAY_QUEUE, C015_DelayHandler->getNextScheduleTime());
@@ -253,40 +266,41 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
 
 // Uncrustify may change this into multi line, which will result in failed builds
 // *INDENT-OFF*
-bool do_process_c015_delay_queue(int controller_number, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
+bool do_process_c015_delay_queue(cpluginID_t cpluginID, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
   const C015_queue_element& element = static_cast<const C015_queue_element&>(element_base);
+
 // *INDENT-ON*
-  if (!Settings.ControllerEnabled[element._controller_idx]) {
-    // controller has been disabled. Answer true to flush queue.
+if (!Settings.ControllerEnabled[element._controller_idx]) {
+  // controller has been disabled. Answer true to flush queue.
+  return true;
+}
+
+if (!ESPEasy::net::NetworkConnected()) {
+  return false;
+}
+
+if (!Blynk_keep_connection_c015(element._controller_idx, ControllerSettings)) {
+  return false;
+}
+
+while (element.vPin[element.valuesSent] == -1) {
+  //   A non valid value, which we are not going to send.
+  //   answer ok and skip real sending
+  if (element.checkDone(true)) {
     return true;
   }
+}
 
-  if (!NetworkConnected()) {
-    return false;
-  }
+bool sendSuccess = Blynk_send_c015(
+  element.txt[element.valuesSent],
+  element.vPin[element.valuesSent],
+  ControllerSettings.ClientTimeout);
 
-  if (!Blynk_keep_connection_c015(element._controller_idx, ControllerSettings)) {
-    return false;
-  }
-
-  while (element.vPin[element.valuesSent] == -1) {
-    //   A non valid value, which we are not going to send.
-    //   answer ok and skip real sending
-    if (element.checkDone(true)) {
-      return true;
-    }
-  }
-
-  bool sendSuccess = Blynk_send_c015(
-    element.txt[element.valuesSent],
-    element.vPin[element.valuesSent],
-    ControllerSettings.ClientTimeout);
-
-  return element.checkDone(sendSuccess);
+return element.checkDone(sendSuccess);
 }
 
 boolean Blynk_keep_connection_c015(int controllerIndex, ControllerSettingsStruct& ControllerSettings) {
-  if (!NetworkConnected()) {
+  if (!ESPEasy::net::NetworkConnected()) {
     return false;
   }
 
@@ -301,7 +315,7 @@ boolean Blynk_keep_connection_c015(int controllerIndex, ControllerSettingsStruct
     _C015_LastConnectAttempt[controllerIndex] = millis();
 
     # ifdef CPLUGIN_015_SSL
-    char thumbprint[60] = {0};
+    char thumbprint[60] = { 0 };
     LoadCustomControllerSettings(controllerIndex, reinterpret_cast<uint8_t *>(&thumbprint), sizeof(thumbprint));
 
     if (strlen(thumbprint) != 59) {
@@ -310,6 +324,7 @@ boolean Blynk_keep_connection_c015(int controllerIndex, ControllerSettingsStruct
         addLog(LOG_LEVEL_INFO, thumbprint);
       }
       strcpy(thumbprint, CPLUGIN_015_DEFAULT_THUMBPRINT);
+
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         addLog(LOG_LEVEL_INFO, F(C015_LOG_PREFIX "using default one:"));
         addLog(LOG_LEVEL_INFO, thumbprint);
@@ -408,26 +423,20 @@ String Command_Blynk_Set_c015(struct EventStruct *event, const char *Line) {
   int vPin = event->Par1;
 
   if ((vPin < 0)  || (vPin > 255)) {
-    String err = F("Not correct blynk vPin number ");
-    err += vPin;
-    return err;
+    return concat(F("Not correct blynk vPin number "), vPin);
   }
 
   String data = parseString(Line, 3);
 
   if (data.isEmpty()) {
-    String err = F("Skip sending empty data to blynk vPin ");
-    err += vPin;
-    return err;
+    return concat(F("Skip sending empty data to blynk vPin "), vPin);
   }
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F(C015_LOG_PREFIX "(online): send blynk pin v");
-
-    log += vPin;
-    log += F(" = ");
-    log += data;
-    addLogMove(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, strformat(
+                 F(C015_LOG_PREFIX "(online): send blynk pin v%d = %s"),
+                 vPin,
+                 data.c_str()));
   }
 
   Blynk.virtualWrite(vPin, data);
@@ -448,23 +457,21 @@ boolean Blynk_send_c015(const String& value, int vPin, unsigned int clientTimeou
 
 // This is called for all virtual pins, that don't have BLYNK_WRITE handler
 BLYNK_WRITE_DEFAULT() {
-  uint8_t  vPin     = request.pin;
-  float pinValue = param.asFloat();
+  const unsigned int  vPin     = request.pin;
+  const float pinValue = param.asFloat();
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F(C015_LOG_PREFIX "server set v");
-    log += vPin;
-    log += F(" to ");
-    log += pinValue;
-    addLogMove(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, strformat(
+                 F(C015_LOG_PREFIX "server set v%u to %f"),
+                 vPin,
+                 pinValue));
   }
 
   if (Settings.UseRules) {
-    String eventCommand = F("blynkv");
-    eventCommand += vPin;
-    eventCommand += '=';
-    eventCommand += pinValue;
-    eventQueue.addMove(std::move(eventCommand));
+    eventQueue.addMove(strformat(
+                         F("blynkv%d=%f"),
+                         vPin,
+                         pinValue));
   }
 }
 

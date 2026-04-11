@@ -108,14 +108,16 @@
 // resolve any problems related to ESP chips.  Please do not contact me and please
 // DO NOT CREATE GITHUB ISSUES for ESP support.  All ESP questions must be asked
 // on ESP community forums.
+//
+// See: https://github.com/esp8266/Arduino/blob/587435110f03a3ad53a0cc7144387a353f478521/cores/esp8266/core_esp8266_wiring_digital.cpp#L35
 #define PIN_TO_BASEREG(pin)             ((volatile uint32_t*) GPO)
 #define PIN_TO_BITMASK(pin)             (1 << (pin))
 #define IO_REG_TYPE uint32_t
 #define IO_REG_BASE_ATTR
 #define IO_REG_MASK_ATTR
 #define DIRECT_READ(base, mask)         ((GPI & (mask)) ? 1 : 0)    //GPIO_IN_ADDRESS
-#define DIRECT_MODE_INPUT(base, mask)   (GPE &= ~(mask))            //GPIO_ENABLE_W1TC_ADDRESS
-#define DIRECT_MODE_OUTPUT(base, mask)  (GPE |= (mask))             //GPIO_ENABLE_W1TS_ADDRESS
+#define DIRECT_MODE_INPUT(base, mask)   (GPEC = (mask))             //GPIO_ENABLE_W1TC_ADDRESS
+#define DIRECT_MODE_OUTPUT(base, mask)  (GPES = (mask))             //GPIO_ENABLE_W1TS_ADDRESS
 #define DIRECT_WRITE_LOW(base, mask)    (GPOC = (mask))             //GPIO_OUT_W1TC_ADDRESS
 #define DIRECT_WRITE_HIGH(base, mask)   (GPOS = (mask))             //GPIO_OUT_W1TS_ADDRESS
 
@@ -129,10 +131,21 @@ void DIRECT_pinWrite_ISR(IO_REG_TYPE pin, bool pinstate);
 void DIRECT_PINMODE_OUTPUT_ISR(IO_REG_TYPE pin);
 void DIRECT_PINMODE_INPUT_ISR(IO_REG_TYPE pin);
 
-#elif defined(ARDUINO_ARCH_ESP32)
+int32_t  DIRECT_measureWaitForPinState_ISR(IO_REG_TYPE gpio_pin_rx, uint32_t start_usec, int32_t timeout_usec, bool newState);
 
+#elif defined(ARDUINO_ARCH_ESP32)
+#if ESP_IDF_VERSION_MAJOR < 5
 #include <esp32-hal-gpio.h>
 #include <driver/rtc_io.h>
+#else
+#include <soc/gpio_struct.h>
+#include <driver/rtc_io.h>
+#include <esp_idf_version.h>
+#include <soc/soc_caps.h>
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 0)
+#include <driver/gpio.h>
+#endif
+#endif
 #define PIN_TO_BASEREG(pin)             (0)
 #define PIN_TO_BITMASK(pin)             (pin)
 #define IO_REG_TYPE uint32_t
@@ -142,12 +155,17 @@ void DIRECT_PINMODE_INPUT_ISR(IO_REG_TYPE pin);
 static inline __attribute__((always_inline))
 IO_REG_TYPE directRead(IO_REG_TYPE pin)
 {
-#if CONFIG_IDF_TARGET_ESP32C3
+#if CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C5
     return (GPIO.in.val >> pin) & 0x1;
+#elif CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32C61 || CONFIG_IDF_TARGET_ESP32P4
+    if ( pin < 32 )
+        return (GPIO.in.val >> pin) & 0x1;
+    else if ( pin < SOC_GPIO_PIN_COUNT )
+        return (GPIO.in1.val >> (pin - 32)) & 0x1;
 #else // plain ESP32
     if ( pin < 32 )
         return (GPIO.in >> pin) & 0x1;
-    else if ( pin < 46 )
+    else if ( pin < SOC_GPIO_PIN_COUNT )
         return (GPIO.in1.val >> (pin - 32)) & 0x1;
 #endif
 
@@ -157,12 +175,18 @@ IO_REG_TYPE directRead(IO_REG_TYPE pin)
 static inline __attribute__((always_inline))
 void directWriteLow(IO_REG_TYPE pin)
 {
-#if CONFIG_IDF_TARGET_ESP32C3
+#if CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C5
     GPIO.out_w1tc.val = ((uint32_t)1 << pin);
+#elif CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32C61 || CONFIG_IDF_TARGET_ESP32P4
+    if ( pin < 32 )
+        GPIO.out_w1tc.val = ((uint32_t)1 << pin);
+    else if ( pin < SOC_GPIO_PIN_COUNT )
+        GPIO.out1_w1tc.val = ((uint32_t)1 << (pin - 32));
+
 #else // plain ESP32
     if ( pin < 32 )
         GPIO.out_w1tc = ((uint32_t)1 << pin);
-    else if ( pin < 46 )
+    else if ( pin < SOC_GPIO_PIN_COUNT )
         GPIO.out1_w1tc.val = ((uint32_t)1 << (pin - 32));
 #endif
 }
@@ -170,12 +194,18 @@ void directWriteLow(IO_REG_TYPE pin)
 static inline __attribute__((always_inline))
 void directWriteHigh(IO_REG_TYPE pin)
 {
-#if CONFIG_IDF_TARGET_ESP32C3
+#if CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C5
     GPIO.out_w1ts.val = ((uint32_t)1 << pin);
+#elif CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32C61 || CONFIG_IDF_TARGET_ESP32P4
+    if ( pin < 32 )
+        GPIO.out_w1ts.val = ((uint32_t)1 << pin);
+    else if ( pin < SOC_GPIO_PIN_COUNT )
+        GPIO.out1_w1ts.val = ((uint32_t)1 << (pin - 32));
+
 #else // plain ESP32
     if ( pin < 32 )
         GPIO.out_w1ts = ((uint32_t)1 << pin);
-    else if ( pin < 46 )
+    else if ( pin < SOC_GPIO_PIN_COUNT )
         GPIO.out1_w1ts.val = ((uint32_t)1 << (pin - 32));
 #endif
 }
@@ -183,10 +213,10 @@ void directWriteHigh(IO_REG_TYPE pin)
 static inline __attribute__((always_inline))
 void directModeInput(IO_REG_TYPE pin)
 {
-#if CONFIG_IDF_TARGET_ESP32C3
+#if CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C5
     GPIO.enable_w1tc.val = ((uint32_t)1 << (pin));
 #else
-    if ( digitalPinIsValid(pin) )
+    if ( GPIO_IS_VALID_GPIO(pin) )
     {
 #if ESP_IDF_VERSION_MAJOR < 4      // IDF 3.x ESP32/PICO-D4
         uint32_t rtc_reg(rtc_gpio_desc[pin].reg);
@@ -198,10 +228,17 @@ void directModeInput(IO_REG_TYPE pin)
         }
 #endif
 	// Input
+#if CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32C61 || CONFIG_IDF_TARGET_ESP32P4
+        if ( pin < 32 )
+            GPIO.enable_w1tc.val = ((uint32_t)1 << pin);
+        else
+            GPIO.enable1_w1tc.val = ((uint32_t)1 << (pin - 32));
+#else
         if ( pin < 32 )
             GPIO.enable_w1tc = ((uint32_t)1 << pin);
         else
             GPIO.enable1_w1tc.val = ((uint32_t)1 << (pin - 32));
+#endif
     }
 #endif
 }
@@ -209,10 +246,10 @@ void directModeInput(IO_REG_TYPE pin)
 static inline __attribute__((always_inline))
 void directModeOutput(IO_REG_TYPE pin)
 {
-#if CONFIG_IDF_TARGET_ESP32C3
+#if CONFIG_IDF_TARGET_ESP32C2 || CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C5
     GPIO.enable_w1ts.val = ((uint32_t)1 << (pin));
 #else
-    if ( digitalPinIsValid(pin) && pin <= 33 ) // pins above 33 can be only inputs
+    if ( GPIO_IS_VALID_GPIO(pin) && pin <= 33 ) // pins above 33 can be only inputs
     {
 #if ESP_IDF_VERSION_MAJOR < 4      // IDF 3.x ESP32/PICO-D4
         uint32_t rtc_reg(rtc_gpio_desc[pin].reg);
@@ -224,10 +261,18 @@ void directModeOutput(IO_REG_TYPE pin)
         }
 #endif
         // Output
+#if CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32C61 || CONFIG_IDF_TARGET_ESP32P4
+        if ( pin < 32 )
+            GPIO.enable_w1ts.val = ((uint32_t)1 << pin);
+        else // already validated to pins <= 33
+            GPIO.enable1_w1ts.val = ((uint32_t)1 << (pin - 32));
+
+#else
         if ( pin < 32 )
             GPIO.enable_w1ts = ((uint32_t)1 << pin);
         else // already validated to pins <= 33
             GPIO.enable1_w1ts.val = ((uint32_t)1 << (pin - 32));
+#endif
     }
 #endif
 }
@@ -244,10 +289,12 @@ void DIRECT_pinWrite(IO_REG_TYPE pin, bool pinstate);
 void DIRECT_PINMODE_OUTPUT(IO_REG_TYPE pin);
 void DIRECT_PINMODE_INPUT(IO_REG_TYPE pin);
 
-IO_REG_TYPE DIRECT_pinRead_ISR(IO_REG_TYPE pin) IRAM_ATTR;
-void DIRECT_pinWrite_ISR(IO_REG_TYPE pin, bool pinstate) IRAM_ATTR;
-void DIRECT_PINMODE_OUTPUT_ISR(IO_REG_TYPE pin) IRAM_ATTR;
-void DIRECT_PINMODE_INPUT_ISR(IO_REG_TYPE pin) IRAM_ATTR;
+IO_REG_TYPE DIRECT_pinRead_ISR(IO_REG_TYPE pin);
+void  DIRECT_pinWrite_ISR(IO_REG_TYPE pin, bool pinstate);
+void  DIRECT_PINMODE_OUTPUT_ISR(IO_REG_TYPE pin);
+void  DIRECT_PINMODE_INPUT_ISR(IO_REG_TYPE pin);
+
+int32_t  DIRECT_measureWaitForPinState_ISR(IO_REG_TYPE gpio_pin_rx, uint32_t start_usec, int32_t timeout_usec, bool newState);
 
 /*
 // https://github.com/PaulStoffregen/OneWire/pull/47

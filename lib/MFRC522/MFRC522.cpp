@@ -29,11 +29,12 @@ MFRC522::MFRC522(	uint8_t resetPowerDownPin	///< Arduino pin connected to MFRC52
  * Prepares the output pins.
  */
 MFRC522::MFRC522(	uint8_t chipSelectPin,		///< Arduino pin connected to MFRC522's SPI slave select input (Pin 24, NSS, active low)
-					uint8_t resetPowerDownPin	///< Arduino pin connected to MFRC522's reset and power down input (Pin 6, NRSTPD, active low). If there is no connection from the CPU to NRSTPD, set this to UINT8_MAX. In this case, only soft reset will be used in PCD_Init().
-				) {
-	_chipSelectPin = chipSelectPin;
-	_resetPowerDownPin = resetPowerDownPin;
-} // End constructor
+					uint8_t resetPowerDownPin,	///< Arduino pin connected to MFRC522's reset and power down input (Pin 6, NRSTPD, active low). If there is no connection from the CPU to NRSTPD, set this to UINT8_MAX. In this case, only soft reset will be used in PCD_Init().
+					SPIClass& spi) :
+	_chipSelectPin(chipSelectPin),
+	_resetPowerDownPin(resetPowerDownPin),
+	_spi(spi)
+{} // End constructor
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Basic interface functions for communicating with the MFRC522
@@ -46,12 +47,12 @@ MFRC522::MFRC522(	uint8_t chipSelectPin,		///< Arduino pin connected to MFRC522'
 void MFRC522::PCD_WriteRegister(	PCD_Register reg,	///< The register to write to. One of the PCD_Register enums.
 									uint8_t value			///< The value to write.
 								) {
-	SPI.beginTransaction(SPISettings(MFRC522_SPICLOCK, MSBFIRST, SPI_MODE0));	// Set the settings to work with SPI bus
+	_spi.beginTransaction(SPISettings(MFRC522_SPICLOCK, MSBFIRST, SPI_MODE0));	// Set the settings to work with SPI bus
 	digitalWrite(_chipSelectPin, LOW);		// Select slave
-	SPI.transfer(reg);						// MSB == 0 is for writing. LSB is not used in address. Datasheet section 8.1.2.3.
-	SPI.transfer(value);
+	_spi.transfer(reg);						// MSB == 0 is for writing. LSB is not used in address. Datasheet section 8.1.2.3.
+	_spi.transfer(value);
 	digitalWrite(_chipSelectPin, HIGH);		// Release slave again
-	SPI.endTransaction(); // Stop using the SPI bus
+	_spi.endTransaction(); // Stop using the SPI bus
 } // End PCD_WriteRegister()
 
 /**
@@ -62,14 +63,14 @@ void MFRC522::PCD_WriteRegister(	PCD_Register reg,	///< The register to write to
 									uint8_t count,			///< The number of bytes to write to the register
 									uint8_t *values		///< The values to write. Byte array.
 								) {
-	SPI.beginTransaction(SPISettings(MFRC522_SPICLOCK, MSBFIRST, SPI_MODE0));	// Set the settings to work with SPI bus
+	_spi.beginTransaction(SPISettings(MFRC522_SPICLOCK, MSBFIRST, SPI_MODE0));	// Set the settings to work with SPI bus
 	digitalWrite(_chipSelectPin, LOW);		// Select slave
-	SPI.transfer(reg);						// MSB == 0 is for writing. LSB is not used in address. Datasheet section 8.1.2.3.
+	_spi.transfer(reg);						// MSB == 0 is for writing. LSB is not used in address. Datasheet section 8.1.2.3.
 	for (uint8_t index = 0; index < count; index++) {
-		SPI.transfer(values[index]);
+		_spi.transfer(values[index]);
 	}
 	digitalWrite(_chipSelectPin, HIGH);		// Release slave again
-	SPI.endTransaction(); // Stop using the SPI bus
+	_spi.endTransaction(); // Stop using the SPI bus
 } // End PCD_WriteRegister()
 
 /**
@@ -79,12 +80,12 @@ void MFRC522::PCD_WriteRegister(	PCD_Register reg,	///< The register to write to
 uint8_t MFRC522::PCD_ReadRegister(	PCD_Register reg	///< The register to read from. One of the PCD_Register enums.
 								) {
 	uint8_t value;
-	SPI.beginTransaction(SPISettings(MFRC522_SPICLOCK, MSBFIRST, SPI_MODE0));	// Set the settings to work with SPI bus
+	_spi.beginTransaction(SPISettings(MFRC522_SPICLOCK, MSBFIRST, SPI_MODE0));	// Set the settings to work with SPI bus
 	digitalWrite(_chipSelectPin, LOW);			// Select slave
-	SPI.transfer(0x80 | reg);					// MSB == 1 is for reading. LSB is not used in address. Datasheet section 8.1.2.3.
-	value = SPI.transfer(0);					// Read the value back. Send 0 to stop reading.
+	_spi.transfer(0x80 | reg);					// MSB == 1 is for reading. LSB is not used in address. Datasheet section 8.1.2.3.
+	value = _spi.transfer(0);					// Read the value back. Send 0 to stop reading.
 	digitalWrite(_chipSelectPin, HIGH);			// Release slave again
-	SPI.endTransaction(); // Stop using the SPI bus
+	_spi.endTransaction(); // Stop using the SPI bus
 	return value;
 } // End PCD_ReadRegister()
 
@@ -103,26 +104,26 @@ void MFRC522::PCD_ReadRegister(	PCD_Register reg,	///< The register to read from
 	//Serial.print(F("Reading ")); 	Serial.print(count); Serial.println(F(" bytes from register."));
 	uint8_t address = 0x80 | reg;				// MSB == 1 is for reading. LSB is not used in address. Datasheet section 8.1.2.3.
 	uint8_t index = 0;							// Index in values array.
-	SPI.beginTransaction(SPISettings(MFRC522_SPICLOCK, MSBFIRST, SPI_MODE0));	// Set the settings to work with SPI bus
+	_spi.beginTransaction(SPISettings(MFRC522_SPICLOCK, MSBFIRST, SPI_MODE0));	// Set the settings to work with SPI bus
 	digitalWrite(_chipSelectPin, LOW);		// Select slave
 	count--;								// One read is performed outside of the loop
-	SPI.transfer(address);					// Tell MFRC522 which address we want to read
+	_spi.transfer(address);					// Tell MFRC522 which address we want to read
 	if (rxAlign) {		// Only update bit positions rxAlign..7 in values[0]
 		// Create bit mask for bit positions rxAlign..7
 		uint8_t mask = (0xFF << rxAlign) & 0xFF;
 		// Read value and tell that we want to read the same address again.
-		uint8_t value = SPI.transfer(address);
+		uint8_t value = _spi.transfer(address);
 		// Apply mask to both current value of values[0] and the new data in value.
 		values[0] = (values[0] & ~mask) | (value & mask);
 		index++;
 	}
 	while (index < count) {
-		values[index] = SPI.transfer(address);	// Read value and tell that we want to read the same address again.
+		values[index] = _spi.transfer(address);	// Read value and tell that we want to read the same address again.
 		index++;
 	}
-	values[index] = SPI.transfer(0);			// Read the final byte. Send 0 to stop reading.
+	values[index] = _spi.transfer(0);			// Read the final byte. Send 0 to stop reading.
 	digitalWrite(_chipSelectPin, HIGH);			// Release slave again
-	SPI.endTransaction(); // Stop using the SPI bus
+	_spi.endTransaction(); // Stop using the SPI bus
 } // End PCD_ReadRegister()
 
 /**
@@ -191,29 +192,19 @@ MFRC522::StatusCode MFRC522::PCD_CalculateCRC(	uint8_t *data,		///< In: Pointer 
  * Initializes the MFRC522 chip.
  */
 void MFRC522::PCD_Init() {
-	bool hardReset = false;
 
 	// Set the chipSelectPin as digital output, do not select the slave yet
 	pinMode(_chipSelectPin, OUTPUT);
 	digitalWrite(_chipSelectPin, HIGH);
 	
 	// If a valid pin number has been set, pull device out of power down / reset state.
-	if (_resetPowerDownPin != UNUSED_PIN) {
-		// First set the resetPowerDownPin as digital input, to check the MFRC522 power down mode.
-		pinMode(_resetPowerDownPin, INPUT);
-	
-		if (digitalRead(_resetPowerDownPin) == LOW) {	// The MFRC522 chip is in power down mode.
-			pinMode(_resetPowerDownPin, OUTPUT);		// Now set the resetPowerDownPin as digital output.
-			digitalWrite(_resetPowerDownPin, LOW);		// Make sure we have a clean LOW state.
-			delayMicroseconds(2);				// 8.8.1 Reset timing requirements says about 100ns. Let us be generous: 2μsl
-			digitalWrite(_resetPowerDownPin, HIGH);		// Exit power down mode. This triggers a hard reset.
-			// Section 8.8.2 in the datasheet says the oscillator start-up time is the start up time of the crystal + 37,74μs. Let us be generous: 50ms.
-			delay(50);
-			hardReset = true;
-		}
+	if (_resetPowerDownPin != UNUSED_PIN)
+	{
+		pinMode(_resetPowerDownPin, OUTPUT);
+		PCD_HardReset();
 	}
-
-	if (!hardReset) { // Perform a soft reset if we haven't triggered a hard reset above.
+	else
+	{ // Perform a soft reset if we haven't triggered a hard reset above.
 		PCD_Reset();
 	}
 	
@@ -233,6 +224,11 @@ void MFRC522::PCD_Init() {
 	
 	PCD_WriteRegister(TxASKReg, 0x40);		// Default 0x00. Force a 100 % ASK modulation independent of the ModGsPReg register setting
 	PCD_WriteRegister(ModeReg, 0x3D);		// Default 0x3F. Set the preset value for the CRC coprocessor for the CalcCRC command to 0x6363 (ISO 14443-3 part 6.2.4)
+
+	PCD_WriteRegister(CWGsPReg, 0b111111);		// conductance of the p-driver output
+	PCD_WriteRegister(ModGsPReg, 0b111111);		// conductance of the p-driver output
+	PCD_WriteRegister(GsNReg, 0b11111111);		// impedance of the n-driver
+
 	PCD_AntennaOn();						// Enable the antenna driver pins TX1 and TX2 (they were disabled by the reset)
 } // End PCD_Init()
 
@@ -271,6 +267,18 @@ void MFRC522::PCD_Reset() {
 	} while ((PCD_ReadRegister(CommandReg) & (1 << 4)) && (++count) < 3);
 } // End PCD_Reset()
 
+void MFRC522::PCD_HardReset()
+{
+	if (_resetPowerDownPin != UNUSED_PIN)
+	{
+		digitalWrite(_resetPowerDownPin, LOW);	// Make sure we have a clean LOW state.
+		delayMicroseconds(2);					// 8.8.1 Reset timing requirements says about 100ns. Let us be generous: 2μsl
+		digitalWrite(_resetPowerDownPin, HIGH); // Exit power down mode. This triggers a hard reset.
+		// Section 8.8.2 in the datasheet says the oscillator start-up time is the start up time of the crystal + 37,74μs. Let us be generous: 50ms.
+		delay(50);
+	}
+}
+
 /**
  * Turns the antenna on by enabling pins TX1 and TX2.
  * After a reset these pins are disabled.
@@ -291,7 +299,7 @@ void MFRC522::PCD_AntennaOff() {
 
 /**
  * Get the current MFRC522 Receiver Gain (RxGain[2:0]) value.
- * See 9.3.3.6 / table 98 in http://www.nxp.com/documents/data_sheet/MFRC522.pdf
+ * See 9.3.3.6 / table 98 in https://www.nxp.com/docs/en/data-sheet/MFRC522.pdf
  * NOTE: Return value scrubbed with (0x07<<4)=01110000b as RCFfgReg may use reserved bits.
  * 
  * @return Value of the RxGain, scrubbed to the 3 bits used.
@@ -302,7 +310,7 @@ uint8_t MFRC522::PCD_GetAntennaGain() {
 
 /**
  * Set the MFRC522 Receiver Gain (RxGain) to value specified by given mask.
- * See 9.3.3.6 / table 98 in http://www.nxp.com/documents/data_sheet/MFRC522.pdf
+ * See 9.3.3.6 / table 98 in https://www.nxp.com/docs/en/data-sheet/MFRC522.pdf
  * NOTE: Given mask is scrubbed with (0x07<<4)=01110000b as RCFfgReg may use reserved bits.
  */
 void MFRC522::PCD_SetAntennaGain(uint8_t mask) {
@@ -314,7 +322,7 @@ void MFRC522::PCD_SetAntennaGain(uint8_t mask) {
 
 /**
  * Performs a self-test of the MFRC522
- * See 16.1.1 in http://www.nxp.com/documents/data_sheet/MFRC522.pdf
+ * See 16.1.1 in https://www.nxp.com/docs/en/data-sheet/MFRC522.pdf
  * 
  * @return Whether or not the test passed. Or false if no firmware reference is available.
  */
@@ -368,21 +376,28 @@ bool MFRC522::PCD_PerformSelfTest() {
 	
 	// Pick the appropriate reference values
 	const uint8_t *reference;
-	switch (version) {
-		case 0x88:	// Fudan Semiconductor FM17522 clone
-			reference = FM17522_firmware_reference;
-			break;
-		case 0x90:	// Version 0.0
-			reference = MFRC522_firmware_referenceV0_0;
-			break;
-		case 0x91:	// Version 1.0
-			reference = MFRC522_firmware_referenceV1_0;
-			break;
-		case 0x92:	// Version 2.0
-			reference = MFRC522_firmware_referenceV2_0;
-			break;
-		default:	// Unknown version
-			return false; // abort test
+	switch(version) {
+      // Fudan Semiconductor clone:
+	  case 0xb2:  // FM17522
+		reference = FM17522_firmware_referenceB2;
+		break;
+	  case 0x88:  // FM17522
+		reference = FM17522_firmware_reference88;
+		break;
+	  case 0x89:  // FM17522E
+		reference = FM17522E_firmware_reference;
+		break;
+	  case 0x90:  // Version 0.0
+		reference = MFRC522_firmware_referenceV0_0;
+		break;
+	  case 0x91:  // Version 1.0
+		reference = MFRC522_firmware_referenceV1_0;
+		break;
+	  case 0x92:  // Version 2.0
+		reference = MFRC522_firmware_referenceV2_0;
+		break;
+	  default:  // Unknown version
+		return false; // abort test
 	}
 	
 	// Verify that the results match up to our expectations
@@ -463,6 +478,8 @@ MFRC522::StatusCode MFRC522::PCD_CommunicateWithPICC(	uint8_t command,		///< The
 														uint8_t rxAlign,		///< In: Defines the bit position in backData[0] for the first bit received. Default 0.
 														bool checkCRC		///< In: True => The last two bytes of the response is assumed to be a CRC_A that must be validated.
 									 ) {
+    const long software_timeout_ms = 36; // 36ms
+
 	// Prepare values for BitFramingReg
 	uint8_t txLastBits = validBits ? *validBits : 0;
 	uint8_t bitFraming = (rxAlign << 4) + txLastBits;		// RxAlign = BitFramingReg[6..4]. TxLastBits = BitFramingReg[2..0]
@@ -481,8 +498,9 @@ MFRC522::StatusCode MFRC522::PCD_CommunicateWithPICC(	uint8_t command,		///< The
 	// In PCD_Init() we set the TAuto flag in TModeReg. This means the timer automatically starts when the PCD stops transmitting.
 	// Each iteration of the do-while-loop takes 17.86μs.
 	// TODO check/modify for other architectures than Arduino Uno 16bit
-	uint16_t i;
-	for (i = 2000; i > 0; i--) {
+    long t_delta=0;
+    long t_start=millis();
+    while(t_delta < software_timeout_ms) {
 		uint8_t n = PCD_ReadRegister(ComIrqReg);	// ComIrqReg[7..0] bits are: Set1 TxIRq RxIRq IdleIRq HiAlertIRq LoAlertIRq ErrIRq TimerIRq
 		if (n & waitIRq) {					// One of the interrupts that signal success has been set.
 			break;
@@ -490,9 +508,11 @@ MFRC522::StatusCode MFRC522::PCD_CommunicateWithPICC(	uint8_t command,		///< The
 		if (n & 0x01) {						// Timer interrupt - nothing received in 25ms
 			return STATUS_TIMEOUT;
 		}
+		delay(1);   // prevents bus flood
+		t_delta = millis() - t_start;
 	}
 	// 35.7ms and nothing happend. Communication with the MFRC522 might be down.
-	if (i == 0) {
+	if(t_delta >= software_timeout_ms) {
 		return STATUS_TIMEOUT;
 	}
 	
@@ -868,7 +888,7 @@ MFRC522::StatusCode MFRC522::PICC_HaltA() {
 /**
  * Executes the MFRC522 MFAuthent command.
  * This command manages MIFARE authentication to enable a secure communication to any MIFARE Mini, MIFARE 1K and MIFARE 4K card.
- * The authentication is described in the MFRC522 datasheet section 10.3.1.9 and http://www.nxp.com/documents/data_sheet/MF1S503x.pdf section 10.1.
+ * The authentication is described in the MFRC522 datasheet section 10.3.1.9 and https://www.nxp.com/docs/en/data-sheet/MF1S503x.pdf section 10.1.
  * For use with MIFARE Classic PICCs.
  * The PICC must be selected - ie in state ACTIVE(*) - before calling this function.
  * Remember to call PCD_StopCrypto1() after communicating with the authenticated PICC - otherwise no new communications can start.
@@ -1346,36 +1366,36 @@ const __FlashStringHelper *MFRC522::PICC_GetTypeName(PICC_Type piccType	///< One
  * Dumps debug info about the connected PCD to Serial.
  * Shows all known firmware versions
  */
-void MFRC522::PCD_DumpVersionToSerial() {
+void MFRC522::PCD_DumpVersionToSerial(Print &logPrint) {
 	// Get the MFRC522 firmware version
 	uint8_t v = PCD_ReadRegister(VersionReg);
-	Serial.print(F("Firmware Version: 0x"));
-	Serial.print(v, HEX);
+	logPrint.print(F("Firmware Version: 0x"));
+	logPrint.print(v, HEX);
 	// Lookup which version
 	switch(v) {
-		case 0x88: Serial.println(F(" = (clone)"));  break;
-		case 0x90: Serial.println(F(" = v0.0"));     break;
-		case 0x91: Serial.println(F(" = v1.0"));     break;
-		case 0x92: Serial.println(F(" = v2.0"));     break;
-		case 0x12: Serial.println(F(" = counterfeit chip"));     break;
-		default:   Serial.println(F(" = (unknown)"));
+		case 0x88: logPrint.println(F(" = (clone)"));  break;
+		case 0x90: logPrint.println(F(" = v0.0"));     break;
+		case 0x91: logPrint.println(F(" = v1.0"));     break;
+		case 0x92: logPrint.println(F(" = v2.0"));     break;
+		case 0x12: logPrint.println(F(" = counterfeit chip"));     break;
+		default:   logPrint.println(F(" = (unknown)"));
 	}
 	// When 0x00 or 0xFF is returned, communication probably failed
 	if ((v == 0x00) || (v == 0xFF))
-		Serial.println(F("WARNING: Communication failure, is the MFRC522 properly connected?"));
+		logPrint.println(F("WARNING: Communication failure, is the MFRC522 properly connected?"));
 } // End PCD_DumpVersionToSerial()
 
 /**
- * Dumps debug info about the selected PICC to Serial.
+ * Dumps debug info about the selected PICC to logPrint.
  * On success the PICC is halted after dumping the data.
  * For MIFARE Classic the factory default key of 0xFFFFFFFFFFFF is tried.  
  */
 void MFRC522::PICC_DumpToSerial(Uid *uid	///< Pointer to Uid struct returned from a successful PICC_Select().
-								) {
+					, Print &logPrint) {
 	MIFARE_Key key;
 	
 	// Dump UID, SAK and Type
-	PICC_DumpDetailsToSerial(uid);
+	PICC_DumpDetailsToSerial(uid, logPrint);
 	
 	// Dump contents
 	PICC_Type piccType = PICC_GetType(uid->sak);
@@ -1387,11 +1407,11 @@ void MFRC522::PICC_DumpToSerial(Uid *uid	///< Pointer to Uid struct returned fro
 			for (uint8_t i = 0; i < 6; i++) {
 				key.keyByte[i] = 0xFF;
 			}
-			PICC_DumpMifareClassicToSerial(uid, piccType, &key);
+			PICC_DumpMifareClassicToSerial(uid, piccType, &key, logPrint);
 			break;
 			
 		case PICC_TYPE_MIFARE_UL:
-			PICC_DumpMifareUltralightToSerial();
+			PICC_DumpMifareUltralightToSerial(logPrint);
 			break;
 			
 		case PICC_TYPE_ISO_14443_4:
@@ -1399,7 +1419,7 @@ void MFRC522::PICC_DumpToSerial(Uid *uid	///< Pointer to Uid struct returned fro
 		case PICC_TYPE_ISO_18092:
 		case PICC_TYPE_MIFARE_PLUS:
 		case PICC_TYPE_TNP3XXX:
-			Serial.println(F("Dumping memory contents not implemented for that PICC type."));
+			logPrint.println(F("Dumping memory contents not implemented for that PICC type."));
 			break;
 			
 		case PICC_TYPE_UNKNOWN:
@@ -1408,36 +1428,36 @@ void MFRC522::PICC_DumpToSerial(Uid *uid	///< Pointer to Uid struct returned fro
 			break; // No memory dump here
 	}
 	
-	Serial.println();
+	logPrint.println();
 	PICC_HaltA(); // Already done if it was a MIFARE Classic PICC.
 } // End PICC_DumpToSerial()
 
 /**
- * Dumps card info (UID,SAK,Type) about the selected PICC to Serial.
+ * Dumps card info (UID,SAK,Type) about the selected PICC to logPrint.
  */
 void MFRC522::PICC_DumpDetailsToSerial(Uid *uid	///< Pointer to Uid struct returned from a successful PICC_Select().
-									) {
+									, Print &logPrint) {
 	// UID
-	Serial.print(F("Card UID:"));
+	logPrint.print(F("Card UID:"));
 	for (uint8_t i = 0; i < uid->size; i++) {
 		if(uid->uidByte[i] < 0x10)
-			Serial.print(F(" 0"));
+			logPrint.print(F(" 0"));
 		else
-			Serial.print(F(" "));
-		Serial.print(uid->uidByte[i], HEX);
+			logPrint.print(F(" "));
+		logPrint.print(uid->uidByte[i], HEX);
 	} 
-	Serial.println();
+	logPrint.println();
 	
 	// SAK
-	Serial.print(F("Card SAK: "));
+	logPrint.print(F("Card SAK: "));
 	if(uid->sak < 0x10)
-		Serial.print(F("0"));
-	Serial.println(uid->sak, HEX);
+		logPrint.print(F("0"));
+	logPrint.println(uid->sak, HEX);
 	
 	// (suggested) PICC type
 	PICC_Type piccType = PICC_GetType(uid->sak);
-	Serial.print(F("PICC type: "));
-	Serial.println(PICC_GetTypeName(piccType));
+	logPrint.print(F("PICC type: "));
+	logPrint.println(PICC_GetTypeName(piccType));
 } // End PICC_DumpDetailsToSerial()
 
 /**
@@ -1447,7 +1467,7 @@ void MFRC522::PICC_DumpDetailsToSerial(Uid *uid	///< Pointer to Uid struct retur
 void MFRC522::PICC_DumpMifareClassicToSerial(	Uid *uid,			///< Pointer to Uid struct returned from a successful PICC_Select().
 												PICC_Type piccType,	///< One of the PICC_Type enums.
 												MIFARE_Key *key		///< Key A used for all sectors.
-											) {
+											, Print &logPrint) {
 	uint8_t no_of_sectors = 0;
 	switch (piccType) {
 		case PICC_TYPE_MIFARE_MINI:
@@ -1471,9 +1491,9 @@ void MFRC522::PICC_DumpMifareClassicToSerial(	Uid *uid,			///< Pointer to Uid st
 	
 	// Dump sectors, highest address first.
 	if (no_of_sectors) {
-		Serial.println(F("Sector Block   0  1  2  3   4  5  6  7   8  9 10 11  12 13 14 15  AccessBits"));
+		logPrint.println(F("Sector Block   0  1  2  3   4  5  6  7   8  9 10 11  12 13 14 15  AccessBits"));
 		for (int8_t i = no_of_sectors - 1; i >= 0; i--) {
-			PICC_DumpMifareClassicSectorToSerial(uid, key, i);
+			PICC_DumpMifareClassicSectorToSerial(uid, key, i, logPrint);
 		}
 	}
 	PICC_HaltA(); // Halt the PICC before stopping the encrypted session.
@@ -1488,7 +1508,7 @@ void MFRC522::PICC_DumpMifareClassicToSerial(	Uid *uid,			///< Pointer to Uid st
 void MFRC522::PICC_DumpMifareClassicSectorToSerial(Uid *uid,			///< Pointer to Uid struct returned from a successful PICC_Select().
 													MIFARE_Key *key,	///< Key A for the sector.
 													uint8_t sector			///< The sector to dump, 0..39.
-													) {
+													, Print &logPrint) {
 	MFRC522::StatusCode status;
 	uint8_t firstBlock;		// Address of lowest address to dump actually last block dumped)
 	uint8_t no_of_blocks;		// Number of blocks in sector
@@ -1533,32 +1553,32 @@ void MFRC522::PICC_DumpMifareClassicSectorToSerial(Uid *uid,			///< Pointer to U
 		// Sector number - only on first line
 		if (isSectorTrailer) {
 			if(sector < 10)
-				Serial.print(F("   ")); // Pad with spaces
+				logPrint.print(F("   ")); // Pad with spaces
 			else
-				Serial.print(F("  ")); // Pad with spaces
-			Serial.print(sector);
-			Serial.print(F("   "));
+				logPrint.print(F("  ")); // Pad with spaces
+			logPrint.print(sector);
+			logPrint.print(F("   "));
 		}
 		else {
-			Serial.print(F("       "));
+			logPrint.print(F("       "));
 		}
 		// Block number
 		if(blockAddr < 10)
-			Serial.print(F("   ")); // Pad with spaces
+			logPrint.print(F("   ")); // Pad with spaces
 		else {
 			if(blockAddr < 100)
-				Serial.print(F("  ")); // Pad with spaces
+				logPrint.print(F("  ")); // Pad with spaces
 			else
-				Serial.print(F(" ")); // Pad with spaces
+				logPrint.print(F(" ")); // Pad with spaces
 		}
-		Serial.print(blockAddr);
-		Serial.print(F("  "));
+		logPrint.print(blockAddr);
+		logPrint.print(F("  "));
 		// Establish encrypted communications before reading the first block
 		if (isSectorTrailer) {
 			status = PCD_Authenticate(PICC_CMD_MF_AUTH_KEY_A, firstBlock, key, uid);
 			if (status != STATUS_OK) {
-				Serial.print(F("PCD_Authenticate() failed: "));
-				Serial.println(GetStatusCodeName(status));
+				logPrint.print(F("PCD_Authenticate() failed: "));
+				logPrint.println(GetStatusCodeName(status));
 				return;
 			}
 		}
@@ -1566,19 +1586,19 @@ void MFRC522::PICC_DumpMifareClassicSectorToSerial(Uid *uid,			///< Pointer to U
 		byteCount = sizeof(buffer);
 		status = MIFARE_Read(blockAddr, buffer, &byteCount);
 		if (status != STATUS_OK) {
-			Serial.print(F("MIFARE_Read() failed: "));
-			Serial.println(GetStatusCodeName(status));
+			logPrint.print(F("MIFARE_Read() failed: "));
+			logPrint.println(GetStatusCodeName(status));
 			continue;
 		}
 		// Dump data
 		for (uint8_t index = 0; index < 16; index++) {
 			if(buffer[index] < 0x10)
-				Serial.print(F(" 0"));
+				logPrint.print(F(" 0"));
 			else
-				Serial.print(F(" "));
-			Serial.print(buffer[index], HEX);
+				logPrint.print(F(" "));
+			logPrint.print(buffer[index], HEX);
 			if ((index % 4) == 3) {
-				Serial.print(F(" "));
+				logPrint.print(F(" "));
 			}
 		}
 		// Parse sector trailer data
@@ -1609,22 +1629,22 @@ void MFRC522::PICC_DumpMifareClassicSectorToSerial(Uid *uid,			///< Pointer to U
 		
 		if (firstInGroup) {
 			// Print access bits
-			Serial.print(F(" [ "));
-			Serial.print((g[group] >> 2) & 1, DEC); Serial.print(F(" "));
-			Serial.print((g[group] >> 1) & 1, DEC); Serial.print(F(" "));
-			Serial.print((g[group] >> 0) & 1, DEC);
-			Serial.print(F(" ] "));
+			logPrint.print(F(" [ "));
+			logPrint.print((g[group] >> 2) & 1, DEC); logPrint.print(F(" "));
+			logPrint.print((g[group] >> 1) & 1, DEC); logPrint.print(F(" "));
+			logPrint.print((g[group] >> 0) & 1, DEC);
+			logPrint.print(F(" ] "));
 			if (invertedError) {
-				Serial.print(F(" Inverted access bits did not match! "));
+				logPrint.print(F(" Inverted access bits did not match! "));
 			}
 		}
 		
 		if (group != 3 && (g[group] == 1 || g[group] == 6)) { // Not a sector trailer, a value block
 			int32_t value = (int32_t(buffer[3])<<24) | (int32_t(buffer[2])<<16) | (int32_t(buffer[1])<<8) | int32_t(buffer[0]);
-			Serial.print(F(" Value=0x")); Serial.print(value, HEX);
-			Serial.print(F(" Adr=0x")); Serial.print(buffer[12], HEX);
+			logPrint.print(F(" Value=0x")); logPrint.print(value, HEX);
+			logPrint.print(F(" Adr=0x")); logPrint.print(buffer[12], HEX);
 		}
-		Serial.println();
+		logPrint.println();
 	}
 	
 	return;
@@ -1633,41 +1653,41 @@ void MFRC522::PICC_DumpMifareClassicSectorToSerial(Uid *uid,			///< Pointer to U
 /**
  * Dumps memory contents of a MIFARE Ultralight PICC.
  */
-void MFRC522::PICC_DumpMifareUltralightToSerial() {
+void MFRC522::PICC_DumpMifareUltralightToSerial(Print &logPrint) {
 	MFRC522::StatusCode status;
 	uint8_t byteCount;
 	uint8_t buffer[18];
 	uint8_t i;
 	
-	Serial.println(F("Page  0  1  2  3"));
+	logPrint.println(F("Page  0  1  2  3"));
 	// Try the mpages of the original Ultralight. Ultralight C has more pages.
 	for (uint8_t page = 0; page < 16; page +=4) { // Read returns data for 4 pages at a time.
 		// Read pages
 		byteCount = sizeof(buffer);
 		status = MIFARE_Read(page, buffer, &byteCount);
 		if (status != STATUS_OK) {
-			Serial.print(F("MIFARE_Read() failed: "));
-			Serial.println(GetStatusCodeName(status));
+			logPrint.print(F("MIFARE_Read() failed: "));
+			logPrint.println(GetStatusCodeName(status));
 			break;
 		}
 		// Dump data
 		for (uint8_t offset = 0; offset < 4; offset++) {
 			i = page + offset;
 			if(i < 10)
-				Serial.print(F("  ")); // Pad with spaces
+				logPrint.print(F("  ")); // Pad with spaces
 			else
-				Serial.print(F(" ")); // Pad with spaces
-			Serial.print(i);
-			Serial.print(F("  "));
+				logPrint.print(F(" ")); // Pad with spaces
+			logPrint.print(i);
+			logPrint.print(F("  "));
 			for (uint8_t index = 0; index < 4; index++) {
 				i = 4 * offset + index;
 				if(buffer[i] < 0x10)
-					Serial.print(F(" 0"));
+					logPrint.print(F(" 0"));
 				else
-					Serial.print(F(" "));
-				Serial.print(buffer[i], HEX);
+					logPrint.print(F(" "));
+				logPrint.print(buffer[i], HEX);
 			}
-			Serial.println();
+			logPrint.println();
 		}
 	}
 } // End PICC_DumpMifareUltralightToSerial()

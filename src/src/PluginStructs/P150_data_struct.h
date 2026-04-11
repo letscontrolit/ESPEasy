@@ -9,7 +9,11 @@
 # define P150_CONFIG                PCONFIG_ULONG(0) // Sensor config
 # define P150_OPTIONS               PCONFIG_ULONG(1) // Plugin options
 
-# define P150_USE_EXTRA_LOG         1                // Enable(1)/disable(0) low-level logging
+# ifdef LIMIT_BUILD_SIZE
+#  define P150_USE_EXTRA_LOG         0               // Enable(1)/disable(0) low-level logging
+# else // ifdef LIMIT_BUILD_SIZE
+#  define P150_USE_EXTRA_LOG         1               // Enable(1)/disable(0) low-level logging
+# endif // ifdef LIMIT_BUILD_SIZE
 
 # define P150_CONFIG_RESET_MASK   0b1111000000011111 // Reset the bits we need to overwrite
 

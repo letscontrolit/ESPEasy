@@ -24,3 +24,11 @@
         ","
         Will reset the calibration values to the default values, causing auto-calibration.
         "
+        "
+        ``cseclearpulses``
+
+        ","
+        (Added: 2024-01-16)
+        Will reset the CF-pulse counter.
+        N.B. this also clears the kWh counter as it is derived from the CF-pulse counter.
+        "

@@ -29,9 +29,9 @@ private:
   union {
     struct {
       int8_t  ETH_Phy_Addr;
-      int8_t  ETH_Pin_mdc;
-      int8_t  ETH_Pin_mdio;
-      int8_t  ETH_Pin_power;
+      int8_t  ETH_Pin_mdc_cs;
+      int8_t  ETH_Pin_mdio_irq;
+      int8_t  ETH_Pin_power_rst;
       uint8_t ETH_Phy_Type;
       uint8_t ETH_Clock_Mode;
       uint8_t NetworkMedium;

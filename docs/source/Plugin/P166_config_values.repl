@@ -1,0 +1,24 @@
+.. csv-table::
+    :header: "Config value", "Information"
+    :widths: 20, 30
+
+    "
+    ``[<taskname>#preset<X>]``
+    ","
+    Returns the numbered preset value ``<X>``, range ``preset1``..``preset25``, as shown in the configuration. Only configured values, having a name, can be retrieved.
+    "
+    "
+    ``[<taskname>#initial0]``
+    ","
+    Returns the configured initial voltage for output 0.
+    "
+    "
+    ``[<taskname>#initial1]``
+    ","
+    Returns the configured initial voltage for output 1.
+    "
+    "
+    ``[<taskname>#range]``
+    ","
+    Returns the configured Output range value 5 (0-5V) or 10 (0-10V)
+    "

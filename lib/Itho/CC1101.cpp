@@ -5,7 +5,7 @@
 #include "CC1101.h"
 
 // default constructor
-CC1101::CC1101(int8_t CSpin, int8_t MISOpin) : _CSpin(CSpin), _MISOpin(MISOpin)
+CC1101::CC1101(int8_t CSpin, int8_t MISOpin, SPIClass& spi) : _CSpin(CSpin), _MISOpin(MISOpin), _spi(spi)
 {
   // SPI.begin(); // Done already by ESPEasy
   pinMode(_CSpin, OUTPUT);
@@ -51,7 +51,7 @@ void CC1101::reset()
   select();
 
   spi_waitMiso();
-  SPI.transfer(CC1101_SRES);
+  _spi.transfer(CC1101_SRES);
   delay(10);
   spi_waitMiso();
   deselect();
@@ -63,7 +63,7 @@ uint8_t CC1101::writeCommand(uint8_t command)
 
   select();
   spi_waitMiso();
-  result = SPI.transfer(command);
+  result = _spi.transfer(command);
   deselect();
 
   return result;
@@ -73,8 +73,8 @@ void CC1101::writeRegister(uint8_t address, uint8_t data)
 {
   select();
   spi_waitMiso();
-  SPI.transfer(address);
-  SPI.transfer(data);
+  _spi.transfer(address);
+  _spi.transfer(data);
   deselect();
 }
 
@@ -84,8 +84,8 @@ uint8_t CC1101::readRegister(uint8_t address)
 
   select();
   spi_waitMiso();
-  SPI.transfer(address);
-  val = SPI.transfer(0);
+  _spi.transfer(address);
+  val = _spi.transfer(0);
   deselect();
 
   return val;
@@ -97,12 +97,12 @@ uint8_t CC1101::readRegisterMedian3(uint8_t address)
 
   select();
   spi_waitMiso();
-  SPI.transfer(address);
-  val1 = SPI.transfer(0);
-  SPI.transfer(address);
-  val2 = SPI.transfer(0);
-  SPI.transfer(address);
-  val3 = SPI.transfer(0);
+  _spi.transfer(address);
+  val1 = _spi.transfer(0);
+  _spi.transfer(address);
+  val2 = _spi.transfer(0);
+  _spi.transfer(address);
+  val3 = _spi.transfer(0);
   deselect();
 
   // reverse sort (largest in val1) because this is te expected order for TX_BUFFER
@@ -162,10 +162,10 @@ void CC1101::writeBurstRegister(uint8_t address, uint8_t *data, uint8_t length)
 
   select();
   spi_waitMiso();
-  SPI.transfer(address | CC1101_WRITE_BURST);
+  _spi.transfer(address | CC1101_WRITE_BURST);
 
   for (i = 0; i < length; i++) {
-    SPI.transfer(pgm_read_byte(&(data[i])));
+    _spi.transfer(pgm_read_byte(&(data[i])));
   }
   deselect();
 }
@@ -176,10 +176,10 @@ void CC1101::readBurstRegister(uint8_t *buffer, uint8_t address, uint8_t length)
 
   select();
   spi_waitMiso();
-  SPI.transfer(address | CC1101_READ_BURST);
+  _spi.transfer(address | CC1101_READ_BURST);
 
   for (i = 0; i < length; i++) {
-    buffer[i] = SPI.transfer(0x00);
+    buffer[i] = _spi.transfer(0x00);
   }
 
   deselect();

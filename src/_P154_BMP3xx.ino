@@ -2,14 +2,14 @@
 #ifdef USES_P154
 
 // #######################################################################################################
-// #################################### Plugin-154: Environment - BMP3xx   ###############################
+// ################################## Plugin-154: Environment - BMP3xx I2C   #############################
 // #######################################################################################################
 
 # include "src/PluginStructs/P154_data_struct.h"
 
 # define PLUGIN_154
 # define PLUGIN_ID_154         154
-# define PLUGIN_NAME_154       "Environment - BMP3xx"
+# define PLUGIN_NAME_154       "Environment - BMP3xx (I2C)"
 # define PLUGIN_VALUENAME1_154 "Temperature"
 # define PLUGIN_VALUENAME2_154 "Pressure"
 
@@ -21,18 +21,15 @@ boolean Plugin_154(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_154;
-      Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_TEMP_BARO;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = 2;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].PluginStats        = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_154;
+      dev.Type           = DEVICE_TYPE_I2C;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_TEMP_BARO;
+      dev.FormulaOption  = true;
+      dev.ValueCount     = 2;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
+      dev.PluginStats    = true;
       break;
     }
 
@@ -56,7 +53,7 @@ boolean Plugin_154(uint8_t function, struct EventStruct *event, String& string)
       constexpr int nrAddressOptions   = NR_ELEMENTS(i2cAddressValues);
 
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
-        addFormSelectorI2C(F("i2c_addr"), nrAddressOptions, i2cAddressValues, P154_I2C_ADDR);
+        addFormSelectorI2C(F("i2c_addr"), nrAddressOptions, i2cAddressValues, P154_I2C_ADDR, 0x77);
         addFormNote(F("SDO Low=0x76, High=0x77"));
       } else {
         success = intArrayContains(nrAddressOptions, i2cAddressValues, event->Par1);
@@ -85,7 +82,7 @@ boolean Plugin_154(uint8_t function, struct EventStruct *event, String& string)
       P154_data_struct *P154_data =
         static_cast<P154_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      success = (nullptr != P154_data && P154_data->begin());
+      success = (nullptr != P154_data && P154_data->begin(event));
       break;
     }
 
@@ -98,7 +95,11 @@ boolean Plugin_154(uint8_t function, struct EventStruct *event, String& string)
         break;
       }
 
-      success = P154_data->read(UserVar[event->BaseVarIndex], UserVar[event->BaseVarIndex + 1]);
+      float temp, pressure{};
+
+      success = P154_data->read(temp, pressure);
+      UserVar.setFloat(event->TaskIndex, 0, temp);
+      UserVar.setFloat(event->TaskIndex, 1, pressure);
       break;
     }
 

@@ -6,8 +6,6 @@
 
 # include "../Commands/GPIO.h" // FIXME TD-er: Only needed till we can call GPIO commands from the ESPEasy core.
 
-# include "../Helpers/Hardware.h"
-
 
 const __FlashStringHelper * P098_config_struct::toString(P098_config_struct::PWM_mode_type PWM_mode) {
   switch (PWM_mode) {
@@ -442,7 +440,8 @@ void ICACHE_RAM_ATTR P098_data_struct::process_limit_switch(
   ISR_noInterrupts();
   {
     // Don't call gpio_config.readState() here
-    const bool pinState        = gpio_config.inverted ? digitalRead(gpio_config.gpio) == 0 : digitalRead(gpio_config.gpio) != 0;
+    const bool pinState        = 
+      (DIRECT_pinRead_ISR(gpio_config.gpio) != 0) ^ gpio_config.inverted;
     const uint64_t currentTime = getMicros64();
 
 

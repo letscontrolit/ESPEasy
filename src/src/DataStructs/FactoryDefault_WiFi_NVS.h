@@ -29,8 +29,8 @@ private:
   union {
     struct {
       uint64_t IncludeHiddenSSID              : 1;
-      uint64_t ApDontForceSetup               : 1;
-      uint64_t DoNotStartAP                   : 1;
+      uint64_t ApCaptivePortal_inv            : 1;  // Was ApDontForceSetup, so store inverted to remain compatible with existing settings
+      uint64_t DoNotStartAPfallback_ConnectFail                   : 1;
       uint64_t ForceWiFi_bg_mode              : 1;
       uint64_t WiFiRestart_connection_lost    : 1;
       uint64_t WifiNoneSleep                  : 1;
@@ -40,8 +40,10 @@ private:
       uint64_t WaitWiFiConnect                : 1;
       uint64_t SDK_WiFi_autoreconnect         : 1;
       uint64_t HiddenSSID_SlowConnectPerBSSID : 1;
+      uint64_t EnableIPv6                     : 1;
+      uint64_t PassiveWiFiScan                : 1;
 
-      uint64_t unused : 52;
+      uint64_t unused : 50;
     } bits;
 
     uint64_t data{};

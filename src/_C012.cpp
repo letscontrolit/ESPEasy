@@ -59,7 +59,15 @@ bool CPlugin_012(CPlugin::Function function, struct EventStruct *event, String& 
 
       // Collect the values at the same run, to make sure all are from the same sample
       uint8_t valueCount = getValueCountForTask(event->TaskIndex);
-      std::unique_ptr<C012_queue_element> element(new C012_queue_element(event, valueCount));
+
+      constexpr unsigned size = sizeof(C012_queue_element);
+      void *ptr               = special_calloc(1, size);
+    
+      if (ptr == nullptr) {
+        break;
+      }
+    
+      UP_C012_queue_element  element(new (ptr) C012_queue_element(event, valueCount));
 
       for (uint8_t x = 0; x < valueCount; x++)
       {
@@ -67,10 +75,11 @@ bool CPlugin_012(CPlugin::Function function, struct EventStruct *event, String& 
         const String formattedValue = formatUserVar(event, x, isvalid);
 
         if (isvalid) {
-          element->txt[x]  = F("update/V");
-          element->txt[x] += event->idx + x;
-          element->txt[x] += F("?value=");
-          element->txt[x] += formattedValue;
+          move_special(element->txt[x], strformat(
+            F("update/V%d?value=%s"), 
+            event->idx + x, 
+            formattedValue.c_str()));
+
           #ifndef BUILD_NO_DEBUG
           if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
             addLog(LOG_LEVEL_DEBUG_MORE, element->txt[x]);
@@ -104,7 +113,7 @@ bool CPlugin_012(CPlugin::Function function, struct EventStruct *event, String& 
 
 // Uncrustify may change this into multi line, which will result in failed builds
 // *INDENT-OFF*
-bool do_process_c012_delay_queue(int controller_number, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
+bool do_process_c012_delay_queue(cpluginID_t cpluginID, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
   const C012_queue_element& element = static_cast<const C012_queue_element&>(element_base);
 // *INDENT-ON*
   while (element.txt[element.valuesSent].isEmpty()) {
@@ -115,7 +124,7 @@ bool do_process_c012_delay_queue(int controller_number, const Queue_element_base
     }
   }
 
-  if (!NetworkConnected()) {
+  if (!ESPEasy::net::NetworkConnected()) {
     return false;
   }
   return element.checkDone(Blynk_get(element.txt[element.valuesSent], element._controller_idx));

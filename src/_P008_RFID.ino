@@ -7,6 +7,8 @@
 
 /*
    History:
+   2025-06-14 tonhuisman: Add support for Custom Value Type per task value
+   2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported yet for RFID)
    2023-01-22 tonhuisman: Disable some strings in BUILD_NO_DEBUG builds to reduce size, minor optimizations
    2022-12-04 tonhuisman: Fix initialization issue (hanginging ESP...) when GPIO pins are not configured correctly
    2022-12-03 tonhuisman: Add Get Config values for tag value and bits received
@@ -47,17 +49,13 @@ boolean Plugin_008(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_008;
-      Device[deviceCount].Type               = DEVICE_TYPE_DUAL;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_ULONG;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = false;
-      Device[deviceCount].ValueCount         = 1;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = false;
-      Device[deviceCount].GlobalSyncOption   = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_008;
+      dev.Type           = DEVICE_TYPE_DUAL;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_ULONG;
+      dev.ValueCount     = 1;
+      dev.SendDataOption = true;
+      dev.CustomVTypeVar = true;
       break;
     }
 
@@ -80,6 +78,22 @@ boolean Plugin_008(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_MQTT_DISCOVER || FEATURE_CUSTOM_TASKVAR_VTYPE
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      #  if FEATURE_CUSTOM_TASKVAR_VTYPE
+
+      for (uint8_t i = 0; i < event->Par5; ++i) {
+        event->ParN[i] = ExtraTaskSettings.getTaskVarCustomVType(i);  // Custom/User selection
+      }
+      #  else // if FEATURE_CUSTOM_TASKVAR_VTYPE
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_NONE); // Not yet supported
+      #  endif // if FEATURE_CUSTOM_TASKVAR_VTYPE
+      success = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER || FEATURE_CUSTOM_TASKVAR_VTYPE
+
     case PLUGIN_SET_DEFAULTS:
     {
       P008_DATA_BITS      = 26;  // Minimal nr. of bits
@@ -93,9 +107,7 @@ boolean Plugin_008(uint8_t function, struct EventStruct *event, String& string)
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P008_data_struct(event));
       P008_data_struct *P008_data = static_cast<P008_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P008_data) {
-        success = P008_data->plugin_init(event);
-      }
+      success = nullptr != P008_data && P008_data->plugin_init(event);
       break;
     }
 
@@ -103,9 +115,7 @@ boolean Plugin_008(uint8_t function, struct EventStruct *event, String& string)
     {
       P008_data_struct *P008_data = static_cast<P008_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P008_data) {
-        success = P008_data->plugin_timer_in(event);
-      }
+      success = nullptr != P008_data && P008_data->plugin_timer_in(event);
       break;
     }
 
@@ -113,9 +123,7 @@ boolean Plugin_008(uint8_t function, struct EventStruct *event, String& string)
     {
       P008_data_struct *P008_data = static_cast<P008_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P008_data) {
-        success = P008_data->plugin_once_a_second(event);
-      }
+      success = nullptr != P008_data && P008_data->plugin_once_a_second(event);
       break;
     }
 
@@ -123,9 +131,7 @@ boolean Plugin_008(uint8_t function, struct EventStruct *event, String& string)
     {
       P008_data_struct *P008_data = static_cast<P008_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P008_data) {
-        success = P008_data->plugin_get_config(event, string);
-      }
+      success = nullptr != P008_data && P008_data->plugin_get_config(event, string);
       break;
     }
 
@@ -151,7 +157,7 @@ boolean Plugin_008(uint8_t function, struct EventStruct *event, String& string)
 
       if (P008_REMOVE_TIMEOUT == 0) { P008_REMOVE_TIMEOUT = 500; } // Default 500 mSec (was hardcoded value)
       addFormNumericBox(F("Automatic Tag removal after"), F("rmvtime"), P008_REMOVE_TIMEOUT, 250, 60000); // 0.25 to 60 seconds
-      addUnit(F("mSec."));
+      addUnit(F("ms"));
 
       // Max allowed is int = 0x7FFFFFFF ...
       addFormNumericBox(F("Value to set on Tag removal"), F("rmvval"), P008_REMOVE_VALUE, 0);
@@ -171,15 +177,6 @@ boolean Plugin_008(uint8_t function, struct EventStruct *event, String& string)
       P008_COMPATIBILITY  = isFormItemChecked(F("comp")) ? 0 : 1;    // Inverted logic!
       P008_REMOVE_VALUE   = getFormItemInt(F("rmvval"));
       P008_REMOVE_TIMEOUT = getFormItemInt(F("rmvtime"));
-
-      // uint64_t keyMask = 0LL;
-      // keyMask = (0x1ull << (P008_DATA_BITS - 2));
-      // keyMask--;
-      // String log = F("P008: testing keyMask = 0x");
-      // log += ull2String(keyMask, HEX);
-      // log += F(" bits: ");
-      // log += P008_DATA_BITS;
-      // addLog(LOG_LEVEL_INFO, log);
 
       success = true;
       break;

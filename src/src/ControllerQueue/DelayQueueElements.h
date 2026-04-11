@@ -9,6 +9,9 @@
 #include "../ControllerQueue/Queue_element_base.h"
 #include "../DataStructs/ControllerSettingsStruct.h"
 
+#include <memory> // For std::unique_ptr
+#include <new>    // for std::nothrow
+
 
 // The most logical place to have these queue element handlers defined would be in their
 // respective _Cxxx.ino file.
@@ -52,25 +55,30 @@
 //      in the element stored in the queue.
 #define DEFINE_Cxxx_DELAY_QUEUE_MACRO(NNN, M)                                                                          \
   extern struct ControllerDelayHandlerStruct *C##NNN####M##_DelayHandler;                                              \
-  bool do_process_c##NNN####M##_delay_queue(int controller_number, const Queue_element_base & element, ControllerSettingsStruct & ControllerSettings); \
+  bool do_process_c##NNN####M##_delay_queue(cpluginID_t cpluginID, const Queue_element_base & element, ControllerSettingsStruct & ControllerSettings); \
   void process_c##NNN####M##_delay_queue();                                                                            \
   bool init_c##NNN####M##_delay_queue(controllerIndex_t ControllerIndex);                                              \
   void exit_c##NNN####M##_delay_queue();                                                                               \
+  typedef std::unique_ptr<C##NNN####M##_queue_element> UP_C##NNN####M##_queue_element;
+
+
+# ifdef USE_SECOND_HEAP
 
 #define DEFINE_Cxxx_DELAY_QUEUE_MACRO_CPP(NNN, M)                                                                    \
   ControllerDelayHandlerStruct *C##NNN####M##_DelayHandler = nullptr;                                                \
   void process_c##NNN####M##_delay_queue() {                                                                         \
     if (C##NNN####M##_DelayHandler == nullptr) return;                                                               \
     C##NNN####M##_DelayHandler->process(                                                                             \
-      M, do_process_c##NNN####M##_delay_queue, TimingStatsElements::C##NNN####M##_DELAY_QUEUE,                                            \
-      SchedulerIntervalTimer_e::TIMER_C##NNN####M##_DELAY_QUEUE);                                          \
+      M, do_process_c##NNN####M##_delay_queue, TimingStatsElements::C##NNN####M##_DELAY_QUEUE,                       \
+      SchedulerIntervalTimer_e::TIMER_C##NNN####M##_DELAY_QUEUE);                                                    \
   }                                                                                                                  \
   bool init_c##NNN####M##_delay_queue(controllerIndex_t ControllerIndex) {                                           \
     if (C##NNN####M##_DelayHandler == nullptr) {                                                                     \
+      HeapSelectDram ephemeral;                                                                                      \
       C##NNN####M##_DelayHandler = new (std::nothrow) (ControllerDelayHandlerStruct);                                \
     }                                                                                                                \
     if (C##NNN####M##_DelayHandler == nullptr) { return false; }                                                     \
-    return C##NNN####M##_DelayHandler->cacheControllerSettings(ControllerIndex);                                 \
+    return C##NNN####M##_DelayHandler->cacheControllerSettings(ControllerIndex);                                     \
   }                                                                                                                  \
   void exit_c##NNN####M##_delay_queue() {                                                                            \
     if (C##NNN####M##_DelayHandler != nullptr) {                                                                     \
@@ -79,6 +87,32 @@
     }                                                                                                                \
   }                                                                                                                  \
 
+#else
+
+#define DEFINE_Cxxx_DELAY_QUEUE_MACRO_CPP(NNN, M)                                                                    \
+  ControllerDelayHandlerStruct *C##NNN####M##_DelayHandler = nullptr;                                                \
+  void process_c##NNN####M##_delay_queue() {                                                                         \
+    if (C##NNN####M##_DelayHandler == nullptr) return;                                                               \
+    C##NNN####M##_DelayHandler->process(                                                                             \
+      M, do_process_c##NNN####M##_delay_queue, TimingStatsElements::C##NNN####M##_DELAY_QUEUE,                       \
+      SchedulerIntervalTimer_e::TIMER_C##NNN####M##_DELAY_QUEUE);                                                    \
+  }                                                                                                                  \
+  bool init_c##NNN####M##_delay_queue(controllerIndex_t ControllerIndex) {                                           \
+    if (C##NNN####M##_DelayHandler == nullptr) {                                                                     \
+      C##NNN####M##_DelayHandler = new (std::nothrow) (ControllerDelayHandlerStruct);                                \
+    }                                                                                                                \
+    if (C##NNN####M##_DelayHandler == nullptr) { return false; }                                                     \
+    return C##NNN####M##_DelayHandler->cacheControllerSettings(ControllerIndex);                                     \
+  }                                                                                                                  \
+  void exit_c##NNN####M##_delay_queue() {                                                                            \
+    if (C##NNN####M##_DelayHandler != nullptr) {                                                                     \
+      delete C##NNN####M##_DelayHandler;                                                                             \
+      C##NNN####M##_DelayHandler = nullptr;                                                                          \
+    }                                                                                                                \
+  }                                                                                                                  \
+
+
+#endif
 
 
 
@@ -238,11 +272,12 @@ DEFINE_Cxxx_DELAY_QUEUE_MACRO(0, 18)
  #endif
  */
 
-/*
+
  #ifdef USES_C023
+ # include "../ControllerQueue/C023_queue_element.h"
    DEFINE_Cxxx_DELAY_QUEUE_MACRO(0, 23)
  #endif
- */
+
 
 /*
  #ifdef USES_C024

@@ -146,7 +146,7 @@
 
   void msecTimerHandlerStruct::recordIdle() {
     if (is_idle) { return; }
-    last_exec_time_usec = getMicros64();
+    last_exec_time_usec = micros();
     is_idle             = true;
     delay(0); // Nothing to do, so leave time for backgroundtasks
   }
@@ -154,5 +154,5 @@
   void msecTimerHandlerStruct::recordRunning() {
     if (!is_idle) { return; }
     is_idle               = false;
-    total_idle_time_usec += usecPassedSince(last_exec_time_usec);
+    total_idle_time_usec += usecPassedSince_fast(last_exec_time_usec);
   }

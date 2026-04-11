@@ -84,6 +84,9 @@ void ESPEasy_Scheduler::handle_schedule() {
     case SchedulerTimerType_e::GPIO_timer:
       process_gpio_timer(timerID, timer);
       break;
+    case SchedulerTimerType_e::NWPLUGIN_TIMER_IN_e:
+      process_network_timer(timerID);
+      break;
 
     case SchedulerTimerType_e::SystemEventQueue:
     case SchedulerTimerType_e::IntendedReboot:

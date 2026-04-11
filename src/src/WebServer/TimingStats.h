@@ -12,11 +12,11 @@ void handle_timingstats();
 // ********************************************************************************
 // HTML table formatted timing statistics
 // ********************************************************************************
-void format_using_threshhold(unsigned long value);
+void format_using_threshhold(uint32_t value);
 
-void stream_html_timing_stats(const TimingStats& stats, long timeSinceLastReset);
+void stream_html_timing_stats(const TimingStats& stats, int32_t timeSinceLastReset);
 
-long stream_timing_statistics(bool clearStats);
+int32_t stream_timing_statistics(bool clearStats);
 
 #endif 
 

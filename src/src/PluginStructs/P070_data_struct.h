@@ -5,7 +5,7 @@
 #ifdef USES_P070
 
 
-#include <NeoPixelBus_wrapper.h>
+# include <NeoPixelBus_wrapper.h>
 
 
 # define NUMBER_LEDS      60 // number of LED in the strip

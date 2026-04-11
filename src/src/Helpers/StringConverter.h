@@ -14,6 +14,10 @@
 
 // -V::569
 
+
+unsigned int count_newlines(const String& str);
+
+
 /********************************************************************************************\
    Concatenate using code which results in the smallest compiled code
  \*********************************************************************************************/
@@ -21,8 +25,17 @@
 String concat(const __FlashStringHelper * str, const String &val);
 String concat(const __FlashStringHelper * str, const __FlashStringHelper *val);
 
+String concat(const __FlashStringHelper * str, const char* val);
+String concat(const String & str, const char* val);
+
+String concat(const char& str, const String &val);
+
 template <typename T>
 String concat(const __FlashStringHelper * str, const T &val) {
+  # ifdef USE_SECOND_HEAP
+  HeapSelectDram ephemeral;
+  # endif // ifdef USE_SECOND_HEAP
+
   String res(str);
   res.concat(val);
   return res;
@@ -30,6 +43,10 @@ String concat(const __FlashStringHelper * str, const T &val) {
 
 template <typename T>
 String concat(const String& str, const T &val) {
+  # ifdef USE_SECOND_HEAP
+  HeapSelectDram ephemeral;
+  # endif // ifdef USE_SECOND_HEAP
+
   String res(str);
   res.concat(val);
   return res;
@@ -37,6 +54,17 @@ String concat(const String& str, const T &val) {
 
 bool equals(const String& str, const __FlashStringHelper * f_str);
 bool equals(const String& str, const char& c);
+
+// Move the string to 2nd heap if present
+void move_special(String& dest, String&& source);
+String move_special(String&& source);
+
+// Try to reserve on the heap with the most space available
+bool reserve_special(String& str, size_t size);
+
+// Arduino String does not have a function to de-allocate its internal buffer
+// This is a special trick to de-allocate its internal buffer and thus free up memory.
+void free_string(String& str);
 
 /*
 template <typename T>
@@ -66,61 +94,9 @@ bool str2ip(const String& string,
 bool str2ip(const char *string,
                uint8_t       *IP);
 
-String  formatIP(const IPAddress& ip);
+String  formatIP(const IPAddress& ip, bool includeZone = false);
 
 
-/********************************************************************************************\
-   Handling HEX strings
- \*********************************************************************************************/
-
-// Convert max. 8 hex decimals to unsigned long
-unsigned long hexToUL(const String& input_c,
-                      size_t        nrHexDecimals);
-
-unsigned long hexToUL(const String& input_c);
-
-unsigned long hexToUL(const String& input_c,
-                      size_t        startpos,
-                      size_t        nrHexDecimals);
-
-// Convert max. 16 hex decimals to unsigned long long
-unsigned long long hexToULL(const String& input_c,
-                            size_t        nrHexDecimals); 
-
-unsigned long long hexToULL(const String& input_c);
-
-unsigned long long hexToULL(const String& input_c,
-                            size_t        startpos,
-                            size_t        nrHexDecimals);
-
-void appendHexChar(uint8_t data, String& string);
-
-// Binary data to HEX
-// Returned string length will be twice the size of the data array.
-String formatToHex_array(const uint8_t* data, size_t size);
-
-String formatToHex(unsigned long value,
-                   const __FlashStringHelper * prefix,
-                   unsigned int minimal_hex_digits);
-
-String formatToHex(unsigned long value,
-                   const __FlashStringHelper * prefix);
-
-String formatToHex(unsigned long value, unsigned int minimal_hex_digits = 0);
-
-String formatToHex_no_prefix(unsigned long value, unsigned int minimal_hex_digits = 0);
-
-String formatHumanReadable(unsigned long value,
-                           unsigned long factor);
-
-String formatHumanReadable(unsigned long value,
-                           unsigned long factor,
-                           int           NrDecimals);
-
-String formatToHex_decimal(unsigned long value);
-
-String formatToHex_decimal(unsigned long value,
-                           unsigned long factor);
 
 const __FlashStringHelper * boolToString(bool value);
 
@@ -160,6 +136,14 @@ String formatUserVar(struct EventStruct *event,
                      uint8_t                rel_index,
                      bool              & isvalid);
 
+#if FEATURE_STRING_VARIABLES
+String formatUserVarForPresentation(struct EventStruct *event,
+                                    taskVarIndex_t      varNr,
+                                    bool              & hasPresentation,
+                                    const String      & value,
+                                    const deviceIndex_t DeviceIndex,
+                                    String              valueName = EMPTY_STRING);
+#endif // if FEATURE_STRING_VARIABLES
 
 String get_formatted_Controller_number(cpluginID_t cpluginID);
 
@@ -191,22 +175,6 @@ String wrapWithQuotesIfContainsParameterSeparatorChar(const String& text);
 /*********************************************************************************************\
    Format an object value pair for use in JSON.
 \*********************************************************************************************/
-String to_json_object_value(const __FlashStringHelper * object,
-                            const __FlashStringHelper * value,
-                            bool wrapInQuotes = false);
-
-String to_json_object_value(const __FlashStringHelper * object,
-                            const String& value,
-                            bool wrapInQuotes = false);
-
-String to_json_object_value(const __FlashStringHelper * object,
-                            String&& value,
-                            bool wrapInQuotes = false);
-
-String to_json_object_value(const String& object,
-                            const String& value,
-                            bool wrapInQuotes = false);
-
 String to_json_value(const String& value,
                      bool wrapInQuotes = false);
 
@@ -317,6 +285,8 @@ char* GetTextIndexed(char* destination, size_t destination_size, uint32_t index,
 \*********************************************************************************************/
 int GetCommandCode(char* destination, size_t destination_size, const char* needle, const char* haystack);
 
+int GetCommandCode(const char* needle, const char* haystack);
+
 
 
 // escapes special characters in strings for use in html-forms
@@ -332,23 +302,23 @@ void   htmlStrongEscape(String& html);
 
 String URLEncode(const String& msg);
 
-void   repl(const __FlashStringHelper * key,
+bool   repl(const __FlashStringHelper * key,
             const String& val,
             String      & s,
             bool       useURLencode);
 
-void   repl(const __FlashStringHelper * key,
+bool   repl(const __FlashStringHelper * key,
             const char* val,
             String      & s,
             bool       useURLencode);
 
-void   repl(const __FlashStringHelper * key1,
-             const __FlashStringHelper * key2,
+bool   repl(const __FlashStringHelper * key1,
+            const __FlashStringHelper * key2,
             const char* val,
             String      & s,
             bool       useURLencode);
 
-void   repl(const String& key,
+bool   repl(const String& key,
             const String& val,
             String      & s,
             bool       useURLencode);
@@ -364,9 +334,29 @@ void parseControllerVariables(String            & s,
                               bool             useURLencode);
 
 void parseSingleControllerVariable(String            & s,
-                                   struct EventStruct *event,
-                                   uint8_t                taskValueIndex,
-                                   bool             useURLencode);
+                                   struct EventStruct* event,
+                                   uint8_t             taskValueIndex,
+                                   bool                useURLencode);
+
+#if FEATURE_MQTT_DISCOVER
+void parseDeviceClassVariable(String                   & s,
+                              const __FlashStringHelper* devclass,
+                              bool                       useURLencode);
+
+void parseUniqueIdVariable(String      & s,
+                           const String& uniqueId,
+                           bool          useURLencode);
+
+void parseElementIdVariable(String     & s,
+                           const String& elementId,
+                           bool          useURLencode);
+#endif
+
+#if FEATURE_STRING_VARIABLES
+void parseValNameVariable(String      & s,
+                          const String& valname,
+                          bool          useURLencode);
+#endif // if FEATURE_STRING_VARIABLES
 
 void parseSystemVariables(String& s,
                           bool useURLencode);
@@ -388,6 +378,22 @@ bool getConvertArgument2(const __FlashStringHelper * marker,
                          int         & startIndex,
                          int         & endIndex);
 
+#if FEATURE_STRING_VARIABLES
+bool getConvertArgumentStrFormat(const __FlashStringHelper *marker,
+                                 const String             & s,
+                                 String                   & argStr,
+                                 float                    & arg1,
+                                 float                    & arg2,
+                                 int                      & startIndex,
+                                 int                      & endIndex);
+#endif // if FEATURE_STRING_VARIABLES
+
+bool getConvertArgumentStr(const __FlashStringHelper *marker,
+                           const String             & s,
+                           String                   & argument,
+                           int                      & startIndex,
+                           int                      & endIndex);
+
 bool getConvertArgumentString(const __FlashStringHelper * marker,
                               const String& s,
                               String      & argumentString,
@@ -405,6 +411,10 @@ bool getConvertArgumentString(const String& marker,
 void parseStandardConversions(String& s,
                               bool useURLencode);
 
+#if FEATURE_STRING_VARIABLES
+String get_date_time_from_timestamp(time_t unix_timestamp, bool am_pm, bool iso_format);
+String get_weekday_from_timestamp(time_t unix_timestamp);
+#endif // if FEATURE_STRING_VARIABLES
 
 bool HasArgv(const char  *string,
              unsigned int argc);

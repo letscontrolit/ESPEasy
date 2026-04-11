@@ -60,7 +60,7 @@
 // #endif
 #  endif // if (defined(LIMIT_BUILD_SIZE) && !defined(P037_OVERRIDE)) || defined(P037_LIMIT_BUILD_SIZE)
 
-#  ifdef PLUGIN_DISPLAY_COLLECTION
+#  if defined(PLUGIN_DISPLAY_A_COLLECTION) || defined(PLUGIN_DISPLAY_B_COLLECTION)
 #   if P037_FILTER_SUPPORT
 #    undef P037_FILTER_SUPPORT
 #    define P037_FILTER_SUPPORT 0
@@ -69,7 +69,7 @@
 #    undef P037_REPLACE_BY_COMMA_SUPPORT
 #    define P037_REPLACE_BY_COMMA_SUPPORT 0
 #   endif // if P037_REPLACE_BY_COMMA_SUPPORT
-#  endif  // ifdef PLUGIN_DISPLAY_COLLECTION
+#  endif // if defined(PLUGIN_DISPLAY_A_COLLECTION) || defined(PLUGIN_DISPLAY_B_COLLECTION)
 # endif // ifndef PLUGIN_BUILD_MAX_ESP32
 
 # define P037_MAX_MAPPINGS  25
@@ -94,9 +94,11 @@
 # define P037_OPERAND_LIST    F("=%")
 
 # define P037_FILTER_COUNT    3
-# define P037_FILTER_LIST     F("=-:") // Length should at least match P037_FILTER_COUNT
+# define P037_FILTER_LIST     F("=-:")           // Length should at least match P037_FILTER_COUNT
 
-# define P037_VALUE_SEPARATOR '\x02'   // Separator outside of the normal ascii character values
+# define P037_VALUE_SEPARATOR '\x02'             // Separator outside of the normal ascii character values
+
+# define P037_REPLACE_CHAR_SET  "!@$%^&*;:.|/\\" // Allowable set of characters to be replaced by a comma
 
 // Data structure
 struct P037_data_struct : public PluginTaskData_base

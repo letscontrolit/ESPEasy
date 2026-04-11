@@ -28,7 +28,7 @@
     "
     | ``st77xxcmd,clear``
     ","
-    | Clear the display, using the default background color.
+    | Clear the display, using the **default** background color. For clearing with a custom background color see the ``<trigger>,clear[,<color>]`` command.
     "
     "
     | ``st77xxcmd,backlight,<percentage>``

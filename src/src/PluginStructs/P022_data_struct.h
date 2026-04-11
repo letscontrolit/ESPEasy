@@ -53,6 +53,9 @@ struct P022_data_struct : public PluginTaskData_base {
 
 
   static String P022_logPrefix(int address);
+  static String P022_logPrefix(int address, const __FlashStringHelper * poststr);
+
+  void initModeFreq(int address, uint8_t mode2, uint16_t freq);
 
   uint32_t initializeState_lo = 0;
   uint32_t initializeState_hi = 0;

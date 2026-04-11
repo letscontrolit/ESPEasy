@@ -8,9 +8,8 @@
 #include "../WebServer/Markup.h"
 #include "../WebServer/Markup_Forms.h"
 
-#include "../Commands/InternalCommands.h"
+#include "../Commands/ExecuteCommand.h"
 #include "../Globals/Nodes.h"
-#include "../Globals/Device.h"
 #include "../Globals/Plugins.h"
 #include "../Globals/Settings.h"
 
@@ -98,7 +97,7 @@ bool handle_custom(const String& path) {
         addSelector_Item(name, it->first, choice == it->first);
       }
     }
-    addSelector_Foot();
+    addSelector_Foot(true);
 
     // create <> navigation buttons
     uint8_t prev = Settings.Unit;
@@ -137,7 +136,7 @@ bool handle_custom(const String& path) {
   String webrequest = webArg(F("cmd"));
 
   if (webrequest.length() > 0) {
-    ExecuteCommand_all_config(EventValueSource::Enum::VALUE_SOURCE_HTTP, webrequest.c_str());
+    ExecuteCommand_all_config({EventValueSource::Enum::VALUE_SOURCE_HTTP, webrequest.c_str()});
 
     // handle some update processes first, before returning page update...
     String dummy;
@@ -147,6 +146,9 @@ bool handle_custom(const String& path) {
 
   if (dataFile)
   {
+    if (!dashboardPage) {
+      TXBuffer.startStream(); // Start streaming as it hasn't been started yet, to avoid HTTP/0.9 fallback response
+    }
     // Read the file per line and serve per line to reduce amount of memory needed.
     size_t available = dataFile.available();
     String line;
@@ -187,6 +189,7 @@ bool handle_custom(const String& path) {
                 "<meta name='viewport' content='width=width=device-width, initial-scale=1'><STYLE>* {font-family:sans-serif; font-size:16pt;}.button {margin:4px; padding:4px 16px; background-color:#07D; color:#FFF; text-decoration:none; border-radius:4px}</STYLE>"));
       html_table_class_normal();
 
+
       for (taskIndex_t x = 0; x < TASKS_MAX; x++)
       {
         if (validPluginID_fullcheck(Settings.getPluginID_for_task(x)))
@@ -199,11 +202,11 @@ bool handle_custom(const String& path) {
 
             const uint8_t valueCount = getValueCountForTask(x);
 
-            for (uint8_t varNr = 0; varNr < VARS_PER_TASK; varNr++)
+            struct EventStruct TempEvent(x);
+            for (uint8_t varNr = 0; varNr < valueCount; varNr++)
             {
-              const String taskValueName = getTaskValueName(x, varNr);
-              if ((varNr < valueCount) &&
-                  (!taskValueName.isEmpty()))
+              const String taskValueName = Cache.getTaskDeviceValueName(x, varNr);
+              if (!taskValueName.isEmpty())
               {
                 if (varNr > 0) {
                   html_TR_TD();
@@ -211,7 +214,7 @@ bool handle_custom(const String& path) {
                 html_TD();
                 addHtml(taskValueName);
                 html_TD();
-                addHtml(formatUserVarNoCheck(x, varNr));
+                addHtml(formatUserVarNoCheck(&TempEvent, varNr));
               }
             }
           }

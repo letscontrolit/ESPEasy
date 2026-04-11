@@ -21,7 +21,7 @@ void ESPEasy_Scheduler::setPluginTaskTimer(
 void ESPEasy_Scheduler::setPluginTaskTimer(
   unsigned long msecFromNow,
   taskIndex_t taskIndex,
-  PluginFunctions_e function,
+  const PluginFunctions_e& function,
   int Par1, int Par2, int Par3, int Par4, int Par5)
 {
   // taskIndex and par1 form a unique key that can be used to restart a timer
@@ -29,7 +29,7 @@ void ESPEasy_Scheduler::setPluginTaskTimer(
 
   if (!Settings.TaskDeviceEnabled[taskIndex]) { return; }
 
-  const PluginTaskTimerID timerID(taskIndex, Par1);
+  const PluginTaskTimerID timerID(taskIndex, Par1, function);
 
   systemTimerStruct timer_data;
 

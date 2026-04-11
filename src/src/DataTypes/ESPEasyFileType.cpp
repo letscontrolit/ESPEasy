@@ -2,7 +2,11 @@
 
 #include "../../ESPEasy_common.h"
 
+#include "../CustomBuild/StorageLayout.h"
+
 #include "../Globals/ResetFactoryDefaultPref.h"
+
+#include "../Helpers/StringConverter.h"
 
 bool matchFileType(const String& filename, FileType::Enum filetype)
 {
@@ -14,10 +18,30 @@ bool matchFileType(const String& filename, FileType::Enum filetype)
 
 bool isProtectedFileType(const String& filename)
 {
-  return matchFileType(filename, FileType::CONFIG_DAT) ||
-         matchFileType(filename, FileType::SECURITY_DAT) ||
-         matchFileType(filename, FileType::NOTIFICATION_DAT) ||
-         matchFileType(filename, FileType::PROVISIONING_DAT);
+  #if FEATURE_EXTENDED_CUSTOM_SETTINGS
+  bool isTaskSpecificConfig = false;
+  const String fname        = filename.substring(filename.startsWith(F("/")) ? 1 : 0);
+  const String mask         = F(DAT_TASKS_CUSTOM_EXTENSION_FILEMASK);
+  const int8_t mPerc        = mask.indexOf('%');
+
+  if ((mPerc > -1) && fname.startsWith(mask.substring(0, mPerc))) {
+    for (uint8_t n = 0; n < TASKS_MAX && !isTaskSpecificConfig; ++n) {
+      isTaskSpecificConfig |= (fname.equalsIgnoreCase(strformat(mask, n + 1)));
+    }
+  }
+  #endif // if FEATURE_EXTENDED_CUSTOM_SETTINGS
+
+  return
+    #if FEATURE_EXTENDED_CUSTOM_SETTINGS
+    isTaskSpecificConfig || // Support for extcfgNN.dat
+    #endif // if FEATURE_EXTENDED_CUSTOM_SETTINGS
+    matchFileType(filename, FileType::CONFIG_DAT) ||
+    matchFileType(filename, FileType::SECURITY_DAT) ||
+    matchFileType(filename, FileType::NOTIFICATION_DAT) ||
+#if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE
+    matchFileType(filename, FileType::DEV_SECURITY_DAT) ||
+#endif
+    matchFileType(filename, FileType::PROVISIONING_DAT);
 }
 
 const __FlashStringHelper* getFileName(FileType::Enum filetype) {
@@ -27,6 +51,9 @@ const __FlashStringHelper* getFileName(FileType::Enum filetype) {
     case FileType::NOTIFICATION_DAT: return F("notification.dat");
     case FileType::SECURITY_DAT:     return F("security.dat");
     case FileType::PROVISIONING_DAT: return F("provisioning.dat");
+#if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE
+    case FileType::DEV_SECURITY_DAT: return F("devsecurity.dat");
+#endif
     case FileType::RULES_TXT:
       // Use getRulesFileName
       break;
@@ -63,6 +90,9 @@ bool getDownloadFiletypeChecked(FileType::Enum filetype, unsigned int filenr) {
     case FileType::NOTIFICATION_DAT: return ResetFactoryDefaultPreference.fetchNotificationDat();
     case FileType::RULES_TXT:        return ResetFactoryDefaultPreference.fetchRulesTXT(filenr);
     case FileType::PROVISIONING_DAT: return ResetFactoryDefaultPreference.fetchProvisioningDat();
+#if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE
+    case FileType::DEV_SECURITY_DAT: return ResetFactoryDefaultPreference.fetchDeviceSecurityDat();
+#endif
       break;
 
     case FileType::MAX_FILETYPE:

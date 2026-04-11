@@ -13,7 +13,9 @@ Type: |P038_type|
 
 Name: |P038_name|
 
-Status: |P038_status|
+Status ESP32: |P038_status|
+
+Status ESP8266: |P038_status_lb|
 
 GitHub: |P038_github|_
 
@@ -82,6 +84,9 @@ Change log
 
 .. versionchanged:: 2.0
   ...
+
+  |improved|
+  2024-12-22: Fix HSV values for ``NeoPixelHSV*`` commands.
 
   |improved|
   2022-01: Make plugin multi-instance compatible, improve/fix pin selection, allow RGBW color selection for ``NeoPixelLine*`` commands.

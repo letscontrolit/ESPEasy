@@ -16,6 +16,10 @@
 //  Written by José Araújo (josemariaaraujo@gmail.com),
 //      with most code copied from plugin 085: _P085_AcuDC243.ino
 
+/** Changelog:
+ * 2025-01-17 tonhuisman: Implement support for MQTT AutoDiscovery (partially)
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported yet for DDS238)
+ */
 
 /*
    DF - Below doesn't look right; needs a RS485 to TTL(3.3v) level converter (see https://github.com/reaper7/SDM_Energy_Meter)
@@ -37,19 +41,18 @@ boolean Plugin_108(uint8_t function, struct EventStruct *event, String& string) 
 
   switch (function) {
     case PLUGIN_DEVICE_ADD: {
-      Device[++deviceCount].Number           = PLUGIN_ID_108;
-      Device[deviceCount].Type               = DEVICE_TYPE_SERIAL_PLUS1; // connected through 3 datapins
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_QUAD;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = P108_NR_OUTPUT_VALUES;
-      Device[deviceCount].OutputDataType     = Output_Data_type_t::Simple;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].PluginStats        = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_108;
+      dev.Type           = DEVICE_TYPE_SERIAL_PLUS1; // connected through 3 datapins
+      dev.VType          = Sensor_VType::SENSOR_TYPE_QUAD;
+      dev.FormulaOption  = true;
+      dev.ValueCount     = P108_NR_OUTPUT_VALUES;
+      dev.OutputDataType = Output_Data_type_t::Simple;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
+      dev.PluginStats    = true;
+      dev.MqttStateClass = true;
+      dev.setPin3Direction(gpio_direction::gpio_output);
       break;
     }
 
@@ -62,7 +65,7 @@ boolean Plugin_108(uint8_t function, struct EventStruct *event, String& string) 
       for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
         if (i < P108_NR_OUTPUT_VALUES) {
           const uint8_t pconfigIndex = i + P108_QUERY1_CONFIG_POS;
-          uint8_t choice             = PCONFIG(pconfigIndex);
+          const uint8_t choice       = PCONFIG(pconfigIndex);
           ExtraTaskSettings.setTaskDeviceValueName(i, Plugin_108_valuename(choice, false));
         } else {
           ExtraTaskSettings.clearTaskDeviceValueName(i);
@@ -76,6 +79,14 @@ boolean Plugin_108(uint8_t function, struct EventStruct *event, String& string) 
       event->String3 = formatGpioName_output_optional(F("DE"));
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      success = getDiscoveryVType(event, Plugin_108_QueryVType, P108_QUERY1_CONFIG_POS, event->Par5);;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
 
     case PLUGIN_WEBFORM_SHOW_CONFIG:
     {
@@ -108,7 +119,8 @@ boolean Plugin_108(uint8_t function, struct EventStruct *event, String& string) 
       for (int i = 0; i < 4; ++i) {
         options_baudrate[i] = String(p108_storageValueToBaudrate(i));
       }
-      addFormSelector(F("Baud Rate"), P108_BAUDRATE_LABEL, 4, options_baudrate, nullptr, P108_BAUDRATE);
+      const FormSelectorOptions selector(4, options_baudrate);
+      selector.addFormSelector(F("Baud Rate"), P108_BAUDRATE_LABEL, P108_BAUDRATE);
       addUnit(F("baud"));
       addFormNumericBox(F("Modbus Address"), P108_DEV_ID_LABEL, P108_DEV_ID, 1, 247);
       break;
@@ -139,13 +151,7 @@ boolean Plugin_108(uint8_t function, struct EventStruct *event, String& string) 
         addRowLabel(F("Checksum (pass/fail/nodata)"));
         uint32_t reads_pass, reads_crc_failed, reads_nodata;
         P108_data->modbus.getStatistics(reads_pass, reads_crc_failed, reads_nodata);
-        String chksumStats;
-        chksumStats  = reads_pass;
-        chksumStats += '/';
-        chksumStats += reads_crc_failed;
-        chksumStats += '/';
-        chksumStats += reads_nodata;
-        addHtml(chksumStats);
+        addHtml(strformat(F("%d/%d/%d"), reads_pass, reads_crc_failed, reads_nodata));
 
         addFormSubHeader(F("Logged Values"));
         p108_showValueLoadPage(P108_QUERY_Wh_imp, event);
@@ -243,7 +249,7 @@ boolean Plugin_108(uint8_t function, struct EventStruct *event, String& string) 
 
       if ((nullptr != P108_data) && P108_data->isInitialized()) {
         for (int i = 0; i < P108_NR_OUTPUT_VALUES; ++i) {
-          UserVar[event->BaseVarIndex + i] = p108_readValue(PCONFIG(i + P108_QUERY1_CONFIG_POS), event);
+          UserVar.setFloat(event->TaskIndex, i, p108_readValue(PCONFIG(i + P108_QUERY1_CONFIG_POS), event));
           delay(1);
         }
 

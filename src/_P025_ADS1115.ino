@@ -5,6 +5,9 @@
 // #################################### Plugin 025: ADS1x15 I2C 0x48)  ###############################################
 // #######################################################################################################
 
+/** Changelog:
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery
+ */
 
 # include "src/PluginStructs/P025_data_struct.h"
 
@@ -23,19 +26,16 @@ boolean Plugin_025(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_025;
-      Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_SINGLE;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = 1;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].OutputDataType     = Output_Data_type_t::Simple;
-      Device[deviceCount].PluginStats        = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_025;
+      dev.Type           = DEVICE_TYPE_I2C;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_SINGLE;
+      dev.FormulaOption  = true;
+      dev.ValueCount     = 1;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
+      dev.OutputDataType = Output_Data_type_t::Simple;
+      dev.PluginStats    = true;
       break;
     }
 
@@ -74,6 +74,14 @@ boolean Plugin_025(uint8_t function, struct EventStruct *event, String& string)
       success           = true;
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      success = getDiscoveryVType(event, Plugin_QueryVType_Analog, 255, event->Par5);;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
 
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
@@ -155,10 +163,7 @@ boolean Plugin_025(uint8_t function, struct EventStruct *event, String& string)
       // uint8_t port = CONFIG_PORT - (unit * 4);
       // uint8_t address = 0x48 + unit;
 
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P025_data_struct(event));
-      P025_data_struct *P025_data = static_cast<P025_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-      success = (nullptr != P025_data);
+      success = initPluginTaskData(event->TaskIndex, new (std::nothrow) P025_data_struct(event));
       break;
     }
 
@@ -173,18 +178,15 @@ boolean Plugin_025(uint8_t function, struct EventStruct *event, String& string)
           if (P025_data->read(value, i)) {
             success = true;
 
-        # ifndef BUILD_NO_DEBUG
+            # ifndef BUILD_NO_DEBUG
             String log;
 
             if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-              log  = F("ADS1x15 : Analog value: ");
-              log += value;
-              log += F(" / Channel: ");
-              log += P025_MUX(i);
+              log = strformat(F("ADS1x15 : Analog value: %.2f / Channel: %d"), value, P025_MUX(i));
             }
-        # endif // ifndef BUILD_NO_DEBUG
+            # endif // ifndef BUILD_NO_DEBUG
 
-            UserVar[event->BaseVarIndex + i] = value;
+            UserVar.setFloat(event->TaskIndex, i, value);
 
             const P025_VARIOUS_BITS_t p025_variousBits(P025_VARIOUS_BITS);
 
@@ -197,23 +199,23 @@ boolean Plugin_025(uint8_t function, struct EventStruct *event, String& string)
               if (adc1 != adc2)
               {
                 const float normalized = static_cast<float>(value - adc1) / static_cast<float>(adc2 - adc1);
-                UserVar[event->BaseVarIndex + i] = normalized * (out2 - out1) + out1;
-            # ifndef BUILD_NO_DEBUG
+                UserVar.setFloat(event->TaskIndex, i, normalized * (out2 - out1) + out1);
+                # ifndef BUILD_NO_DEBUG
 
                 if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
                   log += ' ';
-                  log += formatUserVarNoCheck(event->TaskIndex, i);
+                  log += formatUserVarNoCheck(event, i);
                 }
-            # endif // ifndef BUILD_NO_DEBUG
+                # endif // ifndef BUILD_NO_DEBUG
               }
             }
 
-        # ifndef BUILD_NO_DEBUG
+            # ifndef BUILD_NO_DEBUG
 
             if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
               addLogMove(LOG_LEVEL_DEBUG, log);
             }
-        # endif // ifndef BUILD_NO_DEBUG
+            # endif // ifndef BUILD_NO_DEBUG
           }
         }
       }

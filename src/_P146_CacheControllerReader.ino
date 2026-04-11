@@ -21,9 +21,12 @@
 // - Filter data to only upload data related to sufficient change in value
 // - Allow to upload the original timestamp along with the sample
 
+/** Changelog:
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported for Cache reader)
+ */
 
 # define PLUGIN_146
-# define PLUGIN_ID_146          146
+# define PLUGIN_ID_146         146
 # define PLUGIN_NAME_146       "Generic - Cache Reader"
 # define PLUGIN_VALUENAME1_146 "FileNr"
 # define PLUGIN_VALUENAME2_146 "FilePos"
@@ -41,20 +44,15 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_146;
-      Device[deviceCount].Type               = DEVICE_TYPE_DUMMY;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_DUAL;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = false;
-      Device[deviceCount].DecimalsOnly       = false;
-      Device[deviceCount].ValueCount         = 2;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = false;
-      Device[deviceCount].TimerOptional      = true;
-      Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].OutputDataType     = Output_Data_type_t::Default;
+      auto& dev = Device[++deviceCount];
+      dev.Number            = PLUGIN_ID_146;
+      dev.Type              = DEVICE_TYPE_DUMMY;
+      dev.VType             = Sensor_VType::SENSOR_TYPE_DUAL;
+      dev.ValueCount        = 2;
+      dev.SendDataOption    = true;
+      dev.OutputDataType    = Output_Data_type_t::Default;
+      dev.HideDerivedValues = true;
+      dev.NoDeviceSettings  = true;
       break;
     }
 
@@ -70,6 +68,15 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_146));
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_NONE); // Not yet supported
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
 
     case PLUGIN_SET_DEFAULTS:
     {
@@ -98,20 +105,33 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      // Init the controller cache handler, just in case the cache controller may not be enabled
-      ControllerCache.init();
-
       // Restore the last position from RTC when rebooting.
       ControllerCache.setPeekFilePos(
         P146_TASKVALUE_FILENR,
         P146_TASKVALUE_FILEPOS);
-      initPluginTaskData(event->TaskIndex,
-                         new (std::nothrow) P146_data_struct(event));
-      P146_data_struct *P146_data = static_cast<P146_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      if (nullptr != P146_data) {
-        success = true;
+      // Init the controller cache handler, just in case the cache controller may not be enabled
+      ControllerCache.init();
+
+      // Update the position based on actually present cache files.
+      int peekFileNr{};
+      int peekReadPos = ControllerCache.getPeekFilePos(peekFileNr);
+
+      if (peekReadPos >= 0) {
+        P146_SET_TASKVALUE_FILENR(peekFileNr);
+        P146_SET_TASKVALUE_FILEPOS(peekReadPos);
       }
+
+
+      success = initPluginTaskData(
+        event->TaskIndex,
+        new (std::nothrow) P146_data_struct(event));
+      break;
+    }
+
+    case PLUGIN_EXIT:
+    {
+      P146_data_struct::flush();
       break;
     }
 
@@ -131,27 +151,41 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
               P146_data->prepareCSVInBulk(event->TaskIndex, P146_GET_JOIN_TIMESTAMP, P146_GET_ONLY_SET_TASKS, separator);
             }
           }
-        } else {
+        } else if (P146_GET_SEND_VIA_ORIG_TASK || P146_GET_SEND_VIA_EVENT) {
           // Do not set the "success" or else the task values of this Cache reader task will be sent to the same controller too.
 
-          if (P146_data_struct::sendViaOriginalTask(event->TaskIndex, P146_GET_SEND_TIMESTAMP)) {
+          bool processed = false;
+
+          if (P146_GET_SEND_VIA_ORIG_TASK && P146_data_struct::sendViaOriginalTask(event->TaskIndex, P146_GET_SEND_TIMESTAMP)) {
+            processed = true;
+          }
+
+          if (P146_GET_SEND_VIA_EVENT && P146_data_struct::sendViaEvent_AllCache(event->TaskIndex, P146_GET_SEND_TIMESTAMP)) {
+            processed = true;
+          }
+
+          if (processed) {
             int readFileNr    = 0;
             const int readPos = ControllerCache.getPeekFilePos(readFileNr);
 
             if (P146_GET_ERASE_BINFILES) {
               // Check whether we must delete the oldest file
-              if (P146_TASKVALUE_FILENR != 0 && P146_TASKVALUE_FILENR  < readFileNr) {
+              if ((P146_TASKVALUE_FILENR != 0) && (P146_TASKVALUE_FILENR  < readFileNr)) {
                 ControllerCache.deleteCacheBlock(P146_TASKVALUE_FILENR);
               }
             }
 
-            P146_TASKVALUE_FILENR  = readFileNr;
-            P146_TASKVALUE_FILEPOS = readPos;
+            P146_SET_TASKVALUE_FILENR(readFileNr);
+            P146_SET_TASKVALUE_FILEPOS(readPos);
           }
         }
       } else {
         // Default to 1 sec
         Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 1000);
+        int readFileNr    = 0;
+        const int readPos = ControllerCache.getPeekFilePos(readFileNr);
+        P146_SET_TASKVALUE_FILENR(readFileNr);
+        P146_SET_TASKVALUE_FILEPOS(readPos);
       }
 
       break;
@@ -178,13 +212,14 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
             if (P146_GET_ERASE_BINFILES) {
               // Check whether we must delete the oldest file
               const int filenr = P146_TASKVALUE_FILENR;
-              if (filenr != 0 && filenr  < readFileNr) {
+
+              if ((filenr != 0) && (filenr  < readFileNr)) {
                 ControllerCache.deleteCacheBlock(filenr);
               }
             }
 
-            P146_TASKVALUE_FILENR  = readFileNr;
-            P146_TASKVALUE_FILEPOS = readPos;
+            P146_SET_TASKVALUE_FILENR(readFileNr);
+            P146_SET_TASKVALUE_FILEPOS(readPos);
           }
           success = true;
         }
@@ -196,12 +231,16 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       addFormCheckBox(F("Delete Cache Files After Send"), F("deletebin"), P146_GET_ERASE_BINFILES);
+
+      addFormSubHeader(F("Read Rate"));
+      addFormNumericBox(F("Minimal Send Interval"), F("minsendinterval"), P146_MINIMAL_SEND_INTERVAL, 0, 1000);
+      addUnit(F("ms"));
+
       addFormSubHeader(F("MQTT Output Options"));
       addFormCheckBox(F("Send Bulk"),          F("sendbulk"), P146_GET_SEND_BULK);
       addFormCheckBox(F("HEX encoded Binary"), F("binary"),   P146_GET_SEND_BINARY);
 
       //      addFormCheckBox(F("Send ReadPos"),          F("sendreadpos"),    P146_GET_SEND_READ_POS);
-      addFormNumericBox(F("Minimal Send Interval"), F("minsendinterval"), P146_MINIMAL_SEND_INTERVAL, 0, 1000);
       addFormNumericBox(F("Max Message Size"),
                         F("maxmsgsize"),
                         P146_MQTT_MESSAGE_LENGTH,
@@ -214,7 +253,10 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
       addFormTextBox(F("Publish Topic"),  getPluginCustomArgName(P146_PublishTopicIndex),  strings[P146_PublishTopicIndex],  P146_Nchars);
 
 
-      //      addFormSubHeader(F("Non MQTT Output Options"));
+      addFormSubHeader(F("Non MQTT Output Options"));
+      addFormCheckBox(F("Send via Original Task"), F("origTask"),  P146_GET_SEND_VIA_ORIG_TASK);
+      addFormCheckBox(F("Send as Event"),          F("sendEvent"), P146_GET_SEND_VIA_EVENT);
+
       //      addFormCheckBox(F("Send Timestamp"), F("sendtimestamp"), P146_GET_SEND_TIMESTAMP);
 
       addTableSeparator(F("Export to CSV"), 2, 3);
@@ -230,10 +272,12 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
           ',',
           ';'
         };
-        addFormSelector(F("Separator"), F("separator"), 3, separatorLabels, separatorOptions, P146_SEPARATOR_CHARACTER);
+        constexpr size_t optionCount = NR_ELEMENTS(separatorOptions);
+        const FormSelectorOptions selector(optionCount, separatorLabels, separatorOptions);
+        selector.addFormSelector(F("Separator"), F("separator"), P146_SEPARATOR_CHARACTER);
       }
       addFormCheckBox(F("Join Samples with same Timestamp"), F("jointimestamp"), P146_GET_JOIN_TIMESTAMP);
-      addFormCheckBox(F("Export only enabled tasks"),            F("onlysettasks"),  P146_GET_ONLY_SET_TASKS);
+      addFormCheckBox(F("Export only enabled tasks"),        F("onlysettasks"),  P146_GET_ONLY_SET_TASKS);
 
       addFormNote(F("Download button link only updated after saving"));
 
@@ -241,11 +285,15 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
       html_add_button_prefix();
       addHtml(F("dumpcache?separator="));
 
-      switch (static_cast<char>(P146_SEPARATOR_CHARACTER)) {
-        case '\t': addHtml(F("Tab")); break;
-        case ',':  addHtml(F("Comma")); break;
+      switch (static_cast<char>(P146_SEPARATOR_CHARACTER))
+      {
+        case '\t': addHtml(F("Tab"));
+          break;
+        case ',':  addHtml(F("Comma"));
+          break;
         case ';':
-        default:   addHtml(F("Semicolon")); break;
+        default:   addHtml(F("Semicolon"));
+          break;
       }
 
       if (P146_GET_JOIN_TIMESTAMP) {
@@ -277,14 +325,16 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
       P146_SET_ONLY_SET_TASKS(isFormItemChecked(F("onlysettasks")));
       P146_SEPARATOR_CHARACTER = getFormItemInt(F("separator"));
 
+      P146_SET_SEND_VIA_ORIG_TASK(isFormItemChecked(F("origTask")));
+      P146_SET_SEND_VIA_EVENT(isFormItemChecked(F("sendEvent")));
+
       String strings[P146_Nlines];
-      String error;
 
       for (uint8_t varNr = 0; varNr < P146_Nlines; varNr++) {
         strings[varNr] = webArg(getPluginCustomArgName(varNr));
       }
 
-      error = SaveCustomTaskSettings(event->TaskIndex, strings, P146_Nlines, 0);
+      const String error = SaveCustomTaskSettings(event->TaskIndex, strings, P146_Nlines, 0);
 
       if (!error.isEmpty()) {
         addHtmlError(error);
@@ -302,7 +352,15 @@ boolean Plugin_146(uint8_t function, struct EventStruct *event, String& string)
 
       if (equals(command, F("cachereader"))) {
         if (equals(subcommand, F("setreadpos"))) {
-          P146_data_struct::setPeekFilePos(event->Par2, event->Par3);
+          if (P146_data_struct::setPeekFilePos(event->Par2, event->Par3)) {
+            int peekFileNr{};
+            int peekReadPos = ControllerCache.getPeekFilePos(peekFileNr);
+
+            if (peekReadPos >= 0) {
+              P146_SET_TASKVALUE_FILENR(peekFileNr);
+              P146_SET_TASKVALUE_FILEPOS(peekReadPos);
+            }
+          }
           success = true;
         } else if (equals(subcommand, F("sendtaskinfo"))) {
           P146_data_struct *P146_data = static_cast<P146_data_struct *>(getPluginTaskData(event->TaskIndex));

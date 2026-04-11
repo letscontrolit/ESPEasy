@@ -13,7 +13,9 @@ Type: |P036_type|
 
 Name: |P036_name|
 
-Status: |P036_status|
+Status ESP32: |P036_status|
+
+Status ESP8266: |P036_status_lb|
 
 GitHub: |P036_github|_
 
@@ -99,6 +101,8 @@ For the ``Ticker`` there are some restrictions:
 
 * **Disable all scrolling while WiFi is disconnected**: When checked switching between the pages is always "instant" and long lines are not scrolling as long as no Wifi connection is established. The Wifi connection attempts use a lot of resources and the scrolling may be disturbed by that.
 
+* **Hide startup logo**: When checked, the ESPEasy logo, normally shown for a few moments as the plugin is starting, will *not* appear, but the regular data will just be displayed.
+
 .. image:: P036_GenerateEventsOptions.png
 
 * **Generate Events**: Depending on the build used (NORMAL and CUSTOM), an option to generate events can be set, that will generate an event if the display is turned on or off, the contrast setting is changed, a new frame is shown, the number of lines per frame is changed or a line is updated using the ``oledframedcmd,<line>,<text>`` command.
@@ -113,6 +117,10 @@ Content
 .. image:: P036_HeaderOptions.png
 
 * **Header** / **Header (alternate)**: The plugin allows for a header line, which may show some user selectable information. When using a different setting for **Header (alternate)**, the header will be updated halfway of the Interval time. The **User defined 1/2** options are not available in all builds. If they are available, their content can be set using the ``oledframedcmd,userDef1,'<user Defined Header1>'`` and ``oledframedcmd,userDef2,'<user Defined Header2>'`` commands (by default they are empty), see the command reference below for details.
+
+* **Header Time format**: To leave some more space for long **Header** values, the time can be shortened from the default *HH:MM:SS* format to *HH:MM* format. For users that prefer the AM/PM time format, these options have also been added.
+
+.. image:: P036_HeaderTimeFormatOptions.png
 
 * **Scroll long lines**: When checked, lines that won't fit on the display will be scrolled to be completely shown.
 

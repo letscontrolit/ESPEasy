@@ -6,6 +6,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery
  * 2023-11-24 tonhuisman: Add Device flag for I2CMax100kHz as this sensor won't work at 400 kHz
  * 2022-05-08 tonhuisman: Use ESPEasy core I2C functions where possible
  *                        Add support for use of the Analog output pin and 'analogout,<value>' command
@@ -27,6 +28,13 @@
 # define P007_OUTPUT_MODE        PCONFIG_LONG(1)
 # define P007_OUTPUT_ENABLED     (0b01000000)
 
+# if FEATURE_MQTT_DISCOVER
+int Plugin_007_QueryVType(uint8_t value_nr) {
+  return static_cast<int>(Sensor_VType::SENSOR_TYPE_ANALOG_ONLY);
+}
+
+# endif // if FEATURE_MQTT_DISCOVER
+
 
 boolean Plugin_007(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -36,19 +44,16 @@ boolean Plugin_007(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_007;
-      Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_SINGLE;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = 1;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].OutputDataType     = Output_Data_type_t::Simple;
-      Device[deviceCount].I2CMax100kHz       = true; // Max 100 kHz allowed/supported
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_007;
+      dev.Type           = DEVICE_TYPE_I2C;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_SINGLE;
+      dev.FormulaOption  = true;
+      dev.ValueCount     = 1;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
+      dev.OutputDataType = Output_Data_type_t::Simple;
+      dev.I2CMax100kHz   = true; // Max 100 kHz allowed/supported
       break;
     }
 
@@ -82,6 +87,14 @@ boolean Plugin_007(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      success = getDiscoveryVType(event, Plugin_007_QueryVType, 255, event->Par5);;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
+
     case PLUGIN_SET_DEFAULTS:
     {
       PCONFIG(P007_SENSOR_TYPE_INDEX) = static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_SINGLE);
@@ -108,8 +121,10 @@ boolean Plugin_007(uint8_t function, struct EventStruct *event, String& string)
           portNames[x] += x;
         }
         addFormSelectorI2C(F("pi2c"), 8, i2cAddressValues, address);
-        addFormSelector(F("Port"), F("pport"), 4, portNames, portValues, port);
-        addFormNote(F("Selected Port value will be stored in first 'Values' field and consecutively for 'Number Output Values' &gt; Single."));
+        const FormSelectorOptions selector(4, portNames, portValues);
+        selector.addFormSelector(F("Port"), F("pport"), port);
+        addFormNote(F(
+                      "Selected Port value will be stored in first 'Values' field and consecutively for 'Number Output Values' &gt; Single."));
       } else {
         success = intArrayContains(8, i2cAddressValues, event->Par1);
       }
@@ -143,7 +158,9 @@ boolean Plugin_007(uint8_t function, struct EventStruct *event, String& string)
         0b00100000,
         0b00110000,
       };
-      addFormSelector(F("Input mode"), F("input_mode"), 4, inputModeOptions, inputModeValues, P007_INPUT_MODE);
+      constexpr size_t optionCount = NR_ELEMENTS(inputModeValues);
+      const FormSelectorOptions selector(optionCount, inputModeOptions, inputModeValues);
+      selector.addFormSelector(F("Input mode"), F("input_mode"), P007_INPUT_MODE);
 
       addFormCheckBox(F("Enable Analog output (AOUT)"), F("output_mode"), P007_OUTPUT_MODE == P007_OUTPUT_ENABLED);
 
@@ -179,7 +196,7 @@ boolean Plugin_007(uint8_t function, struct EventStruct *event, String& string)
       uint8_t port          = CONFIG_PORT - (unit * 4);
       const uint8_t address = 0x48 + unit;
 
-      uint8_t var = 0;
+      uint8_t var              = 0;
       const uint8_t valueCount = P007_NR_OUTPUT_VALUES;
 
       for (; var < valueCount; ++port, ++var) {
@@ -196,32 +213,26 @@ boolean Plugin_007(uint8_t function, struct EventStruct *event, String& string)
 
           if (Wire.available())
           {
-            Wire.read();                                      // Read older value first (stored in chip)
-            UserVar[event->BaseVarIndex + var] = Wire.read(); // now read actual value and store into Value var
-
+            Wire.read();                                          // Read older value first (stored in chip)
+            UserVar.setFloat(event->TaskIndex, var, Wire.read()); // now read actual value and store into Value var
+#ifndef BUILD_NO_DEBUG
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-              String log;
-
-              if (log.reserve(40)) {
-                log += F("PCF  : Analog port: A");
-                log += port - 1;
-                log += F(" value ");
-                log += var + 1;
-                log += ':';
-                log += ' ';
-                log += formatUserVarNoCheck(event->TaskIndex, var);
-                addLogMove(LOG_LEVEL_INFO, log);
-              }
+              addLog(LOG_LEVEL_INFO, strformat(
+                       F("PCF  : Analog port: A%d value %d: %s"),
+                       port - 1,
+                       var + 1,
+                       formatUserVarNoCheck(event, var).c_str()));
             }
+#endif
             success = true;
           }
         } else {
-          UserVar[event->BaseVarIndex + var] = 0;
+          UserVar.setFloat(event->TaskIndex, var, 0.0f);
         }
       }
 
       for (; var < VARS_PER_TASK; ++var) {
-        UserVar[event->BaseVarIndex + var] = 0;
+        UserVar.setFloat(event->TaskIndex, var, 0.0f);
       }
       break;
     }
@@ -233,8 +244,8 @@ boolean Plugin_007(uint8_t function, struct EventStruct *event, String& string)
       if ((P007_OUTPUT_MODE == P007_OUTPUT_ENABLED) &&
           equals(command, F("analogout")) &&
           (event->Par1 >= 0) && (event->Par1 <= 255)) {
-        uint8_t unit    = (CONFIG_PORT - 1) / 4;
-        uint8_t address = 0x48 + unit;
+        const uint8_t unit    = (CONFIG_PORT - 1) / 4;
+        const uint8_t address = 0x48 + unit;
 
         // Setup all required bits to the config register
         uint8_t configRegister = 0;

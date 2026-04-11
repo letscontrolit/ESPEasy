@@ -13,7 +13,9 @@ Type: |P004_type|
 
 Name: |P004_name|
 
-Status: |P004_status|
+Status ESP32: |P004_status|
+
+Status ESP8266: |P004_status_lb|
 
 GitHub: |P004_github|_
 
@@ -38,6 +40,13 @@ Supported hardware
 .. ~~~~~~
 
 .. .. include:: P004_events.repl
+
+Get Config Values
+-----------------
+
+Get Config Values retrieves values or settings from the sensor or plugin, and can be used in Rules, Display plugins, Formula's etc. The square brackets **are** part of the variable. Replace ``<taskname>`` by the **Name** of the task.
+
+.. include:: P004_config_values.repl
 
 Change log
 ----------

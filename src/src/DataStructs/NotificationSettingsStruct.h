@@ -5,7 +5,11 @@
 
 #if FEATURE_NOTIFIER
 
-#include <memory> // For std::shared_ptr
+#include <memory> // For std::unique_ptr
+
+# define NPLUGIN_001_DEF_TM     8000  // Email Server Default Response Time, in mS.
+# define NPLUGIN_001_MIN_TM     5000
+# define NPLUGIN_001_MAX_TM     20000
 
 /*********************************************************************************************\
  * NotificationSettingsStruct
@@ -27,12 +31,17 @@ struct NotificationSettingsStruct
   int8_t        Pin2;
   char          User[49];
   char          Pass[33];
+  unsigned int  Timeout_ms;
   //its safe to extend this struct, up to 4096 bytes, default values in config are 0
 };
 
-typedef std::shared_ptr<NotificationSettingsStruct> NotificationSettingsStruct_ptr_type;
-#define MakeNotificationSettings(T) NotificationSettingsStruct_ptr_type NotificationSettingsStruct_ptr(new (std::nothrow)  NotificationSettingsStruct());\
-                                    NotificationSettingsStruct& T = *NotificationSettingsStruct_ptr;
+DEF_UP(NotificationSettingsStruct);
+
+#define MakeNotificationSettings(T) void * calloc_ptr = special_calloc(1,sizeof(NotificationSettingsStruct)); UP_NotificationSettingsStruct T(new (calloc_ptr)  NotificationSettingsStruct());
+
+// Check to see if MakeNotificationSettings was successful
+#define AllocatedNotificationSettings() (NotificationSettings.get() != nullptr)
+
 
 // Need to make sure every byte between the members is also zero
 // Otherwise the checksum will fail and settings will be saved too often.

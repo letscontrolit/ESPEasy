@@ -7,7 +7,7 @@
 
   ``[<taskname>].pwm,<pcagpio>,<value>[,<duration>]``
 
-  pcagpio: 0 ... 255
+  pcagpio: 0 ... 15
 
   value: 0 ... 4096
 
@@ -25,7 +25,7 @@
   "
   ``[<taskname>].gpio,<pcagpio>,<value>``
 
-  pcagpio: 0 ... 255/all
+  pcagpio: 0 ... 15/all
 
   value: 0/1
   ","
@@ -36,7 +36,7 @@
   "
   ``[<taskname>].pulse,<pcagpio>,<value>,<duration>[,<resettimeout>|auto]``
 
-  pcagpio: 0 ... 255
+  pcagpio: 0 ... 15
 
   value: 0/1
 

@@ -1,10 +1,5 @@
 #include "../Commands/GPIO.h"
 
-#include "../../ESPEasy_common.h"
-
-
-#include "../../ESPEasy-Globals.h"
-
 #include "../Commands/Common.h"
 #include "../DataStructs/PinMode.h"
 #include "../ESPEasyCore/Controller.h"
@@ -13,10 +8,16 @@
 #include "../Globals/ESPEasy_Scheduler.h"
 #include "../Globals/GlobalMapPortStatus.h"
 #include "../Helpers/Audio.h"
-#include "../Helpers/Hardware.h"
+#include "../Helpers/Hardware_PWM.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/PortStatus.h"
 #include "../Helpers/Numerical.h"
+#include "../Helpers/Hardware_I2C.h"
+
+#if FEATURE_I2C_MULTIPLE
+#include "../Globals/Settings.h"
+#include "../Helpers/Hardware_device_info.h"
+#endif // if FEATURE_I2C_MULTIPLE
 
 #if FEATURE_GPIO_USE_ESP8266_WAVEFORM
 # include <core_esp8266_waveform.h>
@@ -94,12 +95,13 @@ bool gpio_monitor_helper(int port, struct EventStruct *event, const char *Line)
     globalMapPortStatus[key].state = state;
 
     if (state == -1) { globalMapPortStatus[key].mode = PIN_MODE_OFFLINE; }
-
+    #ifndef BUILD_NO_DEBUG
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       addLog(LOG_LEVEL_INFO, concat(
         logPrefix,
         strformat(F(" port #%d: added to monitor list."), port))); 
     }
+    #endif
     String dummy;
     SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, dummy, 0);
 
@@ -141,11 +143,13 @@ bool gpio_unmonitor_helper(int port, struct EventStruct *event, const char *Line
     SendStatusOnlyIfNeeded(event, SEARCH_PIN_STATE, key, dummy, 0);
 
     removeMonitorFromPort(key);
+    #ifndef BUILD_NO_DEBUG
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       addLog(LOG_LEVEL_INFO, concat(
         logPrefix,
         strformat(F(" port #%d: removed from monitor list."), port)));
     }
+    #endif
 
     return true;
   } else {
@@ -408,7 +412,9 @@ const __FlashStringHelper * Command_GPIO_RTTTL(struct EventStruct *event, const 
     return return_command_success_flashstr();
   }
   #else // if FEATURE_RTTTL
+  #ifndef BUILD_NO_DEBUG
   addLog(LOG_LEVEL_ERROR, F("RTTTL: command not included in build"));
+  #endif
   #endif // if FEATURE_RTTTL
   return return_command_failed_flashstr();
 }
@@ -646,10 +652,19 @@ void createAndSetPortStatus_Mode_State(uint32_t key, uint8_t newMode, int8_t new
   }
   #endif
 
-
+  auto it = globalMapPortStatus.find(key);
+  if (it == globalMapPortStatus.end()) {
+#ifdef ESP32
+    if (getPluginFromKey(key).value == PLUGIN_GPIO_INT) {
+      gpio_reset_pin((gpio_num_t)getPortFromKey(key));
+    }
+#endif
+  }
   // If it doesn't exist, it is now created.
   globalMapPortStatus[key].mode = newMode;
-  auto it = globalMapPortStatus.find(key);
+  if (it == globalMapPortStatus.end()) {
+    it = globalMapPortStatus.find(key);
+  }
 
   if (it != globalMapPortStatus.end()) {
     // Should always be true, as it would be created if it didn't exist.
@@ -1185,12 +1200,12 @@ bool getGPIOPinStateValues(String& str) {
   const String command    = parseString(str, 2);
   const String gpio_descr = parseString(str, 3);
 
-  if ((command.length() >= 8) && command.equalsIgnoreCase(F("pinstate")) && (device.length() > 0)) {
+  if ((command.length() >= 8) && equals(command, F("pinstate")) && (device.length() > 0)) {
     #ifndef BUILD_NO_DEBUG
     String logPrefix;
     #endif
     // returns pin value using syntax: [plugin#xxxxxxx#pinstate#x]
-    int par1;
+    int32_t par1{};
     const bool validArgument = validIntFromString(gpio_descr, par1);
     #if FEATURE_PINSTATE_EXTENDED
     pluginID_t pluginID = INVALID_PLUGIN_ID;
@@ -1216,6 +1231,11 @@ bool getGPIOPinStateValues(String& str) {
           #if FEATURE_PINSTATE_EXTENDED
           pluginID  = PLUGIN_MCP;
           #endif // if FEATURE_PINSTATE_EXTENDED
+          #if FEATURE_I2C_MULTIPLE
+          if (getI2CBusCount() > 1) {
+            I2CSelectHighClockSpeed(Settings.getI2CInterfacePCFMCP());
+          }
+          #endif // if FEATURE_I2C_MULTIPLE
           str       = GPIO_MCP_Read(par1);
           #ifndef BUILD_NO_DEBUG
           logPrefix = F("MCP");
@@ -1229,6 +1249,11 @@ bool getGPIOPinStateValues(String& str) {
           #if FEATURE_PINSTATE_EXTENDED
           pluginID  = PLUGIN_PCF;
           #endif // if FEATURE_PINSTATE_EXTENDED
+          #if FEATURE_I2C_MULTIPLE
+          if (getI2CBusCount() > 1) {
+            I2CSelectHighClockSpeed(Settings.getI2CInterfacePCFMCP());
+          }
+          #endif // if FEATURE_I2C_MULTIPLE
           str       = GPIO_PCF_Read(par1);
           #ifndef BUILD_NO_DEBUG
           logPrefix = F("PCF");
@@ -1239,7 +1264,7 @@ bool getGPIOPinStateValues(String& str) {
         default:
         {
           #if FEATURE_PINSTATE_EXTENDED
-          unsigned int plugin = INVALID_PLUGIN_ID.value;
+          uint32_t plugin = INVALID_PLUGIN_ID.value;
           if (validUIntFromString(device, plugin) && (plugin != INVALID_PLUGIN_ID.value)) { // Valid plugin ID?
             pluginID.value  = plugin;
             #ifndef BUILD_NO_DEBUG
@@ -1277,9 +1302,9 @@ bool getGPIOPinStateValues(String& str) {
     } else {
       addLog(LOG_LEVEL_ERROR, F(" PLUGIN PINSTATE. Syntax error. Pin parameter is not numeric"));
     }
-  } else if ((command.length() >= 8) && command.equalsIgnoreCase(F("pinrange"))) {
+  } else if ((command.length() >= 8) && equals(command, F("pinrange"))) {
     // returns pin value using syntax: [plugin#xxxxxxx#pinrange#x-y]
-    int  par1, par2;
+    int32_t  par1, par2;
     bool successPar = false;
     int  dashpos    = gpio_descr.indexOf('-');
 

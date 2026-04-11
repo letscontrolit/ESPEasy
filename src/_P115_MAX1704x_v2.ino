@@ -12,6 +12,11 @@
 #include "_Plugin_Helper.h"
 #ifdef USES_P115
 
+/** Changelog:
+ * 2025-06-14 tonhuisman: Add support for Custom Value Type per task value
+ * 2025-01-18 tonhuisman: Implement support for MQTT AutoDiscovery (partially)
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported yet for MAX1704)
+ */
 
 # include "src/PluginStructs/P115_data_struct.h"
 
@@ -37,19 +42,17 @@ boolean Plugin_115(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_115;
-      Device[deviceCount].Type               = DEVICE_TYPE_I2C;                  // how the device is connected
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_TRIPLE; // type of value the plugin will return
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = 4;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].DecimalsOnly       = true;
-      Device[deviceCount].PluginStats        = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_115;
+      dev.Type           = DEVICE_TYPE_I2C;                  // how the device is connected
+      dev.VType          = Sensor_VType::SENSOR_TYPE_TRIPLE; // type of value the plugin will return
+      dev.FormulaOption  = true;
+      dev.ValueCount     = 4;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
+      dev.DecimalsOnly   = true;
+      dev.PluginStats    = true;
+      dev.CustomVTypeVar = true;
       break;
     }
 
@@ -67,6 +70,22 @@ boolean Plugin_115(uint8_t function, struct EventStruct *event, String& string)
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[3], PSTR(PLUGIN_VALUENAME4_115));
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER || FEATURE_CUSTOM_TASKVAR_VTYPE
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      #  if FEATURE_CUSTOM_TASKVAR_VTYPE
+
+      for (uint8_t i = 0; i < event->Par5; ++i) {
+        event->ParN[i] = ExtraTaskSettings.getTaskVarCustomVType(i);  // Custom/User selection
+      }
+      #  else // if FEATURE_CUSTOM_TASKVAR_VTYPE
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_NONE); // Not yet supported
+      #  endif // if FEATURE_CUSTOM_TASKVAR_VTYPE
+      success = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER || FEATURE_CUSTOM_TASKVAR_VTYPE
 
     case PLUGIN_I2C_HAS_ADDRESS:
     {
@@ -109,7 +128,9 @@ boolean Plugin_115(uint8_t function, struct EventStruct *event, String& string)
           MAX1704X_MAX17044,
           MAX1704X_MAX17048,
           MAX1704X_MAX17049 };
-        addFormSelector(F("Device"), F("device"), 4, options, optionValues, choice);
+        constexpr size_t optionCount = NR_ELEMENTS(optionValues);
+        const FormSelectorOptions selector(optionCount, options, optionValues);
+        selector.addFormSelector(F("Device"), F("device"), choice);
       }
 
       addFormNumericBox(F("Alert threshold"), F("threshold"), P115_THRESHOLD, 1, 32);
@@ -135,23 +156,14 @@ boolean Plugin_115(uint8_t function, struct EventStruct *event, String& string)
       P115_data_struct *P115_data = static_cast<P115_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if ((nullptr != P115_data) && P115_data->initialized) {
-        UserVar[event->BaseVarIndex + 0] = P115_data->voltage;
-        UserVar[event->BaseVarIndex + 1] = P115_data->soc;
-        UserVar[event->BaseVarIndex + 2] = P115_data->alert;
-        UserVar[event->BaseVarIndex + 3] = P115_data->changeRate;
+        UserVar.setFloat(event->TaskIndex, 0, P115_data->voltage);
+        UserVar.setFloat(event->TaskIndex, 1, P115_data->soc);
+        UserVar.setFloat(event->TaskIndex, 2, P115_data->alert);
+        UserVar.setFloat(event->TaskIndex, 3, P115_data->changeRate);
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          String log;
-          log.reserve(64);
-          log  = F("MAX1704x : Voltage: ");
-          log += P115_data->voltage;
-          log += F(" SoC: ");
-          log += P115_data->soc;
-          log += F(" Alert: ");
-          log += P115_data->alert;
-          log += F(" Rate: ");
-          log += P115_data->changeRate;
-          addLogMove(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, strformat(F("MAX1704x : Voltage: %.2f SoC: %.2f Alert: %d Rate: %.2f"),
+                                               P115_data->voltage, P115_data->soc, P115_data->alert, P115_data->changeRate));
         }
         success = true;
       }
@@ -165,7 +177,7 @@ boolean Plugin_115(uint8_t function, struct EventStruct *event, String& string)
       if ((nullptr != P115_data) && P115_data->initialized) {
         const String command = parseString(string, 1);
 
-        if ((equals(command, F("max1704xclearalert"))))
+        if (equals(command, F("max1704xclearalert")))
         {
           P115_data->clearAlert();
           success = true;
@@ -190,9 +202,9 @@ boolean Plugin_115(uint8_t function, struct EventStruct *event, String& string)
                 const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
 
                 if (validDeviceIndex(DeviceIndex)) {
-                  String eventvalues = formatUserVarNoCheck(event, 0); // Voltage
-                  eventvalues += ',';
-                  eventvalues += formatUserVarNoCheck(event, 1); // State Of Charge
+                  const String eventvalues = strformat(F("%s,%s"),
+                                                       formatUserVarNoCheck(event, 0).c_str(),  // Voltage
+                                                       formatUserVarNoCheck(event, 1).c_str()); // State Of Charge
                   eventQueue.add(event->TaskIndex, F("AlertTriggered"), eventvalues);
                 }
               }

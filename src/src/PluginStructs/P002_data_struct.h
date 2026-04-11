@@ -6,15 +6,20 @@
 #include "../Helpers/OversamplingHelper.h"
 
 #ifdef USES_P002
+#if SOC_ADC_SUPPORTED || defined(ESP8266)
 
-# include "../Helpers/Hardware.h"
 # include <vector>
 
 # ifdef ESP32
 
 // Needed to get ADC Vref
-  #  include <esp_adc_cal.h>
-  #  include <driver/adc.h>
+#  if ESP_IDF_VERSION_MAJOR >= 5
+  #   include <esp_adc/adc_oneshot.h>
+
+#  else // if ESP_IDF_VERSION_MAJOR >= 5
+  #   include <esp_adc_cal.h>
+  #   include <driver/adc.h>
+#  endif // if ESP_IDF_VERSION_MAJOR >= 5
 # endif // ifdef ESP32
 
 
@@ -53,7 +58,11 @@
 # define P002_ADC_0db              (ADC_ATTEN_DB_0  + 10)
 # define P002_ADC_2_5db            (ADC_ATTEN_DB_2_5 + 10)
 # define P002_ADC_6db              (ADC_ATTEN_DB_6 + 10)
-# define P002_ADC_11db             (ADC_ATTEN_DB_11 + 10)
+# if ESP_IDF_VERSION_MAJOR >= 5
+#  define P002_ADC_11db             (ADC_ATTEN_DB_12 + 10)
+# else // if ESP_IDF_VERSION_MAJOR >= 5
+#  define P002_ADC_11db             (ADC_ATTEN_DB_11 + 10)
+# endif // if ESP_IDF_VERSION_MAJOR >= 5
 
 
 struct P002_ADC_Value_pair {
@@ -95,7 +104,7 @@ struct P002_binningRange {
 };
 
 struct P002_data_struct : public PluginTaskData_base {
-  P002_data_struct() = default;
+  P002_data_struct()          = default;
   virtual ~P002_data_struct() = default;
 
   void init(struct EventStruct *event);
@@ -123,12 +132,15 @@ public:
 
 private:
 
-  void formatADC_statistics(const __FlashStringHelper *label,
-                            int                        raw,
-                            bool                       includeOutputValue = false) const;
-  void format_2point_calib_statistics(const __FlashStringHelper *label,
-                                      int                        raw,
-                                      float                      float_value) const;
+  void   formatADC_statistics(const __FlashStringHelper *label,
+                              int                        raw,
+                              bool                       includeOutputValue = false) const;
+  String formatADC_statistics_to_str(int    raw,
+                                     float& float_value,
+                                     bool   includeOutputValue = false) const;
+  void   format_2point_calib_statistics(const __FlashStringHelper *label,
+                                        int                        raw,
+                                        float                      float_value) const;
 
 # ifdef ESP32
   static adc_atten_t                getAttenuation(struct EventStruct *event);
@@ -167,7 +179,7 @@ public:
 
   void          reset();
 
-  uint32_t getOversamplingCount() const;
+  uint32_t      getOversamplingCount() const;
 
 private:
 
@@ -209,41 +221,33 @@ public:
 # ifdef ESP32
   static bool  useFactoryCalibration(struct EventStruct *event);
 
-  static float applyFactoryCalibration(float       raw_value,
-                                       adc_atten_t attenuation);
-
-
 # endif // ifdef ESP32
 
 private:
 
 # ifndef LIMIT_BUILD_SIZE
-  float        applyMultiPointInterpolation(float float_value, bool force = false) const;
+  float applyMultiPointInterpolation(float float_value,
+                                     bool  force = false) const;
 # endif // ifndef LIMIT_BUILD_SIZE
-
-  static float mapADCtoFloat(float float_value,
-                             float adc1,
-                             float adc2,
-                             float out1,
-                             float out2);
 
 
   // Map the input "point" values to the nearest int.
   static void setTwoPointCalibration(struct EventStruct *event,
-                                     float adc1,
-                                     float adc2,
-                                     float out1,
-                                     float out2);
+                                     float               adc1,
+                                     float               adc2,
+                                     float               out1,
+                                     float               out2);
 
 public:
 
-  bool plugin_set_config(struct EventStruct *event, String& string);
-
+  bool plugin_set_config(struct EventStruct *event,
+                         String            & string);
 
 private:
- 
 
-  OversamplingHelper<int32_t> OverSampling;
+  int analog_read() const;
+
+  OversamplingHelper<int32_t>OverSampling;
 
   int   _calib_adc1 = 0;
   int   _calib_adc2 = 0;
@@ -269,11 +273,16 @@ private:
   String  _formula_preprocessed;
 # endif // ifndef LIMIT_BUILD_SIZE
 # ifdef ESP32
-  bool        _useFactoryCalibration = false;
-  adc_atten_t _attenuation           = ADC_ATTEN_DB_11;
+  bool _useFactoryCalibration = false;
+
+#  if ESP_IDF_VERSION_MAJOR >= 5
+  adc_atten_t _attenuation = ADC_ATTEN_DB_12;
+#  else // if ESP_IDF_VERSION_MAJOR >= 5
+  adc_atten_t _attenuation = ADC_ATTEN_DB_11;
+#  endif // if ESP_IDF_VERSION_MAJOR >= 5
 # endif // ifdef ESP32
 };
 
-
+#endif
 #endif // ifdef USES_P002
 #endif // ifndef PLUGINSTRUCTS_P002_DATA_STRUCT_H

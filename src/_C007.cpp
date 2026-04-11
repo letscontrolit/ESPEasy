@@ -11,6 +11,7 @@
 # define CPLUGIN_ID_007         7
 # define CPLUGIN_NAME_007       "Emoncms"
 
+# define C007_DEFAULT_URL "/emoncms/input/post.json"
 
 bool CPlugin_007(CPlugin::Function function, struct EventStruct *event, String& string)
 {
@@ -26,12 +27,22 @@ bool CPlugin_007(CPlugin::Function function, struct EventStruct *event, String& 
       proto.usesPassword = true;
       proto.defaultPort  = 80;
       proto.usesID       = true;
+      proto.usesTemplate = true;
+      # if FEATURE_HTTP_TLS
+      proto.usesTLS = true;
+      # endif // if FEATURE_HTTP_TLS
       break;
     }
 
     case CPlugin::Function::CPLUGIN_GET_DEVICENAME:
     {
       string = F(CPLUGIN_NAME_007);
+      break;
+    }
+
+    case CPlugin::Function::CPLUGIN_PROTOCOL_TEMPLATE:
+    {
+      event->String2 = F(C007_DEFAULT_URL);
       break;
     }
 
@@ -52,6 +63,7 @@ bool CPlugin_007(CPlugin::Function function, struct EventStruct *event, String& 
       if (C007_DelayHandler == nullptr) {
         break;
       }
+
       if (C007_DelayHandler->queueFull(event->ControllerIndex)) {
         break;
       }
@@ -68,8 +80,13 @@ bool CPlugin_007(CPlugin::Function function, struct EventStruct *event, String& 
         break;
       }
 
-      std::unique_ptr<C007_queue_element> element(new C007_queue_element(event));
-      success = C007_DelayHandler->addToQueue(std::move(element));
+      constexpr unsigned size = sizeof(C007_queue_element);
+      void *ptr               = special_calloc(1, size);
+
+      if (ptr != nullptr) {
+        UP_C007_queue_element  element(new (ptr) C007_queue_element(event));
+        success = C007_DelayHandler->addToQueue(std::move(element));
+      }
 
       Scheduler.scheduleNextDelayQueue(SchedulerIntervalTimer_e::TIMER_C007_DELAY_QUEUE, C007_DelayHandler->getNextScheduleTime());
       break;
@@ -90,42 +107,38 @@ bool CPlugin_007(CPlugin::Function function, struct EventStruct *event, String& 
 
 // Uncrustify may change this into multi line, which will result in failed builds
 // *INDENT-OFF*
-bool do_process_c007_delay_queue(int controller_number, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
+bool do_process_c007_delay_queue(cpluginID_t cpluginID, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
   const C007_queue_element& element = static_cast<const C007_queue_element&>(element_base);
+
 // *INDENT-ON*
-  String url = F("/emoncms/input/post.json?node=");
+if (ControllerSettings.Publish[0] == '\0') {
+  strcpy_P(ControllerSettings.Publish, PSTR(C007_DEFAULT_URL));
+}
+String url = strformat(F("%s?node=%d&json="), ControllerSettings.Publish, Settings.Unit);
 
-  url += Settings.Unit;
-  url += F("&json=");
+for (uint8_t i = 0; i < element.valueCount; ++i) {
+  url += strformat(F("%cfield%d:%s"), (i == 0) ? '{' : ',', element.idx + i, element.txt[i].c_str());
+}
+url += strformat(F("}&apikey=%s"), getControllerPass(element._controller_idx, ControllerSettings).c_str()); // "0UDNN17RW6XAS2E5" // api key
 
-  for (uint8_t i = 0; i < element.valueCount; ++i) {
-    url += (i == 0) ? '{' : ',';
-    url += F("field");
-    url += element.idx + i;
-    url += ':';
-    url += element.txt[i];
-  }
-  url += '}';
-  url += F("&apikey=");
-  url += getControllerPass(element._controller_idx, ControllerSettings); // "0UDNN17RW6XAS2E5" // api key
+  # ifndef BUILD_NO_DEBUG
 
-#ifndef BUILD_NO_DEBUG
-  if (Settings.SerialLogLevel >= LOG_LEVEL_DEBUG_MORE) {
-    serialPrintln(url);
-  }
-#endif
+if (loglevelActiveFor(LOG_LEVEL_DEBUG_MORE)) {
+  addLog(LOG_LEVEL_DEBUG_MORE, url);
+}
+  # endif // ifndef BUILD_NO_DEBUG
 
-  int httpCode = -1;
-  send_via_http(
-    controller_number,
-    ControllerSettings,
-    element._controller_idx,
-    url,
-    F("GET"),
-    EMPTY_STRING,
-    EMPTY_STRING,
-    httpCode);
-  return (httpCode >= 100) && (httpCode < 300);
+int httpCode = -1;
+send_via_http(
+  cpluginID,
+  ControllerSettings,
+  element._controller_idx,
+  url,
+  F("GET"),
+  EMPTY_STRING,
+  EMPTY_STRING,
+  httpCode);
+return (httpCode >= 100) && (httpCode < 300);
 }
 
 #endif // ifdef USES_C007

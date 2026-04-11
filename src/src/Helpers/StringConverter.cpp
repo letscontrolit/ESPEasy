@@ -9,28 +9,49 @@
 #include "../ESPEasyCore/ESPEasy_Log.h"
 
 #include "../Globals/Cache.h"
-#include "../Globals/CRCValues.h"
+//#include "../Globals/CRCValues.h"
 #include "../Globals/Device.h"
-#include "../Globals/ESPEasyWiFiEvent.h"
-#include "../Globals/ESPEasy_time.h"
-#include "../Globals/MQTT.h"
+#include "../../ESPEasy/net/Globals/ESPEasyWiFiEvent.h"
+//#include "../Globals/ESPEasy_time.h"
+//#include "../Globals/MQTT.h"
 #include "../Globals/Plugins.h"
 #include "../Globals/Settings.h"
 
 #include "../Helpers/Convert.h"
-#include "../Helpers/ESPEasy_Storage.h"
+//#include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Networking.h"
 #include "../Helpers/Numerical.h"
+#include "../Helpers/StringGenerator_System.h"
 #include "../Helpers/StringParser.h"
 #include "../Helpers/SystemVariables.h"
-#include "../Helpers/_Plugin_SensorTypeHelper.h"
+//#include "../Helpers/_Plugin_SensorTypeHelper.h"
 
 // -V::569
 
+unsigned int count_newlines(const String& str)
+{
+  unsigned int count = 0;
+  const size_t strlength = str.length();
+  size_t pos = 0;
+  while (pos < strlength) {
+    if (str[pos] == '\n') ++count;
+    ++pos;
+  }
+  return count;
+}
+
 String concat(const __FlashStringHelper * str, const String &val) {
-  String res(str);
+  String res;
+  reserve_special(res, strlen_P((PGM_P)str) + val.length());
+  res.concat(str);
   res.concat(val);
+
+  /*
+  String res(str);
+  reserve_special(res, res.length() + val.length());
+  res.concat(val);
+  */
   return res;
 }
 
@@ -38,14 +59,76 @@ String concat(const __FlashStringHelper * str, const __FlashStringHelper *val) {
   return concat(str, String(val));
 }
 
+String concat(const __FlashStringHelper * str, const char* val) {
+  return concat(String(str), String(val));
+}
+
+String concat(const String & str, const char* val)
+{
+  return concat(str, String(val));
+}
+
+String concat(const char& str, const String &val)
+{
+  String res(str);
+  reserve_special(res, res.length() + val.length());
+  res.concat(val);
+  return res;
+}
+
 bool equals(const String& str, const __FlashStringHelper * f_str) {
   return str.equals(String(f_str));
 }
 
 bool equals(const String& str, const char& c) {
-  return str.equals(String(c));
+  return str.length() == 1 && str[0] == c;
 }
 
+void move_special(String& dest, String&& source) {
+  // Only try to store larger strings here as those tend to be kept for a longer period.
+  if ((source.length() >= 64) 
+#ifdef USE_SECOND_HEAP
+      && mmu_is_dram(&(source[0]))
+#endif
+  ) {
+    // The string was not allocated on the 2nd heap, so copy instead of move
+    if (!reserve_special(dest, source.length())) {
+      // Could not allocate on 2nd heap or PSRAM, so just move existing string
+      dest = std::move(source);
+      return;
+    }
+  }
+
+  // Try to avoid keeping reserved memory on empty strings
+  // So just copy the data, not move
+  dest = source;
+  free_string(source);  
+}
+
+String move_special(String&& source) {
+  String dest;
+  move_special(dest, std::move(source));
+  return dest;
+}
+
+
+bool reserve_special(String& str, size_t size) {
+  return String_reserve_special(str, size);
+}
+
+void free_string(String& str) {
+  // This is a call specifically tailored to what is done in:
+  //  void String::move(String &rhs)
+
+#if defined(ESP32) || defined(CORE_POST_3_0_0)
+  // Use current implementation of String::copy as this
+  // invalidates and thus deallocates current buffer
+  str = (const char*)nullptr;
+  str = String(); // No idea why this is needed, without it, some ESP32's may bootloop
+#else
+  str = String();
+#endif
+}
 
 /********************************************************************************************\
    Format string using vsnprintf
@@ -57,7 +140,7 @@ String strformat(const String& format, ...)
   {
     va_list arg;
     va_start(arg, format); // variable args start after parameter 'format'
-    char temp[64];
+    static char temp[64];
     char* buffer = temp;
     int len = vsnprintf_P(temp, sizeof(temp), format.c_str(), arg);
     va_end(arg);
@@ -70,7 +153,9 @@ String strformat(const String& format, ...)
         vsnprintf_P(buffer, len + 1, format.c_str(), arg);
         va_end(arg);
     }
-    res.reserve(len + 1);
+    if (len > 64) {
+      reserve_special(res, len + 1);
+    }
     res = buffer;
     if (buffer != temp) {
         delete[] buffer;
@@ -85,7 +170,7 @@ String strformat(const __FlashStringHelper * format, ...)
   {
     va_list arg;
     va_start(arg, format); // variable args start after parameter 'format'
-    char temp[64];
+    static char temp[64];
     char* buffer = temp;
     int len = vsnprintf_P(temp, sizeof(temp), (PGM_P)format, arg);
     va_end(arg);
@@ -98,7 +183,9 @@ String strformat(const __FlashStringHelper * format, ...)
         vsnprintf_P(buffer, len + 1, (PGM_P)format, arg);
         va_end(arg);
     }
-    res.reserve(len + 1);
+    if (len > 64) {
+      reserve_special(res, len + 1);
+    }
     res = buffer;
     if (buffer != temp) {
         delete[] buffer;
@@ -135,7 +222,7 @@ bool str2ip(const char *string, uint8_t *IP)
   return false;
 }
 
-String formatIP(const IPAddress& ip) {
+String formatIP(const IPAddress& ip, bool includeZone) {
 #ifdef ESP8266
 #if defined(ARDUINO_ESP8266_RELEASE_2_3_0)
   IPAddress tmp(ip);
@@ -145,6 +232,7 @@ String formatIP(const IPAddress& ip) {
 #endif // if defined(ARDUINO_ESP8266_RELEASE_2_3_0)
 #endif
 #ifdef ESP32
+/*
   #if LWIP_IPV6
   if (ip.isAny()) {
     IPAddress tmp;
@@ -152,141 +240,13 @@ String formatIP(const IPAddress& ip) {
     return tmp.toString();
   }
   #endif
+*/
+#if FEATURE_USE_IPV6
+  return ip.toString(includeZone);
+#else
   return ip.toString();
 #endif
-}
-
-
-/********************************************************************************************\
-   Handling HEX strings
- \*********************************************************************************************/
-
-// Convert max. 8 hex decimals to unsigned long
-unsigned long hexToUL(const String& input_c, size_t nrHexDecimals) {
-  const unsigned long long resULL = hexToULL(input_c, nrHexDecimals);
-  return static_cast<unsigned long>(resULL & 0xFFFFFFFFull);
-}
-
-unsigned long hexToUL(const String& input_c) {
-  return hexToUL(input_c, input_c.length());
-}
-
-unsigned long hexToUL(const String& input_c, size_t startpos, size_t nrHexDecimals) {
-  return hexToUL(input_c.substring(startpos, startpos + nrHexDecimals), nrHexDecimals);
-}
-
-// Convert max. 16 hex decimals to unsigned long long (aka uint64_t)
-unsigned long long hexToULL(const String& input_c, size_t nrHexDecimals) {
-  size_t nr_decimals = nrHexDecimals;
-
-  if (nr_decimals > 16) {
-    nr_decimals = 16;
-  }
-  const size_t inputLength = input_c.length();
-
-  if (nr_decimals > inputLength) {
-    nr_decimals = inputLength;
-  } else if (input_c.startsWith(F("0x"))) { // strtoull handles that prefix nicely
-    nr_decimals += 2;
-  }
-  return strtoull(input_c.substring(0, nr_decimals).c_str(), 0, 16);
-}
-
-unsigned long long hexToULL(const String& input_c) {
-  return hexToULL(input_c, input_c.length());
-}
-
-unsigned long long hexToULL(const String& input_c, size_t startpos, size_t nrHexDecimals) {
-  return hexToULL(input_c.substring(startpos, startpos + nrHexDecimals), nrHexDecimals);
-}
-
-void appendHexChar(uint8_t data, String& string)
-{
-  const char *hex_chars = "0123456789abcdef";
-  string += hex_chars[(data >> 4) & 0xF];
-  string += hex_chars[(data) & 0xF];
-}
-
-String formatToHex_array(const uint8_t* data, size_t size)
-{
-  String res;
-  res.reserve(2 * size);
-  for (size_t i = 0; i < size; ++i) {
-    appendHexChar(data[i], res);
-  }
-  return res;
-}
-
-String formatToHex(unsigned long value, 
-                   const __FlashStringHelper * prefix,
-                   unsigned int minimal_hex_digits) {
-  return concat(prefix, formatToHex_no_prefix(value, minimal_hex_digits));
-}
-
-String formatToHex(unsigned long value,
-                   const __FlashStringHelper * prefix) {
-  return formatToHex(value, prefix, 0);
-}
-
-String formatToHex(unsigned long value, unsigned int minimal_hex_digits) {
-  return formatToHex(value, F("0x"), minimal_hex_digits);
-}
-
-String formatToHex_no_prefix(unsigned long value, unsigned int minimal_hex_digits) {
-  const String fmt = strformat(F("%%0%dX"), minimal_hex_digits);
-  return strformat(fmt, value);
-}
-
-String formatHumanReadable(unsigned long value, unsigned long factor) {
-  String result = formatHumanReadable(value, factor, 2);
-
-  result.replace(F(".00"), EMPTY_STRING);
-  return result;
-}
-
-String formatHumanReadable(unsigned long value, unsigned long factor, int NrDecimals) {
-  float floatValue(value);
-  uint8_t  steps = 0;
-
-  while (value >= factor) {
-    value /= factor;
-    ++steps;
-    floatValue /= float(factor);
-  }
-  String result = toString(floatValue, NrDecimals);
-
-  switch (steps) {
-    case 0: break;
-    case 1: result += 'k'; break;
-    case 2: result += 'M'; break;
-    case 3: result += 'G'; break;
-    case 4: result += 'T'; break;
-    default:
-      result += '*';
-      result += factor;
-      result += '^';
-      result += steps;
-      break;
-  }
-  return result;
-}
-
-String formatToHex_decimal(unsigned long value) {
-  return formatToHex_decimal(value, 1);
-}
-
-String formatToHex_decimal(unsigned long value, unsigned long factor) {
-  String result = formatToHex(value);
-
-  result += F(" (");
-
-  if (factor > 1) {
-    result += formatHumanReadable(value, factor);
-  } else {
-    result += value;
-  }
-  result += ')';
-  return result;
+#endif
 }
 
 const __FlashStringHelper * boolToString(bool value) {
@@ -367,7 +327,7 @@ String doFormatUserVar(struct EventStruct *event, uint8_t rel_index, bool mustCh
     return EMPTY_STRING;
   }
 
-  {
+  if (Device[DeviceIndex].HasFormatUserVar) {
     // First try to format using the plugin specific formatting.
     String result;
     EventStruct tempEvent;
@@ -378,7 +338,8 @@ String doFormatUserVar(struct EventStruct *event, uint8_t rel_index, bool mustCh
       return result;
     }
   }
-
+  
+  // Spent upto 400 usec till here
   const uint8_t valueCount      = getValueCountForTask(event->TaskIndex);
   const Sensor_VType sensorType = event->getSensorType();
 
@@ -388,13 +349,11 @@ String doFormatUserVar(struct EventStruct *event, uint8_t rel_index, bool mustCh
     #ifndef BUILD_NO_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-      String log = F("No sensor value for TaskIndex: ");
-      log += event->TaskIndex + 1;
-      log += F(" varnumber: ");
-      log += rel_index + 1;
-      log += F(" type: ");
-      log += getSensorTypeLabel(sensorType);
-      addLogMove(LOG_LEVEL_ERROR, log);
+      addLogMove(LOG_LEVEL_ERROR, strformat(
+        F("No sensor value for TaskIndex: %d varnumber: %d type: %s"),
+        event->TaskIndex + 1,
+        rel_index + 1,
+        String(getSensorTypeLabel(sensorType)).c_str()));
     }
     #endif // ifndef BUILD_NO_DEBUG
     return EMPTY_STRING;
@@ -415,14 +374,13 @@ String doFormatUserVar(struct EventStruct *event, uint8_t rel_index, bool mustCh
 #ifndef BUILD_NO_DEBUG
 
       if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-        String log = F("Invalid float value for TaskIndex: ");
-        log += event->TaskIndex;
-        log += F(" varnumber: ");
-        log += rel_index;
-        addLogMove(LOG_LEVEL_DEBUG, log);
+        addLogMove(LOG_LEVEL_DEBUG, strformat(
+          F("Invalid float value for TaskIndex: %d varnumber: %d"),
+          event->TaskIndex + 1,
+          rel_index + 1));
       }
 #endif // ifndef BUILD_NO_DEBUG
-      const float f = 0.0f;
+      const float f{};
       return toString(f, nrDecimals);
     }
   }
@@ -459,14 +417,54 @@ String formatUserVar(struct EventStruct *event, uint8_t rel_index, bool& isvalid
   return doFormatUserVar(event, rel_index, true, isvalid);
 }
 
+#if FEATURE_STRING_VARIABLES
+String formatUserVarForPresentation(struct EventStruct *event,
+                                    taskVarIndex_t      varNr,
+                                    bool              & hasPresentation,
+                                    const String      & value,
+                                    const deviceIndex_t DeviceIndex,
+                                    String              valueName) {
+  const taskIndex_t taskIndex = event->TaskIndex;
+  String formula = Cache.getTaskDeviceFormula(taskIndex, varNr);
+  hasPresentation = Cache.hasFormula(taskIndex, varNr)
+                            && formula.startsWith(F(TASK_VALUE_PRESENTATION_PREFIX_STRING));
+  if (hasPresentation) {
+    formula.remove(0, 1);
+    formula.replace(F("%value%"), value);
+    if (Cache.hasFormula_with_prevValue(taskIndex, varNr)) {
+      event->sensorType = Device[DeviceIndex].VType;
+      String dummy;
+      PluginCall(PLUGIN_GET_DEVICEVTYPE, event, dummy);
+      const String prev_str = UserVar.getPreviousValue(taskIndex, varNr, event->sensorType);
+      formula.replace(F("%pvalue%"), prev_str.isEmpty() ? value : prev_str);
+    }
+    formula = parseTemplate(formula);
+    return formula;
+  } else {
+    String taskName = getTaskDeviceName(taskIndex);
+    taskName.toLowerCase();
+    if (valueName.isEmpty() && validTaskVarIndex(varNr)) {
+      valueName = getTaskValueName(taskIndex, varNr);
+    }
+    valueName.toLowerCase();
+    String presentation = getCustomStringVar(strformat(F(TASK_VALUE_PRESENTATION_PREFIX_TEMPLATE), taskName.c_str(), valueName.c_str()));
+    if (!presentation.isEmpty()) {
+      stripEscapeCharacters(presentation);
+      presentation.replace(F("%value%"), value);
+      presentation = parseTemplate(presentation);
+    }
+    hasPresentation = !presentation.isEmpty();
+    return presentation;
+  }
+  return EMPTY_STRING;
+}
+#endif // if FEATURE_STRING_VARIABLES
+
 String get_formatted_Controller_number(cpluginID_t cpluginID) {
   if (!validCPluginID(cpluginID)) {
     return F("C---");
   }
-  String result;
-  result += 'C';
-  result += formatIntLeadingZeroes(cpluginID, 3);
-  return result;
+  return strformat(F("C%03d"), cpluginID);
 }
 
 String get_formatted_Plugin_number(pluginID_t pluginID)
@@ -502,21 +500,11 @@ String wrap_braces(const String& string) {
 }
 
 String wrap_String(const String& string, char wrap) {
-  String result;
-  result.reserve(string.length() + 2);
-  result += wrap;
-  result += string;
-  result += wrap;
-  return result;
+  return wrap_String(string, wrap, wrap);
 }
 
 String wrap_String(const String& string, char char1, char char2) {
-  String result;
-  result.reserve(string.length() + 2);
-  result += char1;
-  result += string;
-  result += char2;
-  return result;
+  return strformat(F("%c%s%c"), char1, string.c_str(), char2);
 }
 
 String wrapIfContains(const String& value, char contains, char wrap) {
@@ -534,10 +522,9 @@ String wrapWithQuotes(const String& text) {
   char quotechar = '_';
   if (!findUnusedQuoteChar(text, quotechar)) {
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-      String log = F("No unused quote to wrap: _");
-      log += text;
-      log += '_';
-      addLogMove(LOG_LEVEL_ERROR, log);
+      addLogMove(LOG_LEVEL_ERROR, strformat(
+        F("No unused quote to wrap: _%s_"), 
+        text.c_str()));
     }
   }
   return wrap_String(text, quotechar);
@@ -556,66 +543,57 @@ String wrapWithQuotesIfContainsParameterSeparatorChar(const String& text) {
 /*********************************************************************************************\
    Format an object value pair for use in JSON.
 \*********************************************************************************************/
-String to_json_object_value(const __FlashStringHelper * object,
-                            const __FlashStringHelper * value,
-                            bool wrapInQuotes) 
-{
-  return to_json_object_value(String(object), String(value), wrapInQuotes);
-}
-
-
-String to_json_object_value(const __FlashStringHelper * object,
-                            const String& value,
-                            bool wrapInQuotes) 
-{
-  return to_json_object_value(String(object), value, wrapInQuotes);
-}
-
-String to_json_object_value(const __FlashStringHelper * object,
-                            String&& value,
-                            bool wrapInQuotes) 
-{
-  return to_json_object_value(String(object), value, wrapInQuotes);
-}
-
-String to_json_object_value(const String& object, const String& value, bool wrapInQuotes) {
-  String result;
-  result.reserve(object.length() + value.length() + 6);
-  result = wrap_String(object, '"');
-  result += ':';
-  result += to_json_value(value, wrapInQuotes);
-  return result;
-}
-
 String to_json_value(const String& value, bool wrapInQuotes) {
   if (value.isEmpty()) {
     // Empty string
     return F("\"\"");
   }
+  const size_t val_length = value.length();
+
+  if (val_length > 2) {
+    // Check for JSON objects or arrays
+    const char firstchar = value[0];
+    const char lastchar = value[val_length - 1];
+    if ((firstchar == '[' && lastchar == ']') ||
+        (firstchar == '{' && lastchar == '}')) 
+    {
+      return value;
+    }
+  }
+
+
   if (wrapInQuotes || mustConsiderAsJSONString(value)) {
     // Is not a numerical value, or BIN/HEX notation, thus wrap with quotes
 
     // First we check for not allowed special characters.
-    const size_t val_length = value.length();
+
+    // Most frequently found in a string
+    const bool backslash_or_doubleQuote_found = 
+      value.indexOf('\\') != -1 ||
+      value.indexOf('"') != -1;
+    
     for (size_t i = 0; i < val_length; ++i) {
       const char c = value[i];
       // Special characters not allowed in JSON:
-      if (c == '\n'|| //  \n  New line
-          c == '\r'|| //  \r  Carriage return
-          c == '\t'|| //  \t  Tab
-          c == '\\'|| //  \\  Backslash character
+      if (backslash_or_doubleQuote_found ||
+          (c >= '\b' && c <= '\r')
+/*
           c == '\b'|| //  \b  Backspace (ascii code 08)
+          c == '\t'|| //  \t  Tab
+          c == '\n'|| //  \n  New line
           c == '\f'|| //  \f  Form feed (ascii code 0C)
-          c == '"') { //  \"  Double quote
+          c == '\r'|| //  \r  Carriage return
+*/
+          ) {
         // Must replace characters, so make a deepcopy
         String tmpValue(value);
-        tmpValue.replace('\n', '^');
-        tmpValue.replace('\r', '^');
-        tmpValue.replace('\t', ' ');
-        tmpValue.replace('\\', '^');
-        tmpValue.replace('\b', '^');
-        tmpValue.replace('\f', '^');
-        tmpValue.replace('"',  '\'');
+        tmpValue.replace('\b', '^');  //  \b  Backspace (ascii code 08)
+        tmpValue.replace('\t', ' ');  //  \t  Tab
+        tmpValue.replace('\n', '^');  //  \n  New line
+        tmpValue.replace('\f', '^');  //  \f  Form feed (ascii code 0C)
+        tmpValue.replace('\r', '^');  //  \r  Carriage return
+        tmpValue.replace('\\', '^');  //  Backslash
+        tmpValue.replace('"',  '\''); //  Double quote
         return wrap_String(tmpValue, '"');
       }
     }
@@ -633,7 +611,7 @@ String stripWrappingChar(const String& text, char wrappingChar) {
   const unsigned int length = text.length();
 
   if ((length >= 2) && stringWrappedWithChar(text, wrappingChar)) {
-    return text.substring(1, length - 1);
+    return move_special(text.substring(1, length - 1));
   }
   return text;
 }
@@ -719,6 +697,7 @@ bool safe_strncpy(char *dest, const char *source, size_t max_size) {
 
 // Convert a string to lower case and replace spaces with underscores.
 String to_internal_string(const String& input, char replaceSpace) {
+  // Do not set to 2nd heap as it is only used temporarily so prefer speed over mem usage
   String result = input;
 
   result.trim();
@@ -751,12 +730,13 @@ String parseStringKeepCase(const String& string, uint8_t indexFind, char separat
   String result;
 
   if (!GetArgv(string.c_str(), result, indexFind, separator)) {
-    return EMPTY_STRING;
+    return String();
   }
   if (trimResult) {
     result.trim();
   }
-  return stripQuotes(result);
+  result = stripQuotes(result);
+  return result;
 }
 
 String parseStringToEnd(const String& string, uint8_t indexFind, char separator, bool trimResult) {
@@ -795,7 +775,9 @@ String parseStringToEndKeepCase(const String& string, uint8_t indexFind, char se
   if (!hasArgument || (pos_begin < 0) || (pos_begin == pos_end)) {
     return EMPTY_STRING;
   }
-  String result = string.substring(pos_begin, pos_end);
+
+  String result;
+  move_special(result, string.substring(pos_begin, pos_end));
 
   if (trimResult) {
     result.trim();
@@ -825,11 +807,10 @@ String tolerantParseStringKeepCase(const String& string, uint8_t indexFind, char
  ****************************************************************************/
 String parseHexTextString(const String& argument, int index) {
   String result;
+  result.reserve(argument.length()); // longer than needed, most likely
 
   // Ignore these characters when used as hex-byte separators (0x01ab 23-cd:45 -> 0x01,0xab,0x23,0xcd,0x45)
   const String skipChars = F(" -:,.;");
-
-  result.reserve(argument.length()); // longer than needed, most likely
   int i      = index;
   String arg = parseStringKeepCase(argument, i, ',', false);
 
@@ -838,7 +819,7 @@ String parseHexTextString(const String& argument, int index) {
       size_t j = 2;
 
       while (j < arg.length()) {
-        int hex = -1;
+        int32_t hex = -1;
 
         if (validIntFromString(concat(F("0x"), arg.substring(j, j + 2)), hex) && (hex > 0) && (hex < 256)) {
           result += char(hex);
@@ -870,7 +851,8 @@ std::vector<uint8_t> parseHexTextData(const String& argument, int index) {
   // Ignore these characters when used as hex-byte separators (0x01ab 23-cd:45 -> 0x01,0xab,0x23,0xcd,0x45)
   const String skipChars = F(" -:,.;");
 
-  result.reserve(argument.length()); // longer than needed, most likely
+  result.reserve(argument.length() / 2); // longer than needed, most likely
+
   int i      = index;
   String arg = parseStringKeepCase(argument, i, ',', false);
 
@@ -879,17 +861,21 @@ std::vector<uint8_t> parseHexTextData(const String& argument, int index) {
       size_t j = 2;
 
       while (j < arg.length()) {
-        int hex = -1;
+        int32_t hex = -1;
 
         if (validIntFromString(concat(F("0x"), arg.substring(j, j + 2)), hex) && (hex > -1) && (hex < 256)) {
           result.push_back(char(hex));
         }
         j += 2;
-        int c = skipChars.indexOf(arg.substring(j, j + 1));
 
-        while (j < arg.length() && c > -1) {
-          j++;
-          c = skipChars.indexOf(arg.substring(j, j + 1));
+        // Skip characters we need to ignore
+        if ((j + 1 < arg.length()) && (skipChars.indexOf(arg[j + 1]) != -1)) {
+          int c = -1;
+
+          do {
+            ++j;
+            c = (j < arg.length()) ? skipChars.indexOf(arg[j]) : -1;
+          } while (c > -1);
         }
       }
     } else {
@@ -915,25 +901,27 @@ char* GetTextIndexed(char* destination, size_t destination_size, uint32_t index,
   // Returns empty string if not found
   // Returns text of found
   char* write = destination;
-  const char* read = haystack;
 
-  index++;
-  while (index--) {
-    size_t size = destination_size -1;
-    write = destination;
-    char ch = '.';
-    while ((ch != '\0') && (ch != '|')) {
-      ch = pgm_read_byte(read++);
-      if (size && (ch != '|'))  {
-        *write++ = ch;
-        size--;
+  if (haystack != nullptr) {
+    const char* read = haystack;
+    index++;
+    while (index--) {
+      size_t size = destination_size -1;
+      write = destination;
+      char ch = '.';
+      while ((ch != '\0') && (ch != '|')) {
+        ch = pgm_read_byte(read++);
+        if (size && (ch != '|'))  {
+          *write++ = ch;
+          size--;
+        }
       }
-    }
-    if (0 == ch) {
-      if (index) {
-        write = destination;
+      if (0 == ch) {
+        if (index) {
+          write = destination;
+        }
+        break;
       }
-      break;
     }
   }
   *write = '\0';
@@ -951,6 +939,8 @@ int GetCommandCode(char* destination, size_t destination_size, const char* needl
   // Returns -1 of not found
   // Returns index and command if found
   int result = -1;
+  if (haystack == nullptr) 
+    return result;
   const char* read = haystack;
   char* write = destination;
 
@@ -978,6 +968,13 @@ int GetCommandCode(char* destination, size_t destination_size, const char* needl
   return result;
 }
 
+int GetCommandCode(const char* needle, const char* haystack)
+{
+  // Likely long enough to parse any command
+  static char temp[32]{};
+  temp[0] = '\0';
+  return GetCommandCode(temp, sizeof(temp), needle, haystack);
+}
 
 
 // escapes special characters in strings for use in html-forms
@@ -1033,12 +1030,7 @@ void htmlStrongEscape(String& html)
     }
     else
     {
-      char s[4] = {0};
-      sprintf_P(s, PSTR("%03d"), static_cast<int>(html[i]));
-      escaped += '&';
-      escaped += '#';
-      escaped += s;
-      escaped += ';';
+      escaped += strformat(F("&#%03d;"), static_cast<int>(html[i]));
     }
   }
   html = escaped;
@@ -1049,6 +1041,10 @@ void htmlStrongEscape(String& html)
 // ********************************************************************************
 String URLEncode(const String& msg)
 {
+  // Only used for temporary strings, so keep on default heap for speed
+  #ifdef USE_SECOND_HEAP
+  HeapSelectDram ephemeral;
+  #endif
   String encodedMsg;
 
   const size_t msg_length = msg.length();
@@ -1069,42 +1065,50 @@ String URLEncode(const String& msg)
   return encodedMsg;
 }
 
-void repl(const __FlashStringHelper * key,
+bool repl(const __FlashStringHelper * key,
             const String& val,
             String      & s,
             bool       useURLencode)
 {
-  repl(String(key), val, s, useURLencode);
+  const char c = pgm_read_byte(key);
+  if (s.indexOf(c) != -1) 
+    return repl(String(key), val, s, useURLencode);
+  return false;
 }
 
-void repl(const __FlashStringHelper * key,
+bool repl(const __FlashStringHelper * key,
           const char* val,
           String      & s,
           bool       useURLencode)
 {
-  repl(String(key), String(val), s, useURLencode);
+  const char c = pgm_read_byte(key);
+  if (s.indexOf(c) != -1) 
+    return repl(String(key), String(val), s, useURLencode);
+  return false;
 }
 
-void repl(const __FlashStringHelper * key1,
+bool repl(const __FlashStringHelper * key1,
            const __FlashStringHelper * key2,
            const char* val,
            String      & s,
            bool       useURLencode)
 {
-  repl(key1, val, s, useURLencode);
-  repl(key2, val, s, useURLencode);
+  bool somethingReplaced = false;
+  if (repl(key1, val, s, useURLencode)) somethingReplaced = true;
+  if (repl(key2, val, s, useURLencode)) somethingReplaced = true;
+  return somethingReplaced;
 }
 
 
-void repl(const String& key, const String& val, String& s, bool useURLencode)
+bool repl(const String& key, const String& val, String& s, bool useURLencode)
 {
+  if (s.indexOf(key) == -1) { return false; }
   if (useURLencode) {
-    // URLEncode does take resources, so check first if needed.
-    if (s.indexOf(key) == -1) { return; }
     s.replace(key, URLEncode(val));
   } else {
     s.replace(key, val);
   }
+  return true;
 }
 
 void parseSpecialCharacters(String& s, bool useURLencode)
@@ -1120,8 +1124,8 @@ void parseSpecialCharacters(String& s, bool useURLencode)
     const char degree[3]   = { 0xc2, 0xb0, 0 };       // Unicode degree symbol
     const char degreeC[4]  = { 0xe2, 0x84, 0x83, 0 }; // Unicode degreeC symbol
     const char degree_C[4] = { 0xc2, 0xb0, 'C', 0 };  // Unicode degree symbol + captial C
-    repl(F("{D}"),   degree,   s, useURLencode);
-    repl(F("&deg;"), degree,   s, useURLencode);
+    if (!no_accolades)   repl(F("{D}"),   degree,   s, useURLencode);
+    if (!no_html_entity) repl(F("&deg;"), degree,   s, useURLencode);
     repl(degreeC,    degree_C, s, useURLencode);
   }
   // Degree symbol is often used on displays, so still support that one.
@@ -1178,8 +1182,8 @@ void parseSpecialCharacters(String& s, bool useURLencode)
    replace other system variables like %sysname%, %systime%, %ip%
  \*********************************************************************************************/
 void parseControllerVariables(String& s, struct EventStruct *event, bool useURLencode) {
-  s = parseTemplate(s, useURLencode);
   parseEventVariables(s, event, useURLencode);
+  s = parseTemplate(s, useURLencode);
 }
 
 // FIXME TD-er: These macros really increase build size.
@@ -1188,17 +1192,57 @@ void parseControllerVariables(String& s, struct EventStruct *event, bool useURLe
   if (s.indexOf(T) != -1) { repl((T), (S), s, useURLencode); }
 
 void parseSingleControllerVariable(String            & s,
-                                   struct EventStruct *event,
-                                   uint8_t                taskValueIndex,
-                                   bool             useURLencode) {
+                                   struct EventStruct* event,
+                                   uint8_t             taskValueIndex,
+                                   bool                useURLencode) {
   SMART_REPL(F("%valname%"), getTaskValueName(event->TaskIndex, taskValueIndex));
 }
 
+#if FEATURE_MQTT_DISCOVER
+void parseDeviceClassVariable(String                   & s,
+                              const __FlashStringHelper* devclass,
+                              bool                       useURLencode) {
+  SMART_REPL(F("%devclass%"), devclass);
+}
+
+void parseUniqueIdVariable(String      & s,
+                           const String& uniqueId,
+                           bool          useURLencode) {
+  SMART_REPL(F("%unique_id%"), uniqueId);
+}
+
+void parseElementIdVariable(String     & s,
+                           const String& elementId,
+                           bool          useURLencode) {
+  SMART_REPL(F("%element_id%"), elementId);
+}
+#endif
+
+#if FEATURE_STRING_VARIABLES
+void parseValNameVariable(String      & s,
+                          const String& valname,
+                          bool          useURLencode) {
+  SMART_REPL(F("%valname%"), valname);
+}
+#endif // if FEATURE_STRING_VARIABLES
+
 void parseSystemVariables(String& s, bool useURLencode)
 {
+  String MaskEscapedPercent;
+  bool mustReplaceEscapedPercent = hasEscapedCharacter(s, '%');
+
+  if (mustReplaceEscapedPercent) {
+    MaskEscapedPercent = static_cast<char>(0x04); // ASCII 0x04 = End of transmit
+    s.replace(F("\\%"), MaskEscapedPercent);
+  }
+
   parseSpecialCharacters(s, useURLencode);
 
   SystemVariables::parseSystemVariables(s, useURLencode);
+
+  if (mustReplaceEscapedPercent) {
+    s.replace(MaskEscapedPercent, F("\\%"));
+  }
 }
 
 void parseEventVariables(String& s, struct EventStruct *event, bool useURLencode)
@@ -1208,8 +1252,47 @@ void parseEventVariables(String& s, struct EventStruct *event, bool useURLencode
   }
   repl(F("%id%"), String(event->idx), s, useURLencode);
 
+  const bool val_found = s.indexOf(F("%val")) != -1;
+  const bool vname_found = s.indexOf(F("%vname")) != -1;
+
+  #if FEATURE_STRING_VARIABLES
+  std::map<uint8_t, String> strVarNames;
+  std::map<uint8_t, String> strVarValues;
+
+  if (Settings.SendDerivedTaskValues(event->TaskIndex, event->ControllerIndex)) {
+    String taskName = getTaskDeviceName(event->TaskIndex);
+    taskName.toLowerCase();
+    String postfix;
+    const String search = getDerivedValueSearchAndPostfix(taskName, postfix);
+
+    auto it = customStringVar.begin();
+    uint8_t varNr = VARS_PER_TASK; // %val5% and %vname5% and incrementing the number
+    while (it != customStringVar.end()) {
+      if (it->first.startsWith(search) && it->first.endsWith(postfix)) {
+        String valueName = it->first.substring(search.length(), it->first.indexOf('-'));
+        const String vname2 = getDerivedValueName(taskName, valueName);
+        if (!vname2.isEmpty()) {
+          valueName = vname2;
+        }
+        if (!it->second.isEmpty()) {
+          String value(it->second);
+          value = parseTemplateAndCalculate(value);
+          strVarNames.insert(std::pair<uint8_t, String>(varNr, valueName));
+          strVarValues.insert(std::pair<uint8_t, String>(varNr, value));
+          ++varNr; // increment after to keep the values & code below consistent
+        }
+      }
+      else if (it->first.substring(0, search.length()).compareTo(search) > 0) {
+        break;
+      }
+      ++it;
+    }
+
+  }
+  #endif // if FEATURE_STRING_VARIABLES
+
   if (validTaskIndex(event->TaskIndex)) {
-    if (s.indexOf(F("%val")) != -1) {
+    if (val_found) {
       const uint8_t valueCount = (event->getSensorType() == Sensor_VType::SENSOR_TYPE_ULONG) ? 1 : getValueCountForTask(event->TaskIndex);
       for (uint8_t i = 0; i < valueCount; ++i) {
         String valstr = F("%val");
@@ -1217,21 +1300,42 @@ void parseEventVariables(String& s, struct EventStruct *event, bool useURLencode
         valstr += '%';
         SMART_REPL(valstr, formatUserVarNoCheck(event, i));
       }
+
+      #if FEATURE_STRING_VARIABLES
+      auto it = strVarValues.begin();
+      while (it != strVarValues.end()) {
+        String valstr = F("%val");
+        valstr += (it->first + 1);
+        valstr += '%';
+        SMART_REPL(valstr, it->second);
+        ++it;
+      }
+      #endif // if FEATURE_STRING_VARIABLES
     }
   }
 
   SMART_REPL(F("%tskname%"), getTaskDeviceName(event->TaskIndex));
 
-  const bool vname_found = s.indexOf(F("%vname")) != -1;
-
   if (vname_found) {
-    for (uint8_t i = 0; i < 4; ++i) {
+    const uint8_t valueCount = getValueCountForTask(event->TaskIndex);
+    for (uint8_t i = 0; i < valueCount; ++i) {
       String vname = F("%vname");
       vname += (i + 1);
       vname += '%';
 
-      SMART_REPL(vname, getTaskValueName(event->TaskIndex, i));
+      SMART_REPL(vname, Cache.getTaskDeviceValueName(event->TaskIndex, i));
     }
+    #if FEATURE_STRING_VARIABLES
+    auto it = strVarNames.begin();
+    while (it != strVarNames.end()) {
+      String vname = F("%vname");
+      vname += (it->first + 1);
+      vname += '%';
+
+      SMART_REPL(vname, it->second);
+      ++it;
+    }
+    #endif // if FEATURE_STRING_VARIABLES
   }
 }
 
@@ -1252,7 +1356,9 @@ bool getConvertArgument2(const __FlashStringHelper * marker, const String& s, fl
   if (getConvertArgumentString(marker, s, argumentString, startIndex, endIndex)) {
     const int pos_comma = argumentString.indexOf(',');
 
-    if (pos_comma == -1) { return false; }
+    if (pos_comma == -1) { 
+      return validFloatFromString(argumentString, arg1); // Accept single argument, with second argument 0
+    }
 
     if (validFloatFromString(argumentString.substring(0, pos_comma), arg1)) {
       return validFloatFromString(argumentString.substring(pos_comma + 1), arg2);
@@ -1260,6 +1366,53 @@ bool getConvertArgument2(const __FlashStringHelper * marker, const String& s, fl
   }
   return false;
 }
+
+#if FEATURE_STRING_VARIABLES
+bool getConvertArgumentStr(const __FlashStringHelper * marker, const String& s, String& argument, int& startIndex, int& endIndex) {
+  return getConvertArgumentString(marker, s, argument, startIndex, endIndex);
+}
+
+#define _MAX_STRFORMAT_ARGUMENTS 2 // Max. 2 numeric arguments for now to avoid strformat() from crashing when reading the 3rd argument that's not there
+bool getConvertArgumentStrFormat(const __FlashStringHelper * marker, const String& s, String& argStr, float& arg1, float& arg2, int& startIndex, int& endIndex) {
+  String argumentString;
+
+  if (getConvertArgumentString(marker, s, argumentString, startIndex, endIndex)) {
+    const int pos_comma = argumentString.indexOf(',');
+    
+    if (pos_comma == -1) { return false; } // At least 2 arguments required
+    
+    argStr = getCustomStringVar(argumentString.substring(0, pos_comma)); // Get String variable content
+
+    if (argStr.isEmpty()) { // Not found or invalid variable name: probably provided a formatstring (not quoted, no commas!)
+      argStr = argumentString.substring(0, pos_comma);
+    }
+
+    int pos_dollar = argStr.indexOf('$');
+    int dollarCount{};
+    while (pos_dollar != -1) {
+      ++dollarCount;
+      ++pos_dollar;
+      pos_dollar = argStr.indexOf('$', pos_dollar);
+    }
+
+    // We support, 0, 1 or 2, $ formatting characters to avoid crashes and confusion with shorthand variables
+    if (dollarCount > _MAX_STRFORMAT_ARGUMENTS) { return false; }
+
+    argStr.replace('$', '%'); // Change to regular strformat() format specifiers
+
+    const int pos_comma2 = argumentString.indexOf(',', pos_comma + 1);
+
+    if (pos_comma2 == -1) {
+      return validFloatFromString(argumentString.substring(pos_comma + 1), arg1);
+    }
+
+    return validFloatFromString(argumentString.substring(pos_comma + 1, pos_comma2), arg1)
+           && validFloatFromString(argumentString.substring(pos_comma2 + 1), arg2);
+  }
+  return false;
+}
+#undef _MAX_STRFORMAT_ARGUMENTS
+#endif // if FEATURE_STRING_VARIABLES
 
 bool getConvertArgumentString(const __FlashStringHelper * marker, const String& s, String& argumentString, int& startIndex, int& endIndex) {
   return getConvertArgumentString(String(marker), s, argumentString, startIndex, endIndex);
@@ -1303,14 +1456,15 @@ struct ConvertArgumentData {
   ConvertArgumentData() = delete;
 
   String& str;
+  String str1;
   float arg1, arg2;
   int   startIndex;
   int   endIndex;
   bool  URLencode;
 };
 
-void repl(ConvertArgumentData& data, const String& repl_str) {
-  repl(data.str.substring(data.startIndex, data.endIndex), repl_str, data.str, data.URLencode);
+bool repl(ConvertArgumentData& data, const String& repl_str) {
+  return repl(data.str.substring(data.startIndex, data.endIndex), repl_str, data.str, data.URLencode);
 }
 
 bool getConvertArgument(const __FlashStringHelper * marker, ConvertArgumentData& data) {
@@ -1320,6 +1474,16 @@ bool getConvertArgument(const __FlashStringHelper * marker, ConvertArgumentData&
 bool getConvertArgument2(const __FlashStringHelper * marker, ConvertArgumentData& data) {
   return getConvertArgument2(marker, data.str, data.arg1, data.arg2, data.startIndex, data.endIndex);
 }
+
+bool getConvertArgumentStr(const __FlashStringHelper * marker, ConvertArgumentData& data) {
+  return getConvertArgumentStr(marker, data.str, data.str1, data.startIndex, data.endIndex);
+}
+
+#if FEATURE_STRING_VARIABLES
+bool getConvertArgumentStrFormat(const __FlashStringHelper * marker, ConvertArgumentData& data) {
+  return getConvertArgumentStrFormat(marker, data.str, data.str1, data.arg1, data.arg2, data.startIndex, data.endIndex);
+}
+#endif // if FEATURE_STRING_VARIABLES
 
 // Parse conversions marked with "%conv_marker%(float)"
 // Must be called last, since all sensor values must be converted, processed, etc.
@@ -1345,20 +1509,76 @@ void parseStandardConversions(String& s, bool useURLencode) {
   SMART_CONV(F("%c_m2dhm%"),  minutesToDayHourMinute(data.arg1))
   SMART_CONV(F("%c_m2hcm%"),  minutesToHourColonMinute(data.arg1))
   SMART_CONV(F("%c_s2dhms%"), secondsToDayHourMinuteSecond(data.arg1))
-  SMART_CONV(F("%c_2hex%"),   formatToHex_no_prefix(data.arg1))
+  #if FEATURE_ESPEASY_P2P
+  SMART_CONV(F("%c_uname%"),  getNameForUnit(data.arg1))
+  SMART_CONV(F("%c_uage%"),   String(static_cast<int32_t>(getAgeForUnit(data.arg1) / 1000)))
+  SMART_CONV(F("%c_ubuild%"), String(getBuildnrForUnit(data.arg1)))
+  SMART_CONV(F("%c_ubuildstr%"), formatSystemBuildNr(getBuildnrForUnit(data.arg1)))
+  SMART_CONV(F("%c_uload%"),  toString(getLoadForUnit(data.arg1)))
+  SMART_CONV(F("%c_utype%"),  String(getTypeForUnit(data.arg1)))
+  SMART_CONV(F("%c_utypestr%"), getTypeStringForUnit(data.arg1))
+  #endif // if FEATURE_ESPEASY_P2P
+  #if FEATURE_STRING_VARIABLES
+  SMART_CONV(F("%c_ts2wday%"),  get_weekday_from_timestamp(static_cast<uint32_t>(data.arg1)))
+  #endif // if FEATURE_STRING_VARIABLES
+  #ifndef LIMIT_BUILD_SIZE
+  SMART_CONV(F("%c_d2r%"),    doubleToString(radians(data.arg1)))
+  SMART_CONV(F("%c_r2d%"),    doubleToString(degrees(data.arg1)))
+  #endif // ifndef LIMIT_BUILD_SIZE
   #undef SMART_CONV
 
   // Conversions with 2 parameters
   #define SMART_CONV(T, FUN) \
   while (getConvertArgument2((T), data)) { repl(data, (FUN)); }
   SMART_CONV(F("%c_dew_th%"), toString(compute_dew_point_temp(data.arg1, data.arg2), 2))
+  SMART_CONV(F("%c_2hex%"),   formatToHex_no_prefix(data.arg1, data.arg2))
   #if FEATURE_ESPEASY_P2P
   SMART_CONV(F("%c_u2ip%"),   formatUnitToIPAddress(data.arg1, data.arg2))
   #endif
   SMART_CONV(F("%c_alt_pres_sea%"), toString(altitudeFromPressure(data.arg1, data.arg2), 2))
   SMART_CONV(F("%c_sea_pres_alt%"), toString(pressureElevation(data.arg1, data.arg2), 2))
+  #if FEATURE_STRING_VARIABLES
+  SMART_CONV(F("%c_ts2date%"),      get_date_time_from_timestamp(static_cast<uint32_t>(data.arg1), !essentiallyZero(data.arg2), false))
+  SMART_CONV(F("%c_ts2isodate%"),   get_date_time_from_timestamp(static_cast<uint32_t>(data.arg1), !essentiallyZero(data.arg2), true))
+  #endif // if FEATURE_STRING_VARIABLES
+
+  #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+  SMART_CONV(F("%c_random%"), doubleToString(HwRandom_f(data.arg1, data.arg2), 3, true))
+  #else
+  SMART_CONV(F("%c_random%"), floatToString(HwRandom_f(data.arg1, data.arg2), 3, true))
+  #endif
   #undef SMART_CONV
+  
+  #if FEATURE_STRING_VARIABLES
+  double tmp{};
+  #define SMART_CONV(T, FUN) \
+  while (getConvertArgumentStr((T), data)) { repl(data, (FUN)); }
+  SMART_CONV(F("%c_isnum%"),  String(validDoubleFromString(getCustomStringVar(data.str1), tmp) ? 1 : 0))
+  #undef SMART_CONV
+  // 1 string and 1 or 2 numeric arguments
+  #define SMART_CONV(T, FUN) \
+  while (getConvertArgumentStrFormat((T), data)) { repl(data, (FUN)); }
+  SMART_CONV(F("%c_strf%"),   strformat(data.str1, data.arg1, data.arg2))
+  #undef SMART_CONV
+  #endif // if FEATURE_STRING_VARIABLES
 }
+
+#if FEATURE_STRING_VARIABLES
+String get_date_time_from_timestamp(time_t unix_timestamp, bool am_pm, bool iso_format) {
+  struct tm ts;
+  ts = *localtime(&unix_timestamp);
+
+  return formatDateTimeString(ts, '-', ':', iso_format ? 'T' : ' ', am_pm && !iso_format)
+          + (iso_format && am_pm ? node_time.getTimeZoneOffsetString() : F("Z"));
+}
+
+String get_weekday_from_timestamp(time_t unix_timestamp) {
+  struct tm ts;
+  ts = *localtime(&unix_timestamp);
+
+  return String(ts.tm_wday);
+}
+#endif // if FEATURE_STRING_VARIABLES
 
 /********************************************************************************************\
    Find positional parameter in a char string
@@ -1373,16 +1593,13 @@ bool GetArgv(const char *string, String& argvString, unsigned int argc, char sep
   int  pos_begin, pos_end;
   bool hasArgument = GetArgvBeginEnd(string, argc, pos_begin, pos_end, separator);
 
-  argvString = String();
+  free_string(argvString);
 
   if (!hasArgument) { return false; }
 
   if ((pos_begin >= 0) && (pos_end >= 0) && (pos_end > pos_begin)) {
     argvString.reserve(pos_end - pos_begin);
-
-    for (int i = pos_begin; i < pos_end; ++i) {
-      argvString += string[i];
-    }
+    argvString.concat(string + pos_begin, pos_end - pos_begin);
     argvString.trim();
     argvString = stripQuotes(argvString);
   }
@@ -1392,6 +1609,9 @@ bool GetArgv(const char *string, String& argvString, unsigned int argc, char sep
 bool GetArgvBeginEnd(const char *string, const unsigned int argc, int& pos_begin, int& pos_end, char separator) {
   pos_begin = -1;
   pos_end   = -1;
+  if (string == nullptr) {
+    return false;
+  }
   size_t string_len = strlen(string);
   unsigned int string_pos = 0, argc_pos = 0;
   bool parenthesis          = false;
@@ -1413,7 +1633,7 @@ bool GetArgvBeginEnd(const char *string, const unsigned int argc, int& pos_begin
 
     if  (!parenthesis && (((c == ' ') && (d == ' ')) || 
                           ((c == separator) && (d == ' ')))) {
-      // Consider multiple consequitive spaces as one.
+      // Consider multiple consecutive spaces as one.
     }
     else if  (!parenthesis && ((d == ' ') && (e == separator))) {
       // Skip the space.      

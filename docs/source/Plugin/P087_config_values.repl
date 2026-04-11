@@ -1,0 +1,70 @@
+.. csv-table::
+    :header: "Config value", "Information"
+    :widths: 20, 30
+
+    "
+    ``[<taskname>#group.<groupnr>]``
+    ","
+    Get the contents from groupnr after processing received data.
+
+    NB: The regular expression parser uses 0-based group numbers (where most other regex parsers use 1-based group numbers!)
+    "
+    "
+    ``[<taskname>#next.<groupvalue>]``
+    ","
+    Get the value of the next group that holds ``<groupvalue>``.
+
+    Example:
+
+    Regular expression: ``((node)=(%d+);?)((weight)=(%d+);?)((temp%d?)=(%-?%d+);?)((rssi)=(%-?%d+);?)``
+
+    Received data: ``node=1;weight=40;temp1=20;rssi=-30``
+
+    This will result in these groups:
+
+    .. list-table::
+        :widths: 20, 50, 200
+        :header-rows: 1
+
+        * - Group
+          - Data
+          -
+        * - 0
+          - node=1
+          -
+        * - 1
+          - node
+          -
+        * - 2
+          - 1
+          -
+        * - 3
+          - weight=40
+          -
+        * - 4
+          - weight
+          -
+        * - 5
+          - 40
+          -
+        * - 6
+          - temp1=20
+          -
+        * - 7
+          - temp1
+          -
+        * - 8
+          - 20
+          -
+        * - 9
+          - rssi=-30
+          -
+        * - 10
+          - rssi
+          -
+        * - 11
+          - -30
+          -
+
+    Requesting ``[SerialProxy#next.weight]`` will return the value ``40``.
+    "

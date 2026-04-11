@@ -1,0 +1,39 @@
+.. csv-table::
+    :header: "Command Syntax", "Extra information"
+    :widths: 20, 30
+
+    "
+    | ``dmx,log``
+    ","
+    | List the current content of the send-buffer to the log.
+    "
+    "
+    | ``dmx,test``
+    ","
+    | Fills the send-buffer with random data and sends that to the connected devices.
+    "
+    "
+    | ``dmx,on``
+    ","
+    | Fills the send-buffer all \'255\' values and sends that to the connected devices to turn everthing on.
+    "
+    "
+    | ``dmx,off``
+    ","
+    | Fills the send-buffer all \'0\' values and sends that to the connected devices to turn everthing off.
+    "
+    "
+    | ``dmx,<channel>=<value>[,<value>[,<channel>=<value>]]``
+
+    | ``channel``: Channel number from 1 .. **Channels** set in the configuration.
+
+    | ``value``: Numeric value between 0 and 255 (inclusive) to set for the channel.
+    ","
+    | Fills the send-buffer given value(s) for the channel and sends that to the connected devices.
+
+    | If no channel is used with a value, it is set for the next channel. The channel is initially set to 1.
+
+    | Multiple values, optionally with a channel prefixed, can be provided and will be processed until no more data is found.
+
+    | Also, other subcommands (not including ``dmx``) can be used, f.e. setting up some channel data and adding a ``,log`` at the end to list the current buffer content to the log output.
+    "

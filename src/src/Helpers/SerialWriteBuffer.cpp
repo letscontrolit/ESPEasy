@@ -1,104 +1,70 @@
 #include "../Helpers/SerialWriteBuffer.h"
 
-#include "../Helpers/Memory.h"
+#include "../Helpers/StringConverter.h"
 
-void SerialWriteBuffer_t::add(const String& line)
-{
-  // When the buffer is too full, try to dump at least the size of what we try to add.
-  const bool mustPop = _buffer.size() > _maxSize;
+#include "../Globals/Settings.h"
+
+
+String SerialWriteBuffer_t::colorize(const String& str) const {
+#if FEATURE_COLORIZE_CONSOLE_LOGS
+  if (!Settings.ColorizeSerialLog()) return str;
+  const __FlashStringHelper *format = F("%s");
+
+  switch (_loglevel)
   {
-    #ifdef USE_SECOND_HEAP
+    case LOG_LEVEL_NONE: format = F("\033[31;1m%s\033[0m");     // Red + Bold or increased intensity
+      break;
+    case LOG_LEVEL_INFO: format = F("\033[36m%s\033[0m");       // Cyan
+      break;
+    case LOG_LEVEL_ERROR: format = F("\033[31;1m%s\033[0m");    // Red + Bold or increased intensity
+      break;
+# ifndef BUILD_NO_DEBUG
+    case LOG_LEVEL_DEBUG: format = F("\033[32m%s\033[0m");      // Green
+      break;
+    case LOG_LEVEL_DEBUG_MORE: format = F("\033[35m%s\033[0m"); // Purple
+      break;
+    case LOG_LEVEL_DEBUG_DEV: format = F("\033[33m%s\033[0m");  // Yellow
+      break;
+# endif // ifndef BUILD_NO_DEBUG
+    default:
+      return str;
 
-    // Allow to store the logs in 2nd heap if present.
-    HeapSelectIram ephemeral;
-    #endif // ifdef USE_SECOND_HEAP
-    int roomLeft = getRoomLeft();
-
-    auto it = line.begin();
-
-    while (roomLeft > 0 && it != line.end()) {
-      if (mustPop) {
-        _buffer.pop_front();
-      }
-      _buffer.push_back(*it);
-      --roomLeft;
-      ++it;
-    }
   }
+  return strformat(format, str.c_str());
+#else // if FEATURE_COLORIZE_CONSOLE_LOGS
+  return str;
+#endif // if FEATURE_COLORIZE_CONSOLE_LOGS
 }
 
-void SerialWriteBuffer_t::add(const __FlashStringHelper *line)
+
+size_t SerialWriteBuffer_t::write_skipping(Print& stream)
 {
-  add(String(line));
+  // Mark with empty line we skipped the rest of the message.
+  return stream.print(F(" ...\r\n\r\n"));
 }
 
-void SerialWriteBuffer_t::add(char c)
+void SerialWriteBuffer_t::prepare_prefix()
 {
-  if (_buffer.size() > _maxSize) {
-    _buffer.pop_front();
-  }
-  _buffer.push_back(c);
-}
+  // Prepare prefix
+  _prefix = format_msec_duration(_timestamp);
 
-void SerialWriteBuffer_t::addNewline()
-{
-  add('\r');
-  add('\n');
-}
-
-void SerialWriteBuffer_t::clear()
-{
-  _buffer.clear();
-}
-
-int SerialWriteBuffer_t::availableForWrite() const
-{
-  return _buffer.size();
-}
-
-size_t SerialWriteBuffer_t::write(Stream& stream, size_t nrBytesToWrite)
-{
-  size_t bytesWritten     = 0;
-  const size_t bufferSize = _buffer.size();
-
-  if (bufferSize == 0) {
-    return bytesWritten;
-  }
-
-  if (nrBytesToWrite > 0) {
-    if (nrBytesToWrite > bufferSize) {
-      nrBytesToWrite = bufferSize;
-    }
-
-    while (nrBytesToWrite > 0 && !_buffer.empty()) {
-      const char c = _buffer.front();
-
-      if (stream.write((uint8_t)c) == 0) {
-        return bytesWritten;
-      }
-      _buffer.pop_front();
-      --nrBytesToWrite;
-      ++bytesWritten;
-    }
-  }
-  return bytesWritten;
-}
-
-int SerialWriteBuffer_t::getRoomLeft() const {
-  #ifdef USE_SECOND_HEAP
-
-  // If stored in 2nd heap, we must check this for space
-  HeapSelectIram ephemeral;
-  #endif // ifdef USE_SECOND_HEAP
-
-  int roomLeft = getMaxFreeBlock();
-
-  if (roomLeft < 1000) {
-    roomLeft = 0;                    // Do not append to buffer.
-  } else if (roomLeft < 4000) {
-    roomLeft = 128 - _buffer.size(); // 1 buffer.
+  if (_loglevel == LOG_LEVEL_NONE) {
+    _prefix += colorize(F(" : >  "));
   } else {
-    roomLeft -= 4000;                // leave some free for normal use.
+      #ifndef LIMIT_BUILD_SIZE
+    _prefix += strformat(F(" : (%d) "), FreeMem());
+      #else
+    _prefix += ' ';
+      #endif // ifndef LIMIT_BUILD_SIZE
+    {
+      String loglevelDisplayString = getLogLevelDisplayString(_loglevel);
+
+      while (loglevelDisplayString.length() < LOG_LEVEL_MAX_STRING_LENGTH) {
+        loglevelDisplayString += ' ';
+      }
+      _prefix += colorize(loglevelDisplayString);
+    }
+    _prefix += F(" | ");
   }
-  return roomLeft;
+
 }

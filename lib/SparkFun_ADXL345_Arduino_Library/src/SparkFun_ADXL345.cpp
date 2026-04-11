@@ -22,7 +22,6 @@
 #include "Arduino.h"
 #include "SparkFun_ADXL345.h"
 #include <Wire.h>
-#include <SPI.h>
 
 #define ADXL345_DEVICE_DEFAULT (0x53) // Device Address for ADXL345
 #define ADXL345_DEVICE (_i2c_addr)    // Device Address for ADXL345
@@ -38,7 +37,7 @@ ADXL345::ADXL345(uint8_t i2c_addr = ADXL345_DEVICE_DEFAULT) : _i2c_addr(i2c_addr
   I2C      = true;
 }
 
-ADXL345::ADXL345(int CS) {
+ADXL345::ADXL345(int CS, SPIClass& spi) {
   status     = ADXL345_OK;
   error_code = ADXL345_NO_ERROR;
 
@@ -47,17 +46,20 @@ ADXL345::ADXL345(int CS) {
   gains[2] = 0.00349265;
   _CS      = CS;
   I2C      = false;
-  // tonhuisman: disabled as SPI is already initialized in ESPEasy core.
+
+  // 2021-12-13 tonhuisman: disabled as SPI is already initialized in ESPEasy core.
   // SPI.begin();
   // SPI.setDataMode(SPI_MODE3);
+  // 2025-08-13 tonhuisman: provide external SPI bus
+  _spi = spi;
   pinMode(_CS, OUTPUT);
   digitalWrite(_CS, HIGH);
 }
 
 void ADXL345::powerOn() {
-  if (I2C) {
-    Wire.begin(); // If in I2C Mode Only
-  }
+  // if (I2C) {
+  //   Wire.begin(); // If in I2C Mode Only ESPEasy has already taken care of this
+  // }
 
   // ADXL345 TURN ON
   writeTo(ADXL345_POWER_CTL, 0);  // Wakeup
@@ -168,8 +170,8 @@ void ADXL345::readFromI2C(byte address, int num, byte _buff[]) {
 /*         Point to Destination; Write Value; Turn Off              */
 void ADXL345::writeToSPI(byte __reg_address, byte __val) {
   digitalWrite(_CS, LOW);
-  SPI.transfer(__reg_address);
-  SPI.transfer(__val);
+  _spi.transfer(__reg_address);
+  _spi.transfer(__val);
   digitalWrite(_CS, HIGH);
 }
 
@@ -185,10 +187,10 @@ void ADXL345::readFromSPI(byte __reg_address, int num, byte _buff[]) {
   }
 
   digitalWrite(_CS, LOW);
-  SPI.transfer(_address); // Transfer Starting Reg Address To Be Read
+  _spi.transfer(_address); // Transfer Starting Reg Address To Be Read
 
   for (int i = 0; i < num; i++) {
-    _buff[i] = SPI.transfer(0x00);
+    _buff[i] = _spi.transfer(0x00);
   }
   digitalWrite(_CS, HIGH);
 }
@@ -199,7 +201,7 @@ void ADXL345::getRangeSetting(byte *rangeSetting) {
   byte _b;
 
   readFrom(ADXL345_DATA_FORMAT, 1, &_b);
-  *rangeSetting = _b & B00000011;
+  *rangeSetting = _b & 0b00000011;
 }
 
 void ADXL345::setRangeSetting(int val) {
@@ -208,22 +210,22 @@ void ADXL345::setRangeSetting(int val) {
 
   switch (val) {
     case 2:
-      _s = B00000000;
+      _s = 0b00000000;
       break;
     case 4:
-      _s = B00000001;
+      _s = 0b00000001;
       break;
     case 8:
-      _s = B00000010;
+      _s = 0b00000010;
       break;
     case 16:
-      _s = B00000011;
+      _s = 0b00000011;
       break;
     default:
-      _s = B00000000;
+      _s = 0b00000000;
   }
   readFrom(ADXL345_DATA_FORMAT, 1, &_b);
-  _s |= (_b & B11101100);
+  _s |= (_b & 0b11101100);
   writeTo(ADXL345_DATA_FORMAT, _s);
 }
 
@@ -700,7 +702,7 @@ double ADXL345::getRate() {
   byte _b;
 
   readFrom(ADXL345_BW_RATE, 1, &_b);
-  _b &= B00001111;
+  _b &= 0b00001111;
   return (pow(2, ((int)_b) - 6)) * 6.25;
 }
 
@@ -716,7 +718,7 @@ void ADXL345::setRate(double rate) {
 
   if (r <= 9) {
     readFrom(ADXL345_BW_RATE, 1, &_b);
-    _s = (byte)(r + 6) | (_b & B11110000);
+    _s = (byte)(r + 6) | (_b & 0b11110000);
     writeTo(ADXL345_BW_RATE, _s);
   }
 }

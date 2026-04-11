@@ -15,8 +15,6 @@
 #  include <NOxGasIndexAlgorithm.h>
 # endif // if P147_FEATURE_GASINDEXALGORITHM
 
-# include "../Helpers/CRC_functions.h"
-
 # define P147_SENSOR_TYPE         PCONFIG(0)
 # define P147_LOW_POWER_MEASURE   PCONFIG(1)
 

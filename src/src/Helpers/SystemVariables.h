@@ -7,47 +7,82 @@ class SystemVariables {
 public:
 
   enum Enum : uint8_t {
-    // For optmization, keep enums sorted alfabetically
+    // For optmization, keep enums sorted alfabetically by their flash string
+    BOARD_NAME,
     BOOT_CAUSE,
     BSSID,
+    CLIENTIP,
     CR,
-    IP,
-    IP4, // 4th IP octet
-    SUBNET,
-    GATEWAY,
     DNS,
     DNS_1,
     DNS_2,
-    CLIENTIP,
-    #if FEATURE_INTERNAL_TEMPERATURE
-    INTERNAL_TEMPERATURE,
-    #endif // if FEATURE_INTERNAL_TEMPERATURE
-    ISMQTT,
-    ISMQTTIMP,
-    ISNTP,
-    ISWIFI,
-    #if FEATURE_ETHERNET
-    ETHWIFIMODE,
+    ESP_CHIP_CORES,
+    ESP_CHIP_FREQ,
+    ESP_CHIP_ID,
+    ESP_CHIP_MODEL,
+    ESP_CHIP_REVISION,
+#if FEATURE_ETHERNET
     ETHCONNECTED,
     ETHDUPLEX,
     ETHSPEED,
-    ETHSTATE,
     ETHSPEEDSTATE,
-    #endif // if FEATURE_ETHERNET
+    ETHSTATE,
+    ETHWIFIMODE,
+#endif // if FEATURE_ETHERNET
+    #ifndef LIMIT_BUILD_SIZE
+    S_E,
+    #endif // ifndef LIMIT_BUILD_SIZE
+
+    FLASH_CHIP_MODEL,
+    FLASH_CHIP_VENDOR,
+    FLASH_FREQ,
+    FLASH_SIZE,
+    FS_FREE,
+    FS_SIZE,
+    GATEWAY,
+#if FEATURE_INTERNAL_TEMPERATURE
+    INTERNAL_TEMPERATURE,
+#endif // if FEATURE_INTERNAL_TEMPERATURE
+
+    IP4,
+    IP,
+#if FEATURE_USE_IPV6
+    IP6_LOCAL,
+#endif
+    ISVAR_DOUBLE,
+    ISLIMITED_BUILD,
+    ISMQTT,
+    ISMQTTIMP,
+    ISNTP,
+#ifdef USES_NW005
+    ISPPP,
+#endif
+    ISWIFIAP,
+    ISWIFI,
     LCLTIME,
     LCLTIME_AM,
     LF,
+    #if FEATURE_LAT_LONG_VAR_CMD
+    LATITUDE,
+    LONGITUDE,
+    #endif // if FEATURE_LAT_LONG_VAR_CMD
+    SUNRISE_M,
+    SUNSET_M,
     MAC,
     MAC_INT,
+    #ifndef LIMIT_BUILD_SIZE
+    S_PI,
+    #endif // ifndef LIMIT_BUILD_SIZE
+    S_LF,
+    S_CR,
     RSSI,
     SPACE,
     SSID,
+    SUBNET,
     SUNRISE,
-    SUNSET,
     SUNRISE_S,
+    SUNSET,
     SUNSET_S,
-    SUNRISE_M,
-    SUNSET_M,
     SYSBUILD_DATE,
     SYSBUILD_DESCR,
     SYSBUILD_FILENAME,
@@ -63,6 +98,7 @@ public:
     SYSMIN_0,
     SYSMONTH,
     SYSMONTH_S,
+    SYSMONTH_0,
     SYSNAME,
     SYSSEC,
     SYSSEC_0,
@@ -74,43 +110,34 @@ public:
     SYSTIME_AM_SP,
     SYSTM_HM,
     SYSTM_HM_0,
-    SYSTM_HM_SP,
     SYSTM_HM_AM,
     SYSTM_HM_AM_0,
     SYSTM_HM_AM_SP,
+    SYSTM_HM_SP,
     SYSTZOFFSET,
+    #ifndef LIMIT_BUILD_SIZE
+    SYSTZOFFSET_S,
+    #endif // ifndef LIMIT_BUILD_SIZE
     SYSWEEKDAY,
     SYSWEEKDAY_S,
     SYSYEAR,
     SYSYEARS,
     SYSYEAR_0,
-    SYS_MONTH_0,
-    S_CR,
-    S_LF,
-    UNIT_sysvar, // We already use UNIT as define.
-    #if FEATURE_ZEROFILLED_UNITNUMBER
+    UNIT_sysvar,
+#if FEATURE_ZEROFILLED_UNITNUMBER
     UNIT_0_sysvar,
-    #endif // FEATURE_ZEROFILLED_UNITNUMBER
+#endif // FEATURE_ZEROFILLED_UNITNUMBER
     UNIXDAY,
     UNIXDAY_SEC,
     UNIXTIME,
+    #ifndef LIMIT_BUILD_SIZE
+    UNIXTIME_LCL,
+    #endif // ifndef LIMIT_BUILD_SIZE
     UPTIME,
     UPTIME_MS,
     VCC,
+    VARIABLE, // Can not be the first 'v' variable, as the name is only 1 character long
     WI_CH,
-    FLASH_FREQ, // Frequency of the flash chip
-    FLASH_SIZE, // Real size of the flash chip
-    FLASH_CHIP_VENDOR,
-    FLASH_CHIP_MODEL,
-    FS_SIZE,    // Size of the file system
-    FS_FREE,    // Free space (in bytes) on the file system
-
-    ESP_CHIP_ID,
-    ESP_CHIP_FREQ,
-    ESP_CHIP_MODEL,
-    ESP_CHIP_REVISION,
-    ESP_CHIP_CORES,
-    ESP_BOARD_NAME,
 
 
     // Keep UNKNOWN as last
@@ -119,10 +146,13 @@ public:
 
   // Find the next thing to replace.
   // Return UNKNOWN when nothing needs to be replaced.
-  static SystemVariables::Enum      nextReplacementEnum(const String        & str,
-                                                        SystemVariables::Enum last_tested);
+  static SystemVariables::Enum nextReplacementEnum(const String        & str,
+                                                   SystemVariables::Enum last_tested,
+                                                   int                 & last_percent_pos);
 
   static String                     toString(SystemVariables::Enum enumval);
+
+  static SystemVariables::Enum      startIndex_beginWith(const char* beginchar);
   static const __FlashStringHelper* toFlashString(SystemVariables::Enum enumval);
 
   static String                     getSystemVariable(SystemVariables::Enum enumval);

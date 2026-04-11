@@ -4,9 +4,9 @@
 #include "../../ESPEasy-Globals.h"
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
-#include "../ESPEasyCore/ESPEasyEth.h"
-#include "../ESPEasyCore/ESPEasyNetwork.h"
-#include "../ESPEasyCore/ESPEasyWifi.h"
+#include "../../ESPEasy/net/eth/ESPEasyEth.h"
+#include "../../ESPEasy/net/ESPEasyNetwork.h"
+#include "../../ESPEasy/net/wifi/ESPEasyWifi.h"
 #include "../ESPEasyCore/ESPEasyRules.h"
 
 #include "../Globals/EventQueue.h"
@@ -33,7 +33,7 @@ int getDeepSleepMax()
   #endif // ifdef ESP8266
   #ifdef ESP32
   int dsmax = 281474976; // / 3600 (hour) / 24 (day) / 365 (year) = ~8 years. (max. 48 bits in microseconds)
-  #endif // ifdef ESp32
+  #endif // ifdef ESP32
 
 #if defined(CORE_POST_2_5_0)
   dsmax = INT_MAX;
@@ -77,7 +77,7 @@ bool readyForSleep()
     return false;
   }
 
-  if (!NetworkConnected()) {
+  if (!ESPEasy::net::NetworkConnected()) {
     // Allow 12 seconds to establish connections
     return timeOutReached(timerAwakeFromDeepSleep + 12000);
   }

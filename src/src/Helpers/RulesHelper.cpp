@@ -3,6 +3,7 @@
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../Globals/Settings.h"
 #include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/StringConverter.h"
 #include "../Helpers/StringProvider.h"
 
 /********************************************************************************************\
@@ -17,8 +18,7 @@ bool rules_replace_common_mistakes(const String& from, const String& to, String&
 
   if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
     String log;
-
-    if (log.reserve(32 + from.length() + to.length() + line.length())) {
+    if (reserve_special(log, 32 + from.length() + to.length() + line.length())) {
       log  = F("Rules (Syntax Error, auto-corrected): '");
       log += from;
       log += F("' => '");
@@ -162,13 +162,11 @@ void RulesHelperClass::init()
 #ifndef BUILD_NO_DEBUG
 
         if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-          String log = F("Cache rules event: ");
-          log += filename;
-          log += F(" pos: ");
-          log += pos_start_line;
-          log += ' ';
-          log += rulesLine;
-          addLogMove(LOG_LEVEL_DEBUG, log);
+          addLogMove(LOG_LEVEL_DEBUG, strformat(
+            F("Cache rules event: %s pos: %u %s"),
+            filename.c_str(),
+            pos_start_line,
+            rulesLine.c_str()));
         }
 #endif // ifndef BUILD_NO_DEBUG
       }
@@ -209,7 +207,7 @@ size_t RulesHelperClass::read(const String& filename, size_t& pos, uint8_t *buff
 
   if (it == _fileHandleMap.end()) {
     // No open file handle found, so try to open it.
-    _fileHandleMap.emplace(filename, tryOpenFile(filename, "r+"));
+    _fileHandleMap.emplace(filename, tryOpenFile(filename, "r"));
     it = _fileHandleMap.find(filename);
   }
 
@@ -218,7 +216,9 @@ size_t RulesHelperClass::read(const String& filename, size_t& pos, uint8_t *buff
   }
 
   if (it->second.position() != pos) {
-    it->second.seek(pos);
+    if (!it->second.seek(pos)) {
+      return 0;
+    }
   }
   const size_t ret = it->second.read(buffer, length);
 
@@ -281,7 +281,7 @@ String RulesHelperClass::readLn(const String& filename,
 
   if (it == _fileHandleMap.end()) {
     // Read lines from the file
-    fs::File f = tryOpenFile(filename, "r+");
+    fs::File f = tryOpenFile(filename, "r");
 
     if (f) {
       RulesLines lines;
@@ -293,7 +293,7 @@ String RulesHelperClass::readLn(const String& filename,
 
       while (f.available()) {
         if (addChar(char(f.read()), tmpStr, firstNonSpaceRead)) {
-          lines.push_back(tmpStr);
+          lines.push_back(std::move(move_special(std::move(tmpStr))));
           ++readPos;
 
           firstNonSpaceRead = false;
@@ -304,17 +304,16 @@ String RulesHelperClass::readLn(const String& filename,
       if (tmpStr.length() > 0) {
         rules_strip_trailing_comments(tmpStr);
         check_rules_line_user_errors(tmpStr);
-        lines.push_back(tmpStr);
+        lines.push_back(std::move(move_special(std::move(tmpStr))));
         tmpStr.clear();
       }
 # ifndef BUILD_NO_DEBUG
 
       if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-        String log = F("Rules : Read ");
-        log += lines.size();
-        log += F(" lines from ");
-        log += filename;
-        addLogMove(LOG_LEVEL_DEBUG, log);
+        addLogMove(LOG_LEVEL_DEBUG, strformat(
+                     F("Rules : Read %u  lines from %s"),
+                     lines.size(),
+                     filename.c_str()));
       }
 # endif // ifndef BUILD_NO_DEBUG
       _fileHandleMap.emplace(std::make_pair(filename, std::move(lines)));
@@ -343,6 +342,12 @@ String RulesHelperClass::readLn(const String& filename,
                                 bool        & moreAvailable,
                                 bool          searchNextOnBlock)
 {
+  # ifdef USE_SECOND_HEAP
+
+  // Do not store in 2nd heap, this is only temporary and needs to be as fast as possible
+  HeapSelectDram ephemeral;
+  # endif // ifdef USE_SECOND_HEAP
+
   std::vector<uint8_t> buf;
 
   buf.resize(RULES_BUFFER_SIZE);
@@ -361,6 +366,14 @@ String RulesHelperClass::readLn(const String& filename,
     const size_t startPos = pos;
     int len               = read(filename, pos, &buf[0], RULES_BUFFER_SIZE);
     moreAvailable = len != 0;
+
+    // Due to change in Arduino code, pos may now also be (size_t)-1
+    // See: https://github.com/espressif/arduino-esp32/commit/0ab2c58b6c14f6dbc8b9ab0e61d776cd3ac5de66
+    constexpr size_t errorcode = (size_t)-1;
+
+    if (pos == errorcode) {
+      moreAvailable = false;
+    }
 
     if (!moreAvailable) { done = true; }
 
@@ -391,7 +404,10 @@ String RulesHelperClass::readLn(const String& filename,
   }
   rules_strip_trailing_comments(line);
   check_rules_line_user_errors(line);
-  return line;
+
+  // Make sure there is no left-over reserved data 
+  // and allocate it to the appropriate memory area.
+  return move_special(std::move(line));
 }
 
 #endif // ifdef CACHE_RULES_IN_MEMORY

@@ -12,14 +12,17 @@
 // ########################## Adapted to ESPEasy 2.0 by Jochen Krapf #####################################
 // #######################################################################################################
 
+/** Changelog:
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery
+ */
 
-#define PLUGIN_069
-#define PLUGIN_ID_069         69
-#define PLUGIN_NAME_069       "Environment - LM75A"
-#define PLUGIN_VALUENAME1_069 "Temperature"
+# define PLUGIN_069
+# define PLUGIN_ID_069         69
+# define PLUGIN_NAME_069       "Environment - LM75A"
+# define PLUGIN_VALUENAME1_069 "Temperature"
 
 
-#include "src/PluginStructs/P069_data_struct.h"
+# include "src/PluginStructs/P069_data_struct.h"
 
 
 boolean Plugin_069(uint8_t function, struct EventStruct *event, String& string)
@@ -30,18 +33,15 @@ boolean Plugin_069(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_069;
-      Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_SINGLE;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = 1;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].PluginStats        = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_069;
+      dev.Type           = DEVICE_TYPE_I2C;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_SINGLE;
+      dev.FormulaOption  = true;
+      dev.ValueCount     = 1;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
+      dev.PluginStats    = true;
       break;
     }
 
@@ -57,10 +57,19 @@ boolean Plugin_069(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      success = getDiscoveryVType(event, Plugin_QueryVType_Temperature, 255, event->Par5);
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
+
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
       const uint8_t i2cAddressValues[] = { 0x48, 0x49, 0x4A, 0x4B, 0x4C, 0x4D, 0x4E, 0x4F };
+
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
         addFormSelectorI2C(F("i2c_addr"), 8, i2cAddressValues, PCONFIG(0));
       } else {
@@ -94,11 +103,7 @@ boolean Plugin_069(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P069_data_struct(static_cast<uint8_t>(PCONFIG(0))));
-      P069_data_struct *P069_data =
-        static_cast<P069_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-      success = (nullptr != P069_data);
+      success = initPluginTaskData(event->TaskIndex, new (std::nothrow) P069_data_struct(static_cast<uint8_t>(PCONFIG(0))));
       break;
     }
 
@@ -111,23 +116,20 @@ boolean Plugin_069(uint8_t function, struct EventStruct *event, String& string)
         return success;
       }
 
-      P069_data->setAddress((uint8_t)PCONFIG(0));
-
       const float tempC = P069_data->getTemperatureInDegrees();
-      UserVar[event->BaseVarIndex] = tempC;
-      success                      = !isnan(tempC);
-
+      UserVar.setFloat(event->TaskIndex, 0, tempC);
+      success = !isnan(tempC);
+#ifndef BUILD_NO_DEBUG
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         if (!success) {
           addLog(LOG_LEVEL_INFO, F("LM75A: No reading!"));
         }
         else
         {
-          String log = F("LM75A: Temperature: ");
-          log += tempC;
-          addLogMove(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, concat(F("LM75A: Temperature: "), formatUserVarNoCheck(event, 0)));
         }
       }
+#endif
       break;
     }
   }

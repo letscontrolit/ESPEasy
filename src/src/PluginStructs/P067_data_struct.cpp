@@ -52,12 +52,10 @@ P067_data_struct::~P067_data_struct() {}
 bool P067_data_struct::init(struct EventStruct *event) {
   // Log anyway
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = concat(F("HX711: GPIO: SCL="), static_cast<int>(_pinSCL));
-    log += concat(F(" DOUT="), static_cast<int>(_pinDOUT));
-    addLogMove(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, strformat(F("HX711: GPIO: SCL=%d DOUT=%d"), _pinSCL, _pinDOUT));
   }
-  UserVar[event->BaseVarIndex]     = 0.0f; // Reset output
-  UserVar[event->BaseVarIndex + 1] = 0.0f;
+  UserVar.setFloat(event->TaskIndex, 0, 0.0f); // Reset output
+  UserVar.setFloat(event->TaskIndex, 1, 0.0f);
 
   if (isInitialized()) {
     pinMode(_pinSCL, OUTPUT); // Keep regular pinMode functions for initialization
@@ -83,15 +81,15 @@ bool P067_data_struct::plugin_read(struct EventStruct *event)           {
 
     // Channel A activated?
     if (_modeChanA != P067_ChannelA_State_e::modeAoff) {
-      String log = concat(F("HX711: ("), (int)event->TaskIndex + 1);
-      log += F(") ChanA: ");
+      String log = strformat(F("HX711: (%d) ChanA: "), (int)event->TaskIndex + 1);
 
       float value{};
-      if (OversamplingChanA.get(value)) {
-        UserVar[event->BaseVarIndex + 2] = value;
-        UserVar[event->BaseVarIndex] = UserVar[event->BaseVarIndex + 2] + _offsetChanA; // Offset
 
-        log += formatUserVarNoCheck(event->TaskIndex, 0);
+      if (OversamplingChanA.get(value)) {
+        UserVar.setFloat(event->TaskIndex, 2, value);
+        UserVar.setFloat(event->TaskIndex, 0, UserVar.getFloat(event->TaskIndex, 2) + _offsetChanA); // Offset
+
+        log += formatUserVarNoCheck(event, 0);
 
         if (P067_GET_CHANNEL_A_CALIB) { // Calibration channel A?
           int   adc1 = P067_CONFIG_CHANNEL_A_ADC1;
@@ -101,10 +99,9 @@ bool P067_data_struct::plugin_read(struct EventStruct *event)           {
 
           if (adc1 != adc2) {
             const float normalized = static_cast<float>(UserVar[event->BaseVarIndex] - adc1) / static_cast<float>(adc2 - adc1);
-            UserVar[event->BaseVarIndex] = normalized * (out2 - out1) + out1;
+            UserVar.setFloat(event->TaskIndex, 0, normalized * (out2 - out1) + out1);
 
-            log += F(" = ");
-            log += formatUserVarNoCheck(event->TaskIndex, 0);
+            log += concat(F(" = "), formatUserVarNoCheck(event, 0));
           }
         }
       } else {
@@ -116,15 +113,15 @@ bool P067_data_struct::plugin_read(struct EventStruct *event)           {
 
     // Channel B activated?
     if (_modeChanB != P067_ChannelB_State_e::modeBoff) {
-      String log = concat(F("HX711: ("), (int)event->TaskIndex + 1);
-      log += F(") ChanB: ");
+      String log = strformat(F("HX711: (%d) ChanB: "), (int)event->TaskIndex + 1);
 
       float value{};
-      if (OversamplingChanB.get(value)) {
-        UserVar[event->BaseVarIndex + 3] = value;
-        UserVar[event->BaseVarIndex + 1] = UserVar[event->BaseVarIndex + 3] + _offsetChanB; // Offset
 
-        log += formatUserVarNoCheck(event->TaskIndex, 1);
+      if (OversamplingChanB.get(value)) {
+        UserVar.setFloat(event->TaskIndex, 3, value);
+        UserVar.setFloat(event->TaskIndex, 1, UserVar.getFloat(event->TaskIndex, 3) + _offsetChanB); // Offset
+
+        log += formatUserVarNoCheck(event, 1);
 
         if (P067_GET_CHANNEL_B_CALIB) { // Calibration channel B?
           int   adc1 = P067_CONFIG_CHANNEL_B_ADC1;
@@ -134,10 +131,9 @@ bool P067_data_struct::plugin_read(struct EventStruct *event)           {
 
           if (adc1 != adc2) {
             const float normalized = (UserVar[event->BaseVarIndex + 1] - adc1) / static_cast<float>(adc2 - adc1);
-            UserVar[event->BaseVarIndex + 1] = normalized * (out2 - out1) + out1;
+            UserVar.setFloat(event->TaskIndex, 1, normalized * (out2 - out1) + out1);
 
-            log += F(" = ");
-            log += formatUserVarNoCheck(event->TaskIndex, 1);
+            log += concat(F(" = "), formatUserVarNoCheck(event, 1));
           }
         }
       } else {
@@ -162,12 +158,13 @@ bool P067_data_struct::plugin_fifty_per_second(struct EventStruct *event) {
     success = true;
 
     switch (_channelRead) {
-      case P067_Channel_e::chanA64:  //
+      case P067_Channel_e::chanA64:   //
       case P067_Channel_e::chanA128:
       {
         if (!P067_GET_CHANNEL_A_OS) { // Oversampling on channel A?
           OversamplingChanA.reset();
         }
+
         if (OversamplingChanA.getCount() > 250) {
           OversamplingChanA.resetKeepLast();
         }
@@ -179,6 +176,7 @@ bool P067_data_struct::plugin_fifty_per_second(struct EventStruct *event) {
         if (!P067_GET_CHANNEL_B_OS) { // Oversampling on channel B?
           OversamplingChanB.reset();
         }
+
         if (OversamplingChanB.getCount() > 250) {
           OversamplingChanB.resetKeepLast();
         }

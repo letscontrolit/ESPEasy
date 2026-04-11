@@ -1,0 +1,21 @@
+.. csv-table::
+    :header: "Command Syntax", "Extra information"
+    :widths: 20, 30
+
+    "
+    ``radsens,calibration,<value>``
+    ","
+    Change the calibration value for the board in impulses per microrad. Can be used when a different type of geiger tube is installed on the board. The default tube uses 105 imp/uRad.
+    "
+    "
+    ``radsens,highvoltage,<0|1>``
+    ","
+    Enable (``1``) or disable (``0``) the High Voltage generator on the board that powers the geiger tube. When this is turned off, the used power is greatly reduced, but no usable measurements can be retrieved.
+    
+    This command can be used when bringing the ESP in sleep mode, and when returning from sleep mode.
+    "
+    "
+    ``radsens,resetcount``
+    ","
+    Clear the incremental count in the sensor driver.
+    "

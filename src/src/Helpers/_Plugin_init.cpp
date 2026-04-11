@@ -6,6 +6,7 @@
 #include "../Globals/Settings.h"
 
 #include "../Helpers/Misc.h"
+#include "../Helpers/StringConverter.h"
 
 
 // ********************************************************************************
@@ -371,11 +372,7 @@ constexpr /*pluginID_t*/ uint8_t DeviceIndex_to_Plugin_id[] PROGMEM =
 #endif // ifdef USES_P088
 
 #ifdef USES_P089
-  # ifdef ESP8266
-
-  // FIXME TD-er: Support Ping plugin for ESP32
   89,
-  # endif // ifdef ESP8266
 #endif // ifdef USES_P089
 
 #ifdef USES_P090
@@ -407,11 +404,8 @@ constexpr /*pluginID_t*/ uint8_t DeviceIndex_to_Plugin_id[] PROGMEM =
 #endif // ifdef USES_P096
 
 #ifdef USES_P097
-  # if defined(ESP32) && !defined(ESP32C3)
-
   // Touch (ESP32)
   97,
-  # endif // if defined(ESP32) && !defined(ESP32C3)
 #endif // ifdef USES_P097
 
 #ifdef USES_P098
@@ -1407,11 +1401,7 @@ constexpr const Plugin_ptr_t PROGMEM Plugin_ptr[] =
 #endif // ifdef USES_P088
 
 #ifdef USES_P089
-  # ifdef ESP8266
-
-  // FIXME TD-er: Support Ping plugin for ESP32
   &Plugin_089,
-  # endif // ifdef ESP8266
 #endif // ifdef USES_P089
 
 #ifdef USES_P090
@@ -1443,11 +1433,8 @@ constexpr const Plugin_ptr_t PROGMEM Plugin_ptr[] =
 #endif // ifdef USES_P096
 
 #ifdef USES_P097
-  # if defined(ESP32) && !defined(ESP32C3)
-
   // Touch (ESP32)
   &Plugin_097,
-  # endif // if defined(ESP32) && !defined(ESP32C3)
 #endif // ifdef USES_P097
 
 #ifdef USES_P098
@@ -2083,6 +2070,8 @@ constexpr const Plugin_ptr_t PROGMEM Plugin_ptr[] =
 #endif // ifdef USES_P255
 };
 
+bool _Plugin_init_setupDone = false;
+
 
 constexpr size_t DeviceIndex_to_Plugin_id_size = NR_ELEMENTS(DeviceIndex_to_Plugin_id);
 
@@ -2090,7 +2079,7 @@ constexpr size_t DeviceIndex_to_Plugin_id_size = NR_ELEMENTS(DeviceIndex_to_Plug
 constexpr size_t Lowest_Plugin_id = DeviceIndex_to_Plugin_id_size == 0 ? 0 : DeviceIndex_to_Plugin_id[0];
 
 // Highest plugin ID included in the build
-constexpr size_t Highest_Plugin_id = DeviceIndex_to_Plugin_id_size > 1 ? DeviceIndex_to_Plugin_id[DeviceIndex_to_Plugin_id_size - 1] : 0;
+constexpr size_t Highest_Plugin_id = DeviceIndex_to_Plugin_id_size > 0 ? DeviceIndex_to_Plugin_id[DeviceIndex_to_Plugin_id_size - 1] : 0;
 
 // Array size including index of highest plugin ID.
 constexpr size_t Plugin_id_to_DeviceIndex_size = Highest_Plugin_id + 1 - Lowest_Plugin_id;
@@ -2164,42 +2153,65 @@ unsigned getNrBuiltInDeviceIndex()
 
 deviceIndex_t getDeviceIndex_from_PluginID(pluginID_t pluginID)
 {
-  const size_t arrayIndex = get_Plugin_id_to_DeviceIndex_arrayIndex(pluginID);
-  if (arrayIndex < Plugin_id_to_DeviceIndex_size)
-  {
-    return Plugin_id_to_DeviceIndex[arrayIndex];
+  if (validPluginID(pluginID)) {
+    const size_t arrayIndex = get_Plugin_id_to_DeviceIndex_arrayIndex(pluginID);
+    if (arrayIndex < Plugin_id_to_DeviceIndex_size)
+    {
+      return Plugin_id_to_DeviceIndex[arrayIndex];
+    }
   }
   return INVALID_DEVICE_INDEX;
 }
 
 pluginID_t getPluginID_from_DeviceIndex(deviceIndex_t deviceIndex)
 {
-  if (deviceIndex < DeviceIndex_to_Plugin_id_size)
+  if (do_check_validDeviceIndex(deviceIndex))
   {
     return pluginID_t::toPluginID(pgm_read_byte(DeviceIndex_to_Plugin_id + deviceIndex.value));
   }
   return INVALID_PLUGIN_ID;
 }
 
-bool validDeviceIndex_init(deviceIndex_t deviceIndex)
+bool do_check_validDeviceIndex(deviceIndex_t deviceIndex)
 {
-  return deviceIndex < DeviceIndex_to_Plugin_id_size;
+  if (_Plugin_init_setupDone) {
+    return deviceIndex < DeviceIndex_to_Plugin_id_size;
+  }
+  return false;
 }
 
 // Array containing "DeviceIndex" alfabetically sorted.
 deviceIndex_t getDeviceIndex_sorted(deviceIndex_t deviceIndex)
 {
-  if (deviceIndex < DeviceIndex_to_Plugin_id_size) {
+  if (do_check_validDeviceIndex(deviceIndex)) {
     return DeviceIndex_sorted[deviceIndex.value];
   }
   return INVALID_DEVICE_INDEX;
 }
 
 
-boolean PluginCall(deviceIndex_t deviceIndex, uint8_t function, struct EventStruct *event, String& string)
+boolean do_PluginCall(deviceIndex_t deviceIndex, uint8_t function, struct EventStruct *event, String& string)
 {
-  if (deviceIndex < DeviceIndex_to_Plugin_id_size)
+  // TODO TD-er: May need to be changed to some other type when we ever will have > 64 tasks
+  static uint64_t taskIndex_initialized{};
+  if (do_check_validDeviceIndex(deviceIndex))
   {
+    if (function == PLUGIN_INIT) {
+      if (bitReadULL(taskIndex_initialized, event->TaskIndex)) {
+        // FIXME TD-er: What to do here? Was already initialized
+        addLog(LOG_LEVEL_ERROR, strformat(F("Task %d was already initialized"), event->TaskIndex + 1));
+        return false;
+      }
+      bitSetULL(taskIndex_initialized, event->TaskIndex);
+    } else if (function == PLUGIN_EXIT) {
+      if (!bitReadULL(taskIndex_initialized, event->TaskIndex)) {
+        // FIXME TD-er: What to do here? Was not (yet) initialized
+//        addLog(LOG_LEVEL_ERROR, strformat(F("Task %d was not (yet) initialized"), event->TaskIndex + 1));
+        return false;
+      }
+      bitClearULL(taskIndex_initialized, event->TaskIndex);
+    }
+
     Plugin_ptr_t plugin_call = (Plugin_ptr_t)pgm_read_ptr(Plugin_ptr + deviceIndex.value);
     return plugin_call(function, event, string);
   }
@@ -2208,10 +2220,9 @@ boolean PluginCall(deviceIndex_t deviceIndex, uint8_t function, struct EventStru
 
 void PluginSetup()
 {
-  static bool setupDone = false;
-  if (setupDone) return;
+  if (_Plugin_init_setupDone) return;
 
-  setupDone = true;
+  _Plugin_init_setupDone = true;
 
   for (size_t id = 0; id < Plugin_id_to_DeviceIndex_size; ++id)
   {
@@ -2225,6 +2236,11 @@ void PluginSetup()
 
   for (deviceIndex_t deviceIndex; deviceIndex < DeviceIndex_to_Plugin_id_size; ++deviceIndex)
   {
+    #ifdef ESP32
+    Device.getDeviceStructForEdit(deviceIndex).clear();
+    #elif defined(ESP8266)
+    Device[deviceIndex].clear();
+    #endif
     const pluginID_t pluginID = getPluginID_from_DeviceIndex(deviceIndex);
 
     if (validPluginID(pluginID)) { 
@@ -2235,7 +2251,7 @@ void PluginSetup()
         struct EventStruct TempEvent;
         TempEvent.idx = deviceIndex.value;
         String dummy;
-        PluginCall(deviceIndex, PLUGIN_DEVICE_ADD, &TempEvent, dummy);
+        do_PluginCall(deviceIndex, PLUGIN_DEVICE_ADD, &TempEvent, dummy);
       }
     }
   }

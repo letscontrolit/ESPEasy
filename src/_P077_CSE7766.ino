@@ -8,6 +8,9 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2025-01-16 tonhuisman: Implement support for MQTT AutoDiscovery
+ *                        Add support for PLUGIN_GET_DEVICEVALUECOUNT that was missing.
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported yet for CSE7766)
  * 2023-02-12 tonhuisman: Separate PLUGIN_SERIAL_IN and PLUGIN_TEN_PER_SECOND (changed from PLUGIN_FIFTY_PER_SECOND) handling
  *                        Fixed some minor code-issues
  * 2023-02-11 tonhuisman: Add PLUGIN_WRITE support for csereset and csecalibrate,[Voltage],[Current],[Power]
@@ -21,7 +24,7 @@
 # include "src/PluginStructs/P077_data_struct.h"
 
 # define PLUGIN_077
-# define PLUGIN_ID_077         77
+# define PLUGIN_ID_077            77
 # ifdef PLUGIN_SET_SONOFF_POW
   #  define PLUGIN_NAME_077       "Energy (AC) - CSE7766 (POW r2)"
 # else // ifdef PLUGIN_SET_SONOFF_POW
@@ -40,21 +43,19 @@ boolean Plugin_077(uint8_t function, struct EventStruct *event, String& string) 
 
   switch (function) {
     case PLUGIN_DEVICE_ADD: {
-      Device[++deviceCount].Number           = PLUGIN_ID_077;
-      Device[deviceCount].Type               = DEVICE_TYPE_SERIAL;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_QUAD;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = 4;
-      Device[deviceCount].OutputDataType     = Output_Data_type_t::Simple;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].TimerOptional      = true;
-      Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].PluginStats        = true;
-      Device[deviceCount].TaskLogsOwnPeaks   = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number           = PLUGIN_ID_077;
+      dev.Type             = DEVICE_TYPE_SERIAL;
+      dev.VType            = Sensor_VType::SENSOR_TYPE_QUAD;
+      dev.FormulaOption    = true;
+      dev.ValueCount       = 4;
+      dev.OutputDataType   = Output_Data_type_t::Simple;
+      dev.SendDataOption   = true;
+      dev.TimerOption      = true;
+      dev.TimerOptional    = true;
+      dev.PluginStats      = true;
+      dev.TaskLogsOwnPeaks = true;
+      dev.MqttStateClass   = true;
       break;
     }
 
@@ -86,6 +87,21 @@ boolean Plugin_077(uint8_t function, struct EventStruct *event, String& string) 
       break;
     }
 
+    case PLUGIN_GET_DEVICEVALUECOUNT:
+    {
+      event->Par1 = P077_NR_OUTPUT_VALUES;
+      success     = true;
+      break;
+    }
+
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      success = getDiscoveryVType(event, Plugin_077_QueryVType, P077_QUERY1_CONFIG_POS, event->Par5);
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
+
     case PLUGIN_SET_DEFAULTS:
     {
       CONFIG_PIN1 = 3; // Former default HWSerial0
@@ -113,9 +129,9 @@ boolean Plugin_077(uint8_t function, struct EventStruct *event, String& string) 
           const float value = P077_data->getValue(query);
           int nrDecimals    = 2;
 
-          if ((query == P077_query::P077_QUERY_PULSES)) {
+          if (query == P077_query::P077_QUERY_PULSES) {
             nrDecimals = 0;
-          } else if ((query == P077_query::P077_QUERY_KWH)) {
+          } else if (query == P077_query::P077_QUERY_KWH) {
             nrDecimals = 3;
           }
 
@@ -220,7 +236,6 @@ boolean Plugin_077(uint8_t function, struct EventStruct *event, String& string) 
         P077_QUERY4 = static_cast<uint8_t>(P077_QUERY4_DFLT);
       }
 
-
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P077_data_struct());
       P077_data_struct *P077_data = static_cast<P077_data_struct *>(getPluginTaskData(event->TaskIndex));
 
@@ -294,18 +309,10 @@ boolean Plugin_077(uint8_t function, struct EventStruct *event, String& string) 
             # ifndef BUILD_NO_DEBUG
 
             if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-              String log = F("CSE voltage: ");
-              log += P077_data->getValue(P077_query::P077_QUERY_VOLTAGE);
-              addLogMove(LOG_LEVEL_DEBUG, log);
-              log  = F("CSE power: ");
-              log += P077_data->getValue(P077_query::P077_QUERY_ACTIVE_POWER);
-              addLogMove(LOG_LEVEL_DEBUG, log);
-              log  = F("CSE current: ");
-              log += P077_data->getValue(P077_query::P077_QUERY_CURRENT);
-              addLogMove(LOG_LEVEL_DEBUG, log);
-              log  = F("CSE pulses: ");
-              log += P077_data->cf_pulses;
-              addLogMove(LOG_LEVEL_DEBUG, log);
+              addLogMove(LOG_LEVEL_DEBUG, concat(F("CSE voltage: "), P077_data->getValue(P077_query::P077_QUERY_VOLTAGE)));
+              addLogMove(LOG_LEVEL_DEBUG, concat(F("CSE power: "), P077_data->getValue(P077_query::P077_QUERY_ACTIVE_POWER)));
+              addLogMove(LOG_LEVEL_DEBUG, concat(F("CSE current: "), P077_data->getValue(P077_query::P077_QUERY_CURRENT)));
+              addLogMove(LOG_LEVEL_DEBUG, concat(F("CSE pulses: "), P077_data->cf_pulses));
             }
             # endif // ifndef BUILD_NO_DEBUG
           }
@@ -313,23 +320,14 @@ boolean Plugin_077(uint8_t function, struct EventStruct *event, String& string) 
           # ifndef BUILD_NO_DEBUG
 
           if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-            String log = F("CSE: time ");
-            log += P077_data->t_max;
-            log += '/';
-            log += P077_data->t_pkt;
-            log += '/';
-            log += P077_data->t_all;
-            addLogMove(LOG_LEVEL_DEBUG, log);
-            log  = F("CSE: bytes ");
-            log += P077_data->count_bytes;
-            log += '/';
-            log += P077_data->count_max;
-            log += '/';
-            log += P077_data->serial_Available();
-            addLogMove(LOG_LEVEL_DEBUG, log);
-            log  = F("CSE: nr ");
-            log += P077_data->count_pkt;
-            addLogMove(LOG_LEVEL_DEBUG, log);
+            addLogMove(LOG_LEVEL_DEBUG,
+                       strformat(F("CSE: time %d/%d/%d"),
+                                 P077_data->t_max, P077_data->t_pkt, P077_data->t_all));
+            addLogMove(LOG_LEVEL_DEBUG,
+                       strformat(F("CSE: bytes %d/%d/%d"),
+                                 P077_data->count_bytes, P077_data->count_max, P077_data->serial_Available()));
+            addLogMove(LOG_LEVEL_DEBUG,
+                       concat(F("CSE: nr "), P077_data->count_pkt));
           }
           # endif // ifndef BUILD_NO_DEBUG
           P077_data->t_all       = 0;

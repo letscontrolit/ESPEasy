@@ -44,7 +44,7 @@ P159_data_struct::P159_data_struct(ESPEasySerialPort portType,
 
     if (nullptr != radar) {
       if (radar->begin(*easySerial, false)) {
-        bool rst = radar->requestRestart();
+        const bool rst = radar->requestRestart();
 
         // start initiated, now wait, next step: request configuration
         milestone = millis();
@@ -60,23 +60,19 @@ P159_data_struct::P159_data_struct(ESPEasySerialPort portType,
 } // constructor
 
 void P159_data_struct::disconnectSerial() {
-  if (nullptr != easySerial) {
-    delete easySerial;
-    easySerial = nullptr;
-  }
+  delete easySerial;
+  easySerial = nullptr;
 
-  if (nullptr != radar) {
-    delete radar;
-    radar = nullptr;
-  }
+  delete radar;
+  radar = nullptr;
 } // disconnectSerial()
 
 bool P159_data_struct::processSensor(struct EventStruct *event) {
   bool new_data = false;
 
   if (isValid()) {
-    uint32_t iStart     = millis(); // FIXME Remove log
-    P159_state_e sState = state;
+    const uint32_t iStart = millis();
+    P159_state_e   sState = state;
 
     switch (state) {
       case P159_state_e::Initializing:
@@ -117,7 +113,7 @@ bool P159_data_struct::processSensor(struct EventStruct *event) {
 
             for (uint8_t i = 0; i <= mMax; ++i) {
               addLog(LOG_LEVEL_INFO, strformat(F("LD2410: Sensitivity, gate %d (%.2f - %.2f mtr): moving:%3d, stationary:%3d"),
-                                               i, i * 0.75f, (i + 1) * 0.75f,
+                                               i, i * P159_GATE_DISTANCE_METERS, (i + 1) * P159_GATE_DISTANCE_METERS,
                                                i <= mMvGate ? radar->cfgMovingGateSensitivity(i) : 0,
                                                i <= mStGate ? radar->cfgStationaryGateSensitivity(i) : 0));
             }
@@ -144,7 +140,7 @@ bool P159_data_struct::processSensor(struct EventStruct *event) {
           for (int8_t i = 0; i < valueCount; ++i) {
             const uint8_t pconfigIndex = i + P159_QUERY1_CONFIG_POS;
             bool isChanged             = false;
-            UserVar[event->BaseVarIndex + i] = getRadarValue(PCONFIG(pconfigIndex), UserVar[event->BaseVarIndex + i], isChanged);
+            UserVar.setFloat(event->TaskIndex, i, getRadarValue(PCONFIG(pconfigIndex), UserVar[event->BaseVarIndex + i], isChanged));
 
             result |= isChanged;
           }
@@ -181,7 +177,7 @@ bool P159_data_struct::plugin_read(struct EventStruct *event) {
     for (int8_t i = 0; i < valueCount; ++i) {
       const uint8_t pconfigIndex = i + P159_QUERY1_CONFIG_POS;
       bool isChanged             = false;
-      UserVar[event->BaseVarIndex + i] = getRadarValue(PCONFIG(pconfigIndex), UserVar[event->BaseVarIndex + i], isChanged);
+      UserVar.setFloat(event->TaskIndex, i, getRadarValue(PCONFIG(pconfigIndex), UserVar[event->BaseVarIndex + i], isChanged));
 
       result |= isChanged;
     }
@@ -301,11 +297,11 @@ bool P159_data_struct::plugin_webform_load(struct EventStruct *event) {
 
       for (uint8_t i = 0; i <= mMax; ++i) {
         html_TR_TD();
-        addHtml(strformat(F("Gate %d (%.2f - %.2f mtr)"), i, i * 0.75f, (i + 1) * 0.75f));
+        addHtml(strformat(F("Gate %d (%.2f - %.2f mtr)"), i, i * P159_GATE_DISTANCE_METERS, (i + 1) * P159_GATE_DISTANCE_METERS));
         html_TD();
-        addNumericBox(getPluginCustomArgName(idx++), radar->cfgMovingGateSensitivity(i), 0, 100, true);
+        addNumericBox(getPluginCustomArgName(idx++), radar->cfgMovingGateSensitivity(i), 0, P159_MAX_SENSITIVITY_VALUE, true);
         html_TD();
-        addNumericBox(getPluginCustomArgName(idx++), radar->cfgStationaryGateSensitivity(i), 0, 100, true);
+        addNumericBox(getPluginCustomArgName(idx++), radar->cfgStationaryGateSensitivity(i), 0, P159_MAX_SENSITIVITY_VALUE, true);
       }
       html_end_table();
       addHtml(strformat(F("\n<script type='text/javascript'>document.getElementById('saveSens')."
@@ -323,20 +319,22 @@ bool P159_data_struct::plugin_webform_save(struct EventStruct *event) {
 
   if (isValid() && doSave) {
     int idx              = 0;
-    const uint16_t idle  = getFormItemInt(getPluginCustomArgName(idx++));
-    const uint8_t  gMove = getFormItemInt(getPluginCustomArgName(idx++));
-    const uint8_t  gStat = getFormItemInt(getPluginCustomArgName(idx++));
+    const uint16_t idle  = getFormItemIntCustomArgName(idx++);
+    const uint8_t  gMove = getFormItemIntCustomArgName(idx++);
+    const uint8_t  gStat = getFormItemIntCustomArgName(idx++);
     addLog(LOG_LEVEL_INFO, F("LD2410: Save sensitivity settings to sensor, start..."));
     radar->requestConfigurationModeBegin();
     radar->setMaxValues(gMove, gStat, idle);
     const uint16_t maxGate = radar->cfgMaxGate();
 
     for (uint16_t gate = 0; gate <= maxGate; ++gate) {
-      const uint16_t sMove = getFormItemInt(getPluginCustomArgName(idx++));
-      const uint16_t sStat = getFormItemInt(getPluginCustomArgName(idx++));
+      const uint16_t sMove = getFormItemIntCustomArgName(idx++);
+      const uint16_t sStat = getFormItemIntCustomArgName(idx++);
 
       // Set sensitivity (level) to 100 to effectively disable sensitivity
-      radar->setGateSensitivityThreshold(gate, gate <= gMove ? sMove : 100, gate <= gStat ? sStat : 100);
+      radar->setGateSensitivityThreshold(gate,
+                                         gate <= gMove ? sMove : P159_MAX_SENSITIVITY_VALUE,
+                                         gate <= gStat ? sStat : P159_MAX_SENSITIVITY_VALUE);
     }
     radar->requestConfigurationModeEnd();
     addLog(LOG_LEVEL_INFO, F("LD2410: Save sensitivity settings to sensor, done."));

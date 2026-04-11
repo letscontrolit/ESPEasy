@@ -1,7 +1,8 @@
 #include "../PluginStructs/P095_data_struct.h"
 
 #ifdef USES_P095
-# include "../Helpers/Hardware.h"
+
+#include "../Helpers/Hardware_SPI.h"
 
 /****************************************************************************
  * ILI9xxx_type_toString: Display-value for the device selected
@@ -10,6 +11,10 @@ const __FlashStringHelper* ILI9xxx_type_toString(const ILI9xxx_type_e& device) {
   switch (device) {
     case ILI9xxx_type_e::ILI9341_240x320: return F("ILI9341 240 x 320px");
     case ILI9xxx_type_e::ILI9342_240x320: return F("ILI9342 240 x 320px (M5Stack)");
+    # if P095_ENABLE_ILI9342_2
+    case ILI9xxx_type_e::ILI9342_CYD_AF_240x320: return F("ILI9342 240 x 320px (CYD-1)");
+    case ILI9xxx_type_e::ILI9342_CYD_BD_240x320: return F("ILI9342 240 x 320px (CYD-2)");
+    # endif // if P095_ENABLE_ILI9342_2
     case ILI9xxx_type_e::ILI9481_320x480: return F("ILI9481 320 x 480px");
     case ILI9xxx_type_e::ILI9481_CPT29_320x480: return F("ILI9481 320 x 480px (CPT29)");
     case ILI9xxx_type_e::ILI9481_PVI35_320x480: return F("ILI9481 320 x 480px (PVI35)");
@@ -18,10 +23,11 @@ const __FlashStringHelper* ILI9xxx_type_toString(const ILI9xxx_type_e& device) {
     case ILI9xxx_type_e::ILI9481_RGB_320x480: return F("ILI9481 320 x 480px (RGB)");
     case ILI9xxx_type_e::ILI9481_CMI7_320x480: return F("ILI9481 320 x 480px (CMI7)");
     case ILI9xxx_type_e::ILI9481_CMI8_320x480: return F("ILI9481 320 x 480px (CMI8)");
-    # ifdef P095_ENABLE_ILI948X
-    case ILI9xxx_type_e::ILI9486_320x480: return F("ILI9486 320 x 480px");
-    case ILI9xxx_type_e::ILI9488_320x480: return F("ILI9488 320 x 480px");
-    # endif // ifdef P095_ENABLE_ILI948X
+    # if P095_ENABLE_ILI948X
+
+    // case ILI9xxx_type_e::ILI9486_320x480: return F("ILI9486 320 x 480px");
+    case ILI9xxx_type_e::ILI9488_320x480: return F("ILI9486/ILI9488 320 x 480px");
+    # endif // if P095_ENABLE_ILI948X
   }
   # ifndef BUILD_NO_DEBUG
   return F("Unsupported type!");
@@ -39,6 +45,10 @@ void ILI9xxx_type_toResolution(const ILI9xxx_type_e& device,
   switch (device) {
     case ILI9xxx_type_e::ILI9341_240x320:
     case ILI9xxx_type_e::ILI9342_240x320:
+    # if P095_ENABLE_ILI9342_2
+    case ILI9xxx_type_e::ILI9342_CYD_AF_240x320:
+    case ILI9xxx_type_e::ILI9342_CYD_BD_240x320:
+    # endif // if P095_ENABLE_ILI9342_2
       x = 240;
       y = 320;
       break;
@@ -50,10 +60,11 @@ void ILI9xxx_type_toResolution(const ILI9xxx_type_e& device,
     case ILI9xxx_type_e::ILI9481_RGB_320x480:
     case ILI9xxx_type_e::ILI9481_CMI7_320x480:
     case ILI9xxx_type_e::ILI9481_CMI8_320x480:
-    # ifdef P095_ENABLE_ILI948X
-    case ILI9xxx_type_e::ILI9486_320x480:
+    # if P095_ENABLE_ILI948X
+
+    // case ILI9xxx_type_e::ILI9486_320x480:
     case ILI9xxx_type_e::ILI9488_320x480:
-    # endif // ifdef P095_ENABLE_ILI948X
+    # endif // if P095_ENABLE_ILI948X
       x = 320;
       y = 480;
       break;
@@ -69,10 +80,10 @@ const __FlashStringHelper* P095_CommandTrigger_toString(const P095_CommandTrigge
     case P095_CommandTrigger::ili9341: break;
     case P095_CommandTrigger::ili9342: return F("ili9342");
     case P095_CommandTrigger::ili9481: return F("ili9481");
-    # ifdef P095_ENABLE_ILI948X
+    # if P095_ENABLE_ILI948X
     case P095_CommandTrigger::ili9486: return F("ili9486");
     case P095_CommandTrigger::ili9488: return F("ili9488");
-    # endif // ifdef P095_ENABLE_ILI948X
+    # endif // if P095_ENABLE_ILI948X
   }
   return F("ili9341"); // Default command trigger
 }
@@ -90,11 +101,19 @@ P095_data_struct::P095_data_struct(ILI9xxx_type_e      displayType,
                                    String              commandTrigger,
                                    uint16_t            fgcolor,
                                    uint16_t            bgcolor,
-                                   bool                textBackFill)
+                                   bool                textBackFill
+                                   # if                ADAGFX_FONTS_INCLUDED
+                                   ,
+                                   const uint8_t       defaultFontId
+                                   # endif // if ADAGFX_FONTS_INCLUDED
+                                   )
   : _displayType(displayType), _rotation(rotation), _fontscaling(fontscaling), _textmode(textmode),
   _backlightPin(backlightPin), _backlightPercentage(backlightPercentage), _displayTimer(displayTimer),
   _displayTimeout(displayTimer), _commandTrigger(commandTrigger), _fgcolor(fgcolor), _bgcolor(bgcolor),
   _textBackFill(textBackFill)
+  # if ADAGFX_FONTS_INCLUDED
+  , _defaultFontId(defaultFontId)
+  # endif // if ADAGFX_FONTS_INCLUDED
 {
   _commandTrigger.toLowerCase();
   _commandTriggerCmd  = _commandTrigger;
@@ -107,6 +126,9 @@ P095_data_struct::P095_data_struct(ILI9xxx_type_e      displayType,
 P095_data_struct::~P095_data_struct() {
   delete gfxHelper;
   delete tft;
+  # if P095_ENABLE_ILI948X
+  delete ili9488;
+  # endif // if P095_ENABLE_ILI948X
 }
 
 void P095_data_struct::init() {
@@ -124,35 +146,66 @@ bool P095_data_struct::plugin_init(struct EventStruct *event) {
   init();
   bool success = false;
 
-  if (nullptr == tft) {
+  if (nullptr == tft
+      # if P095_ENABLE_ILI948X
+      && nullptr == ili9488
+      # endif // if P095_ENABLE_ILI948X
+      ) {
     # ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_INFO, F("ILI9341: Init start."));
     # endif // ifndef BUILD_NO_DEBUG
 
-    tft = new (std::nothrow) Adafruit_ILI9341(PIN(0), PIN(1), PIN(2), static_cast<uint8_t>(_displayType), _xpix, _ypix);
+    # if P095_ENABLE_ILI948X
 
-    if (nullptr != tft) {
-      tft->begin();
+    if (ILI9xxx_type_e::ILI9488_320x480 == _displayType) {
+      ili9488 = new (std::nothrow) ILI9488(PIN(0), PIN(1), PIN(2));
+
+      if (nullptr != ili9488) {
+        ili9488->begin();
+        useILI9488 = true;
+      }
+    } else
+    # endif // if P095_ENABLE_ILI948X
+    {
+      # ifdef ESP32 // PIN(0) and PIN(1) swapped!
+      auto spi_ptr = getSPIBusForTask(event->TaskIndex);
+      if (spi_ptr) 
+      tft = new (std::nothrow) Adafruit_ILI9341(spi_ptr,
+                                                PIN(1),
+                                                PIN(0),
+                                                PIN(2),
+                                                static_cast<uint8_t>(_displayType),
+                                                _xpix,
+                                                _ypix);
+      # endif // ifdef ESP32
+      # ifdef ESP8266
+      tft = new (std::nothrow) Adafruit_ILI9341(PIN(0), PIN(1), PIN(2), static_cast<uint8_t>(_displayType), _xpix, _ypix);
+      # endif // ifdef ESP8266
+
+      if (nullptr != tft) {
+        tft->begin();
+      }
     }
+
 
     # ifndef BUILD_NO_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log;
       log.reserve(65);
-      log += F("ILI9341: Init done, address: 0x");
-      log += String(reinterpret_cast<ulong>(tft), HEX);
-      log += ' ';
+      log += strformat(F("ILI9341: Init done, address: 0x%x "),
+                       #  if P095_ENABLE_ILI948X
+                       useILI9488 ? reinterpret_cast<ulong>(ili9488) :
+                       #  endif // if P095_ENABLE_ILI948X
+                       reinterpret_cast<ulong>(tft));
 
-      if (nullptr == tft) {
+      if (!isInitialized()) {
         log += F("in");
       }
-      log += F("valid, display: ");
-      log += ILI9xxx_type_toString(static_cast<ILI9xxx_type_e>(P095_CONFIG_FLAG_GET_TYPE));
-      log += F(", commands: ");
-      log += _commandTrigger;
-      log += '/';
-      log += _commandTriggerCmd;
+      log += strformat(F("valid, display: %s, commands: %s/%s"),
+                       FsP(ILI9xxx_type_toString(_displayType)),
+                       _commandTrigger.c_str(),
+                       _commandTriggerCmd.c_str());
       addLogMove(LOG_LEVEL_INFO, log);
     }
     # endif // ifndef BUILD_NO_DEBUG
@@ -160,18 +213,44 @@ bool P095_data_struct::plugin_init(struct EventStruct *event) {
     addLog(LOG_LEVEL_INFO, F("ILI9341: No init?"));
   }
 
-  if (nullptr != tft) {
-    gfxHelper = new (std::nothrow) AdafruitGFX_helper(tft,
-                                                      _commandTrigger,
-                                                      _xpix,
-                                                      _ypix,
-                                                      AdaGFXColorDepth::FullColor,
-                                                      _textmode,
-                                                      _fontscaling,
-                                                      _fgcolor,
-                                                      _bgcolor,
-                                                      true,
-                                                      _textBackFill);
+  if (isInitialized()) {
+    # if P095_ENABLE_ILI948X
+
+    if (useILI9488) {
+      gfxHelper = new (std::nothrow) AdafruitGFX_helper(ili9488,
+                                                        _commandTrigger,
+                                                        _xpix,
+                                                        _ypix,
+                                                        AdaGFXColorDepth::FullColor,
+                                                        _textmode,
+                                                        _fontscaling,
+                                                        _fgcolor,
+                                                        _bgcolor,
+                                                        true,
+                                                        _textBackFill
+                                                        #  if ADAGFX_FONTS_INCLUDED
+                                                        , _defaultFontId
+                                                        #  endif // if ADAGFX_FONTS_INCLUDED
+                                                        );
+    } else
+    # endif // if P095_ENABLE_ILI948X
+    {
+      gfxHelper = new (std::nothrow) AdafruitGFX_helper(tft,
+                                                        _commandTrigger,
+                                                        _xpix,
+                                                        _ypix,
+                                                        AdaGFXColorDepth::FullColor,
+                                                        _textmode,
+                                                        _fontscaling,
+                                                        _fgcolor,
+                                                        _bgcolor,
+                                                        true,
+                                                        _textBackFill
+                                                        # if ADAGFX_FONTS_INCLUDED
+                                                        , _defaultFontId
+                                                        # endif // if ADAGFX_FONTS_INCLUDED
+                                                        );
+    }
 
     if (nullptr != gfxHelper) {
       gfxHelper->initialize();
@@ -181,10 +260,21 @@ bool P095_data_struct::plugin_init(struct EventStruct *event) {
       gfxHelper->invertDisplay(P095_CONFIG_FLAG_GET_INVERTDISPLAY);
     }
     updateFontMetrics();
-    tft->fillScreen(_bgcolor);             // fill screen with background color
-    tft->setTextColor(_fgcolor, _bgcolor); // set text color to white and configured background
-    tft->setTextSize(_fontscaling);        // Handles 0 properly, text size, default 1 = very small
-    tft->setCursor(0, 0);                  // move cursor to position (0, 0) pixel
+    # if P095_ENABLE_ILI948X
+
+    if (useILI9488) {
+      ili9488->fillScreen(_bgcolor);             // fill screen with background color
+      ili9488->setTextColor(_fgcolor, _bgcolor); // set text color to white and configured background
+      ili9488->setTextSize(_fontscaling);        // Handles 0 properly, text size, default 1 = very small
+      ili9488->setCursor(0, 0);                  // move cursor to position (0, 0) pixel
+    } else
+    # endif // if P095_ENABLE_ILI948X
+    {
+      tft->fillScreen(_bgcolor);             // fill screen with background color
+      tft->setTextColor(_fgcolor, _bgcolor); // set text color to white and configured background
+      tft->setTextSize(_fontscaling);        // Handles 0 properly, text size, default 1 = very small
+      tft->setCursor(0, 0);                  // move cursor to position (0, 0) pixel
+    }
     displayOnOff(true);
     # ifdef P095_SHOW_SPLASH
 
@@ -203,7 +293,7 @@ bool P095_data_struct::plugin_init(struct EventStruct *event) {
     updateFontMetrics();
 
 
-    if (P095_CONFIG_BUTTON_PIN != -1) {
+    if (validGpio(P095_CONFIG_BUTTON_PIN)) {
       pinMode(P095_CONFIG_BUTTON_PIN, INPUT_PULLUP);
     }
 
@@ -243,14 +333,24 @@ bool P095_data_struct::plugin_exit(struct EventStruct *event) {
 
   if ((nullptr != tft) && bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_CLEAR_ON_EXIT)) {
     tft->fillScreen(ADAGFX_BLACK); // fill screen with black color
-    displayOnOff(false);
   }
+  # if P095_ENABLE_ILI948X
+
+  if ((nullptr != ili9488) && bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_CLEAR_ON_EXIT)) {
+    ili9488->fillScreen(ADAGFX_BLACK); // fill screen with black color
+  }
+  # endif // if P095_ENABLE_ILI948X
+  displayOnOff(false);
 
   delete gfxHelper;
   gfxHelper = nullptr;
 
   delete tft;
   tft = nullptr;
+  # if P095_ENABLE_ILI948X
+  delete ili9488;
+  ili9488 = nullptr;
+  # endif // if P095_ENABLE_ILI948X
   return true;
 }
 
@@ -258,7 +358,7 @@ bool P095_data_struct::plugin_exit(struct EventStruct *event) {
  * plugin_read: Re-draw the default content
  ***************************************************************************/
 bool P095_data_struct::plugin_read(struct EventStruct *event) {
-  if ((nullptr != tft) && !_splashState) {
+  if (isInitialized() && !_splashState) {
     if (stringsHasContent) {
       gfxHelper->setColumnRowMode(false); // Turn off column mode
 
@@ -280,8 +380,8 @@ bool P095_data_struct::plugin_read(struct EventStruct *event) {
       gfxHelper->setColumnRowMode(bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_USE_COL_ROW)); // Restore column mode
       int16_t curX, curY;
       gfxHelper->getCursorXY(curX, curY);                                                    // Get current X and Y coordinates,
-      UserVar[event->BaseVarIndex]     = curX;                                               // and put into Values
-      UserVar[event->BaseVarIndex + 1] = curY;
+      UserVar.setFloat(event->TaskIndex, 0, curX);                                           // and put into Values
+      UserVar.setFloat(event->TaskIndex, 1, curY);
     }
   }
   return false; // Always return false, so no attempt to send to
@@ -306,6 +406,12 @@ bool P095_data_struct::plugin_ten_per_second(struct EventStruct *event) {
       if (nullptr != tft) {
         tft->fillScreen(_bgcolor); // fill screen with background color
       }
+      #  if P095_ENABLE_ILI948X
+
+      if (nullptr != ili9488) {
+        ili9488->fillScreen(_bgcolor); // fill screen with background color
+      }
+      #  endif // if P095_ENABLE_ILI948X
 
       // Schedule the surrogate initial PLUGIN_READ that has been suppressed by the splash
       Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 10);
@@ -313,7 +419,7 @@ bool P095_data_struct::plugin_ten_per_second(struct EventStruct *event) {
   }
   # endif // ifdef P095_SHOW_SPLASH
 
-  if ((P095_CONFIG_BUTTON_PIN != -1) && (getButtonState()) && (nullptr != tft)) {
+  if (validGpio(P095_CONFIG_BUTTON_PIN) && (getButtonState()) && isInitialized()) {
     displayOnOff(true);
     markButtonStateProcessed();
   }
@@ -327,7 +433,7 @@ bool P095_data_struct::plugin_once_a_second(struct EventStruct *event) {
   if ((_displayTimer > 0) && !_splashState) {
     _displayTimer--;
 
-    if ((nullptr != tft) && (_displayTimer == 0)) {
+    if (isInitialized() && (_displayTimer == 0)) {
       displayOnOff(false);
     }
   }
@@ -341,7 +447,7 @@ bool P095_data_struct::plugin_write(struct EventStruct *event, const String& str
   bool   success = false;
   String cmd     = parseString(string, 1);
 
-  if ((nullptr != tft) && cmd.equals(_commandTriggerCmd) && !_splashState) {
+  if (isInitialized() && cmd.equals(_commandTriggerCmd) && !_splashState) {
     String arg1 = parseString(string, 2);
     success = true;
 
@@ -356,16 +462,33 @@ bool P095_data_struct::plugin_write(struct EventStruct *event, const String& str
       String arg2 = parseString(string, 3);
 
       if (!arg2.isEmpty()) {
-        tft->fillScreen(AdaGFXparseColor(arg2));
+        # if P095_ENABLE_ILI948X
+
+        if (useILI9488) {
+          ili9488->fillScreen(AdaGFXparseColor(arg2));
+        } else
+        # endif // if P095_ENABLE_ILI948X
+        {
+          tft->fillScreen(AdaGFXparseColor(arg2));
+        }
       } else {
-        tft->fillScreen(_bgcolor);
+        # if P095_ENABLE_ILI948X
+
+        if (useILI9488) {
+          ili9488->fillScreen(_bgcolor);
+        } else
+        # endif // if P095_ENABLE_ILI948X
+        {
+          tft->fillScreen(_bgcolor);
+        }
       }
     }
     else if (equals(arg1, F("backlight"))) {
-      if ((P095_CONFIG_BACKLIGHT_PIN != -1) &&       // All is valid?
+      if (validGpio(P095_CONFIG_BACKLIGHT_PIN) &&    // All is valid?
           (event->Par2 > 0) &&
           (event->Par2 <= 100)) {
         P095_CONFIG_BACKLIGHT_PERCENT = event->Par2; // Set but don't store
+        _backlightPercentage          = event->Par2; // Also set to current
         displayOnOff(true);
       } else {
         success = false;
@@ -374,7 +497,15 @@ bool P095_data_struct::plugin_write(struct EventStruct *event, const String& str
     else if (equals(arg1, F("inv"))) {
       if ((event->Par2 >= 0) &&
           (event->Par2 <= 1)) {
-        tft->invertDisplay(event->Par2);
+        # if P095_ENABLE_ILI948X
+
+        if (useILI9488) {
+          ili9488->invertDisplay(event->Par2);
+        } else
+        # endif // if P095_ENABLE_ILI948X
+        {
+          tft->invertDisplay(event->Par2);
+        }
       } else {
         success = false;
       }
@@ -384,7 +515,15 @@ bool P095_data_struct::plugin_write(struct EventStruct *event, const String& str
         if (nullptr != gfxHelper) {
           gfxHelper->setRotation(event->Par2 % 4);
         } else {
-          tft->setRotation(event->Par2 % 4);
+          # if P095_ENABLE_ILI948X
+
+          if (useILI9488) {
+            ili9488->setRotation(event->Par2 % 4);
+          } else
+          # endif // if P095_ENABLE_ILI948X
+          {
+            tft->setRotation(event->Par2 % 4);
+          }
         }
       } else {
         success = false;
@@ -393,8 +532,8 @@ bool P095_data_struct::plugin_write(struct EventStruct *event, const String& str
       success = false;
     }
   }
-  else if (tft && (cmd.equals(_commandTrigger) ||
-                   (gfxHelper && gfxHelper->isAdaGFXTrigger(cmd))) && !_splashState) {
+  else if (isInitialized() && (cmd.equals(_commandTrigger) ||
+                               (gfxHelper && gfxHelper->isAdaGFXTrigger(cmd))) && !_splashState) {
     success = true;
 
     if (!bitRead(P095_CONFIG_FLAGS, P095_CONFIG_FLAG_NO_WAKE)) { // Wake display?
@@ -412,8 +551,8 @@ bool P095_data_struct::plugin_write(struct EventStruct *event, const String& str
       if (success) {
         int16_t curX, curY;
         gfxHelper->getCursorXY(curX, curY); // Get current X and Y coordinates, and put into Values
-        UserVar[event->BaseVarIndex]     = curX;
-        UserVar[event->BaseVarIndex + 1] = curY;
+        UserVar.setFloat(event->TaskIndex, 0, curX);
+        UserVar.setFloat(event->TaskIndex, 1, curY);
       }
     }
   }
@@ -441,7 +580,7 @@ bool P095_data_struct::plugin_get_config_value(struct EventStruct *event,
  * displayOnOff: Turn display on or off
  ***************************************************************************/
 void P095_data_struct::displayOnOff(bool state) {
-  if (_backlightPin != -1) {
+  if (validGpio(_backlightPin)) {
     # if defined(ESP8266)
     analogWrite(_backlightPin, state ? ((1024 / 100) * _backlightPercentage) : 0);
     # endif // if defined(ESP8266)
@@ -450,7 +589,15 @@ void P095_data_struct::displayOnOff(bool state) {
     # endif // if defined(ESP32)
   }
 
-  tft->sendCommand(state ? ILI9341_DISPON : ILI9341_DISPOFF);
+  # if P095_ENABLE_ILI948X
+
+  if (useILI9488) {
+    ili9488->writecommand(state ? ILI9341_DISPON : ILI9341_DISPOFF);
+  } else
+  # endif // if P095_ENABLE_ILI948X
+  {
+    tft->sendCommand(state ? ILI9341_DISPON : ILI9341_DISPOFF);
+  }
   _displayTimer = (state ? _displayTimeout : 0);
 }
 

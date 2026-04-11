@@ -26,21 +26,33 @@
  * on I2C Bus
  */
 
-// History:
-// 2021-08-01 tonhuisman: Plugin migrated from ESPEsyPluginPlayground repository
-//                        Minor adjustments, changed castings to use static_cast<type>(var) method,
-//                        Added check for other I2C devoces configured on ESPEasy tasks to give a warning
-//                        about I2C incmopatibility, for AHT10 device only
-// 2021-03 sakinit:       Initial plugin, added on ESPEasyPluginPlayground
+/** History:
+ * 2024-12-21 chromoxdor: Add temperature offset + simple humidity compensation
+ * 2024-12-03 tonhuisman: Add alternative initialization for AHT10 (clone), see https://github.com/letscontrolit/ESPEasy/issues/5172
+ *                        Small code optimization.
+ * 2024-04-28 tonhuisman: Update plugin name and documentation as DHT20 and AM2301B actually contain an AHT20!
+ *                        DHT20: https://www.adafruit.com/product/5183 (Description)
+ *                        AM2301B: https://www.adafruit.com/product/5181 (Description)
+ * 2021-08-01 tonhuisman: Plugin migrated from ESPEsyPluginPlayground repository
+ *                        Minor adjustments, changed castings to use static_cast<type>(var) method,
+ *                        Added check for other I2C devices configured on ESPEasy tasks to give a warning
+ *                        about I2C incompatibility, for AHT10/AHT15 device only
+ * 2021-03 sakinit:       Initial plugin, added on ESPEasyPluginPlayground
+ */
 
 # include "src/PluginStructs/P105_data_struct.h"
 
 # define PLUGIN_105
 # define PLUGIN_ID_105         105
-# define PLUGIN_NAME_105       "Environment - AHT10/AHT2x"
+# define PLUGIN_NAME_105       "Environment - AHT1x/AHT2x/DHT20/AM2301B"
 # define PLUGIN_VALUENAME1_105 "Temperature"
 # define PLUGIN_VALUENAME2_105 "Humidity"
 
+
+# define P105_I2C_ADRESS          PCONFIG(0)
+# define P105_AHT_TYPE            PCONFIG(1)
+# define P105_ALT_INIT            PCONFIG(2)
+# define P105_TEMPERATURE_OFFSET  PCONFIG(3)
 
 boolean Plugin_105(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -50,18 +62,15 @@ boolean Plugin_105(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_105;
-      Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_TEMP_HUM;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = 2;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].PluginStats        = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_105;
+      dev.Type           = DEVICE_TYPE_I2C;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_TEMP_HUM;
+      dev.FormulaOption  = true;
+      dev.ValueCount     = 2;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
+      dev.PluginStats    = true;
       break;
     }
 
@@ -81,11 +90,11 @@ boolean Plugin_105(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      const uint8_t i2cAddressValues[2] = { 0x38, 0x39 };
+      const uint8_t i2cAddressValues[] = { 0x38, 0x39 };
 
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
-        addFormSelectorI2C(F("i2c_addr"), 2, i2cAddressValues, PCONFIG(0));
-        addFormNote(F("SDO Low=0x38, High=0x39. NB: Only available on AHT10 sensors."));
+        addFormSelectorI2C(F("i2c_addr"), 2, i2cAddressValues, P105_I2C_ADRESS);
+        addFormNote(F("SDO Low=0x38, High=0x39. NB: Only available on AHT1x sensors."));
       } else {
         success = intArrayContains(2, i2cAddressValues, event->Par1);
       }
@@ -96,18 +105,25 @@ boolean Plugin_105(uint8_t function, struct EventStruct *event, String& string)
     # if FEATURE_I2C_GET_ADDRESS
     case PLUGIN_I2C_GET_ADDRESS:
     {
-      event->Par1 = PCONFIG(0);
+      event->Par1 = P105_I2C_ADRESS;
       success     = true;
       break;
     }
     # endif // if FEATURE_I2C_GET_ADDRESS
 
+    case PLUGIN_SET_DEFAULTS:
+    {
+      P105_AHT_TYPE           = static_cast<int>(AHTx_device_type::AHT20_DEVICE);
+      P105_TEMPERATURE_OFFSET = 0;
+      break;
+    }
+
     case PLUGIN_WEBFORM_LOAD:
     {
-      if (static_cast<AHTx_device_type>(PCONFIG(1)) ==  AHTx_device_type::AHT10_DEVICE) {
+      if (static_cast<AHTx_device_type>(P105_AHT_TYPE) ==  AHTx_device_type::AHT10_DEVICE) {
         bool hasOtherI2CDevices = false;
 
-        for (taskIndex_t x = 0; validTaskIndex(x) && !hasOtherI2CDevices; x++) {
+        for (taskIndex_t x = 0; validTaskIndex(x) && !hasOtherI2CDevices; ++x) {
           const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(x);
 
           if (validDeviceIndex(DeviceIndex)
@@ -120,50 +136,61 @@ boolean Plugin_105(uint8_t function, struct EventStruct *event, String& string)
                   )
               ) {
             hasOtherI2CDevices = true;
+            break;
           }
         }
 
         if (hasOtherI2CDevices) {
           addRowLabel(EMPTY_STRING, EMPTY_STRING);
           addHtmlDiv(F("note warning"),
-                     F("Attention: Sensor model AHT10 may cause I2C issues when combined with other I2C devices on the same bus!"));
+                     F("Attention: Sensor model AHT1x may cause I2C issues when combined with other I2C devices on the same bus!"));
         }
       }
       {
-        const __FlashStringHelper *options[] = { F("AHT10"), F("AHT20"), F("AHT21") };
+        const __FlashStringHelper *options[] = { F("AHT1x"), F("AHT20"), F("AHT21") };
         const int indices[]                  = { static_cast<int>(AHTx_device_type::AHT10_DEVICE),
                                                  static_cast<int>(AHTx_device_type::AHT20_DEVICE),
                                                  static_cast<int>(AHTx_device_type::AHT21_DEVICE) };
-        addFormSelector(F("Sensor model"), F("ahttype"), 3, options, indices, PCONFIG(1), true);
-        addFormNote(F("Changing Sensor model will reload the page."));
+        constexpr size_t optionCount = NR_ELEMENTS(indices);
+        FormSelectorOptions selector(optionCount, options, indices);
+        selector.reloadonchange = true;
+        selector.addFormSelector(F("Sensor model"), F("ahttype"), P105_AHT_TYPE);
+        // addFormNote(F("Changing Sensor model will reload the page."));
+
+        if (static_cast<int>(AHTx_device_type::AHT10_DEVICE) == P105_AHT_TYPE) {
+          addFormCheckBox(F("AHT10 Alternative initialization"), F("altinit"), P105_ALT_INIT);
+        }
       }
 
+      addFormNumericBox(F("Temperature offset"), F("tempoffset"), P105_TEMPERATURE_OFFSET);
+      addUnit(F("x 0.1C"));
+      addFormNote("Offset in units of 0.1 degree Celsius and also corrects humidity.");
       success = true;
+
       break;
     }
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      PCONFIG(1) = getFormItemInt(F("ahttype"));
+      P105_AHT_TYPE = getFormItemInt(F("ahttype"));
 
-      if (static_cast<AHTx_device_type>(PCONFIG(1)) != AHTx_device_type::AHT10_DEVICE) {
-        PCONFIG(0) = 0x38; // AHT20/AHT21 only support a single I2C address.
+      if (static_cast<AHTx_device_type>(P105_AHT_TYPE) != AHTx_device_type::AHT10_DEVICE) {
+        P105_I2C_ADRESS = 0x38; // AHT20/AHT21 only support a single I2C address.
       } else {
-        PCONFIG(0) = getFormItemInt(F("i2c_addr"));
+        P105_I2C_ADRESS = getFormItemInt(F("i2c_addr"));
+        P105_ALT_INIT   = isFormItemChecked(F("altinit")) ? 1 : 0;
       }
-      success = true;
+
+      P105_TEMPERATURE_OFFSET = getFormItemInt(F("tempoffset"));
+      success                 = true;
       break;
     }
 
     case PLUGIN_INIT:
     {
-      initPluginTaskData(event->TaskIndex,
-                         new (std::nothrow) P105_data_struct(PCONFIG(0), static_cast<AHTx_device_type>(PCONFIG(1))));
-      P105_data_struct *P105_data =
-        static_cast<P105_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-      success = (nullptr != P105_data);
-
+      success = initPluginTaskData(
+        event->TaskIndex,
+        new (std::nothrow) P105_data_struct(P105_I2C_ADRESS, static_cast<AHTx_device_type>(P105_AHT_TYPE), 1 == P105_ALT_INIT));
       break;
     }
 
@@ -192,22 +219,16 @@ boolean Plugin_105(uint8_t function, struct EventStruct *event, String& string)
         }
         P105_data->state = AHTx_state::AHTx_Values_read;
 
-        UserVar[event->BaseVarIndex]     = P105_data->getTemperature();
-        UserVar[event->BaseVarIndex + 1] = P105_data->getHumidity();
+        UserVar.setFloat(event->TaskIndex, 0, P105_data->getTemperature() + (P105_TEMPERATURE_OFFSET / 10.0f));
+        UserVar.setFloat(event->TaskIndex, 1, P105_data->getHumidity() * (1 - 0.005f * P105_TEMPERATURE_OFFSET));
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          String log;
-          log.reserve(60); // Prevent re-allocation
-          log  = P105_data->getDeviceName();
-          log += F(" : Addr: 0x");
-          log += String(PCONFIG(0), HEX);
-          addLogMove(LOG_LEVEL_INFO, log);
-          log  = P105_data->getDeviceName();
-          log += F(" : Temperature: ");
-          log += formatUserVarNoCheck(event->TaskIndex, 0);
-          log += F(" : Humidity: ");
-          log += formatUserVarNoCheck(event->TaskIndex, 1);
-          addLogMove(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, strformat(F("%s : Addr: 0x%02x"), P105_data->getDeviceName().c_str(), P105_I2C_ADRESS));
+          addLogMove(LOG_LEVEL_INFO,
+                     strformat(F("%s : Temperature: %s : Humidity: %s"),
+                               P105_data->getDeviceName().c_str(),
+                               formatUserVarNoCheck(event, 0).c_str(),
+                               formatUserVarNoCheck(event, 1).c_str()));
         }
         success = true;
       }

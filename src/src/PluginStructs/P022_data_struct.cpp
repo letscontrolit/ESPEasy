@@ -107,15 +107,28 @@ void P022_data_struct::Plugin_022_initialize(int address)
   // default mode is open drain output, drive leds connected to VCC
   Plugin_022_writeRegister(i2cAddress, PLUGIN_022_PCA9685_MODE1, (uint8_t)0x01);      // reset the device
   delay(1);
-  Plugin_022_writeRegister(i2cAddress, PLUGIN_022_PCA9685_MODE1, (uint8_t)B10100000); // set up for auto increment
+  Plugin_022_writeRegister(i2cAddress, PLUGIN_022_PCA9685_MODE1, (uint8_t)0b10100000); // set up for auto increment
   // Plugin_022_writeRegister(i2cAddress, PCA9685_MODE2, (uint8_t)0x10); // set to output
   p022_set_init(address);
 }
 
 String P022_data_struct::P022_logPrefix(int address) {
-  String res = formatToHex(address, F("PCA 0x"), 2);
-  res += F(": ");
-  return res;
+  return concat(formatToHex(address, F("PCA 0x"), 2),  F(": "));
+}
+
+String P022_data_struct::P022_logPrefix(int address, const __FlashStringHelper * poststr)
+{
+  return concat(P022_logPrefix(address), poststr);
+}
+
+void P022_data_struct::initModeFreq(int address, uint8_t mode2, uint16_t freq)
+{
+  if (!p022_is_init(address))
+  {
+    Plugin_022_initialize(address);
+    Plugin_022_writeRegister(address, PCA9685_MODE2, mode2);
+    Plugin_022_Frequency(address, freq);
+  }
 }
 
 #endif // ifdef USES_P022

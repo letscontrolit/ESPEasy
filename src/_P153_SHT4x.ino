@@ -54,18 +54,15 @@ boolean Plugin_153(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_153;
-      Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_TEMP_HUM;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = 2;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].PluginStats        = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_153;
+      dev.Type           = DEVICE_TYPE_I2C;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_TEMP_HUM;
+      dev.FormulaOption  = true;
+      dev.ValueCount     = 2;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
+      dev.PluginStats    = true;
 
       break;
     }
@@ -92,7 +89,9 @@ boolean Plugin_153(uint8_t function, struct EventStruct *event, String& string)
 
       if (PLUGIN_WEBFORM_SHOW_I2C_PARAMS == function) {
         addFormSelectorI2C(F("i2c_addr"), 3, i2cAddressValues, P153_I2C_ADDRESS);
+        # ifndef BUILD_NO_DEBUG
         addFormNote(F("Chip type determines address: SHT-4x-<b>A</b>xxx = 0x44, SHT-4x-<b>B</b>xxx = 0x45, SHT-4x-<b>C</b>xxx = 0x46"));
+        # endif // ifndef BUILD_NO_DEBUG
       } else {
         success = intArrayContains(3, i2cAddressValues, event->Par1);
       }
@@ -147,23 +146,20 @@ boolean Plugin_153(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(P153_configuration_e::HighResolution20mW1000msec),
           static_cast<int>(P153_configuration_e::HighResolution20mW100msec),
         };
-        addFormSelector(F("Startup Configuration"),
-                        F("startup"),
-                        sizeof(configurationOptions) / sizeof(configurationOptions[0]),
-                        configurations,
-                        configurationOptions,
-                        P153_STARTUP_CONFIGURATION);
+        constexpr size_t optionCount = NR_ELEMENTS(configurationOptions);
+        const FormSelectorOptions selector(optionCount, configurations, configurationOptions);
+        selector.addFormSelector(F("Startup Configuration"), F("startup"), P153_STARTUP_CONFIGURATION);
         addFormNote(F("Heater should not exceed 10% dutycycle, so 1 sec. heater must have Interval > 10 sec.!"));
 
         addFormNumericBox(F("Use Normal Configuration after"), F("loops"), P153_INTERVAL_LOOPS, 0, 10);
         addUnit(F("Interval runs (0..10)"));
 
-        addFormSelector(F("Normal Configuration"),
-                        F("normal"),
-                        3, // Only non-heater options
-                        configurations,
-                        configurationOptions,
-                        P153_NORMAL_CONFIGURATION);
+        const FormSelectorOptions selector_normal(
+          3, // Only non-heater options
+          configurations, configurationOptions);
+
+        selector_normal.addFormSelector(
+          F("Normal Configuration"), F("normal"), P153_NORMAL_CONFIGURATION);
       }
 
       success = true;

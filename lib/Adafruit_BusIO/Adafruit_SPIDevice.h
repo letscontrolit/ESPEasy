@@ -3,6 +3,10 @@
 
 #include <Arduino.h>
 
+#if defined(ESP32) && ESP_IDF_VERSION_MAJOR >= 5
+#include <atomic>
+#endif
+
 #if !defined(SPI_INTERFACES_COUNT) ||                                          \
     (defined(SPI_INTERFACES_COUNT) && (SPI_INTERFACES_COUNT > 0))
 // HW SPI available
@@ -64,7 +68,12 @@ typedef uint8_t BusIO_PortMask;
 
 #elif defined(ESP8266) || defined(ESP32) || defined(__SAM3X8E__) ||            \
     defined(ARDUINO_ARCH_SAMD)
+
+#if ESP_IDF_VERSION_MAJOR >= 5
+typedef std::atomic< uint32_t > BusIO_PortReg;
+#else
 typedef volatile uint32_t BusIO_PortReg;
+#endif
 typedef uint32_t BusIO_PortMask;
 #define BUSIO_USE_FAST_PINIO
 

@@ -1,22 +1,13 @@
 #include "../ControllerQueue/SimpleQueueElement_string_only.h"
 
+#include "../Helpers/StringConverter.h"
+
 
 simple_queue_element_string_only::simple_queue_element_string_only(int ctrl_idx, taskIndex_t TaskIndex,  String&& req)
 {
   _controller_idx = ctrl_idx;
   _taskIndex      = TaskIndex;
-  #ifdef USE_SECOND_HEAP
-  HeapSelectIram ephemeral;
-
-  if ((req.length() > 0) && !mmu_is_iram(&(req[0]))) {
-    // The string was not allocated on the 2nd heap, so copy instead of move
-    txt = req;
-  } else {
-    txt = std::move(req);
-  }
-  #else // ifdef USE_SECOND_HEAP
-  txt = std::move(req);
-  #endif // ifdef USE_SECOND_HEAP
+  move_special(txt, std::move(req));
 }
 
 size_t simple_queue_element_string_only::getSize() const {

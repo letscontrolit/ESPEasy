@@ -3,6 +3,8 @@
 #include "../WebServer/common.h"
 #include "../WebServer/HTML_wrappers.h"
 
+#include "../Helpers/StringConverter.h"
+
 #include "../Static/WebStaticData.h"
 
 
@@ -32,7 +34,7 @@ void addButton(const String& url, const String& label, const String& classes, bo
   addHtml(label);
   addHtml(F("</a>"));
 }
-
+# ifdef WEBSERVER_NEW_RULES
 void addButtonWithSvg(const String& url, const String& label)
 {
   addButtonWithSvg(url, label, EMPTY_STRING, false);
@@ -42,7 +44,7 @@ void addButtonWithSvg(const String& url, const String& label, const String& svgP
   addHtml(F("<a "));
   addHtmlAttribute(F("class"), F("button link"));
   addHtmlAttribute(F("href"),  url);
-  #ifndef BUILD_MINIMAL_OTA
+  #ifndef LIMIT_BUILD_SIZE
   bool hasSVG = svgPath.length() > 0;
 
   if (hasSVG)
@@ -56,7 +58,7 @@ void addButtonWithSvg(const String& url, const String& label, const String& svgP
   }
   addHtml('>');
 
-  #ifndef BUILD_MINIMAL_OTA
+  #ifndef LIMIT_BUILD_SIZE
 
   if (hasSVG) {
     addHtml(F("<svg width='24' height='24' viewBox='-1 -1 26 26' style='position: relative; top: 5px;'>"));
@@ -103,7 +105,7 @@ void addDeleteButton(const String& url, const String& label)
                    true);
 #endif // ifdef BUILD_MINIMAL_OTA
 }
-
+#endif
 void addWideButton(const __FlashStringHelper * url, const __FlashStringHelper * label) {
   html_add_wide_button_prefix(EMPTY_STRING, true);
   addHtml(url);
@@ -153,15 +155,7 @@ void addSubmitButton(const String& value, const String& name, const String& clas
 {
   addHtml(F("<input "));
   {
-    String fullClasses;
-    fullClasses.reserve(12 + classes.length());
-    fullClasses = F("button link");
-
-    if (classes.length() > 0) {
-      fullClasses += ' ';
-      fullClasses += classes;
-    }
-    addHtmlAttribute(F("class"), fullClasses);
+    addHtmlAttribute(F("class"), concat(F("button link "), classes));
   }
   addHtmlAttribute(F("type"),  F("submit"));
   addHtmlAttribute(F("value"), value);
@@ -173,6 +167,7 @@ void addSubmitButton(const String& value, const String& name, const String& clas
   addHtml(F("/><div id='toastmessage'></div>"));
 }
 
+#ifdef WEBSERVER_GITHUB_COPY
 // add copy to clipboard button
 void addCopyButton(const String& value, const String& delimiter, const String& name)
 {
@@ -191,4 +186,32 @@ void addCopyButton(const String& value, const String& delimiter, const String& n
   addHtml(' ', '(');
   html_copyText_marker();
   addHtml(F(")</button>"));
+}
+#endif
+
+void addPlugin_Add_Edit_Button(const __FlashStringHelper * urlPrefix, size_t index, bool plugin_set, bool plugin_supported, const String& symbol)
+{
+  if (plugin_set && !plugin_supported) {
+    html_add_button_prefix(F("red"), true);
+  } else {
+    html_add_button_prefix();
+  }
+  
+  addHtml(urlPrefix);
+  addHtml(F("?index="));
+  addHtmlInt(index + 1);
+  addHtml('\'', '>');
+
+  if (plugin_set) {
+    addHtml(F("Edit"));
+  } else {
+    addHtml(F("Add"));
+  }
+  addHtml(F("</a><TD>"));
+  if (symbol.isEmpty()) {
+    addHtmlInt(index + 1);
+  } else {
+    addHtml(symbol);
+  }
+  html_TD();
 }

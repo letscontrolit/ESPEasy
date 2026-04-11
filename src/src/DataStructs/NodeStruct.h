@@ -5,7 +5,7 @@
 
 #if FEATURE_ESPEASY_P2P
 #include "../Helpers/ESPEasy_time.h"
-#include "../DataStructs/MAC_address.h"
+#include "../../ESPEasy/net/DataStructs/MAC_address.h"
 
 #include <IPAddress.h>
 #include <map>
@@ -19,7 +19,7 @@ struct __attribute__((__packed__)) NodeStruct
   NodeStruct();
 
   bool          valid() const;
-  bool          validate();
+  bool          validate(const IPAddress& remoteIP);
 
   // Compare nodes.
   // Return true when this node has better credentials to be used as ESPEasy-NOW neighbor
@@ -29,17 +29,24 @@ struct __attribute__((__packed__)) NodeStruct
   // - lower load (TODO TD-er)
   bool operator<(const NodeStruct &other) const;
 
-  const __FlashStringHelper * getNodeTypeDisplayString() const;
+  String getNodeTypeDisplayString() const;
 
   String        getNodeName() const;
 
   IPAddress     IP() const;
 
+  #if FEATURE_USE_IPV6
+  IPAddress     IPv6_link_local(bool stripZone = false) const;
+  IPAddress     IPv6_global() const;
+
+  bool          hasIPv6() const;
+  #endif
+
   MAC_address   STA_MAC() const;
 
   MAC_address   ESPEasy_Now_MAC() const;
 
-  unsigned long getAge() const;
+  uint32_t getAge() const;
 
   bool          isExpired() const;
 
@@ -63,7 +70,7 @@ struct __attribute__((__packed__)) NodeStruct
 
 
   // Do not change the order of this data, as it is being sent via P2P UDP.
-  // 6 byte mac  (STA interface)
+  // 6 byte mac  (STA or ETH interface)
   // 4 byte ip
   // 1 byte unit
   // 2 byte build
@@ -77,7 +84,7 @@ struct __attribute__((__packed__)) NodeStruct
   // 1 byte administrative distance
 
 
-  uint8_t  sta_mac[6]        = { 0 }; // STA mode MAC
+  uint8_t  sta_mac[6]        = { 0 }; // STA mode MAC (or MAC from ETH device)
   uint8_t  ip[4]             = { 0 };
   uint8_t  unit              = 0;
   uint16_t build             = 0;
@@ -95,12 +102,21 @@ struct __attribute__((__packed__)) NodeStruct
 
   // When sending system info, this value contains the time since last time sync.
   // When kept as node info, this is the last time stamp the node info was updated.
-  unsigned long lastUpdated = (1 << 30);
-  uint8_t  version = 1;
-  uint8_t  dummy = 0; // Not yet used
-  uint32_t unix_time_sec = 0;
+  uint32_t lastUpdated = (1 << 30);
+  uint8_t       version     = 1;
+  #if FEATURE_USE_IPV6
+  uint8_t hasIPv4                       : 1;
+  // Whether the IPv6 address can be derived from the given sta_mac member
+  uint8_t hasIPv6_mac_based_link_local  : 1;
+  uint8_t hasIPv6_mac_based_link_global : 1;
+
+  uint8_t unused : 5;
+  #else
+  uint8_t unused = 0;
+  #endif
+  uint32_t unix_time_sec  = 0;
   uint32_t unix_time_frac = 0;
 };
 typedef std::map<uint8_t, NodeStruct> NodesMap;
-#endif
+#endif // if FEATURE_ESPEASY_P2P
 #endif // DATASTRUCTS_NODESTRUCT_H

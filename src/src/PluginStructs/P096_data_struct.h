@@ -27,6 +27,7 @@
 # define P096_CONFIG_ROTATION           PCONFIG(1)      // Rotation
 # define P096_CONFIG_WIDTH              PCONFIG(2)      // Display width
 # define P096_CONFIG_HEIGHT             PCONFIG(3)      // Display height
+# define P096_CONFIG_DEFAULT_FONT       PCONFIG(4)      // Default font
 
 # define P096_CONFIG_COLORS            PCONFIG_ULONG(3) // 2 Colors fit in 1 long
 
@@ -113,7 +114,7 @@ public:
                    uint16_t            bgcolor      = ADAGFX_BLACK,
                    AdaGFXColorDepth    colorDepth   = AdaGFXColorDepth::Monochrome,
                    bool                textBackFill = true);
-  P096_data_struct() = delete;
+  P096_data_struct()                                = delete;
   virtual ~P096_data_struct();
 
   bool plugin_init(struct EventStruct *event);

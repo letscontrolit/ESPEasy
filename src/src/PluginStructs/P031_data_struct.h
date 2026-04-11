@@ -23,10 +23,10 @@ class P031_data_struct : public PluginTaskData_base {
 public:
 
   enum {
-    SHT1X_CMD_MEASURE_TEMP = B00000011,
-    SHT1X_CMD_MEASURE_RH   = B00000101,
-    SHT1X_CMD_READ_STATUS  = B00000111,
-    SHT1X_CMD_SOFT_RESET   = B00011110
+    SHT1X_CMD_MEASURE_TEMP = 0b00000011,
+    SHT1X_CMD_MEASURE_RH   = 0b00000101,
+    SHT1X_CMD_READ_STATUS  = 0b00000111,
+    SHT1X_CMD_SOFT_RESET   = 0b00011110
   };
 
   P031_data_struct() = default;

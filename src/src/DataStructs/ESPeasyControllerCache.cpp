@@ -2,6 +2,8 @@
 
 #if FEATURE_RTC_CACHE_STORAGE
 
+#include "../Helpers/Memory.h"
+
 ControllerCache_struct::~ControllerCache_struct() {
   if (_RTC_cache_handler != nullptr) {
     delete _RTC_cache_handler;
@@ -33,7 +35,12 @@ bool ControllerCache_struct::flush() {
 
 void ControllerCache_struct::init() {
   if (_RTC_cache_handler == nullptr) {
-    _RTC_cache_handler = new (std::nothrow) RTC_cache_handler_struct;
+    constexpr unsigned size = sizeof(RTC_cache_handler_struct);
+    void *ptr               = special_calloc(1, size);
+
+    if (ptr != nullptr) {
+      _RTC_cache_handler = new (ptr) RTC_cache_handler_struct;
+    }
     if (_RTC_cache_handler != nullptr) {
       _RTC_cache_handler->init();
     }
@@ -56,6 +63,7 @@ bool ControllerCache_struct::deleteOldestCacheBlock() {
 
 void ControllerCache_struct::closeOpenFiles() {
   if (_RTC_cache_handler != nullptr) {
+    _RTC_cache_handler->flush();
     _RTC_cache_handler->closeOpenFiles();
   }
 }
@@ -80,7 +88,7 @@ void ControllerCache_struct::resetpeek() {
   }
 }
 
-bool ControllerCache_struct::peekDataAvailable() const {
+bool ControllerCache_struct::peekDataAvailable() {
   if (_RTC_cache_handler == nullptr) {
     return false;
   }

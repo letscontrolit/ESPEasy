@@ -10,18 +10,13 @@
 # include "../WebServer/Markup_Buttons.h"
 # include "../WebServer/Markup_Forms.h"
 
-# include "../Commands/InternalCommands.h"
-# include "../ESPEasyCore/ESPEasyNetwork.h"
-# include "../Globals/ESPEasy_time.h"
-# include "../Globals/ESPEasyWiFiEvent.h"
+# include "../Commands/ExecuteCommand.h"
+# include "../../ESPEasy/net/ESPEasyNetwork.h"
 # include "../Globals/MainLoopCommand.h"
-# include "../Globals/NetworkState.h"
 # include "../Globals/Nodes.h"
 # include "../Globals/Settings.h"
 # include "../Globals/Statistics.h"
-# include "../Helpers/ESPEasy_Storage.h"
 # include "../Helpers/Memory.h"
-# include "../Helpers/Misc.h"
 # include "../Helpers/StringGenerator_System.h"
 # include "../Helpers/WebServer_commandHelper.h"
 
@@ -54,11 +49,14 @@
   #  define MAIN_PAGE_SHOW_NODE_LIST_TYPE    true
 # endif // ifndef MAIN_PAGE_SHOW_NODE_LIST_TYPE
 
-
 // ********************************************************************************
 // Web Interface root page
 // ********************************************************************************
 void handle_root() {
+  # ifdef USE_SECOND_HEAP
+  HeapSelectDram ephemeral;
+  # endif // ifdef USE_SECOND_HEAP
+
   # ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_root"));
   # endif // ifndef BUILD_NO_RAM_TRACKER
@@ -67,8 +65,9 @@ void handle_root() {
     return;
   }
 
-  // if Wifi setup, launch setup wizard if AP_DONT_FORCE_SETUP is not set.
-  if (WiFiEventData.wifiSetup && !Settings.ApDontForceSetup())
+  // if Wifi setup, launch setup wizard if AP_FORCE_SETUP is set.
+  if (!ESPEasy::net::NetworkConnected() &&
+      Settings.ApCaptivePortal())
   {
     web_server.send_P(200, (PGM_P)F("text/html"), (PGM_P)F("<meta HTTP-EQUIV='REFRESH' content='0; url=/setup'>"));
     return;
@@ -94,8 +93,6 @@ void handle_root() {
   rebootCmd = strcasecmp_P(sCommand.c_str(), PSTR("reboot")) == 0;
   sendHeadandTail_stdtemplate(_HEAD, rebootCmd);
 
-  int freeMem = ESP.getFreeHeap();
-
   // TODO: move this to handle_tools, from where it is actually called?
 
   // have to disconnect or reboot from within the main loop
@@ -103,23 +100,29 @@ void handle_root() {
   // disconnect here could result into a crash/reboot...
   if (strcasecmp_P(sCommand.c_str(), PSTR("wifidisconnect")) == 0)
   {
+    # ifndef LIMIT_BUILD_SIZE
     addLog(LOG_LEVEL_INFO, F("WIFI : Disconnecting..."));
+    # endif
     cmd_within_mainloop = CMD_WIFI_DISCONNECT;
     addHtml(F("OK"));
   } else if (strcasecmp_P(sCommand.c_str(), PSTR("reboot")) == 0)
   {
+    # ifndef LIMIT_BUILD_SIZE
     addLog(LOG_LEVEL_INFO, F("     : Rebooting..."));
+    # endif
     cmd_within_mainloop = CMD_REBOOT;
     addHtml(F("OK"));
   } else if (strcasecmp_P(sCommand.c_str(), PSTR("reset")) == 0)
   {
     if (loggedIn) {
+      # ifndef LIMIT_BUILD_SIZE
       addLog(LOG_LEVEL_INFO, F("     : factory reset..."));
+      # endif
       cmd_within_mainloop = CMD_REBOOT;
       addHtml(F(
                 "OK. Please wait > 1 min and connect to Access point.<BR><BR>PW=configesp<BR>URL=<a href='http://192.168.4.1'>192.168.4.1</a>"));
       TXBuffer.endStream();
-      ExecuteCommand_internal(EventValueSource::Enum::VALUE_SOURCE_HTTP, sCommand.c_str());
+      ExecuteCommand_internal({ EventValueSource::Enum::VALUE_SOURCE_HTTP, sCommand.c_str() }, true);
       return;
     }
   } else {
@@ -133,93 +136,51 @@ void handle_root() {
     html_table_class_normal();
     addFormHeader(F("System Info"));
 
-    addRowLabelValue(LabelType::UNIT_NR);
-    addRowLabelValue(LabelType::GIT_BUILD);
-    addRowLabel(LabelType::LOCAL_TIME);
+    static const LabelType::Enum labels[] PROGMEM =
+    {
 
-    if (node_time.systemTimePresent())
-    {
-      addHtml(getValue(LabelType::LOCAL_TIME));
-    }
-    else {
-      addHtml(F("<font color='red'>No system time source</font>"));
-    }
-    addRowLabelValue(LabelType::TIME_SOURCE);
+      LabelType::UNIT_NR,
+      LabelType::GIT_BUILD,
+      LabelType::LOCAL_TIME,
+      LabelType::TIME_SOURCE,
 
-    addRowLabel(LabelType::UPTIME);
-    {
-      addHtml(getExtendedValue(LabelType::UPTIME));
-    }
-    addRowLabel(LabelType::LOAD_PCT);
+      LabelType::UPTIME,
+      LabelType::LOAD_PCT,
 
-    if (wdcounter > 0)
-    {
-      addHtmlFloat(getCPUload());
-      addHtml(F("% (LC="));
-      addHtmlInt(getLoopCountPerSec());
-      addHtml(')');
-    }
-    {
-      addRowLabel(LabelType::FREE_MEM);
-      addHtmlInt(freeMem);
-        # ifndef BUILD_NO_RAM_TRACKER
-      addHtml(F(" ("));
-      addHtmlInt(lowestRAM);
-      addHtml(F(" - "));
-      addHtml(lowestRAMfunction);
-      addHtml(')');
-        # endif // ifndef BUILD_NO_RAM_TRACKER
-    }
-    {
-        # ifdef USE_SECOND_HEAP
-      addRowLabelValue(LabelType::FREE_HEAP_IRAM);
-      # endif // ifdef USE_SECOND_HEAP
-    }
-    {
-      addRowLabel(LabelType::FREE_STACK);
-      addHtmlInt(getCurrentFreeStack());
-        # ifndef BUILD_NO_RAM_TRACKER
-      addHtml(F(" ("));
-      addHtmlInt(lowestFreeStack);
-      addHtml(F(" - "));
-      addHtml(lowestFreeStackfunction);
-      addHtml(')');
-        # endif // ifndef BUILD_NO_RAM_TRACKER
-    }
+# if FEATURE_INTERNAL_TEMPERATURE
+      LabelType::INTERNAL_TEMPERATURE,
+# endif
+      LabelType::FREE_MEM,
+# ifdef USE_SECOND_HEAP
+      LabelType::FREE_HEAP_IRAM,
+# endif // ifdef USE_SECOND_HEAP
+      LabelType::FREE_STACK,
 
   # if FEATURE_ETHERNET
-    addRowLabelValue(LabelType::ETH_WIFI_MODE);
+      LabelType::ETH_WIFI_MODE,
   # endif // if FEATURE_ETHERNET
 
-    if (!WiFiEventData.WiFiDisconnected())
-    {
-      addRowLabelValue(LabelType::IP_ADDRESS);
-      addRowLabel(LabelType::WIFI_RSSI);
-      addHtmlInt(WiFi.RSSI());
-      addHtml(F(" dBm ("));
-      addHtml(WiFi.SSID());
-      addHtml(')');
-    }
+      LabelType::IP_ADDRESS,
+# if FEATURE_USE_IPV6
+      LabelType::IP6_LOCAL,
+
+      // Do not show global IPv6 on the root page
+
+# endif // if FEATURE_USE_IPV6
+      LabelType::WIFI_RSSI,
 
   # if FEATURE_ETHERNET
+      LabelType::ETH_SPEED_STATE,
 
-    if (active_network_medium == NetworkMedium_t::Ethernet) {
-      addRowLabelValue(LabelType::ETH_SPEED_STATE);
-      addRowLabelValue(LabelType::ETH_IP_ADDRESS);
-    }
   # endif // if FEATURE_ETHERNET
 
       # if FEATURE_MDNS
-    {
-      addRowLabel(LabelType::M_DNS);
-      addHtml(F("<a href='http://"));
-      const String url = getValue(LabelType::M_DNS);
-      addHtml(url);
-      addHtml(F("'>"));
-      addHtml(url);
-      addHtml(F("</a>"));
-    }
+      LabelType::M_DNS,
       # endif // if FEATURE_MDNS
+
+      LabelType::MAX_LABEL
+    };
+    addRowLabelValues(labels);
 
     # if FEATURE_MQTT
     {
@@ -250,11 +211,12 @@ void handle_root() {
         addFormHeader(F("Command Argument"));
         addRowLabel(F("Command"));
         addHtml(sCommand);
-
-        addHtml(F("<TR><TD colspan='2'>Command Output<BR><textarea readonly rows='10' wrap='on'>"));
+        
+        addRowColspan(2);
+        addHtml(F("Command Output<BR><textarea readonly rows='10' wrap='on'>"));
         addHtml(printWebString);
         addHtml(F("</textarea>"));
-        printWebString = String();
+        free_string(printWebString);
       }
     }
     html_end_table();
@@ -278,7 +240,7 @@ void handle_root() {
       html_table_header(F("Type"));
     }
     html_table_header(F("IP"), 160); // Should fit "255.255.255.255"
-    html_table_header(F("Load"));
+    html_table_header(F("Load (%)"));
     html_table_header(F("Age (s)"));
     #  ifdef USES_ESPEASY_NOW
 
@@ -325,20 +287,75 @@ void handle_root() {
           html_TD();
         }
 
-        if (it->second.ip[0] != 0)
+        if (it->second.ip[0] != 0
+#  if FEATURE_USE_IPV6
+            || (Settings.EnableIPv6() &&
+                (it->second.hasIPv6_mac_based_link_local ||
+                 it->second.hasIPv6_mac_based_link_global)
+                )
+#  endif // if FEATURE_USE_IPV6
+            )
         {
-          html_add_wide_button_prefix();
+          IPAddress ip        = it->second.IP();
+          const uint16_t port = it->second.webgui_portnumber;
 
+#  if FEATURE_USE_IPV6
+          bool isIPv6 = false;
+
+          if (Settings.EnableIPv6()) {
+            if (it->second.hasIPv6_mac_based_link_local) {
+              ip     = it->second.IPv6_link_local(true);
+              isIPv6 = true;
+            } else if (it->second.hasIPv6_mac_based_link_global) {
+              ip     = it->second.IPv6_global();
+              isIPv6 = true;
+            }
+          }
+
+          if (it->second.hasIPv4 && it->second.hasIPv6()) {
+            // Add 2 buttons for IPv4 and IPv6 address
+            html_add_wide_button_prefix();
+            addHtml(F("http://"));
+            addHtml(wrap_String(formatIP(ip), '[', ']'));
+
+            if ((port != 0) && (port != 80)) {
+              addHtml(':');
+              addHtmlInt(port);
+            }
+            addHtml('\'', '>');
+            addHtml(formatIP(ip));
+            addHtml(F("</a>"));
+
+            // Now prepare 2nd button prefix
+            addHtml(F("<BR>"));
+            html_add_wide_button_prefix();
+            ip     = it->second.IP();
+            isIPv6 = false;
+          } else {
+            // Add single wide button
+            html_add_wide_button_prefix();
+          }
+#  else // if FEATURE_USE_IPV6
+          html_add_wide_button_prefix();
+#  endif // if FEATURE_USE_IPV6
           addHtml(F("http://"));
-          addHtml(formatIP(it->second.IP()));
-          uint16_t port = it->second.webgui_portnumber;
+#  if FEATURE_USE_IPV6
+
+          if (isIPv6) {
+            addHtml(wrap_String(formatIP(ip), '[', ']'));
+          } else {
+            addHtml(formatIP(ip));
+          }
+          #  else // if FEATURE_USE_IPV6
+          addHtml(formatIP(ip));
+          #  endif // if FEATURE_USE_IPV6
 
           if ((port != 0) && (port != 80)) {
             addHtml(':');
             addHtmlInt(port);
           }
           addHtml('\'', '>');
-          addHtml(formatIP(it->second.IP()));
+          addHtml(formatIP(ip));
           addHtml(F("</a>"));
         }
         html_TD();
@@ -388,8 +405,8 @@ void handle_root() {
   # endif // if FEATURE_ESPEASY_P2P
     html_end_form();
 
-    printWebString = String();
-    printToWeb     = false;
+    free_string(printWebString);
+    printToWeb = false;
     sendHeadandTail_stdtemplate(_TAIL);
   }
   TXBuffer.endStream();

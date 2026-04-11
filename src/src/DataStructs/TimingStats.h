@@ -7,6 +7,7 @@
 
 # include "../DataTypes/DeviceIndex.h"
 # include "../DataTypes/ESPEasy_plugin_functions.h"
+# include "../../ESPEasy/net/DataTypes/NetworkDriverIndex.h"
 # include "../DataTypes/ProtocolIndex.h"
 # include "../Globals/Settings.h"
 # include "../Helpers/ESPEasy_time_calc.h"
@@ -25,6 +26,9 @@ enum class TimingStatsElements {
 
   // Controller queue
   MQTT_DELAY_QUEUE,
+
+  // Do not interrupt this sequence of Cxxx_DELAY_QUEUE 
+  // as its order is used to generate MiscStatsName
   C001_DELAY_QUEUE,
   C002_DELAY_QUEUE,
   C003_DELAY_QUEUE,
@@ -43,7 +47,6 @@ enum class TimingStatsElements {
   C016_DELAY_QUEUE,
   C017_DELAY_QUEUE,
   C018_DELAY_QUEUE,
-  C018_AIR_TIME,
   C019_DELAY_QUEUE,
   C020_DELAY_QUEUE,
   C021_DELAY_QUEUE,
@@ -51,6 +54,10 @@ enum class TimingStatsElements {
   C023_DELAY_QUEUE,
   C024_DELAY_QUEUE,
   C025_DELAY_QUEUE,
+
+  // Controller specific timing stats
+  C018_AIR_TIME,   
+  C023_AIR_TIME,   
 
   
   // Related to Task runs & sending data + rules
@@ -60,6 +67,9 @@ enum class TimingStatsElements {
   PLUGIN_CALL_1PS,
   CPLUGIN_CALL_10PS,
   CPLUGIN_CALL_50PS,
+  NWPLUGIN_CALL_10PS,
+  NWPLUGIN_CALL_50PS,
+  NWPLUGIN_PROCESS_NETWORK_EVENTS,
   SENSOR_SEND_TASK,
   SEND_DATA_STATS,
   COMPUTE_FORMULA_STATS,
@@ -68,7 +78,6 @@ enum class TimingStatsElements {
   PARSE_SYSVAR_NOCHANGE,
   PARSE_TEMPLATE_PADDED,
   IS_NUMERICAL,
-  GET_TASKVALUE_AS_STRING,
   FORMAT_USER_VAR,
   PROCESS_SYSTEM_EVENT_QUEUE,
   RULES_MATCH,
@@ -76,6 +85,7 @@ enum class TimingStatsElements {
   RULES_PROCESS_MATCHED,
   RULES_PARSE_LINE,
   COMMAND_EXEC_INTERNAL,
+  COMMAND_DECODE_INTERNAL,
   CONSOLE_LOOP,
   CONSOLE_WRITE_SERIAL,
   
@@ -101,6 +111,15 @@ enum class TimingStatsElements {
   HANDLE_SCHEDULER_TASK,
   HANDLE_SCHEDULER_IDLE,
   BACKGROUND_TASKS,
+#if FEATURE_MQTT
+  PERIODICAL_MQTT,
+#endif
+  CHECK_UDP,
+  C013_SEND_UDP,
+  C013_SEND_UDP_FAIL,
+  C013_RECEIVE_SENSOR_DATA,
+  WEBSERVER_HANDLE_CLIENT,
+  UPDATE_RTTTL,
 
   // Web serving
   HANDLE_SERVING_WEBPAGE,
@@ -131,22 +150,22 @@ enum class TimingStatsElements {
 class TimingStats {
 public:
 
-  TimingStats();
+  TimingStats() = default;
 
-  void     add(int64_t time);
+  void     add(int32_t duration_usec);
   void     reset();
   bool     isEmpty() const;
   float    getAvg() const;
-  uint32_t getMinMax(uint64_t& minVal,
-                     uint64_t& maxVal) const;
-  bool     thresholdExceeded(const uint64_t& threshold) const;
+  uint32_t getMinMax(uint32_t& minVal,
+                     uint32_t& maxVal) const;
+  bool     thresholdExceeded(const uint32_t& threshold) const;
 
 private:
 
-  float _timeTotal;
-  uint32_t _count;
-  uint64_t _maxVal;
-  uint64_t _minVal;
+  uint64_t _timeTotal{};
+  uint32_t _count{};
+  uint32_t _maxVal{};
+  uint32_t _minVal = 4294967295;
 };
 
 
@@ -154,29 +173,35 @@ const __FlashStringHelper* getPluginFunctionName(int function);
 bool                       mustLogFunction(int function);
 const __FlashStringHelper* getCPluginCFunctionName(CPlugin::Function function);
 bool                       mustLogCFunction(CPlugin::Function function);
+bool                       mustLogNWFunction(NWPlugin::Function function);
 String                     getMiscStatsName(TimingStatsElements stat);
 
 void                       stopTimerTask(deviceIndex_t T,
                                          int           F,
-                                         uint64_t      statisticsTimerStart);
+                                         uint32_t      statisticsTimerStart);
 void                       stopTimerController(protocolIndex_t   T,
                                                CPlugin::Function F,
-                                               uint64_t          statisticsTimerStart);
+                                               uint32_t          statisticsTimerStart);
+void                       stopTimerNetwork(ESPEasy::net::networkDriverIndex_t T,
+                                               NWPlugin::Function F,
+                                               uint32_t          statisticsTimerStart);
 void                       stopTimer(TimingStatsElements L,
-                                     uint64_t            statisticsTimerStart);
+                                     uint32_t            statisticsTimerStart);
 void                       addMiscTimerStat(TimingStatsElements L,
-                                            int64_t             T);
+                                            int32_t             T);
 
 extern std::map<int, TimingStats> pluginStats;
 extern std::map<int, TimingStats> controllerStats;
+extern std::map<int, TimingStats> networkStats;
 extern std::map<TimingStatsElements, TimingStats> miscStats;
 extern unsigned long timingstats_last_reset;
 
-# define START_TIMER const uint64_t statisticsTimerStart(getMicros64());
+# define START_TIMER const uint32_t statisticsTimerStart(micros());
 # define STOP_TIMER_TASK(T, F) stopTimerTask(T, F, statisticsTimerStart);
 # define STOP_TIMER_CONTROLLER(T, F) stopTimerController(T, F, statisticsTimerStart);
+# define STOP_TIMER_NETWORK(T, F) stopTimerNetwork(T, F, statisticsTimerStart);
 
-// #define STOP_TIMER_LOADFILE miscStats[LOADFILE_STATS].add(usecPassedSince(statisticsTimerStart));
+// #define STOP_TIMER_LOADFILE miscStats[LOADFILE_STATS].add(usecPassedSince_fast(statisticsTimerStart));
 # define STOP_TIMER(L) stopTimer(TimingStatsElements::L, statisticsTimerStart);
 # define STOP_TIMER_VAR(L) stopTimer(L, statisticsTimerStart);
 
@@ -188,6 +213,7 @@ extern unsigned long timingstats_last_reset;
 # define START_TIMER ;
 # define STOP_TIMER_TASK(T, F) ;
 # define STOP_TIMER_CONTROLLER(T, F) ;
+# define STOP_TIMER_NETWORK(T, F) ;
 # define STOP_TIMER(L) ;
 # define ADD_TIMER_STAT(L, T) ;
 

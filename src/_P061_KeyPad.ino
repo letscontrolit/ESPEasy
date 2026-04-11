@@ -6,6 +6,8 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2025-06-14 tonhuisman: Add support for Custom Value Type per task value
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported for Keypad)
  * 2022-01-23 tonhuisman: Add support for MCP23017 Direct mode, see https://github.com/letscontrolit/ESPEasy/issues/557
  *                        Add support for PCF8575 Matrix and Direct mode (requires pull-ups, 10-100k, on all 8 or 16 inputs!)
  *                        Support for PCF8575 can be disabled by disabling #define P061_ENABLE_PCF8575
@@ -89,18 +91,15 @@ boolean Plugin_061(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_061;
-      Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_SWITCH;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = false;
-      Device[deviceCount].ValueCount         = 1;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].TimerOptional      = true;
-      Device[deviceCount].GlobalSyncOption   = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_061;
+      dev.Type           = DEVICE_TYPE_I2C;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_SWITCH;
+      dev.ValueCount     = 1;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
+      dev.TimerOptional  = true;
+      dev.CustomVTypeVar = true;
       break;
     }
 
@@ -115,6 +114,22 @@ boolean Plugin_061(uint8_t function, struct EventStruct *event, String& string)
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_061));
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER || FEATURE_CUSTOM_TASKVAR_VTYPE
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      #  if FEATURE_CUSTOM_TASKVAR_VTYPE
+
+      for (uint8_t i = 0; i < event->Par5; ++i) {
+        event->ParN[i] = ExtraTaskSettings.getTaskVarCustomVType(i);  // Custom/User selection
+      }
+      #  else // if FEATURE_CUSTOM_TASKVAR_VTYPE
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_NONE); // Not yet supported
+      #  endif // if FEATURE_CUSTOM_TASKVAR_VTYPE
+      success = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER || FEATURE_CUSTOM_TASKVAR_VTYPE
 
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
@@ -157,13 +172,9 @@ boolean Plugin_061(uint8_t function, struct EventStruct *event, String& string)
         F("PCF8575 (Direct 16)")
         # endif // ifdef P061_ENABLE_PCF8575
       };
-      int optionsCount =
-      # ifdef P061_ENABLE_PCF8575
-        6;
-      # else // ifdef P061_ENABLE_PCF8575
-        4;
-      # endif // ifdef P061_ENABLE_PCF8575
-      addFormSelector(F("Chip (Mode)"), F("chip"), optionsCount, options, nullptr, P061_CONFIG_KEYPAD_TYPE);
+      constexpr int optionsCount = NR_ELEMENTS(options);
+      const FormSelectorOptions selector(optionsCount, options);
+      selector.addFormSelector(F("Chip (Mode)"), F("chip"), P061_CONFIG_KEYPAD_TYPE);
 
       success = true;
       break;

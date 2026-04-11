@@ -8,8 +8,7 @@
 // Forward declaration
 struct C018_data_struct;
 
-# include <rn2xx3.h>
-
+#include <rn2xx3_datatypes.h>
 
 # define C018_DEVICE_EUI_LEN          17
 # define C018_DEVICE_ADDR_LEN         33
@@ -49,6 +48,7 @@ struct C018_ConfigStruct
   uint32_t      rx2_freq                                        = 0;
 };
 
+DEF_UP(C018_ConfigStruct);
 
 #endif // ifdef USES_C018
 

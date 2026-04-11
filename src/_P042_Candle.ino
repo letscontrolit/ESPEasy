@@ -9,6 +9,7 @@
 // Wifi Candle for ESPEasy by Dominik Schmidt (10.2016)
 
 /** Changelog:
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported for NeoPixel)
  * 2023-10-26 tonhuisman: Apply NeoPixelBus_wrapper as replacement for Adafruit_NeoPixel library
  * 2023-01-21 tonhuisman: Move to PluginStruct_base to enable multi-instance use of this plugin
  * 2023-01-21 tonhuisman: Further refactor and improve code, including GH feedback
@@ -92,17 +93,14 @@ boolean Plugin_042(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_042;
-      Device[deviceCount].Type               = DEVICE_TYPE_SINGLE;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_TRIPLE;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = false;
-      Device[deviceCount].ValueCount         = 3;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].GlobalSyncOption   = false;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_042;
+      dev.Type           = DEVICE_TYPE_SINGLE;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_TRIPLE;
+      dev.ValueCount     = 3;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
+      dev.setPin1Direction(gpio_direction::gpio_output);
       break;
     }
 
@@ -119,6 +117,15 @@ boolean Plugin_042(uint8_t function, struct EventStruct *event, String& string)
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[2], PSTR(PLUGIN_VALUENAME3_042));
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_NONE); // Not yet supported
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
 
     case PLUGIN_GET_DEVICEGPIONAMES:
     {
@@ -142,7 +149,7 @@ boolean Plugin_042(uint8_t function, struct EventStruct *event, String& string)
       addFormNumericBox(F("Led Count"), P042_WEBVAR_PIXELCOUNT, P042_CONFIG_PIXELCOUNT, 1, P042_MAX_PIXELS);
 
       {
-        const __FlashStringHelper *options[P042_FLAME_OPTIONS] = {
+        const __FlashStringHelper *options[] = {
           F("Off"),
           F("Static Light"),
           F("Simple Candle"),
@@ -158,7 +165,8 @@ boolean Plugin_042(uint8_t function, struct EventStruct *event, String& string)
         }
 
         // Candle Type Selection
-        addFormSelector(F("Flame Type"), P042_WEBVAR_CANDLETYPE, P042_FLAME_OPTIONS, options, nullptr, P042_CONFIG_CANDLETYPE);
+        const FormSelectorOptions selector(P042_FLAME_OPTIONS, options);
+        selector.addFormSelector(F("Flame Type"), P042_WEBVAR_CANDLETYPE,  P042_CONFIG_CANDLETYPE);
       }
 
       // Advanced Color options
@@ -167,18 +175,16 @@ boolean Plugin_042(uint8_t function, struct EventStruct *event, String& string)
       addHtml(F("<input type='radio' id='clrDef' name='" P042_WEBVAR_COLORTYPE_S "' value='0'"));
 
       if (Candle_color == P042_ColorType::ColorDefault) {
-        addHtml(F(" checked>"));
-      } else {
-        addHtml('>');
+        addHtml(F(" checked"));
       }
+      addHtml('>');
       addHtml(F("<label for='clrDef'> Use default color</label><br>"));
       addHtml(F("<input type='radio' id='clrSel' name='" P042_WEBVAR_COLORTYPE_S "' value='1'"));
 
       if (Candle_color == P042_ColorType::ColorSelected) {
-        addHtml(F(" checked>"));
-      } else {
-        addHtml('>');
+        addHtml(F(" checked"));
       }
+      addHtml('>');
       addHtml(F("<label for='clrSel'> Use selected color</label><br>"));
 
       // http://jscolor.com/examples/

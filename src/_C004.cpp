@@ -23,6 +23,9 @@ bool CPlugin_004(CPlugin::Function function, struct EventStruct *event, String& 
       proto.usesPassword = true;
       proto.defaultPort  = 80;
       proto.usesID       = true;
+      #if FEATURE_HTTP_TLS
+      proto.usesTLS = true;
+      # endif 
       break;
     }
 
@@ -48,7 +51,8 @@ bool CPlugin_004(CPlugin::Function function, struct EventStruct *event, String& 
     {
       success = true;
 
-      switch (event->idx) {
+      switch (event->idx)
+      {
         case ControllerSettingsStruct::CONTROLLER_USER:
           string = F("ThingHTTP Name");
           break;
@@ -67,13 +71,19 @@ bool CPlugin_004(CPlugin::Function function, struct EventStruct *event, String& 
       if (C004_DelayHandler == nullptr) {
         break;
       }
+
       if (C004_DelayHandler->queueFull(event->ControllerIndex)) {
         break;
       }
 
-      std::unique_ptr<C004_queue_element> element(new C004_queue_element(event));
+      constexpr unsigned size = sizeof(C004_queue_element);
+      void *ptr               = special_calloc(1, size);
 
-      success = C004_DelayHandler->addToQueue(std::move(element));
+      if (ptr != nullptr) {
+        UP_C004_queue_element  element(new (ptr) C004_queue_element(event));
+
+        success = C004_DelayHandler->addToQueue(std::move(element));
+      }
       Scheduler.scheduleNextDelayQueue(SchedulerIntervalTimer_e::TIMER_C004_DELAY_QUEUE, C004_DelayHandler->getNextScheduleTime());
 
       break;
@@ -94,43 +104,40 @@ bool CPlugin_004(CPlugin::Function function, struct EventStruct *event, String& 
 
 // Uncrustify may change this into multi line, which will result in failed builds
 // *INDENT-OFF*
-bool do_process_c004_delay_queue(int controller_number, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
+bool do_process_c004_delay_queue(cpluginID_t cpluginID, const Queue_element_base& element_base, ControllerSettingsStruct& ControllerSettings) {
   const C004_queue_element& element = static_cast<const C004_queue_element&>(element_base);
 // *INDENT-ON*
-  String postDataStr = F("api_key=");
+String postDataStr = concat(F("api_key="),
+                            getControllerPass(element._controller_idx, ControllerSettings)); // used for API key
 
-  postDataStr += getControllerPass(element._controller_idx, ControllerSettings); // used for API key
-
-  if (element.sensorType == Sensor_VType::SENSOR_TYPE_STRING) {
-    postDataStr += F("&status=");
-    postDataStr += element.txt[0]; // FIXME TD-er: Is this correct?
-    // See: https://nl.mathworks.com/help/thingspeak/writedata.html
-  } else {
-    for (uint8_t x = 0; x < element.valueCount; x++)
-    {
-      postDataStr += F("&field");
-      postDataStr += element.idx + x;
-      postDataStr += '=';
-      postDataStr += element.txt[x];
-    }
+if (element.sensorType == Sensor_VType::SENSOR_TYPE_STRING) {
+  postDataStr += concat(F("&status="), element.txt[0]);                                      // FIXME TD-er: Is this correct?
+  // See: https://nl.mathworks.com/help/thingspeak/writedata.html
+} else {
+  for (uint8_t x = 0; x < element.valueCount; x++) {
+    postDataStr += strformat(F("&field%d=%s"),
+                             element.idx + x,
+                             element.txt[x].c_str());
   }
-  if (!ControllerSettings.UseDNS) {
-    // Patch the ControllerSettings to make sure we're using a hostname instead of an IP address
-    ControllerSettings.setHostname(F("api.thingspeak.com")); // PM_CZ: HTTP requests must contain host headers.
-    ControllerSettings.UseDNS = true;
-  }
+}
 
-  int httpCode = -1;
-  send_via_http(
-    controller_number,
-    ControllerSettings,
-    element._controller_idx,
-    F("/update"), // uri
-    F("POST"),
-    F("Content-Type: application/x-www-form-urlencoded\r\n"),
-    postDataStr,
-    httpCode);
-  return (httpCode >= 100) && (httpCode < 300);
+if (!ControllerSettings.UseDNS) {
+  // Patch the ControllerSettings to make sure we're using a hostname instead of an IP address
+  ControllerSettings.setHostname(F("api.thingspeak.com")); // PM_CZ: HTTP requests must contain host headers.
+  ControllerSettings.UseDNS = true;
+}
+
+int httpCode = -1;
+send_via_http(
+  cpluginID,
+  ControllerSettings,
+  element._controller_idx,
+  F("/update"), // uri
+  F("POST"),
+  F("Content-Type: application/x-www-form-urlencoded\r\n"),
+  postDataStr,
+  httpCode);
+return (httpCode >= 100) && (httpCode < 300);
 }
 
 #endif // ifdef USES_C004

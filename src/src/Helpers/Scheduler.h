@@ -144,7 +144,7 @@ public:
 
 void                 setPluginTaskTimer(unsigned long msecFromNow,
                                           taskIndex_t   taskIndex,
-                                          PluginFunctions_e function,
+                                          const PluginFunctions_e& function,
                                           int           Par1,
                                           int           Par2 = 0,
                                           int           Par3 = 0,
@@ -152,6 +152,27 @@ void                 setPluginTaskTimer(unsigned long msecFromNow,
                                           int           Par5 = 0);
 
   void process_plugin_task_timer(SchedulerTimerID timerID);
+
+  /*********************************************************************************************\
+  * Network Adapter Timer  (NWPLUGIN_TASKTIMER_IN)
+  * Can be scheduled per combo networkIndex & Par1 (20 least significant bits)
+  \*********************************************************************************************/
+  void setNetworkInitTimer(unsigned long msecFromNow,
+                           ESPEasy::net::networkIndex_t   networkIndex);
+  void setNetworkExitTimer(unsigned long msecFromNow,
+                           ESPEasy::net::networkIndex_t   networkIndex);
+
+  void setNetworkTimer(unsigned long msecFromNow,
+                      ESPEasy::net::networkIndex_t   networkIndex,
+                      NWPlugin::Function function,
+                      int           Par1 = 0,
+                      int           Par2 = 0,
+                      int           Par3 = 0,
+                      int           Par4 = 0,
+                      int           Par5 = 0);
+
+  void process_network_timer(SchedulerTimerID timerID);
+
 
 
   /*********************************************************************************************\
@@ -161,9 +182,11 @@ void                 setPluginTaskTimer(unsigned long msecFromNow,
   // @param msecFromNow   Number of milli seconds from now (also used as interval for recurring)
   // @param timerIndex    The index of the timer used. (1 ... max)
   // @param recurringCount  Number of times needed to run (-1 for always)
+  // @param startImmediately  Run immediately
   bool setRulesTimer(unsigned long msecFromNow,
                      unsigned int  timerIndex,
-                     int           recurringCount = 0);
+                     int           recurringCount = 0,
+                     bool          startImmediately = false);
 
   void process_rules_timer(SchedulerTimerID timerID,
                            unsigned long lasttimer);
@@ -236,30 +259,30 @@ void                 setPluginTaskTimer(unsigned long msecFromNow,
   \*********************************************************************************************/
 
   // Note: event will be moved
-  void schedule_plugin_task_event_timer(deviceIndex_t        DeviceIndex,
+  void schedule_plugin_task_event_timer(taskIndex_t          taskIndex,
                                         uint8_t              Function,
                                         struct EventStruct&& event);
 
 #if FEATURE_MQTT
-  void schedule_mqtt_plugin_import_event_timer(deviceIndex_t DeviceIndex,
-                                               taskIndex_t   TaskIndex,
-                                               uint8_t       Function,
-                                               char         *c_topic,
-                                               uint8_t      *b_payload,
-                                               unsigned int  length);
+  void schedule_mqtt_plugin_import_event_timer(deviceIndex_t  DeviceIndex,
+                                               taskIndex_t    TaskIndex,
+                                               uint8_t        Function,
+                                               const char    *c_topic,
+                                               const uint8_t *b_payload,
+                                               unsigned int   length);
 #endif
 
 
   // Note: the event will be moved
-  void schedule_controller_event_timer(protocolIndex_t      ProtocolIndex,
+  void schedule_controller_event_timer(controllerIndex_t    ControllerIndex,
                                        uint8_t              Function,
                                        struct EventStruct&& event);
 
 #if FEATURE_MQTT
-  void schedule_mqtt_controller_event_timer(protocolIndex_t   ProtocolIndex,
+  void schedule_mqtt_controller_event_timer(controllerIndex_t ControllerIndex,
                                             CPlugin::Function Function,
-                                            char             *c_topic,
-                                            uint8_t          *b_payload,
+                                            const char       *c_topic,
+                                            const uint8_t    *b_payload,
                                             unsigned int      length);
 #endif
 

@@ -55,6 +55,8 @@
 //              Settings.TaskDevicePluginConfig[x][7]     - Last known status of switch
 //              Settings.TaskDevicePluginConfigLong[x][0] - Minimal detection threshold counter
 //              Settings.TaskDevicePluginConfigLong[x][1] - Detection threshold window counter
+//              Settings.TaskDevicePluginConfigLong[x][2] - Setting Detection on all 3 axis
+//              Settings.TaskDevicePluginConfigLong[x][3] - Setting all 3 axis as values
 
 
 // FIXME TD-er: Reverted to old version before adding Plugin_task_data array
@@ -63,6 +65,10 @@
 // https://github.com/letscontrolit/ESPEasy/commit/af20984079d3e7aa59e08fd9b232f6d17ba3b523#diff-ec860ac195fffa61ec11dd419fefa5b9
 // https://github.com/letscontrolit/ESPEasy/commit/6400c495e24f39ebac88eb634f29cfb73137fa2b#diff-ec860ac195fffa61ec11dd419fefa5b9
 
+/** Changelog:
+ * 2025-06-14 tonhuisman: Add support for Custom Value Type per task value
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported yet for Gyro)
+ */
 
 # include "src/PluginStructs/P045_data_struct.h"
 
@@ -80,14 +86,16 @@ boolean Plugin_045(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number       = PLUGIN_ID_045;
-      Device[deviceCount].Type           = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType          = Sensor_VType::SENSOR_TYPE_SINGLE;
-      Device[deviceCount].ValueCount     = 1;    // Unfortunatly domoticz has no custom multivalue sensors.
-      Device[deviceCount].SendDataOption = true; //   and I use Domoticz ... so there.
-      Device[deviceCount].TimerOption    = true;
-      Device[deviceCount].FormulaOption  = false;
-      Device[deviceCount].PluginStats    = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_045;
+      dev.Type           = DEVICE_TYPE_I2C;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_SINGLE;
+      dev.ValueCount     = 1;    // Unfortunatly domoticz has no custom multivalue sensors.
+      dev.SendDataOption = true; //   and I use Domoticz ... so there.
+      dev.TimerOption    = true;
+      dev.FormulaOption  = false;
+      dev.PluginStats    = true;
+      dev.CustomVTypeVar = true;
       break;
     }
 
@@ -102,6 +110,46 @@ boolean Plugin_045(uint8_t function, struct EventStruct *event, String& string)
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_045));
       break;
     }
+
+    case PLUGIN_GET_DEVICEVTYPE:
+    {
+      if (0 == PCONFIG(1)) {
+        // The default sensorType of the device is a single sensor value. But for detection movement we want it to be
+        // a switch so we change the sensortype here.
+        event->sensorType = Sensor_VType::SENSOR_TYPE_SWITCH;
+      } else if (1 == PCONFIG_LONG(3)) {
+        event->sensorType = Sensor_VType::SENSOR_TYPE_TRIPLE;
+      } else {
+        event->sensorType = Sensor_VType::SENSOR_TYPE_SINGLE;
+      }
+      break;
+    }
+
+    case PLUGIN_GET_DEVICEVALUECOUNT:
+    {
+      if ((0 == PCONFIG(1)) || (0 == PCONFIG_LONG(3))) {
+        event->Par1 = 1;
+      } else {
+        event->Par1 = 3;
+      }
+      break;
+    }
+
+    # if FEATURE_MQTT_DISCOVER || FEATURE_CUSTOM_TASKVAR_VTYPE
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      #  if FEATURE_CUSTOM_TASKVAR_VTYPE
+
+      for (uint8_t i = 0; i < event->Par5; ++i) {
+        event->ParN[i] = ExtraTaskSettings.getTaskVarCustomVType(i);  // Custom/User selection
+      }
+      #  else // if FEATURE_CUSTOM_TASKVAR_VTYPE
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_NONE); // Not yet supported
+      #  endif // if FEATURE_CUSTOM_TASKVAR_VTYPE
+      success = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER || FEATURE_CUSTOM_TASKVAR_VTYPE
 
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
@@ -130,7 +178,7 @@ boolean Plugin_045(uint8_t function, struct EventStruct *event, String& string)
     {
       uint8_t choice = PCONFIG(1);
       {
-        const __FlashStringHelper *options[10] = {
+        const __FlashStringHelper *options[] = {
           F("Movement detection"),
           F("Range acceleration X"),
           F("Range acceleration Y"),
@@ -142,7 +190,9 @@ boolean Plugin_045(uint8_t function, struct EventStruct *event, String& string)
           F("G-force Y"),
           F("G-force Z")
         };
-        addFormSelector(F("Function"), F("pfunction"), 10, options, nullptr, choice);
+
+        const FormSelectorOptions selector(NR_ELEMENTS(options), options);
+        selector.addFormSelector(F("Function"), F("pfunction"), choice);
       }
 
       if (choice == 0) {
@@ -161,6 +211,8 @@ boolean Plugin_045(uint8_t function, struct EventStruct *event, String& string)
         addFormNumericBox(F("Detection window"),     F("pthld_window"),  PCONFIG(6), 0, 999999);
 
         addFormNote(F("Details are in the 'ReadTheDocs' documentation."));
+      } else {
+        addFormCheckBox(F("Provide all 3 values (X/Y/Z)"), F("pmultival"), PCONFIG_LONG(3) == 1);
       }
       success = true;
       break;
@@ -177,6 +229,7 @@ boolean Plugin_045(uint8_t function, struct EventStruct *event, String& string)
       PCONFIG(5)      = getFormItemInt(F("pthld_counter"));
       PCONFIG(6)      = getFormItemInt(F("pthld_window"));
       PCONFIG_LONG(2) = isFormItemChecked(F("pmultiaxes")) ? 0 : 1; // Inverted setting, default is backward compatible, 3 axis
+      PCONFIG_LONG(3) = isFormItemChecked(F("pmultival")) ? 1 : 0;
 
       if (PCONFIG(6) < PCONFIG(5)) {
         PCONFIG(6) = PCONFIG(5);
@@ -205,10 +258,10 @@ boolean Plugin_045(uint8_t function, struct EventStruct *event, String& string)
       }
 
       // Reset vars
-      PCONFIG(7) = 0;                   // Last known value of "switch" is off
-      UserVar[event->BaseVarIndex] = 0; // Switch is off
-      PCONFIG_LONG(0) = 0;              // Minimal detection counter is zero
-      PCONFIG_LONG(1) = 0;              // Detection window counter is zero
+      PCONFIG(7) = 0;                           // Last known value of "switch" is off
+      UserVar.setFloat(event->TaskIndex, 0, 0); // Switch is off
+      PCONFIG_LONG(0) = 0;                      // Minimal detection counter is zero
+      PCONFIG_LONG(1) = 0;                      // Detection window counter is zero
       break;
     }
 
@@ -243,7 +296,7 @@ boolean Plugin_045(uint8_t function, struct EventStruct *event, String& string)
             uint8_t count      = 0; // Counter to check if not all thresholdvalues are set to 0 or disabled
             uint8_t threscount = 0; // Counter to check how many tresholds have been exceeded
 
-            for (uint8_t i = 0; i < 3; i++)
+            for (uint8_t i = 0; i < 3; ++i)
             {
               // for each axis:
               if (PCONFIG(i + 2) != 0) {    // not disabled, check threshold
@@ -271,14 +324,14 @@ boolean Plugin_045(uint8_t function, struct EventStruct *event, String& string)
 
               // Did we count more times exceeded then the minimum detection value?
               if (PCONFIG_LONG(0) >= PCONFIG(5)) {
-                UserVar[event->BaseVarIndex] = 1; // x times threshold exceeded within window.
+                UserVar.setFloat(event->TaskIndex, 0, 1.0f); // x times threshold exceeded within window.
               } else {
-                UserVar[event->BaseVarIndex] = 0; // reset because x times threshold within window not met.
+                UserVar.setFloat(event->TaskIndex, 0, 0.0f); // reset because x times threshold within window not met.
               }
 
               // Check if UserVar changed so we do not overload homecontroller with the same readings
-              if (PCONFIG(7) != UserVar[event->BaseVarIndex]) {
-                PCONFIG(7) = UserVar[event->BaseVarIndex];
+              if (PCONFIG(7) != UserVar.getFloat(event->TaskIndex, 0)) {
+                PCONFIG(7) = UserVar.getFloat(event->TaskIndex, 0);
                 success    = true;
               } else {
                 success = false;
@@ -286,19 +339,23 @@ boolean Plugin_045(uint8_t function, struct EventStruct *event, String& string)
               PCONFIG_LONG(0) = 0; // reset threshold exceeded counter
             }
 
-            // The default sensorType of the device is a single sensor value. But for detection movement we want it to be
-            // a switch so we change the sensortype here. Looks like a legal thing to do because _P001_Switch does it as well.
-            event->sensorType = Sensor_VType::SENSOR_TYPE_SWITCH;
             break;
           }
 
           // All other functions are reading values. So extract xyz value and wanted type from function number:
-          default:                                            // [1-3]: range-values, [4-6]: a-values, [7-9]: g-values
+          default:                                                 // [1-3]: range-values, [4-6]: a-values, [7-9]: g-values
           {
-            uint8_t reqaxis = (_P045_Function - 1) % 3;       // xyz         -> eg: function 5(ay) (5-1) % 3 = 1           (y)
-            uint8_t reqvar  = ((_P045_Function - 1) / 3) + 2; // range, a, g -> eg: function 9(gz) ((9-1) / 3 = 2) + 2 = 4 (g)
-            UserVar[event->BaseVarIndex] = float(P045_data->_axis[reqaxis][reqvar]);
-            success                      = true;
+            const uint8_t reqvar = ((_P045_Function - 1) / 3) + 2; // range, a, g -> eg: function 9(gz) ((9-1) / 3 = 2) + 2 = 4 (g)
+
+            if (1 == PCONFIG_LONG(3)) {
+              for (uint8_t i = 0; i < 3; ++i) {                    // All 3 axis
+                UserVar.setFloat(event->TaskIndex, i, P045_data->_axis[i][reqvar]);
+              }
+            } else {
+              const uint8_t reqaxis = (_P045_Function - 1) % 3; // xyz -> eg: function 5(ay) (5-1) % 3 = 1 (y)
+              UserVar.setFloat(event->TaskIndex, 0, P045_data->_axis[reqaxis][reqvar]);
+            }
+            success = true;
             break;
           }
         }

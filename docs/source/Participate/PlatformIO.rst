@@ -3,14 +3,14 @@
 PlatformIO
 **********
 
-ESP easy can be built using the Arduino IDE or PlatformIO (PIO).
-Arduino IDE is not being used during development, so it may take some more effort to get it setup for building ESPeasy.
+ESP easy can be built using the PlatformIO/pioarduino IDE (PIO).
+Arduino IDE is no longer supported for development though it's technically possible to be used. It may take considerable effort to get it setup for building ESPeasy.
 
-We advice to use PlatformIO as build environment.
+We *strongly* advise to use PIO as build environment.
 
-PlatformIO is just the build, test and upload environment for many micro controllers like the ESP8266 and ESP32 we use.
+PIO is just the build, test and upload environment for many micro controllers like the ESP8266 and ESP32 we use.
 
-On top of that you need to use an editor, or so called IDE in which PlatformIO will be used.
+On top of that you need to use an editor, or so called IDE in which PIO will be used.
 
 The current choice is:
 
@@ -21,10 +21,10 @@ VSCode is free to use and available for Windows, MacOS and Linux.
 Apart from VSCode, there are more available, like Eclipse, MS Visual Studio (IDE) and probably more.
 
 
-PlatformIO Prerequisites
-========================
+PlatformIO/pioarduino Prerequisites
+===================================
 
-PlatformIO does need at least the following:
+PIO does need at least the following:
 
 * Python
 * Git command line tools (`download <https://git-scm.com/downloads>`_)
@@ -58,16 +58,18 @@ install Pyton in Windows for PlatformIO.
 
 These steps have been explained in this Youtube video: https://youtu.be/ArqwMcYSMsU though you might want to use the latest version of both the Git tools and Python.
 
-PlatformIO with VSCode
-======================
+PlatformIO/pioarduino with VSCode
+=================================
 
 Install
 -------
 
 For development of ESPEasy, a number of extensions has to be installed in VS-Code:
 
-* PlatformIO IDE (by PlatformIO)
-* C/C++ IntelliSense (by Microsoft)
+* pioarduino IDE (by pioarduino)
+* C/C++ (by Microsoft)
+* C/C++ Extension Pack (by Microsoft)
+* C/C++ Themes (by Microsoft)
 * Uncrustify (by Zachary Flower, originally by Laurent Tréguier)
 
 Optional, but highly recommended:
@@ -78,9 +80,11 @@ Optional, but highly recommended:
 * All Autocomplete (by Atishay Jain)
 * Excel Viewer (by GrapeCity)
 * Esbonio - An extension for editing sphinx projects (by Swyddfa)
+* reStructuredText (by LeXtudio)
 * reStructuredText Syntax highlighting (by Trond Snekvik)
 * Extension pack for reStructuredText (by LeXtudio Inc.)
 * Markdown All in One (by Yu Zhang)
+* WSL (by Microsoft) (when using WSL2 as documented below)
 
 
 Uncrustify
@@ -91,6 +95,8 @@ This code format standard is defined in the file uncrustify.cfg in the main dire
 For new code contributions, it is highly appreciated if the code is formatted using this tool.
 
 NB: Uncrustify has to be installed separately, as it is not included in the plugin! Download `Uncrustify from Sourceforge.net <https://sourceforge.net/projects/uncrustify/>`_
+
+When using a Linux OS, f.e. WSL with Ubuntu, uncrustify can be installed via the regular package manager (shown below). It is strongly advised to use version 0.78 or newer, as older versions seem to have some bugs, causing document formatting to fail.
 
 To do so:
 
@@ -105,17 +111,19 @@ After setting it as the default formatter, the hotkey Alt-Shift-F (Cmd-Shift-F o
 
   There used to be a reference to the Atom editor, but both Atom, and the PlatformIO plugin for Atom, are no longer maintained by their owners, so it was removed from this documentation.
 
-Load a project using PlatformIO
--------------------------------
+Load a project using PlatformIO/pioarduino
+------------------------------------------
+
+.. note:: PlatformIO has been superceded by the Community-supported **pioarduino** initiative. For simplicity, in most places the abbreviation PIO is throughout this section of the documentation.
 
 If you have PIO installed and the source tree cloned to your hard drive, then you can open the main dir of the repository.
 The main directory of the repository is the level with the file platformio.ini in it.
 
-Then in a few moments after opening the directory, on the left there will appear an alien logo, the logo of PlatformIO.
+Then in a few moments after opening the directory, on the left there will appear an chip-package logo, the logo of pioarduino.
 If you click that one, you will get a tree with lots and lots of project tasks and environments.
 
-It is important  to note that PlatformIO does everything based on environments, which are defined in the platformio.ini file.
-In the PlatformIO menu (on the left) everything is grouped per environment.
+It is important  to note that PIO does everything based on environments, which are defined in the platformio.ini file.
+In the PIO menu (on the left) everything is grouped per environment.
 
 An environment entry has several tasks, like:
 
@@ -126,8 +134,9 @@ An environment entry has several tasks, like:
 * Clean
 * ... many more.
 
-Some of these options only are available when you have registered with PlatformIO and some are only for paid subscriptions.
-At least the basic ones used for almost any user are available with the free account.
+.. .. Some of these options only are available when you have registered with PlatformIO and some are only for paid subscriptions.
+
+.. .. At least the basic ones used for almost any user are available with the free account.
 
 The environment definitions all have at least the used micro controller in the name and the amount of flash memory used.
 
@@ -140,8 +149,8 @@ For example:
 * ..._ESP32_16M8M_LittleFS -> ESP32 with 16 MB flash and a 4 MB partition for the sketch. (8MB LittleFS)
 * ..._ESP32_16M1M_ETH -> ESP32 with 16 MB flash and a 4 MB partition for the sketch. (1MB SPIFFS, Wired ethernet support)
 
-Make a custom build using PlatformIO
-------------------------------------
+Make a custom build using PIO
+-----------------------------
 
 The easiest is to go for the environment ``custom_ESP8266_4M1M`` and unfold that one.
 Then select ``Build`` to see if it will start building.
@@ -162,6 +171,137 @@ All builds will be made in a directory with the same name as the environment use
 
 Once the build is successful, the .bin file(s) and .bin.gz file (where applicable) are copied to the ``build_output/bin`` folder.
 
+VS-Code with WSL2
+=================
+
+Building ESPEasy on Windows has become more and more tedious due to various issues:
+
+* Maximum path lengh limits
+* Maximum command line length limits
+* Extremely long build times
+
+All these mainly apply to the latest ESP32-xx builds using ESP-IDF5.x.
+
+On a beefy desktop PC, like an AMD Ryzen9 with 12 CPU cores, building a ``MAX`` build for ESP32-S3 takes about 10 - 15 minutes on Windows.
+The same build when using WSL2 via VS-Code takes only 2 minutes to build.
+
+When using VS-Code with WSL2, the VS-Code editor application runs on Windows, and, via the WSL plugin, communicates with a VS-Code server component on a Linux instance, running on WSL, that has the source code repository available, and where the build process is executed.
+
+
+Installing WSL2
+---------------
+
+For installing WSL2 the following steps are needed. Assumption here is that the default Linux distribution for WSL is used, currently Ubuntu (24.04 LTS), using apt-get as the package manager. Other Linux distributions may use a different package manager, like dnf, zypper or yum, using somewhat different commands. Those commands are not documented here.
+
+Install WSL2 - The Windows part
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Open a Windows Command prompt, preferrably Powershell, with Administrator privileges (Press the Windows key and start typing ``powershell``, then select Run as administrator)
+
+* Type the command ``wsl --install`` and press <Enter>, this will start the installation procedure, ask for permissions via User Account Control where needed (that must be confirmed), and download and install what's required.
+
+* Once this part of the installation is complete, the computer must be restarted. This will install any additional Windows components that weren't installed yet.
+
+* After logging in to Windows, the installation procedure will be further completed, and you will be asked to enter a username and password for your day-to-day Linux user. This password will be needed later, f.e. when starting the WSL Linux instance, so best practice is to store it in a password safe of some sort (or write it on a Post-It note and stick that under your keyboard ;-)) 
+
+Install WSL2 - The Linux part
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Now that Linux is installed, it's strongly advised to get it up to date with the latest patches, similar to Windows Update. This should be repeated on a regular basis to keep your installation up to date:
+
+.. highlight::sh
+
+.. code-block::
+    
+    sudo apt-get update
+    sudo apt-get upgrade
+
+NB: The ``sudo`` command will ask for your current account password once, (and maybe later again after some time has passed). When asked for confirmation, confirm the installation of any needed updates, or add the ``-y`` parameter to the ``upgrade`` command to continue without questions.
+
+Additionally some tools need to be installed so PIO can be properly installed later, and we can use the Uncrustify plugin in VS-Code to format the code nicely:
+
+.. highlight::sh
+
+.. code-block::
+    
+    sudo apt-get install python3-venv python3-pip uncrustify
+
+NB: When running an older release of Ubuntu, like 2022.04 LTS, then uncrustify needs to be install/updated manually with a newer version, as the distributed version isn't working correctly. Or your Ubuntu install could be upgraded to 2024.04 (or newer) to correct this issue.
+
+Once this is completed, you can get the ESPEasy code in your WSL Linux file system. By default your Linux instance has access to the same internet connection as the host-computer that's running WSL, so the commands are the same as below for cloning a repository (**Clone your forked repositoryto your computer**)
+
+Start VS-Code from Linux
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+Now that the repository is available locally, you can start VS-Code from the root folder of this repository:
+
+.. highlight::sh
+
+.. code-block::
+    
+    cd ESPEasy
+    code .
+
+This will install, or update, the VS-Code server component in Linux and then open the VS-Code IDE in your Windows environment, assuming you have installed the suggested WSL plugin in VS-Code.
+
+
+
+Linking USB serial adapter to WSL2
+----------------------------------
+
+In short, a specific USB device must first be shared (using ``usbipd bind --busid <busid>`` ) and thus made unavailable from Windows.
+After the USB device is 'bound' (shared), it must be attached to a specific wsl instance.
+
+N.B. this must be repeated after a device was unplugged and replugged.
+
+The required steps are described `here <https://learn.microsoft.com/en-us/windows/wsl/connect-usb#attach-a-usb-device>`_
+However since this is rather tedious and error prone, it is strongly advised to use a GUI tool like `WSL USB Manager <https://gitlab.com/alelec/wsl-usb-gui>`_ to perform these steps.
+
+After attaching an USB device to a WSL instance, it is best to check whether it was found using `dmesg` via the command line on WSL2.
+
+If only an USB device was detected but no `/dev/ttyUSBxx` was assigned, then a modprobe call is needed:
+
+* ``sudo modprobe usbserial`` - Probably needed for any USB to serial adapter
+* ``sudo modprobe ch341`` - For CH340/CH341 USB to serial chips (rectangular form chip)
+* ``sudo modprobe cp210x`` - For FTDI CP210x USB to serial chips (small square form factor)
+* ``sudo modprobe ftdi_sio`` - For FTDI USB to serial chips with multiple serial ports like the FTDI4232H which has 4 serial ports.
+* ``sudo modprobe vhci-hcd`` - For the virtual serial port passed from the Windows side to WSL2 (since WSL2 started using Linux 6.x core)
+
+After calling these 'modprobe' commands, the result can be verified using ``lsmod`` and re-checking ``dmesg`` to see which ``/dev/ttyUSBxx`` ports were assigned.
+
+The ownerchip and permissions of these ``/dev/ttyUSBxx`` are probably set like this:
+
+.. highlight::sh
+
+.. code-block::
+    
+    ll /dev/ttyUSB0
+    crw------- 1 root root 188, 0 Oct 18 22:02 /dev/ttyUSB0
+
+The simplest way to get this to work without constantly using ``sudo`` or run as ``root`` is to change permissions like this:
+
+.. highlight::sh
+
+.. code-block::
+    
+    sudo chmod 666 /dev/ttyUSB0
+    ll /dev/ttyUSB0
+    crw-rw-rw- 1 root root 188, 0 Oct 18 22:02 /dev/ttyUSB0
+
+.. note:: This is not the best way from a security point of view.
+
+A probably more preferred method is to change ownership of the device to ``dialout`` group:
+
+.. highlight::sh
+
+.. code-block::
+
+    sudo adduser $(whoami) dialout
+    sudo chown root.dialout /dev/ttyUSB0
+    sudo chmod 660 /dev/ttyUSB0
+    ll /dev/ttyUSB0
+    crw-rw---- 1 root dialout 188, 0 Oct 18 22:14 /dev/ttyUSB0
+
 
 
 Upload to ESP
@@ -172,7 +312,7 @@ Upload to ESP
 Linux
 -----
 
-For Linux, you may need to install 99-platformio-udev.rules to make PlatformIO upload tools work in vscode.
+For Linux, you may need to install 99-platformio-udev.rules to make PIO upload tools work in vscode.
 
 
 .. highlight::sh
@@ -182,12 +322,12 @@ Starter guide for (local) development on ESPEasy
 
 For those with less development experience, or less experience in using Github, this chapter is intended as a **How To** guide to get started with development on ESPEasy.
 
-It tries to help setting up Visual Studio Code (VSCode) with the PlatformIO development environment and additional VSCode plugins that aid in easier working on code and documentation.
+It tries to help setting up Visual Studio Code (VSCode) with the PIO development environment and additional VSCode plugins that aid in easier working on code and documentation.
 
 The global steps described here are:
 
 - Creating a private copy on Github
-- Getting VSCode and PlatformIO set up
+- Getting VSCode and PIO set up
 - Getting the source code from Github onto your system
 - Compiling the source code
 - Creating a branch to make your changes
@@ -231,12 +371,12 @@ After this completes, you can view the fork in your Github dashboard at https://
 
 (You have to replace [your_github_handle] with the name you selected during the Github sign-up procedure)
 
-Install VSCode and PlatformIO
+Install VSCode and PIO
 ------------------------------
 
-Earlier on this page, a complete description has been given on how to install **PlatformIO with VSCode** with the required and advised optional extensions and the git command-line tools.
+Earlier on this page, a complete description has been given on how to install **PlatformIO/pioarduino with VSCode** with the required and advised optional extensions and the git command-line tools.
 
-NB: PlatformIO is often shortened to PIO.
+NB: PlatformIO/pioarduino is shortened to PIO.
 
 Clone your forked repository to your computer
 ---------------------------------------------
@@ -287,7 +427,7 @@ Depending on your usual workflow, the current VSCode environment can be saved as
 Compile an ESPEasy PIO environment
 ----------------------------------
 
-ESPEasy supports several different configurations of ESP units, ESP8266, ESP8285 and ESP32, and also some predefined hardware configurations and sets of plugins & controllers. This has been turned into several different PlatformIO environments, to make managing the different builds as easy as possible.
+ESPEasy supports several different configurations of ESP units, ESP8266, ESP8285 and ESP32, and also some predefined hardware configurations and sets of plugins & controllers. This has been turned into several different PIO environments, to make managing the different builds as easy as possible.
 
 To compile such 'environment' (PIO terminology), select the PIO button (it looks like an alien) in VSCode:
 
@@ -357,10 +497,10 @@ Especially for new plugins, it is highly recommended to write documentation, as 
 
 
 Using external libraries
-~~~~~~~~~~~~~~~~~~~~~~~~
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. note:: 
-    Since November 2022, the PlatformIO configuration for ESPEasy was changed to *require* all libraries to be locally available, to a) prevent unexpected 'surprises' when an external library is updated, and b) greatly improve build output stability and quality.
+    Since November 2022, the PIO configuration for ESPEasy was changed to *require* all libraries to be locally available, to a) prevent unexpected 'surprises' when an external library is updated, and b) greatly improve build output stability and quality.
 
 While developing a plugin or some other feature, often you use an existing library to re-use that (assumably) proven and tested functionality. To include such library, there is a prerequisite, and some generic steps to take:
 
@@ -381,7 +521,7 @@ Writing documentation
 
 Updating, or adding if it does not yet exist, the documentation is a useful activity that should be part of changing or adding to the ESPEasy code. Some of the optional VSCode extensions are specifically aimed at that task.
 
-The documentation is created in the reStructuredText format, using mostly a ``.rst`` extension, and can be built locally by installing the sphinx tool. This can be installed manually by opening a Terminal window in VSCode (an already open Terminal can also be used) and issuing these commands:
+The documentation is created in the reStructuredText format, using mostly a ``.rst`` extension, and can be built locally by installing the sphinx tool. This can be installed manually by opening a PIO Terminal window in VSCode (an already open PIO Terminal can also be used, when using WSL2 a PIO Terminal is *required* to execute in the correct Python Virtual Environment (venv)) and issuing these commands:
 
 .. code-block::
 
@@ -447,7 +587,7 @@ After the commit is completed, more commits can be added, if desired. It is good
 
 To have the commit(s) to be presented as a pull request, they must be published, and the easiest way to accomplish that is to use the Publish Changes button in VSCode:
 
-.. image:: VSCode_Publish_changes.png
+.. image:: VSCode_publish_changes.png
     :alt: VSCode publish change button
 
 After clicking that button, you have to select the source the changes should be published to. As we don't have (direct) write access to the upstream ESPEasy repository, we can only publish to the 'origin' (git terminology), our own fork of the repository, so that option should be selected by clicking it, or pressing the Enter key:

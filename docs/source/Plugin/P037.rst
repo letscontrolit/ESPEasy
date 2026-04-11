@@ -13,7 +13,9 @@ Type: |P037_type|
 
 Name: |P037_name|
 
-Status: |P037_status|
+Status ESP32: |P037_status|
+
+Status ESP8266: |P037_status_lb|
 
 GitHub: |P037_github|_
 
@@ -179,7 +181,7 @@ The number of mappings is currently limited to 25, but only the number of used m
 Option: Generate events for accepted topics
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* **Generate events for accepted topics**: Enabling this option will generate an event for every incoming, and accepted if Filtering is used, non-JSON payload even when that has a non-numeric value. The event generated is: ``<devicename>#<valuename>=<value>``, for example ``MQTT_Import#Value1=on``.
+* **Generate events for accepted topics**: Enabling this option will generate an event for every incoming, and accepted if Filtering is used, non-JSON payload even when that has a non-numeric value. The event generated is: ``<devicename>#<valuename>=<value>``, for example ``MQTT_Import#Value1=on``. When the ``<value>`` is numeric, the configured number of decimals is applied to the value.
 
 When this option is disabled it has the backward-compatible behavior of discarding that message as invalid.
 
@@ -190,10 +192,16 @@ Option: Limit events being generated
 
 * **Max. # events in event queue**: As a protection against event-overflow this configures a check for the queue-length, so if more than the selected number of events is still in the queue, new events will be discarded until some events are processed, and the remaining is less than this count. When set to 0 this check is disabled.
 
-Option: Modify separater character in events
+Option: Modify separator character in events
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 * **To replace by comma in event**: Select a character that is to be replaced by a comma, before it is put into the event-queue. There is a limited set of characters that can be replaced, to avoid ending up with malformed events.
+
+Available options:
+
+.. image:: P037_ReplaceByCommaOptions.png
+
+The available set of replacement characters is ``! @ $ % ^ & * ; : . | / \`` (exclamation, at, dollar, percent, caret, ampersand, semicolon, colon, period, pipe, slash and backslash). When set to None, no replacement will be done.
 
 This can be used to 'transform' the content of a JSON message so the used separator is a comma, for easier use in rules.
 

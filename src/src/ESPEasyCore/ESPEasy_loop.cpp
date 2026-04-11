@@ -2,11 +2,14 @@
 
 
 #include "../../ESPEasy-Globals.h"
+#include "../../ESPEasy/net/ESPEasyNetwork.h"
+#include "../../ESPEasy/net/Globals/NWPlugins.h"
+#include "../../ESPEasy/net/wifi/ESPEasyWifi.h"
+#include "../Commands/ExecuteCommand.h"
+#include "../Commands/InternalCommands_decoder.h"
 #include "../DataStructs/TimingStats.h"
-#include "../ESPEasyCore/ESPEasyNetwork.h"
-#include "../ESPEasyCore/ESPEasyWifi_ProcessEvent.h"
-#include "../ESPEasyCore/ESPEasy_backgroundtasks.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
+#include "../ESPEasyCore/ESPEasy_backgroundtasks.h"
 #include "../Globals/ESPEasy_Scheduler.h"
 #include "../Globals/EventQueue.h"
 #include "../Globals/RTC.h"
@@ -16,28 +19,28 @@
 #include "../Helpers/ESPEasyRTC.h"
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/I2C_access.h"
-#include "../Helpers/Hardware.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/Networking.h"
 #include "../Helpers/PeriodicalActions.h"
 #include "../Helpers/StringConverter.h"
+#include "../WebServer/ESPEasy_WebServer.h"
 
 void updateLoopStats() {
   ++loopCounter;
   ++loopCounter_full;
 
   if (lastLoopStart == 0) {
-    lastLoopStart = getMicros64();
+    lastLoopStart = micros();
     return;
   }
-  const int64_t usecSince = usecPassedSince(lastLoopStart);
+  const int32_t usecSince = usecPassedSince_fast(lastLoopStart);
 
   #if FEATURE_TIMING_STATS
   ADD_TIMER_STAT(LOOP_STATS, usecSince);
   #endif // if FEATURE_TIMING_STATS
 
   loop_usec_duration_total += usecSince;
-  lastLoopStart             = getMicros64();
+  lastLoopStart             = micros();
 
   if ((usecSince <= 0) || (usecSince > 10000000)) {
     return; // No loop should take > 10 sec.
@@ -69,12 +72,16 @@ void ESPEasy_loop()
 
   updateLoopStats();
 
-  handle_unprocessedNetworkEvents();
+//  ESPEasy::net::wifi::loopWiFi();
 
-  bool firstLoopConnectionsEstablished = NetworkConnected() && firstLoop;
+//  ESPEasy::net::wifi::handle_unprocessedNetworkEvents();
+
+  bool firstLoopConnectionsEstablished = firstLoop && ESPEasy::net::NetworkConnected();
 
   if (firstLoopConnectionsEstablished) {
+    #ifndef LIMIT_BUILD_SIZE
     addLog(LOG_LEVEL_INFO, F("firstLoopConnectionsEstablished"));
+    #endif
     firstLoop               = false;
     timerAwakeFromDeepSleep = millis(); // Allow to run for "awake" number of seconds, now we have wifi.
 
@@ -86,6 +93,11 @@ void ESPEasy_loop()
       eventQueue.addMove(std::move(event));
     }
 
+#ifndef BUILD_NO_DEBUG
+    checkAll_internalCommands();
+#endif
+
+
     RTC.bootFailedCount = 0;
     saveToRTC();
     #if FEATURE_ESPEASY_P2P
@@ -93,6 +105,11 @@ void ESPEasy_loop()
     #endif
   }
 
+  setWebserverRunning(ESPEasy::net::NWPluginCall(NWPlugin::Function::NWPLUGIN_WEBSERVER_SHOULD_RUN));
+  // ESPEasy::net::processNetworkEvents();
+
+#if FEATURE_I2C
+#if FEATURE_CLEAR_I2C_STUCK
   if (Settings.EnableClearHangingI2Cbus())
   {
     // Check I2C bus to see if it needs to be cleared.
@@ -126,6 +143,8 @@ void ESPEasy_loop()
         break;
     }
   }
+#endif
+#endif
 
 
   // Work around for nodes that do not have WiFi connection for a long time and may reboot after N unsuccessful connect attempts
@@ -154,11 +173,13 @@ void ESPEasy_loop()
   else
   {
     if (!UseRTOSMultitasking) {
-      // On ESP32 the schedule is executed on the 2nd core.
+      // On ESP32, when using RTOS multitasking, the schedule is executed in a separate RTOS task
       Scheduler.handle_schedule();
     }
   }
 
+  // Calls above may have received/generated commands for the command queue, thus need to process them.
+  processExecuteCommandQueue();
   backgroundtasks();
 
   if (readyForSleep()) {

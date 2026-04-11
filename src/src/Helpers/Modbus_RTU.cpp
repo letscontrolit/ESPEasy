@@ -19,7 +19,7 @@ void ModbusRTU_struct::reset() {
     delete easySerial;
     easySerial = nullptr;
   }
-  detected_device_description = String();
+  free_string(detected_device_description);
 
   for (int i = 0; i < 8; ++i) {
     _sendframe[i] = 0;
@@ -45,7 +45,13 @@ bool ModbusRTU_struct::init(const ESPEasySerialPort port, const int16_t serial_r
     return false;
   }
   reset();
-  easySerial = new (std::nothrow) ESPeasySerial(port, serial_rx, serial_tx);
+  {
+    # ifdef USE_SECOND_HEAP
+    HeapSelectDram ephemeral;
+    # endif // ifdef USE_SECOND_HEAP
+
+    easySerial = new (std::nothrow) ESPeasySerial(port, serial_rx, serial_tx);
+  }
   if (easySerial == nullptr) { return false; }
   easySerial->begin(baudrate);
 
@@ -58,13 +64,14 @@ bool ModbusRTU_struct::init(const ESPEasySerialPort port, const int16_t serial_r
   }
 
   detected_device_description = getDevice_description(_modbus_address);
-
+#ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log; // = F("Modbus detected: ");
     log += detected_device_description;
     addLogMove(LOG_LEVEL_INFO, log);
     modbus_log_MEI(_modbus_address);
   }
+#endif
   return true;
 }
 
@@ -246,8 +253,10 @@ String ModbusRTU_struct::parse_modbus_MEI_response(unsigned int& object_value_in
 
   if (_recv_buf_used < 8) {
     // Too small.
+#ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_INFO,
-           String(F("MEI response too small: ")) + _recv_buf_used);
+           concat(F("MEI response too small: "), _recv_buf_used));
+#endif
     next_object_id = 0xFF;
     more_follows   = false;
     return result;
@@ -385,7 +394,7 @@ void ModbusRTU_struct::logModbusException(uint8_t value) {
       log += F("Modbus No Data");
       break;
      default:
-      log += String(F("Unknown Exception code: ")) + value;
+      log += concat(F("Unknown Exception code: "), value);
       break;
      }
      log += F(" - sent: ");
@@ -535,13 +544,10 @@ uint32_t ModbusRTU_struct::read_32b_HoldingRegister(short address) {
 }
 
 float ModbusRTU_struct::read_float_HoldingRegister(short address) {
-  union {
-    uint32_t ival;
-    float    fval;
-  } conversion;
-
-  conversion.ival = read_32b_HoldingRegister(address);
-  return conversion.fval;
+  const uint32_t ival = read_32b_HoldingRegister(address);
+  float    fval{};
+  memcpy(&fval, &ival, sizeof(ival));
+  return fval;
 
   //    uint32_t ival = read_32b_HoldingRegister(address);
   //    float fval = *reinterpret_cast<float*>(&ival);

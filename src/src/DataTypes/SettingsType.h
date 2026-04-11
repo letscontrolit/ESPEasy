@@ -2,7 +2,7 @@
 #define DATATYPES_SETTINGSTYPE_H
 
 #include "../../ESPEasy_common.h"
-
+#include "../DataTypes/TaskIndex.h"
 
 class SettingsType {
 public:
@@ -19,6 +19,12 @@ public:
 #if FEATURE_ALTERNATIVE_CDN_URL
     CdnSettings_Type,
 #endif
+#if FEATURE_STORE_NETWORK_INTERFACE_SETTINGS
+    NetworkInterfaceSettings_Type,
+#endif
+#if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE
+    DeviceSpecificCredentials_type,
+#endif   
 
     SettingsType_MAX
   };
@@ -27,6 +33,9 @@ public:
     FILE_CONFIG_type,
     FILE_NOTIFICATION_type,
     FILE_SECURITY_type,
+#if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE
+    FILE_DEVICE_SECURITY_type,
+#endif
     FILE_UNKNOWN_type
   };
 
@@ -45,12 +54,13 @@ public:
   static int              getMaxFilePos(Enum settingsType);
   static int              getFileSize(Enum settingsType);
 
-#ifndef BUILD_MINIMAL_OTA
+#ifndef BUILD_NO_DEBUG
   static unsigned int     getSVGcolor(Enum settingsType);
-#endif // ifndef BUILD_MINIMAL_OTA
+#endif
 
   static SettingsFileEnum getSettingsFile(Enum settingsType);
-  static String           getSettingsFileName(Enum settingsType);
+  static String           getSettingsFileName(Enum settingsType,
+                                              int  index = INVALID_TASK_INDEX);
   static const __FlashStringHelper * getSettingsFileName(SettingsType::SettingsFileEnum file_type);
   static size_t           getInitFileSize(SettingsType::SettingsFileEnum file_type);
 };

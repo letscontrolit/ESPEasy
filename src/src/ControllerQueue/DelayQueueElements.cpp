@@ -9,6 +9,9 @@
 ControllerDelayHandlerStruct *MQTTDelayHandler = nullptr;
 
 bool init_mqtt_delay_queue(controllerIndex_t ControllerIndex, String& pubname, bool& retainFlag) {
+  // Make sure the controller is re-connecting with the current settings.
+  MQTTDisconnect();
+
   MakeControllerSettings(ControllerSettings); // -V522
 
   if (!AllocatedControllerSettings()) {
@@ -18,7 +21,7 @@ bool init_mqtt_delay_queue(controllerIndex_t ControllerIndex, String& pubname, b
 
   if (MQTTDelayHandler == nullptr) {
     # ifdef USE_SECOND_HEAP
-    HeapSelectIram ephemeral;
+    HeapSelectDram ephemeral;
     # endif // ifdef USE_SECOND_HEAP
 
     MQTTDelayHandler = new (std::nothrow) ControllerDelayHandlerStruct;
@@ -38,6 +41,7 @@ bool init_mqtt_delay_queue(controllerIndex_t ControllerIndex, String& pubname, b
 
 void exit_mqtt_delay_queue() {
   if (MQTTDelayHandler != nullptr) {
+    MQTTDisconnect();
     delete MQTTDelayHandler;
     MQTTDelayHandler = nullptr;
   }
@@ -163,11 +167,11 @@ DEFINE_Cxxx_DELAY_QUEUE_MACRO_CPP(0, 18) // -V522
  #endif
  */
 
-/*
- #ifdef USES_C023
-   DEFINE_Cxxx_DELAY_QUEUE_MACRO_CPP(0, 23)  // -V522
- #endif
- */
+
+#ifdef USES_C023
+  DEFINE_Cxxx_DELAY_QUEUE_MACRO_CPP(0, 23)  // -V522
+#endif
+
 
 /*
  #ifdef USES_C024

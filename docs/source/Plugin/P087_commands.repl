@@ -26,3 +26,12 @@
         ``'0xXXxx XX,xx-XX:xx'``: A sequence of hexadecimal values (range: 0x00..0xFF), that *can* be separated by a space, comma, dash, colon, semicolon or period, or are just entered adjecent. Only the first 2 characters should be ``0x`` or ``0X``, the rest is interpreted as hex bytes, and appended to the data to send. Quotes are only required if space or comma separators are used.
         Using this command, either from rules, via http or mqtt, the text that is provided as content is completely sent to the serial port. No extra data is added, other than any (system) variables that are included, being replaced.
         "
+        "
+        ``serialproxy_test,'<content to process>[,...]'``
+
+        ``<content to process>``: Some text to be processed as if it was received via the serial port.
+        ","
+        This command is intended for testing the regular expression and filtering.
+
+        The sentence provided with this command is handed over for processing as if it was received via the serial port, so it will be processed and filtered, and an event will be generated if it's matched.
+        "

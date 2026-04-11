@@ -5,6 +5,10 @@
 // #################################### Plugin-017: PN532 RFID reader ####################################
 // #######################################################################################################
 
+/** Changelog:
+ * 2025-06-14 tonhuisman: Add support for Custom Value Type per task value
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported for RFID)
+ */
 
 /*
  ################## WARNING!!!!! ################
@@ -56,8 +60,8 @@
 
 
 // DEBUG code using logic analyzer for timings
-//# define P017_DEBUG_LOGIC_ANALYZER_PIN       25
-//# define P017_DEBUG_LOGIC_ANALYZER_PIN_INIT  33
+// # define P017_DEBUG_LOGIC_ANALYZER_PIN       25
+// # define P017_DEBUG_LOGIC_ANALYZER_PIN_INIT  33
 
 # include <GPIO_Direct_Access.h>
 
@@ -76,7 +80,7 @@ int16_t  Plugin_017_readResponse(uint8_t command,
                                  uint8_t buf[],
                                  uint8_t len);
 
-boolean  Plugin_017(uint8_t function, struct EventStruct *event, String& string)
+boolean Plugin_017(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
 
@@ -84,17 +88,14 @@ boolean  Plugin_017(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_017;
-      Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_ULONG;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].ValueCount         = 1;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = false;
-      Device[deviceCount].TimerOptional      = true;
-      Device[deviceCount].GlobalSyncOption   = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_017;
+      dev.Type           = DEVICE_TYPE_I2C;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_ULONG;
+      dev.ValueCount     = 1;
+      dev.SendDataOption = true;
+      dev.TimerOptional  = true;
+      dev.CustomVTypeVar = true;
       break;
     }
 
@@ -109,6 +110,22 @@ boolean  Plugin_017(uint8_t function, struct EventStruct *event, String& string)
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_017));
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER || FEATURE_CUSTOM_TASKVAR_VTYPE
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      #  if FEATURE_CUSTOM_TASKVAR_VTYPE
+
+      for (uint8_t i = 0; i < event->Par5; ++i) {
+        event->ParN[i] = ExtraTaskSettings.getTaskVarCustomVType(i);  // Custom/User selection
+      }
+      #  else // if FEATURE_CUSTOM_TASKVAR_VTYPE
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_NONE); // Not yet supported
+      #  endif // if FEATURE_CUSTOM_TASKVAR_VTYPE
+      success = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER || FEATURE_CUSTOM_TASKVAR_VTYPE
 
     case PLUGIN_I2C_HAS_ADDRESS:
     {
@@ -141,21 +158,17 @@ boolean  Plugin_017(uint8_t function, struct EventStruct *event, String& string)
       const bool autoTagRemoval = P017_AUTO_TAG_REMOVAL == 0; // Inverted state!
       addFormCheckBox(F("Automatic Tag removal"), F("tagremove"), autoTagRemoval);
 
-      if (P017_REMOVAL_TIMEOUT == 0) { 
+      if (P017_REMOVAL_TIMEOUT == 0) {
         P017_REMOVAL_TIMEOUT = 500; // Defaulty 500 mSec (was hardcoded value)
       }
+
       // 0.25 to 60 seconds
-      addFormNumericBox(F("Automatic Tag removal after"), F("removetime"), P017_REMOVAL_TIMEOUT, 250, 60000); 
-      addUnit(F("mSec."));
+      addFormNumericBox(F("Automatic Tag removal after"), F("removetime"), P017_REMOVAL_TIMEOUT, 250, 60000);
+      addUnit(F("ms"));
 
-      
-      addFormNumericBox(F("Value to set on Tag removal"), F("removevalue"), P017_NO_TAG_DETECTED_VALUE, 0, 2147483647); 
-      // Max allowed is int
-      // =
-      // 0x7FFFFFFF ...
+      addFormNumericBox(F("Value to set on Tag removal"), F("removevalue"), P017_NO_TAG_DETECTED_VALUE, 0, 2147483647);
 
-      const bool eventOnRemoval = P017_EVENT_ON_TAG_REMOVAL == 1; // Normal state!
-      addFormCheckBox(F("Event on Tag removal"), F("eventremove"), eventOnRemoval);
+      addFormCheckBox(F("Event on Tag removal"), F("eventremove"), P017_EVENT_ON_TAG_REMOVAL == 1);
 
       success = true;
       break;
@@ -191,7 +204,7 @@ boolean  Plugin_017(uint8_t function, struct EventStruct *event, String& string)
       # endif // ifdef P017_DEBUG_LOGIC_ANALYZER_PIN_INIT
 
 
-      for (uint8_t x = 0; x < 3; x++)
+      for (uint8_t x = 0; x < 3; ++x)
       {
         if (Plugin_017_Init(CONFIG_PIN3)) {
           success = true;
@@ -250,8 +263,14 @@ bool P017_handle_timer_in(struct EventStruct *event)
         # endif // ifdef P017_DEBUG_LOGIC_ANALYZER_PIN
 
       // TODO: Clock stretching issue https://github.com/esp8266/Arduino/issues/1541
-      if (Settings.isI2CEnabled()
-          && ((DIRECT_pinRead(Settings.Pin_i2c_sda) == 0) || (DIRECT_pinRead(Settings.Pin_i2c_scl) == 0)))
+      # if FEATURE_I2C_MULTIPLE
+      const uint8_t i2cBus = Settings.getI2CInterface(event->TaskIndex);
+      # else // if FEATURE_I2C_MULTIPLE
+      const uint8_t i2cBus = 0;
+      # endif // if FEATURE_I2C_MULTIPLE
+
+      if (Settings.isI2CEnabled(i2cBus)
+          && ((DIRECT_pinRead(Settings.getI2CSdaPin(i2cBus)) == 0) || (DIRECT_pinRead(Settings.getI2CSclPin(i2cBus)) == 0)))
       {
         addLog(LOG_LEVEL_ERROR, F("PN532: BUS error"));
         Plugin_017_Init(CONFIG_PIN3);
@@ -284,7 +303,7 @@ bool P017_handle_timer_in(struct EventStruct *event)
 
       uint8_t uid[] = { 0, 0, 0, 0, 0, 0, 0 };
       uint8_t uidLength;
-      uint8_t error = Plugin_017_readPassiveTargetID(uid, &uidLength);
+      const uint8_t error = Plugin_017_readPassiveTargetID(uid, &uidLength);
 
       # ifdef P017_DEBUG_LOGIC_ANALYZER_PIN
 
@@ -298,9 +317,8 @@ bool P017_handle_timer_in(struct EventStruct *event)
         errorCount++;
 
         if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-          String log = F("PN532: Read error: ");
-          log += errorCount;
-          addLogMove(LOG_LEVEL_ERROR, log);
+          addLogMove(LOG_LEVEL_ERROR,
+                     concat(F("PN532: Read error: "), errorCount));
         }
       }
       else {
@@ -323,12 +341,12 @@ bool P017_handle_timer_in(struct EventStruct *event)
 
         unsigned long key = uid[0];
 
-        for (uint8_t i = 1; i < 4; i++) {
+        for (uint8_t i = 1; i < 4; ++i) {
           key <<= 8;
           key  += uid[i];
         }
-        unsigned long old_key = UserVar.getSensorTypeLong(event->TaskIndex);
-        bool new_key          = false;
+        const unsigned long old_key = UserVar.getSensorTypeLong(event->TaskIndex);
+        bool new_key                = false;
 
         if (old_key != key) {
           UserVar.setSensorTypeLong(event->TaskIndex, key);
@@ -336,20 +354,14 @@ bool P017_handle_timer_in(struct EventStruct *event)
         }
 
         tempcounter++;
-
+#ifndef BUILD_NO_DEBUG
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          String log = F("PN532: ");
-
-          if (new_key) {
-            log += F("New Tag: ");
-          } else {
-            log += F("Old Tag: ");
-          }
-          log += key;
-          log += ' ';
-          log += tempcounter;
-          addLogMove(LOG_LEVEL_INFO, log);
+          addLog(LOG_LEVEL_INFO, strformat(F("PN532: %s Tag: %d %u"),
+                                           FsP(new_key ? F("New") : F("Old")),
+                                           key,
+                                           tempcounter));
         }
+#endif
 
         if (new_key) { sendData(event); }
         uint32_t resetTimer = P017_REMOVAL_TIMEOUT;
@@ -385,9 +397,8 @@ boolean Plugin_017_Init(int8_t resetPin)
   if (validGpio(resetPin))
   {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log = F("PN532: Reset on pin: ");
-      log += resetPin;
-      addLogMove(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO,
+                 concat(F("PN532: Reset on pin: "), resetPin));
     }
     pinMode(resetPin, OUTPUT);
     digitalWrite(resetPin, LOW);
@@ -403,15 +414,15 @@ boolean Plugin_017_Init(int8_t resetPin)
   uint32_t versiondata = getFirmwareVersion();
 
   if (versiondata) {
+#ifndef BUILD_NO_DEBUG
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log = F("PN532: Found chip PN5");
-      log += formatToHex_no_prefix((versiondata >> 24) & 0xFF, 2);
-      log += F(" FW: ");
-      log += formatToHex_no_prefix((versiondata >> 16) & 0xFF, 2);
-      log += '.';
-      log += formatToHex_no_prefix((versiondata >> 8) & 0xFF, 2);
-      addLogMove(LOG_LEVEL_INFO, log);
+      addLog(LOG_LEVEL_INFO,
+             strformat(F("PN532: Found chip PN5%s FW: %s.%s"),
+                       formatToHex_no_prefix((versiondata >> 24) & 0xFF, 2).c_str(),
+                       formatToHex_no_prefix((versiondata >> 16) & 0xFF, 2).c_str(),
+                       formatToHex_no_prefix((versiondata >> 8) & 0xFF,  2).c_str()));
     }
+#endif
   }
   else {
 # ifdef P017_DEBUG_LOGIC_ANALYZER_PIN_INIT
@@ -468,8 +479,8 @@ uint32_t getFirmwareVersion(void)
 
   // read data packet
   int16_t status = Plugin_017_readResponse(
-    PN532_COMMAND_GETFIRMWAREVERSION, 
-    Plugin_017_pn532_packetbuffer, 
+    PN532_COMMAND_GETFIRMWAREVERSION,
+    Plugin_017_pn532_packetbuffer,
     sizeof(Plugin_017_pn532_packetbuffer));
 
   if (0 > status) {
@@ -501,7 +512,7 @@ void Plugin_017_powerDown(void)
   // read and ignore response
   Plugin_017_readResponse(
     PN532_COMMAND_POWERDOWN,
-    Plugin_017_pn532_packetbuffer, 
+    Plugin_017_pn532_packetbuffer,
     sizeof(Plugin_017_pn532_packetbuffer));
 }
 
@@ -529,7 +540,7 @@ uint8_t Plugin_017_readPassiveTargetID(uint8_t *uid, uint8_t *uidLength)
   // read data packet
   const int16_t read_code = Plugin_017_readResponse(
     PN532_COMMAND_INLISTPASSIVETARGET,
-    Plugin_017_pn532_packetbuffer, 
+    Plugin_017_pn532_packetbuffer,
     sizeof(Plugin_017_pn532_packetbuffer));
 
   if (read_code < 0) {
@@ -554,7 +565,7 @@ uint8_t Plugin_017_readPassiveTargetID(uint8_t *uid, uint8_t *uidLength)
   /* Card appears to be Mifare Classic */
   *uidLength = Plugin_017_pn532_packetbuffer[5];
 
-  for (uint8_t i = 0; i < Plugin_017_pn532_packetbuffer[5]; i++) {
+  for (uint8_t i = 0; i < Plugin_017_pn532_packetbuffer[5]; ++i) {
     uid[i] = Plugin_017_pn532_packetbuffer[6 + i];
   }
 
@@ -584,7 +595,7 @@ int8_t Plugin_017_writeCommand(const uint8_t *header, uint8_t hlen)
   Wire.write(PN532_HOSTTOPN532);
   uint8_t sum = PN532_HOSTTOPN532; // sum of TFI + DATA
 
-  for (uint8_t i = 0; i < hlen; i++) {
+  for (uint8_t i = 0; i < hlen; ++i) {
     if (Wire.write(header[i])) {
       sum += header[i];
     } else {
@@ -634,7 +645,7 @@ int16_t Plugin_017_readResponse(uint8_t command, uint8_t buf[], uint8_t len)
     return PN532_INVALID_FRAME;
   }
 
-  uint8_t cmd = command + 1; // response command
+  const uint8_t cmd = command + 1; // response command
 
   if ((PN532_PN532TOHOST != Wire.read()) || ((cmd) != Wire.read())) {
     return PN532_INVALID_FRAME;
@@ -648,7 +659,7 @@ int16_t Plugin_017_readResponse(uint8_t command, uint8_t buf[], uint8_t len)
 
   uint8_t sum = PN532_PN532TOHOST + cmd;
 
-  for (uint8_t i = 0; i < length; i++) {
+  for (uint8_t i = 0; i < length; ++i) {
     buf[i] = Wire.read();
     sum   += buf[i];
   }
@@ -691,7 +702,7 @@ int8_t Plugin_017_readAckFrame()
   } while (1);
 
 
-  for (uint8_t i = 0; i < sizeof(PN532_ACK); i++) {
+  for (uint8_t i = 0; i < sizeof(PN532_ACK); ++i) {
     ackBuf[i] = Wire.read();
   }
 

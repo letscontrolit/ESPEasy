@@ -13,17 +13,13 @@
 
 
 P087_data_struct::~P087_data_struct() {
-  if (easySerial != nullptr) {
-    delete easySerial;
-    easySerial = nullptr;
-  }
+  delete easySerial;
+  easySerial = nullptr;
 }
 
 void P087_data_struct::reset() {
-  if (easySerial != nullptr) {
-    delete easySerial;
-    easySerial = nullptr;
-  }
+  delete easySerial;
+  easySerial = nullptr;
 }
 
 bool P087_data_struct::init(ESPEasySerialPort port, const int16_t serial_rx, const int16_t serial_tx, unsigned long baudrate,
@@ -62,10 +58,7 @@ void P087_data_struct::post_init() {
     // Index is negative when not used.
     if ((index >= 0) && (index < P87_MAX_CAPTURE_INDEX) && (_lines[i * 3 + P087_FIRST_FILTER_POS + 2].length() > 0)) {
       # ifndef BUILD_NO_DEBUG
-      log += ' ';
-      log += String(i);
-      log += ':';
-      log += String(index);
+      log += strformat(F(" %d:%d"), i, index);
       # endif // ifndef BUILD_NO_DEBUG
       capture_index[i]          = index;
       capture_index_used[index] = true;
@@ -86,9 +79,7 @@ void P087_data_struct::sendString(const String& data) {
     easySerial->write(data.c_str());
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log = F("Proxy: Sending: ");
-      log += data;
-      addLogMove(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, concat(F("Proxy: Sending: "), data));
     }
   }
 }
@@ -99,10 +90,7 @@ void P087_data_struct::sendData(uint8_t *data, size_t size) {
     easySerial->write(data, size);
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log = F("Proxy: Sending ");
-      log += size;
-      log += F(" bytes.");
-      addLogMove(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, strformat(F("Proxy: Sending %d bytes."), size));
     }
   }
 }
@@ -118,42 +106,53 @@ bool P087_data_struct::loop() {
 
     while (available > 0 && !fullSentenceReceived) {
       // Look for end marker
-      char c = easySerial->read();
+      uint8_t c = easySerial->read();
       --available;
 
       if (available == 0) {
         available = easySerial->available();
         delay(0);
       }
+      const size_t length = sentence_part.length();
+      # ifdef LIMIT_BUILD_SIZE
+      const bool addCharacter = (10u != c);
+      const bool finished     = (13u == c);
+      # else // ifdef LIMIT_BUILD_SIZE
+      const bool addCharacter = (10u != c) || handle_binary;  // Skip LF in ascii-mode
+      bool finished           = (13u == c) && !handle_binary; // Done on CR in ascii-mode
 
-      switch (c) {
-        case 13:
-        {
-          const size_t length = sentence_part.length();
-          bool valid          = length > 0;
+      if (0 != fixed_length) {
+        finished = (length == fixed_length);
 
-          for (size_t i = 0; i < length && valid; ++i) {
-            if ((sentence_part[i] > 127) || (sentence_part[i] < 32)) {
-              sentence_part = String();
-              ++sentences_received_error;
-              valid = false;
-            }
-          }
-
-          if (valid) {
-            fullSentenceReceived = true;
-            last_sentence        = sentence_part;
-            sentence_part        = String();
-          }
-          break;
+        if (finished) {
+          available = 0; // Forced exit
         }
-        case 10:
+      }
+      # endif // ifdef LIMIT_BUILD_SIZE
 
-          // Ignore LF
-          break;
-        default:
-          sentence_part += c;
-          break;
+      if (finished) {
+        bool valid = length > 0;
+
+        for (size_t i = 0; i < length && valid
+             # ifndef LIMIT_BUILD_SIZE
+             && !handle_binary // Skip valid-ascii check
+             # endif // ifndef LIMIT_BUILD_SIZE
+             ; ++i) {
+          if ((sentence_part[i] > 127) || (sentence_part[i] < 32)) {
+            sentence_part = EMPTY_STRING;
+            ++sentences_received_error;
+            valid = false;
+          }
+        }
+
+        if (valid) {
+          fullSentenceReceived = true;
+          last_sentence        = sentence_part;
+          sentence_part        = EMPTY_STRING;
+        }
+      }
+      else if (addCharacter) {
+        sentence_part += static_cast<char>(c);
       }
 
       if (max_length_reached()) { fullSentenceReceived = true; }
@@ -164,6 +163,16 @@ bool P087_data_struct::loop() {
     ++sentences_received;
     length_last_received = last_sentence.length();
   }
+  # ifndef LIMIT_BUILD_SIZE
+  else if (handle_binary && last_sentence.isEmpty() && !sentence_part.isEmpty()) { // Receive binary data (no end-marker)
+    fullSentenceReceived = true;
+    last_sentence        = sentence_part;
+    sentence_part        = EMPTY_STRING;
+    ++sentences_received;
+    length_last_received = last_sentence.length();
+  }
+  # endif // ifndef LIMIT_BUILD_SIZE
+
   return fullSentenceReceived;
 }
 
@@ -173,7 +182,7 @@ bool P087_data_struct::getSentence(String& string) {
   if (string.isEmpty()) {
     return false;
   }
-  last_sentence = String();
+  last_sentence = EMPTY_STRING;
   return true;
 }
 
@@ -241,10 +250,10 @@ String P087_data_struct::getFilter(uint8_t lineNr, uint8_t& capture, P087_Filter
 {
   uint8_t varNr = lineNr * 3 + P087_FIRST_FILTER_POS;
 
-  if ((varNr + 3) > P87_Nlines) { return ""; }
+  if ((varNr + 3) > P87_Nlines) { return EMPTY_STRING; }
 
   capture    = _lines[varNr++].toInt();
-  comparator = _lines[varNr++] == "1" ? P087_Filter_Comp::NotEqual : P087_Filter_Comp::Equal;
+  comparator = equals(_lines[varNr++], '1') ? P087_Filter_Comp::NotEqual : P087_Filter_Comp::Equal;
   return _lines[varNr];
 }
 
@@ -295,7 +304,7 @@ bool P087_data_struct::matchRegexp(String& received) const {
   }
 
 
-  uint32_t regexp_match_length = getRegExpMatchLength();
+  const uint32_t regexp_match_length = getRegExpMatchLength();
 
   if ((regexp_match_length > 0) && (strlength > regexp_match_length)) {
     strlength = regexp_match_length;
@@ -307,9 +316,10 @@ bool P087_data_struct::matchRegexp(String& received) const {
 
   bool match_result = false;
 
+  capture_vector.clear();
+  ms.GlobalMatch(getRegEx().c_str(), match_callback); // To allow the matched values be retrieved also when not using Global Match option
+
   if (globalMatch()) {
-    capture_vector.clear();
-    ms.GlobalMatch(_lines[P087_REGEX_POS].c_str(), match_callback);
     const uint8_t vectorlength = capture_vector.size();
 
     for (uint8_t i = 0; i < vectorlength; ++i) {
@@ -320,13 +330,10 @@ bool P087_data_struct::matchRegexp(String& received) const {
           if ((capture_index[n] == capture_vector[i].first) && !(_lines[lines_index].isEmpty())) {
             String log;
             log.reserve(32);
-            log  = F("P087: Index: ");
-            log += capture_vector[i].first;
-            log += F(" Found ");
-            log += capture_vector[i].second;
+            log = strformat(F("P087: Index: %d Found %s"), capture_vector[i].first, capture_vector[i].second.c_str());
 
             // Found a Capture Filter with this capture index.
-            if (capture_vector[i].second == _lines[lines_index]) {
+            if (capture_vector[i].second.equals(_lines[lines_index])) {
               log += F(" Matches");
 
               // Found a match. Now check if it is supposed to be one or not.
@@ -342,10 +349,11 @@ bool P087_data_struct::matchRegexp(String& received) const {
               log += F(" No Match");
 
               if (capture_index_must_not_match[n]) {
-                log += F(" (!=) ");
+                log += F(" (!=)");
               } else {
-                log += F(" (==) ");
+                log += F(" (==)");
               }
+              log += ' ';
               log += _lines[lines_index];
             }
             addLogMove(LOG_LEVEL_INFO, log);
@@ -353,19 +361,16 @@ bool P087_data_struct::matchRegexp(String& received) const {
         }
       }
     }
-    capture_vector.clear();
+
+    // capture_vector.clear(); // KEEP so we can use plugin_get_config_value to retrieve the values
   } else {
-    char result = ms.Match(_lines[P087_REGEX_POS].c_str());
+    char result = ms.Match(getRegEx().c_str());
 
     if (result == REGEXP_MATCHED) {
       # ifndef BUILD_NO_DEBUG
 
       if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-        String log = F("Match at: ");
-        log += ms.MatchStart;
-        log += F(" Match Length: ");
-        log += ms.MatchLength;
-        addLogMove(LOG_LEVEL_DEBUG, log);
+        addLogMove(LOG_LEVEL_DEBUG, strformat(F("Match at: %d Match Length: %d"), ms.MatchStart, ms.MatchLength));
       }
       # endif // ifndef BUILD_NO_DEBUG
       match_result = true;
@@ -389,6 +394,69 @@ const __FlashStringHelper * P087_data_struct::MatchType_toString(P087_Match_Type
 bool P087_data_struct::max_length_reached() const {
   if (max_length == 0) { return false; }
   return sentence_part.length() >= max_length;
+}
+
+void P087_data_struct::setLastSentence(String string) {
+  last_sentence = string;
+}
+
+bool P087_data_struct::plugin_get_config_value(struct EventStruct *event,
+                                               String            & string) {
+  bool success               = false;
+  const uint8_t vectorlength = capture_vector.size();
+  char sep                   = '.';
+
+  if ((-1 == string.indexOf(sep)) && (string.indexOf(',') >= 0)) {
+    sep = ',';
+  }
+  const String cmd = parseString(string, 1, sep);
+
+  # ifndef BUILD_NO_DEBUG
+  addLog(LOG_LEVEL_DEBUG, concat(F("P087: Before GetConfig: "), string));
+  # endif // ifndef BUILD_NO_DEBUG
+
+  if (equals(cmd, F("group"))) {
+    int32_t par2;
+
+    if (validIntFromString(parseString(string, 2, sep), par2) &&
+        (par2 >= 0)) {
+      for (uint8_t i = 0; i < vectorlength && !success; ++i) { // Stop when we find the requested group
+        # ifndef BUILD_NO_DEBUG
+        addLog(LOG_LEVEL_DEBUG, strformat(F("P087: get group: %d = %s"),
+                                          capture_vector[i].first,
+                                          capture_vector[i].second.c_str()));
+        # endif // ifndef BUILD_NO_DEBUG
+
+        if (par2 == capture_vector[i].first) {
+          string  = capture_vector[i].second;
+          success = true;
+        }
+      }
+    }
+  }  else
+  if (equals(cmd, F("next"))) {                                    // Get next group value after matching name
+    const String name_ = parseString(string, 2, sep);
+
+    for (uint8_t i = 0; i < (vectorlength - 1) && !success; ++i) { // Stop when we find the requested name
+                                                                   // Loops until 1 BEFORE the end of the vector!
+      # ifndef BUILD_NO_DEBUG
+      addLog(LOG_LEVEL_DEBUG, strformat(F("P087: get next: %d = %s => %s"),
+                                        capture_vector[i].first,
+                                        capture_vector[i].second.c_str(),
+                                        capture_vector[i + 1].second.c_str()));
+      # endif // ifndef BUILD_NO_DEBUG
+
+      if (name_.equalsIgnoreCase(capture_vector[i].second)) {
+        string  = capture_vector[i + 1].second; // Take NEXT value
+        success = true;
+      }
+    }
+  } // else...
+  # ifndef BUILD_NO_DEBUG
+  addLog(LOG_LEVEL_DEBUG, concat(F("P087: After GetConfig: "), string));
+  # endif // ifndef BUILD_NO_DEBUG
+
+  return success;
 }
 
 #endif // USES_P087

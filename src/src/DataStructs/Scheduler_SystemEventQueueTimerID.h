@@ -16,15 +16,15 @@ struct SystemEventQueueTimerID : SchedulerTimerID {
                           uint8_t                  Function);
 
   uint8_t getFunction() const {
-    return static_cast<uint8_t>((id) & 0xFF);
+    return static_cast<uint8_t>((getId()) & 0xFF);
   }
 
   uint8_t getIndex() const {
-    return static_cast<uint8_t>((id >> 8) & 0xFF);
+    return static_cast<uint8_t>((getId() >> 8) & 0xFF);
   }
 
   SchedulerPluginPtrType_e getPtrType() const {
-    return static_cast<SchedulerPluginPtrType_e>((id >> 16) & 0xFF);
+    return static_cast<SchedulerPluginPtrType_e>((getId() >> 16) & 0xFF);
   }
 
 #ifndef BUILD_NO_DEBUG

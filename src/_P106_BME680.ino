@@ -15,6 +15,7 @@
    /******************************************************************************/
 
 /** Changelog:
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery
  * 2023-04-16 tonhuisman: Add option to present Gas(resistance) as Ohm instead of kOhm
  *                        Rename sensor to BME68x from BME680, as BME688 is backward compatible.
  *                        NB: AI-features of BME688 are not supported!
@@ -44,18 +45,15 @@ boolean Plugin_106(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_106;
-      Device[deviceCount].Type               = DEVICE_TYPE_I2C;
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_QUAD;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = 4;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].PluginStats        = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number         = PLUGIN_ID_106;
+      dev.Type           = DEVICE_TYPE_I2C;
+      dev.VType          = Sensor_VType::SENSOR_TYPE_QUAD;
+      dev.FormulaOption  = true;
+      dev.ValueCount     = 4;
+      dev.SendDataOption = true;
+      dev.TimerOption    = true;
+      dev.PluginStats    = true;
       break;
     }
 
@@ -74,13 +72,22 @@ boolean Plugin_106(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_TEMP_HUM_BARO);
+      success     = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
+
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      const uint8_t i2cAddressValues[] = { 0x77, 0x76 };
+      const uint8_t i2cAddressValues[] = { 0x76, 0x77 };
 
       if (function == PLUGIN_WEBFORM_SHOW_I2C_PARAMS) {
-        addFormSelectorI2C(F("i2c_addr"), 2, i2cAddressValues, P106_I2C_ADDRESS);
+        addFormSelectorI2C(F("i2c_addr"), 2, i2cAddressValues, P106_I2C_ADDRESS, 0x77);
         addFormNote(F("SDO Low=0x76, High=0x77"));
       } else {
         success = intArrayContains(2, i2cAddressValues, event->Par1);
@@ -96,6 +103,14 @@ boolean Plugin_106(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
     # endif // if FEATURE_I2C_GET_ADDRESS
+
+    case PLUGIN_SET_DEFAULTS:
+    {
+      P106_I2C_ADDRESS = 0x77; // Default address
+
+      success = true;
+      break;
+    }
 
     case PLUGIN_WEBFORM_LOAD:
     {
@@ -143,23 +158,23 @@ boolean Plugin_106(uint8_t function, struct EventStruct *event, String& string)
           break;
         }
 
-        if (!P106_data->bme.performReading()) {
+        if (!P106_data->performReading()) {
           P106_data->initialized = false;
           addLog(LOG_LEVEL_ERROR, F("BME68x : Failed to perform reading!"));
           break;
         }
 
-        UserVar[event->BaseVarIndex + 0] = P106_data->bme.temperature;
-        UserVar[event->BaseVarIndex + 1] = P106_data->bme.humidity;
-        UserVar[event->BaseVarIndex + 3] = P106_GET_OPT_GAS_OHM ? P106_data->bme.gas_resistance : P106_data->bme.gas_resistance / 1000.0f;
+        UserVar.setFloat(event->TaskIndex, 0, P106_data->getTemperature());
+        UserVar.setFloat(event->TaskIndex, 1, P106_data->getHumidity());
+        UserVar.setFloat(event->TaskIndex, 3, P106_GET_OPT_GAS_OHM ? P106_data->getGasResistance() : P106_data->getGasResistance() / 1000.0f);
 
         const int elev = P106_ALTITUDE;
 
         if (elev != 0)
         {
-          UserVar[event->BaseVarIndex + 2] = pressureElevation(P106_data->bme.pressure / 100.0f, elev);
+          UserVar.setFloat(event->TaskIndex, 2, pressureElevation(P106_data->getPressure(), elev));
         } else {
-          UserVar[event->BaseVarIndex + 2] = P106_data->bme.pressure / 100.0f;
+          UserVar.setFloat(event->TaskIndex, 2, P106_data->getPressure());
         }
       }
 

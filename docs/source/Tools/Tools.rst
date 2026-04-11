@@ -1,5 +1,19 @@
+#####
 Tools
-*****
+#####
+
+Command
+*******
+
+In the **Command** input field you can enter a command to be executed by the unit.
+
+Once the command is executed, by clicking the Submit button or pressing the <Enter> key, the output of the command (*not* the logging) is shown below the command input. Most commands, when successful, will be output as ``OK``, or if an error occurs ``Command unknown:...`` or ``ERROR``. Some commands, like the ``gpio`` related, output a new state overview for the involved pin.
+
+As a sort-of side-effect after clicking Submit, the command is url-encoded by the browser, and can be copied from the address bar of the browser to be used from a remote system (or other ESP from rules).
+
+System
+******
+
 
 Log
 ===
@@ -93,7 +107,7 @@ The ``sysinfo`` page does show a lot of information about the system.
 
 * **Unit Number**: The assigned unit number of the node.
 * **Local Time**:	The local time as known by the node. This includes any set timezone and DST (Daylight Saving).
-* **Time Source**:	The origin of the current system time. (e.g. NTP / GPS / Manual set)
+* **Time Source**:	The origin of the current system time. (e.g. NTP / GPS / Manual set / Node on the P2P network)
 * **UTC time stored in RTC**: When external RTC is configured and has a time set, the UTC time stored in this RTC will be shown. (Added: 2022/10/30)
 * **Time Wander**:	Time drift of the crystal in ppm. Espressif states the crystal should have an accuracy of better than 10 ppm, which translates in a wander of 0.010 msec/sec.  (older ESPEasy builds used msec/sec as unit, but ppm is more relatable to crystal specs.)
 * **Uptime**:	Current uptime of the node
@@ -164,14 +178,14 @@ All these values are described in great detail in the Advanced section, where th
 Firmware
 --------
 
-* **Build**:  Showing the internal build number. Example: ``20114 - Mega``
+* **Build**:  Showing the internal build number. Example: ``20241222 - Mega``
 * **System Libraries**:  Showing the used core library version. Example: ``ESP82xx Core 2843a5ac, NONOS SDK 2.2.2-dev(38a443e), LWIP: 2.1.2 PUYA support``
 * **Git Build**: Showing the GIT branch or tag information with SHA of the last commit. 	Example: ``feature/randomize_NTP_interval_569442e``
 * **Plugin Count**: 	Number of plugins included in the build. 
 * **Build Origin**:	Indication whether it is "self built" or an official build.
-* **Build Time**:  Date and time when the running version of ESPEasy was built. Example: ``Aug 11 2021 14:00:44``
-* **Binary Filename**: The filename of the installed ESPEasy build.  Example: ``ESP_Easy_mega_20210811_custom_ESP8266_4M1M``
-* **Build Platform**:	The platform used to build the installed ESPEasy build. Example: ``Windows-10-10.0.19041-SP0``
+* **Build Time**:  Date and time when the running version of ESPEasy was built. Example: ``Dec 22 2024 22:00:44``
+* **Binary Filename**: The filename of the installed ESPEasy build.  Example: ``ESP_Easy_mega_20241222_custom_ESP8266_4M1M``
+* **Build Platform**:	The platform used to build the installed ESPEasy build. Example: ``Windows-10-10.0.22631-SP0``
 * **Git HEAD**: The Git branch + SHA of the last commit used to build the installed ESPEasy build.	Example: ``feature/randomize_NTP_interval_569442e``
 
 System Status
@@ -233,9 +247,7 @@ Rules Settings
 --------------
 
 * Rules - Check to enable rules functionality (on next page load, extra Rules tab will appear)
-* Old Engine - Default checked.
 * Enable Rules Cache - Rules cache will keep track of where in the rules files each ``on ... do`` block is located. This significantly improves the time it takes to handle events. (Enabled by default, Added 2022/04/17)
-* Allow Rules Event Reorder - It is best to have the rules blocks for the most frequently occuring events placed at the top of the first rules file. (also for frequently happening events, which you don't want to act on) The cached event positions can be reordered in memory based on how often an event was matched.  (Enabled by default, Added 2022/04/17, disabled 2022/06/24)
 * Tolerant last parameter - When checked, the last parameter of a command will have less strict parsing.
 * SendToHTTP wait for ack - When checked, the command SendToHTTP will wait for an acknowledgement from the server.
 * SendToHTTP Follow Redirects - When checked, HTTP calls may follow redirects. Strict RFC2616, only requests using GET or HEAD methods will be redirected (using the same method), since the RFC requires end-user confirmation in other cases.
@@ -261,6 +273,15 @@ This allows ESPEasy to know the correct date and time after been powered off for
 
 N.B. these modules all use I2C, so they need to be connected to the configured I2C pins and those pins should be set.
 
+Added: 2025-02-02
+
+When multiple I2C Buses are configured (ESP32 only), we need to configure on which I2C Bus the RTC chip is connected:
+
+.. image:: images/Tools_RTC_I2CSelector.png
+
+NB: If only 1 I2C Bus is configured, this configuration option isn't shown.
+
+
 Procedure to configure a real time clock (RTC) chip:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -277,6 +298,9 @@ Besides using NTP to set the date/time to the RTC chip, other supported options 
 
 * Using the ``DateTime`` command to set the date and time.
 * Having a GPS receiver connected, using the GPS plugin (:ref:`P082_page`), the ESPEasy date/time will be set when GPS date/time is valid, as that is more accurate than the RTC date/time. The RTC date/time will be used from boot, and be updated once the GPS has a fix, which may take some time, depending on conditions.
+* Use the Date/Time from another node on the P2P network, that has a time source configured.
+
+ESPEasy will automatically select the time source with the highest expected accuracy.
 
 
 DST Settings
@@ -327,14 +351,18 @@ This console can be accessed via a serial port.
 * Serial Port - The selected serial port to use for the console.
 * ESP RX GPIO ← TX - GPIO pin used as RX, to connect with the TX of the other device.
 * ESP TX GPIO → RX - GPIO pin used as TX, to connect with the RX of the other device.
-* Fallback to Serial 0 - (Only on ESP32-C3/S2/S3) Configure HW Serial0 port as secondary port for the ESPEasy console.
+* Fallback to Serial 0 - (Only on ESP32-C3/S2/S3/C6) Configure HW Serial0 port as secondary port for the ESPEasy console. When unchecked, the Fallback RX/TX pins will be available for selection in the GPIO pin selector and GPIO boot-states configuration on the Hardware tab.
 
 GPIO pin selection will only be shown for Serial Port types which require action GPIO pins.
 For example USB CDC and HW CDC ports do not need specific GPIO pins for their configuration.
 
 See also: `Serial Helper <../Plugin/SerialHelper.html>`__
 
-.. note:: Make sure to either uncheck "Enable Serial Port Console" or configure another serial port for the console, when either HW Serial0 or its pins are used in a task.
+.. note:: Make sure to either uncheck "Enable Serial Port Console" or configure another serial port for the console, when either HW Serial0 or its pins are used in a task or on the hardware page for I2C, SPI, SD-card or Ethernet.
+
+Correct typing errors: (added: 2025-01-21)
+
+When typing commands in the console (nothing you type is visible until you press <Enter>), typos can be corrected using the backspace key (ctrl-H). Some terminal configurations may use a different key code for backspace, then this can be re-configured in your terminal software, or you can use ``<ctrl-H>`` for correcting typos.
 
 Special notes on Software Serial
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -378,17 +406,20 @@ like subnet mask / gateway / DNS, it may still be useful.
 This allows a somewhat static IP in your network (N.B. use it with an 'octet' outside the range of the DHCP IPs) while still having set to DHCP.
 So if you take the node to another network which does use 192.168.52.x then you will know it will be on 192.168.52.10 (when setting this value to "10")
 
-I2C ClockStretchLimit
-^^^^^^^^^^^^^^^^^^^^^
-
-- `I2C-bus.org - Clock Stretching <https://www.i2c-bus.org/clock-stretching/>`_
-- `ESPeasy wiki - Basics: The I2C Bus <https://www.letscontrolit.com/wiki/index.php/Basics:_The_I%C2%B2C_Bus>`_
-
 WD I2C Address
 ^^^^^^^^^^^^^^
 
 The Watchdog timer can be accessed via I2C.
 What can be read/set/changed must still be documented.
+
+Added: 2025-02-02
+
+When multiple I2C Buses are configured (ESP32 only), we need to configure on which I2C Bus the Watchdog chip is connected:
+
+.. image:: images/Tools_WD_I2CSelector.png
+
+NB: If only 1 I2C Bus is configured, this configuration option isn't shown.
+
 
 JSON bool output without quotes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -412,6 +443,8 @@ Try clear I2C bus when stuck
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Added: 2021-09-26
+
+Not available on ESP32 IDF 5.x builds (since Sept 2024 all ESP32-family builds use IDF 5.x framework).
 
 Occasionally the I2C bus can become "stuck".
 This is quite hard to reproduce, as it is very likely this is caused by external noise.
@@ -439,6 +472,25 @@ To ensure that I2C connected devices work as intended, a device-available-check 
 Default: checked
 
 NB: This option is excluded from the build if this setting is not available.
+
+Show Unit of Measure
+^^^^^^^^^^^^^^^^^^^^
+
+Added: 2025-06-12
+
+If the Unit of Measure, configurable per Task Value, should not be displayed on the Devices page, this setting can be unchecked. The UoM field will still be present in the JSON output at ``/json`` output for the taskvalues where it is set, and the ``ShowUoM`` boolean value at the root of the JSON structure will reflect the state of this checkbox.
+
+NB: This option is excluded from the build if this feature is not enabled.
+
+MQTT Connect in background
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Added: 2025-08-23
+
+Depending on the internet connection, f.e. when connecting via a low-end mobile network or other slow connection type, starting a connection to a MQTT Broker can take quite some time.
+
+On ESP32, tasks like starting the MQTT connection can be delegated to an independent background task, to avoid blocking the normal working of ESPEasy, that will report the result when completed. This feature is enabled by default, as it is the preferred setting, but when this way of connecting is causing issues, it can be disabled.
+
 
 Allow OTA without size-check
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -468,6 +520,19 @@ Disable Rules auto-completion
 Added: 2023-07-20
 
 When Rules auto-completion, also including syntax highlighting, is available in the build, some users have difficulty working with the auto-completion. This option disables the auto-completion, and that also inhibits the syntax highlighting as these 2 features are closely integrated.
+
+Disable Save Config as .tar
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Added: 2023-08-25
+
+Only available in builds that have .tar support included!
+
+By default, using the Tools/Save button, the complete configuration will be downloaded as a single .tar archive, that includes all configuration files (``config.dat``, ``security.dat``, ``provisioning.dat``, ``notification.dat``, ``rules1.txt`` .. ``rules4.txt`` and any task-specific CustomSettings ``extcfg<NN>.dat``).
+
+Enabling this option allows to download *only* the ``config.dat`` file (renamed to include unit name, unit number, buildnumber and current date/time), to accommodate external systems/scripts that expect only the .dat file.
+
+The Tools/Backup files feature will still download all files stored on the Flash file system, independent of this setting, and also the Tools/Load and Tools/File browser/Upload buttons will extract the included files from an uploaded .tar file.
 
 Deep Sleep Alternative
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -774,6 +839,11 @@ This is enabled by default.
 Show JSON
 =========
 
+This will show the (nearly) complete node configuration and sensor data in json format. When opened from a browser, you may need to select a formatting/display option before anything is shown.
+
+The data in the json is gathered at the time the request is made, so will contain the latest sensor data, that can be shown in a (custom) dashboard, or pulled and stored by an external monitoring service.
+
+
 Show Metrics
 ============
 
@@ -792,6 +862,7 @@ System metrics exposed are:
 * Wifi Strength
 * Wifi connection time
 * Wifi reconnection count (since boot)
+* CPU temperature (when available in the build) (Added: 2025/07/22)
 
 In Addition, device values are exposed.  
 
@@ -888,11 +959,28 @@ Then it does not make sense to have the client timeout of that controller set to
 System Variables
 ================
 
+Shows an overview of the available variables set from rules, and available ``%variable%`` variables in several categories.
+
+Included Plugins
+================
+
+Show a list of all plugins available in the build, Plugins, Controllers and Notifications.
+
+For Devices, the plugins are listed both sorted by Description and by Plugin ID, for easier retrieval.
+
+Controller plugins also show columns for MQTT and TLS (when included in the build).
+
+.. image:: images/Tools_PluginList_Controllers.png
+
+
+
+Interfaces
+**********
 
 I2C Scan
 ========
 
-To verify if any connected I2C devices are properly detected by the ESP, the I2C Scan is available. This will scan the I2C bus, and, when configured, the additional busses provided via an I2C multiplexer, for available devices.
+To verify if any connected I2C devices are properly detected by the ESP, the I2C Scan is available. This will scan the I2C bus, and, when configured, the additional buses/channels provided via an I2C multiplexer, for available devices.
 
 The scan is performed if the I2C ``SDA`` and ``SCL`` GPIO pins are configured on the Hardware page, and will use the configured ``Slow device Clock Speed`` setting (default: 100 kHz) during the scan, as that should be supported by any I2C device available.
 
@@ -906,9 +994,70 @@ Example scan using an I2C multiplexer, showing multiple devices across multiple 
 
 .. image:: images/Tools_I2Cscan_multiplexer.png
 
+Added: 2025-02-02
+
+When having multiple I2C Buses configured, for each configured interface an I2C Scan is performed, including the multiplexer if that's configured.
+
+An example: (No actual multiplexer connected...)
+
+.. image:: images/Tools_I2Cscan_multipleBuses.png
+
+|
 
 .. note:: On builds that have ``LIMIT_BUILD_SIZE`` set, like the ESP8266 Collection and Display builds, the names of the supported devices and plugins are **not** included in the output, only the address(es) are listed.
 
+|
+
+Settings
+********
+
+Load
+====
+
+The :cyan:`Load` button will allow to load files onto the Flash file system. If you want to restore a previously saved ``config.dat``, the downloaded file has to be renamed to exactly ``config.dat`` and uploaded.
+
+Since 2023-08-25, .tar archive support has been added and made available in most builds, allowing to download and upload the complete configuration, and even all files on the flash file system, as a single archive, for backup and restore/clone purposes. This makes it possible to more easily deploy a unit using a pre-configured configuration.
+
+Uploading an earlier created backup as a .tar file, will unpack all files in the root of the archive to the flash file system, *overwriting* any files that already exist. If the archive includes ``config.dat`` and the Extended CustomTaskSettings feature is available, any already existing ``extcfg<NN>.dat`` file that's not included in the archive will be removed, as that is part of the configuration, and these files can not be deleted manually.
+
+Any files in subdirectories in the archive will be ignored, as directories are not supported on the flash filesystem.
+
+Save
+====
+
+The :cyan:`Save` button offers to download the configuration of the unit. If .tar file support is included in the build, by default all configuration files (``config.dat``, ``security.dat``, ``provisioning.dat``, ``notification.dat``, ``rules1.txt`` .. ``rules4.txt`` and any task-specific CustomSettings ``extcfg<NN>.dat``) will be included, if they exist, in the .tar archive that can be downloaded. Ensure the file is actually saved by your browser, as some browsers try to discourage the download of both .dat and .tar files, and need an extra confirmation to store the file!
+
+If .tar file support is not included, or the Tools/Advanced option **Disable Save Config as .tar** is enabled, only the ``config.dat`` file will be downloaded.
+
+Backup files
+============
+
+The :cyan:`Backup files` button is only available if .tar file support is included in the build, and offers to download a .tar archive containing all files on the flash file system. These can be stored as a backup and restored in case of some configuration or system failure, or used to create 1 or multiple clones of the unit for multi-deployment. Uploading can also be started from an automation system or script, POST-ing the .tar archive from an external source.
+
+Backup w/o credentials
+======================
+
+The :cyan:`Backup w/o credentials` button acts like the :cyan:`Backup files` button, with the exception that the ``security.dat`` file is excluded from the backup, so you can share a complete system configuration, without sharing any usernames, passwords and similar secrets that should often not be shared.
+
+The backup filename includes ``no_creds`` to show this fact.
+
+Firmware
+********
+
+Firmware update
+===============
+
+Via the :cyan:`Update Firmware` button, you can browse for an updated firmware, downloaded from the Releases page, an Actions run, or self-built, and install that. When using the same flash configuration (``4M1M``, ``4M316k``, ``8M1M``, etc.) and file system type (SPIFFS v.s. LittleFS) all settings will be preserved. When uncertain, the configuration should be saved first, using either the Save (or Backup files if available) button above.
+
+.. include:: ../Reference/Migrate_SPIFFS_to_LittleFS.rst
+
+File system
+***********
+
+File browser
+============
+
+Via :cyan:`File browser` you can browse the files on the flash file system, download them separately, upload additional files, or delete any non-system files.
 
 Factory Reset
 =============
@@ -916,7 +1065,7 @@ Factory Reset
 Sometimes it can be useful to start over with a fresh setup.
 The Factory Reset allows just that, and more.
 
-- Format flash filesystem (so called SPIFFS)
+- Format flash filesystem (SPIFFS or LittleFS)
 - Re-create new settings files
 - Already store some existing values to keep
 - Allow for some pre-defined module config
@@ -960,15 +1109,15 @@ In order to download settings files, one has to select which ones to download an
 In the example shown here, the notification settings and rules were cloned from another ESPeasy node.
 This other node is protected using a login, just to show basic authentication is also allowed.
 
-Due to the needed memory resources, it is not possible to download from HTTPS.
-This also meand the settings file and credentials are sent in plain text. 
+Due to the needed memory resources, it is currently not possible to download from HTTPS.
+This also means the settings file and credentials are sent in plain text. 
 So do not use this to download settings with sensitive information directly from the internet.
 
 On some nodes the remaining free space on the SPIFFS filesystem may be too small to keep the original file and a downloaded version.
 For example on 1MB nodes, there is only 120k SPIFFS, which means it is not possible to have the ''config.dat'' file stored twice on the filesystem.
 
 For these, the "Delete First" checkbox should be used.
-But be aware that the file is deleted first, even if the host holding the files to download is unavailable.
+But be aware that the file is deleted first, even if the host holding the files to download is unavailable, or the operation fails during the download.
 
 Better try first with a smaller file on such nodes.
 Especially if the node is hard to reach for a proper clean setup.
@@ -1070,7 +1219,7 @@ Changed: 2023-11-18: Single-word commands split into 2 words: ``Provision,<subcm
 
 * ``Provision,Config`` Fetch ``config.dat``
 * ``Provision,Security`` Fetch ``security.dat``
-* ``Provision,Notification`` Fetch ``notification.dat``
+* ``Provision,Notification`` Fetch ``notification.dat`` (When the Notification feature is included in the build.)
 * ``Provision,Provision`` Fetch ``provisioning.dat``
 * ``Provision,Rules,1`` Fetch ``rules1.txt``
 * ``Provision,CustomCdnUrl`` Fetch ``customcdnurl.dat`` (When the Custom CDN Url feature is included in the build.)

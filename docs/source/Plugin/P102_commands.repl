@@ -1,0 +1,15 @@
+.. csv-table::
+    :header: "Command Syntax", "Extra information"
+    :widths: 20, 30
+
+    "
+
+    | ``ResetEnergy,<modbus_address>``
+
+    ","
+
+    | This command will reset the Energy counter for the PZEM unit (value is stored in the unit). The value retrieved on the next read should return the updated value. (Can be 0 if no energy is flowing, or the energy counted since the reset command was executed.)
+
+    | This command can be executed by any task if multiple PZEM tasks are configured, as they all share the single MODBUS Serial configuration of the *first* PZEM task.
+
+    "

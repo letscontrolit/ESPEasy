@@ -1,0 +1,23 @@
+.. csv-table::
+    :header: "Config value", "Information"
+    :widths: 20, 30
+
+    "
+    ``[<taskname>#GetTimeX]``
+    ","
+    Returns the configured Day,Time string for line X (Range: 1..Nr. of Day,Time fields), as shown in the UI.
+
+    Examples:
+
+    - ``All,06:00``
+    - ``Wrk,%sunset-1h%``
+    "
+    "
+    ``[<taskname>#GetValueX]``
+    ","
+    Returns the configured value for line X (Range: 1..Nr. of Day,Time fields), with a twist:
+
+    If a GPIO is configured, or the setting 'Value input On/Off only' is checked, a 0 is returned for Off and 1 for On (the stored value is actualy 1 higher)
+
+    When no GPIO is configured and the setting 'Value input On/Off only' is unchecked, the shown value is returned.
+    "

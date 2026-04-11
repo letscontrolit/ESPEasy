@@ -2,16 +2,30 @@
 
 #if FEATURE_ESPEASY_P2P
 #include "../../ESPEasy-Globals.h"
+
 #include "../DataTypes/NodeTypeID.h"
-#include "../ESPEasyCore/ESPEasyNetwork.h"
+
+#include "../../ESPEasy/net/ESPEasyNetwork.h"
+
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Settings.h"
+
 #include "../Helpers/ESPEasy_time_calc.h"
+#include "../Helpers/StringConverter.h"
 
 
 #define NODE_STRUCT_AGE_TIMEOUT 300000  // 5 minutes
 
-NodeStruct::NodeStruct() : ESPEasyNowPeer(0), useAP_ESPEasyNow(0), scaled_rssi(0)
+NodeStruct::NodeStruct() : 
+  ESPEasyNowPeer(0), 
+  useAP_ESPEasyNow(0), 
+  scaled_rssi(0)
+#if FEATURE_USE_IPV6
+   ,hasIPv4(0)
+   ,hasIPv6_mac_based_link_local(0)
+   ,hasIPv6_mac_based_link_global(0)
+   ,unused(0)
+#endif
 {}
 
 bool NodeStruct::valid() const {
@@ -19,7 +33,7 @@ bool NodeStruct::valid() const {
   return true;
 }
 
-bool NodeStruct::validate() {
+bool NodeStruct::validate(const IPAddress& remoteIP) {
   if (build < 20107) {
     // webserverPort introduced in 20107
     webgui_portnumber = 80;
@@ -37,10 +51,33 @@ bool NodeStruct::validate() {
   }
   if (build < 20253) {
     version = 0;
-    dummy = 0;
+#if FEATURE_USE_IPV6
+    hasIPv4                       = 0;
+    hasIPv6_mac_based_link_local  = 0;
+    hasIPv6_mac_based_link_global = 0;
+
+    unused = 0;
+#else
+    unused = 0;
+#endif
+
     unix_time_frac = 0;
     unix_time_sec = 0;
   }
+
+#if FEATURE_USE_IPV6
+  // Check if we're in the same global subnet
+  if (Settings.EnableIPv6() &&
+      hasIPv6_mac_based_link_global && 
+      remoteIP.type() == IPv6) {
+    const IPAddress this_global = ESPEasy::net::NetworkGlobalIP6();
+    // Check first 64 bit to see if we're in the same global scope
+    for (int i = 0; i < 8 && hasIPv6_mac_based_link_global; ++i) {
+      if (this_global[i] != remoteIP[i])
+        hasIPv6_mac_based_link_global = false;
+    }
+  }
+#endif
 
   // FIXME TD-er: Must make some sanity checks to see if it is a valid message
   return valid();
@@ -98,7 +135,7 @@ bool NodeStruct::operator<(const NodeStruct &other) const {
 }
 
 
-const __FlashStringHelper * NodeStruct::getNodeTypeDisplayString() const {
+String NodeStruct::getNodeTypeDisplayString() const {
   return toNodeTypeDisplayString(nodeType);
 }
 
@@ -106,10 +143,10 @@ String NodeStruct::getNodeName() const {
   String res;
   size_t length = strnlen(reinterpret_cast<const char *>(nodeName), sizeof(nodeName));
 
-  res.reserve(length);
-
-  for (size_t i = 0; i < length; ++i) {
-    res += static_cast<char>(nodeName[i]);
+  if (reserve_special(res, length)) {
+    for (size_t i = 0; i < length; ++i) {
+      res += static_cast<char>(nodeName[i]);
+    }
   }
   return res;
 }
@@ -117,6 +154,42 @@ String NodeStruct::getNodeName() const {
 IPAddress NodeStruct::IP() const {
   return IPAddress(ip[0], ip[1], ip[2], ip[3]);
 }
+
+#if FEATURE_USE_IPV6
+IPAddress NodeStruct::IPv6_link_local(bool stripZone) const
+{
+  if (Settings.EnableIPv6() && hasIPv6_mac_based_link_local) {
+    // Base IPv6 on MAC address
+    IPAddress ipv6;
+    if (ESPEasy::net::IPv6_link_local_from_MAC(sta_mac, ipv6)) {
+      if (stripZone) {
+        return IPAddress(IPv6, &ipv6[0], 0);
+      }
+      return ipv6;
+    }
+  }
+  return IN6ADDR_ANY;
+}
+
+IPAddress NodeStruct::IPv6_global() const
+{
+  if (Settings.EnableIPv6() && hasIPv6_mac_based_link_global) {
+    // Base IPv6 on MAC address
+    IPAddress ipv6;
+    if (ESPEasy::net::IPv6_global_from_MAC(sta_mac, ipv6)) {
+      return ipv6;
+    }
+  }
+  return IN6ADDR_ANY;
+}
+
+bool NodeStruct::hasIPv6() const {
+  if (!Settings.EnableIPv6()) return false;
+  return hasIPv6_mac_based_link_local ||
+         hasIPv6_mac_based_link_global;
+}
+#endif
+
 
 MAC_address NodeStruct::STA_MAC() const {
   return MAC_address(sta_mac);
@@ -130,7 +203,7 @@ MAC_address NodeStruct::ESPEasy_Now_MAC() const {
   return MAC_address(sta_mac);
 }
 
-unsigned long NodeStruct::getAge() const {
+uint32_t NodeStruct::getAge() const {
   return timePassedSince(lastUpdated);
 }
 
@@ -144,21 +217,21 @@ float NodeStruct::getLoad() const {
 
 String NodeStruct::getSummary() const {
   String res;
-
-  res.reserve(48);
-  res  = F("Unit: ");
-  res += unit;
-  res += F(" \"");
-  res += getNodeName();
-  res += '"';
-  res += F(" load: ");
-  res += String(getLoad(), 1);
-  res += F(" RSSI: ");
-  res += getRSSI();
-  res += F(" ch: ");
-  res += channel;
-  res += F(" dst: ");
-  res += distance;
+  if (reserve_special(res, 48)) {
+    res  = F("Unit: ");
+    res += unit;
+    res += F(" \"");
+    res += getNodeName();
+    res += '"';
+    res += F(" load: ");
+    res += String(getLoad(), 1);
+    res += F(" RSSI: ");
+    res += getRSSI();
+    res += F(" ch: ");
+    res += channel;
+    res += F(" dst: ");
+    res += distance;
+  }
   return res;
 }
 
@@ -245,8 +318,10 @@ bool NodeStruct::match(const MAC_address& mac) const
 bool NodeStruct::isThisNode() const
 {
     // Check to see if we process a node we've sent ourselves.
-    if (WifiSoftAPmacAddress() == ap_mac) return true;
-    if (WifiSTAmacAddress() == sta_mac) return true;
+    #if FEATURE_WIFI
+    if (ESPEasy::net::WifiSoftAPmacAddress() == ap_mac) return true;
+    #endif
+    if (ESPEasy::net::NetworkMacAddress() == sta_mac) return true;
 
     return false;
 }

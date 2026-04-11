@@ -13,32 +13,42 @@
 # include "../Globals/CPlugins.h"
 # include "../Globals/Plugins.h"
 # include "../Helpers/ESPEasy_Storage.h"
-# include "../Helpers/Hardware.h"
 # include "../Helpers/Misc.h"
 # include "../Helpers/StringParser.h"
 
 # include <vector>
 
-# if defined(PLUGIN_SET_MAX) || defined(PLUGIN_BUILD_CUSTOM)
+// # if defined(PLUGIN_SET_MAX) || defined(PLUGIN_BUILD_CUSTOM) || ((defined(PLUGIN_DISPLAY_A_COLLECTION) ||
+// defined(PLUGIN_DISPLAY_B_COLLECTION)) && defined(ESP32))
+# ifdef ESP32
 #  define P104_USE_NUMERIC_DOUBLEHEIGHT_FONT // Enables double height numeric font for double-height time/date
-# endif // if defined(PLUGIN_SET_MAX) || defined(PLUGIN_BUILD_CUSTOM)
-# define P104_USE_FULL_DOUBLEHEIGHT_FONT     // Enables the use of a full (lower ascii only) set double height font
-# define P104_USE_VERTICAL_FONT              // Enables the use of a vertical font
-# define P104_USE_EXT_ASCII_FONT             // Enables the use of an extended ascii font
-# define P104_USE_ARABIC_FONT                // Enables the use of a Arabic font (see usage in MD_Parola examples)
-# define P104_USE_GREEK_FONT                 // Enables the use of a Greek font (see usage in MD_Parola examples)
-# define P104_USE_KATAKANA_FONT              // Enables the use of a Katakana font (see usage in MD_Parola examples)
-# define P104_USE_COMMANDS                   // Enables the use of all commands, not just clear, txt, settxt and update
-# define P104_USE_DATETIME_OPTIONS           // Enables extra date/time options
-# define P104_USE_BAR_GRAPH                  // Enables the use of Bar-graph feature
-# define P104_USE_ZONE_ACTIONS               // Enables the use of Actions per zone (New above/New below/Delete)
-# define P104_USE_ZONE_ORDERING              // Enables the use of Zone ordering (Numeric order (1..n)/Display order (n..1))
-# define P104_USE_DOT_SET                    // Enables the use of Dot-set feature
+// # endif // if defined(PLUGIN_SET_MAX) || defined(PLUGIN_BUILD_CUSTOM) || ((defined(PLUGIN_DISPLAY_A_COLLECTION) ||
+// defined(PLUGIN_DISPLAY_B_COLLECTION)) && defined(ESP32))
+# endif // ifdef ESP32
+# define P104_USE_FULL_DOUBLEHEIGHT_FONT // Enables the use of a full (lower ascii only) set double height font
+# define P104_USE_VERTICAL_FONT          // Enables the use of a vertical font
+# define P104_USE_EXT_ASCII_FONT         // Enables the use of an extended ascii font
+# define P104_USE_ARABIC_FONT            // Enables the use of an Arabic font (see usage in MD_Parola examples)
+# define P104_USE_GREEK_FONT             // Enables the use of a Greek font (see usage in MD_Parola examples)
+# define P104_USE_KATAKANA_FONT          // Enables the use of a Katakana font (see usage in MD_Parola examples)
+# define P104_USE_CYRILLIC_EXT_FONT      // Enables the use of an ASCII font with Cyrillic extended characters
+# define P104_USE_COMMANDS               // Enables the use of all commands, not just clear, txt, settxt and update
+# define P104_USE_DATETIME_OPTIONS       // Enables extra date/time options
+# define P104_USE_BAR_GRAPH              // Enables the use of Bar-graph feature
+# define P104_USE_ZONE_ACTIONS           // Enables the use of Actions per zone (New above/New below/Delete)
+# define P104_USE_ZONE_ORDERING          // Enables the use of Zone ordering (Numeric order (1..n)/Display order (n..1))
+# define P104_USE_DOT_SET                // Enables the use of Dot-set feature
 
-# define P104_ADD_SETTINGS_NOTES             // Adds some notes on the Settings page
+# define P104_ADD_SETTINGS_NOTES         // Adds some notes on the Settings page
+
+# if FEATURE_EXTENDED_CUSTOM_SETTINGS && defined(ESP32) && defined(USE_LITTLEFS)
+#  define P104_FEATURE_STORAGE_V3     1  // Only enable saving in storage for ESP32
+# else // if FEATURE_EXTENDED_CUSTOM_SETTINGS && defined(ESP32) && defined(USE_LITTLEFS)
+#  define P104_FEATURE_STORAGE_V3     0
+# endif // if FEATURE_EXTENDED_CUSTOM_SETTINGS && defined(ESP32) && defined(USE_LITTLEFS)
 
 // To make it fit in the ESP8266 display build
-# if defined(PLUGIN_DISPLAY_COLLECTION) && defined(ESP8266) && !defined(LIMIT_BUILD_SIZE)
+# if (defined(PLUGIN_DISPLAY_A_COLLECTION) || defined(PLUGIN_DISPLAY_B_COLLECTION)) && defined(ESP8266) && !defined(LIMIT_BUILD_SIZE)
 #  ifdef P104_USE_FULL_DOUBLEHEIGHT_FONT
 #   undef P104_USE_FULL_DOUBLEHEIGHT_FONT
 #   ifndef P104_USE_NUMERIC_DOUBLEHEIGHT_FONT
@@ -60,6 +70,9 @@
 #  ifdef P104_USE_KATAKANA_FONT
 #   undef P104_USE_KATAKANA_FONT
 #  endif  // ifdef P104_USE_KATAKANA_FONT
+#  ifdef P104_USE_CYRILLIC_EXT_FONT
+#   undef P104_USE_CYRILLIC_EXT_FONT
+#  endif  // ifdef P104_USE_CYRILLIC_EXT_FONT
 // #  ifdef P104_USE_COMMANDS
 // #   undef P104_USE_COMMANDS
 // #  endif  // ifdef P104_USE_COMMANDS
@@ -76,7 +89,8 @@
 #   undef P104_DEBUG_DEV
 #  endif // ifdef P104_DEBUG_DEV
 #  define P104_MEDIUM_ANIMATIONS
-# endif   // if defined(PLUGIN_DISPLAY_COLLECTION) && defined(ESP8266)
+# endif // if (defined(PLUGIN_DISPLAY_A_COLLECTION) || defined(PLUGIN_DISPLAY_B_COLLECTION)) && defined(ESP8266) &&
+// !defined(LIMIT_BUILD_SIZE)
 
 // # define P104_MINIMAL_ANIMATIONS            // disable most animations
 // # define P104_MEDIUM_ANIMATIONS             // disable some complex animations
@@ -85,7 +99,7 @@
 # define P104_MAX_MESG             20        // Message size for time/date (dd-mm-yyyy hh:mm:ss\0)
 
 # ifdef ESP32
-#  define P104_MAX_ZONES           16u       // 1..P104_MAX_ZONES zones selectable
+#  define P104_MAX_ZONES           16        // 1..P104_MAX_ZONES zones selectable
 #  define P104_SETTINGS_BUFFER_V1  1020      // Bigger buffer possible on ESP32
 # else // ifdef ESP32
 #  define P104_MAX_ZONES           8u        // 1..P104_MAX_ZONES zones selectable
@@ -131,6 +145,9 @@
 #  ifdef P104_USE_KATAKANA_FONT
 #   undef P104_USE_KATAKANA_FONT
 #  endif // ifdef P104_USE_KATAKANA_FONT
+#  ifdef P104_USE_CYRILLIC_EXT_FONT
+#   undef P104_USE_CYRILLIC_EXT_FONT
+#  endif // ifdef P104_USE_CYRILLIC_EXT_FONT
 # endif    // ifdef LIMIT_BUILD_SIZE
 
 # if defined(P104_USE_TOOLTIPS) && !FEATURE_TOOLTIPS
@@ -252,6 +269,9 @@
 // - extend in P104_data_struct::configureZones the switch/case statement to conditionaly support the new font
 // - update documentation
 
+const uint8_t P104_NORMAL_CHAR_SPACING = 1; // Default font-size character spacing
+const uint8_t P104_DOUBLE_CHAR_SPACING = 2; // Character spacing for double-height fonts
+
 // This is the default font id
 # define P104_DEFAULT_FONT_ID     0
 
@@ -305,9 +325,16 @@
 #  include "../Static/Fonts/P104_font_katakana.h"
 # endif // ifdef P104_USE_KATAKANA_FONT
 
+# ifdef P104_USE_CYRILLIC_EXT_FONT
+
+#  define P104_CYRILLIC_EXT_FONT_ID 8
+
+#  include "../Static/Fonts/P104_font_cyr_ext.h"
+# endif // ifdef P104_USE_CYRILLIC_EXT_FONT
+
 struct P104_zone_struct {
   P104_zone_struct() = delete; // Not used, so leave out explicitly
-  P104_zone_struct(uint8_t _zone) :  text(F("\"\"")), zone(_zone) {}
+  P104_zone_struct(uint8_t _zone);
 
   String   text;
   int32_t  repeatDelay  = -1;
@@ -332,6 +359,13 @@ struct P104_zone_struct {
   uint16_t _upper       = 0u; // lower and upper pixel numbers
   uint8_t  _startModule = 0u; // starting module, end module is _startModule + size - 1
   # endif // if defined(P104_USE_BAR_GRAPH) || defined(P104_USE_DOT_SET)
+
+  // Used to loop over member values
+  bool getIntValue(uint8_t  offset,
+                   int32_t& value) const;
+  bool setIntValue(uint8_t offset,
+                   int32_t value);
+
 };
 
 # ifdef P104_USE_BAR_GRAPH
@@ -345,7 +379,9 @@ struct P104_bargraph_struct {
   uint8_t                  graph;
   uint8_t                  barType   = 0u;
   uint8_t                  direction = 0u;
+
 };
+
 # endif // ifdef P104_USE_BAR_GRAPH
 
 struct P104_data_struct : public PluginTaskData_base {
@@ -361,20 +397,17 @@ struct P104_data_struct : public PluginTaskData_base {
   void   loadSettings();
   bool   webform_load(struct EventStruct *event);
   bool   webform_save(struct EventStruct *event);
-  String getError() {
-    return error;
-  }
 
-  void configureZones();
+  String getError() { return error; }
 
-  void setZones(uint16_t _zones) {
-    expectedZones = _zones;
-  }
+  void   configureZones();
 
-  bool handlePluginWrite(taskIndex_t   taskIndex,
-                         const String& string);
-  bool handlePluginOncePerSecond(struct EventStruct *event);
-  void checkRepeatTimer(uint8_t z);
+  void   setZones(uint16_t _zones) { expectedZones = _zones; }
+
+  bool   handlePluginWrite(taskIndex_t   taskIndex,
+                           const String& string);
+  bool   handlePluginOncePerSecond(struct EventStruct *event);
+  void   checkRepeatTimer(uint8_t z);
 
   MD_Parola *P = nullptr;
 
@@ -468,6 +501,17 @@ private:
   void createHString(String& string);
   # endif // if defined(P104_USE_NUMERIC_DOUBLEHEIGHT_FONT) || defined(P104_USE_FULL_DOUBLEHEIGHT_FONT)
   void reverseStr(String& str);
+  union {
+    struct {
+      uint16_t P104_dataSize;
+      char     P104_data[P104_SETTINGS_BUFFER_V2 + 1];
+
+    };
+
+    uint8_t P104_storeThis[P104_SETTINGS_BUFFER_V2 + 1 + sizeof(uint16_t)]{};
+
+  };
+
 };
 
 #endif // ifdef USES_P104

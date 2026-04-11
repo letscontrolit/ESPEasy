@@ -1,0 +1,283 @@
+\ Copyright (c) 2016 Thomas Pornin <pornin@bolet.org>
+\
+\ Permission is hereby granted, free of charge, to any person obtaining 
+\ a copy of this software and associated documentation files (the
+\ "Software"), to deal in the Software without restriction, including
+\ without limitation the rights to use, copy, modify, merge, publish,
+\ distribute, sublicense, and/or sell copies of the Software, and to
+\ permit persons to whom the Software is furnished to do so, subject to
+\ the following conditions:
+\
+\ The above copyright notice and this permission notice shall be 
+\ included in all copies or substantial portions of the Software.
+\
+\ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, 
+\ EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+\ MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND 
+\ NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+\ BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+\ ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+\ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+\ SOFTWARE.
+
+preamble {
+
+#include "t_inner.h"
+
+#define CTX   ((br_pkey_decoder_context *)(void *)((unsigned char *)t0ctx - offsetof(br_pkey_decoder_context, cpu)))
+#define CONTEXT_NAME   br_pkey_decoder_context
+
+/* see bearssl_x509.h */
+void
+br_pkey_decoder_init(br_pkey_decoder_context *ctx)
+{
+	memset(ctx, 0, sizeof *ctx);
+	ctx->cpu.dp = &ctx->dp_stack[0];
+	ctx->cpu.rp = &ctx->rp_stack[0];
+	br_pkey_decoder_init_main(&ctx->cpu);
+	br_pkey_decoder_run(&ctx->cpu);
+}
+
+/* see bearssl_x509.h */
+void
+br_pkey_decoder_push(br_pkey_decoder_context *ctx,
+	const void *data, size_t len)
+{
+	ctx->hbuf = data;
+	ctx->hlen = len;
+	br_pkey_decoder_run(&ctx->cpu);
+}
+
+/* State machine should be squeezed for size, not performance critical */
+#pragma GCC optimize ("Os")
+
+}
+
+addr: key_type
+addr: key_data
+
+cc: read8-low ( -- x ) {
+	if (CTX->hlen == 0) {
+		T0_PUSHi(-1);
+	} else {
+		CTX->hlen --;
+		T0_PUSH(pgm_read_byte(CTX->hbuf ++));
+	}
+}
+
+cc: read-blob-inner ( addr len -- addr len ) {
+	uint32_t len = T0_POP();
+	uint32_t addr = T0_POP();
+	size_t clen = CTX->hlen;
+	if (clen > len) {
+		clen = (size_t)len;
+	}
+	if (addr != 0) {
+		memcpy_P((unsigned char *)CTX + addr, CTX->hbuf, clen);
+	}
+	CTX->hbuf += clen;
+	CTX->hlen -= clen;
+	T0_PUSH(addr + clen);
+	T0_PUSH(len - clen);
+}
+
+\ Get the length of the key_data buffer.
+: len-key_data
+	CX 0 8191 { 3 * BR_X509_BUFSIZE_KEY } ;
+
+\ Get the address and length for the key_data buffer.
+: addr-len-key_data ( -- addr len )
+	addr-key_data len-key_data ;
+
+\ Set the private key (RSA).
+cc: set-rsa-key ( nlen elen -- ) {
+	size_t elen = T0_POP();
+	size_t nlen = T0_POP();
+
+	CTX->key.rsa.n = CTX->key_data;
+	CTX->key.rsa.nlen = nlen;
+	CTX->key.rsa.e = CTX->key_data + nlen;
+	CTX->key.rsa.elen = elen;
+}
+
+\ Set the private key (EC).
+cc: set-ec-key ( curve qlen -- ) {
+	size_t qlen = T0_POP();
+	uint32_t curve = T0_POP();
+	CTX->key.ec.curve = curve;
+	CTX->key.ec.q = CTX->key_data;
+	CTX->key.ec.qlen = qlen;
+}
+
+cc: print-out ( val -- ) {
+	uint32_t t = T0_POP();
+	printf("DEBUG: %d\n", t);
+}
+
+
+\ Get the bit length for an integer (unsigned).
+: int-bit-length ( x -- bitlen )
+	0 swap
+	begin dup while 1 u>> swap 1+ swap repeat
+	drop ;
+
+\ Read an INTEGER into the key_data buffer, but then ignore it.
+: read-integer-ignore ( lim -- lim )
+	addr-len-key_data read-integer drop ;
+
+\ Read an INTEGER into the key_data buffer, at the provided offset.
+\ Returned value is the integer length (in bytes).
+: read-integer-off ( lim off -- lim dlen )
+	dup addr-len-key_data rot - swap rot + swap read-integer ;
+
+\ Decode RSA key, starting with the SEQUENCE tag.
+: decode-RSA ( lim -- lim )
+	\ We are inside the Bit String at the # of unused bits value
+	\ There better no unused bits, we should be pow(2)
+	read8 if ERR_X509_UNSUPPORTED fail then
+
+	read-sequence-open
+	
+	decode-RSA-next
+	
+	\ Close the SEQUENCE.
+	close-elt
+	;
+
+\ Decode RSA public key
+: decode-RSA-next ( lim -- lim )
+	\ Modulus
+	addr-len-key_data read-integer dup dup { off nlen }
+
+	\ Public exponent: read but skip.
+	read-integer-off { elen }
+
+	\ Set RSA key.
+	nlen elen set-rsa-key
+
+	\ The caller will close the sequence, thereby validating that there
+	\ is no extra field.
+	;
+
+\ Decode an EC key, starting with the SEQUENCE tag.
+: decode-EC ( lim curve -- lim )
+	{ curve }
+
+	\ We are inside the Bit String at the # of unused bits value
+	\ There better no unused bits, we should be pow(2)
+	read8 if ERR_X509_UNSUPPORTED fail then
+
+        \ Read tag for the private key; should be OCTET STRING. Then use the
+        \ decode-EC-next function for the remainder of the key.
+        read-tag 0x04 check-tag-primitive
+
+	curve decode-EC-next
+	;
+ 
+
+\ Decode an EC key; the version, and the tag for the OCTET STRING, have
+\ already been read. The curve ID is provided (0 if unknown).
+: decode-EC-next ( lim curve -- lim )
+	{ curve }
+
+	\ Read the public key proper.
+	dup { qlen }
+	qlen len-key_data > if ERR_X509_UNSUPPORTED fail then
+	qlen addr-key_data read-blob
+	drop 0
+
+	\ The curve must have been defined one way or another.
+	curve ifnot ERR_X509_UNSUPPORTED fail then
+
+	\ Set the EC key.
+	curve qlen set-ec-key
+
+	\ The caller will close the sequence.
+	;
+
+\ Decode a PKCS#8 object. The version and the tag for the AlgorithmIdentifier
+\ structure have already been read. This function returns the key type.
+: decode-PKCS8-next ( lim -- lim keytype )
+	\ Decode the AlgorithmIdentifier.
+	read-length-open-elt
+	read-OID ifnot ERR_X509_UNSUPPORTED fail then
+	{ ; is-rsa curve }
+	choice
+		rsaEncryption eqOID uf
+			\ RSA private key. We ignore the parameters.
+			skip-remaining -1 >is-rsa
+		enduf
+		id-ecPublicKey eqOID uf
+			\ EC private key. Parameters, if present, shall
+			\ identify the curve.
+			0 >is-rsa
+			dup if read-curve-ID else 0 then >curve
+		enduf
+		ERR_X509_UNSUPPORTED fail
+	endchoice
+	close-elt
+
+	\ Open public key value and decode it. Should be bit-string (0x03)
+	read-tag 0x03 check-tag-primitive
+	read-length-open-elt
+
+	is-rsa if
+		decode-RSA
+	else
+		curve decode-EC
+	then
+	close-elt
+	\ We ignore any extra field, i.e. attributes or public key.
+	skip-remaining
+	\ Return the key type.
+	is-rsa if KEYTYPE_RSA else KEYTYPE_EC then
+	;
+
+\ Decode a private key.
+: main ( -- ! )
+	\ RSA private key format is defined in PKCS#1 (RFC 3447):
+	\   RSAPrivateKey ::= SEQUENCE {
+	\       n         INTEGER,
+	\       e         INTEGER
+	\   }
+	\
+	\ EC public key format - TODO?
+	\
+	\ PKCS#8 (unencrypted) is:
+	\   OneAsymmetricKey ::= SEQUENCE {
+	\       version      INTEGER,   -- 0 or 1
+	\       algorithm    AlgorithmIdentifier,
+	\       privateKey   OCTET STRING,
+	\       attributes   [0] IMPLICIT Attributes OPTIONAL,
+	\       publicKey    [1] IMPLICIT BIT STRING OPTIONAL
+	\   }
+	\ The 'publicKey' field is an add-on from RFC 5958 and may be
+	\ present only if the 'version' is v2 (i.e. has value 1). We
+	\ ignore it anyway.
+
+	\ An arbitrary upper limit on the private key size.
+	0xFFFFFF
+
+	\ Open the outer SEQUENCE.
+	read-sequence-open
+
+	\ Get next tag: it should be either an INTEGER (RSA private key),
+	\ an OCTET STRING (EC private key), or a SEQUENCE (for an
+	\ AlgorithmIdentifier, in a PKCS#8 object).
+	read-tag
+	case
+		0x02 of check-primitive decode-RSA-next KEYTYPE_RSA endof
+		0x04 of check-primitive 0 decode-EC-next KEYTYPE_EC endof
+		0x10 of check-constructed decode-PKCS8-next endof
+		ERR_X509_UNSUPPORTED fail
+	endcase
+	{ key-type }
+
+	\ Close the SEQUENCE.
+	close-elt
+	\ Set the key type, which marks the decoding as a success.
+	key-type addr-key_type set8
+	\ Read one byte, then fail: if the read succeeds, then there is
+	\ some trailing byte.
+	read8-nc ERR_X509_EXTRA_ELEMENT fail
+	;

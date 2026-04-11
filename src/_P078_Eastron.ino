@@ -3,13 +3,20 @@
 #ifdef USES_P078
 
 // #######################################################################################################
-// ############## Plugin 078: SDM120/SDM120CT/220/230/630/72D/DDM18SD Eastron Energy Meter ###############
+// ############## Plugin 078: SDM120/SDM120CT/220/230/630/72D/DDM18SD/TAC2100 Eastron Energy Meter ###############
 // #######################################################################################################
 
 /*
    Plugin written by: Sergio Faustino sjfaustino__AT__gmail.com
 
-   This plugin reads available values of an Eastron SDM120C SDM120/SDM120CT/220/230/630/72D & also DDM18SD.
+   This plugin reads available values of an Eastron SDM120C SDM120/SDM120CT/220/230/630/72D & also DDM18SD and TAC2100.
+ */
+
+/** Changelog:
+ * 2025-10-25 tonhuisman: Add custom Unit of Measure group per value to limit selection to useful options
+ * 2025-08-02 repa6: Add partial support for TAC2100 meter
+ * 2025-01-17 tonhuisman: Implement support for MQTT AutoDiscovery (partial)
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported yet for Eastron)
  */
 
 # define PLUGIN_078
@@ -22,6 +29,7 @@
 # define P078_NR_OUTPUT_OPTIONS_SDM630                    86
 # define P078_NR_OUTPUT_OPTIONS_SDM72D                    9
 # define P078_NR_OUTPUT_OPTIONS_DDM18SD                   7
+# define P078_NR_OUTPUT_OPTIONS_TAC2100                   27
 
 
 # include "src/PluginStructs/P078_data_struct.h"
@@ -40,20 +48,18 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
   {
     case PLUGIN_DEVICE_ADD:
     {
-      Device[++deviceCount].Number           = PLUGIN_ID_078;
-      Device[deviceCount].Type               = DEVICE_TYPE_SERIAL_PLUS1; // connected through 3 datapins
-      Device[deviceCount].VType              = Sensor_VType::SENSOR_TYPE_QUAD;
-      Device[deviceCount].Ports              = 0;
-      Device[deviceCount].PullUpOption       = false;
-      Device[deviceCount].InverseLogicOption = false;
-      Device[deviceCount].FormulaOption      = true;
-      Device[deviceCount].ValueCount         = P078_NR_OUTPUT_VALUES;
-      Device[deviceCount].OutputDataType     = Output_Data_type_t::Simple;
-      Device[deviceCount].SendDataOption     = true;
-      Device[deviceCount].TimerOption        = true;
-      Device[deviceCount].GlobalSyncOption   = true;
-      Device[deviceCount].PluginStats        = true;
-      Device[deviceCount].TaskLogsOwnPeaks   = true;
+      auto& dev = Device[++deviceCount];
+      dev.Number           = PLUGIN_ID_078;
+      dev.Type             = DEVICE_TYPE_SERIAL_PLUS1; // connected through 3 datapins
+      dev.VType            = Sensor_VType::SENSOR_TYPE_QUAD;
+      dev.FormulaOption    = true;
+      dev.ValueCount       = P078_NR_OUTPUT_VALUES;
+      dev.OutputDataType   = Output_Data_type_t::Simple;
+      dev.SendDataOption   = true;
+      dev.TimerOption      = true;
+      dev.PluginStats      = true;
+      dev.TaskLogsOwnPeaks = true;
+      dev.MqttStateClass   = true;
       break;
     }
 
@@ -65,10 +71,11 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEVALUENAMES:
     {
+      const SDM_MODEL model = static_cast<SDM_MODEL>(P078_MODEL);
+
       for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
         if (i < P078_NR_OUTPUT_VALUES) {
-          const SDM_MODEL model  = static_cast<SDM_MODEL>(P078_MODEL);
-          const uint8_t   choice = PCONFIG(i + P078_QUERY1_CONFIG_POS);
+          const uint8_t choice = PCONFIG(i + P078_QUERY1_CONFIG_POS);
           ExtraTaskSettings.setTaskDeviceValueName(i, SDM_getValueNameForModel(model, choice));
         } else {
           ExtraTaskSettings.clearTaskDeviceValueName(i);
@@ -82,6 +89,34 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
       serialHelper_modbus_getGpioNames(event);
       break;
     }
+
+    # if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      const SDM_MODEL model = static_cast<SDM_MODEL>(P078_MODEL);
+
+      for (uint8_t i = 0; i < event->Par5; ++i) {
+        const uint8_t choice = PCONFIG(i + P078_QUERY1_CONFIG_POS);
+        event->ParN[i] = static_cast<int>(Plugin_078_QueryVType(model, choice));
+      }
+      success = true;
+      break;
+    }
+    # endif // if FEATURE_MQTT_DISCOVER
+
+    # if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+    case PLUGIN_GET_UOM_GROUPS:
+    {
+      const SDM_MODEL model = static_cast<SDM_MODEL>(P078_MODEL);
+
+      for (uint8_t i = 0; i < P078_NR_OUTPUT_VALUES; ++i) {
+        const uint8_t choice = PCONFIG(i + P078_QUERY1_CONFIG_POS);
+        event->Par64N[i] = Plugin_078_QueryUOMGroup(model, choice);
+      }
+      success = true;
+      break;
+    }
+    # endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 
     case PLUGIN_WEBFORM_SHOW_CONFIG:
     {
@@ -120,9 +155,11 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
         String options_baudrate[6];
 
         for (int i = 0; i < 6; ++i) {
-          options_baudrate[i] = String(p078_storageValueToBaudrate(i));
+          options_baudrate[i] = p078_storageValueToBaudrate(i);
         }
-        addFormSelector(F("Baud Rate"), P078_BAUDRATE_LABEL, 6, options_baudrate, nullptr, P078_BAUDRATE);
+        constexpr size_t optionCount = NR_ELEMENTS(options_baudrate);
+        const FormSelectorOptions selector(optionCount, options_baudrate);
+        selector.addFormSelector(F("Baud Rate"), P078_BAUDRATE_LABEL, P078_BAUDRATE);
         addUnit(F("baud"));
       }
 
@@ -136,20 +173,16 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
 
       addFormNumericBox(F("Modbus Address"), P078_DEV_ID_LABEL, P078_DEV_ID, 1, 247);
 
-      #ifdef ESP32
+      # ifdef ESP32
       addFormCheckBox(F("Enable Collision Detection"), F(P078_FLAG_COLL_DETECT_LABEL), P078_GET_FLAG_COLL_DETECT);
       addFormNote(F("/RE connected to GND, only supported on hardware serial"));
-      #endif
-
+      # endif // ifdef ESP32
 
 
       if (Plugin_078_SDM != nullptr) {
         addRowLabel(F("Checksum (pass/fail)"));
-        String chksumStats;
-        chksumStats  = Plugin_078_SDM->getSuccCount();
-        chksumStats += '/';
-        chksumStats += Plugin_078_SDM->getErrCount();
-        addHtml(chksumStats);
+        addHtml(strformat(F("%d/%d"),
+                          Plugin_078_SDM->getSuccCount(), Plugin_078_SDM->getErrCount()));
       }
 
       break;
@@ -176,11 +209,13 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
           F("DDM18SD"),
           F("SDM630"),
           F("SDM72_V2"),
-          F("SDM320C")
+          F("SDM320C"),
+          F("TAC2100"),
         };
         constexpr size_t nrOptions = NR_ELEMENTS(options_model);
-        addFormSelector(F("Model Type"), P078_MODEL_LABEL, nrOptions, options_model, nullptr, P078_MODEL);
-        addFormNote(F("Submit after changing the modell to update Output Configuration."));
+        FormSelectorOptions selector(nrOptions, options_model);
+        selector.reloadonchange = true;
+        selector.addFormSelector(F("Model Type"), P078_MODEL_LABEL, P078_MODEL);
       }
       success = true;
       break;
@@ -205,9 +240,9 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
       P078_DEV_ID   = getFormItemInt(P078_DEV_ID_LABEL);
       P078_MODEL    = getFormItemInt(P078_MODEL_LABEL);
       P078_BAUDRATE = getFormItemInt(P078_BAUDRATE_LABEL);
-      #ifdef ESP32
+      # ifdef ESP32
       P078_SET_FLAG_COLL_DETECT(isFormItemChecked(F(P078_FLAG_COLL_DETECT_LABEL)));
-      #endif
+      # endif // ifdef ESP32
 
       Plugin_078_init = false; // Force device setup next time
       success         = true;
@@ -280,7 +315,6 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
 
         // Need a few seconds to read the first sample, so trigger a new read a few seconds after init.
         Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 2000);
-
       }
       break;
     }
@@ -293,15 +327,12 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
 
       Plugin_078_init = false;
 
-      if (Plugin_078_ESPEasySerial != nullptr) {
-        delete Plugin_078_ESPEasySerial;
-        Plugin_078_ESPEasySerial = nullptr;
-      }
+      delete Plugin_078_ESPEasySerial;
+      Plugin_078_ESPEasySerial = nullptr;
 
-      if (Plugin_078_SDM != nullptr) {
-        delete Plugin_078_SDM;
-        Plugin_078_SDM = nullptr;
-      }
+      delete Plugin_078_SDM;
+      Plugin_078_SDM = nullptr;
+
       break;
     }
 
