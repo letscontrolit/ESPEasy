@@ -1,20 +1,20 @@
 #include "../Helpers/BusCmd_Helper.h"
 #if FEATURE_BUS_COMMAND
-#include <GPIO_Direct_Access.h>
-#include "../Globals/RulesCalculate.h"
+# include <GPIO_Direct_Access.h>
+# include "../Globals/RulesCalculate.h"
 
 // These commands (not case-sensitive) must have the same order as the BusCmd_Commands_e enum class
 const char BusCmd_commands[] PROGMEM =
   "n|g|p|r|w|s|t|e|c|v|d|a|z|i|l|"
-  #if FEATURE_BUSCMD_STRING && FEATURE_STRING_VARIABLES
+  # if FEATURE_BUSCMD_STRING && FEATURE_STRING_VARIABLES
   "m|"
-  #endif // if FEATURE_BUSCMD_STRING && FEATURE_STRING_VARIABLES
+  # endif // if FEATURE_BUSCMD_STRING && FEATURE_STRING_VARIABLES
 ;
 const char BusCmd_commandsLong[] PROGMEM =
   "nop|get|put|read|write|read16|write16|eval|calc|value|delay|enable|reset|if|let|"
-  #if FEATURE_BUSCMD_STRING && FEATURE_STRING_VARIABLES
+  # if FEATURE_BUSCMD_STRING && FEATURE_STRING_VARIABLES
   "letstr|"
-  #endif // if FEATURE_BUSCMD_STRING && FEATURE_STRING_VARIABLES
+  # endif // if FEATURE_BUSCMD_STRING && FEATURE_STRING_VARIABLES
 ;
 
 // Supported data formats, _ == undefined, not processed
@@ -36,9 +36,9 @@ const char BusCmd_dataFormats[] PROGMEM =
   "32le|"
   "b|"
   "w|"
-  #if FEATURE_BUSCMD_STRING
+  # if FEATURE_BUSCMD_STRING
   "str|"
-  #endif // if FEATURE_BUSCMD_STRING
+  # endif // if FEATURE_BUSCMD_STRING
 ;
 
 /**
@@ -52,27 +52,35 @@ BusCmd_Command_struct::BusCmd_Command_struct(BusCmd_Command_e    _command,
                                              String              _calculation,
                                              String              _variable)
   :command(_command), format(_format), reg(_reg), len(_len), calculation(_calculation), variable(_variable) {
-  switch (format) {
-    case BusCmd_DataFormat_e::undefined: d0_uint32_t = (uint32_t)_data; break; // Special case
-    case BusCmd_DataFormat_e::uint8_t: d0_uint8_t    = (uint8_t)_data; break;
+  switch (format)
+  {
+    case BusCmd_DataFormat_e::undefined: d0_uint32_t = (uint32_t)_data;
+      break; // Special case
+    case BusCmd_DataFormat_e::uint8_t: d0_uint8_t = (uint8_t)_data;
+      break;
     case BusCmd_DataFormat_e::uint16_t:
-    case BusCmd_DataFormat_e::uint16_t_LE: d0_uint16_t = (uint16_t)_data; break;
+    case BusCmd_DataFormat_e::uint16_t_LE: d0_uint16_t = (uint16_t)_data;
+      break;
     case BusCmd_DataFormat_e::uint24_t:
     case BusCmd_DataFormat_e::uint32_t:
     case BusCmd_DataFormat_e::uint24_t_LE:
-    case BusCmd_DataFormat_e::uint32_t_LE: d0_uint32_t = (uint32_t)_data; break;
-    case BusCmd_DataFormat_e::int8_t: d0_int8_t        = _data; break;
+    case BusCmd_DataFormat_e::uint32_t_LE: d0_uint32_t = (uint32_t)_data;
+      break;
+    case BusCmd_DataFormat_e::int8_t: d0_int8_t = _data;
+      break;
     case BusCmd_DataFormat_e::int16_t:
-    case BusCmd_DataFormat_e::int16_t_LE: d0_int16_t = _data; break;
+    case BusCmd_DataFormat_e::int16_t_LE: d0_int16_t = _data;
+      break;
     case BusCmd_DataFormat_e::int24_t:
     case BusCmd_DataFormat_e::int32_t:
     case BusCmd_DataFormat_e::int24_t_LE:
-    case BusCmd_DataFormat_e::int32_t_LE: d0_int32_t = _data; break;
+    case BusCmd_DataFormat_e::int32_t_LE: d0_int32_t = _data;
+      break;
     case BusCmd_DataFormat_e::bytes:
     case BusCmd_DataFormat_e::words:
-    #if FEATURE_BUSCMD_STRING
+    # if FEATURE_BUSCMD_STRING
     case BusCmd_DataFormat_e::string:
-    #endif // if FEATURE_BUSCMD_STRING
+    # endif // if FEATURE_BUSCMD_STRING
       break;
   }
 }
@@ -89,35 +97,40 @@ BusCmd_Command_struct::~BusCmd_Command_struct() {
 int64_t BusCmd_Command_struct::getIntValue() {
   int64_t data{};
 
-  switch (format) {
+  switch (format)
+  {
     case BusCmd_DataFormat_e::undefined: break;
-    case BusCmd_DataFormat_e::uint8_t: data = d0_uint8_t; break;
+    case BusCmd_DataFormat_e::uint8_t: data = d0_uint8_t;
+      break;
     case BusCmd_DataFormat_e::uint16_t:
-    case BusCmd_DataFormat_e::uint16_t_LE: data = d0_uint16_t; break;
+    case BusCmd_DataFormat_e::uint16_t_LE: data = d0_uint16_t;
+      break;
     case BusCmd_DataFormat_e::uint24_t:
     case BusCmd_DataFormat_e::uint32_t:
     case BusCmd_DataFormat_e::uint24_t_LE:
-    case BusCmd_DataFormat_e::uint32_t_LE: data = d0_uint32_t; break;
-    case BusCmd_DataFormat_e::int8_t: data      = d0_int8_t; break;
+    case BusCmd_DataFormat_e::uint32_t_LE: data = d0_uint32_t;
+      break;
+    case BusCmd_DataFormat_e::int8_t: data = d0_int8_t;
+      break;
     case BusCmd_DataFormat_e::int16_t:
-    case BusCmd_DataFormat_e::int16_t_LE: data = d0_int16_t; break;
+    case BusCmd_DataFormat_e::int16_t_LE: data = d0_int16_t;
+      break;
     case BusCmd_DataFormat_e::int24_t:
     case BusCmd_DataFormat_e::int32_t:
     case BusCmd_DataFormat_e::int24_t_LE:
-    case BusCmd_DataFormat_e::int32_t_LE: data = d0_int32_t; break;
+    case BusCmd_DataFormat_e::int32_t_LE: data = d0_int32_t;
+      break;
     case BusCmd_DataFormat_e::bytes:
     case BusCmd_DataFormat_e::words:
-    #if FEATURE_BUSCMD_STRING
+    # if FEATURE_BUSCMD_STRING
     case BusCmd_DataFormat_e::string:
-    #endif // if FEATURE_BUSCMD_STRING
+    # endif // if FEATURE_BUSCMD_STRING
       break;
   }
   return data;
 }
 
-String BusCmd_Command_struct::getHexValue(const bool withPrefix) {
-  return withPrefix ? concat(F("0x"), getHexValue()) : getHexValue();
-}
+String BusCmd_Command_struct::getHexValue(const bool withPrefix) { return withPrefix ? concat(F("0x"), getHexValue()) : getHexValue(); }
 
 String BusCmd_Command_struct::getHexValue() {
   uint64_t data64 = getUIntValue();
@@ -126,15 +139,16 @@ String BusCmd_Command_struct::getHexValue() {
     return formatToHex_array(&data_b[0], data_b.size());
   } else if (BusCmd_DataFormat_e::words == format) {
     return formatToHex_wordarray(&data_w[0], data_w.size());
-    #if FEATURE_BUSCMD_STRING
+    # if FEATURE_BUSCMD_STRING
   } else if (BusCmd_DataFormat_e::string == format) {
     return EMPTY_STRING;
-    #endif // if FEATURE_BUSCMD_STRING
+    # endif // if FEATURE_BUSCMD_STRING
   }
   return formatToHex(data64);
 }
 
-#if FEATURE_BUSCMD_STRING
+# if FEATURE_BUSCMD_STRING
+
 String BusCmd_Command_struct::getString() {
   if (BusCmd_DataFormat_e::string == format) {
     return variable;
@@ -142,9 +156,10 @@ String BusCmd_Command_struct::getString() {
   return EMPTY_STRING;
 }
 
-#endif // if FEATURE_BUSCMD_STRING
+# endif // if FEATURE_BUSCMD_STRING
 
-#ifndef LIMIT_BUILD_SIZE
+# ifndef LIMIT_BUILD_SIZE
+
 String BusCmd_Command_struct::toString() {
   char cmd[8]{};
   char cmdS[3]{};
@@ -175,9 +190,9 @@ String BusCmd_Command_struct::toString() {
 
   if (!variable.isEmpty()) {
     result = concat(result, strformat(
-                      # if FEATURE_BUSCMD_STRING
+                      #  if FEATURE_BUSCMD_STRING
                       BusCmd_DataFormat_e::string == format ? F(", string: %s") :
-                      # endif // if FEATURE_BUSCMD_STRING
+                      #  endif // if FEATURE_BUSCMD_STRING
                       F(", variable: %s"), variable.c_str()));
   }
 
@@ -187,7 +202,7 @@ String BusCmd_Command_struct::toString() {
   return result;
 }
 
-#endif // ifndef LIMIT_BUILD_SIZE
+# endif // ifndef LIMIT_BUILD_SIZE
 
 /**
  * Constructor BusCmd_Buffer
@@ -216,7 +231,8 @@ BusCmd_Helper_struct::~BusCmd_Helper_struct() {
 }
 
 const __FlashStringHelper * BusCmd_Helper_struct::cacheSuffix(BusCmd_CommandSource_e source) {
-  switch (source) {
+  switch (source)
+  {
     case BusCmd_CommandSource_e::PluginIdle:
     case BusCmd_CommandSource_e::PluginGetConfigVar:
     case BusCmd_CommandSource_e::PluginRead:
@@ -264,11 +280,12 @@ std::vector<BusCmd_Command_struct>BusCmd_Helper_struct::parseBusCmdCommands(cons
 
   if (!key.isEmpty() && (_commandCache.count(key) == 1) && !update) {
     commands = _commandCache.find(key)->second;
-#ifndef BUILD_NO_DEBUG
+# ifndef BUILD_NO_DEBUG
+
     if (loglevelActiveFor(LOG_LEVEL_INFO) && _showLog && parseAndLogOK) {
       addLog(LOG_LEVEL_INFO, strformat(F("BUSCMD: Retrieve '%s' from cache with %d commands."), name.c_str(), commands.size()));
     }
-#endif
+# endif // ifndef BUILD_NO_DEBUG
   }
 
   if (!line.isEmpty() && ((commands.empty()) || update) && parseAndLogOK) {
@@ -324,12 +341,12 @@ std::vector<BusCmd_Command_struct>BusCmd_Helper_struct::parseBusCmdCommands(cons
             arg0 = parseStringKeepCaseNoTrim(cmdAll, i, BUSCMD_ARGUMENT_SEPARATOR);
           }
 
-          #ifndef LIMIT_BUILD_SIZE
+          # ifndef LIMIT_BUILD_SIZE
 
           if (loglevelActiveFor(LOG_LEVEL_INFO) && _showLog && parseAndLogOK) {
             addLog(LOG_LEVEL_INFO, strformat(F("BUSCMD: Arguments parsed: %d (%s)"), args.size(), cmdAll.c_str()));
           }
-          #endif // ifndef LIMIT_BUILD_SIZE
+          # endif // ifndef LIMIT_BUILD_SIZE
 
           args[0].toLowerCase();
           String sFmt = args[1];
@@ -353,9 +370,9 @@ std::vector<BusCmd_Command_struct>BusCmd_Helper_struct::parseBusCmdCommands(cons
           }
 
           if ((BusCmd_DataFormat_e::bytes == fmt) || (BusCmd_DataFormat_e::words == fmt)
-              #if FEATURE_BUSCMD_STRING
+              # if FEATURE_BUSCMD_STRING
               || (BusCmd_DataFormat_e::string == fmt)
-              #endif // if FEATURE_BUSCMD_STRING
+              # endif // if FEATURE_BUSCMD_STRING
               ) {
             if (!validUIntFromString(args[arg], len) && !args[arg].isEmpty()) {
               variable = args[arg];
@@ -367,20 +384,31 @@ std::vector<BusCmd_Command_struct>BusCmd_Helper_struct::parseBusCmdCommands(cons
           if (arg1i > -1) {
             BusCmd_Command_e cmd = static_cast<BusCmd_Command_e>(arg1i);
             int64_t val          = 0;
-            validInt64FromString(args[arg], val);
 
-            switch (cmd) {
+            if (!validInt64FromString(args[arg], val) && (
+                  (BusCmd_Command_e::Read == cmd) ||
+                  (BusCmd_Command_e::Write == cmd) ||
+                  (BusCmd_Command_e::RegisterRead == cmd) ||
+                  (BusCmd_Command_e::Register16Read == cmd) ||
+                  (BusCmd_Command_e::RegisterWrite == cmd) ||
+                  (BusCmd_Command_e::Register16Write == cmd)
+                  )) {
+              calculation = args[arg];
+            }
+
+            switch (cmd)
+            {
               case BusCmd_Command_e::NOP: break;
               case BusCmd_Command_e::Read:  // get - g.<format>
                 break;
               case BusCmd_Command_e::Write: // put - p.<format>.<value>
 
-                #if FEATURE_BUSCMD_STRING
+                # if FEATURE_BUSCMD_STRING
 
                 if (BusCmd_DataFormat_e::string == fmt) {
                   variable = args[arg];
                 }
-                #endif // if FEATURE_BUSCMD_STRING
+                # endif // if FEATURE_BUSCMD_STRING
                 break;
               case BusCmd_Command_e::Calculate: // calc - c.<calculation>
               case BusCmd_Command_e::If:        // if - i.<calculation>[.skip]
@@ -394,9 +422,9 @@ std::vector<BusCmd_Command_struct>BusCmd_Helper_struct::parseBusCmdCommands(cons
                 }
                 break;
               case BusCmd_Command_e::Let:              // let - l.<variable>.<calculation>
-              #if FEATURE_BUSCMD_STRING && FEATURE_STRING_VARIABLES
+              # if FEATURE_BUSCMD_STRING && FEATURE_STRING_VARIABLES
               case BusCmd_Command_e::LetStr:           // letstr - m.<variable>.<calculation>
-              #endif // if FEATURE_BUSCMD_STRING && FEATURE_STRING_VARIABLES
+              # endif // if FEATURE_BUSCMD_STRING && FEATURE_STRING_VARIABLES
                 fmt         = BusCmd_DataFormat_e::undefined;
                 val         = 0;
                 variable    = args[arg - 1];
@@ -429,22 +457,24 @@ std::vector<BusCmd_Command_struct>BusCmd_Helper_struct::parseBusCmdCommands(cons
                 val = 0;
 
                 if (!((BusCmd_DataFormat_e::bytes == fmt) || (BusCmd_DataFormat_e::words == fmt)
-                      #if FEATURE_BUSCMD_STRING
+                      # if FEATURE_BUSCMD_STRING
                       || (BusCmd_DataFormat_e::string == fmt)
-                      #endif // if FEATURE_BUSCMD_STRING
+                      # endif // if FEATURE_BUSCMD_STRING
                       )) {
                   ++arg;
 
-                  validInt64FromString(args[arg], val);
+                  if (!validInt64FromString(args[arg], val)) {
+                    calculation = args[arg];
+                  }
                 }
 
-                #if FEATURE_BUSCMD_STRING
+                # if FEATURE_BUSCMD_STRING
 
                 if (BusCmd_DataFormat_e::string == fmt) {
                   ++arg;
                   variable = args[arg];
                 }
-                #endif // if FEATURE_BUSCMD_STRING
+                # endif // if FEATURE_BUSCMD_STRING
                 break;
               case BusCmd_Command_e::EnableGPIO: // enable - l.<state>
               case BusCmd_Command_e::ResetGPIO:  // reset - z.<state>.<msec>
@@ -498,23 +528,24 @@ std::vector<BusCmd_Command_struct>BusCmd_Helper_struct::parseBusCmdCommands(cons
       }
 
       if (evt > 0) {
-        #ifndef LIMIT_BUILD_SIZE
+        # ifndef LIMIT_BUILD_SIZE
 
         if (loglevelActiveFor(LOG_LEVEL_INFO) && _showLog) {
           for (auto it = commands.begin(); it != commands.end(); ++it) {
             addLog(LOG_LEVEL_INFO, strformat(F("BUSCMD: Parsing command: %s, name: %s"), it->toString().c_str(), name.c_str()));
           }
         }
-        #endif // ifndef LIMIT_BUILD_SIZE
+        # endif // ifndef LIMIT_BUILD_SIZE
 
         if (!key.isEmpty()) {
           _commandCache[concat(key, keyPostfix)] = commands;
-#ifndef BUILD_NO_DEBUG
+# ifndef BUILD_NO_DEBUG
+
           if (loglevelActiveFor(LOG_LEVEL_INFO) && _showLog) {
             addLog(LOG_LEVEL_INFO, strformat(F("BUSCMD: Insert '%s%s' into cache with %d commands."),
                                              name.c_str(), keyPostfix.c_str(), commands.size()));
           }
-#endif
+# endif // ifndef BUILD_NO_DEBUG
         }
       }
     }
@@ -577,11 +608,34 @@ bool BusCmd_Helper_struct::executeBusCmdCommands() {
     _lastCommand = _it->command; // We only need this for long ResetGPIO pulses
     _lastReg     = _it->reg;
 
-    switch (_it->command) {
+    if (!_it->calculation.isEmpty() && (
+          (BusCmd_Command_e::Read == _it->command) ||
+          (BusCmd_Command_e::Write == _it->command) ||
+          (BusCmd_Command_e::RegisterRead == _it->command) ||
+          (BusCmd_Command_e::Register16Read == _it->command) ||
+          (BusCmd_Command_e::RegisterWrite == _it->command) ||
+          (BusCmd_Command_e::Register16Write == _it->command)
+          )) {
+      String toCalc(replacePluginValues(_it->calculation));
+      const String newCalc = parseTemplate(toCalc); // Process like rules
+      ESPEASY_RULES_FLOAT_TYPE tmp{};
+
+      if (Calculate(newCalc, tmp) == CalculateReturnCode::OK) {
+        _it->d0_int32_t = static_cast<uint32_t>(tmp);
+      }
+
+      // NOTE: Keep for development-testing
+      // addLog(LOG_LEVEL_INFO, strformat(F("BusCmd: Pre-calc '%s' -> '%s' = '%s'"),
+      //                                  _it->calculation.c_str(), newCalc.c_str(), doubleToString(tmp).c_str()));
+    }
+
+    switch (_it->command)
+    {
       case BusCmd_Command_e::NOP: break;
       case BusCmd_Command_e::Read:
 
-        switch (_it->format) {
+        switch (_it->format)
+        {
           case BusCmd_DataFormat_e::undefined: break;
           case BusCmd_DataFormat_e::uint8_t:
           case BusCmd_DataFormat_e::int8_t:
@@ -654,17 +708,18 @@ bool BusCmd_Helper_struct::executeBusCmdCommands() {
           case BusCmd_DataFormat_e::words:
             _it->data_w = _iBusCmd_Handler->read16uW(_len);
             break;
-          #if FEATURE_BUSCMD_STRING
+          # if FEATURE_BUSCMD_STRING
           case BusCmd_DataFormat_e::string:
             _it->variable = _iBusCmd_Handler->readString(_len);
             break;
-          #endif // if FEATURE_BUSCMD_STRING
+          # endif // if FEATURE_BUSCMD_STRING
         }
         result = true;
         break;
       case BusCmd_Command_e::Write:
 
-        switch (_it->format) {
+        switch (_it->format)
+        {
           case BusCmd_DataFormat_e::undefined: break;
           case BusCmd_DataFormat_e::uint8_t:
           case BusCmd_DataFormat_e::int8_t:
@@ -733,18 +788,19 @@ bool BusCmd_Helper_struct::executeBusCmdCommands() {
           case BusCmd_DataFormat_e::words:
             result = _iBusCmd_Handler->write16uW(_it->data_w);
             break;
-          #if FEATURE_BUSCMD_STRING
+          # if FEATURE_BUSCMD_STRING
           case BusCmd_DataFormat_e::string:
             result = _iBusCmd_Handler->writeString(_it->variable);
             break;
-          #endif // if FEATURE_BUSCMD_STRING
+          # endif // if FEATURE_BUSCMD_STRING
         }
         break;
       case BusCmd_Command_e::Register16Read:
         wideReg = true; // fall through
       case BusCmd_Command_e::RegisterRead:
 
-        switch (_it->format) {
+        switch (_it->format)
+        {
           case BusCmd_DataFormat_e::undefined: break;
           case BusCmd_DataFormat_e::uint8_t:
           case BusCmd_DataFormat_e::int8_t:
@@ -817,11 +873,11 @@ bool BusCmd_Helper_struct::executeBusCmdCommands() {
           case BusCmd_DataFormat_e::words:
             _it->data_w = _iBusCmd_Handler->read16uWREG(_it->reg, _len, wideReg);
             break;
-          #if FEATURE_BUSCMD_STRING
+          # if FEATURE_BUSCMD_STRING
           case BusCmd_DataFormat_e::string:
             _it->variable = _iBusCmd_Handler->readStringREG(_it->reg, _len, wideReg);
             break;
-          #endif // if FEATURE_BUSCMD_STRING
+          # endif // if FEATURE_BUSCMD_STRING
         }
         result = true;
         break;
@@ -829,7 +885,8 @@ bool BusCmd_Helper_struct::executeBusCmdCommands() {
         wideReg = true; // fall through
       case BusCmd_Command_e::RegisterWrite:
 
-        switch (_it->format) {
+        switch (_it->format)
+        {
           case BusCmd_DataFormat_e::undefined: break;
           case BusCmd_DataFormat_e::uint8_t:
           case BusCmd_DataFormat_e::int8_t:
@@ -898,11 +955,11 @@ bool BusCmd_Helper_struct::executeBusCmdCommands() {
           case BusCmd_DataFormat_e::words:
             result = _iBusCmd_Handler->write16uWREG(_it->reg, _it->data_w, wideReg);
             break;
-          #if FEATURE_BUSCMD_STRING
+          # if FEATURE_BUSCMD_STRING
           case BusCmd_DataFormat_e::string:
             result = _iBusCmd_Handler->writeStringReg(_it->reg, _it->variable, wideReg);
             break;
-          #endif // if FEATURE_BUSCMD_STRING
+          # endif // if FEATURE_BUSCMD_STRING
         }
         break;
       case BusCmd_Command_e::Value:
@@ -916,9 +973,9 @@ bool BusCmd_Helper_struct::executeBusCmdCommands() {
       case BusCmd_Command_e::Calculate:
       case BusCmd_Command_e::If:
       case BusCmd_Command_e::Let:
-      #if FEATURE_BUSCMD_STRING && FEATURE_STRING_VARIABLES
+      # if FEATURE_BUSCMD_STRING && FEATURE_STRING_VARIABLES
       case BusCmd_Command_e::LetStr:
-      #endif // if FEATURE_BUSCMD_STRING && FEATURE_STRING_VARIABLES
+      # endif // if FEATURE_BUSCMD_STRING && FEATURE_STRING_VARIABLES
 
         result = true;
 
@@ -927,7 +984,7 @@ bool BusCmd_Helper_struct::executeBusCmdCommands() {
           const String newCalc = parseTemplate(toCalc); // Process like rules
           ESPEASY_RULES_FLOAT_TYPE tmp{};
 
-          #if FEATURE_BUSCMD_STRING && FEATURE_STRING_VARIABLES
+          # if FEATURE_BUSCMD_STRING && FEATURE_STRING_VARIABLES
 
           if ((BusCmd_Command_e::LetStr == _it->command)) {
             String toVar(replacePluginValues(_it->variable));
@@ -942,14 +999,16 @@ bool BusCmd_Helper_struct::executeBusCmdCommands() {
               }
             }
           } else
-          #endif // if FEATURE_BUSCMD_STRING && FEATURE_STRING_VARIABLES
+          # endif // if FEATURE_BUSCMD_STRING && FEATURE_STRING_VARIABLES
 
           if (Calculate(newCalc, tmp) == CalculateReturnCode::OK) {
-#ifndef BUILD_NO_DEBUG
+            # ifndef BUILD_NO_DEBUG
+
             if (loglevelActiveFor(LOG_LEVEL_INFO) && _showLog && parseAndLogOK) {
               addLog(LOG_LEVEL_INFO, strformat(F("BUSCMD: Calculation: %s, result: %s"), toCalc.c_str(), doubleToString(tmp).c_str()));
             }
-#endif
+            # endif // ifndef BUILD_NO_DEBUG
+
             if (BusCmd_Command_e::If == _it->command) {
               if (essentiallyZero(tmp)) { // 0 = false => cancel execution
                 if (0 == _it->len) {
@@ -1030,7 +1089,8 @@ bool BusCmd_Helper_struct::executeBusCmdCommands() {
     }
 
     if ((BusCmd_CommandState_e::Processing == _commandState) && !_valueIsSet) {
-      switch (_it->format) {
+      switch (_it->format)
+      {
         case BusCmd_DataFormat_e::undefined: break;
         case BusCmd_DataFormat_e::uint8_t:
         case BusCmd_DataFormat_e::uint16_t:
@@ -1053,30 +1113,30 @@ bool BusCmd_Helper_struct::executeBusCmdCommands() {
         case BusCmd_DataFormat_e::bytes:
         case BusCmd_DataFormat_e::words:
           break;
-        #if FEATURE_BUSCMD_STRING
+        # if FEATURE_BUSCMD_STRING
         case BusCmd_DataFormat_e::string:
-          # if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+          #  if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
           validDoubleFromString(_it->variable, _value);
-          # else // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+          #  else // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
           validFloatFromString(_it->variable, _value);
-          # endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+          #  endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
           break;
-        #endif // if FEATURE_BUSCMD_STRING
+        # endif // if FEATURE_BUSCMD_STRING
       }
     }
-#ifndef LIMIT_BUILD_SIZE
+# ifndef LIMIT_BUILD_SIZE
 
     if (loglevelActiveFor(LOG_LEVEL_INFO) && _showLog && parseAndLogOK) {
-      # if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+      #  if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
       const String valStr = doubleToString(_value, 2, true);
-      # else // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+      #  else // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
       const String valStr = toString(_value, 2, true);
-      # endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+      #  endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
 
       addLog(LOG_LEVEL_INFO, strformat(F("BUSCMD: Executing command: %s, value[%d]:(%c): %s"),
                                        _it->toString().c_str(), _varIndex, _valueIsSet ? 't' : 'f', valStr.c_str()));
     }
-#endif // ifndef LIMIT_BUILD_SIZE
+# endif // ifndef LIMIT_BUILD_SIZE
     ++_it; // Next command
 
     while (toSkip > 0 && _it != _commands.end()) {
@@ -1103,9 +1163,9 @@ String BusCmd_Helper_struct::replacePluginValues(const String& inVar) {
 
   if (_evalIsSet) {
     result.replace(F("%value%"),
-                   #if FEATURE_BUSCMD_STRING
+                   # if FEATURE_BUSCMD_STRING
                    BusCmd_DataFormat_e::string == _evalCommand->format ? _evalCommand->getString() :
-                   #endif // if FEATURE_BUSCMD_STRING
+                   # endif // if FEATURE_BUSCMD_STRING
                    toString(_evalCommand->getIntValue()));     // %value%
     result.replace(F("%h%"), _evalCommand->getHexValue(true)); // %h%
 
@@ -1138,11 +1198,12 @@ bool BusCmd_Helper_struct::parseAndExecute(BusCmd_CommandSource_e source,
   _commands      = parseBusCmdCommands(EMPTY_STRING, line);
 
   if (!_commands.empty()) {
-#ifndef BUILD_NO_DEBUG
+# ifndef BUILD_NO_DEBUG
+
     if (loglevelActiveFor(LOG_LEVEL_INFO) && _showLog) {
       addLog(LOG_LEVEL_INFO, strformat(logFormat, _commands.size()));
     }
-#endif
+# endif // ifndef BUILD_NO_DEBUG
     _commandState = BusCmd_CommandState_e::Processing;
     result        = executeBusCmdCommands();
     _commands.clear();
@@ -1271,7 +1332,8 @@ void BusCmd_Helper_struct::setCommands(std::vector<BusCmd_Command_struct>command
   _commandState = commandState;
 }
 
-#ifndef LIMIT_BUILD_SIZE
+# ifndef LIMIT_BUILD_SIZE
+
 bool BusCmd_Helper_struct::plugin_get_config(struct EventStruct *event,
                                              String            & string) {
   const String cmd = parseString(string, 1);
@@ -1305,7 +1367,7 @@ bool BusCmd_Helper_struct::plugin_get_config(struct EventStruct *event,
       string = strformat(F("%g"), _value);
     }
   }
-  # ifndef BUILD_NO_DEBUG
+  #  ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) { // Not logging log value or early return
     addLog(LOG_LEVEL_DEBUG, strformat(F("BUSCMD: GET_CONFIG, result: %s, success: %d, value: %g, cmds: %d"),
@@ -1314,10 +1376,10 @@ bool BusCmd_Helper_struct::plugin_get_config(struct EventStruct *event,
                                       _value,
                                       cmds.size()));
   }
-  # endif // ifndef BUILD_NO_DEBUG
+  #  endif // ifndef BUILD_NO_DEBUG
 
   return success;
 }
 
-#endif // ifndef LIMIT_BUILD_SIZE
-#endif
+# endif // ifndef LIMIT_BUILD_SIZE
+#endif // if FEATURE_BUS_COMMAND

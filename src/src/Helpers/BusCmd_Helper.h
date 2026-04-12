@@ -2,6 +2,7 @@
 #define _HELPERS_BUSCMD_HELPER_H
 
 /** Changelog:
+ * 2026-04-12 tonhuisman: Allow rules-variables to be used for get/read and put/write commands
  * 2025-08-16 tonhuisman: Extend If I2C command to optionally skip forward N commands on false (0) result
  * 2025-08-07 tonhuisman: Add LetStr I2C command, analogue to Rules LetStr command
  * 2025-06-03 tonhuisman: Add PLUGIN_GET_CONFIG_VALUE support, guarded with ifndef LIMIT_BUILD_SIZE
@@ -11,11 +12,11 @@
 
 #include "../../_Plugin_Helper.h"
 #if FEATURE_BUS_COMMAND
-#include "../Helpers/IBusCmd_Handler.h"
+# include "../Helpers/IBusCmd_Handler.h"
 
-#define BUSCMD_EVENT_SEPARATOR     '|'
-#define BUSCMD_COMMAND_SEPARATOR   ';'
-#define BUSCMD_ARGUMENT_SEPARATOR  '.'
+# define BUSCMD_EVENT_SEPARATOR     '|'
+# define BUSCMD_COMMAND_SEPARATOR   ';'
+# define BUSCMD_ARGUMENT_SEPARATOR  '.'
 
 enum class BusCmd_Command_e : uint8_t {
   NOP = 0u,        // 'n'
@@ -33,9 +34,10 @@ enum class BusCmd_Command_e : uint8_t {
   ResetGPIO,       // 'z'
   If,              // 'i'
   Let,             // 'l'
-  #if FEATURE_BUSCMD_STRING && FEATURE_STRING_VARIABLES
+  # if FEATURE_BUSCMD_STRING && FEATURE_STRING_VARIABLES
   LetStr,          // 'm'
-  #endif // if FEATURE_BUSCMD_STRING && FEATURE_STRING_VARIABLES
+  # endif // if FEATURE_BUSCMD_STRING && FEATURE_STRING_VARIABLES
+
 };
 
 enum class BusCmd_DataFormat_e : uint8_t {
@@ -56,9 +58,10 @@ enum class BusCmd_DataFormat_e : uint8_t {
   int32_t_LE,
   bytes,
   words,
-  #if FEATURE_BUSCMD_STRING
+  # if FEATURE_BUSCMD_STRING
   string,
-  #endif // if FEATURE_BUSCMD_STRING
+  # endif // if FEATURE_BUSCMD_STRING
+
 };
 
 enum class BusCmd_CommandState_e :uint8_t {
@@ -67,6 +70,7 @@ enum class BusCmd_CommandState_e :uint8_t {
   StartingDelay,   // Interrupts the command execution loop
   WaitingForDelay,
   ConditionalExit, // Cancels further command execution
+
 };
 
 enum class BusCmd_CommandSource_e : uint8_t {
@@ -77,6 +81,7 @@ enum class BusCmd_CommandSource_e : uint8_t {
   PluginTenPerSecond,
   PluginFiftyPerSecond,
   PluginGetConfigVar,
+
 };
 
 struct BusCmd_Command_struct {
@@ -89,19 +94,18 @@ struct BusCmd_Command_struct {
                         uint32_t            _len,
                         String              _calculation,
                         String              _variable);
-  #ifndef LIMIT_BUILD_SIZE
+  # ifndef LIMIT_BUILD_SIZE
   String   toString();
-  #endif // ifndef LIMIT_BUILD_SIZE
+  # endif // ifndef LIMIT_BUILD_SIZE
   String   getHexValue();
   String   getHexValue(const bool withPrefix);
   int64_t  getIntValue();
-  uint32_t getUIntValue() {
-    return static_cast<uint32_t>(getIntValue());
-  }
 
-  #if FEATURE_BUSCMD_STRING
-  String getString();
-  #endif // if FEATURE_BUSCMD_STRING
+  uint32_t getUIntValue() { return static_cast<uint32_t>(getIntValue()); }
+
+  # if FEATURE_BUSCMD_STRING
+  String   getString();
+  # endif // if FEATURE_BUSCMD_STRING
 
   BusCmd_Command_e    command = BusCmd_Command_e::NOP;
   BusCmd_DataFormat_e format  = BusCmd_DataFormat_e::undefined;
@@ -113,28 +117,39 @@ struct BusCmd_Command_struct {
       uint8_t d1_uint8_t;
       uint8_t d2_uint8_t;
       uint8_t d3_uint8_t;
+
     };
+
     struct {
       int8_t d0_int8_t;
       int8_t d1_int8_t;
       int8_t d2_int8_t;
       int8_t d3_int8_t;
+
     };
+
     struct {
       uint16_t d0_uint16_t;
       uint16_t d1_uint16_t;
+
     };
+
     struct {
       int16_t d0_int16_t;
       int16_t d1_int16_t;
+
     };
+
     int32_t  d0_int32_t;
     uint32_t d0_uint32_t{};
+
   };
+
   std::vector<uint8_t> data_b;
   std::vector<uint16_t>data_w;
   String               calculation;
   String               variable;
+
 };
 
 struct BusCmd_Buffer {
@@ -142,6 +157,7 @@ struct BusCmd_Buffer {
                 const String& line);
   String cacheName;
   String commandSet;
+
 };
 
 struct BusCmd_Helper_struct {
@@ -158,10 +174,10 @@ struct BusCmd_Helper_struct {
   bool plugin_once_a_second(struct EventStruct *event);
   bool plugin_ten_per_second(struct EventStruct *event);
   bool plugin_fifty_per_second(struct EventStruct *event);
-  #ifndef LIMIT_BUILD_SIZE
+  # ifndef LIMIT_BUILD_SIZE
   bool plugin_get_config(struct EventStruct *event,
                          String            & string);
-  #endif // ifndef LIMIT_BUILD_SIZE
+  # endif // ifndef LIMIT_BUILD_SIZE
 
   std::vector<BusCmd_Command_struct>parseBusCmdCommands(const String& name,
                                                         const String& line);
@@ -176,9 +192,7 @@ struct BusCmd_Helper_struct {
                        const String         & logFormat);
 
   // Setters
-  void setLog(bool showLog) {
-    _showLog = showLog;
-  }
+  void setLog(bool showLog) { _showLog = showLog; }
 
   void setCommands(std::vector<BusCmd_Command_struct>commands,
                    taskVarIndex_t                    taskVarIndex,
@@ -190,9 +204,7 @@ struct BusCmd_Helper_struct {
                  const String& name,
                  const String& line);
 
-  inline void setCommandSource(BusCmd_CommandSource_e commandSource) {
-    _commandSource = commandSource;
-  }
+  inline void                   setCommandSource(BusCmd_CommandSource_e commandSource) { _commandSource = commandSource; }
 
   inline BusCmd_CommandSource_e getCommandSource() const {
     return _commandSource;
@@ -238,6 +250,8 @@ private:
   std::vector<BusCmd_Command_struct>::iterator         _evalCommand;
   std::vector<BusCmd_Command_struct>::iterator         _it;
   std::vector<BusCmd_Buffer>                           _buffer;
+
 };
-#endif
+
+#endif // if FEATURE_BUS_COMMAND
 #endif // ifndef _HELPERS_BUSCMD_HELPER_H
