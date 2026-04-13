@@ -12,6 +12,10 @@
 
 #include "../Helpers/Networking.h"
 
+#if FEATURE_JSON_EVENT
+# include "../Helpers/HTTPResponseParser.h"
+#endif // if FEATURE_JSON_EVENT
+
 #if FEATURE_SEND_TO_HTTP || FEATURE_POST_TO_HTTP || FEATURE_PUT_TO_HTTP
 const __FlashStringHelper* httpEmitToHTTP(struct EventStruct        *event,
                                           const __FlashStringHelper *logIdentifier,
@@ -94,6 +98,7 @@ const __FlashStringHelper* httpEmitToHTTP(struct EventStruct        *event,
     #endif // if FEATURE_HTTP_TLS
 
     int httpCode = -1;
+
     send_via_http(
       logIdentifier,
       timeout,
