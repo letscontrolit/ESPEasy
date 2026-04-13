@@ -2,16 +2,9 @@
 
 #if FEATURE_ETHERNET
 
-# include "../../../src/CustomBuild/ESPEasyLimits.h"
-# include "../ESPEasyNetwork.h"
-# include "../wifi/ESPEasyWifi.h"
 # include "../../../src/ESPEasyCore/ESPEasy_Log.h"
-# include "../../../src/ESPEasyCore/ESPEasyGPIO.h"
-# include "../Globals/NetworkState.h"
 # include "../../../src/Globals/Settings.h"
-# include "../../../src/Helpers/Hardware_GPIO.h"
 # include "../../../src/Helpers/StringConverter.h"
-# include "../../../src/Helpers/Networking.h"
 
 # include <ETH.h>
 # include <lwip/dns.h>

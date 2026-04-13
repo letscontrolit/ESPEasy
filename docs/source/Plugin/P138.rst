@@ -13,7 +13,9 @@ Type: |P138_type|
 
 Name: |P138_name|
 
-Status: |P138_status|
+Status ESP32: |P138_status|
+
+Status ESP8266: |P138_status_lb|
 
 GitHub: |P138_github|_
 

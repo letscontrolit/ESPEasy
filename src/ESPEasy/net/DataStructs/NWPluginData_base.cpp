@@ -1,16 +1,12 @@
 #include "../DataStructs/NWPluginData_base.h"
 
 #include "../../../src/DataStructs/ESPEasy_EventStruct.h"
-#include "../../../src/Globals/RuntimeData.h"
-#include "../../../src/Globals/Settings.h"
 #include "../../../src/Helpers/StringConverter.h"
 #if FEATURE_STORE_NETWORK_INTERFACE_SETTINGS
 # include "../../../src/Helpers/_ESPEasy_key_value_store.h"
 #include "../_NWPlugin_Helper.h"
 #endif
 #ifdef ESP32
-# include "../Globals/NetworkState.h"
-
 # include <esp_netif.h>
 # include <esp_netif_types.h>
 #endif // ifdef ESP32
@@ -58,6 +54,17 @@ NWPluginData_base::~NWPluginData_base()
   _kvs = nullptr;
 #endif // if FEATURE_STORE_NETWORK_INTERFACE_SETTINGS
 }
+
+#ifdef ESP32
+bool NWPluginData_base::isDefaultRoute() const {
+  if (_netif) {
+    return _netif->isDefault();
+  }
+  return false;
+}
+
+#endif
+
 
 bool NWPluginData_base::hasPluginStats() const {
 #if FEATURE_NETWORK_STATS

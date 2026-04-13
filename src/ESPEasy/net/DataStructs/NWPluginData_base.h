@@ -39,6 +39,10 @@ struct NWPluginData_base {
 
   virtual bool exit(EventStruct *event) = 0;
 
+#ifdef ESP32
+  virtual bool isDefaultRoute() const;
+#endif
+
   bool         hasPluginStats() const;
 
   bool         hasPeaks() const;

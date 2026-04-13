@@ -2,6 +2,8 @@
 
 #ifdef USES_P116
 
+#include "../Helpers/Hardware_SPI.h"
+
 /****************************************************************************
  * ST77xx_type_toString: Display-value for the device selected
  ***************************************************************************/
@@ -170,6 +172,10 @@ bool P116_data_struct::plugin_init(struct EventStruct *event) {
     addLog(LOG_LEVEL_INFO, F("ST77xx: Init start."));
     uint8_t initRoptions = 0xFF;
 
+    #ifdef ESP32
+    auto spi_ptr = getSPIBusForTask(event->TaskIndex);
+    if (!spi_ptr) return false;
+    #endif
     switch (_device) {
       case ST77xx_type_e::ST7735s_128x128:
 
@@ -197,14 +203,14 @@ bool P116_data_struct::plugin_init(struct EventStruct *event) {
           initRoptions = INITR_BLACKTAB135x240; // 135x240px
         }
 
-        // fall through
+      // fall through
       case ST77xx_type_e::ST7735s_172x320:
 
         if (initRoptions == 0xFF) {
           initRoptions = INITR_BLACKTAB172x320; // 172x320px
         }
 
-        // fall through
+      // fall through
       case ST77xx_type_e::ST77xxs_170x320:
 
         if (initRoptions == 0xFF) {
@@ -233,7 +239,12 @@ bool P116_data_struct::plugin_init(struct EventStruct *event) {
           initRoptions = INITR_MINI160x80; // 80x160px
         }
 
+        # ifdef ESP32
+        st7735 = new (std::nothrow) Adafruit_ST7735(spi_ptr, PIN(0), PIN(1), PIN(2));
+        # endif // ifdef ESP32
+        # ifdef ESP8266
         st7735 = new (std::nothrow) Adafruit_ST7735(PIN(0), PIN(1), PIN(2));
+        # endif // ifdef ESP8166
 
         if (nullptr != st7735) {
           st7735->initR(initRoptions); // initialize a ST7735s chip
@@ -251,7 +262,12 @@ bool P116_data_struct::plugin_init(struct EventStruct *event) {
       case ST77xx_type_e::ST7789vw3_135x240:
       # endif // if P116_EXTRA_ST7789
       {
+        # ifdef ESP32
+        st7789 = new (std::nothrow) Adafruit_ST7789(spi_ptr, PIN(0), PIN(1), PIN(2));
+        # endif // ifdef ESP32
+        # ifdef ESP8266
         st7789 = new (std::nothrow) Adafruit_ST7789(PIN(0), PIN(1), PIN(2));
+        # endif // ifdef ESP8266
 
         if (nullptr != st7789) {
           uint8_t init_seq = 0; // Default/original initialisation
@@ -273,7 +289,12 @@ bool P116_data_struct::plugin_init(struct EventStruct *event) {
       }
       case ST77xx_type_e::ST7796s_320x480:
       {
+        # ifdef ESP32
+        st7796 = new (std::nothrow) Adafruit_ST7796S_kbv(spi_ptr, PIN(0), PIN(1), PIN(2));
+        # endif // ifdef ESP32
+        # ifdef ESP8266
         st7796 = new (std::nothrow) Adafruit_ST7796S_kbv(PIN(0), PIN(1), PIN(2));
+        # endif // ifdef ESP8266
 
         if (nullptr != st7796) {
           st7796->begin();

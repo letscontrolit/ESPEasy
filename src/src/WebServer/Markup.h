@@ -2,11 +2,9 @@
 #define WEBSERVER_WEBSERVER_MARKUP_H
 
 #include "../WebServer/common.h"
-#include "../DataTypes/ProtocolIndex.h"
 #include "../DataTypes/CPluginID.h"
 #include "../ESPEasy/net/DataTypes/NWPluginID.h"
 #include "../DataTypes/PluginID.h"
-#include "../Globals/Plugins.h"
 #include "../Helpers/StringGenerator_GPIO.h"
 
 
@@ -141,11 +139,11 @@ void addRowLabel_copy(const String& label);
 
 void addRowLabel(LabelType::Enum label);
 
-void addRowLabelValue(LabelType::Enum label);
+void addRowLabelValue(LabelType::Enum label, bool extendedValue);
 
-void addRowLabelValues(const LabelType::Enum labels[]);
+void addRowLabelValues(const LabelType::Enum labels[], bool extendedValue = true);
 
-void addRowLabelValue_copy(LabelType::Enum label);
+void addRowLabelValue_copy(LabelType::Enum label, bool extendedValue = false);
 
 void addRowColspan(int colspan);
 
@@ -170,6 +168,9 @@ void addFormHeader(const __FlashStringHelper *header,
 void addFormHeader(const __FlashStringHelper *header,
                    const __FlashStringHelper *helpButton,
                    const __FlashStringHelper *rtdHelpButton);
+void addFormHeader(const String&              header,
+                   const __FlashStringHelper *helpButton,
+                   const __FlashStringHelper *rtdHelpButton);
 
 /*
    void addFormHeader(const String& header,
@@ -178,6 +179,21 @@ void addFormHeader(const __FlashStringHelper *header,
                    const String& helpButton,
                    const String& rtdHelpButton);
  */
+
+// ********************************************************************************
+// Add a detail wrapper start & end, terminates the page-table, and starts a new page table
+// Feature disabled in MIMNIMAL_OTA builds for reduced bin size
+// ********************************************************************************
+#ifndef BUILD_MINIMAL_OTA
+void addFormDetailsStart(const bool initialOpen);
+void addFormDetailsStart(const __FlashStringHelper *caption, const bool initialOpen);
+void addFormDetailsEnd();
+void addFormFixedFirstColumn();
+#else // ifndef BUILD_MINIMAL_OTA
+#define addFormDetailsStart(...)
+#define addFormDetailsEnd()
+#define addFormFixedFirstColumn()
+#endif // ifndef BUILD_MINIMAL_OTA
 
 // ********************************************************************************
 // Add a sub header

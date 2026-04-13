@@ -540,6 +540,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 
 // #define USES_P131   // NeoPixel Matrix
 // #define USES_P132   // INA3221
+//   #define P132_EXTENDED 1 // Extend support with INA219, INA226, INA228, INA230, INA231 and INA260
 // #define USES_P133   // LTR390 UV
 // #define USES_P134   // A02YYUW
 // #define USES_P135   // SCD4x

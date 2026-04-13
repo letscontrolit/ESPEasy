@@ -21,11 +21,13 @@
 #define setNBitToUL(N, B, V, M)  N=(((N) & ~((M) << (B))) | (static_cast<uint32_t>((V) & (M)) << (B)))
 #define getNBitFromUL(number, bitnr, mask)  (((number) >> (bitnr)) & (mask))
 
+#define set16BitToUL(N, B, V) setNBitToUL(N, B, V, 0xFFFFUL)
 #define set8BitToUL(N, B, V) setNBitToUL(N, B, V, 0xFFUL)
 #define set4BitToUL(N, B, V) setNBitToUL(N, B, V, 0x0FUL)
 #define set3BitToUL(N, B, V) setNBitToUL(N, B, V, 0x07UL)
 #define set2BitToUL(N, B, V) setNBitToUL(N, B, V, 0x03UL)
 
+#define get16BitFromUL(number, bitnr)  getNBitFromUL(number, bitnr, 0xFFFFUL)
 #define get8BitFromUL(number, bitnr)  getNBitFromUL(number, bitnr, 0xFFUL)
 #define get4BitFromUL(number, bitnr)  getNBitFromUL(number, bitnr, 0x0FUL)
 #define get3BitFromUL(number, bitnr)  getNBitFromUL(number, bitnr, 0x07UL)

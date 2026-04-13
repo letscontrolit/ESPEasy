@@ -13,10 +13,10 @@
 
 
 # ifdef USES_NW001
-#  include "../NWPluginStructs/NW001_data_struct_WiFi_STA.h"
+//#  include "../NWPluginStructs/NW001_data_struct_WiFi_STA.h"
 # endif
 # ifdef USES_NW002
-#  include "../NWPluginStructs/NW002_data_struct_WiFi_AP.h"
+//#  include "../NWPluginStructs/NW002_data_struct_WiFi_AP.h"
 # endif
 # ifdef USES_NW003
 #  include "../NWPluginStructs/NW003_data_struct_ETH_RMII.h"
@@ -135,7 +135,7 @@ String NWPlugin_import_export::exportConfig(
     child->write({ F("enabled"), Settings.getNetworkEnabled(networkIndex) });
     child->write({ F("route_prio"), Settings.getRoutePrio_for_network(networkIndex) });
     child->write({ F("sn_block"), Settings.getNetworkInterfaceSubnetBlockClientIP(networkIndex) });
-    child->write({ F("start_delay"), Settings.getNetworkInterfaceStartupDelayAtBoot(networkIndex) });
+    child->write({ F("start_delay"), Settings.getNetworkInterfaceStartupDelay(networkIndex) });
 
 # if FEATURE_USE_IPV6
     child->write({ F("en_ipv6"), Settings.getNetworkEnabled_IPv6(networkIndex) });
@@ -223,7 +223,7 @@ String NWPlugin_import_export::importConfig(
             break;
           case 2: Settings.setNetworkInterfaceSubnetBlockClientIP(networkIndex, bool_val);
             break;
-          case 3: Settings.setNetworkInterfaceStartupDelayAtBoot(networkIndex, value.toInt());
+          case 3: Settings.setNetworkInterfaceStartupDelay(networkIndex, value.toInt());
             break;
 # if FEATURE_USE_IPV6
           case 4: Settings.setNetworkEnabled_IPv6(networkIndex, bool_val);

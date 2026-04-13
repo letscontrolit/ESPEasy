@@ -95,7 +95,12 @@ void NWPluginData_static_runtime::mark_start()
 
   if (!_netif) { return; }
 
-  _netif->setHostname(NetworkCreateRFCCompliantHostname().c_str());
+  const String hostname = strformat(
+    F("%s-%s"),
+    NetworkCreateRFCCompliantHostname().c_str(), 
+    _eventInterfaceName.c_str());
+
+  _netif->setHostname(hostname.c_str());
 # if FEATURE_USE_IPV6
   _netif->enableIPv6(_enableIPv6);
 # endif
@@ -108,7 +113,7 @@ void NWPluginData_static_runtime::mark_start()
 # endif // if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 0)
 # if NW_PLUGIN_LOG_EVENTS
 
-  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+  if (!_eventInterfaceName.isEmpty() && loglevelActiveFor(LOG_LEVEL_INFO)) {
     addLog(LOG_LEVEL_INFO, strformat(
              F("%s: Started"),
              _eventInterfaceName.c_str()));
@@ -121,7 +126,7 @@ void NWPluginData_static_runtime::mark_stop()
   _startStopStats.setOff();
 # if NW_PLUGIN_LOG_EVENTS
 
-  if (_netif && loglevelActiveFor(LOG_LEVEL_INFO)) {
+  if (_netif && !_eventInterfaceName.isEmpty() && loglevelActiveFor(LOG_LEVEL_INFO)) {
     addLog(LOG_LEVEL_INFO, strformat(
              F("%s: Stopped"),
              _eventInterfaceName.c_str()));
@@ -134,7 +139,7 @@ void NWPluginData_static_runtime::mark_got_IP()
   // Set OnOffTimer to off so we can also count how often we get new IP
   _gotIPStats.forceSet(true);
 
-  if (!_netif) { return; }
+  if (!_netif || _eventInterfaceName.isEmpty()) { return; }
 
   if (!_netif->isDefault()) {
     nonDefaultNetworkInterface_gotIP = true;
@@ -200,7 +205,7 @@ void NWPluginData_static_runtime::mark_lost_IP()
 # endif
 # if NW_PLUGIN_LOG_EVENTS
 
-  if (_netif && loglevelActiveFor(LOG_LEVEL_INFO)) {
+  if (_netif && !_eventInterfaceName.isEmpty() && loglevelActiveFor(LOG_LEVEL_INFO)) {
     addLog(LOG_LEVEL_INFO, strformat(
              F("%s: Lost IP"),
              _eventInterfaceName.c_str()));
@@ -235,7 +240,7 @@ void NWPluginData_static_runtime::mark_connected()
 
 void NWPluginData_static_runtime::log_connected()
 {
-  if (_netif && loglevelActiveFor(LOG_LEVEL_INFO)) {
+  if (_netif && !_eventInterfaceName.isEmpty() && loglevelActiveFor(LOG_LEVEL_INFO)) {
     if (_establishConnectStats.getCycleCount()) {
       // Log duration
       addLog(LOG_LEVEL_INFO, strformat(
@@ -269,7 +274,7 @@ void NWPluginData_static_runtime::mark_disconnected()
 
 void NWPluginData_static_runtime::log_disconnected()
 {
-  if (_netif && loglevelActiveFor(LOG_LEVEL_INFO)) {
+  if (_netif && !_eventInterfaceName.isEmpty() && loglevelActiveFor(LOG_LEVEL_INFO)) {
     addLog(LOG_LEVEL_INFO, strformat(
              F("%s: Disconnected. Connected for: %s"),
              _eventInterfaceName.c_str(),
@@ -277,6 +282,13 @@ void NWPluginData_static_runtime::log_disconnected()
                _connectedStats.getLastOnDuration_ms()).c_str()));
   }
 }
+
+
+void NWPluginData_static_runtime::mark_connect_failed()
+{
+  networkConnectionFailed = true;
+}
+
 
 } // namespace net
 } // namespace ESPEasy

@@ -2,7 +2,6 @@ import argparse
 import json
 import sys
 import os
-import  collections
 
 manifest_binfiles = {}
 
@@ -35,14 +34,14 @@ def create_display_text(description, version, families):
         esp32_split.append('C3')
     if 'ESP32-C5' in families:
         esp32_split.append('C5')
+    if 'ESP32-C6' in families:
+        esp32_split.append('C6')
     if 'ESP32-C61' in families:
         esp32_split.append('C61')
-    elif 'ESP32-C6' in families:
-        esp32_split.append('C6')
+    if 'ESP32-H2' in families:
+        esp32_split.append('H2')
     if 'ESP32-H21' in families:
         esp32_split.append('H21')
-    elif 'ESP32-H2' in families:
-        esp32_split.append('H2')
     if 'ESP32-P4' in families:
         esp32_split.append('P4')
 
@@ -383,7 +382,7 @@ def generate_manifest_files(bin_folder, output_prefix):
             '    </style>\n',
             '    <script\n',
             '      type="module"\n',
-            '      src="https://unpkg.com/tasmota-esp-web-tools@10.0.3/dist/web/install-button.js?module"\n',
+            '      src="https://unpkg.com/tasmota-esp-web-tools@11.1.2/dist/web/install-button.js?module"\n',
             '    ></script>\n',
             '  </head>\n',
             '  <body>\n',

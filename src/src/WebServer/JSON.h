@@ -4,7 +4,7 @@
 
 #include "../WebServer/common.h"
 
-#include "../Helpers/KeyValueWriter_JSON.h"
+class KeyValueWriter;
 
 // ********************************************************************************
 // Web Interface get CSV value from task

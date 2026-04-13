@@ -2,6 +2,8 @@
 
 #ifdef USES_P095
 
+#include "../Helpers/Hardware_SPI.h"
+
 /****************************************************************************
  * ILI9xxx_type_toString: Display-value for the device selected
  ***************************************************************************/
@@ -165,7 +167,20 @@ bool P095_data_struct::plugin_init(struct EventStruct *event) {
     } else
     # endif // if P095_ENABLE_ILI948X
     {
+      # ifdef ESP32 // PIN(0) and PIN(1) swapped!
+      auto spi_ptr = getSPIBusForTask(event->TaskIndex);
+      if (spi_ptr) 
+      tft = new (std::nothrow) Adafruit_ILI9341(spi_ptr,
+                                                PIN(1),
+                                                PIN(0),
+                                                PIN(2),
+                                                static_cast<uint8_t>(_displayType),
+                                                _xpix,
+                                                _ypix);
+      # endif // ifdef ESP32
+      # ifdef ESP8266
       tft = new (std::nothrow) Adafruit_ILI9341(PIN(0), PIN(1), PIN(2), static_cast<uint8_t>(_displayType), _xpix, _ypix);
+      # endif // ifdef ESP8266
 
       if (nullptr != tft) {
         tft->begin();

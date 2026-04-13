@@ -43,18 +43,18 @@ public:
 
   virtual ~KeyValueWriter_JSON();
 
-  virtual void              write();
+  virtual void              write() override;
 
-  virtual void              write(const KeyValueStruct& kv);
+  virtual void              write(const KeyValueStruct& kv) override;
 
   // Create writer of the same derived type, with this set as parent
-  virtual UP_KeyValueWriter createChild();
-  virtual UP_KeyValueWriter createChild(const String& header);
-  virtual UP_KeyValueWriter createChildArray(const String& header);
+  virtual UP_KeyValueWriter createChild() override;
+  virtual UP_KeyValueWriter createChild(const String& header) override;
+  virtual UP_KeyValueWriter createChildArray(const String& header) override;
 
   // Create new writer of the same derived type, without parent
-  virtual UP_KeyValueWriter createNew();
-  virtual UP_KeyValueWriter createNew(const String& header);
+  virtual UP_KeyValueWriter createNew() override;
+  virtual UP_KeyValueWriter createNew(const String& header) override;
 
   virtual bool              dataOnlyOutput() const override {
     // JSON is not intended to be human readable
@@ -73,7 +73,7 @@ public:
 
 private:
 
-  void writeValue(const ValueStruct& value);
+  void writeValue(const ValueStruct& value, bool forceString);
 
 #ifdef USE_KWH_JSON_PRETTY_PRINT
 

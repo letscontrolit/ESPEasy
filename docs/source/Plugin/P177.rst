@@ -13,7 +13,9 @@ Type: |P177_type|
 
 Name: |P177_name|
 
-Status: |P177_status|
+Status ESP32: |P177_status|
+
+Status ESP8266: |P177_status_lb|
 
 GitHub: |P177_github|_
 

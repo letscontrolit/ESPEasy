@@ -1,11 +1,13 @@
 #include "../Helpers/Hardware_GPIO.h"
+#include "ESPEasy_config.h"
 
 #ifdef ESP8266
+
+# include "../Helpers/Hardware_device_info.h"
 
 // ********************************************************************************
 // Get info of a specific GPIO pin
 // ********************************************************************************
-
 
 // return true when pin can be used.
 bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning) {
@@ -15,26 +17,22 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
 
   warning = isBootStrapPin(gpio);
 
-  switch (gpio) {
-    case  0: pinnr =  3; break;
-    case  1: pinnr = 10; break;
-    case  2: pinnr =  4; break;
-    case  3: pinnr =  9; break;
-    case  4: pinnr =  2; break;
-    case  5: pinnr =  1; break;
-    case  6:                    // GPIO 6 .. 8  is used for flash
-    case  7:
-    case  8: pinnr = -1; break;
-    case  9: pinnr = 11; break; // On ESP8266 used for flash
-    case 10: pinnr = 12; break; // On ESP8266 used for flash
-    case 11: pinnr = -1; break;
-    case 12: pinnr =  6; break;
-    case 13: pinnr =  7; break;
-    case 14: pinnr =  5; break;
+  constexpr int8_t NodeMCU_PINNR[]
+  { 3, 10, 4, 9, 2, 1, 
+    -1, -1, -1,  // GPIO 6 .. 8 & 11  is used for flash 
+    11, 12,         // On ESP8266 GPIO 9 & 10 used for flash (QUAD mode)
+    -1,                 // GPIO 11
+    6, 7, 5, 8, 
+    0                   // GPIO 16 is used by the deep-sleep mechanism
+  };
 
+  if ((gpio >= 0) && (static_cast<size_t>(gpio) < NR_ELEMENTS(NodeMCU_PINNR))) {
+    pinnr = NodeMCU_PINNR[gpio];
+  }
+
+  if (gpio == 15) {
     // GPIO-15 Can't be used as an input. There is an external pull-down on this pin.
-    case 15: pinnr =  8; input = false; break;
-    case 16: pinnr =  0; break; // This is used by the deep-sleep mechanism
+    input = false;
   }
 
   if (isFlashInterfacePin_ESPEasy(gpio)) {
@@ -66,15 +64,9 @@ bool getGpioInfo(int gpio, int& pinnr, bool& input, bool& output, bool& warning)
   return input || output;
 }
 
-bool isBootModePin(int gpio)
-{
-  return gpio == 0; 
-}
+bool isBootModePin(int gpio)  { return gpio == 0; }
 
-bool isBootStrapPin(int gpio)
-{
-    return (gpio == 0 || gpio == 2 || gpio == 15);
-}
+bool isBootStrapPin(int gpio) { return gpio == 0 || gpio == 2 || gpio == 15; }
 
 bool getGpioPullResistor(int gpio, bool& hasPullUp, bool& hasPullDown) {
   hasPullDown = false;
@@ -92,18 +84,17 @@ bool getGpioPullResistor(int gpio, bool& hasPullUp, bool& hasPullDown) {
   return true;
 }
 
-
 bool validGpio(int gpio) {
   if (gpio < 0) { return false; }
-  if (gpio > MAX_GPIO) { return false; }
 
-  int pinnr;
+  if (!GPIO_IS_VALID_GPIO(gpio)) { return false; }
+
+  int  pinnr;
   bool input;
   bool output;
   bool warning;
 
   return getGpioInfo(gpio, pinnr, input, output, warning);
 }
-
 
 #endif // ifdef ESP8266

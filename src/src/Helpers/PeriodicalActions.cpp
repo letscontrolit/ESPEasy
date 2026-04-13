@@ -45,6 +45,9 @@
 #include "../../ESPEasy_fdwdecl.h"
 #endif
 
+#if FEATURE_MDNS
+#include "../Helpers/MDNS_Helper.h"
+#endif
 
 
 #define PLUGIN_ID_MQTT_IMPORT         37
@@ -62,8 +65,13 @@ void run50TimesPerSecond() {
 #ifdef ESP32
     static const NetworkInterface *lastDefaultInterface = nullptr;
     NetworkInterface * currentDefaultInterface = Network.getDefaultInterface();
-    if (nonDefaultNetworkInterface_gotIP || lastDefaultInterface != currentDefaultInterface) {
+    if (nonDefaultNetworkInterface_gotIP || 
+        networkConnectionFailed || 
+        lastDefaultInterface != currentDefaultInterface) {
       nonDefaultNetworkInterface_gotIP = false;
+
+      // TODO TD-er: Must do something else here on failed connect?
+      networkConnectionFailed = false;
       ESPEasy::net::NWPluginCall(NWPlugin::Function::NWPLUGIN_PRIORITY_ROUTE_CHANGED, 0, dummy);
       lastDefaultInterface = currentDefaultInterface;
     }
@@ -212,6 +220,7 @@ void runOncePerSecond()
 #endif
 
   // I2C Watchdog feed
+#if FEATURE_I2C
   if (Settings.WDI2CAddress != 0)
   {
     #if FEATURE_I2C_MULTIPLE
@@ -219,6 +228,7 @@ void runOncePerSecond()
     #endif // if FEATURE_I2C_MULTIPLE
     I2C_write8(Settings.WDI2CAddress, 0xA5);
   }
+#endif
 
   #if FEATURE_MDNS
   #ifdef ESP8266
@@ -558,12 +568,17 @@ void flushAndDisconnectAllClients() {
     saveToRTC();
     delay(100); // Flush anything in the network buffers.
   }
+
   process_serialWriteBuffer();
 }
 
 
 void prepareShutdown(IntendedRebootReason_e reason)
 {
+#if FEATURE_MDNS
+  end_mDNS();
+#endif
+
 //  WiFiEventData.intent_to_reboot = true;
 #if FEATURE_MQTT
   runPeriodicalMQTT(); // Flush outstanding MQTT messages

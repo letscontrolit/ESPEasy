@@ -1,6 +1,5 @@
 #include "../DataStructs/FactoryDefaultPref.h"
 
-#include "../../ESPEasy_common.h"
 
 ResetFactoryDefaultPreference_struct::ResetFactoryDefaultPreference_struct() : _preference(0)
 {}

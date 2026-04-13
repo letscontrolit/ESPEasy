@@ -239,7 +239,9 @@ String serializeDomoticzJson(struct EventStruct *event)
       }
     } else {
       writer.write({ F("nvalue"), F("0") });
-      writer.write({ F("svalue"), formatDomoticzSensorType(event) });
+      writer.write({ F("svalue"), 
+                     formatDomoticzSensorType(event), 
+                     KeyValueStruct::Format::PreFormatted });
     }
   }
 

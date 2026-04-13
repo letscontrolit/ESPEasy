@@ -2,17 +2,17 @@
 
 #ifdef USES_NW002
 
+# ifdef ESP32
 # include "../../../src/Globals/Settings.h"
-
-# include "../../../src/Helpers/ESPEasy_time_calc.h"
-# include "../../../src/Helpers/LongTermOnOffTimer.h"
-# include "../../../src/Helpers/StringConverter.h"
+#endif
 
 # include "../wifi/ESPEasyWifi.h"
 
 # ifdef ESP32
 #  include <esp_wifi.h>
 #  include <esp_wifi_ap_get_sta_list.h>
+#  include <NetworkEvents.h>
+#  include <NetworkManager.h>
 # endif // ifdef ESP32
 
 # define NW_PLUGIN_ID  2
@@ -27,7 +27,7 @@ namespace net {
 namespace wifi {
 
 # ifdef ESP32
-static NWPluginData_static_runtime stats_and_cache(true, &NW_PLUGIN_INTERFACE);
+static NWPluginData_static_runtime stats_and_cache(true, &NW_PLUGIN_INTERFACE, "AP");
 # else
 static NWPluginData_static_runtime stats_and_cache(true, "AP"); // Cannot use flash strings during init of static objects
 # endif // ifdef ESP32
@@ -93,9 +93,7 @@ bool NW002_data_struct_WiFi_AP::init(EventStruct *event)
   nw002_enable_NAPT = Settings.WiFi_AP_enable_NAPT();
 # endif
 
-  if (Settings.StartAP_on_NW002_init()) {
-    ESPEasy::net::wifi::setAPinternal(true);
-  }
+  ESPEasy::net::wifi::setAPinternal(true);
 # ifdef ESP32
   NW002_update_NAPT();
 # endif

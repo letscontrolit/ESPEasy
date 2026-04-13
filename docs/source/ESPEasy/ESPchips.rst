@@ -32,17 +32,23 @@ ESPEasy does support a number of variants of the processors manufactured by Espr
 * **ESP32-solo1** Same as ESP32, but with 1 core, running at 160 MHz. Used in some commercially sold devices like the early editions of the orange Shelly modules.
 * **ESP32-S2** Has more GPIO pins than the ESP32, but only 1 CPU core. Initial support in ESPEasy added since 2021-09-19.
 * **ESP32-S3** Support added: 2023-05-03
+* **ESP32-S31** Not yet supported
 * **ESP32-C2 / ESP8684** Support added: 2023-11-10
 * **ESP32-C3 / ESP8685** Support added: 2023-05-03
-* **ESP32-C5** Not yet supported
+* **ESP32-C5** Preliminary support added: 2026-01-09
 * **ESP32-C6** Support added: 2023-11-10
+* **ESP32-C61** Preliminary support added: 2026-01-09
+* **ESP32-E22** Not yet supported
 * **ESP32-H2** Not yet supported
-* **ESP32-P4** Not yet supported
+* **ESP32-H21** Not yet supported
+* **ESP32-H4** Not yet supported
+* **ESP32-P4** Support added: 2026-01-08
+* **ESP32-P4rev3** Not yet supported
 
 
 .. list-table:: Espressif platforms
    :header-rows: 1
-   :widths: 7 7 7 7 7 7 7 7 7 7 7 7
+   :widths: 7 7 7 7 7 7 7 7 7 7 7 7 7
    :stub-columns: 1   
    
    *  - 
@@ -50,49 +56,53 @@ ESPEasy does support a number of variants of the processors manufactured by Espr
       - ESP32 (ESP32solo1)
       - ESP32-S2
       - ESP32-S3
+      - ESP32-S31
       - ESP32-C2 (ESP8684)
       - ESP32-C3 (ESP8685)
       - ESP32-C5
       - ESP32-C6
       - ESP32-C61
       - ESP32-H2
-      - ESP32-P4
+      - ESP32-P4 
    *  - CPU
       - Xtensa® single-core 32-bit L106
       - Xtensa® dual-core 32-bit LX6 (solo1:single core)
       - Xtensa® single-core 32-bit LX7
       - Xtensa® dual-core 32-bit LX7
+      - 32-bit RISC-V dual-core processor
       - 32-bit RISC-V single-core processor
       - 32-bit RISC-V single-core processor
       - 32-bit RISC-V single-core processor
       - 32-bit RISC-V single-core processor
       - 32-bit RISC-V single-core processor
       - 32-bit RISC-V single-core processor
-      - 32-bit RISC-V dual-core processor up to 400 MHz with AI instruction extension and FPU for the HP system
+      - 32-bit RISC-V dual-core processor up to 400 MHz with AI instruction extension and FPU for the HP system 
    *  - Core
       - 1
       - 2 (solo1:1)
       - 1
       - 2
-      - 1
-      - 1
-      - 1
-      - 1
-      - 1
-      - 1
       - 2
+      - 1
+      - 1
+      - 1
+      - 1
+      - 1
+      - 1
+      - 2 
    *  - Freq. (MHz)
       - 80
       - 240 (solo1:160)
       - 240
       - 240
+      - 320
       - 120
       - 160
       - 240
       - 160
       - 120
       - 96
-      - 400
+      - 360 (v1.x) / 400 (v3.x) 
    *  - Voltage (V)
       - 2.5 ~ 3.6
       - 3.0 ~ 3.6
@@ -105,44 +115,49 @@ ESPEasy does support a number of variants of the processors manufactured by Espr
       - 3.0 ~ 3.6
       - 3.0 ~ 3.6
       - 3.0 ~ 3.6
+      - 3.0 ~ 3.6 
    *  - ESPEasy supported since
-      - May-15
+      - 2026/05
       - 2017/12 (solo1:2023/05)
-      - Sep-21
-      - May-23
-      - Nov-23
-      - May-23
+      - 2021/09
+      - 2023/05
       - 
-      - Nov-23
-      - 
-      - 
-      - 
+      - 2023/11
+      - 2023/05
+      - 2026/01
+      - 2023/11
+      - 2026/01
+      - n/a
+      - 2026/01
    *  - Introduction
       - 2014
       - 2016
       - 2019
       - 2021
+      - 2026
       - 2022
       - 2020
-      - 
+      - 2022
       - 2021
-      - 
+      - 2024
       - 2021
-      - 
-   *  - Status (2024/12)
+      - 2023 
+   *  - Status (2026/03)
       - End-Of-Life
       - Mass Production (solo1: NRND)
       - NRND
       - Mass Production
+      - Announced
       - Mass Production
       - Mass Production
-      - Sample
       - Mass Production
-      - Sample
       - Mass Production
-      - Sample
+      - Mass Production
+      - Mass Production
+      - Mass Production 
    *  - Wi-Fi
       - IEEE 802.11 b/g/n; 2.4 GHz; HT20; up to 72 Mbps
+      - IEEE 802.11 b/g/n; 2.4 GHz; HT20/40; up to 150 Mbps
       - IEEE 802.11 b/g/n; 2.4 GHz; HT20/40; up to 150 Mbps
       - IEEE 802.11 b/g/n; 2.4 GHz; HT20/40; up to 150 Mbps
       - IEEE 802.11 b/g/n; 2.4 GHz; HT20/40; up to 150 Mbps
@@ -152,20 +167,22 @@ ESPEasy does support a number of variants of the processors manufactured by Espr
       - IEEE 802.11 b/g/n; 2.4 GHz; HT20/40; up to 150 Mbps
       - IEEE 802.11 b/g/n; 2.4 GHz; HT20/40; up to 150 Mbps
       - No Wi-Fi
-      - No Wi-Fi
+      - No Wi-Fi 
    *  - Wi-Fi 6
       - 
       - 
       - 
       - 
+      - IEEE 802.11 ax; 2.4 GHz; HT20; up to 150 Mbps
       - 
       - 
       - IEEE 802.11 ax; 2.4/5 GHz; HT20; up to 150 Mbps
       - IEEE 802.11 ax; 2.4 GHz; HT20; up to 150 Mbps
       - IEEE 802.11 ax; 2.4 GHz; HT20; up to 150 Mbps
       - 
-      - 
+      -  
    *  - 5 GHz Wi-Fi
+      - 
       - 
       - 
       - 
@@ -176,35 +193,38 @@ ESPEasy does support a number of variants of the processors manufactured by Espr
       - 
       - 
       - 
-      - 
+      -  
    *  - Zigbee / Thread (802.15.4)
       - N/A
       - N/A
       - N/A
       - N/A
+      - Available
       - N/A
       - N/A
       - Available
       - Available
       - N/A
       - Available
-      - N/A
+      - N/A 
    *  - Bluetooth
       - N/A
       - BR/EDR + Bluetooth LE v4.2
       - N/A
       - Bluetooth LE v5.0
+      - Bluetooth LE+BR/EDR v5.4
       - Bluetooth LE v5.0
       - Bluetooth LE v5.0
       - Bluetooth LE v5.0
       - Bluetooth LE v5.3
       - Bluetooth LE v5.0
       - Bluetooth LE v5.0
-      - N/A
+      - N/A 
    *  - SRAM (KB)
       - 160
       - 520
       - 320
+      - 512
       - 512
       - 272
       - 400
@@ -212,43 +232,46 @@ ESPEasy does support a number of variants of the processors manufactured by Espr
       - 512
       - 320
       - 320
-      - 768
+      - 768 
    *  - ROM (KB)
       - 
       - 448
       - 128
       - 384
+      - 320
       - 576
       - 384
       - 320
       - 320
       - 256
       - 128
-      - 128
+      - 128 
    *  - RTC SRAM (KB)
       - 1
       - 16
       - 16
       - 16
+      - 32
       - 0
       - 8
       - 16
       - 16
       - 16
       - 4
-      - 32
+      - 32 
    *  - ADC
       - 1*10-bit ADC, 1 channel
       - 2*12-bit ADC, 18 channels
       - 2*13-bit ADC, 20 channels
       - 2*12-bit ADC, 20 channels
+      - 
       - 1*12-bit ADC, 5 channels
       - 2*12-bit ADC, 6 channels
       - 1*12-bit ADC, 6 channels
       - 1*12-bit ADC, 7 channels
       - 1*12-bit ADC, 4 channels
       - 1*12-bit ADC, 5 channels
-      - 2*12-bit ADC, 14 channels
+      - 2*12-bit ADC, 14 channels 
    *  - DAC
       - 0
       - 2*8-bit DAC
@@ -261,126 +284,137 @@ ESPEasy does support a number of variants of the processors manufactured by Espr
       - 0
       - 0
       - 0
+      - 0 
    *  - Touch
       - 0
       - 10
       - 14
       - 14
+      - 
       - 0
       - 0
       - 0
       - 0
       - 0
       - 0
-      - 14
+      - 14 
    *  - Temp Sensor
       - 
       - 0
       - 1
       - 1
+      - 
       - 1
       - 1
       - 1
       - 1
       - 1
       - 1
-      - 1
+      - 1 
    *  - GPIO
       - 16
       - 26
       - 37
       - 36
+      - 61
       - 14
       - 15
       - 22
       - 30
       - 18
       - 19
-      - 55
+      - 55 
    *  - Strapping GPIO
       - 0, 2, 15
       - 0, 2, 5, 12, 15
       - 0, 45, 46
       - 0, 3, 45, 46
+      - 
       - 8, 9
       - 2, 8, 9
       - 8, 9
       - 4, 5, 8, 9, 15
       - 4, 5, 8, 9, 15
       - 8, 9
-      - 
+      -  
    *  - GPIO for flash/PSRAM
       - 6, 7, 8, 9, 10, 11
       - 6, 7, 8, 9, 10, 11 (PSRAM or embedded flash: 16, 17)
       - 27, 28, 29, 30, 31, 32 (OPI: 33, 34, 35, 36, 37)
       - 27, 28, 29, 30, 31, 32 (OPI: 33, 34, 35, 36, 37)
+      - 
       - 11, 12, 13, 14, 15, 16, 17
       - 11, 12, 13, 14, 15, 16, 17
       - 11, 12, 13, 14, 15, 16, 17
       - 20, 21, 22, 24, 25, 26
       - 20, 21, 22, 24, 25, 26
       - 
-      - N/A
+      - N/A 
    *  - UART
       - 1.5 (Serial1 out only)
       - 3
       - 2
       - 3
+      - 4
       - 2
       - 2
       - 3
       - 2
       - 2
       - 2
-      - 5
+      - 5 
    *  - SPI
       - 2
       - 4
       - 4
       - 4
+      - 
       - 3
       - 3
       - 1
       - 1
       - 1
       - 3
-      - 5
+      - 5 
    *  - SDIO HOST
       - 
       - 1
       - 0
       - 2
+      - 
       - 0
       - 0
       - 0
       - 0
       - 0
       - 0
-      - 1
+      - 1 
    *  - SDIO SLAVE
       - 
       - 1
       - 0
       - 0
+      - 
       - 0
       - 0
       - 0
       - 1
       - 1
       - 0
-      - 1
+      - 1 
    *  - I2C
       - 1(soft)
       - 2
       - 2
       - 2
+      - 
       - 1
       - 1
       - 2
       - 2
       - 1
       - 2
-      - 3
+      - 3 
    *  - I3C
       - 
       - 
@@ -392,79 +426,86 @@ ESPEasy does support a number of variants of the processors manufactured by Espr
       - 
       - 
       - 
-      - 1
+      - 
+      - 1 
    *  - I2S
       - 1
       - 2
       - 1
       - 2
+      - 
       - 0
       - 1
       - 1
       - 1
       - 1
       - 1
-      - 3
+      - 3 
    *  - RMT
       - 0
       - 1*8 channels
       - 1*4 channels
       - 1*4 channels
+      - 
       - 0
       - 1*4 channels
       - 1 channel
       - 1*4 channels
       - 
       - 1*2 channels
-      - 1*4 channels
+      - 1*4 channels 
    *  - LEDC PWM
       - 0
       - 2*8 channels
       - 1*8 channels
       - 1*8 channels
+      - 
       - 1*6 channels
       - 1*6 channels
       - 1*6 channels
       - 1*6 channels
       - 1*6 channels
       - 1*6 channels
-      - 1*8 channels
+      - 1*8 channels 
    *  - MCPWM
       - 0
       - 2
       - 0
       - 2
+      - 
       - 0
       - 0
       - 0
       - 1
       - 0
       - 1
-      - 2
+      - 2 
    *  - USB OTG
       - 0
       - 0
       - 1
       - 1
+      - 1
       - 0
       - 0
       - 0
       - 0
       - 0
       - 0
-      - 2
+      - 2 
    *  - USB Serial / JTAG
       - N/A
       - N/A
       - YES
       - YES
-      - N/A
       - YES
       - N/A
       - YES
+      - N/A
       - YES
       - YES
       - YES
+      - YES 
    *  - Hall
       - 0
       - 1 (removed in ESP-IDF5)
@@ -477,30 +518,33 @@ ESPEasy does support a number of variants of the processors manufactured by Espr
       - 0
       - 0
       - 0
+      - 0 
    *  - Ethernet
       - 0
       - 1 (RMII and SPI)
       - 1 (SPI)
       - 1 (SPI)
+      - 1 (RMII Gbit and SPI)
       - 1 (SPI)
       - 1 (SPI)
       - 1 (SPI)
       - 1 (SPI)
       - 1 (SPI)
       - 0
-      - 1 (RMII and SPI)
+      - 1 (RMII and SPI) 
    *  - TWAI (CAN)
       - 0
       - 1
       - 1
       - 1
+      - 1
       - 0
       - 1
       - 2
       - 2
       - 2
       - 1
-      - 3
+      - 3 
    *  - JTAG
       - 
       - YES
@@ -513,18 +557,20 @@ ESPEasy does support a number of variants of the processors manufactured by Espr
       - YES
       - YES
       - YES
+      - YES 
    *  - Camera
       - N/A
       - 1*DVP 8/16-bit
       - 1*DVP 8/16-bit
       - 1*DVP 8/16-bit
-      - N/A
-      - N/A
-      - N/A
-      - N/A
-      - N/A
-      - N/A
       - 1*DVP 8/16-bit
+      - N/A
+      - N/A
+      - N/A
+      - N/A
+      - N/A
+      - N/A
+      - 1*DVP 8/16-bit 
    *  - TOF
       - N/A
       - N/A
@@ -537,22 +583,25 @@ ESPEasy does support a number of variants of the processors manufactured by Espr
       - N/A
       - N/A
       - N/A
+      - N/A 
    *  - BT Certification
       - 
       - BT SIG
       - 
       - BT SIG
       - 
+      - 
       - BT SIG
       - 
       - BQB
       - 
       - 
-      - 
+      -  
    *  - Wi-Fi Certification
       - WPA 2
       - Wi-Fi Alliance/WPA 3
       - Wi-Fi Alliance/WPA 3
+      - 
       - 
       - WFA
       - 
@@ -560,43 +609,47 @@ ESPEasy does support a number of variants of the processors manufactured by Espr
       - 
       - 
       - 
-      - 
+      -  
    *  - Green Certification
       - 
       - RoHS/REACH
       - RoHS/REACH
       - RoHS/REACH
-      - RoHS/REACH
-      - RoHS/REACH
       - 
       - RoHS/REACH
       - RoHS/REACH
       - 
+      - RoHS/REACH
+      - RoHS/REACH
       - 
+      -  
    *  - RF Certification
       - 
       - FCC / CE-RED / IC / TELEC / KCC / SRRC / NCC
       - FCC / CE-RED / SRRC / IC
       - SRRC / CE / FCC / IC / MIC / NCC / KCC
+      - 
       - SRRC
       - FCC / CE-RED / SRRC / IC
       - 
       - 
       - 
       - 
-      - 
+      -  
    *  - Sleep Power Consumption
       - 900 µA light sleep, 20 µA deep sleep
       - 800 µA light sleep, 10 µA deep sleep
       - 750 µA light sleep, 25 µA deep sleep
       - 240 µA light sleep, 8 µA deep sleep
+      - 
       - 140 µA light sleep, 5 µA deep sleep
       - 130 µA light sleep, 5 µA deep sleep
       - 
       - 180 µA / 35 µA light sleep, 7 µA deep sleep
       - 
       - 
-      -
+      -  
+
 
 
 Sources:
@@ -610,31 +663,36 @@ Sources:
 Datasheets
 ==========
 
-* `DS:ESP8266 (ESP8285) <https://www.espressif.com/sites/default/files/documentation/0a-esp8266ex_datasheet_en.pdf>`_
-* `DS:ESP32 <https://www.espressif.com/sites/default/files/documentation/esp32_datasheet_en.pdf>`_ / `DS:ESP32-solo1 <https://www.espressif.com/sites/default/files/documentation/esp32-solo-1_datasheet_en.pdf>`_ 
-* `DS:ESP32-S2 <https://www.espressif.com/sites/default/files/documentation/esp32-s2_datasheet_en.pdf>`_
-* `DS:ESP32-S3 <https://www.espressif.com/sites/default/files/documentation/esp32-s3_datasheet_en.pdf>`_
-* `DS:ESP32-C3 <https://www.espressif.com/sites/default/files/documentation/esp32-c3_datasheet_en.pdf>`_ / `DS:ESP8685 <https://www.espressif.com/sites/default/files/documentation/esp8685_datasheet_en.pdf>`_ 
-* `DS:ESP32-C2 <https://www.espressif.com/sites/default/files/documentation/esp8684_datasheet_en.pdf>`_ / `DS:ESP8684 <https://www.espressif.com/sites/default/files/documentation/esp8684_datasheet_en.pdf>`_ 
-* `DS:ESP32-C5 <https://www.espressif.com/sites/default/files/documentation/esp32-c5_datasheet_en.pdf>`_
-* `DS:ESP32-C6 <https://www.espressif.com/sites/default/files/documentation/esp32-c6_datasheet_en.pdf>`_
-* `DS:ESP32-H2 <https://cdn-shop.adafruit.com/product-files/5715/esp32-h2_datasheet_en.pdf>`_
-* `DS:ESP32-P4 <https://www.espressif.com/sites/default/files/documentation/esp32-p4_datasheet_en.pdf>`_
+* `DS:ESP8266 <https://documentation.espressif.com/0a-esp8266ex_datasheet_en.pdf>`_
+* `DS:ESP8285 <https://documentation.espressif.com/0a-esp8285_datasheet_en.pdf>`_
+* `DS:ESP32 <https://documentation.espressif.com/esp32_datasheet_en.pdf>`_ 
+* `DS:ESP32-S2 <https://documentation.espressif.com/esp32-s2_datasheet_en.pdf>`_
+* `DS:ESP32-S3 <https://documentation.espressif.com/esp32-s3_datasheet_en.pdf>`_
+* `DS:ESP32-C2 <https://documentation.espressif.com/esp8684_datasheet_en.pdf>`_ 
+* `DS:ESP32-C3 <https://documentation.espressif.com/esp32-c3_datasheet_en.pdf>`_ 
+* `DS:ESP32-C5 <https://documentation.espressif.com/esp32-c5_datasheet_en.pdf>`_
+* `DS:ESP32-C6 <https://documentation.espressif.com/esp32-c6_datasheet_en.pdf>`_
+* `DS:ESP32-C61 <https://documentation.espressif.com/esp32-c61_datasheet_en.pdf>`_
+* `DS:ESP32-H2 <https://documentation.espressif.com/esp32-h2_datasheet_en.pdf>`_
+* `DS:ESP32-P4 <https://documentation.espressif.com/esp32-p4_datasheet_en.pdf>`_
+* `DS:ESP32-P4 v1.3 <https://documentation.espressif.com/esp32-p4-chip-revision-v1.3_datasheet_en.pdf>`_
 
 
 Technical Reference Manuals
 ===========================
 
-* `TR:ESP8266 <https://www.espressif.com/sites/default/files/documentation/esp8266-technical_reference_en.pdf>`_
-* `TR:ESP32 <https://www.espressif.com/sites/default/files/documentation/esp32_technical_reference_manual_en.pdf>`_
-* `TR:ESP32-S2 <https://www.espressif.com/sites/default/files/documentation/esp32-s2_technical_reference_manual_en.pdf>`_
-* `TR:ESP32-S3 <https://www.espressif.com/sites/default/files/documentation/esp32-s3_technical_reference_manual_en.pdf>`_
-* `TR:ESP32-C3 <https://www.espressif.com/sites/default/files/documentation/esp32-c3_technical_reference_manual_en.pdf>`_
-* `TR:ESP32-C2 <https://www.espressif.com/sites/default/files/documentation/esp8684_technical_reference_manual_en.pdf>`_
-* `TR:ESP32-C5 <https://www.espressif.com/sites/default/files/documentation/esp32-c5_technical_reference_manual_en.pdf>`_
-* `TR:ESP32-C6 <https://www.espressif.com/sites/default/files/documentation/esp32-c6_technical_reference_manual_en.pdf>`_
-* `TR:ESP32-H2 <https://www.espressif.com/sites/default/files/documentation/esp32-h2_technical_reference_manual_en.pdf>`_
-* `TR:ESP32-P4 <https://www.espressif.com/sites/default/files/documentation/esp32-p4_technical_reference_manual_en.pdf>`_
+* `TR:ESP8266 <https://documentation.espressif.com/esp8266-technical_reference_en.pdf>`_
+* `TR:ESP32 <https://documentation.espressif.com/esp32_technical_reference_manual_en.pdf>`_
+* `TR:ESP32-S2 <https://documentation.espressif.com/esp32-s2_technical_reference_manual_en.pdf>`_
+* `TR:ESP32-S3 <https://documentation.espressif.com/esp32-s3_technical_reference_manual_en.pdf>`_
+* `TR:ESP32-C2 <https://documentation.espressif.com/esp8684_technical_reference_manual_en.pdf>`_
+* `TR:ESP32-C3 <https://documentation.espressif.com/esp32-c3_technical_reference_manual_en.pdf>`_
+* `TR:ESP32-C5 <https://documentation.espressif.com/esp32-c5_technical_reference_manual_en.pdf>`_
+* `TR:ESP32-C6 <https://documentation.espressif.com/esp32-c6_technical_reference_manual_en.pdf>`_
+* `TR:ESP32-C61 <https://documentation.espressif.com/esp32-c61_technical_reference_manual_en.pdf>`_
+* `TR:ESP32-H2 <https://documentation.espressif.com/esp32-h2_technical_reference_manual_en.pdf>`_
+* `TR:ESP32-P4 <https://documentation.espressif.com/esp32-p4_technical_reference_manual_en.pdf>`_
+* `TR:ESP32-P4 v1.3 <https://documentation.espressif.com/esp32-p4-chip-revision-v1.3_technical_reference_manual_en.pdf>`_
 
 
 ESP8266/ESP8285
@@ -845,6 +903,13 @@ Build versions:
 * The default SPI mode will be quad mode for both flash and PSRAM
 * ``max_ESP32s3_16M8M_LittleFS_OPI_PSRAM_CDC`` will have quad mode for flash and octal (OPI) mode for PSRAM. (typical 8MB PSRAM)
 
+ESP32-S31
+=========
+
+There is not yet much known about the ESP32-S31.
+Announcement `here <https://www.espressif.com/en/news/ESP32_S31_Release>`_
+
+
 
 ESP32-C2/ESP8684
 ================
@@ -879,9 +944,10 @@ Due to the RISC-V core used in the ESP32-C3, this is a very 'snappy' device and 
 ESP32-C5
 ========
 
+Added: 2026/01/26
+
 This will be the first Espressif SoC supporting 5 GHz WiFi.
 
-.. note:: Beta silicon is available (as of June 2025), which may change in Q3 or Q4 of 2025. So not yet adviced to be used in real products
 
 ESP32-C6
 ========
@@ -896,9 +962,9 @@ It is the more powerful version of the ESP32-H2 and also includes not only the t
 ESP32-C61
 =========
 
-This is a stripped-down version of the ESP32-C6, but with PSRAM versions available.
+Added: 2026/01/26
 
-.. note:: Not yet available (as of Dec 2024)
+This is a stripped-down version of the ESP32-C6, but with PSRAM versions available.
 
 
 
@@ -926,3 +992,9 @@ It does have a RMII interface for Ethernet, like the ESP32-classic does.
 
 .. note:: Not yet supported. Beta silicon is available (as of June 2025), which may change in Q3 or Q4 of 2025. So not yet adviced to be used in real products
 
+ESP32-P4 rev3.x
+===============
+
+New revision of the ESP32-P4, which is incompatible with the initial P4.
+
+.. note:: Not yet supported (as of March 2026)

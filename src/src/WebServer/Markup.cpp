@@ -9,14 +9,15 @@
 
 #include "../Globals/Settings.h"
 
-#include "../Helpers/Convert.h"
+#if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 #include "../Helpers/ESPEasy_UnitOfMeasure.h"
+#endif
 #include "../Helpers/Hardware_GPIO.h"
-#include "../Helpers/StringConverter_Numerical.h"
+#include "../Helpers/Hardware_device_info.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_GPIO.h"
 
-#include "../../ESPEasy_common.h"
+
 
 #ifdef ESP32
 # include "soc/soc_caps.h"
@@ -114,8 +115,12 @@ void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int
     bool input, output, warning;
 
     if (getGpioInfo(gpio, pinnr, input, output, warning)) {
+#if FEATURE_I2C
       bool includeI2C = true;
+#endif
+#if FEATURE_SPI
       bool includeSPI = true;
+#endif
       bool includeSerial = true;
       #if FEATURE_ETHERNET
       bool includeEthernet = true;
@@ -127,6 +132,7 @@ void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int
       // bool includeResetPin = true;
 
       switch (purpose) {
+#if FEATURE_SPI
         case PinSelectPurpose::SPI:
         case PinSelectPurpose::SPI_MISO:
           includeSPI = false;
@@ -134,6 +140,7 @@ void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int
             return;
           }
           break;
+#endif
 #if FEATURE_ETHERNET
         case PinSelectPurpose::Ethernet:
           includeEthernet = false;
@@ -160,7 +167,7 @@ void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int
             return;
           }
           break;
-
+#if FEATURE_I2C
         case PinSelectPurpose::I2C:
 #if FEATURE_I2C_MULTIPLE
         case PinSelectPurpose::I2C_2:
@@ -169,6 +176,7 @@ void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int
 #endif
 #endif
           includeI2C = false;
+#endif
           // fallthrough
         case PinSelectPurpose::Generic_bidir:
 
@@ -217,19 +225,20 @@ void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int
           break;
   
       }
-
+#if FEATURE_I2C
       if (includeI2C && Settings.isI2C_pin(gpio)) {
         disabled = true;
       }
+#endif
 
       if (includeSerial && isSerialConsolePin(gpio)) {
         disabled = true;
       }
-
+#if FEATURE_SPI
       if (includeSPI && Settings.isSPI_pin(gpio)) {
         disabled = true;
       }
-
+#endif
       // Not blocking these GPIO pins, as they may already be in dual-purpose use, just a place-holder
       // if (includeStatusLed && (Settings.Pin_status_led == gpio)) {
       //   disabled = true;
@@ -240,9 +249,10 @@ void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int
       // }
   
   #if FEATURE_ETHERNET
-
-      if (Settings.isEthernetPin(gpio) || (includeEthernet && Settings.isEthernetPinOptional(gpio))) {
-        disabled = true;
+      if (includeEthernet) {
+        if (Settings.isEthernetPin(gpio) || Settings.isEthernetPinOptional(gpio)) {
+          disabled = true;
+        }
       }
   #endif // if FEATURE_ETHERNET
 
@@ -262,25 +272,7 @@ void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int
 
 void addSelector_Item(const __FlashStringHelper *option, int index, bool    selected, bool    disabled, const String& attr)
 {
-  addHtml(F("<option "));
-  addHtmlAttribute(F("value"), index);
-
-  if (selected) {
-    addHtml(F(" selected"));
-  }
-
-  if (disabled) {
-    addDisabled();
-  }
-
-  if (attr.length() > 0)
-  {
-    addHtml(' ');
-    addHtml(attr);
-  }
-  addHtml('>');
-  addHtml(option);
-  addHtml(F("</option>"));
+  addSelector_Item(String(option), index, selected, disabled, attr);
 }
 
 void addSelector_Item(const String& option, int index, bool    selected, bool    disabled, const String& attr)
@@ -292,7 +284,10 @@ void addSelector_Item(const String& option, int index, bool    selected, bool   
     addHtml(F(" selected"));
   }
 
-  if (disabled) {
+  if (disabled && !selected) {
+    // Make sure something that's selected isn't marked disabled.
+    // Disabled items are not sent in the POST, so if saving settings 
+    // where a chosen option is marked 'disabled' you may get odd results.
     addDisabled();
   }
 
@@ -458,23 +453,23 @@ void addRowLabel(LabelType::Enum label) {
   addRowLabel(getLabel(label));
 }
 
-void addRowLabelValue(LabelType::Enum label) {
+void addRowLabelValue(LabelType::Enum label, bool extendedValue) {
   addRowLabel(getLabel(label));
-  addHtml(getValue(label));
+  addHtml(extendedValue ? getExtendedValue(label) : getValue(label));
 #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
   addUnit(getFormUnit(label));
 #endif
 }
 
-void addRowLabelValues(const LabelType::Enum labels[]) {
+void addRowLabelValues(const LabelType::Enum labels[], bool extendedValue) {
 
   KeyValueWriter_WebForm writer(true);
-  writer.writeLabels(labels, true);
+  writer.writeLabels(labels, extendedValue);
 }
 
-void addRowLabelValue_copy(LabelType::Enum label) {
+void addRowLabelValue_copy(LabelType::Enum label, bool extendedValue) {
   addRowLabel_copy(getLabel(label));
-  addHtml(getValue(label));
+  addHtml(extendedValue ? getExtendedValue(label) : getValue(label));
 #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
   addUnit(getFormUnit(label));
 #endif
@@ -530,6 +525,15 @@ void addFormHeader(const __FlashStringHelper *header,
   html_table_header(F(""));
 }
 
+void addFormHeader(const String&              header,
+                   const __FlashStringHelper *helpButton,
+                   const __FlashStringHelper *rtdHelpButton)
+{
+  html_TR();
+  html_table_header(header, helpButton, rtdHelpButton, 300);
+  html_table_header(F(""));
+}
+
 /*
 void addFormHeader(const String& header, const String& helpButton) {
   addFormHeader(header, helpButton, EMPTY_STRING);
@@ -542,6 +546,41 @@ void addFormHeader(const String& header, const String& helpButton, const String&
   html_table_header(F(""));
 }
 */
+
+// ********************************************************************************
+// Add a detail wrapper start & end, terminates the page-table, and starts a new page table
+// ********************************************************************************
+#ifndef BUILD_MINIMAL_OTA
+void addFormDetailsStart(const bool initialOpen) {
+  addFormDetailsStart(F("Details..."), initialOpen);
+}
+
+void addFormDetailsStart(const __FlashStringHelper *caption, const bool initialOpen)
+{
+  html_end_table();
+  addHtml(strformat(F("<details %s>"), FsP(initialOpen ? F("open") : F(""))));
+  addHtml(F("<summary>"));
+  addHtml(caption);
+  addHtml(F("</summary>"));
+  html_table_class_normal();
+  addFormFixedFirstColumn();
+}
+
+void addFormDetailsEnd()
+{
+  html_end_table();
+  addHtml(F("</details>"));
+  html_table_class_normal();
+  addFormFixedFirstColumn();
+}
+
+// Fix first table column at 25vw (view width %) via css class 'tc1', as we work with multiple tables that should be vertically aligned
+// This must be added as the first element in a table definition
+void addFormFixedFirstColumn()
+{
+  addHtml(F("<colgroup><col span=\"1\" class=\"tc1\"/></colgroup>"));
+}
+#endif // ifndef BUILD_MINIMAL_OTA
 
 // ********************************************************************************
 // Add a sub header

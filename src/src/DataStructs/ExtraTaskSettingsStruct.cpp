@@ -1,7 +1,5 @@
 #include "../DataStructs/ExtraTaskSettingsStruct.h"
 
-#include "../../ESPEasy_common.h"
-
 #include "../DataStructs/PluginStats_Config.h"
 
 #include "../Helpers/Misc.h"

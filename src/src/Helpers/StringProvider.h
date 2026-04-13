@@ -36,7 +36,6 @@ struct LabelType {
     WIFI_ENABLE_CAPTIVE_PORTAL,
     WIFI_START_AP_NO_CREDENTIALS,
     WIFI_START_AP_ON_CONNECT_FAIL,
-    WIFI_START_AP_ON_NW002_INIT,
     WIFI_NR_RECONNECT_ATTEMPTS,    
     WIFI_MAX_UPTIME_AUTO_START_AP,
     WIFI_AP_MINIMAL_ON_TIME,
@@ -113,6 +112,9 @@ struct LabelType {
     #if FEATURE_MQTT_CONNECT_BACKGROUND
     MQTT_CONNECT_IN_BACKGROUND,
     #endif // if FEATURE_MQTT_CONNECT_BACKGROUND
+#if FEATURE_COLORIZE_CONSOLE_LOGS
+    COLORIZE_CONSOLE_LOGS,
+#endif
 
     BOOT_TYPE,               // Cold boot
     BOOT_COUNT,              // 0
@@ -136,9 +138,10 @@ struct LabelType {
 //    IP6_GATEWAY,
 #endif
     CLIENT_IP,               // 192.168.1.67
-    #if FEATURE_MDNS
+#if FEATURE_MDNS
     M_DNS,                   // breadboard.local
-    #endif // if FEATURE_MDNS
+    USE_MDNS,
+#endif // if FEATURE_MDNS
     DNS,                     // 192.168.1.1 / (IP unset)
     DNS_1,
     DNS_2,

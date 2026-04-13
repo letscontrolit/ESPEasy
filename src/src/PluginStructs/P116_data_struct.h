@@ -32,9 +32,9 @@
 # include "../Helpers/AdafruitGFX_helper.h" // Use Adafruit graphics helper object
 # include "../CustomBuild/StorageLayout.h"
 
-# define P116_Nlines           24           // The number of different lines which can be displayed
+# define P116_Nlines           24 // The number of different lines which can be displayed
 # define P116_Nchars           60
-# define P116_DebounceTreshold  5           // number of 20 msec (fifty per second) ticks before the button has settled
+# define P116_DebounceTreshold  5 // number of 20 msec (fifty per second) ticks before the button has settled
 
 // # define P116_SHOW_SPLASH                               // Enable to show splash (text)
 
@@ -140,7 +140,7 @@ public:
                    bool                textBackFill = true
                    # if                ADAGFX_FONTS_INCLUDED
                    ,
-                   const uint8_t       defaultFontId = 0
+                   const uint8_t defaultFontId = 0
                    # endif // if ADAGFX_FONTS_INCLUDED
                    );
   P116_data_struct() = delete;

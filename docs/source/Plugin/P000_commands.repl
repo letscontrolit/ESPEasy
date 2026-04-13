@@ -549,37 +549,49 @@
     :green:`Rules`","
     Like ``PostToHTTP`` but using a TLS connection, by default on port 443
 
-    NB: No certificate validation is done!
+    NB: No certificate validation is done!"
     "
-    ProvisionConfig","
+    Provision,Config","
     :red:`Internal`","
     Fetch ``config.dat`` as configured in the Provisioning configuration (see Settings Archive)
 
-    ``ProvisionConfig``"
+    ``Provision,Config``"
     "
-    ProvisionSecurity","
+    Provision,Security","
     :red:`Internal`","
     Fetch ``security.dat`` as configured in the Provisioning configuration (see Settings Archive)
 
-    ``ProvisionSecurity``"
+    ``Provision,Security``"
     "
-    ProvisionNotification","
+    Provision,DevSecurity","
+    :red:`Internal`","
+    Fetch ``devsecurity.dat`` as configured in the Provisioning configuration (see Settings Archive)
+
+    ``Provision,DevSecurity``"
+    "
+    Provision,Notification","
     :red:`Internal`","
     Fetch ``notification.dat`` as configured in the Provisioning configuration (see Settings Archive)
 
-    ``ProvisionNotification``"
+    ``Provision,Notification``"
     "
-    ProvisionProvision","
+    Provision,Provision","
     :red:`Internal`","
     Fetch ``provisioning.dat`` as configured in the Provisioning configuration (see Settings Archive)
 
-    ``ProvisionProvision``"
+    ``Provision,Provision``"
     "
-    ProvisionRules","
+    Provision,Rules","
     :red:`Internal`","
     Fetch ``rulesN.txt`` as configured in the Provisioning configuration (see Settings Archive)
 
-    ``ProvisionRules,1`` to fetch ``rules1.txt`` "
+    ``Provision,Rules,1`` to fetch ``rules1.txt`` "
+    "
+    Provision,Firmware","
+    :red:`Internal`","
+    Fetch a new firmware binary, and flash it on the unit, as configured in the Provisioning configuration (see Settings Archive)
+
+    ``Provision,Firmware,<url-to-firmware-file>`` to fetch and install the specified .bin file from the specified url."
     "
     Publish","
     :green:`Rules`","
@@ -656,7 +668,7 @@
     :green:`Rules`","
     Like ``PutToHTTP`` but using a TLS connection, by default on port 443
 
-    NB: No certificate validation is done!
+    NB: No certificate validation is done!"
     "
     Reboot","
     :red:`Internal`","
@@ -736,7 +748,7 @@
     :green:`Rules`","
     Like ``SendToHTTP`` but using a TLS connection, by default on port 443
 
-    NB: No certificate validation is done!
+    NB: No certificate validation is done!"
     "
     SendToUDP","
     :green:`Rules`","
@@ -1023,9 +1035,9 @@
     "
     WifiAPMode","
     :red:`Internal`","
-    Force the unit into AP mode.
+    Force the unit into AP mode or turn AP mode off.
 
-    ``WifiAPMode``"
+    ``WifiAPMode,<on|off|1|0>``"
     "
     WifiConnect","
     :red:`Internal`","

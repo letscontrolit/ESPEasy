@@ -3,17 +3,11 @@
 #if FEATURE_WIFI
 
 # include "../../../src/ESPEasyCore/ESPEasy_Log.h"
-# include "../../../src/Globals/EventQueue.h"
 # include "../../../src/Globals/RTC.h"
 # include "../../../src/Globals/SecuritySettings.h"
 # include "../../../src/Globals/Settings.h"
-# include "../../../src/Helpers/NetworkStatusLED.h"
-# include "../../../src/Helpers/StringConverter.h"
-# include "../../../src/Helpers/StringGenerator_WiFi.h"
-
 
 # include "../ESPEasyNetwork.h" // for setNetworkMedium, however this should not be part of the WiFi code
-# include "../Globals/ESPEasyWiFiEvent.h"
 # include "../Globals/WiFi_AP_Candidates.h"
 # include "../wifi/ESPEasyWifi.h"
 # include "../wifi/ESPEasyWifi_abstracted.h"
@@ -145,6 +139,7 @@ void ESPEasyWiFi_t::loop()
 
             //            WiFiEventData.warnedNoValidWiFiSettings = true;
           }
+          wifi_STA_data->mark_connect_failed();
 
           wifi_STA_data->_establishConnectStats.clear();
 
@@ -185,6 +180,7 @@ void ESPEasyWiFi_t::loop()
         if (WiFi_AP_Candidates.hasCandidates()) {
           setState(WiFiState_e::WiFiOFF, 100);
         } else {
+          // FIXME TD-er: This might not be a responsibility of this state machine....
           if (shouldStartAP_fallback()) {
             setState(WiFiState_e::AP_Fallback, Settings.APfallback_minimal_on_time_sec() * 1000);
             // TODO TD-er: Must keep track of whether the user has forced AP to be autostarted.
@@ -258,6 +254,7 @@ void ESPEasyWiFi_t::loop()
         if (_state == WiFiState_e::STA_Connecting) {
           setState(WiFiState_e::STA_Reconnecting, WIFI_STATE_MACHINE_STA_CONNECTING_TIMEOUT);
         } else {
+          wifi_STA_data->mark_connect_failed();
           setState(WiFiState_e::WiFiOFF);
         }
       }
@@ -486,7 +483,7 @@ bool ESPEasyWiFi_t::connectSTA()
    */
   WiFi_pre_STA_setup();
 # if defined(ESP8266)
-  wifi_station_set_hostname(NetworkCreateRFCCompliantHostname().c_str());
+  WiFi.hostname(NetworkCreateRFCCompliantHostname().c_str());
 
 # endif // if defined(ESP8266)
 # if defined(ESP32)
@@ -604,7 +601,8 @@ bool ESPEasyWiFi_t::shouldStartAP_fallback() const
     return false;
   }
 
-  return _connect_attempt > Settings.ConnectFailRetryCount;
+  return (Settings.ConnectFailRetryCount > 0) && 
+         (_connect_attempt > Settings.ConnectFailRetryCount);
 }
 
 

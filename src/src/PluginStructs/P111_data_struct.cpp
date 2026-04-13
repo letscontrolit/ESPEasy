@@ -5,16 +5,18 @@
 # include "../ESPEasyCore/ESPEasyRules.h"
 # include "../PluginStructs/P111_data_struct.h"
 # include "../Helpers/PrintToString.h"
+# include "../Helpers/Hardware_SPI.h"
 
 // Needed also here for PlatformIO's library finder as the .h file
 // is in a directory which is excluded in the src_filter
 
 # include <MFRC522.h>
 
-P111_data_struct::P111_data_struct(int8_t csPin,
-                                   int8_t rstPin,
-                                   int8_t irqPin)
-  : mfrc522(nullptr), _csPin(csPin), _rstPin(rstPin), _irqPin(irqPin)
+P111_data_struct::P111_data_struct(taskIndex_t taskIndex,
+                                   int8_t  csPin,
+                                   int8_t  rstPin,
+                                   int8_t  irqPin)
+  : mfrc522(nullptr), _csPin(csPin), _rstPin(rstPin), _irqPin(irqPin), _taskIndex(taskIndex)
 {}
 
 P111_data_struct::~P111_data_struct() {
@@ -29,7 +31,17 @@ P111_data_struct::~P111_data_struct() {
 void P111_data_struct::init() {
   delete mfrc522;
 
-  mfrc522 = new (std::nothrow) MFRC522(_csPin, _rstPin);        // Instantiate a MFRC522
+  # ifdef ESP32
+  auto spi_ptr = getSPIBusForTask(_taskIndex);
+  if (!spi_ptr) { return; }
+  #endif
+
+  // Instantiate a MFRC522
+  mfrc522 = new (std::nothrow) MFRC522(_csPin, _rstPin
+                                       # ifdef ESP32
+                                       , *spi_ptr
+                                       # endif // ifdef ESP32
+                                       );
 
   if (mfrc522 != nullptr) {
     mfrc522->PCD_Init();                                        // Initialize MFRC522 reader
@@ -251,7 +263,10 @@ uint8_t P111_data_struct::readPassiveTargetID(uint8_t *uid,
   return P111_NO_ERROR;
 }
 
-void P111_data_struct::mfrc522_interrupt(P111_data_struct *self)        { self->_irq_pin_time_micros = getMicros64(); }
+void P111_data_struct::mfrc522_interrupt(P111_data_struct *self)
+{
+  self->_irq_pin_time_micros = getMicros64();
+}
 
 /*********************************************************************************************
  * Handle regular read and reset processing

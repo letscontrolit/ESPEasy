@@ -1,7 +1,5 @@
 #include "../Globals/NetworkState.h"
 
-#include "../../../ESPEasy_common.h"
-
 
 // Ethernet Connection status
 ESPEasy::net::NetworkMedium_t active_network_medium = ESPEasy::net::NetworkMedium_t::NotSet;
@@ -28,4 +26,4 @@ WiFiUDP portUDP;
 #ifdef ESP32
 bool nonDefaultNetworkInterface_gotIP{};
 #endif
-
+bool networkConnectionFailed{};

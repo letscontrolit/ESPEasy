@@ -58,10 +58,10 @@ Port_ESPEasySerial_USB_HWCDC_t::Port_ESPEasySerial_USB_HWCDC_t(const ESPEasySeri
 {
   _config.port = ESPEasySerialPort::usb_hw_cdc;
   #if !ARDUINO_USB_CDC_ON_BOOT
-    USB.begin();
+//    USB.begin();
   #endif
   if (_hwcdc_serial != nullptr) {
-     _hwcdc_serial->end();
+//     _hwcdc_serial->end();
 
     //    _config.rxBuffSize = _hwcdc_serial->setRxBufferSize(_config.rxBuffSize);
     //    _config.txBuffSize = _hwcdc_serial->setTxBufferSize(_config.txBuffSize);
@@ -115,8 +115,7 @@ int Port_ESPEasySerial_USB_HWCDC_t::available(void)
 int Port_ESPEasySerial_USB_HWCDC_t::availableForWrite(void)
 {
   if (_hwcdc_serial != nullptr && _hwcdc_serial->isConnected()) {
-      const int res = _hwcdc_serial->availableForWrite();
-      return res > 64 ? 64 : res;
+      return _hwcdc_serial->availableForWrite();
   }
   return 0;
 }

@@ -2,9 +2,12 @@
 
 #include "../Helpers/StringConverter.h"
 
+#include "../Globals/Settings.h"
+
 
 String SerialWriteBuffer_t::colorize(const String& str) const {
 #if FEATURE_COLORIZE_CONSOLE_LOGS
+  if (!Settings.ColorizeSerialLog()) return str;
   const __FlashStringHelper *format = F("%s");
 
   switch (_loglevel)
@@ -34,14 +37,10 @@ String SerialWriteBuffer_t::colorize(const String& str) const {
 }
 
 
-size_t SerialWriteBuffer_t::write_skipping(Stream& stream)
+size_t SerialWriteBuffer_t::write_skipping(Print& stream)
 {
-  size_t bytesWritten{};
-
   // Mark with empty line we skipped the rest of the message.
-  bytesWritten += stream.println(F(" ..."));
-  bytesWritten += stream.println();
-  return bytesWritten;
+  return stream.print(F(" ...\r\n\r\n"));
 }
 
 void SerialWriteBuffer_t::prepare_prefix()

@@ -13,7 +13,9 @@ Type: |P180_type|
 
 Name: |P180_name|
 
-Status: |P180_status|
+Status ESP32: |P180_status|
+
+Status ESP8266: |P180_status_lb|
 
 GitHub: |P180_github|_
 
@@ -82,7 +84,7 @@ For each Value1 .. Value4 output, depending on the **Output Data Type** setting,
 
 * **Value x type**: Here you can select a specific output type for each Value. This shows a selection of the **Output Data Type** selector, but only the single-value types. This will also be used for sending to Domoticz controllers and for MQTT Auto-Discovery.
 
-* **Cache-Name x (optional)**: When set to a unique name (for this task), the parsed & pre-processed command sequence will be stored in a memory-cache, to *significantly* improve the speed of the plugin in runtime. When not set, the command sequence will be parsed every time the task is run (**Interval** setting or ``taskRun`` command). To be able to use event processing for 1ps, 10ps of 50ps, setting a Cache-Name is required!
+* **Cache-Name x**: Should be set to a unique name (for this task), so the parsed & pre-processed command sequence will be stored in a memory-cache, to *significantly* improve the speed of the plugin in runtime. Initially the Cache-name is set to ``c1`` .. ``c4`` (depending on the number of values selected) and can be changed as desired. When empty it will be reset to ``cX`` again.
 
 * **I2C Commands x**: The sequence of commands to execute for this value. Nothing will be done if this is empty. The corresponding Value output can be set from another I2C Commands sequence. The currently used vs. the available space is shown next to the field. I2C Commands are explained below.
 
@@ -373,7 +375,7 @@ The plugin should be configured with these settings:
 
 * **Output Data Type**: ``Single``
 
-* **Cache-Name 1 (optional)**: Fill with a useable name, f.e. ``qrsize``, so the I2C Command sequence is cached for much improved execution-performance. And the additional de-duplication uses the ``1ps`` event-interval, and the sequence must be cached for that event to work.
+* **Cache-Name 1**: Fill with a useable name, f.e. ``qrsize``, so the I2C Command sequence is cached for much improved execution-performance. And the additional de-duplication uses the ``1ps`` event-interval, and the sequence must be cached for that event to work.
 
 * **I2C Commands 1**:
 
@@ -455,7 +457,7 @@ The plugin should be configured with these settings:
 
 ``put.b.2.0x3f.0xf9``: Stop continuous measurement.
 
-* **Cache-Name 1 (optional)**: Fill with a useable name, f.e. ``sdp``, so the I2C Command sequence is cached for much improved execution-performance.
+* **Cache-Name 1**: Fill with a useable name, f.e. ``sdp``, so the I2C Command sequence is cached for much improved execution-performance.
 
 * **I2C Commands 1**:
 
@@ -517,7 +519,7 @@ The plugin should be configured with these settings:
 
 * **Values**: the name can be changed to Distance, and the number of decimals 0. Stats can be enabled, as desired. The Unit of Measure should he set to ``cm``, and the Value Type to ``Distance``
 
-* **Cache-Name 1 (optional)**: Fill with a useable name, f.e. ``distance``, so the I2C Command sequence is cached for much improved execution-performance.
+* **Cache-Name 1**: Fill with a useable name, f.e. ``distance``, so the I2C Command sequence is cached for much improved execution-performance.
 
 * **I2C Commands 1**:
 
@@ -544,7 +546,7 @@ The plugin should be configured with these settings:
 
 * **Values**: the first name can be changed to ``Distance``, and the number of decimals 0. Stats can be enabled, as desired. The Unit of Measure should he set to ``cm``, and the Value Type to ``Distance``, the second name can be changed to f.e. ``SignalStrength``, and number of decimals to 0. Stats can be enabled, as desired. No further settings for this value, as it has an undefined unit and value type.
 
-* **Cache-Name 1 (optional)**: Fill with a useable name, f.e. ``distance``, so the I2C Command sequence is cached for much improved execution-performance.
+* **Cache-Name 1**: Fill with a useable name, f.e. ``distance``, so the I2C Command sequence is cached for much improved execution-performance.
 
 * **I2C Commands 1**:
 
@@ -590,15 +592,15 @@ The plugin should be configured with these settings:
 
 ``write.u8.0x0A.0x00``: Set sensor in Suspend mode.
 
-* **Cache-Name 1 (optional)**: Fill with a useable name, f.e. ``x``, so the I2C Command sequence is cached for much improved execution-performance.
+* **Cache-Name 1**: Fill with a useable name, f.e. ``x``, so the I2C Command sequence is cached for much improved execution-performance.
 
 * **I2C Commands 1**: ``read.16le.0x01`` Read 2 bytes starting at register 1, the ``x`` value, and store in first Value field.
 
-* **Cache-Name 2 (optional)**: Fill with a useable name, f.e. ``y``.
+* **Cache-Name 2**: Fill with a useable name, f.e. ``y``.
 
 * **I2C Commands 2**: ``read.16le.0x03`` Read 2 bytes starting at register 3, the ``y`` value, and store in second Value field.
 
-* **Cache-Name 3 (optional)**: Fill with a useable name, f.e. ``z``.
+* **Cache-Name 3**: Fill with a useable name, f.e. ``z``.
 
 * **I2C Commands 3**: ``read.16le.0x05`` Read 2 bytes starting at register 5, the ``z`` value, and store in third Value field.
 

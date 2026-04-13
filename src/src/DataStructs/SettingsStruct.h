@@ -32,6 +32,9 @@
  #define DEFAULT_SPI 0
 #endif
 
+#if FEATURE_SPI
+#include "../DataTypes/SPI_options.h"
+#endif
 
 // FIXME TD-er: Move this PinBootState to DataTypes folder
 
@@ -257,11 +260,13 @@ class SettingsStruct_tmpl
   void SendDerivedTaskValues(taskIndex_t taskIndex, controllerIndex_t controllerIndex, bool value);
   #endif // if FEATURE_STRING_VARIABLES
 
+#if FEATURE_COLORIZE_CONSOLE_LOGS
+  inline bool ColorizeSerialLog() const  { return !VariousBits_2.ColorizeSerialLog; }
+  inline void ColorizeSerialLog(bool value) { VariousBits_2.ColorizeSerialLog = !value; }
+#endif
+
   inline bool StartAPfallback_NoCredentials() const  { return !VariousBits_2.StartAPfallback_NoCredentials; }
   inline void StartAPfallback_NoCredentials(bool value) { VariousBits_2.StartAPfallback_NoCredentials = !value; }
-
-  inline bool StartAP_on_NW002_init() const  { return VariousBits_2.StartAP_on_NW002_init; }
-  inline void StartAP_on_NW002_init(bool value) { VariousBits_2.StartAP_on_NW002_init = value; }
 
   inline bool DoNotStartAPfallback_ConnectFail() const  { return VariousBits_1.DoNotStartAPfallback_ConnectFail; }
   inline void DoNotStartAPfallback_ConnectFail(bool value) { VariousBits_1.DoNotStartAPfallback_ConnectFail = value; }
@@ -286,6 +291,12 @@ class SettingsStruct_tmpl
 
   inline bool UseLastWiFiFromRTC() const { return VariousBits_1.UseLastWiFiFromRTC; }
   inline void UseLastWiFiFromRTC(bool value) { VariousBits_1.UseLastWiFiFromRTC = value; }
+
+#if FEATURE_MDNS
+  inline bool Use_mDNS() const { return VariousBits_3.Use_mDNS; }
+  inline void Use_mDNS(bool value) { VariousBits_3.Use_mDNS = value; }
+#endif
+
 
   ExtTimeSource_e ExtTimeSource() const;
   void ExtTimeSource(ExtTimeSource_e value);
@@ -366,23 +377,45 @@ public:
   PinBootState getPinBootState(int8_t gpio_pin) const;
   void setPinBootState(int8_t gpio_pin, PinBootState state);
 
-  bool getSPI_pins(int8_t spi_gpios[3]) const;
+#if FEATURE_SPI
+  bool getSPI_pinsForTask(taskIndex_t TaskIndex,
+                          int8_t  spi_gpios[3],
+                          bool    noCheck = false) const;
 
-  #ifdef ESP32
-  spi_host_device_t getSPI_host() const;
-  #endif
+  bool getSPI_pins(int8_t  spi_gpios[3],
+                   uint8_t spi_bus = 0,
+                   bool    noCheck = false) const;
+
+  bool isSPI_enabled(uint8_t spi_bus) const;
+  uint8_t getNrConfiguredSPI_buses() const;
 
   // Return true when pin is one of the SPI pins and SPI is enabled
-  bool isSPI_pin(int8_t pin) const;
+  bool isSPI_pin(int8_t  pin,
+                 uint8_t spi_bus = 0xFF) const;
 
   // Return true when SPI enabled and opt. user defined pins valid.
-  bool isSPI_valid() const;
+  bool isSPI_valid(uint8_t spi_bus) const;
+  bool isSPI_validForTask(taskIndex_t TaskIndex) const;
 
+  uint8_t getSPIBusForTask(taskIndex_t TaskIndex) const;
+  void    setSPIBusForTask(taskIndex_t TaskIndex, uint8_t spi_bus);
+
+  SPI_Options_e getSPISelection(uint8_t spi_bus) const;
+
+  #if FEATURE_SD
+  uint8_t getSPIBusForSDCard() const;
+  void    setSPIBusForSDCard(uint8_t spi_bus);
+  #endif // if FEATURE_SD
+#endif
+
+#if FEATURE_I2C
   // Return true when pin is one of the configured I2C pins.
   bool isI2C_pin(int8_t pin) const;
 
   // Return true if I2C settings are correct
   bool isI2CEnabled(uint8_t i2cBus) const;
+  uint8_t getNrConfiguredI2C_buses() const;
+
 
   uint8_t getI2CInterface(taskIndex_t TaskIndex) const;
   int8_t getI2CSdaPin(uint8_t i2cBus) const;
@@ -402,13 +435,14 @@ public:
   int8_t getI2CMultiplexerAddr(uint8_t i2cBus) const;
   int8_t getI2CMultiplexerResetPin(uint8_t i2cBus) const;
   #endif // if FEATURE_I2CMULTIPLEXER
-
+#endif
+#if FEATURE_ETHERNET
   // Return true when pin is one of the fixed Ethernet pins and Ethernet is enabled
   bool isEthernetPin(int8_t pin) const;
 
   // Return true when pin is one of the optional Ethernet pins and Ethernet is enabled
   bool isEthernetPinOptional(int8_t pin) const;
-
+#endif
   // Access to TaskDevicePin1 ... TaskDevicePin3
   // @param pinnr 1 = TaskDevicePin1, ..., 3 = TaskDevicePin3
   int8_t getTaskDevicePin(taskIndex_t taskIndex, uint8_t pinnr) const;
@@ -444,6 +478,10 @@ public:
 
   void setNetworkEnabled(ESPEasy::net::networkIndex_t index, bool enabled);
 
+  bool getNetworkInterface_isFallback(ESPEasy::net::networkIndex_t index) const;
+
+  void setNetworkInterface_isFallback(ESPEasy::net::networkIndex_t index, bool enabled);
+
   bool getNetworkInterfaceSubnetBlockClientIP(ESPEasy::net::networkIndex_t index) const;
 
   void setNetworkInterfaceSubnetBlockClientIP(ESPEasy::net::networkIndex_t index, bool enabled);
@@ -464,9 +502,9 @@ public:
   void setRoutePrio_for_network(ESPEasy::net::networkIndex_t index, uint8_t prio);
 #endif
 
-  uint32_t getNetworkInterfaceStartupDelayAtBoot(ESPEasy::net::networkIndex_t index) const;
+  uint32_t getNetworkInterfaceStartupDelay(ESPEasy::net::networkIndex_t index) const;
 
-  void setNetworkInterfaceStartupDelayAtBoot(ESPEasy::net::networkIndex_t index, uint32_t delay_ms);
+  void setNetworkInterfaceStartupDelay(ESPEasy::net::networkIndex_t index, uint32_t delay_ms);
 
   uint32_t PID = 0;
   int           Version = 0;
@@ -505,9 +543,9 @@ public:
   uint32_t WireClockStretchLimit = 0;
   union {
     struct {
-      uint32_t unused_00                        : 1; // Bit 0
-      uint32_t unused_01                        : 1; // Bit 1
-      uint32_t unused_02                        : 1; // Bit 2
+      uint32_t wakeOnHigh_ckd                   : 1; // Bit 0
+      uint32_t diableWakePulls                  : 1; // Bit 1
+      uint32_t Use_mDNS                         : 1; // Bit 2
       uint32_t unused_03                        : 1; // Bit 3
       uint32_t unused_04                        : 1; // Bit 4
       uint32_t unused_05                        : 1; // Bit 5
@@ -565,7 +603,11 @@ public:
   int8_t        I2C3_Multiplexer_Type = I2C_MULTIPLEXER_NONE;
   int8_t        I2C3_Multiplexer_Addr = -1;
   int8_t        I2C3_Multiplexer_ResetPin = -1;
-  uint32_t  OLD_TaskDeviceID[N_TASKS - 7] = {0};  //UNUSED: this can be reused
+  uint8_t       InitSPI1 = 0; // 0 = disabled, 1= enabled but for ESP32 there is option 2= SPI2 9 = User defined, see src/src/WebServer/HardwarePage.h enum SPI_Options_e
+  int8_t        SPI1_SCLK_pin = -1;
+  int8_t        SPI1_MISO_pin = -1;
+  int8_t        SPI1_MOSI_pin = -1;
+  unsigned int  OLD_TaskDeviceID[N_TASKS - 8] = {0};  // UNUSED: this can be reused
 
   // FIXME TD-er: When used on ESP8266, this conversion union may not work
   // It might work as it is 32-bit in size.
@@ -681,7 +723,7 @@ public:
   int8_t          I2C_Multiplexer_Type = I2C_MULTIPLEXER_NONE;
   int8_t          I2C_Multiplexer_Addr = -1;
   int8_t          I2C_Multiplexer_Channel[N_TASKS]{};
-  uint8_t         I2C_Flags[N_TASKS] = {0};
+  uint8_t         I2C_SPI_bus_Flags[N_TASKS] = {0};
   uint32_t        I2C_clockSpeed_Slow = 100000;
   int8_t          I2C_Multiplexer_ResetPin = -1;
 
@@ -717,8 +759,8 @@ public:
       uint32_t RestoreUserVarsFromEEPROMOnWarmBoot : 1; // Bit 12
       uint32_t MQTTConnectInBackground             : 1; // Bit 13  // inverted
 
-      uint32_t StartAPfallback_NoCredentials       : 1; // Bit 14 // inverted
-      uint32_t StartAP_on_NW002_init               : 1; // Bit 15
+      uint32_t StartAPfallback_NoCredentials       : 1; // Bit 14  // inverted
+      uint32_t ColorizeSerialLog                   : 1; // Bit 15  // inverted
       uint32_t APfallback_minimal_on_time_sec      : 8; // Bit 16 - 23
       uint32_t APfallback_autostart_max_uptime_m   : 8; // Bit 23 - 31  '0' == disabled
     };
@@ -739,12 +781,12 @@ public:
   uint8_t       NetworkEnabled_bits{};
   uint8_t       NetworkInterfaceSubnetBlockClientIP_bits{}; // Client IP Block Level. Allow from subnet of this interface
   uint8_t       NetworkEnabled_ipv6_bits{};                 // Whether or not to use IPv6 for the given interface  (Settings.EnableIPv6() is the global on/off for IPv6)
-  uint8_t       NetworkUnused_3{};
+  uint8_t       NetworkInterface_isFallback_bits{};
 #ifdef ESP32
   uint8_t       NetworkRoutePrio[NETWORK_MAX] = {0};
 #endif
   // TODO TD-er: For ESP8266 we may likely ever use upto 2 or 3 network interfaces, so maybe re-use the rest later?
-  uint16_t  NetworkInterfaceStartupDelayAtBoot[NETWORK_MAX]{};
+  uint16_t  NetworkInterfaceStartupDelay[NETWORK_MAX]{};
 
 
   // Try to extend settings to make the checksum 4-uint8_t aligned.

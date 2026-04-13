@@ -13,7 +13,9 @@ Type: |P178_type|
 
 Name: |P178_name|
 
-Status: |P178_status|
+Status ESP32: |P178_status|
+
+Status ESP8266: |P178_status_lb|
 
 GitHub: |P178_github|_
 

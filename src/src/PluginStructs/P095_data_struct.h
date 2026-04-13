@@ -4,8 +4,8 @@
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P095
 
-# include <Adafruit_GFX.h>                  // include Adafruit graphics library
-# include <Adafruit_ILI9341.h>              // include Adafruit ILI9341 TFT library
+# include <Adafruit_GFX.h>     // include Adafruit graphics library
+# include <Adafruit_ILI9341.h> // include Adafruit ILI9341 TFT library
 
 # include "../Helpers/AdafruitGFX_helper.h" // Use Adafruit graphics helper object
 # include "../CustomBuild/StorageLayout.h"
@@ -140,7 +140,7 @@ public:
                    bool                textBackFill = true
                    # if                ADAGFX_FONTS_INCLUDED
                    ,
-                   const uint8_t       defaultFontId = 0
+                   const uint8_t defaultFontId = 0
                    # endif // if ADAGFX_FONTS_INCLUDED
                    );
   P095_data_struct() = delete;

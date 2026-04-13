@@ -89,5 +89,8 @@ dependencies.lock
 
 src/src/CustomBuild/CompiletimeDefines_generated.h
 
+sdkconfig.*
 
-sdkconfig.normal_ESP32solo1_4M316k
+src/Custom_.h
+
+compile_commands.json

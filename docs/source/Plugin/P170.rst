@@ -13,7 +13,9 @@ Type: |P170_type|
 
 Name: |P170_name|
 
-Status: |P170_status|
+Status ESP32: |P170_status|
+
+Status ESP8266: |P170_status_lb|
 
 GitHub: |P170_github|_
 

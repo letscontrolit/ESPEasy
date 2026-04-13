@@ -103,6 +103,7 @@ constexpr uint8_t          getI2CBusCount() {
 #if FEATURE_I2C_MULTIPLE
   // Not querying the supported nr. of I2C busses in hardware, but using software multiplexing
   // Assume/expect IDF 5.x
+  // FIXME TD-er: Maybe we should look at SOC_HP_I2C_NUM ????
   // # if defined(SOC_I2C_SUPPORTED) && SOC_I2C_SUPPORTED
   #  if FEATURE_I2C_INTERFACE_3
   return 3u; // SOC_I2C_NUM; // Let's go for all I2C busses, including LP_I2C (low power, where available)
@@ -112,6 +113,18 @@ constexpr uint8_t          getI2CBusCount() {
   // #else
   // return 0u;
   // # endif // if defined(SOC_I2C_SUPPORTED) && SOC_I2C_SUPPORTED
+#else
+  return 1u;
+#endif
+}
+
+// Get the number of usable SPI buses
+constexpr uint8_t getSPIBusCount() {
+#if SOC_SPI_PERIPH_NUM > 3
+  static_assert(false, "Implement processor architecture");
+  return 2u;
+#elif SOC_SPI_PERIPH_NUM > 2
+  return 2u;
 #else
   return 1u;
 #endif

@@ -13,7 +13,9 @@ Type: |P142_type|
 
 Name: |P142_name|
 
-Status: |P142_status|
+Status ESP32: |P142_status|
+
+Status ESP8266: |P142_status_lb|
 
 GitHub: |P142_github|_
 

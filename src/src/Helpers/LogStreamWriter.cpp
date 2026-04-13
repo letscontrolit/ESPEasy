@@ -14,23 +14,20 @@ void LogStreamWriter::clear()
   _readpos   = 0;
 }
 
-bool LogStreamWriter::process(Stream*stream, size_t availableForWrite)
+bool LogStreamWriter::process(Print*stream, size_t availableForWrite)
 {
   if (stream == nullptr) { return false; }
   return write(*stream, availableForWrite) != 0;
 }
 
-bool LogStreamWriter::process()
-{
-  return false;
-}
+bool     LogStreamWriter::process() { return false; }
 
 uint32_t LogStreamWriter::getNrMessages() const
 {
   return Logging.getNrMessages(_log_destination);
 }
 
-size_t LogStreamWriter::write(Stream& stream, size_t nrBytesToWrite)
+size_t LogStreamWriter::write(Print& stream, size_t nrBytesToWrite)
 {
   size_t bytesWritten = 0;
 
@@ -45,8 +42,8 @@ size_t LogStreamWriter::write(Stream& stream, size_t nrBytesToWrite)
   return bytesWritten;
 }
 
-size_t LogStreamWriter::write_single_item(Stream& stream,
-                                          size_t  nrBytesToWrite)
+size_t LogStreamWriter::write_single_item(Print& stream,
+                                          size_t nrBytesToWrite)
 {
   const size_t res = write_item(stream, nrBytesToWrite);
 
@@ -54,8 +51,8 @@ size_t LogStreamWriter::write_single_item(Stream& stream,
   return res;
 }
 
-size_t LogStreamWriter::write_item(Stream& stream,
-                                   size_t  nrBytesToWrite)
+size_t LogStreamWriter::write_item(Print& stream,
+                                   size_t nrBytesToWrite)
 {
   size_t bytesWritten = 0;
 
@@ -78,7 +75,7 @@ size_t LogStreamWriter::write_item(Stream& stream,
     prepare_prefix();
   }
 
-  const size_t maxToWrite = _prefix.length() + _message.length();
+  const size_t maxToWrite = _prefix.length() + _message.length() + 2;
 
   if (nrBytesToWrite > maxToWrite) {
     nrBytesToWrite = maxToWrite;
@@ -86,33 +83,49 @@ size_t LogStreamWriter::write_item(Stream& stream,
 
   bool done = false;
 
+
+
   while (!done && bytesWritten < nrBytesToWrite) {
-    if (_readpos < _prefix.length()) {
-      // Write prefix
-      if (1 != stream.write(_prefix[_readpos])) { return bytesWritten; }
-      ++bytesWritten;
-      ++_readpos;
-    } else if (!_prefix.isEmpty()) {
-      // Clear prefix
-      _prefix.clear();
-      _readpos = 0;
-    } else if (_readpos < _message.length()) {
-      // Write message
-      if (1 != stream.write(_message[_readpos])) { return bytesWritten; }
-      ++bytesWritten;
-      ++_readpos;
-    } else {
+    const size_t bytesWritten_startLoop = bytesWritten;
+    if (!_prefix.isEmpty()) {
+      bytesWritten += write_part(_prefix, stream, nrBytesToWrite - bytesWritten);
+    }
+    else if (!_message.isEmpty()) {
+      bytesWritten += write_part(_message, stream, nrBytesToWrite - bytesWritten);
+    }
+    else {
       if ((bytesWritten + 2) > nrBytesToWrite) { return bytesWritten; }
-      bytesWritten += stream.println();
+      bytesWritten += stream.print(F("\r\n")); // stream.println();
 
       // Done with entry, cleanup and leave
       clear();
       done = true;
     }
+    if (bytesWritten_startLoop == bytesWritten)
+    { 
+      // Nothing written in this loop, retry later.
+      return bytesWritten; 
+    }
   }
   return bytesWritten;
 }
 
-size_t LogStreamWriter::write_skipping(Stream& stream) { return 0; }
+size_t LogStreamWriter::write_part(String& str, Print& stream, size_t  nrBytesToWrite)
+{
+  size_t bytesWritten = 0;
 
-void   LogStreamWriter::prepare_prefix()               {}
+  if (_readpos < str.length()) {
+    const size_t bytesLeft = str.length() - _readpos;
+    bytesWritten = stream.write(&str[_readpos], bytesLeft);
+    _readpos    += bytesWritten;
+  } else {
+    // Clear str
+    str.clear();
+    _readpos = 0;
+  }
+  return bytesWritten;
+}
+
+size_t LogStreamWriter::write_skipping(Print& stream) { return 0; }
+
+void   LogStreamWriter::prepare_prefix()              {}

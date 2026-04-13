@@ -15,7 +15,9 @@ Port Type: |P053_porttype|
 
 Name: |P053_name|
 
-Status: |P053_status|
+Status ESP32: |P053_status|
+
+Status ESP8266: |P053_status_lb|
 
 GitHub: |P053_github|_
 

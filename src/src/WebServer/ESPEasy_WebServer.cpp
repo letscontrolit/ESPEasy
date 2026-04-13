@@ -9,20 +9,21 @@
 #include "../WebServer/ConfigPage.h"
 #include "../WebServer/ControlPage.h"
 #include "../WebServer/ControllerPage.h"
-#include "../WebServer/CustomPage.h"
+//#include "../WebServer/CustomPage.h"
 #include "../WebServer/DevicesPage.h"
 #include "../WebServer/DownloadPage.h"
 #include "../WebServer/FactoryResetPage.h"
 #include "../WebServer/FileList.h"
 #include "../WebServer/HTML_wrappers.h"
 #include "../WebServer/HardwarePage.h"
+#include "../WebServer/InterfacesPage.h"
 #include "../WebServer/I2C_Scanner.h"
 #include "../WebServer/JSON.h"
-#include "../WebServer/LoadFromFS.h"
+//#include "../WebServer/LoadFromFS.h"
 #include "../WebServer/Log.h"
-#include "../WebServer/Markup.h"
-#include "../WebServer/Markup_Buttons.h"
-#include "../WebServer/Markup_Forms.h"
+//#include "../WebServer/Markup.h"
+//#include "../WebServer/Markup_Buttons.h"
+//#include "../WebServer/Markup_Forms.h"
 #include "../WebServer/NetworkPage.h"
 #include "../WebServer/NotificationPage.h"
 #include "../WebServer/PluginListPage.h"
@@ -46,8 +47,6 @@
 #include "../../_Plugin_Helper.h"
 #include "../../ESPEasy_common.h"
 
-#include "../CustomBuild/CompiletimeDefines.h"
-
 #include "../DataStructs/TimingStats.h"
 
 #include "../DataTypes/SettingsType.h"
@@ -56,16 +55,13 @@
 #include "../ESPEasyCore/ESPEasyRules.h"
 #include "../../ESPEasy/net/wifi/ESPEasyWifi.h"
 
-
-#include "../Globals/CPlugins.h"
-#include "../Globals/Device.h"
 #include "../../ESPEasy/net/Globals/NetworkState.h"
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Settings.h"
+#include "../Globals/Services.h"
 
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Hardware_device_info.h"
-#include "../Helpers/Networking.h"
 #include "../Helpers/OTA.h"
 #include "../Helpers/StringConverter.h"
 
@@ -173,6 +169,7 @@ void sendHeadandTail_stdtemplate(bool Tail, bool rebooting) {
 }
 
 bool captivePortal() {
+  if (!Settings.ApCaptivePortal()) return false;
   const IPAddress client_localIP = web_server.client().localIP();
   const bool fromAP              = client_localIP == apIP;
   const bool hasWiFiCredentials  = SecuritySettings.hasWiFiCredentials();
@@ -183,7 +180,11 @@ bool captivePortal() {
     return false;
   }
 
-  if (!isIP(web_server.hostHeader()) && (web_server.hostHeader() != (ESPEasy::net::NetworkGetHostname() + F(".local")))) {
+  if (!isIP(web_server.hostHeader()) 
+#if FEATURE_MDNS
+      && !getValue(LabelType::M_DNS).equalsIgnoreCase(web_server.hostHeader())
+#endif
+) {
     String redirectURL = concat(F("http://"), formatIP(client_localIP));
     #ifdef WEBSERVER_SETUP
 
@@ -272,6 +273,27 @@ void WebServerInit()
   #ifdef WEBSERVER_HARDWARE
   web_server.on(F("/hardware"),        handle_hardware);
   #endif // ifdef WEBSERVER_HARDWARE
+  #ifdef WEBSERVER_INTERFACES
+  web_server.on(F("/interfaces"),      handle_interfaces);
+#if FEATURE_I2C
+  web_server.on(F("/interfaces_i2c"),  handle_interfaces_i2c);
+#endif // if FEATURE_I2C
+#if FEATURE_SPI
+  web_server.on(F("/interfaces_spi"),  handle_interfaces_spi);
+#endif // if FEATURE_SPI
+#if FEATURE_MODBUS && FEATURE_MODBUS_INTERFACES_TAB
+  web_server.on(F("/interfaces_modbus"),  handle_interfaces_modbus);
+#endif // if FEATURE_MODBUS
+#if FEATURE_CAN
+  web_server.on(F("/interfaces_can"),  handle_interfaces_can);
+#endif // if FEATURE_CAN
+#if FEATURE_WRMBUS
+  web_server.on(F("/interfaces_wrmbus"),  handle_interfaces_wrmbus);
+#endif // if FEATURE_WRMBUS
+#if FEATURE_WIMBUS
+  web_server.on(F("/interfaces_wimbus"),  handle_interfaces_wimbus);
+#endif // if FEATURE_WIMBUS
+  #endif // ifdef WEBSERVER_INTERFACES
   #ifdef WEBSERVER_I2C_SCANNER
   web_server.on(F("/i2cscanner"),      handle_i2cscanner);
   #endif // ifdef WEBSERVER_I2C_SCANNER
@@ -281,8 +303,10 @@ void WebServerInit()
   #ifdef WEBSERVER_CSVVAL
   web_server.on(F("/csv"),             handle_csvval);
   #endif
+  #ifdef WEBSERVER_LOG
   web_server.on(F("/log"),             handle_log);
   web_server.on(F("/logjson"),         handle_log_JSON); // Also part of WEBSERVER_NEW_UI
+  #endif
 #if FEATURE_NOTIFIER
   web_server.on(F("/notifications"),   handle_notifications);
 #endif // if FEATURE_NOTIFIER
@@ -492,7 +516,7 @@ void getWebPageTemplateDefault(const String& tmplName, WebTemplateParser& parser
     getWebPageTemplateDefaultHead(parser, addMeta, addJS);
 
     if (!parser.isTail()) {
-      parser.process(F("<body class='bodymenu'"));
+      parser.process(strformat(F("<body class='bodymenu%c'"), isGpMenuSecondLevel(navMenuIndex) ? '2' : ' '));
       #if FEATURE_AUTO_DARK_MODE
 
       if (0 == Settings.getCssMode()) {
@@ -531,7 +555,7 @@ void getWebPageTemplateDefaultHeader(WebTemplateParser& parser, const __FlashStr
   {
     if (parser.isTail()) { return; }
   #ifndef WEBPAGE_TEMPLATE_DEFAULT_HEADER
-    parser.process(F("<header class='headermenu'><h1>ESP Easy Mega: "));
+    parser.process(strformat(F("<header class='headermenu%c'><h1>ESP Easy Mega: "), isGpMenuSecondLevel(navMenuIndex) ? '2' : ' '));
     parser.process(title);
     # if BUILD_IN_WEBHEADER
     parser.process(F(

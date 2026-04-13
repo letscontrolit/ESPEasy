@@ -16,6 +16,7 @@
 
 # if FEATURE_MQTT_TLS
   #  include <WiFiClientSecureLightBearSSL.h>
+  #  include "../CustomBuild/Certificate_CA.h"
 # endif // if FEATURE_MQTT_TLS
 
 # if FEATURE_MQTT_CONNECT_BACKGROUND

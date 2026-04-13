@@ -11,21 +11,7 @@
 # define NWPLUGIN_NAME_003       "Ethernet (RMII)"
 
 # include "../../src/DataStructs/ESPEasy_EventStruct.h"
-# include "../../src/Globals/SecuritySettings.h"
 # include "../../src/Globals/Settings.h"
-# include "../../src/Helpers/ESPEasy_Storage.h"
-# include "../../src/Helpers/PrintToString.h"
-# include "../../src/Helpers/StringConverter.h"
-# include "../../src/WebServer/ESPEasy_WebServer.h"
-# include "../../src/WebServer/HTML_Print.h"
-# include "../../src/WebServer/HTML_wrappers.h"
-# include "../../src/WebServer/Markup.h"
-# include "../../src/WebServer/Markup_Forms.h"
-# include "../../src/WebServer/common.h"
-# include "../net/eth/ESPEasyEth.h"
-# include "../net/Globals/NWPlugins.h"
-# include "../net/Globals/NetworkState.h"
-# include "../net/Helpers/_NWPlugin_Helper_webform.h"
 # include "../net/Helpers/_NWPlugin_init.h"
 # include "../net/Helpers/NW_info_writer.h"
 
@@ -60,7 +46,7 @@ bool NWPlugin_003(NWPlugin::Function function, EventStruct *event, String& strin
     {
       Settings.setRoutePrio_for_network(event->NetworkIndex, 50);
       Settings.setNetworkInterfaceSubnetBlockClientIP(event->NetworkIndex, false);
-      Settings.setNetworkInterfaceStartupDelayAtBoot(event->NetworkIndex, 500 * event->NetworkIndex);
+      Settings.setNetworkInterfaceStartupDelay(event->NetworkIndex, 500 * event->NetworkIndex);
 
       ESPEasy_key_value_store kvs;
       ESPEasy::net::eth::NW003_data_struct_ETH_RMII::loadDefaults(
@@ -96,6 +82,12 @@ bool NWPlugin_003(NWPlugin::Function function, EventStruct *event, String& strin
       break;
     }
 
+    case NWPlugin::Function::NWPLUGIN_FALLBACK_INTERFACE_SHOULD_START:
+    {
+      success = true;
+      break;
+    }
+
     case NWPlugin::Function::NWPLUGIN_WEBFORM_SHOW_CONNECTED:
     {
       auto iface = ESPEasy::net::eth::ETH_NWPluginData_static_runtime::getInterface(event->NetworkIndex);
@@ -116,7 +108,6 @@ bool NWPlugin_003(NWPlugin::Function function, EventStruct *event, String& strin
       }
       break;
     }
-# ifndef LIMIT_BUILD_SIZE
     case NWPlugin::Function::NWPLUGIN_WEBFORM_SHOW_PORT:
     {
       ESPEasy::net::eth::NW003_data_struct_ETH_RMII *NW_data =
@@ -127,7 +118,6 @@ bool NWPlugin_003(NWPlugin::Function function, EventStruct *event, String& strin
       }
       break;
     }
-# endif // ifndef LIMIT_BUILD_SIZE
 
     case NWPlugin::Function::NWPLUGIN_WEBFORM_SAVE:
     {

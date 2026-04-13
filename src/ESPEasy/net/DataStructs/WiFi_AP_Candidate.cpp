@@ -1,8 +1,5 @@
 #include "../DataStructs/WiFi_AP_Candidate.h"
 
-#include "../../../ESPEasy_common.h"
-
-#include "../Globals/ESPEasyWiFiEvent.h"
 #include "../../../src/Globals/SecuritySettings.h"
 #include "../../../src/Globals/Statistics.h"
 #include "../../../src/Helpers/ESPEasy_time_calc.h"
@@ -324,8 +321,13 @@ String WiFi_AP_Candidate::toString(const String& separator) const {
 
       switch (bandwidth)
       {
+#if ESP_IDF_VERSION_MAJOR < 6
         case WIFI_BW_HT20: break;
         case WIFI_BW_HT40:   phy_str += F(" 40 MHz");
+#else
+        case WIFI_BW20: break;
+        case WIFI_BW40:   phy_str += F(" 40 MHz");
+#endif
           break;
         case WIFI_BW80:      phy_str += F(" 80 MHz");
           break;

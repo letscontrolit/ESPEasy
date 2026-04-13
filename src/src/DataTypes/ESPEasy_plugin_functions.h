@@ -156,18 +156,18 @@ public:
   // As these function values are also used in the timing stats, make sure there is no overlap with the PLUGIN_xxx numbering.
 
   enum class Function {
-    NWPLUGIN_DRIVER_ADD = 192, // Called at boot for letting a network adapter adding itself to list of available controllers
-    NWPLUGIN_CONNECT_SUCCESS,  // Only used for timing stats
-    NWPLUGIN_CONNECT_FAIL,     // Only used for timing stats
-    NWPLUGIN_CONNECTION_STATE,
-    NWPLUGIN_DRIVER_TEMPLATE,
+     NWPLUGIN_DRIVER_ADD = 192, // Called at boot for letting a network adapter adding itself to list of available controllers
+//    NWPLUGIN_CONNECT_SUCCESS,  // TODO TD-er: Implement  Only used for timing stats
+//    NWPLUGIN_CONNECT_FAIL,     // TODO TD-er: Implement  Only used for timing stats
+//    NWPLUGIN_CONNECTION_STATE,
+//    NWPLUGIN_DRIVER_TEMPLATE,  // TODO TD-er: Implement
     NWPLUGIN_LOAD_DEFAULTS,
     NWPLUGIN_GET_DEVICENAME,
     NWPLUGIN_CLIENT_IP_WEB_ACCESS_ALLOWED,
     NWPLUGIN_WEBFORM_SAVE,
     NWPLUGIN_WEBFORM_LOAD,
     NWPLUGIN_GET_PARAMETER_DISPLAY_NAME,
-    NWPLUGIN_TIMER_IN,
+    NWPLUGIN_TIMER_IN,         // FIXME TD-er: Do we need this?  Used for NWPluginTimerID from the scheduler
     NWPLUGIN_INIT,
     NWPLUGIN_TEN_PER_SECOND,   // Called 10x per second (typical for checking new data instead of waiting)
     NWPLUGIN_FIFTY_PER_SECOND, // Called 50x per second (typical for checking new data instead of waiting)
@@ -175,12 +175,13 @@ public:
     NWPLUGIN_EXIT_ALL,         // Exit all network interfaces
     NWPLUGIN_EXIT,
     NWPLUGIN_WRITE,            // Send commands to a network adapter.
-    NWPLUGIN_CREDENTIALS_CHANGED,
+    NWPLUGIN_CREDENTIALS_CHANGED,  // TODO TD-er: Implement
+    NWPLUGIN_FALLBACK_INTERFACE_SHOULD_START,
 #ifdef ESP32
     NWPLUGIN_GET_INTERFACE,
     NWPLUGIN_WEBFORM_SHOW_ROUTE_PRIO,
-    NWPLUGIN_PRIORITY_ROUTE_CHANGED, // The default interface was changed, let other interfaces check to see if they need to do something.
 #endif // ifdef ESP32
+    NWPLUGIN_PRIORITY_ROUTE_CHANGED, // The default interface was changed, let other interfaces check to see if they need to do something.
 #if FEATURE_NETWORK_TRAFFIC_COUNT
     NWPLUGIN_GET_TRAFFIC_COUNT,      // TX/RX count in event->Par64_1, resp. event->Par64_2
 #endif
@@ -194,16 +195,15 @@ public:
     NWPLUGIN_WEBFORM_SHOW_NAME,       // Name like "ppp", "eth0", etc.
     NWPLUGIN_WEBFORM_SHOW_ACTIVE,     // Check whether interface is active and if not, return some error value
     NWPLUGIN_WEBFORM_SHOW_CONNECTED,  // Used for showing connected state/speed
-    NWPLUGIN_WEBFORM_SHOW_EXTENDED,   // Used for showing all connection info
+//    NWPLUGIN_WEBFORM_SHOW_EXTENDED,   // Used for showing all connection info
     NWPLUGIN_WEBFORM_SHOW_HOSTNAME,   // Used for showing hostname
     NWPLUGIN_WEBFORM_SHOW_HW_ADDRESS, // Used for showing MAC
     NWPLUGIN_WEBFORM_SHOW_IP,         // Used for showing IP
-#ifndef LIMIT_BUILD_SIZE
+#ifdef ESP32
     NWPLUGIN_WEBFORM_SHOW_PORT,        // Used for showing host information for the network adapter.
 #endif
 
     NWPLUGIN_MAX_FUNCTION  // Keep as last
-
   };
 
 #define NrBitsNWPluginFunctions   NR_BITS(static_cast<unsigned>(NWPlugin::Function::NWPLUGIN_MAX_FUNCTION))

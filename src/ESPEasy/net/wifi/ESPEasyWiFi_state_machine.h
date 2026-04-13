@@ -4,9 +4,7 @@
 
 #if FEATURE_WIFI
 
-# include "../DataStructs/WiFi_AP_Candidate.h"
 # include "../../../src/Helpers/LongTermTimer.h"
-# include "../../../src/Helpers/LongTermOnOffTimer.h"
 
 # include "../wifi/WiFi_STA_connected_state.h"
 # include "../wifi/WiFi_State.h"
@@ -73,7 +71,11 @@ private:
 
   STA_connected_state getSTA_connected_state() const;
 
+public:
+
   bool shouldStartAP_fallback() const;
+
+private:
 
   //  WiFi_AP_Candidate _active_sta;
   //  WiFi_AP_Candidate _AP_conf;

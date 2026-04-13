@@ -13,7 +13,9 @@ Type: |P152_type|
 
 Name: |P152_name|
 
-Status: |P152_status|
+Status ESP32: |P152_status|
+
+Status ESP8266: |P152_status_lb|
 
 GitHub: |P152_github|_
 

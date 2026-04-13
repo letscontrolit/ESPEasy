@@ -13,7 +13,9 @@ Type: |P090_type|
 
 Name: |P090_name|
 
-Status: |P090_status|
+Status ESP32: |P090_status|
+
+Status ESP8266: |P090_status_lb|
 
 GitHub: |P090_github|_
 

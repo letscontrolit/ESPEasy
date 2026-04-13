@@ -2,6 +2,7 @@
 #define DATATYPES_SPI_OPTIONS_H
 
 #include "../../ESPEasy_common.h"
+#include "../Helpers/StringConverter.h"
 
 
 // ESP32 classic has default pins for HSPI.
@@ -13,7 +14,7 @@
 // ESP32-S2/S3  : FSPI
 
 // ESP32 classic:
-//  SPI_HOST  = SPI1_HOST // Only usable on ESP32
+//  SPI_HOST  = SPI1_HOST // Only usable on ESP32, when all functions doing SPI operations are in IRAM
 //  HSPI_HOST = SPI2_HOST
 //  VSPI_HOST = SPI3_HOST
 //
@@ -72,13 +73,17 @@ enum class SPI_Options_e {
   // For ESP32 classic, this is called VSPI
   // For later versions it is called FSPI
   // N.B. the ESP32-C3 does not seem to name these as there is no SPI3_HOST.
-  UserDefined = 9 // Leave some room for other, possible future, hardware-related options
+  UserDefined_VSPI = 9 // Leave some room for other, possible future, hardware-related options
+#if SOC_SPI_PERIPH_NUM > 2
+  ,UserDefined_HSPI = 10
+#endif
 
 };
 
 #ifdef ESP32
 const __FlashStringHelper* getSPI_optionToString(SPI_Options_e option);
-const __FlashStringHelper* getSPI_optionToShortString(SPI_Options_e option);
+const __FlashStringHelper* get_vspi_fspi_str();
+const String getSPI_optionToShortString(SPI_Options_e option, uint8_t spi_bus = 0);
 #endif // ifdef ESP32
 
 #endif // ifndef DATATYPES_SPI_OPTIONS_H
