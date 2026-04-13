@@ -101,7 +101,7 @@ jobs:
       notes: ${{ steps.release-notes.outputs.result }}
     steps:
       - id: release-notes
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           result-encoding: string
           script: |
