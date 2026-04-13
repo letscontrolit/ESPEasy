@@ -1882,7 +1882,7 @@ To create/register a plugin, you have to :
   #if !defined(USES_P178) && defined(ESP32)
     #define USES_P178   // Extra IO - LU9685 Servo controller
   #endif
-  #ifndef USES_P184
+  #if !defined(USES_P184) && defined(ESP32)
     #define USES_P184   // Output - Triac
   #endif
 #endif // ifdef PLUGIN_SET_COLLECTION_G
@@ -1960,7 +1960,7 @@ To create/register a plugin, you have to :
   #if !defined(USES_P180) && defined(ESP32)
     #define USES_P180   // Generic - I2C Generic
   #endif
-  #ifndef USES_P184
+  #if !defined(USES_P184) && defined(ESP32)
     #define USES_P184   // Output - Triac
   #endif
 #endif // ifdef PLUGIN_ENERGY_COLLECTION
