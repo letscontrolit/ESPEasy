@@ -4,6 +4,7 @@
 # ifdef ESP32
 
 #  include "../../../src/DataStructs/TimingStats.h"
+#  include "../../../src/Globals/ESPEasy_Scheduler.h"
 #  include "../../../src/Globals/EventQueue.h"
 #  include "../../../src/Globals/Services.h"
 #  include "../../../src/Globals/Settings.h"
