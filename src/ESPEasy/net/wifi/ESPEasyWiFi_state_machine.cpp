@@ -1,8 +1,10 @@
 #include "../wifi/ESPEasyWiFi_state_machine.h"
+#include "ESPEasy/net/wifi/WiFi_State.h"
 
 #if FEATURE_WIFI
 
 # include "../../../src/ESPEasyCore/ESPEasy_Log.h"
+# include "../../../src/Globals/ESPEasy_Scheduler.h"
 # include "../../../src/Globals/RTC.h"
 # include "../../../src/Globals/SecuritySettings.h"
 # include "../../../src/Globals/Settings.h"
@@ -23,7 +25,7 @@ namespace wifi {
     # define WIFI_STATE_MACHINE_AP_ONLY_TIMEOUT          60000
 
 void ESPEasyWiFi_t::setup() {
-  if (!Settings.getNetworkEnabled(NETWORK_INDEX_WIFI_STA)) return;
+  if (!Settings.getNetworkEnabled(NETWORK_INDEX_WIFI_STA)) { return; }
 
   // TODO TD-er: Must maybe also call 'disable()' first?
 
@@ -47,9 +49,9 @@ void ESPEasyWiFi_t::begin()   {
   if (WiFi_AP_Candidates.hasCandidates()) {
     setState(WiFiState_e::IdleWaiting, 100);
   } else {
-//    if (!Settings.DoNotStartAPfallback_ConnectFail()) {
-//      setState(WiFiState_e::AP_only, WIFI_STATE_MACHINE_AP_ONLY_TIMEOUT);
-//    } else 
+    //    if (!Settings.DoNotStartAPfallback_ConnectFail()) {
+    //      setState(WiFiState_e::AP_only, WIFI_STATE_MACHINE_AP_ONLY_TIMEOUT);
+    //    } else
     {
       if (WifiIsAP(WiFi.getMode())) {
         // TODO TD-er: Must check if any client is connected.
@@ -76,7 +78,13 @@ void ESPEasyWiFi_t::loop()
     {
       // TODO TD-er: Must check what error was given???
       _callbackError = false;
-      setState(WiFiState_e::WiFiOFF);
+
+      if (getMode() == ESPEasyWiFi_mode_e::Setup /* && _state == WiFiState_e::AP_Fallback */) {
+
+        setState(_state == WiFiState_e::STA_Connected_Setup ? WiFiState_e::STA_Connected : WiFiState_e::IdleWaiting);
+      } else {
+        setState(WiFiState_e::WiFiOFF);
+      }
     }
   }
 
@@ -93,16 +101,24 @@ void ESPEasyWiFi_t::loop()
     case WiFiState_e::AP_only:
     case WiFiState_e::AP_Fallback:
 
-      if (WiFi_AP_Candidates.hasCandidates() ||
-          (_state_timeout.timeReached() &&
-           !ESPEasy::net::wifi::wifiAPmodeActivelyUsed())) {
-        setState(WiFiState_e::IdleWaiting, 100);
+      // TODO TD-er: Should also check for 'setup' mode, so we switch to connecting state instead of IdleWaiting
+      // For sure not just when there are candidates.
+      if (!ESPEasy::net::wifi::wifiAPmodeActivelyUsed()) {
+        if (WiFi_AP_Candidates.hasCandidates() ||
+            _state_timeout.timeReached()) {
+          setState(WiFiState_e::IdleWaiting, 100);
+        }
       }
       break;
     case WiFiState_e::IdleWaiting:
 
       if (connected()) {
-        setState(WiFiState_e::STA_Connected, 100);
+        if (getMode() == ESPEasyWiFi_mode_e::Setup) {
+          setState(WiFiState_e::STA_Connected_Setup, 60000);
+        }
+        else {
+          setState(WiFiState_e::STA_Connected, 100);
+        }
         break;
       }
 
@@ -183,6 +199,7 @@ void ESPEasyWiFi_t::loop()
           // FIXME TD-er: This might not be a responsibility of this state machine....
           if (shouldStartAP_fallback()) {
             setState(WiFiState_e::AP_Fallback, Settings.APfallback_minimal_on_time_sec() * 1000);
+
             // TODO TD-er: Must keep track of whether the user has forced AP to be autostarted.
           } else {
             setState(WiFiState_e::WiFiOFF, 1000);
@@ -249,7 +266,12 @@ void ESPEasyWiFi_t::loop()
       const STA_connected_state sta_connected_state = getSTA_connected_state();
 
       if (sta_connected_state == STA_connected_state::Connected) {
-        setState(WiFiState_e::STA_Connected);
+        if (getMode() == ESPEasyWiFi_mode_e::Setup) {
+          setState(WiFiState_e::STA_Connected_Setup, 60000);
+        }
+        else {
+          setState(WiFiState_e::STA_Connected, 100);
+        }
       } else if (_state_timeout.timeReached()) {
         if (_state == WiFiState_e::STA_Connecting) {
           setState(WiFiState_e::STA_Reconnecting, WIFI_STATE_MACHINE_STA_CONNECTING_TIMEOUT);
@@ -317,10 +339,10 @@ void ESPEasyWiFi_t::setState(WiFiState_e newState, uint32_t timeout) {
   }
 # endif // ifndef BUILD_NO_DEBUG
 
-  if (_state == WiFiState_e::AP_only ||
-      _state == WiFiState_e::AP_Fallback) {
-    setAPinternal(false);
-    setAP(false);
+  if ((_state == WiFiState_e::AP_only) ||
+      (_state == WiFiState_e::AP_Fallback)) {
+    Scheduler.setNetworkExitTimer(0, NETWORK_INDEX_WIFI_AP);
+//    setAP(false);
   }
 
   if (_state == WiFiState_e::STA_Connected)
@@ -366,7 +388,7 @@ void ESPEasyWiFi_t::setState(WiFiState_e newState, uint32_t timeout) {
       break;
     case WiFiState_e::AP_only:
     case WiFiState_e::AP_Fallback:
-      setAPinternal(true);
+      Scheduler.setNetworkInitTimer(0, NETWORK_INDEX_WIFI_AP);
       break;
     case WiFiState_e::IdleWaiting:
       // Do nothing here as we're waiting till the timeout is over
@@ -386,6 +408,7 @@ void ESPEasyWiFi_t::setState(WiFiState_e newState, uint32_t timeout) {
 
       // Start connecting
       ++_connect_attempt;
+
       if (!connectSTA()) {
         // TODO TD-er: Must keep track of failed attempts and start AP when either no credentials present or nr. of attempts failed > some
         // threshold.
@@ -396,6 +419,20 @@ void ESPEasyWiFi_t::setState(WiFiState_e newState, uint32_t timeout) {
         }
       }
       break;
+
+    case WiFiState_e::STA_Connected_Setup:
+    {
+      Scheduler.setNetworkInitTimer(0, NETWORK_INDEX_WIFI_AP);
+      _last_seen_connected.setNow();
+      auto wifi_STA_data = getWiFi_STA_NWPluginData_static_runtime();
+
+      if (wifi_STA_data) {
+        wifi_STA_data->mark_connected();
+      }
+
+      break;
+    }
+
     case WiFiState_e::STA_Connected:
     {
 # ifdef ESP32
@@ -403,6 +440,11 @@ void ESPEasyWiFi_t::setState(WiFiState_e newState, uint32_t timeout) {
       // FIXME TD-er: Must move to ESP32-specific cpp file
       // WiFi.STA.setDefault();
 # endif // ifdef ESP32
+
+      if (_state == WiFiState_e::STA_Connected_Setup) {
+        Scheduler.setNetworkExitTimer(0, NETWORK_INDEX_WIFI_AP);
+        setMode(ESPEasyWiFi_mode_e::STA_only);
+      }
       _connect_attempt = 0;
       _last_seen_connected.setNow();
       _state_timeout.clear();
@@ -464,7 +506,7 @@ bool ESPEasyWiFi_t::connectSTA()
     // No need to wait longer to start AP mode.
     if (!Settings.DoNotStartAPfallback_ConnectFail())
     {
-      //      setAPinternal(true);
+      // Scheduler.setNetworkInitTimer(0, NETWORK_INDEX_WIFI_AP);
     }
     return false;
   }
@@ -589,8 +631,13 @@ bool ESPEasyWiFi_t::connectSTA()
 
 bool ESPEasyWiFi_t::shouldStartAP_fallback() const
 {
-  if ((Settings.APfallback_autostart_max_uptime_m() * 1000) > millis()) {
-    return false;
+  if (!Settings.getNetworkInterface_isFallback(NETWORK_INDEX_WIFI_AP)) { return false; }
+
+
+  if (Settings.APfallback_autostart_max_uptime_m() != 0) {
+    if ((Settings.APfallback_autostart_max_uptime_m() * 60000) < millis()) {
+      return false;
+    }
   }
 
   if (Settings.StartAPfallback_NoCredentials() && !SecuritySettings.hasWiFiCredentials()) {
@@ -601,11 +648,9 @@ bool ESPEasyWiFi_t::shouldStartAP_fallback() const
     return false;
   }
 
-  return (Settings.ConnectFailRetryCount > 0) && 
+  return (Settings.ConnectFailRetryCount > 0) &&
          (_connect_attempt > Settings.ConnectFailRetryCount);
 }
-
-
 
 } // namespace wifi
 } // namespace net

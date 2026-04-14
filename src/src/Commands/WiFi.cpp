@@ -16,6 +16,7 @@
 # include "../Helpers/StringConverter.h"
 
 # include "../../ESPEasy/net/wifi/ESPEasyWifi.h"
+# include "../../ESPEasy/net/ESPEasyNetwork.h"
 
 
 # define WIFI_MODE_MAX (WiFiMode_t)4
@@ -92,7 +93,7 @@ const __FlashStringHelper* Command_Wifi_Disconnect(struct EventStruct *event, co
 
 const __FlashStringHelper* Command_Wifi_APMode(struct EventStruct *event, const char *Line)
 {
-  if (!Settings.getNetworkEnabled(1)) { return return_command_failed_flashstr(); }
+  if (!Settings.getNetworkEnabled(NETWORK_INDEX_WIFI_AP)) { return return_command_failed_flashstr(); }
   String TmpStr1;
   bool   APenable = true;
 
@@ -113,10 +114,10 @@ const __FlashStringHelper* Command_Wifi_APMode(struct EventStruct *event, const 
   }
 
   if (APenable) {
-    Scheduler.setNetworkInitTimer(10, 1);
+    Scheduler.setNetworkInitTimer(10, NETWORK_INDEX_WIFI_AP);
   }
   else {
-    Scheduler.setNetworkExitTimer(10, 1);
+    Scheduler.setNetworkExitTimer(10, NETWORK_INDEX_WIFI_AP);
   }
   return return_command_success_flashstr();
 }

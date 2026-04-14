@@ -97,6 +97,13 @@ bool NWPlugin_001(NWPlugin::Function function, EventStruct *event, String& strin
     }
 # endif // ifdef ESP32
 
+    case NWPlugin::Function::NWPLUGIN_CREDENTIALS_CHANGED:
+    {
+//                  ESPEasy::net::wifi::WiFi_AP_Candidates.force_reload(); // Force reload of the credentials and found APs from the last scan
+
+      break;
+    }
+
     case NWPlugin::Function::NWPLUGIN_WEBSERVER_SHOULD_RUN:
     {
       ESPEasy::net::wifi::NW001_data_struct_WiFi_STA *NW_data =

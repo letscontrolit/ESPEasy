@@ -88,7 +88,7 @@ bool setNetworkEnableStatus(ESPEasy::net::networkIndex_t networkIndex, bool enab
 
     if (!enabled) {
       // Use the scheduler as this also removes any pending init calls.
-      Scheduler.setNetworkExitTimer(10, networkIndex);
+      Scheduler.setNetworkExitTimer(0, networkIndex);
     }
     Settings.setNetworkEnabled(networkIndex, enabled);
 
