@@ -188,7 +188,7 @@ bool NWPlugin_002(NWPlugin::Function function, EventStruct *event, String& strin
 # ifdef ESP32
           hostname = WiFi.AP.SSID();
 # else
-          hostname = //ESPEasy::net::NetworkCreateRFCCompliantHostname();
+          hostname = // ESPEasy::net::NetworkCreateRFCCompliantHostname();
                      WiFi.softAPSSID();
 # endif // ifdef ESP32
         }
@@ -276,7 +276,7 @@ bool NWPlugin_002(NWPlugin::Function function, EventStruct *event, String& strin
 # if CONFIG_SOC_WIFI_SUPPORT_5G
 
         // See wifi_5g_channel_bit_t for all supported channels
-// *INDENT-OFF*
+        // *INDENT-OFF*
         const int wifiChannels[] =
         { 1,   2,  3,   4,   5,   6,   7,   8,   9,   10,   11,  12,  13, 14 // 2.4 GHz
           ,36,   40,  44,  48                                                // 5 GHz U-NII-1
@@ -288,7 +288,7 @@ bool NWPlugin_002(NWPlugin::Function function, EventStruct *event, String& strin
           ,169                                                               // 5 GHz U-NII-3/4
           ,173,  177                                                         // 5 GHz U-NII-4
         };
-// *INDENT-ON*
+        // *INDENT-ON*
         constexpr int nrwifiChannels = NR_ELEMENTS(wifiChannels);
         const FormSelectorOptions selector(
           nrwifiChannels,

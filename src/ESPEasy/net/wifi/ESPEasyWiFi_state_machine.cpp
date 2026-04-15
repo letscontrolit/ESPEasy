@@ -46,13 +46,15 @@ void ESPEasyWiFi_t::enable()  {}
 void ESPEasyWiFi_t::disable() { setState(WiFiState_e::Disabled, 100); }
 
 void ESPEasyWiFi_t::begin()   {
+  if (connected()) setState(WiFiState_e::STA_Connected);
   if (WiFi_AP_Candidates.hasCandidates()) {
     setState(WiFiState_e::IdleWaiting, 100);
   } else {
-    //    if (!Settings.DoNotStartAPfallback_ConnectFail()) {
-    //      setState(WiFiState_e::AP_only, WIFI_STATE_MACHINE_AP_ONLY_TIMEOUT);
-    //    } else
-    {
+    if (WiFi_AP_Candidates.hasScanned()) {
+      if (shouldStartAP_fallback()) {
+        setState(WiFiState_e::AP_only, WIFI_STATE_MACHINE_AP_ONLY_TIMEOUT);
+      }
+    } else {
       if (WifiIsAP(WiFi.getMode())) {
         // TODO TD-er: Must check if any client is connected.
         // If not, then we can disable AP mode and switch to WiFiState_e::STA_Scanning
