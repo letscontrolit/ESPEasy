@@ -276,17 +276,19 @@ bool NWPlugin_002(NWPlugin::Function function, EventStruct *event, String& strin
 # if CONFIG_SOC_WIFI_SUPPORT_5G
 
         // See wifi_5g_channel_bit_t for all supported channels
+// *INDENT-OFF*
         const int wifiChannels[] =
-        { 1,                            2,                 3,    4,    5,   6,   7,   8,   9,   10,   11,   12,   13, 14 // 2.4 GHz
-          ,                             36,                40,   44,   48                                                // 5 GHz U-NII-1
-          ,                             52,                56,   60,   64,  68                                           // 5 GHz U-NII-2A
+        { 1,   2,  3,   4,   5,   6,   7,   8,   9,   10,   11,  12,  13, 14 // 2.4 GHz
+          ,36,   40,  44,  48                                                // 5 GHz U-NII-1
+          ,52,   56,  60,  64,  68                                           // 5 GHz U-NII-2A
           // ,72, 76, 80, 84, 88 /* , 92 */                                  // 5 GHz U-NII-2B
-          ,                             /* 96,*/ 100,      104,  108,  112, 116, 120, 124, 128, 132,  136,  140          // 5 GHz U-NII-2C
-          ,                             144                                                                              // 5 GHz U-NII-2C/3
-          ,                             149,               153,  157,  161, 165                                          // 5 GHz U-NII-3
-          ,                             169                                                                              // 5 GHz U-NII-3/4
-          ,                             173,               177                                                           // 5 GHz U-NII-4
+          ,/* 96,*/ 100,104, 108, 112, 116, 120, 124, 128, 132,  136, 140    // 5 GHz U-NII-2C
+          ,144                                                               // 5 GHz U-NII-2C/3
+          ,149,  153, 157, 161, 165                                          // 5 GHz U-NII-3
+          ,169                                                               // 5 GHz U-NII-3/4
+          ,173,  177                                                         // 5 GHz U-NII-4
         };
+// *INDENT-ON*
         constexpr int nrwifiChannels = NR_ELEMENTS(wifiChannels);
         const FormSelectorOptions selector(
           nrwifiChannels,
