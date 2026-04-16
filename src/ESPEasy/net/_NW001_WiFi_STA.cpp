@@ -74,10 +74,11 @@ bool NWPlugin_001(NWPlugin::Function function, EventStruct *event, String& strin
     case NWPlugin::Function::NWPLUGIN_LOAD_DEFAULTS:
     {
 # ifdef ESP32
-      Settings.setRoutePrio_for_network(event->NetworkIndex, 100);
+      Settings.setRoutePrio_for_network(event->NetworkIndex, DEFAULT_STA_ROUTE_PRIO);
 # endif // ifdef ESP32
       Settings.setNetworkInterfaceSubnetBlockClientIP(event->NetworkIndex, false);
-      Settings.setNetworkInterfaceStartupDelay(event->NetworkIndex, 1000);
+      Settings.setNetworkInterfaceStartupDelay(event->NetworkIndex, DEFAULT_STA_STARTUP_DELAY);
+      Settings.setNetworkInterface_isFallback(event->NetworkIndex, DEFAULT_STA_IS_FALLBACK);
 
       Settings.ConnectFailRetryCount = 1;
       break;

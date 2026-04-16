@@ -96,6 +96,33 @@
 #ifndef DEFAULT_WIFI_INCLUDE_HIDDEN_SSID  
 #define DEFAULT_WIFI_INCLUDE_HIDDEN_SSID false  // Allow to connect to hidden SSID APs
 #endif
+
+#ifndef DEFAULT_STA_ROUTE_PRIO
+#define DEFAULT_STA_ROUTE_PRIO              100 // ESP32-only default route priority
+#endif
+
+#ifndef DEFAULT_STA_STARTUP_DELAY
+# if defined(BOARD_HAS_SDIO_ESP_HOSTED) && defined(ESP32P4)
+// Allow longer delay to give any Eth a chance to start
+#define DEFAULT_STA_STARTUP_DELAY           5000 // Delay (in ms) after boot before starting the interface
+#else
+#define DEFAULT_STA_STARTUP_DELAY           1000 // Delay (in ms) after boot before starting the interface
+#endif
+#endif
+
+#ifndef DEFAULT_STA_IS_FALLBACK
+# if defined(BOARD_HAS_SDIO_ESP_HOSTED) && defined(ESP32P4)
+#define DEFAULT_STA_IS_FALLBACK              true 
+#else
+#define DEFAULT_STA_IS_FALLBACK              false
+#endif
+#endif
+
+#ifndef DEFAULT_ETH_ROUTE_PRIO
+#define DEFAULT_ETH_ROUTE_PRIO              150 // ESP32-only default route priority
+#endif
+
+
 #ifndef DEFAULT_USE_STATIC_IP
 #define DEFAULT_USE_STATIC_IP   false           // (true|false) enabled or disabled static IP
 #endif
