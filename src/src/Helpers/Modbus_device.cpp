@@ -11,8 +11,9 @@
 
 # include "../Helpers/Modbus_device.h"
 # include "../Helpers/Modbus_mgr.h"
+#include "Modbus_device.h"
 
-//# define MODBUS_DEBUG
+# define MODBUS_DEBUG
 # ifdef BUILD_NO_DEBUG
 #  undef MODBUS_DEBUG // Debugging switched off
 # endif // ifdef BUILD_NO_DEBUG
@@ -51,41 +52,20 @@ void ModbusDEVICE_struct::reset() {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Simplified initialization function without dere pin and collision detection specified
+// Initialization connected to an existing link. 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-bool ModbusDEVICE_struct::init(uint8_t                 slaveAddress,
-                               const ESPEasySerialPort port,
-                               const int16_t           serial_rx,
-                               const int16_t           serial_tx,
-                               int16_t                 baudrate) {
-  return init(slaveAddress, port, serial_rx, serial_tx, baudrate, -1);
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Full initialization function with dere pin and collision detection specified
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-bool ModbusDEVICE_struct::init(uint8_t                 slaveAddress,
-                               const ESPEasySerialPort port,
-                               const int16_t           serial_rx,
-                               const int16_t           serial_tx,
-                               int16_t                 baudrate,
-                               int8_t                  dere_pin,
-                               bool                    collision_detect) {
-  // Request the Modbus manager to connect this device to a Modbus link with the given parameters.
-  bool success = ModbusMGR_singleton.connect(port, serial_rx, serial_tx, baudrate, dere_pin, collision_detect, &_modbus_link, &_deviceID);
-
+bool ModbusDEVICE_struct::init(uint8_t slaveAddress, int linkId)
+{
+   bool success = ModbusMGR_singleton.connect(linkId, &_modbus_link, &_deviceID);
   _modbus_address = slaveAddress;
-
-  # ifdef MODBUS_DEBUG
-
+  # ifdef MODBUS_DEBUG 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     addLogMove(LOG_LEVEL_INFO,
-               strformat(F("Modbus: Device Init, Slave address = %u, This = %p, deviceID = %u"), slaveAddress, this, _deviceID));
+               strformat(F("Modbus: Device Init, Slave address = %u, This = %p, deviceID = %u, linkId=%d"), slaveAddress, this, _deviceID, linkId));
   }
   # endif // MODBUS_DEBUG
-  return success;
+    return success;
 }
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Checker for device class initialization status
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool ModbusDEVICE_struct::isInitialized() const {

@@ -34,19 +34,8 @@ public:
 
   void reset();
 
-  bool init(uint8_t                 slaveAddress,
-            const ESPEasySerialPort port,
-            const int16_t           serial_rx,
-            const int16_t           serial_tx,
-            int16_t                 baudrate);
-
-  bool init(uint8_t                 slaveAddress,
-            const ESPEasySerialPort port,
-            const int16_t           serial_rx,
-            const int16_t           serial_tx,
-            int16_t                 baudrate,
-            int8_t                  dere_pin,
-            bool                    collision_detect = false);
+bool init( uint8_t                 slaveAddress,
+           int                     linkId);
 
   bool     isInitialized() const;
 

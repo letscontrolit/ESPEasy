@@ -13,7 +13,7 @@
 
 // Plugin configuration parameters
 // PCONFIG(0) is the Modbus device ID.
-// PCONFIG(1) is the serial baud rate.
+// PCONFIG(1) is the Modbus link ID.
 // PCONFIG(2) is used for flags, where bit 0 indicates collision detection
 // PCONFIG(3) is the number of active output values (1-4)
 // PCONFIG(4) is the Modbus register address for value 1
@@ -23,8 +23,8 @@
 // Use P183_ADDRESS(x) to access the PCONFIG value for value x
 # define P183_DEV_ID           PCONFIG(0)
 # define P183_DEV_ID_LABEL     PCONFIG_LABEL(0)
-# define P183_BAUDRATE         PCONFIG(1)
-# define P183_BAUDRATE_LABEL   PCONFIG_LABEL(1)
+# define P183_LINK_ID          PCONFIG(1)
+# define P183_LINK_ID_LABEL    PCONFIG_LABEL(1)
 # define P183_NR_OUTPUTS       PCONFIG(3)
 # define P183_NR_OUTPUTS_LABEL PCONFIG_LABEL(3)
 # define P183_ADDRESS(x) PCONFIG(4 + x)
@@ -34,11 +34,7 @@
 # define P183_SET_FLAG_COLL_DETECT(x) bitWrite(PCONFIG(2), 0, x)
 # define P183_FLAG_COLL_DETECT_LABEL "colldet"
 
-# define P183_DEPIN           CONFIG_PIN3
-
 # define P183_DEV_ID_DFLT      1
-# define P183_BAUDRATE_DFLT    3    // 9600 baud
-# define P183_MAX_BAUDRATE_SEL 8
 # define P183_MODBUS_TIMEOUT   1000 // milliseconds
 # define P183_MAX_MODBUS_NODES 247
 # define P183_MODBUS_BROADCAST_ID 0 // Modbus broadcast address
@@ -59,6 +55,9 @@ struct P183_data_struct : public PluginTaskData_base {
                    int8_t                  dere_pin,
                    bool                    collision_detect);
 
+  bool     plugin_init(uint8_t slaveAddress,
+                       int     linkId);
+
   void     plugin_exit();
   bool     plugin_read(struct EventStruct *event);
   bool     plugin_once_a_second(struct EventStruct *event);
@@ -78,6 +77,7 @@ private:
   uint16_t                    _registerValues[4] = {}; // Modus register values retrieved for output values
   ModbusResultState           _queueStates[4]    = {}; // State of read hloding register transactions
   ModbusResultState           _lastActionState   = ModbusResultState::Busy;
+
 };
 
 #endif // ifdef USES_P183

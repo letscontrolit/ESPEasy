@@ -1,4 +1,5 @@
 #include "../PluginStructs/P183_data_struct.h"
+#include "P183_data_struct.h"
 
 #ifdef USES_P183
 
@@ -20,15 +21,10 @@ P183_data_struct::~P183_data_struct() {
   _modbusDevice = nullptr;
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-bool P183_data_struct::plugin_init(uint8_t                 slaveAddress,
-                                   const ESPEasySerialPort port,
-                                   const int16_t           serial_rx,
-                                   const int16_t           serial_tx,
-                                   int16_t                 baudrate,
-                                   int8_t                  dere_pin,
-                                   bool                    collision_detect) {
-  // Create a fresh Modbus_device object to handle the Modbus communication
+bool P183_data_struct::plugin_init(uint8_t slaveAddress, int linkId)
+{
+  //// TODO Implement
+    // Create a fresh Modbus_device object to handle the Modbus communication
   if (_modbusDevice != nullptr) {
     delete _modbusDevice;
     _modbusDevice = nullptr;
@@ -42,29 +38,12 @@ bool P183_data_struct::plugin_init(uint8_t                 slaveAddress,
 
   // Initialize our own Modbus_device with the provided serial link parameters
   // Note that the link configuration is expected to be the same for all plugins reusing the same serial port
-  if (!_modbusDevice->init(slaveAddress, port, serial_rx, serial_tx, baudrate, dere_pin, collision_detect)) {
+  if (!_modbusDevice->init(slaveAddress, linkId)) {
     return false;
   }
   _modbusDevice->setModbusTimeout(P183_MODBUS_TIMEOUT);
-
-  # ifdef P183_DEBUG
-
-  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    addLogMove(LOG_LEVEL_DEBUG,
-               strformat(F("P183: Init address %d, RX pin %d, TX pin %d, RS485 mode selected on pin %d, baudrate %d, collision detection %s"),
-                         slaveAddress,
-                         serial_rx,
-                         serial_tx,
-                         dere_pin,
-                         baudrate,
-                         collision_detect ? F("enabled") : F("disabled")));
-  }
-  # endif // ifdef P183_DEBUG
-
-
-  return true;
+    return false;
 }
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void P183_data_struct::plugin_exit()
 {

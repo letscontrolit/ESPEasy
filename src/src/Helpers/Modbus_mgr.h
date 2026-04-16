@@ -7,6 +7,7 @@
 
 # include <ESPeasySerial.h>
 # include "Modbus_link.h"
+# include "../../src/Helpers/_ESPEasy_key_value_store.h"
 
 
 // ModbusMGR structure representing the singleton Modbus Management entity
@@ -15,25 +16,12 @@
 // The modbus manager is not involved in the actual data transport, this is handled by a direct relation between Modbus device and
 // ModbusLINK object.
 typedef struct ModbusMGR_struct  {
-  ModbusMGR_struct() = default;
-
+  ModbusMGR_struct();
   ~ModbusMGR_struct();
 
-  void reset();
+  bool initialize();
 
-  bool connect(const ESPEasySerialPort port,
-               const int16_t           serial_rx,
-               const int16_t           serial_tx,
-               int16_t                 baudrate,
-               ModbusLINK_struct     **link,
-               uint8_t                *deviceID);
-
-  bool connect(const ESPEasySerialPort port,
-               const int16_t           serial_rx,
-               const int16_t           serial_tx,
-               int16_t                 baudrate,
-               int8_t                  dere_pin,
-               bool                    collision_detect,
+  bool connect(int                     linkId, 
                ModbusLINK_struct     **link,
                uint8_t                *deviceID);
 
@@ -48,28 +36,39 @@ typedef struct ModbusMGR_struct  {
 
 private:
 
-  static const int MAX_MODBUS_LINKS   = 5;  // Maximum number of Modbus links supported
+  static const int MAX_MODBUS_LINKS   = 4;  // Maximum number of Modbus links supported
   static const int MAX_MODBUS_DEVICES = 16; // Maximum number of Modbus devices supported
 
+  // Structure representing the information of a Modbus link, including its configuration and associated ModbusLINK object
   struct ModbusLinkInfo_struct {
     ESPEasySerialPort         port             = ESPEasySerialPort::not_set;
-    int16_t                   serial_rx        = -1;
-    int16_t                   serial_tx        = -1;
+    int8_t                    serial_rx        = -1;
+    int8_t                    serial_tx        = -1;
     int16_t                   baudrate         = 9600;
     int8_t                    dere_pin         = -1;      // Pin used for RS485 DE/RE control, -1 if not used
     bool                      rs485_mode       = false;   // True if RS485 mode is enabled
     bool                      collision_detect = false;   // True if collision detection is enabled
     struct ModbusLINK_struct *link             = nullptr; // Pointer to the Modbus link object
+    ESPEasy_key_value_store  *kvs              = nullptr; // Key-value store for storing link-specific settings and parameters
   };
 
+  // Structure representing the information of a Modbus device, including assocuited ModbusDEVICE object
   struct ModbusDeviceInfo_struct {
     uint8_t                       deviceID = 0;                               // Unique ID assigned by the Modbus manager
-    struct ModbusDEVICE_struct   *device   = nullptr;                         // Pointer to the Modbus device object
     struct ModbusLinkInfo_struct *link     = nullptr;                         // Pointer to the Modbus link info
   };
 
   ModbusLinkInfo_struct   *_modbus_links[MAX_MODBUS_LINKS]     = { nullptr }; // Pointer to the Modbus link object
   ModbusDeviceInfo_struct *_modbus_devices[MAX_MODBUS_DEVICES] = { nullptr }; // Array of connected Modbus devices
+
+  bool setLink(const int               linkIndex,
+               const ESPEasySerialPort port,
+               const int16_t           serial_rx,
+               const int16_t           serial_tx,
+               int16_t                 baudrate,
+               int8_t                  dere_pin,
+               bool                    collision_detect);
+
 } ModbusMGR_struct_t;
 
 extern ModbusMGR_struct_t ModbusMGR_singleton;                                // Singleton instance of the Modbus Manager

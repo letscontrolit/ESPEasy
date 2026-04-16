@@ -17,6 +17,7 @@
 
 /**
  * Changelog:
+ * 2026-04-13 flashmark: Separate Modbus link definition from plugin.
  * 2025-10-12 flashmark: Restructuring and adding a MODBUS_FAC facility
  * 2025-08-24 flashmark: Initial version
  */
@@ -45,7 +46,7 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
     {
       auto& dev = Device[++deviceCount];
       dev.Number           = PLUGIN_ID_183;
-      dev.Type             = DEVICE_TYPE_SERIAL_PLUS1; // connected through 3 datapins
+      dev.Type             = DEVICE_TYPE_CUSTOM0; //////DEVICE_TYPE_SERIAL_PLUS1; // connected through 3 datapins
       dev.VType            = Sensor_VType::SENSOR_TYPE_QUAD;
       dev.FormulaOption    = true;
       dev.ValueCount       = P183_NR_OUTPUT_VALUES;
@@ -74,13 +75,12 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEGPIONAMES:
     {
-      serialHelper_modbus_getGpioNames(event);
       break;
     }
 
     case PLUGIN_WEBFORM_SHOW_CONFIG:
     {
-      string += serialHelper_getSerialTypeLabel(event);
+      //string += serialHelper_getSerialTypeLabel(event);
       success = true;
       break;
     }
@@ -88,38 +88,7 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_SET_DEFAULTS:
     {
       P183_DEV_ID   = P183_DEV_ID_DFLT;
-      P183_BAUDRATE = P183_BAUDRATE_DFLT;
-
       success = true;
-      break;
-    }
-
-    case PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS:
-    {
-      if ((P183_DEV_ID <= 0) || (P183_DEV_ID > P183_MAX_MODBUS_NODES) || (P183_BAUDRATE >= 6)) {
-        // Load some defaults
-        P183_DEV_ID   = P183_DEV_ID_DFLT;
-        P183_BAUDRATE = P183_BAUDRATE_DFLT;
-      }
-      {
-        String options_baudrate[P183_MAX_BAUDRATE_SEL];
-
-        for (int i = 0; i < P183_MAX_BAUDRATE_SEL; ++i) {
-          options_baudrate[i] = P183_storageValueToBaudrate(i);
-        }
-        constexpr size_t optionCount = NR_ELEMENTS(options_baudrate);
-        const FormSelectorOptions selector(optionCount, options_baudrate);
-        selector.addFormSelector(F("Baud Rate"), P183_BAUDRATE_LABEL, P183_BAUDRATE);
-        addUnit(F("baud"));
-      }
-
-      addFormNumericBox(F("Modbus Device Address"), P183_DEV_ID_LABEL, P183_DEV_ID, 1, 247);
-
-      # ifdef ESP32
-      addFormCheckBox(F("Enable Collision Detection"), F(P183_FLAG_COLL_DETECT_LABEL), P183_GET_FLAG_COLL_DETECT);
-      addFormNote(F("/RE connected to GND, only supported on hardware serial"));
-      # endif // ifdef ESP32
-
       break;
     }
 
@@ -140,6 +109,14 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
+      addFormNumericBox(F("Modbus Link"), P183_LINK_ID_LABEL, P183_LINK_ID, 0, 3);
+      addFormNumericBox(F("Modbus Device Address"), P183_DEV_ID_LABEL, P183_DEV_ID, 1, 247);
+
+      # ifdef ESP32
+      addFormCheckBox(F("Enable Collision Detection"), F(P183_FLAG_COLL_DETECT_LABEL), P183_GET_FLAG_COLL_DETECT);
+      addFormNote(F("/RE connected to GND, only supported on hardware serial"));
+      # endif // ifdef ESP32
+
       success = true;
       break;
     }
@@ -147,11 +124,7 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
     {
       P183_DEV_ID   = getFormItemInt(P183_DEV_ID_LABEL);
-      P183_BAUDRATE = getFormItemInt(P183_BAUDRATE_LABEL);
-      # ifdef ESP32
-      P183_SET_FLAG_COLL_DETECT(isFormItemChecked(F(P183_FLAG_COLL_DETECT_LABEL)));
-      # endif // ifdef ESP32
-
+      P183_LINK_ID  = getFormItemInt(P183_LINK_ID_LABEL);
       P183_NR_OUTPUTS = getFormItemInt(P183_NR_OUTPUTS_LABEL);
 
       for (int outputIndex = 0; outputIndex < P183_NR_OUTPUT_VALUES; ++outputIndex)
@@ -169,13 +142,7 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
       P183_data_struct *P183_data = static_cast<P183_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (P183_data  != nullptr) {
-        success = P183_data->plugin_init(P183_DEV_ID,
-                                         static_cast<ESPEasySerialPort>(CONFIG_PORT),
-                                         CONFIG_PIN1,
-                                         CONFIG_PIN2,
-                                         P183_storageValueToBaudrate(P183_BAUDRATE),
-                                         P183_DEPIN,
-                                         P183_GET_FLAG_COLL_DETECT);
+        success = P183_data->plugin_init(P183_DEV_ID, P183_LINK_ID);
       }
       else {
         addLogMove(LOG_LEVEL_ERROR, F("P183 : Cannot initialize"));
@@ -274,7 +241,8 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
 
       break;
     }
-    case PLUGIN_GET_CONFIG_VALUE: {
+    case PLUGIN_GET_CONFIG_VALUE:
+    {
       P183_data_struct *P183_data = static_cast<P183_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (P183_data == nullptr) {
@@ -293,7 +261,8 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
       }
       break;
     }
-    case PLUGIN_TEN_PER_SECOND: {
+    case PLUGIN_TEN_PER_SECOND:
+    {
       P183_data_struct *P183_data = static_cast<P183_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (P183_data != nullptr) {
@@ -304,35 +273,6 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
   }
 
   return success;
-}
-
-// Convert stored baudrate setting (enumeration value) to actual baudrate value
-// Returns the actual baudrate value.
-int P183_storageValueToBaudrate(uint8_t baudrate_setting) {
-  int baudrate = 9600;
-
-  switch (baudrate_setting)
-  {
-    case 0:
-      baudrate = 1200;   break;
-    case 1:
-      baudrate = 2400;   break;
-    case 2:
-      baudrate = 4800;   break;
-    case 3:
-      baudrate = 9600;   break;
-    case 4:
-      baudrate = 19200;  break;
-    case 5:
-      baudrate = 38400;  break;
-    case 6:
-      baudrate = 57600;  break;
-    case 7:
-      baudrate = 115200; break;
-    default:
-      baudrate = 9600;   break; // Default value for fallback
-  }
-  return baudrate;
 }
 
 #endif // USES_P183

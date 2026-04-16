@@ -13,7 +13,7 @@
 # include "Modbus_device.h"
 # include "Modbus_link.h"
 
-//# define MODBUS_DEBUG
+# define MODBUS_DEBUG
 # ifdef BUILD_NO_DEBUG
 #  undef MODBUS_DEBUG // Debugging switched off
 # endif // ifdef BUILD_NO_DEBUG
@@ -104,11 +104,16 @@ bool ModbusLINK_struct::init(const ESPEasySerialPort port,
   return true;
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Return the initialization status of the link
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool ModbusLINK_struct::isInitialized() const {
   return _easySerial != nullptr;
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Reconfigure the link with new parameters. If the serial port is the same, it is reconfigured, otherwise it is reinitialized.
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool ModbusLINK_struct::reconfigure(const ESPEasySerialPort port, 
     const int16_t serial_rx, 
     const int16_t serial_tx, 
@@ -126,7 +131,7 @@ bool ModbusLINK_struct::reconfigure(const ESPEasySerialPort port,
       return true;
     }
     else {
-      // Different port, need to reinitialize
+      return init(port, serial_rx, serial_tx, baudrate, dere_pin, collision_detect);
     }
   }
   else {

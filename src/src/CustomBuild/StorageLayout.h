@@ -134,7 +134,9 @@
 # define DAT_NETWORK_INTERFACE_SIZE        1024
 #endif 
 
-
+#ifndef DAT_MODBUS_INTERFACE_SIZE
+# define DAT_MODBUS_INTERFACE_SIZE         256 // Reserved size for Modbus link settings
+#endif 
 
 /*
 
@@ -232,7 +234,10 @@
   // All other network interface plugins will be ESP32-only.
   # ifndef DAT_NETWORK_INTERFACES_OFFSET
   #  define DAT_NETWORK_INTERFACES_OFFSET    16384
-  # endif // ifndef DAT_OFFSET_CUSTOM_CONTROLLER
+  # endif 
+  # ifndef DAT_MODBUS_INTERFACE_OFFSET
+  #  define DAT_MODBUS_INTERFACE_OFFSET     6144  // each Modbus link config = 256 bytes, 4 max
+  # endif
   # ifndef DAT_OFFSET_DEV_CREDENTIALS
   #  define DAT_OFFSET_DEV_CREDENTIALS       0
   # endif
