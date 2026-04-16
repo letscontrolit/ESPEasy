@@ -50,14 +50,14 @@ bool NWPlugin_002(NWPlugin::Function function, EventStruct *event, String& strin
     case NWPlugin::Function::NWPLUGIN_LOAD_DEFAULTS:
     {
 # ifdef ESP32
-      Settings.setRoutePrio_for_network(event->NetworkIndex, 10);
+      Settings.setRoutePrio_for_network(event->NetworkIndex, DEFAULT_AP_ROUTE_PRIO);
 # endif
       Settings.setNetworkInterfaceSubnetBlockClientIP(event->NetworkIndex, false);
-      Settings.setNetworkInterfaceStartupDelay(event->NetworkIndex, 10000);
-      Settings.setNetworkInterface_isFallback(event->NetworkIndex, true);
-      Settings.StartAPfallback_NoCredentials(true);
-      Settings.DoNotStartAPfallback_ConnectFail(false);
-      Settings.APfallback_autostart_max_uptime_m(0);
+      Settings.setNetworkInterfaceStartupDelay(event->NetworkIndex, DEFAULT_AP_STARTUP_DELAY);
+      Settings.setNetworkInterface_isFallback(event->NetworkIndex, DEFAULT_AP_IS_FALLBACK);
+      Settings.StartAPfallback_NoCredentials(DEFAULT_AP_START_FALLBACK_NO_CRED);
+      Settings.DoNotStartAPfallback_ConnectFail(DEFAULT_AP_DO_NOT_START_CONN_FAIL);
+      Settings.APfallback_autostart_max_uptime_m(DEFAULT_AP_AUTOSTART_MAX_UPTIME_M);
       Settings.APfallback_minimal_on_time_sec(DEFAULT_AP_FALLBACK_MINIMAL_ON_TIME_SEC);
       break;
     }

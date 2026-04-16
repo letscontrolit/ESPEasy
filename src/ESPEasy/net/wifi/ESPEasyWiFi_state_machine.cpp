@@ -382,6 +382,7 @@ void ESPEasyWiFi_t::setState(WiFiState_e newState, uint32_t timeout) {
   {
     case WiFiState_e::Disabled:
       // Do nothing here, as the device is disabled.
+      WifiDisconnect();
       setSTA(false);
       break;
     case WiFiState_e::WiFiOFF:

@@ -51,6 +51,31 @@
 #define DEFAULT_AP_KEY      "configesp"         // Enter network WPA key for AP (config) mode
 #endif
 
+#ifndef DEFAULT_AP_ROUTE_PRIO
+#define DEFAULT_AP_ROUTE_PRIO                10 // ESP32-only default route priority
+#endif
+
+#ifndef DEFAULT_AP_STARTUP_DELAY
+#define DEFAULT_AP_STARTUP_DELAY          10000 // Delay (in ms) after boot before starting the interface
+#endif
+
+#ifndef DEFAULT_AP_IS_FALLBACK
+#define DEFAULT_AP_IS_FALLBACK              true // Whether or not the WiFi AP interface should be considered a fallback interface
+#endif
+
+#ifndef DEFAULT_AP_START_FALLBACK_NO_CRED
+#define DEFAULT_AP_START_FALLBACK_NO_CRED   true // Whether or not the WiFi AP interface should be started if there are no WiFi credentials
+#endif
+
+#ifndef DEFAULT_AP_DO_NOT_START_CONN_FAIL
+#define DEFAULT_AP_DO_NOT_START_CONN_FAIL   false // Whether or not the WiFi AP interface should start on failed connection attempts
+#endif
+
+#ifndef DEFAULT_AP_AUTOSTART_MAX_UPTIME_M
+#define DEFAULT_AP_AUTOSTART_MAX_UPTIME_M       0 // Max uptime (in minutes) in which the AP interface is allowed to automatically start
+#endif
+
+
 #ifndef DEFAULT_AP_FALLBACK_MINIMAL_ON_TIME_SEC
 #define DEFAULT_AP_FALLBACK_MINIMAL_ON_TIME_SEC  60  // Minimal time to leave the AP on to allow a user to connect to it for entering setup
 #endif
