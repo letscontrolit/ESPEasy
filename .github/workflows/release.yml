@@ -28,7 +28,7 @@ jobs:
       - id: set-matrix
         run: |
           pip install uv
-          uv pip install --system platformio
+          uv pip install --system pioarduino
           python tools/ci/generate-matrix.py
 
   build:
@@ -101,7 +101,7 @@ jobs:
       notes: ${{ steps.release-notes.outputs.result }}
     steps:
       - id: release-notes
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           result-encoding: string
           script: |

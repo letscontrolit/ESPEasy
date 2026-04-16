@@ -229,7 +229,11 @@ int http_authenticate(const String& logIdentifier,
                       const String& pass,
                       const String& host,
                       uint16_t      port,
+                     # if FEATURE_JSON_EVENT
+                      String        uri,
+                     # else // if FEATURE_JSON_EVENT
                       const String& uri,
+                     # endif // if FEATURE_JSON_EVENT
                       const String& HttpMethod,
                       const String& header,
                       const String& postStr,
