@@ -48,7 +48,7 @@
 #include <lwip/dns.h>
 
 
-#if FEATURE_DOWNLOAD
+#if FEATURE_DOWNLOAD && defined(ESP32)
 #include <Update.h>
 #endif
 
