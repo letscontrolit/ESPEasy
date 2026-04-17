@@ -7,19 +7,30 @@
 #include <WiFiClient.h>
 #include <WiFiUdp.h>
 
-#if FEATURE_HTTP_CLIENT
-#ifdef ESP8266
-# include <ESP8266HTTPClient.h>
-#endif // ifdef ESP8266
-#ifdef ESP32
-# include <HTTPClient.h>
-#endif // ifdef ESP32
+#if FEATURE_HTTP_CLIENT || FEATURE_DOWNLOAD
+# if FEATURE_TLS
+
+#  include "HttpClientLight.h"
+#  include <WiFiClientSecureLightBearSSL.h>
+#  define ESPEasy_HTTPClient HTTPClientLight
+
+# else
+
+#  ifdef ESP8266
+#   include <ESP8266HTTPClient.h>
+#  endif // ifdef ESP8266
+#  ifdef ESP32
+#   include <HTTPClient.h>
+#  endif // ifdef ESP32
+
+#  define ESPEasy_HTTPClient HTTPClient
+
+# endif
 #endif
 
 #if FEATURE_HTTP_TLS
 #include "../DataTypes/TLS_types.h"
 #endif // if FEATURE_HTTP_TLS
-
 
 
 #if FEATURE_ESPEASY_P2P
@@ -216,6 +227,8 @@ bool splitUserPass_HostPortString(const String& hostPortString, String& user, St
 // Return value is everything after the hostname:port section (including /)
 String splitURL(const String& fullURL, String& user, String& pass, String& host, uint16_t& port, String& file);
 
+String joinURL(const String& user, const String& pass, const String& host, uint16_t& port, const String& uri, const String& protocol = EMPTY_STRING );
+
 
 #if FEATURE_HTTP_CLIENT
 // Initiate the HTTP connection.
@@ -223,7 +236,7 @@ String splitURL(const String& fullURL, String& user, String& pass, String& host,
 // @retval HTTP return code.
 int http_authenticate(const String& logIdentifier,
                       WiFiClient  & client,
-                      HTTPClient  & http,
+                      ESPEasy_HTTPClient  & http,
                       uint16_t      timeout,
                       const String& user,
                       const String& pass,

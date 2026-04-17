@@ -17,7 +17,7 @@
 # endif // if FEATURE_JSON_EVENT
 
 
-void eventFromResponse(const String& host, const int& httpCode, const String& uri, HTTPClient& http, const int& parseJson) {
+void eventFromResponse(const String& host, const int& httpCode, const String& uri, ESPEasy_HTTPClient& http, const int& parseJson) {
   if ((httpCode == 200)) {
     if (parseJson == -1) {
       // -------------------------------------------------------------------------------------------Thingspeak
