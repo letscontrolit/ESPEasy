@@ -71,7 +71,7 @@ Output Configuration
 
 * **Output Data Type**: This setting determines the number of available Values, and is also used by f.e. the Domoticz controllers for sending data in the correct format. F.e. when configuring a Temperature & Humidity sensor, it makes sense to choose Temp / Hum here.
 
-* **I2C Init Commands**: A sequence of commands, documented in detail below, that will be used to manipulate the sensor when the plugin is enabled. This can f.e. be used to initialize the sensor, set the **'Enable' GPIO** in the Enabled state, or pulse the **'Reset' GPIO** to reset the device.
+* **I2C Init Commands**: A sequence of commands, documented in detail below, that will be used to manipulate the sensor when the plugin is enabled. This can f.e. be used to initialize the sensor, set the **'Enable' GPIO** in the Enabled state, or pulse the **'Reset' GPIO** to reset the device. The last value is used as the initialization result value, where 0 is ``false`` and <> 0 is ``true``. Often this sequence needs ``;calc.1`` appended, to return a ``true`` result.
 
 * **I2C Exit Commands**: A sequence of commands that will be sent to the device when the plugin is disabled. This can f.e. be used to set the **'Enable' GPIO** in Disabled state, or set the device in a power-down state.
 
@@ -150,9 +150,9 @@ For ``dataformat`` there are a limited set of options available:
 The commands available can either be used with the full command, or the 1 character shortcut to save some space in the limited available storage:
 
 * ``get.<format>[.<len>]``: ``(g)``: Read the number of bytes matching the format from the device. ``<len>`` can be a calculation, f.e. to use ``%value%`` from a previous command.
-* ``put.<format>.<data>[.<data>...]``: ``(p)``: Write data to the device, in the format specified. For ``b`` or ``w`` the provided data determines the length of the data to send.
-* ``read.<format>[.<len>].<reg>``: ``(r)``: Read data in the requested format from a register in the device. ``<len>`` can be a calculation, f.e. to use ``%value%`` from a previous command.
-* ``write.<format>.<reg>.<data>[.<data>...]``: ``(w)``: Write data to a register in the device in the specified format.
+* ``put.<format>.<data>[.<data>...]``: ``(p)``: Write data to the device, in the format specified. For ``b`` or ``w`` the provided data and format determines the length of the data to send. ``data`` can be from a global variable, expanded just before execution.
+* ``read.<format>[.<len>].<reg>``: ``(r)``: Read data in the requested format from a register in the device. ``<len>`` can be a calculation, f.e. to use ``%value%`` from a previous command. ``reg`` can be from a global variable, expanded just before execution.
+* ``write.<format>.<reg>.<data>[.<data>...]``: ``(w)``: Write data to a register in the device in the specified format. ``data`` can be from a global variable, expanded just before execution. (not applicable for ``b`` and ``w`` format!)
 * ``eval``: ``(e)``: Evaluate the previous command, and set as selected data for ``calc`` or ``if`` commands.
 * ``value.<valueIndex>``: ``(v)``: (1..4 or a value name) Store the last calculated result, or last read value, in the specified Value field.
 * ``calc.<calculation>``: ``(c)``: Calculate a result, like Rules, extra available vars: ``%value%``, ``%pvalue%``, ``%h%``, ``%b0%..%b<n>%``, ``%bx0%..%bx<n>%``, ``%w0%..%w<n>%``, ``%wx0%..%wx<n>%``
@@ -169,12 +169,14 @@ During processing, the data has to be made available to some of the following st
 
 The next variables are only available after an ``eval`` I2C Command is executed:
 
-* ``%value%``: The value retrieved in decimal presentation, or the read String for format ``str``. So if a ``read`` or ``get`` command was used. Not applicable for ``b.<length>`` and ``w.<length>`` dataformats, ``%h%``, ``%b..%`` or ``%w..%`` variables should be used.
+* ``%value%``: The value retrieved in decimal presentation, or the read String for format ``str``. So if a ``read`` or ``get`` command was used. Not applicable for ``b.<length>`` and ``w.<length>`` dataformats, then ``%h%``, ``%b..%`` or ``%w..%`` variables should be used.
 * ``%h%``: The result of a ``read`` or ``get`` formatted as hex bytes with a single '0x' prefix, using the minimal number of digits needed. For ``b.<length>`` or ``w.<length>`` dataformat all bytes/words are concatenated. If 7 bytes are retrieved using ``get.b.7`` command, ``%h`` will be replaced by ``0x00010203040506``, or 3 words using ``get.w.3`` with ``0x000000010002``, showing the retrieved data of course.
 * ``%b<N>%``: The value of byte N (0-based!), retrieved using the ``b.<length>`` dataformat. This will be a decimal presentation of the data.
 * ``%bx<N>%``: The value of byte N (0-based!), retrieved using the ``b.<length>`` dataformat. This will be a 2 digit hexadecimal presentation, without '0x' prefix, of the data.
 * ``%w<N>%``: The value of word N (0-based!), retrieved using the ``w.<length>`` dataformat. This will be a decimal presentation of the data.
 * ``%wx<N>%``: The value of word N (0-based!), retrieved using the ``w.<length>`` dataformat. This will be a 4 digit hexadecimal presentation, without '0x' prefix, of the data.
+
+For the ``put`` and ``write`` commands, the ``data`` can be from a global variable, in the usual notations, like ``%10%``, ``%v_bits%``, ``[var#5]`` etc. When sending an I2C command sequence from rules, the variable shuld be escaped, f.e. ``\%v_bits\%`` or ``\[int#bits\]``, etc.
 
 Processing commands for 1/sec, 10/sec and 50/sec plugin events
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -613,6 +615,8 @@ Change log
 
 .. versionchanged:: 2.0
   ...
+
+  |added| 2026-04-18 Add support for global variables in ``put``, ``write`` and ``read`` commands.
 
   |added| 2025-12-08 Add index to example configurations.
 
