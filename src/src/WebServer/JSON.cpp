@@ -578,7 +578,7 @@ void handle_json()
 # if FEATURE_ADDITIONAL_JSON_FROM_PLUGIN
 
               EventStruct TempEvent(TaskIndex);
-              TempEvent.Par1 = reinterpret_cast<intptr_t>(taskWriter.get());
+              TempEvent.kvWriter = taskWriter.get();
               
               String dummy;
               PluginCall(PLUGIN_TASK_JSON, &TempEvent, dummy);

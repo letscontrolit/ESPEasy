@@ -371,14 +371,16 @@ boolean Plugin_043(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_TASK_JSON:
     {
       addLog(LOG_LEVEL_INFO, F("P043 JSON CALLED"));
-      auto taskWriter = reinterpret_cast<KeyValueWriter *>(event->Par1);
-      if (!taskWriter) break;
-      taskWriter->write({ F("OnOff"), PCONFIG(6) });
 
-      auto timesWriter = taskWriter->createChildArray(F("Times"));
+      if (!event->kvWriter) break;
+      event->kvWriter->write({ F("OnOff"), PCONFIG(6) });
+
+      auto timesWriter = event->kvWriter->createChildArray(F("Times"));
       if (!timesWriter) break;
 
-      LoadTaskSettings(event->TaskIndex);
+      if (ExtraTaskSettings.TaskIndex != event->TaskIndex) {
+        LoadTaskSettings(event->TaskIndex);
+      }
 
       const int offset =
         (validGpio(CONFIG_PIN1) || (PCONFIG(7) == 1)) ? 1 : 0;
