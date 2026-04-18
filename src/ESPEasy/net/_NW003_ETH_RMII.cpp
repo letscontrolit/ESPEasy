@@ -44,7 +44,10 @@ bool NWPlugin_003(NWPlugin::Function function, EventStruct *event, String& strin
 
     case NWPlugin::Function::NWPLUGIN_LOAD_DEFAULTS:
     {
-      Settings.setRoutePrio_for_network(event->NetworkIndex, 50);
+      // Make sure the first listed Eth device is default set to have the highest route prio
+      Settings.setRoutePrio_for_network(
+        event->NetworkIndex, 
+        DEFAULT_ETH_ROUTE_PRIO - (5 * event->NetworkIndex));
       Settings.setNetworkInterfaceSubnetBlockClientIP(event->NetworkIndex, false);
       Settings.setNetworkInterfaceStartupDelay(event->NetworkIndex, 500 * event->NetworkIndex);
 

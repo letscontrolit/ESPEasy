@@ -362,7 +362,7 @@ void handle_networks_NetworkSettingsPage(ESPEasy::net::networkIndex_t networkind
         ++tmpNetworkDriverIndex;
       }
     }
-    addSelector_Foot();
+    addSelector_Foot(!networkDriverSelectorDisabled);
 
   }
 

@@ -86,7 +86,9 @@ enum class WiFiState_e
   STA_Reconnecting,
 
   // Connected to an AP
-  STA_Connected
+  STA_Connected,
+
+  STA_Connected_Setup
 
 };
 
