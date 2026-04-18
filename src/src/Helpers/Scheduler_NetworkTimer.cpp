@@ -55,6 +55,10 @@ void ESPEasy_Scheduler::setNetworkTimer(unsigned long                msecFromNow
     systemTimers[timerID.mixed_id] = timer_data;
     setNewTimerAt(timerID, millis() + msecFromNow);
   }
+
+  if (msecFromNow == 0) {
+    process_network_timer(timerID);
+  }
 }
 
 void ESPEasy_Scheduler::process_network_timer(SchedulerTimerID id)

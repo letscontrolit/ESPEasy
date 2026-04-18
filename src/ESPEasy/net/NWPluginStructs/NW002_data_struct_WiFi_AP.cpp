@@ -97,6 +97,14 @@ bool NW002_data_struct_WiFi_AP::init(EventStruct *event)
 # ifdef ESP32
   NW002_update_NAPT();
 # endif
+  #  if FEATURE_MDNS
+  #   ifdef ESP8266
+
+  // notifyAPChange() is not present in the ESP32 MDNSResponder
+  MDNS.notifyAPChange();
+  #   endif // ifdef ESP8266
+  #  endif // if FEATURE_MDNS
+
   return true;
 }
 
@@ -108,7 +116,7 @@ bool NW002_data_struct_WiFi_AP::exit(EventStruct *event)
   NW_PLUGIN_INTERFACE.end();
 # endif // ifdef ESP32
 # ifdef ESP8266
-  WiFi.softAPdisconnect();
+  WiFi.softAPdisconnect(true);
 # endif // ifdef ESP8266
 
   stats_and_cache.processEvents();
