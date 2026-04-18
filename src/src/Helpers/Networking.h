@@ -225,7 +225,7 @@ bool splitUserPass_HostPortString(const String& hostPortString, String& user, St
 
 // Split a full URL like "http://hostname:port/path/file.htm"
 // Return value is everything after the hostname:port section (including /)
-String splitURL(const String& fullURL, String& user, String& pass, String& host, uint16_t& port, String& file);
+String splitURL(const String& fullURL, String& user, String& pass, String& host, uint16_t& port, String& file, String& protocol);
 
 String joinURL(const String& user, const String& pass, const String& host, uint16_t& port, const String& uri, const String& protocol = EMPTY_STRING );
 
@@ -242,6 +242,7 @@ int http_authenticate(const String& logIdentifier,
                       const String& pass,
                       const String& host,
                       uint16_t      port,
+                      const String& protocol,
                      # if FEATURE_JSON_EVENT
                       String        uri,
                      # else // if FEATURE_JSON_EVENT
@@ -264,7 +265,8 @@ String send_via_http(const String& logIdentifier,
                      const String& header,
                      const String& postStr,
                      int         & httpCode,
-                     bool          must_check_reply
+                     bool          must_check_reply,
+                     const String& protocol
                      #if FEATURE_HTTP_TLS
                      , TLS_types   tlsType = TLS_types::NoTLS
                      #endif // if FEATURE_HTTP_TLS

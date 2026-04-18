@@ -1304,7 +1304,7 @@ bool splitUserPass_HostPortString(const String& hostPortString, String& user, St
 
 // Split a full URL like "http://hostname:port/path/file.htm"
 // Return value is everything after the hostname:port section (including /)
-String splitURL(const String& fullURL, String& user, String& pass, String& host, uint16_t& port, String& file) {
+String splitURL(const String& fullURL, String& user, String& pass, String& host, uint16_t& port, String& file, String& protocol) {
   int starthost = fullURL.indexOf(F("://"));
 
   if (starthost == -1) {
@@ -1319,16 +1319,16 @@ String splitURL(const String& fullURL, String& user, String& pass, String& host,
     return EMPTY_STRING;
   }
 
-  #if FEATURE_HTTP_TLS
-  if ((starthost > 3) && (port == 80)) { // 'Upgrade' from port 80 to port 443 for HTTPS url
-    String proto = fullURL.substring(0, starthost - 3);
-    proto.toLowerCase();
+  if (starthost > 3) {
+    protocol = fullURL.substring(0, starthost - 3);
+    protocol.toLowerCase(); // Shouldn't be problematic
 
-    if (equals(proto, F("https"))) {
+    #if FEATURE_HTTP_TLS
+    if ((port == 80) && equals(protocol, F("https"))) { // 'Upgrade' from port 80 to port 443 for HTTPS url
       port = 443;
     }
+    #endif // if FEATURE_HTTP_TLS
   }
-  #endif // if FEATURE_HTTP_TLS
 
   int startfile = fullURL.lastIndexOf('/');
 
@@ -1342,12 +1342,11 @@ String joinURL(const String& user, const String& pass, const String& host, uint1
 {
   String fullURL;
   if (protocol.isEmpty()) {
-    if (port == 80) fullURL = F("http://");
-    else if (port == 443) fullURL = F("https://");
-    else return fullURL;
+    if (port == 443) { fullURL = F("https://"); }
+    else { fullURL = F("http://"); }
   } else {
     fullURL += protocol;
-    if (!fullURL.endsWith(F("://"))) fullURL += F("://");
+    if (!fullURL.endsWith(F("://"))) { fullURL += F("://"); }
   }
   if (!user.isEmpty() && !pass.isEmpty()) {
     fullURL += user;
@@ -1355,9 +1354,9 @@ String joinURL(const String& user, const String& pass, const String& host, uint1
     fullURL += pass;
     fullURL += '@';
   }
-  if (host.isEmpty()) return EMPTY_STRING;
+  if (host.isEmpty()) { return EMPTY_STRING; }
   fullURL += host;
-  if (port != 80 && port != 443) {
+  if ((port != 80) && (port != 443)) {
     fullURL += ':';
     fullURL += port;
   }
@@ -1529,6 +1528,7 @@ int http_authenticate(const String& logIdentifier,
                       const String& pass,
                       const String& host,
                       uint16_t      port,
+                      const String& protocol,
                       # if FEATURE_JSON_EVENT
                       String        uri,
                      # else // if FEATURE_JSON_EVENT
@@ -1549,6 +1549,7 @@ int http_authenticate(const String& logIdentifier,
       pass,
       host,
       port,
+      protocol,
       concat(F("/"), uri),
       HttpMethod,
       header,
@@ -1612,7 +1613,7 @@ int http_authenticate(const String& logIdentifier,
   scrubDNS();
 # if defined(CORE_POST_2_6_0) || defined(ESP32)
 #  if FEATURE_TLS
-  const String fullURL = joinURL(user, pass, host, port, uri);
+  const String fullURL = joinURL(user, pass, host, port, uri, protocol);
   if (fullURL.startsWith(F("https")))
     http.begin(fullURL, nullptr); // HTTPS
   else 
@@ -1742,7 +1743,8 @@ String send_via_http(const String& logIdentifier,
                      const String& header,
                      const String& postStr,
                      int         & httpCode,
-                     bool          must_check_reply
+                     bool          must_check_reply,
+                     const String& protocol
                      #if FEATURE_HTTP_TLS
                      , TLS_types   tlsType
                      #endif // if FEATURE_HTTP_TLS
@@ -1808,6 +1810,7 @@ String send_via_http(const String& logIdentifier,
     pass,
     host,
     port,
+    protocol,
     uri,
     HttpMethod,
     header,
@@ -1870,9 +1873,9 @@ bool start_downloadFile(WiFiClient  & client,
                         String        user,
                         String        pass,
                         String      & error) {
-  String   host, file;
+  String   host, file, protocol;
   uint16_t port;
-  String   uri = splitURL(url, user, pass, host, port, file);
+  String   uri = splitURL(url, user, pass, host, port, file, protocol);
 
   if (file_save.isEmpty()) {
     file_save = file;
@@ -1903,6 +1906,7 @@ bool start_downloadFile(WiFiClient  & client,
     pass,
     host,
     port,
+    protocol,
     uri,
     F("GET"),
     EMPTY_STRING, // header
