@@ -1506,7 +1506,11 @@ int http_authenticate(const String& logIdentifier,
                       const String& pass,
                       const String& host,
                       uint16_t      port,
+                      # if FEATURE_JSON_EVENT
+                      String        uri,
+                     # else // if FEATURE_JSON_EVENT
                       const String& uri,
+                     # endif // if FEATURE_JSON_EVENT
                       const String& HttpMethod,
                       const String& header,
                       const String& postStr,
@@ -1528,7 +1532,17 @@ int http_authenticate(const String& logIdentifier,
       postStr,
       must_check_reply);
   }
-  int httpCode              = 0;
+
+# if RESPONSE_PARSER_SUPPORT
+  int parseJson = -1;
+#  if FEATURE_JSON_EVENT
+  UriParseResult uriResult = parseUriPath(uri);
+  parseJson = uriResult.parseJson;
+  uri       = uriResult.cleanedPath;
+#  endif // if FEATURE_JSON_EVENT
+# endif // if RESPONSE_PARSER_SUPPORT
+
+  int httpCode = 0;
   const bool hasCredentials = !user.isEmpty() && !pass.isEmpty();
 
   if (hasCredentials) {
@@ -1655,7 +1669,7 @@ int http_authenticate(const String& logIdentifier,
 
 // ----This way to the custom response parser----------------
 #if RESPONSE_PARSER_SUPPORT
-    eventFromResponse(host, httpCode, uri, http);
+    eventFromResponse(host, httpCode, uri, http, parseJson);
 #endif
   }
 // -----------------------------------------------------------
