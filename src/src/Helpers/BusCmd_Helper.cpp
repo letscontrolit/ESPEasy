@@ -288,7 +288,7 @@ std::vector<BusCmd_Command_struct>BusCmd_Helper_struct::parseBusCmdCommands(cons
 # endif // ifndef BUILD_NO_DEBUG
   }
 
-  if (!line.isEmpty() && ((commands.empty()) || update) && parseAndLogOK) {
+  if (!line.isEmpty() && (commands.empty() || update) && parseAndLogOK) {
     int evt = 1;
 
     while (evt > 0) {
@@ -386,14 +386,10 @@ std::vector<BusCmd_Command_struct>BusCmd_Helper_struct::parseBusCmdCommands(cons
             int64_t val          = 0;
 
             if (!validInt64FromString(args[arg], val) && (
-                  (BusCmd_Command_e::Read == cmd) ||
-                  (BusCmd_Command_e::Write == cmd) ||
-                  (BusCmd_Command_e::RegisterRead == cmd) ||
-                  (BusCmd_Command_e::Register16Read == cmd) ||
-                  (BusCmd_Command_e::RegisterWrite == cmd) ||
-                  (BusCmd_Command_e::Register16Write == cmd)
+                  cmd.isRegisterCmd() || cmd.isWriteCmd()
                   )) {
               calculation = args[arg];
+              stripEscapeCharacters(calculation);
             }
 
             switch (cmd)
@@ -465,6 +461,7 @@ std::vector<BusCmd_Command_struct>BusCmd_Helper_struct::parseBusCmdCommands(cons
 
                   if (!validInt64FromString(args[arg], val)) {
                     calculation = args[arg];
+                    stripEscapeCharacters(calculation);
                   }
                 }
 
@@ -609,19 +606,18 @@ bool BusCmd_Helper_struct::executeBusCmdCommands() {
     _lastReg     = _it->reg;
 
     if (!_it->calculation.isEmpty() && (
-          (BusCmd_Command_e::Read == _it->command) ||
-          (BusCmd_Command_e::Write == _it->command) ||
-          (BusCmd_Command_e::RegisterRead == _it->command) ||
-          (BusCmd_Command_e::Register16Read == _it->command) ||
-          (BusCmd_Command_e::RegisterWrite == _it->command) ||
-          (BusCmd_Command_e::Register16Write == _it->command)
+          _it->command.isRegisterCmd() || _it->command.isWriteCmd()
           )) {
       String toCalc(replacePluginValues(_it->calculation));
       const String newCalc = parseTemplate(toCalc); // Process like rules
       ESPEASY_RULES_FLOAT_TYPE tmp{};
 
       if (Calculate(newCalc, tmp) == CalculateReturnCode::OK) {
-        _it->d0_int32_t = static_cast<uint32_t>(tmp);
+        if (_it->command.isReadCmd()) { // get is already excluded, 'if' above
+          _it->reg = static_cast<uint16_t>(tmp);
+        } else if (_it->command.isWriteCmd()) {
+          _it->d0_int32_t = static_cast<int32_t>(tmp);
+        }
       }
 
       // NOTE: Keep for development-testing
@@ -1143,6 +1139,7 @@ bool BusCmd_Helper_struct::executeBusCmdCommands() {
       ++_it;
       --toSkip; // Skip commands, forward-only, for now
     }
+    delay(0);
   }
 
   if ((BusCmd_CommandState_e::Processing == _commandState) &&

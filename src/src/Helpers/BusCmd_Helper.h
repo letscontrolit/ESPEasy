@@ -2,6 +2,7 @@
 #define _HELPERS_BUSCMD_HELPER_H
 
 /** Changelog:
+ * 2026-04-18 tonhuisman: Limit variable expansion to read (register) and put/write (value) commands
  * 2026-04-12 tonhuisman: Allow rules-variables to be used for get/read and put/write commands
  * 2025-08-16 tonhuisman: Extend If I2C command to optionally skip forward N commands on false (0) result
  * 2025-08-07 tonhuisman: Add LetStr I2C command, analogue to Rules LetStr command
@@ -18,27 +19,60 @@
 # define BUSCMD_COMMAND_SEPARATOR   ';'
 # define BUSCMD_ARGUMENT_SEPARATOR  '.'
 
-enum class BusCmd_Command_e : uint8_t {
-  NOP = 0u,        // 'n'
-  Read,            // 'g'
-  Write,           // 'p'
-  RegisterRead,    // 'r' 8 bit register value
-  RegisterWrite,   // 'w'
-  Register16Read,  // 's' 16 bit register value
-  Register16Write, // 't'
-  Eval,            // 'e'
-  Calculate,       // 'c'
-  Value,           // 'v'
-  Delay,           // 'd'
-  EnableGPIO,      // 'a'
-  ResetGPIO,       // 'z'
-  If,              // 'i'
-  Let,             // 'l'
+// enum class with methods (workaround): https://stackoverflow.com/questions/21295935/can-a-c-enum-class-have-methods
+class BusCmd_Command_e
+{
+public:
+
+  enum Cmds : uint8_t {
+    NOP = 0u,        // 'n'
+    Read,            // 'g'
+    Write,           // 'p'
+    RegisterRead,    // 'r' 8 bit register value
+    RegisterWrite,   // 'w'
+    Register16Read,  // 's' 16 bit register value
+    Register16Write, // 't'
+    Eval,            // 'e'
+    Calculate,       // 'c'
+    Value,           // 'v'
+    Delay,           // 'd'
+    EnableGPIO,      // 'a'
+    ResetGPIO,       // 'z'
+    If,              // 'i'
+    Let,             // 'l'
   # if FEATURE_BUSCMD_STRING && FEATURE_STRING_VARIABLES
-  LetStr,          // 'm'
+    LetStr,          // 'm'
   # endif // if FEATURE_BUSCMD_STRING && FEATURE_STRING_VARIABLES
 
-};
+  };
+
+  BusCmd_Command_e() = default;
+  constexpr BusCmd_Command_e(Cmds aCmd): value(aCmd) {}
+
+  constexpr BusCmd_Command_e(uint8_t uCmd): value(static_cast<Cmds>(uCmd)) {}
+
+  constexpr operator Cmds() const {
+    return value;
+  }
+  explicit operator bool() const = delete;
+
+  constexpr bool isReadCmd() const                       {
+    return Cmds::Read == value || Cmds::RegisterRead == value || Cmds::Register16Read == value;
+  }
+
+  constexpr bool isWriteCmd() const                       {
+    return Cmds::Write == value || Cmds::RegisterWrite == value || Cmds::Register16Write == value;
+  }
+
+  constexpr bool isRegisterCmd() const                       {
+    return Cmds::RegisterRead == value || Cmds::RegisterWrite == value ||
+           Cmds::Register16Read == value || Cmds::Register16Write == value;
+  }
+
+private:
+
+  Cmds value;
+}; // class BusCmd_Command_e
 
 enum class BusCmd_DataFormat_e : uint8_t {
   undefined = 0u,
@@ -190,6 +224,7 @@ struct BusCmd_Helper_struct {
   bool parseAndExecute(BusCmd_CommandSource_e source,
                        const String         & line,
                        const String         & logFormat);
+  bool processCommands(struct EventStruct *event);
 
   // Setters
   void setLog(bool showLog) { _showLog = showLog; }
@@ -220,7 +255,6 @@ struct BusCmd_Helper_struct {
 private:
 
   String replacePluginValues(const String& inVar);
-  bool   processCommands(struct EventStruct *event);
 
   IBusCmd_Handler*_iBusCmd_Handler = nullptr;
 
