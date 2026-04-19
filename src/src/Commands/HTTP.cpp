@@ -28,7 +28,7 @@ const __FlashStringHelper* httpEmitToHTTP(struct EventStruct        *event,
                                           const bool                 useHttps)
 {
   if (ESPEasy::net::NetworkConnected()) {
-    String   user, pass, host, file, path, header, postBody;
+    String   user, pass, host, file, path, header, postBody, protocol;
     uint16_t port;
     uint8_t  idx;
 
@@ -36,7 +36,7 @@ const __FlashStringHelper* httpEmitToHTTP(struct EventStruct        *event,
 
     if (arg1.indexOf(F("://")) != -1) {
       // Full url given
-      path = splitURL(arg1, user, pass, host, port, file);
+      path = splitURL(arg1, user, pass, host, port, file, protocol);
       idx  = 3;
 
       if (useHeader || useBody) {
@@ -111,7 +111,8 @@ const __FlashStringHelper* httpEmitToHTTP(struct EventStruct        *event,
       header,
       postBody,
       httpCode,
-      waitForAck
+      waitForAck,
+      protocol
       #if FEATURE_HTTP_TLS
       , tlsType
       #endif // if FEATURE_HTTP_TLS
