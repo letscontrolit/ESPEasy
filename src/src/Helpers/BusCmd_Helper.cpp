@@ -388,7 +388,7 @@ std::vector<BusCmd_Command_struct>BusCmd_Helper_struct::parseBusCmdCommands(cons
             if (!validInt64FromString(args[arg], val) && (
                   cmd.isRegisterCmd() || cmd.isWriteCmd()
                   )) {
-              calculation = args[arg];
+              calculation = wrapWithQuotes(args[arg]);
               stripEscapeCharacters(calculation);
             }
 
@@ -460,7 +460,8 @@ std::vector<BusCmd_Command_struct>BusCmd_Helper_struct::parseBusCmdCommands(cons
                   ++arg;
 
                   if (!validInt64FromString(args[arg], val)) {
-                    calculation = args[arg];
+                    if (!calculation.isEmpty()) { calculation += BUSCMD_VARIABLE_SEPARATOR; } // Add separator
+                    calculation += wrapWithQuotes(args[arg]);
                     stripEscapeCharacters(calculation);
                   }
                 }
@@ -608,15 +609,27 @@ bool BusCmd_Helper_struct::executeBusCmdCommands() {
     if (!_it->calculation.isEmpty() && (
           _it->command.isRegisterCmd() || _it->command.isWriteCmd()
           )) {
-      String toCalc(replacePluginValues(_it->calculation));
+      String toCalc(replacePluginValues(parseStringKeepCase(_it->calculation, 1, BUSCMD_VARIABLE_SEPARATOR)));
       const String newCalc = parseTemplate(toCalc); // Process like rules
       ESPEASY_RULES_FLOAT_TYPE tmp{};
 
       if (Calculate(newCalc, tmp) == CalculateReturnCode::OK) {
-        if (_it->command.isReadCmd()) { // get is already excluded, 'if' above
-          _it->reg = static_cast<uint16_t>(tmp);
+        // If we have 2 variable parts in calculation, it's a write command with vars for both register and value
+        String toCalc(replacePluginValues(parseStringKeepCase(_it->calculation, 2, BUSCMD_VARIABLE_SEPARATOR)));
+
+        if (_it->command.isReadCmd() || !toCalc.isEmpty()) { // get is already excluded, 'if' above
+          _it->reg = static_cast<uint16_t>(tmp);             // First part is always register if we have 2 variable parts
         } else if (_it->command.isWriteCmd()) {
           _it->d0_int32_t = static_cast<int32_t>(tmp);
+        }
+
+        if (!toCalc.isEmpty() && _it->command.isWriteCmd()) {
+          const String newCalc = parseTemplate(toCalc); // Process like rules
+          ESPEASY_RULES_FLOAT_TYPE tmp{};
+
+          if (Calculate(newCalc, tmp) == CalculateReturnCode::OK) {
+            _it->d0_int32_t = static_cast<int32_t>(tmp);
+          }
         }
       }
 

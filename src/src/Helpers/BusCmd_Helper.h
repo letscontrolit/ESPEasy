@@ -2,6 +2,7 @@
 #define _HELPERS_BUSCMD_HELPER_H
 
 /** Changelog:
+ * 2026-04-19 tonhuisman: Allow also variables to be used for register in write commands
  * 2026-04-18 tonhuisman: Limit variable expansion to read (register) and put/write (value) commands
  * 2026-04-12 tonhuisman: Allow rules-variables to be used for get/read and put/write commands
  * 2025-08-16 tonhuisman: Extend If I2C command to optionally skip forward N commands on false (0) result
@@ -18,6 +19,7 @@
 # define BUSCMD_EVENT_SEPARATOR     '|'
 # define BUSCMD_COMMAND_SEPARATOR   ';'
 # define BUSCMD_ARGUMENT_SEPARATOR  '.'
+# define BUSCMD_VARIABLE_SEPARATOR  ';'
 
 // enum class with methods (workaround): https://stackoverflow.com/questions/21295935/can-a-c-enum-class-have-methods
 class BusCmd_Command_e
