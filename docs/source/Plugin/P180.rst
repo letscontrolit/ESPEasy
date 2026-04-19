@@ -152,7 +152,7 @@ The commands available can either be used with the full command, or the 1 charac
 * ``get.<format>[.<len>]``: ``(g)``: Read the number of bytes matching the format from the device. ``<len>`` can be a calculation, f.e. to use ``%value%`` from a previous command.
 * ``put.<format>.<data>[.<data>...]``: ``(p)``: Write data to the device, in the format specified. For ``b`` or ``w`` the provided data and format determines the length of the data to send. ``data`` can be from a global variable, expanded just before execution.
 * ``read.<format>[.<len>].<reg>``: ``(r)``: Read data in the requested format from a register in the device. ``<len>`` can be a calculation, f.e. to use ``%value%`` from a previous command. ``reg`` can be from a global variable, expanded just before execution.
-* ``write.<format>.<reg>.<data>[.<data>...]``: ``(w)``: Write data to a register in the device in the specified format. ``data`` can be from a global variable, expanded just before execution. (not applicable for ``b`` and ``w`` format!)
+* ``write.<format>.<reg>.<data>[.<data>...]``: ``(w)``: Write data to a register in the device in the specified format. ``reg`` and/or ``data`` can be from a global variable, expanded just before execution. (not applicable for ``b`` and ``w`` format!)
 * ``eval``: ``(e)``: Evaluate the previous command, and set as selected data for ``calc`` or ``if`` commands.
 * ``value.<valueIndex>``: ``(v)``: (1..4 or a value name) Store the last calculated result, or last read value, in the specified Value field.
 * ``calc.<calculation>``: ``(c)``: Calculate a result, like Rules, extra available vars: ``%value%``, ``%pvalue%``, ``%h%``, ``%b0%..%b<n>%``, ``%bx0%..%bx<n>%``, ``%w0%..%w<n>%``, ``%wx0%..%wx<n>%``
