@@ -276,11 +276,19 @@ void NW003_data_struct_ETH_RMII::webform_load(EventStruct *event)
       //          toString(EthClockMode_t::Default),
       toString(EthClockMode_t::Ext_crystal),
       toString(EthClockMode_t::Int_50MHz)
+//      , toString(EthClockMode_t::Ext_crystal_GPIO_32)
+//      , toString(EthClockMode_t::Int_50MHz_GPIO_32)
+//      , toString(EthClockMode_t::Ext_crystal_GPIO_44)
+//      , toString(EthClockMode_t::Int_50MHz_GPIO_44)
     };
     const int indices[] = {
       //          static_cast<int>(EthClockMode_t::Default),
       static_cast<int>(EthClockMode_t::Ext_crystal),
       static_cast<int>(EthClockMode_t::Int_50MHz)
+//      ,static_cast<int>(EthClockMode_t::Ext_crystal_GPIO_32)
+//      ,static_cast<int>(EthClockMode_t::Int_50MHz_GPIO_32)
+//      ,static_cast<int>(EthClockMode_t::Ext_crystal_GPIO_44)
+//      ,static_cast<int>(EthClockMode_t::Int_50MHz_GPIO_44)
     };
 # endif // if CONFIG_IDF_TARGET_ESP32P4
     const FormSelectorOptions selector(
@@ -439,13 +447,7 @@ void NW003_data_struct_ETH_RMII::ethPower(bool enable)
 
   if (!enable) {
     const EthClockMode_t ETH_ClockMode = static_cast<EthClockMode_t>(_kvs->getValueAsInt(NW003_KEY_CLOCK_MODE));
-      # if CONFIG_IDF_TARGET_ESP32P4
-    const bool isExternalCrystal = ETH_ClockMode == EthClockMode_t::Ext_crystal;
-      # else
-    const bool isExternalCrystal = ETH_ClockMode == EthClockMode_t::Ext_crystal_osc;
-      # endif // if CONFIG_IDF_TARGET_ESP32P4
-
-    if (isExternalCrystal) {
+    if (isExternalCrystal(ETH_ClockMode)) {
       delay(600); // Give some time to discharge any capacitors
       // Delay is needed to make sure no clock signal remains present which may cause the ESP to boot into flash mode.
     }
@@ -545,7 +547,8 @@ bool NW003_data_struct_ETH_RMII::ETHConnectRelaxed() {
       mdcPin,
       mdioPin,
       powerPin,
-      (eth_clock_mode_t)Settings.ETH_Clock_Mode);
+      (eth_clock_mode_t)ETH_ClockMode);
+      // TODO TD-er: When we can set the clock GPIO pin on ESP32-P4, this should also be matched to the Espressif eth_clock_mode_t enum.
   }
 
   if (success) {

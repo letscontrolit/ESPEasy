@@ -75,7 +75,7 @@ const __FlashStringHelper * NW005_data_struct_PPP_modem::getLabelString(uint32_t
       return displayString ? F("Baud rate") : F("baudrate");
     case NW005_KEY_FLOWCTRL:
       return displayString ? F("Flow Control") : F("flowctrl");
-    case NW005_KEY_MODEM_MODEL: return displayString ? F("Modem Model") : F("mmodel");
+    case NW005_KEY_MODEM_MODEL: return displayString ? F("Modem Model") : F("phytype");
     case NW005_KEY_APN:
       storageType = KVS_StorageType::Enum::string_type;
       return displayString ? F("Access Point Name (APN)") : F("apn");
