@@ -43,7 +43,11 @@ ESPEasy does support a number of variants of the processors manufactured by Espr
 * **ESP32-H21** ❌
 * **ESP32-H4** ❌
 * **ESP32-P4** Support added: 2026-01-08
-* **ESP32-P4rev3** ❌ (support planned)
+* **ESP32-P4rev3** Support added: 2026-04-20
+
+.. note::
+   ESP32-P4 rev. 1.x was renamed by Espressif to "ESP32-P4 ES" as in "Engineering Sample". The newer 'rev.3.x' silicon is now named "ESP32-P4", though some pages on the Espressif site refer to this as "ESP32-P4X".
+   It is unclear yet what will be the common naming schema for these.  Both silicon revisions do require different build files.
 
 
 .. note::
@@ -131,7 +135,7 @@ ESPEasy does support a number of variants of the processors manufactured by Espr
       - 2023/11
       - 2026/01
       - ❌
-      - 2026/01
+      - 2026/01 (v3.x:2026/04)
    *  - Introduction
       - 2014
       - 2016
