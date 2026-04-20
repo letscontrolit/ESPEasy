@@ -348,20 +348,6 @@ void NW004_data_struct_ETH_SPI::ethResetGPIOpins() {
   gpio_reset_pin(GPIO_NUM_27); // EMAC_RX_CRS_DV - hardcoded
 # endif // if CONFIG_ETH_USE_ESP32_EMAC && FEATURE_ETHERNET
 
-  /*
-     switch (Settings.ETH_Clock_Mode) {
-     case EthClockMode_t::Ext_crystal_osc:       // ETH_CLOCK_GPIO0_IN
-     case EthClockMode_t::Int_50MHz_GPIO_0:      // ETH_CLOCK_GPIO0_OUT
-      gpio_reset_pin(GPIO_NUM_0);
-      break;
-     case EthClockMode_t::Int_50MHz_GPIO_16:     // ETH_CLOCK_GPIO16_OUT
-      gpio_reset_pin(GPIO_NUM_16);
-      break;
-     case EthClockMode_t::Int_50MHz_GPIO_17_inv: // ETH_CLOCK_GPIO17_OUT
-      gpio_reset_pin(GPIO_NUM_17);
-      break;
-     }
-   */
   delay(1);
 
 }
