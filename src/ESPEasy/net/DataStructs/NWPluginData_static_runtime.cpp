@@ -3,6 +3,7 @@
 #include "../../../src/Globals/EventQueue.h"
 #include "../../../src/Globals/Settings.h"
 
+#include "../../../src/Helpers/Networking.h"
 #include "../../../src/Helpers/NetworkStatusLED.h"
 #include "../../../src/Helpers/StringConverter.h"
 
@@ -171,7 +172,7 @@ void NWPluginData_static_runtime::processEvents()
     if (loglevelActiveFor(LOG_LEVEL_INFO) && _netif) {
       auto ip = _netif->localIP();
 
-      if (ip != INADDR_NONE) {
+      if (IPAddressSet(ip)) {
         addLog(LOG_LEVEL_INFO, strformat(
                  F("%s: Got IP: %s/%d GW: %s"),
                  _eventInterfaceName.c_str(),

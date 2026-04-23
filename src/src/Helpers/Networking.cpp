@@ -1124,6 +1124,24 @@ void scrubDNS() {
   */
 }
 
+#ifdef ESP32
+bool IPAddressSet(const IPAddress& ip)
+{
+  return !(ip == INADDR_NONE
+    # if CONFIG_LWIP_IPV6
+      || ip == IN6ADDR_ANY
+    # endif
+    );
+}
+#endif
+#ifdef ESP8266
+bool IPAddressSet(const IPAddress& ip)
+{
+  return !(ip[0] == 0 && ip[1] == 0 && ip[2] == 0 && ip[3] == 0);
+}
+#endif
+
+
 bool valid_DNS_address(const IPAddress& dns) {
   return /*dns.v4() != (uint32_t)0x00000000 && */
          dns != IPAddress((uint32_t)0xFD000000) &&
@@ -1133,7 +1151,7 @@ bool valid_DNS_address(const IPAddress& dns) {
          // Global IPv6 prefixes currently start with 2xxx::
          (dns[0] & 0xF0) != 0x20 &&
 #endif // ifdef ESP32
-         dns != INADDR_NONE;
+         IPAddressSet(dns);
 }
 
 bool setDNS(int index, const IPAddress& dns) {

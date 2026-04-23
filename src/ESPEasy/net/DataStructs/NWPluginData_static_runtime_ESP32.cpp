@@ -5,6 +5,7 @@
 # include "../ESPEasyNetwork.h"
 
 # include "../../../src/Helpers/StringConverter.h"
+# include "../../../src/Helpers/Networking.h"
 # include "../../../src/Globals/Settings.h"
 
 # include "../Globals/NetworkState.h"
@@ -147,11 +148,10 @@ void NWPluginData_static_runtime::mark_got_IP()
 
   for (size_t i = 0; i < NR_ELEMENTS(_dns_cache); ++i) {
     auto tmp = _netif->dnsIP(i);
-
     _dns_cache[i] = tmp; // Also set the 'empty' ones so we won't set left-over DNS server from when another interface was active.
 # if NW_PLUGIN_LOG_EVENTS
 
-    if ((tmp != INADDR_NONE) && loglevelActiveFor(LOG_LEVEL_INFO)) {
+    if (valid_DNS_address(tmp) && loglevelActiveFor(LOG_LEVEL_INFO)) {
       addLog(LOG_LEVEL_INFO, strformat(
                F("%s: DNS Cache %d set to %s"),
                _eventInterfaceName.c_str(),

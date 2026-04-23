@@ -8,6 +8,7 @@
 # include "../../../src/Globals/Settings.h"
 
 # include "../../../src/Helpers/Hardware_GPIO.h"
+# include "../../../src/Helpers/Networking.h"
 # include "../../../src/Helpers/StringConverter.h"
 
 # include "../../../src/WebServer/Markup.h"
@@ -55,16 +56,16 @@ const __FlashStringHelper * NW003_data_struct_ETH_RMII::getLabelString(uint32_t 
     case NW003_KEY_ETH_PIN_POWER: return displayString ? F("Ethernet Power pin") : F("pwr");
     case NW003_KEY_CLOCK_MODE: return displayString ? F("Ethernet Clock") : F("clock");
     case NW003_KEY_IP:
-      storageType = KVS_StorageType::Enum::string_type;
+      storageType = KVS_StorageType::Enum::ip_type;
       return F("IP");
     case NW003_KEY_GW:
-      storageType = KVS_StorageType::Enum::string_type;
+      storageType = KVS_StorageType::Enum::ip_type;
       return displayString ? F("Gateway") : F("gw");
     case NW003_KEY_SN:
-      storageType = KVS_StorageType::Enum::string_type;
+      storageType = KVS_StorageType::Enum::ip_type;
       return displayString ? F("Subnetmask") : F("sn");
     case NW003_KEY_DNS:
-      storageType = KVS_StorageType::Enum::string_type;
+      storageType = KVS_StorageType::Enum::ip_type;
       return F("DNS");
   }
   return F("");
@@ -144,7 +145,18 @@ void NW003_data_struct_ETH_RMII::loadDefaults(ESPEasy_key_value_store     *kvs,
       kvs->setValue(NW003_KEY_ETH_PIN_POWER, static_cast<int8_t>(Settings.ETH_Pin_power_rst));
       kvs->setValue(NW003_KEY_CLOCK_MODE,    static_cast<int8_t>(Settings.ETH_Clock_Mode));
 
-      // TODO TD-er: Copy IP info
+      const IPAddress ip     = Settings.ETH_IP;
+      const IPAddress gw     = Settings.ETH_Gateway;
+      const IPAddress subnet = Settings.ETH_Subnet;
+      const IPAddress dns    = Settings.ETH_DNS;
+
+      // TODO TD-er: Must clear the previous ETH IP settings, once converted
+
+      kvs->setValue(NW003_KEY_IP,  ip);
+      kvs->setValue(NW003_KEY_GW,  gw);
+      kvs->setValue(NW003_KEY_SN,  subnet);
+      kvs->setValue(NW003_KEY_DNS, dns);
+
 
       store_nwpluginTaskData_KVS(kvs, networkIndex, nwPluginID);
     }
@@ -176,12 +188,18 @@ void NW003_data_struct_ETH_RMII::webform_load(EventStruct *event)
   NW003_data_struct_ETH_RMII::loadDefaults(_kvs, event->NetworkIndex, nwpluginID_t(3));
 
   addFormSubHeader(F("Ethernet IP Settings"));
+  {
+    const int keys[] = {
+      NW003_KEY_IP,
+      NW003_KEY_GW,
+      NW003_KEY_SN,
+      NW003_KEY_DNS
+    };
 
-  addFormIPBox(F("ESP Ethernet IP"),         F("espethip"),      Settings.ETH_IP);
-  addFormIPBox(F("ESP Ethernet Gateway"),    F("espethgateway"), Settings.ETH_Gateway);
-  addFormIPBox(F("ESP Ethernet Subnetmask"), F("espethsubnet"),  Settings.ETH_Subnet);
-  addFormIPBox(F("ESP Ethernet DNS"),        F("espethdns"),     Settings.ETH_DNS);
-  addFormNote(F("Leave empty for DHCP"));
+    for (uint32_t i = 0; i < NR_ELEMENTS(keys); ++i) {
+      showWebformItem(*_kvs, NW003_makeWebFormItemParams(keys[i]));
+    }
+  }
 
   addFormSubHeader(F("Ethernet"));
 
@@ -276,19 +294,21 @@ void NW003_data_struct_ETH_RMII::webform_load(EventStruct *event)
       //          toString(EthClockMode_t::Default),
       toString(EthClockMode_t::Ext_crystal),
       toString(EthClockMode_t::Int_50MHz)
-//      , toString(EthClockMode_t::Ext_crystal_GPIO_32)
-//      , toString(EthClockMode_t::Int_50MHz_GPIO_32)
-//      , toString(EthClockMode_t::Ext_crystal_GPIO_44)
-//      , toString(EthClockMode_t::Int_50MHz_GPIO_44)
+
+      //      , toString(EthClockMode_t::Ext_crystal_GPIO_32)
+      //      , toString(EthClockMode_t::Int_50MHz_GPIO_32)
+      //      , toString(EthClockMode_t::Ext_crystal_GPIO_44)
+      //      , toString(EthClockMode_t::Int_50MHz_GPIO_44)
     };
     const int indices[] = {
       //          static_cast<int>(EthClockMode_t::Default),
       static_cast<int>(EthClockMode_t::Ext_crystal),
       static_cast<int>(EthClockMode_t::Int_50MHz)
-//      ,static_cast<int>(EthClockMode_t::Ext_crystal_GPIO_32)
-//      ,static_cast<int>(EthClockMode_t::Int_50MHz_GPIO_32)
-//      ,static_cast<int>(EthClockMode_t::Ext_crystal_GPIO_44)
-//      ,static_cast<int>(EthClockMode_t::Int_50MHz_GPIO_44)
+
+      //      ,static_cast<int>(EthClockMode_t::Ext_crystal_GPIO_32)
+      //      ,static_cast<int>(EthClockMode_t::Int_50MHz_GPIO_32)
+      //      ,static_cast<int>(EthClockMode_t::Ext_crystal_GPIO_44)
+      //      ,static_cast<int>(EthClockMode_t::Int_50MHz_GPIO_44)
     };
 # endif // if CONFIG_IDF_TARGET_ESP32P4
     const FormSelectorOptions selector(
@@ -298,10 +318,10 @@ void NW003_data_struct_ETH_RMII::webform_load(EventStruct *event)
     auto params = NW003_makeWebFormItemParams(NW003_KEY_CLOCK_MODE);
 # if CONFIG_IDF_TARGET_ESP32
     params._defaultIntValue = static_cast<int>(EthClockMode_t::Ext_crystal_osc);
-#endif
+# endif
 # if CONFIG_IDF_TARGET_ESP32P4
     params._defaultIntValue = static_cast<int>(EthClockMode_t::Ext_crystal);
-#endif
+# endif
 
     showFormSelector(*_kvs, selector, params);
 
@@ -336,6 +356,36 @@ bool                          NW003_data_struct_ETH_RMII::exit(EventStruct *even
 
 NWPluginData_static_runtime * NW003_data_struct_ETH_RMII::getNWPluginData_static_runtime() {
   return ESPEasy::net::eth::ETH_NWPluginData_static_runtime::getNWPluginData_static_runtime(_networkIndex);
+}
+
+bool NW003_data_struct_ETH_RMII::getStaticIPAddress(IPAddressType addressType, IPAddress& ip) const
+{
+  ip = IPAddress();
+
+  if (!_kvs) { return false; }
+  uint32_t key = NW003_MAX_KEY;
+
+  switch (addressType)
+  {
+    case IPAddressType::IP:
+      key = NW003_KEY_IP;
+      break;
+    case IPAddressType::Gateway:
+      key = NW003_KEY_GW;
+      break;
+    case IPAddressType::Subnetmask:
+      key = NW003_KEY_SN;
+      break;
+    case IPAddressType::DNS:
+      key = NW003_KEY_DNS;
+      break;
+  }
+
+  if ((key == NW003_MAX_KEY) || !_kvs->getValue(key, ip)) {
+    return false;
+  }
+
+  return IPAddressSet(ip);
 }
 
 bool NW003_data_struct_ETH_RMII::write_Eth_HW_Address(KeyValueWriter *writer)
@@ -447,6 +497,7 @@ void NW003_data_struct_ETH_RMII::ethPower(bool enable)
 
   if (!enable) {
     const EthClockMode_t ETH_ClockMode = static_cast<EthClockMode_t>(_kvs->getValueAsInt(NW003_KEY_CLOCK_MODE));
+
     if (isExternalCrystal(ETH_ClockMode)) {
       delay(600); // Give some time to discharge any capacitors
       // Delay is needed to make sure no clock signal remains present which may cause the ESP to boot into flash mode.
@@ -503,7 +554,7 @@ bool NW003_data_struct_ETH_RMII::ETHConnectRelaxed() {
   if (!(data && iface)) { return false; }
 
   if (data->started() && data->connected()) {
-    if (EthLinkUp()) return true;
+    if (EthLinkUp()) { return true; }
     data->mark_connect_failed();
     return false;
   }
@@ -541,6 +592,12 @@ bool NW003_data_struct_ETH_RMII::ETHConnectRelaxed() {
 # ifndef ESP32P4
     ethResetGPIOpins();
 # endif
+
+    IPAddress ip, gateway, sn, dns;
+    if (getStaticIPAddresses(ip, gateway, sn, dns)) {
+      iface->config(ip, gateway, sn, dns);
+    }
+
     success = iface->begin(
       to_ESP_phy_type(phyType),
       phy_addr,
@@ -548,7 +605,8 @@ bool NW003_data_struct_ETH_RMII::ETHConnectRelaxed() {
       mdioPin,
       powerPin,
       (eth_clock_mode_t)ETH_ClockMode);
-      // TODO TD-er: When we can set the clock GPIO pin on ESP32-P4, this should also be matched to the Espressif eth_clock_mode_t enum.
+
+    // TODO TD-er: When we can set the clock GPIO pin on ESP32-P4, this should also be matched to the Espressif eth_clock_mode_t enum.
   }
 
   if (success) {

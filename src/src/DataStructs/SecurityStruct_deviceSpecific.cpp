@@ -103,12 +103,12 @@ bool SecurityStruct_deviceSpecific::hasWiFiCredentials(uint8_t index) const
 bool SecurityStruct_deviceSpecific::getValue(
   KeyType keytype, uint8_t index, String& value) const
 {
-  return _kvs.getValue(createKey(keytype, index), value);
+  return _kvs.getValue(createKey(keytype, index), value, KVS_StorageType::Enum::string_type);
 }
 
 void SecurityStruct_deviceSpecific::setValue(KeyType keytype, uint8_t index, const String& value)
 {
-  _kvs.setValue(createKey(keytype, index), value);
+  _kvs.setValue(createKey(keytype, index), value, KVS_StorageType::Enum::string_type);
 }
 
 uint32_t SecurityStruct_deviceSpecific::createKey(KeyType keytype, uint16_t index)
@@ -123,8 +123,8 @@ bool SecurityStruct_deviceSpecific::getCredentials(KeyType keytype_key,
                                                    String& secret) const
 {
   return
-    _kvs.getValue(createKey(keytype_key, index), key) &&
-    _kvs.getValue(createKey(keytype_secret, index), secret);
+    _kvs.getValue(createKey(keytype_key, index), key, KVS_StorageType::Enum::string_type) &&
+    _kvs.getValue(createKey(keytype_secret, index), secret, KVS_StorageType::Enum::string_type);
 }
 
 void SecurityStruct_deviceSpecific::setCredentials(KeyType       keytype_key,
@@ -133,8 +133,8 @@ void SecurityStruct_deviceSpecific::setCredentials(KeyType       keytype_key,
                                                    const String& key,
                                                    const String& secret)
 {
-  _kvs.setValue(createKey(keytype_key, index),    key);
-  _kvs.setValue(createKey(keytype_secret, index), secret);
+  _kvs.setValue(createKey(keytype_key, index),    key, KVS_StorageType::Enum::string_type);
+  _kvs.setValue(createKey(keytype_secret, index), secret, KVS_StorageType::Enum::string_type);
 }
 
 #endif // if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE

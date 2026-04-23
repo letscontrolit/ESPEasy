@@ -24,6 +24,7 @@
 #include "../Globals/Settings.h"
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/Misc.h"
+#include "../Helpers/Networking.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_System.h"
 
@@ -503,7 +504,7 @@ void NodesHandler::updateThisNode() {
   thisNode.distance = _distance;
 
   #if FEATURE_USE_IPV6
-  thisNode.hasIPv4 = thisNode.IP() != INADDR_NONE;
+  thisNode.hasIPv4 = IPAddressSet(thisNode.IP()) && thisNode.IP().type() == IPv4;
   thisNode.hasIPv6_mac_based_link_local = ESPEasy::net::is_IPv6_link_local_from_MAC(thisNode.sta_mac);
   thisNode.hasIPv6_mac_based_link_global = ESPEasy::net::is_IPv6_global_from_MAC(thisNode.sta_mac);
   #endif

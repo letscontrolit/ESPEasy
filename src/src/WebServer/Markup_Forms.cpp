@@ -380,34 +380,39 @@ bool getFormPassword(const String& id, String& password)
   return !equals(password, F(MARKUP_FORMS_PASSWORD_MASK_ASTERISKS));
 }
 
-// ********************************************************************************
-// Add a IP Box form
-// ********************************************************************************
-void addFormIPBox(const __FlashStringHelper *label,
-                  const __FlashStringHelper *id,
-                  const uint8_t ip[4])
-{
-  addFormIPBox(String(label), String(id), ip);
-}
-
 void addFormTextBox(const String& label, const String& id, const String& value)
 {
   addRowLabel_tr_id(label, id);
 
   addHtml(strformat(
-    F("<input class='wide' type='text' name='%s' id='%s' value='%s'>"),
-    id.c_str(),
-    id.c_str(),
-    value.c_str()
-  ));
+            F("<input class='wide' type='text' name='%s' id='%s' value='%s'>"),
+            id.c_str(),
+            id.c_str(),
+            value.c_str()
+            ));
 }
 
-void addFormIPBox(const String& label, const String& id, const uint8_t ip[4])
-{
-  const bool empty_IP = (ip[0] == 0 && ip[1] == 0 && ip[2] == 0 && ip[3] == 0);
+// ********************************************************************************
+// Add a IP Box form
+// ********************************************************************************
+void addFormIPBox(const __FlashStringHelper *label,
+                  const __FlashStringHelper *id,
+                  const uint8_t              ip[4]) { addFormIPBox(String(label), String(id), IPAddress(ip)); }
 
+void addFormIPBox(const String& label, const String& id, const uint8_t ip[4]) { addFormIPBox(label, id, IPAddress(ip)); }
+
+void addFormIPBox(const __FlashStringHelper *label,
+                  const __FlashStringHelper *id,
+                  const IPAddress          & ip) { addFormIPBox(String(label), String(id), ip); }
+
+void addFormIPBox(const String   & label,
+                  const String   & id,
+                  const IPAddress& ip)
+{
+  const bool empty_IP = !IPAddressSet(ip);
   addFormTextBox(label, id, (empty_IP) ? EMPTY_STRING : formatIP(ip));
 }
+
 
 // ********************************************************************************
 // Add a MAC Box form
