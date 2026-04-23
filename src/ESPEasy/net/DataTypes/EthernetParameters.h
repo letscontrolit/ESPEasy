@@ -19,14 +19,16 @@ enum class EthClockMode_t : uint8_t {
   Ext_crystal = 1,
   Int_50MHz   = 2,
 
-  /*
-     Ext_crystal_GPIO_32   = (1 | (32 << 2)),
-     Ext_crystal_GPIO_44   = (1 | (44 << 2)),
-     Ext_crystal_GPIO_50   = (1 | (50 << 2)),
-     Int_50MHz_GPIO_32     = (2 | (32 << 2)),
-     Int_50MHz_GPIO_44     = (2 | (44 << 2)),
-     Int_50MHz_GPIO_50     = (2 | (50 << 2)),
-   */
+
+  // Ext_crystal_GPIO_32 = (1 | (32 << 2)),
+  // Ext_crystal_GPIO_44 = (1 | (44 << 2)),
+
+  //     Ext_crystal_GPIO_50   = (1 | (50 << 2)),
+  // Int_50MHz_GPIO_32 = (2 | (32 << 2)),
+  // Int_50MHz_GPIO_44 = (2 | (44 << 2)),
+
+  //     Int_50MHz_GPIO_50     = (2 | (50 << 2)),
+
 
 };
 
@@ -46,6 +48,8 @@ enum class EthClockMode_t : uint8_t {
 
 bool                       isValid(EthClockMode_t clockMode);
 
+bool                       isExternalCrystal(EthClockMode_t clockMode);
+
 const __FlashStringHelper* toString(EthClockMode_t clockMode);
 
 bool                       isGpioUsedInETHClockMode(EthClockMode_t clockMode,
@@ -64,9 +68,9 @@ enum class EthPhyType_t : uint8_t {
   DP83848 = 4,
   KSZ8041 = 5,
   KSZ8081 = 6,
-# if ETH_PHY_LAN867X_SUPPORTED
+#  if ETH_PHY_LAN867X_SUPPORTED
   LAN867X = 7,
-# endif
+#  endif
 # endif // if CONFIG_ETH_USE_ESP32_EMAC && FEATURE_ETHERNET
 # if ESP_IDF_VERSION_MAJOR >= 5
 #  if CONFIG_ETH_SPI_ETHERNET_DM9051
