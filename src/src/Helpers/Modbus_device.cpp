@@ -170,17 +170,6 @@ bool ModbusDEVICE_struct::writeSingleRegister(uint16_t             address,
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Periodic processing function to allow the Modbus device to process its queued requests
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void ModbusDEVICE_struct::processCommand() {
-  // TODO: This function is currently not used since the Modbus link processing is triggered directly from the scheduler.
-  if (_modbus_link != nullptr) {
-    ////_modbus_link->processCommand(); // Trigger processing of the command queue on the link
-    ////ModbusMGR_singleton.processLinks();
-  }
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Callback function called by the Modbus link when a response is received for a queued request.
 // Note that the response might be an invalid response or a timeout
 // The queueID identifies the request.

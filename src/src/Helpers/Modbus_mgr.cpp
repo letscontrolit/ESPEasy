@@ -93,6 +93,7 @@ ModbusMGR_struct::~ModbusMGR_struct()
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool ModbusMGR_struct::initialize()
 {
+
   for (int i = 0; i < MAX_MODBUS_LINKS; i++) {
     if (_modbus_links[i] == nullptr) {
       int8_t val;
@@ -100,9 +101,9 @@ bool ModbusMGR_struct::initialize()
       _modbus_links[i]->link = nullptr;
       _modbus_links[i]->kvs  = new (std::nothrow) ESPEasy_key_value_store;
       _modbus_links[i]->kvs->load(SettingsType::Enum::ModbusInterfaceSettings_Type, i, 0, 0);
-      # ifdef MODBUS_DEBUG
-      _modbus_links[i]->kvs->dump();
-      # endif
+      ////# ifdef MODBUS_DEBUG
+      ////_modbus_links[i]->kvs->dump();
+      ////# endif
       _modbus_links[i]->kvs->getValue(MODBUS_PORT_KEY_INDEX, val);
       _modbus_links[i]->port = static_cast<ESPEasySerialPort>(val);
       _modbus_links[i]->kvs->getValue(MODBUS_RX_KEY_INDEX, _modbus_links[i]->serial_rx);
@@ -122,7 +123,8 @@ bool ModbusMGR_struct::initialize()
       }
     }
   }
-
+  _initialized = true;
+  
   # ifdef MODBUS_DEBUG
   dumpAdminInfo();
   # endif // ifdef MODBUS_DEBUG
@@ -231,13 +233,11 @@ bool ModbusMGR_struct::disconnect(uint8_t deviceID) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void ModbusMGR_struct::processLinks()
 {
-  ModbusLinkInfo_struct *linkInfoPtr = nullptr;
-
-  for (int i = 0; i < MAX_MODBUS_LINKS; i++) {
-    if (_modbus_links[i] != nullptr)  {
-      linkInfoPtr = _modbus_links[i];
-
-      /////////////     linkInfoPtr->link->processCommand(); // Trigger processing of the command queue on the link
+  if (_initialized) {
+    for (int i = 0; i < MAX_MODBUS_LINKS; i++) {
+      if ((_modbus_links[i] != nullptr) && (_modbus_links[i]->link != nullptr)) {
+        _modbus_links[i]->link->processCommand(); // Trigger processing of the command queue on the link
+      }
     }
   }
 }
@@ -349,7 +349,7 @@ void ModbusMGR_struct::show_modbus_interfaces()
                                    strformat(F("MBbaud%u"), link),
                                    modbus_baudrateToStorageValue(_modbus_links[link]->baudrate));
       addUnit(F("baud"));
-      
+
       # ifdef ESP32
       addFormCheckBox(F("Enable Collision Detection"), strformat(F("MBcoll%u"), link), _modbus_links[link]->collision_detect);
       addFormNote(F("/RE connected to GND, only supported on hardware serial"));
@@ -502,8 +502,8 @@ bool ModbusMGR_struct::save_modbus_interfaces(String& error)
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool ModbusMGR_struct::setLink(const int               linkIndex,
                                const ESPEasySerialPort port,
-                               const int16_t           serial_rx,
-                               const int16_t           serial_tx,
+                               const int8_t           serial_rx,
+                               const int8_t           serial_tx,
                                int16_t                 baudrate,
                                int8_t                  dere_pin,
                                bool                    collision_detect)

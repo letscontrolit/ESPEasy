@@ -14,7 +14,7 @@
 // Plugin configuration parameters
 // PCONFIG(0) is the Modbus device ID.
 // PCONFIG(1) is the Modbus link ID.
-// PCONFIG(2) is used for flags, where bit 0 indicates collision detection
+// PCONFIG(2) is used for flags for future use. Currently not used.
 // PCONFIG(3) is the number of active output values (1-4)
 // PCONFIG(4) is the Modbus register address for value 1
 // PCONFIG(5) is the Modbus register address for value 2
@@ -29,10 +29,6 @@
 # define P183_NR_OUTPUTS_LABEL PCONFIG_LABEL(3)
 # define P183_ADDRESS(x) PCONFIG(4 + x)
 # define P183_ADDRESS_LABEL(x) concat(F("addr"), x)
-
-# define P183_GET_FLAG_COLL_DETECT bitRead(PCONFIG(2), 0)
-# define P183_SET_FLAG_COLL_DETECT(x) bitWrite(PCONFIG(2), 0, x)
-# define P183_FLAG_COLL_DETECT_LABEL "colldet"
 
 # define P183_DEV_ID_DFLT      1
 # define P183_MODBUS_TIMEOUT   1000 // milliseconds

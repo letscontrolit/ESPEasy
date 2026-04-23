@@ -76,25 +76,13 @@ struct ModbusLINK_struct  {
   void reset();
 
   bool init(const ESPEasySerialPort port,
-            const int16_t           serial_rx,
-            const int16_t           serial_tx,
-            int16_t                 baudrate);
-
-  bool init(const ESPEasySerialPort port,
-            const int16_t           serial_rx,
-            const int16_t           serial_tx,
+            const int8_t           serial_rx,
+            const int8_t           serial_tx,
             int16_t                 baudrate,
             int8_t                  dere_pin,
             bool                    collision_detect = false);
 
-  bool  isInitialized() const;
-
-  bool  reconfigure(const ESPEasySerialPort port,
-                   const int16_t           serial_rx,
-                   const int16_t           serial_tx,
-                   int16_t                 baudrate,
-                   int8_t                  dere_pin,
-                   bool                    collision_detect = false);
+  bool isInitialized() const;
 
   Modbus_RequestQueueElement* newTransaction(struct ModbusDEVICE_struct *device);
   bool                        freeTransaction(Modbus_RequestQueueElement *transaction);
@@ -128,8 +116,8 @@ private:
   uint32_t            _reads_nodata     = 0;       // TODO: statistics
   uint8_t             _dere_pin         = 0;       // Pin for RS485 direction control
   bool                _collision_detect = false;   // Flag to indicate if collision detection is enabled
-
-  uint8_t _last_error = 0;
+  bool                _initialized      = false;
+  uint8_t             _last_error       = 0;
 
 };
 

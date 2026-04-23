@@ -278,8 +278,10 @@ SettingsType::SettingsFileEnum SettingsType::getSettingsFile(Enum settingsType)
 #if FEATURE_STORE_NETWORK_INTERFACE_SETTINGS
     case Enum::NetworkInterfaceSettings_Type:
 #endif
+#if FEATURE_MODBUS_FAC
     case Enum::ModbusInterfaceSettings_Type:
       return SettingsFileEnum::FILE_CONFIG_type;
+#endif //FEATURE_MODBUS_FAC
     case Enum::NotificationSettings_Type:
       return SettingsFileEnum::FILE_NOTIFICATION_type;
     case Enum::SecuritySettings_Type:

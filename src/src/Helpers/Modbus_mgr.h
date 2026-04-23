@@ -6,8 +6,8 @@
 #if FEATURE_MODBUS_FAC
 
 # include <ESPeasySerial.h>
-# include "Modbus_link.h"
-# include "../../src/Helpers/_ESPEasy_key_value_store.h"
+# include "../Helpers/Modbus_link.h"
+# include "../Helpers/_ESPEasy_key_value_store.h"
 
 
 // ModbusMGR structure representing the singleton Modbus Management entity
@@ -21,14 +21,14 @@ typedef struct ModbusMGR_struct  {
 
   bool initialize();
 
-  bool connect(int                     linkId, 
-               ModbusLINK_struct     **link,
-               uint8_t                *deviceID);
+  bool connect(int                 linkId,
+               ModbusLINK_struct **link,
+               uint8_t            *deviceID);
 
   bool disconnect(uint8_t deviceID);
 
   void processLinks();
-  
+
   void dumpAdminInfo();
 
   void show_modbus_interfaces();
@@ -50,28 +50,31 @@ private:
     bool                      collision_detect = false;   // True if collision detection is enabled
     struct ModbusLINK_struct *link             = nullptr; // Pointer to the Modbus link object
     ESPEasy_key_value_store  *kvs              = nullptr; // Key-value store for storing link-specific settings and parameters
+
   };
 
   // Structure representing the information of a Modbus device, including assocuited ModbusDEVICE object
   struct ModbusDeviceInfo_struct {
-    uint8_t                       deviceID = 0;                               // Unique ID assigned by the Modbus manager
-    struct ModbusLinkInfo_struct *link     = nullptr;                         // Pointer to the Modbus link info
+    uint8_t                       deviceID = 0;       // Unique ID assigned by the Modbus manager
+    struct ModbusLinkInfo_struct *link     = nullptr; // Pointer to the Modbus link info
+
   };
 
   ModbusLinkInfo_struct   *_modbus_links[MAX_MODBUS_LINKS]     = { nullptr }; // Pointer to the Modbus link object
   ModbusDeviceInfo_struct *_modbus_devices[MAX_MODBUS_DEVICES] = { nullptr }; // Array of connected Modbus devices
+  bool                     _initialized                        = false;       // Flag indicating if the manager is initialized
 
   bool setLink(const int               linkIndex,
                const ESPEasySerialPort port,
-               const int16_t           serial_rx,
-               const int16_t           serial_tx,
+               const int8_t            serial_rx,
+               const int8_t            serial_tx,
                int16_t                 baudrate,
                int8_t                  dere_pin,
                bool                    collision_detect);
 
 } ModbusMGR_struct_t;
 
-extern ModbusMGR_struct_t ModbusMGR_singleton;                                // Singleton instance of the Modbus Manager
+extern ModbusMGR_struct_t ModbusMGR_singleton; // Singleton instance of the Modbus Manager
 
 #endif // FEAURE_MODBUS
 #endif // HELPERS_MODBUS_MGR_H

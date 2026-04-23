@@ -112,11 +112,6 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
       addFormNumericBox(F("Modbus Link"), P183_LINK_ID_LABEL, P183_LINK_ID, 0, 3);
       addFormNumericBox(F("Modbus Device Address"), P183_DEV_ID_LABEL, P183_DEV_ID, 1, 247);
 
-      # ifdef ESP32
-      addFormCheckBox(F("Enable Collision Detection"), F(P183_FLAG_COLL_DETECT_LABEL), P183_GET_FLAG_COLL_DETECT);
-      addFormNote(F("/RE connected to GND, only supported on hardware serial"));
-      # endif // ifdef ESP32
-
       success = true;
       break;
     }
@@ -258,15 +253,6 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
         value   = P183_data->readRegisterWait(address);
         string  = String(value);
         success = true;
-      }
-      break;
-    }
-    case PLUGIN_TEN_PER_SECOND:
-    {
-      P183_data_struct *P183_data = static_cast<P183_data_struct *>(getPluginTaskData(event->TaskIndex));
-
-      if (P183_data != nullptr) {
-        P183_data->plugin_ten_per_second(event);
       }
       break;
     }

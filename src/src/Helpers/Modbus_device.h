@@ -43,8 +43,6 @@ bool init( uint8_t                 slaveAddress,
 
   uint16_t getModbusTimeout() const;
 
-  void     processCommand();
-
   void     linkCallback(Modbus_RequestQueueElement *transaction);
 
   // Start reading a Modubus holding register. The result will be available later.

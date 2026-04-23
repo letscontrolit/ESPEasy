@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // MODBUS link class
-// This class implements a Modbus link over a serial connection. It is part of the Modbus facilities supporting multiple Modbus 
+// This class implements a Modbus link over a serial connection. It is part of the Modbus facilities supporting multiple Modbus
 // devices on multiple serial Modbus links.
 // It supports queuing Modbus requests and responses for multiple Modbus devices sharing the same physical link.
 // It exepcts a Modbus device instance to construct and interpret the Modbus messages for the specific device.
@@ -46,47 +46,49 @@ void ModbusLINK_struct::reset() {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Initialize the link with the given serial port and parameters
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-bool ModbusLINK_struct::init(const ESPEasySerialPort port,
-                             const int16_t           serial_rx,
-                             const int16_t           serial_tx,
-                             int16_t                 baudrate) {
-  return init(port, serial_rx, serial_tx, baudrate, -1);
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Initialize the link with the given serial port and parameters, including a dere pin for RS485
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool ModbusLINK_struct::init(const ESPEasySerialPort port,
-                             const int16_t           serial_rx,
-                             const int16_t           serial_tx,
+                             const int8_t            serial_rx,
+                             const int8_t            serial_tx,
                              int16_t                 baudrate,
                              int8_t                  dere_pin,
                              bool                    collision_detect) {
+  bool rs485Mode = false;
+  int  available = 0;
+
   // (re)create the serial port object
   // If the serial port object already exists, delete it first.
-  if (ModbusLINK_struct::_easySerial != nullptr) {
-    delete ModbusLINK_struct::_easySerial;
-    ModbusLINK_struct::_easySerial = nullptr;
+  if (_easySerial != nullptr) {
+    delete _easySerial;
+    _easySerial = nullptr;
   }
-  ModbusLINK_struct::_easySerial = new (std::nothrow) ESPeasySerial(port, serial_rx, serial_tx);
+  _easySerial = new (std::nothrow) ESPeasySerial(port, serial_rx, serial_tx);
 
-  if (ModbusLINK_struct::_easySerial == nullptr) {
+  if (_easySerial == nullptr) {
     return false;
   }
 
   // Set RS485 mode if requested using selected pin for RTS
-  bool rs485Mode = ModbusLINK_struct::_easySerial->setRS485Mode(dere_pin, collision_detect);
+  rs485Mode = _easySerial->setRS485Mode(dere_pin, collision_detect);
+  _easySerial->begin(baudrate);
+  _easySerial->flush();
+  available = _easySerial->available();
 
-  ModbusLINK_struct::_easySerial->begin(baudrate);
-  _dere_pin        = dere_pin;
+  if (available > 0) {
+    // Clear any pending input
+    for (int i = available; i > 0; --i) {
+      _easySerial->read();
+    }
+  }
+  rs485Mode         = _easySerial->setRS485Mode(dere_pin, collision_detect);
+  _dere_pin         = dere_pin;
   _collision_detect = collision_detect;
-  
+
   # ifdef MODBUS_DEBUG
 
-  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    String log = F("Modbus: Link, Init serial, RX pin ");
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    String log = F("---> Modbus: Link, Init serial, RX pin ");
     log += serial_rx;
     log += F(", TX pin ");
     log += serial_tx;
@@ -98,9 +100,12 @@ bool ModbusLINK_struct::init(const ESPEasySerialPort port,
     log += collision_detect ? F("enabled") : F("disabled");
     log += F(", RS485mode enabled: ");
     log += rs485Mode ? F("yes") : F("no");
-    addLogMove(LOG_LEVEL_DEBUG, log);
+    log += F(", Serial isRxEnabled: ");
+    log += _easySerial->isRxEnabled() ? F("yes") : F("no");
+    addLogMove(LOG_LEVEL_INFO, log);
   }
   # endif // MODBUS_DEBUG
+  _initialized = true;
   return true;
 }
 
@@ -109,35 +114,6 @@ bool ModbusLINK_struct::init(const ESPEasySerialPort port,
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool ModbusLINK_struct::isInitialized() const {
   return _easySerial != nullptr;
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Reconfigure the link with new parameters. If the serial port is the same, it is reconfigured, otherwise it is reinitialized.
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-bool ModbusLINK_struct::reconfigure(const ESPEasySerialPort port, 
-    const int16_t serial_rx, 
-    const int16_t serial_tx, 
-    int16_t baudrate, 
-    int8_t dere_pin, 
-    bool collision_detect)
-{
-  if (isInitialized()) {
-    if (_easySerial->getSerialPortType() == port) {
-      // Same port, just reconfigure
-      _easySerial->resetConfig(port, serial_rx, serial_tx);
-      _easySerial->begin(baudrate);
-      _dere_pin        = dere_pin;
-      _collision_detect = collision_detect;
-      return true;
-    }
-    else {
-      return init(port, serial_rx, serial_tx, baudrate, dere_pin, collision_detect);
-    }
-  }
-  else {
-    return init(port, serial_rx, serial_tx, baudrate, dere_pin, collision_detect);
-  }
-  return false;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -213,21 +189,25 @@ uint16_t ModbusLINK_struct::queueTransaction(Modbus_RequestQueueElement *transac
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void ModbusLINK_struct::processCommand()
 {
-  if (_easySerial == nullptr) {
-    addLogMove(LOG_LEVEL_INFO, F("Modbus: Link, Serial port not initialized"));
-    return;                          // Serial port not initialized
+  if ((!_initialized) || (_easySerial == nullptr)) {
+    return; // Serial port not initialized
+  }
+
+  if (_requestQueue.empty()) {
+    return;                          // No transactions to process
   }
 
   auto it   = _requestQueue.begin(); // Iterator for the request queue
   bool busy = false;                 // Only process one request at a time
 
-  while ((it != _requestQueue.end()) && !busy) {
+  while ((it != _requestQueue.end()) && !busy && ((*it) != nullptr)) {
     # ifdef MODBUS_DEBUG
     dumpQueueElement(*it);
     dumpState((*it)->_state);
     # endif // MODBUS_DEBUG
 
-    switch  ((*it)->_state) {
+    switch  ((*it)->_state)
+    {
       case ModbusQueueState::QUEUED:
       {
         // Send the request
@@ -255,7 +235,7 @@ void ModbusLINK_struct::processCommand()
           (*it)->_state = ModbusQueueState::RESPONSE_RECEIVED; // Mark as response received
 
           if ((*it)->_device != nullptr) {
-            (*it)->_device->linkCallback(*it);                 // Notify the device that a response was received
+            (*it)->_device->linkCallback((*it));               // Notify the device that a response was received
           }
         }
         else if (timePassedSince((*it)->_startTime) > (*it)->_timeout) {
@@ -263,7 +243,7 @@ void ModbusLINK_struct::processCommand()
           (*it)->_state = ModbusQueueState::ERROR_OCCURRED; // Mark as error
 
           if ((*it)->_device != nullptr) {
-            (*it)->_device->linkCallback(*it);              // Notify the device that a response was received
+            (*it)->_device->linkCallback((*it));            // Notify the device that a response was received
           }
           else {}
           it++;
@@ -299,32 +279,32 @@ void ModbusLINK_struct::processCommand()
 
 int16_t ModbusLINK_struct::getBaudrate(void) const
 {
-return _easySerial != nullptr ? _easySerial->getBaudRate() : 0;
+  return _easySerial != nullptr ? _easySerial->getBaudRate() : 0;
 }
 
 ESPEasySerialPort ModbusLINK_struct::getPort(void) const
 {
-return ESPEasySerialPort();
+  return ESPEasySerialPort();
 }
 
 int16_t ModbusLINK_struct::getSerialRX(void) const
 {
-return _easySerial != nullptr ? _easySerial->getRxPin() : -1;
+  return _easySerial != nullptr ? _easySerial->getRxPin() : -1;
 }
 
 int16_t ModbusLINK_struct::getSerialTX(void) const
 {
-return _easySerial != nullptr ? _easySerial->getTxPin() : -1;
+  return _easySerial != nullptr ? _easySerial->getTxPin() : -1;
 }
 
 int8_t ModbusLINK_struct::getDerePin(void) const
 {
-return _dere_pin;
+  return _dere_pin;
 }
 
 bool ModbusLINK_struct::getCollisionDetect(void) const
 {
-return _collision_detect;
+  return _collision_detect;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -367,7 +347,8 @@ void ModbusLINK_struct::dumpState(ModbusQueueState_t state) {
 }
 
 const __FlashStringHelper* toString(ModbusQueueState_t state) {
-  switch  (state) {
+  switch  (state)
+  {
     case ModbusQueueState::NOT_QUEUED:
       return F("NOT_QUEUED");
     case ModbusQueueState::QUEUED:

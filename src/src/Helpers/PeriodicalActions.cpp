@@ -49,6 +49,9 @@
 #include "../Helpers/MDNS_Helper.h"
 #endif
 
+#if FEATURE_MODBUS_FAC
+#include "../Helpers/Modbus_mgr.h"
+#endif 
 
 #define PLUGIN_ID_MQTT_IMPORT         37
 
@@ -136,6 +139,10 @@ void run10TimesPerSecond() {
     Blynk_Run_c015();
   }
   #endif
+  #if FEATURE_MODBUS_FAC
+      ModbusMGR_singleton.processLinks();
+  #endif
+  
   if (!UseRTOSMultitasking && 
     (ESPEasy::net::NetworkConnected() || ESPEasy::net::wifi::wifiAPmodeActivelyUsed())) {
     // FIXME TD-er: What about client connected via AP?

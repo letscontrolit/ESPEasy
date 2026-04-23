@@ -61,10 +61,7 @@ bool P183_data_struct::plugin_once_a_second(struct EventStruct *event) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool P183_data_struct::plugin_ten_per_second(struct EventStruct *event) {
-  if (_modbusDevice != nullptr) {
-    _modbusDevice->processCommand();
-  }
-
+  // No actions
   return true;
 }
 
@@ -101,10 +98,6 @@ void P183_data_struct::scan_device(uint8_t node_id, uint8_t start_reg, uint8_t e
 
     _modbusDevice->readHoldingRegister(1, &value, &state);
 
-    while (state == ModbusResultState::Busy) {
-      _modbusDevice->processCommand(); // Trigger Modbus facilities to process the Modbus queue
-    }
-
     if (state == ModbusResultState::Success) {
       addLogMove(LOG_LEVEL_INFO, strformat(F("** Address %u (0x%02X) = %u (0x%02X)"), reg, reg, value, value));
     } else {
@@ -129,9 +122,9 @@ void P183_data_struct::scan_modbus()
   for (uint8_t id = 0; id <= 247; id++) {
     _modbusDevice->readModuleHoldingRegister(id, 1, &value, &state);
 
-    while (state == ModbusResultState::Busy) {
-      _modbusDevice->processCommand(); // Trigger Modbus facilities to process the Modbus queue
-    }
+////    while (state == ModbusResultState::Busy) {
+////      _modbusDevice->processCommand(); // Trigger Modbus facilities to process the Modbus queue
+////    }
     String s = state == ModbusResultState::Success ? F(" OK") : F(" no response");
     addLogMove(LOG_LEVEL_INFO, strformat(F("** Address %u (0x%02X) %s"), id, id, s));
   }
@@ -152,7 +145,7 @@ uint16_t P183_data_struct::readRegisterWait(uint16_t address) {
 
   while (state == ModbusResultState::Busy) {
     delay(50);
-    _modbusDevice->processCommand(); // Trigger Modbus facilities to process the Modbus queue
+////    _modbusDevice->processCommand(); // Trigger Modbus facilities to process the Modbus queue
   }
 
   return value;
