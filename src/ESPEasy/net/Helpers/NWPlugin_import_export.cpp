@@ -134,6 +134,7 @@ String NWPlugin_import_export::exportConfig(
     child->write({ F("nwpluginID"), nwpluginID.value });
     child->write({ F("enabled"), Settings.getNetworkEnabled(networkIndex) });
     child->write({ F("route_prio"), Settings.getRoutePrio_for_network(networkIndex) });
+    child->write({ F("fallback"), Settings.getNetworkInterface_isFallback(networkIndex) });
     child->write({ F("sn_block"), Settings.getNetworkInterfaceSubnetBlockClientIP(networkIndex) });
     child->write({ F("start_delay"), Settings.getNetworkInterfaceStartupDelay(networkIndex) });
 
@@ -201,6 +202,7 @@ String NWPlugin_import_export::importConfig(
     const String non_kvs_keys[] = {
       F("enabled"),
       F("route_prio"),
+      F("fallback"),
       F("sn_block"),
       F("start_delay")
 # if FEATURE_USE_IPV6
@@ -221,12 +223,14 @@ String NWPlugin_import_export::importConfig(
             break;
           case 1: Settings.setRoutePrio_for_network(networkIndex, value.toInt());
             break;
-          case 2: Settings.setNetworkInterfaceSubnetBlockClientIP(networkIndex, bool_val);
+          case 2: Settings.setNetworkInterface_isFallback(networkIndex, bool_val);
             break;
-          case 3: Settings.setNetworkInterfaceStartupDelay(networkIndex, value.toInt());
+          case 3: Settings.setNetworkInterfaceSubnetBlockClientIP(networkIndex, bool_val);
+            break;
+          case 4: Settings.setNetworkInterfaceStartupDelay(networkIndex, value.toInt());
             break;
 # if FEATURE_USE_IPV6
-          case 4: Settings.setNetworkEnabled_IPv6(networkIndex, bool_val);
+          case 5: Settings.setNetworkEnabled_IPv6(networkIndex, bool_val);
             break;
 # endif // if FEATURE_USE_IPV6
         }

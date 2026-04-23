@@ -51,6 +51,31 @@
 #define DEFAULT_AP_KEY      "configesp"         // Enter network WPA key for AP (config) mode
 #endif
 
+#ifndef DEFAULT_AP_ROUTE_PRIO
+#define DEFAULT_AP_ROUTE_PRIO                10 // ESP32-only default route priority
+#endif
+
+#ifndef DEFAULT_AP_STARTUP_DELAY
+#define DEFAULT_AP_STARTUP_DELAY          10000 // Delay (in ms) after boot before starting the interface
+#endif
+
+#ifndef DEFAULT_AP_IS_FALLBACK
+#define DEFAULT_AP_IS_FALLBACK              true // Whether or not the WiFi AP interface should be considered a fallback interface
+#endif
+
+#ifndef DEFAULT_AP_START_FALLBACK_NO_CRED
+#define DEFAULT_AP_START_FALLBACK_NO_CRED   true // Whether or not the WiFi AP interface should be started if there are no WiFi credentials
+#endif
+
+#ifndef DEFAULT_AP_DO_NOT_START_CONN_FAIL
+#define DEFAULT_AP_DO_NOT_START_CONN_FAIL   false // Whether or not the WiFi AP interface should start on failed connection attempts
+#endif
+
+#ifndef DEFAULT_AP_AUTOSTART_MAX_UPTIME_M
+#define DEFAULT_AP_AUTOSTART_MAX_UPTIME_M       0 // Max uptime (in minutes) in which the AP interface is allowed to automatically start
+#endif
+
+
 #ifndef DEFAULT_AP_FALLBACK_MINIMAL_ON_TIME_SEC
 #define DEFAULT_AP_FALLBACK_MINIMAL_ON_TIME_SEC  60  // Minimal time to leave the AP on to allow a user to connect to it for entering setup
 #endif
@@ -71,6 +96,33 @@
 #ifndef DEFAULT_WIFI_INCLUDE_HIDDEN_SSID  
 #define DEFAULT_WIFI_INCLUDE_HIDDEN_SSID false  // Allow to connect to hidden SSID APs
 #endif
+
+#ifndef DEFAULT_STA_ROUTE_PRIO
+#define DEFAULT_STA_ROUTE_PRIO              100 // ESP32-only default route priority
+#endif
+
+#ifndef DEFAULT_STA_STARTUP_DELAY
+# if defined(BOARD_HAS_SDIO_ESP_HOSTED) && defined(ESP32P4)
+// Allow longer delay to give any Eth a chance to start
+#define DEFAULT_STA_STARTUP_DELAY           5000 // Delay (in ms) after boot before starting the interface
+#else
+#define DEFAULT_STA_STARTUP_DELAY           1000 // Delay (in ms) after boot before starting the interface
+#endif
+#endif
+
+#ifndef DEFAULT_STA_IS_FALLBACK
+# if defined(BOARD_HAS_SDIO_ESP_HOSTED) && defined(ESP32P4)
+#define DEFAULT_STA_IS_FALLBACK              true 
+#else
+#define DEFAULT_STA_IS_FALLBACK              false
+#endif
+#endif
+
+#ifndef DEFAULT_ETH_ROUTE_PRIO
+#define DEFAULT_ETH_ROUTE_PRIO              150 // ESP32-only default route priority
+#endif
+
+
 #ifndef DEFAULT_USE_STATIC_IP
 #define DEFAULT_USE_STATIC_IP   false           // (true|false) enabled or disabled static IP
 #endif

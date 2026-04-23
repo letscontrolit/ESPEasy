@@ -26,7 +26,9 @@ def create_display_text(description, version, families):
         fam_split.append('ESP32')
     if 'ESP32-S2' in families:
         esp32_split.append('S2')
-    if 'ESP32-S3' in families:
+    if 'ESP32-S31' in families:
+        esp32_split.append('S31')
+    elif 'ESP32-S3' in families:
         esp32_split.append('S3')
     if 'ESP32-C2' in families:
         esp32_split.append('C2')
@@ -34,16 +36,19 @@ def create_display_text(description, version, families):
         esp32_split.append('C3')
     if 'ESP32-C5' in families:
         esp32_split.append('C5')
-    if 'ESP32-C6' in families:
-        esp32_split.append('C6')
     if 'ESP32-C61' in families:
         esp32_split.append('C61')
+    elif 'ESP32-C6' in families:
+        esp32_split.append('C6')
     if 'ESP32-H2' in families:
         esp32_split.append('H2')
     if 'ESP32-H21' in families:
         esp32_split.append('H21')
-    if 'ESP32-P4' in families:
+    if 'ESP32-P4R3' in families:
+        esp32_split.append('P4R3')
+    elif 'ESP32-P4' in families:
         esp32_split.append('P4')
+
 
     if len(esp32_split) > 0:
         fam_split.append('ESP32-' + '/'.join(esp32_split))
@@ -76,6 +81,8 @@ def parse_filename(file, version, variant, file_suffix):
             manifest_suff = '.manifest.json'
             if 'ESP32s2' in variant:
                 chipFamily = 'ESP32-S2'
+            elif 'ESP32s31' in variant:
+                chipFamily = 'ESP32-S31'
             elif 'ESP32s3' in variant:
                 chipFamily = 'ESP32-S3'
             elif 'ESP32c2' in variant:
@@ -94,7 +101,7 @@ def parse_filename(file, version, variant, file_suffix):
                 chipFamily = 'ESP32-H2'
             elif 'ESP32p4' in variant:
                 chipFamily = 'ESP32-P4'
-                if 'rev300' in variant:
+                if 'rev300' in variant or 'r3' in variant:
                     chipVariant = 'rev300'
                 else:
                     chipVariant = 'rev0'
@@ -261,7 +268,7 @@ def parse_filename(file, version, variant, file_suffix):
                     builds = dict([('chipFamily', chipFamily), ('parts', [parts])])
             else:
                 if add_improv:
-                    builds = dict([('chipFamily', chipFamily), ('chipVariant', chipVariant), ('improv', False), ('parts', [parts])])
+                    builds = dict([('chipFamily', chipFamily), ('chipVariant', chipVariant), ('improv', True), ('parts', [parts])])
                 else:
                     builds = dict([('chipFamily', chipFamily), ('chipVariant', chipVariant), ('parts', [parts])])
 
@@ -382,7 +389,7 @@ def generate_manifest_files(bin_folder, output_prefix):
             '    </style>\n',
             '    <script\n',
             '      type="module"\n',
-            '      src="https://unpkg.com/tasmota-esp-web-tools@11.1.2/dist/web/install-button.js?module"\n',
+            '      src="https://unpkg.com/tasmota-esp-web-tools@12.0.0/dist/web/install-button.js?module"\n',
             '    ></script>\n',
             '  </head>\n',
             '  <body>\n',

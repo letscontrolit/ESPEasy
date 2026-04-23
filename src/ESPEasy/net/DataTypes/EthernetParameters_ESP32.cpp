@@ -20,6 +20,10 @@ bool isValid(EthClockMode_t clockMode) {
   return false;
 }
 
+bool isExternalCrystal(EthClockMode_t clockMode) {
+  return clockMode == EthClockMode_t::Ext_crystal_osc;
+}
+
 bool isGpioUsedInETHClockMode(EthClockMode_t clockMode,
                               int8_t         gpio) {
   if (((clockMode == EthClockMode_t::Int_50MHz_GPIO_0)      && (gpio == 0)) ||

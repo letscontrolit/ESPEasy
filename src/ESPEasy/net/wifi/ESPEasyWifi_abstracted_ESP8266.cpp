@@ -137,14 +137,6 @@ bool doSetWifiMode(WiFiMode_t new_mode)
     delay(1);
   }
 
-
-#  if FEATURE_MDNS
-  #   ifdef ESP8266
-
-  // notifyAPChange() is not present in the ESP32 MDNSResponder
-  MDNS.notifyAPChange();
-  #   endif // ifdef ESP8266
-  #  endif // if FEATURE_MDNS
   return true;
 }
 

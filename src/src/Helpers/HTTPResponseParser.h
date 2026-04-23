@@ -23,7 +23,7 @@
 void eventFromResponse(const String& host,
                        const int   & httpCode,
                        const String& uri,
-                       HTTPClient  & http,
+                       ESPEasy_HTTPClient  & http,
                        const int   & parseJson);
 
 # if FEATURE_JSON_EVENT

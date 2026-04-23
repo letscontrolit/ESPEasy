@@ -320,10 +320,6 @@ void handle_advanced() {
   }
   #endif // if FEATURE_I2C_MULTIPLE
 
-  // TODO: Remove this code
-  addRowLabel(F("I2C ClockStretchLimit"));
-  addUnit(F("Moved to Hardware page"));
-
   #if FEATURE_ARDUINO_OTA
   addFormCheckBox(F("Enable Arduino OTA"), F("arduinootaenable"), Settings.ArduinoOTAEnable);
   #endif // if FEATURE_ARDUINO_OTA

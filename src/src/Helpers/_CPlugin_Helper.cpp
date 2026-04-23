@@ -251,7 +251,8 @@ String send_via_http(int                             cpluginID,
     header,
     postStr,
     httpCode,
-    ControllerSettings.MustCheckReply
+    ControllerSettings.MustCheckReply,
+    EMPTY_STRING
     #if FEATURE_HTTP_TLS
     , ControllerSettings.TLStype()
     #endif // if FEATURE_HTTP_TLS
