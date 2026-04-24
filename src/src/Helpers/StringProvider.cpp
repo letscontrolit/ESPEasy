@@ -407,7 +407,7 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
     }
     case LabelType::ENABLE_SERIAL_PORT_CONSOLE:
     {
-      return KeyValueStruct(F("Enable Serial Port Console"), !!Settings.UseSerial);
+      return KeyValueStruct(F("Enable Serial Port Console"), !!Settings.UseSerial); // Cast to bool to make sure it is shown as a checkmark
     }
     case LabelType::CONSOLE_SERIAL_PORT:
     {
@@ -416,7 +416,7 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
 #if USES_ESPEASY_CONSOLE_FALLBACK_PORT
     case LabelType::CONSOLE_FALLBACK_TO_SERIAL0:
     {
-      return KeyValueStruct(F("Fallback to Serial 0"), Settings.console_serial0_fallback);
+      return KeyValueStruct(F("Fallback to Serial 0"), !!Settings.console_serial0_fallback); // Cast to bool to make sure it is shown as a checkmark
     }
     case LabelType::CONSOLE_FALLBACK_PORT:
     {
@@ -752,7 +752,10 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
     }
     case LabelType::RESTART_WIFI_LOST_CONN:
     {
+      #ifndef BOARD_HAS_SDIO_ESP_HOSTED
+      // Disable option for ESP-hosted WiFi as this always needs to restart when forcing disconnect.
       return KeyValueStruct(F("Restart WiFi Lost Conn"), Settings.WiFiRestart_connection_lost());
+      #endif
     }
     case LabelType::FORCE_WIFI_NOSLEEP:
     {

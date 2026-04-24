@@ -47,7 +47,13 @@ bool WiFi_pre_STA_setup()
 void doWiFiDisconnect() {
   uint8_t retry = 3;
 
-  while (!WiFi.disconnect(Settings.WiFiRestart_connection_lost()) && retry) {
+  #ifdef BOARD_HAS_SDIO_ESP_HOSTED
+  bool wifioff = true;
+  #else
+  bool wifioff = Settings.WiFiRestart_connection_lost();
+  #endif
+
+  while (!WiFi.disconnect(wifioff) && retry) {
     --retry;
     delay(100);
   }
