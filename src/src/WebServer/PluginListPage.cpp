@@ -130,9 +130,13 @@ void handle_pluginlist() {
     html_table_header(F(""),            25);
     html_table_header(F("Description"), 800);
     html_table_header(F(""),            50);
-    #  if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS
+    #  if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS || FEATURE_EMAIL_TLS
+    #   if FEATURE_EMAIL_TLS
+    html_table_header(F("TLS"),         50);
+    #   else
     html_table_header(F(""),            50);
-    #  endif // if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS
+    #   endif // if FEATURE_EMAIL_TLS
+    #  endif // if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS || FEATURE_EMAIL_TLS
     html_table_header(F(""));
 
     for (uint8_t x = 0; x <= notificationCount; x++)
@@ -147,6 +151,13 @@ void handle_pluginlist() {
       NPlugin_ptr[x](NPlugin::Function::NPLUGIN_GET_DEVICENAME, 0, NotificationName);
       addHtml(NotificationName);
       html_TD();
+      #  if FEATURE_EMAIL_TLS
+      html_TD();
+
+      if (Notification[x].usesTLS) {
+        addEnabled(true);
+      }
+      #  endif // if FEATURE_EMAIL_TLS
     }
   }
   # endif // if FEATURE_NOTIFIER
