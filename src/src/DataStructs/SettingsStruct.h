@@ -465,13 +465,11 @@ public:
   }
 
   uint32_t getVariousBits2() const {
-    uint32_t res;
-    memcpy(&res, &VariousBits_2, sizeof(VariousBits_2));
-    return res;    
+    return VariousBits_2._all_bits;    
   }
 
   void setVariousBits2(uint32_t value) {
-    memcpy(&VariousBits_2, &value, sizeof(VariousBits_2));
+    VariousBits_2._all_bits = value;
   }
 
   bool getNetworkEnabled(ESPEasy::net::networkIndex_t index) const;
