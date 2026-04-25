@@ -47,6 +47,15 @@
 #define DEFAULT_AP_SUBNET   255, 255, 255, 0                         // Enter IP address (comma separated) for AP (config) mode
 #define DEFAULT_AP_KEY      "configesp"                              // Enter network WPA key for AP (config) mode
 
+// #define DEFAULT_AP_DNS      1,1,1,1                                  // Used by PPP/NAPT feature (mind the comma-separated parts!),
+                                                                     // Cloudflare DNS: 1.1.1.1 and 1.0.0.1
+                                                                     // Alternatives
+                                                                     // Cleanbrowsing: 185.228.168.9 and 185.228.169.9
+                                                                     // Google Public DNS: 8.8.8.8 and 8.8.4.4
+                                                                     // Quad9:  9.9.9.9 and 149.112.112.112
+                                                                     // OpenDNS: 208.67.222.222 and 208.67.220.220
+                                                                     // Comodo Secure DNS: 8.26.56.26 and 8.20.247.20
+
 // --- Wifi Client Mode -----------------------------------------------------------------------------
 #define DEFAULT_SSID                         "MyHomeSSID"            // Enter your network SSID
 #define DEFAULT_KEY                          "MySuperSecretPassword" // Enter your network WPA key
@@ -295,6 +304,22 @@
 //  #define DEFAULT_PROVISIONING_PASS               ""
 #endif
 
+/*
+ #######################################################################################################
+   Defining Ethernet & GPIO
+ #######################################################################################################
+ */
+// Actual values can be obtained from product documentation and ESPEasyDefaults.h 
+// #define DEFAULT_ETH_PHY_ADDR             0
+// #define DEFAULT_ETH_PHY_TYPE             0 // See EthernetParameters.h enum EthPhyType_t
+// #define DEFAULT_ETH_PIN_MDC              -1
+// #define DEFAULT_ETH_PIN_MDIO             -1
+// #define DEFAULT_ETH_PIN_POWER            -1
+// #define DEFAULT_ETH_CLOCK_MODE           (0) // See EthernetParameters.h enum EthClockMode_t
+
+// #define DEFAULT_NETWORK_MEDIUM       ESPEasy::net::NetworkMedium_t::WIFI
+
+// #define DEFAULT_ENABLED_NETWORK_PLUGIN   1 // Enable this NWPLUGIN_ID number, 1,3..5, on factory reset/initial setup
 
 
 
