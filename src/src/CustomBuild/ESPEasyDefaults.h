@@ -122,6 +122,9 @@
 #define DEFAULT_ETH_ROUTE_PRIO              150 // ESP32-only default route priority
 #endif
 
+#ifndef DEFAULT_ENABLED_NETWORK_PLUGIN
+#define DEFAULT_ENABLED_NETWORK_PLUGIN      1   // Wifi-STA enabled by default, except for P4 (ESP-Hosted is not available on all boards)
+#endif
 
 #ifndef DEFAULT_USE_STATIC_IP
 #define DEFAULT_USE_STATIC_IP   false           // (true|false) enabled or disabled static IP

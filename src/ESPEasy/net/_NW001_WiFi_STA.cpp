@@ -23,13 +23,13 @@
 # include "../net/Helpers/_NWPlugin_init.h"
 # include "../net/NWPluginStructs/NW001_data_struct_WiFi_STA.h"
 # include "../net/wifi/ESPEasyWifi.h"
-#ifdef ESP8266
-# include "../net/ESPEasyNetwork.h"
-#endif
+# ifdef ESP8266
+#  include "../net/ESPEasyNetwork.h"
+# endif
 
-#if FEATURE_TASKVALUE_UNIT_OF_MEASURE
-# include "../../src/Helpers/ESPEasy_UnitOfMeasure.h"
-#endif
+# if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+#  include "../../src/Helpers/ESPEasy_UnitOfMeasure.h"
+# endif
 
 
 # if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE
@@ -65,7 +65,9 @@ bool NWPlugin_001(NWPlugin::Function function, EventStruct *event, String& strin
 
       //        ESPEasy::net::wifi::GetHostedMCUFwVersion() > 0x00020600;
 # else // ifdef ESP32P4
+      #  if DEFAULT_ENABLED_NETWORK_PLUGIN == NWPLUGIN_ID_001
       nw.enabledOnFactoryReset = true;
+      #  endif
 # endif // ifdef ESP32P4
       nw.fixedNetworkIndex = NWPLUGIN_ID_001 - 1; // Start counting at 0
       break;
@@ -100,7 +102,7 @@ bool NWPlugin_001(NWPlugin::Function function, EventStruct *event, String& strin
 
     case NWPlugin::Function::NWPLUGIN_CREDENTIALS_CHANGED:
     {
-//                  ESPEasy::net::wifi::WiFi_AP_Candidates.force_reload(); // Force reload of the credentials and found APs from the last scan
+      // ESPEasy::net::wifi::WiFi_AP_Candidates.force_reload(); // Force reload of the credentials and found APs from the last scan
 
       break;
     }
@@ -112,6 +114,7 @@ bool NWPlugin_001(NWPlugin::Function function, EventStruct *event, String& strin
 
       if (NW_data) {
         auto runtime_data = NW_data->getNWPluginData_static_runtime();
+
         if (runtime_data) {
           success = runtime_data->connected();
         }
