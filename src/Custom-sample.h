@@ -48,7 +48,7 @@
 #define DEFAULT_AP_KEY      "configesp"                              // Enter network WPA key for AP (config) mode
 
 // #define DEFAULT_AP_DNS      1,1,1,1                                  // Used by PPP/NAPT feature (mind the comma-separated parts!),
-                                                                     // Cloudflare DNS: 1.1.1.1 and 1.0.0.1
+                                                                     // Cloudflare DNS: 1.1.1.1 and 1.0.0.1 and 1.1.1.2 (secure) and 1.1.1.3 (censored)
                                                                      // Alternatives
                                                                      // Cleanbrowsing: 185.228.168.9 and 185.228.169.9
                                                                      // Google Public DNS: 8.8.8.8 and 8.8.4.4
