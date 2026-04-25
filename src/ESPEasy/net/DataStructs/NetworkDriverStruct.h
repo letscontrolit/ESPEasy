@@ -14,7 +14,9 @@ namespace net {
 \*********************************************************************************************/
 struct NetworkDriverStruct
 {
-  NetworkDriverStruct() : onlySingleInstance(true) {}
+  NetworkDriverStruct() {
+    onlySingleInstance = 1;
+  }
 
   union {
     struct {
