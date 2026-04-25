@@ -41,9 +41,9 @@ void handle_pluginlist() {
     html_table_header(F(""),            25);
     html_table_header(F("Description"), 800);
     html_table_header(F(""),            50);
-    # if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS
+    # if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS || FEATURE_EMAIL_TLS
     html_table_header(F(""),            50);
-    # endif // if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS
+    # endif // if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS || FEATURE_EMAIL_TLS
     html_table_header(F(""));
 
     deviceIndex_t x;
@@ -170,9 +170,9 @@ void handle_pluginlist() {
     html_table_header(F(""),            25);
     html_table_header(F("Description"), 800);
     html_table_header(F(""),            50);
-    #  if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS
+    #  if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS || FEATURE_EMAIL_TLS
     html_table_header(F(""),            50);
-    #  endif // if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS
+    #  endif // if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS || FEATURE_EMAIL_TLS
     html_table_header(F(""));
 
     ESPEasy::net::networkDriverIndex_t tmpNetworkDriverIndex{};
