@@ -655,6 +655,15 @@ bool ESPEasyWiFi_t::shouldStartAP_fallback() const
          (_connect_attempt > Settings.ConnectFailRetryCount);
 }
 
+bool ESPEasyWiFi_t::shouldRedirectTo_setup() const
+{
+  if (Settings.StartAPfallback_NoCredentials() && !SecuritySettings.hasWiFiCredentials()) {
+    return true;
+  }
+
+  return !Settings.DoNotStartAPfallback_ConnectFail();
+}
+
 } // namespace wifi
 } // namespace net
 } // namespace ESPEasy

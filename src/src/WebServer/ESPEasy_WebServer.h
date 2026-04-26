@@ -5,6 +5,7 @@
 
 #include "../DataTypes/SettingsType.h"
 #include "../WebServer/WebTemplateParser.h"
+#include "../../ESPEasy/net/DataTypes/NetworkIndex.h"
 
 
 // Uncrustify must not be used on macros, so turn it off.
@@ -32,6 +33,13 @@ void   WebServerInit();
 // Return true in that case so the page handler does not try to handle the request again.
 // ********************************************************************************
 bool   captivePortal();
+
+bool   clientConnectedToAP();
+
+// Determine which network interface is being used by the client to access this ESPEasy node
+ESPEasy::net::networkIndex_t getNetworkIndex_ClientConnectsTo();
+
+
 
 void   setWebserverRunning(bool state);
 

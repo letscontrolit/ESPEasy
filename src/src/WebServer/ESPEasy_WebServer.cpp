@@ -169,14 +169,16 @@ void sendHeadandTail_stdtemplate(bool Tail, bool rebooting) {
 }
 
 bool captivePortal() {
-  if (!Settings.ApCaptivePortal()) return false;
-  const IPAddress client_localIP = web_server.client().localIP();
-  const bool fromAP              = client_localIP == apIP;
-  const bool hasWiFiCredentials  = SecuritySettings.hasWiFiCredentials();
+  // We only need to check if a client connected here via AP 
+  // as currently we don't have any interface which allows forwarding
+  // packets and thus acting as a gateway for others.
+  if (!Settings.ApCaptivePortal() || !clientConnectedToAP()) return false;
+
 #ifndef BUILD_NO_DEBUG
   addLog(LOG_LEVEL_DEBUG, concat(F("CaptivePortal: hostHeader: "), web_server.hostHeader()));
 #endif
-  if (hasWiFiCredentials || !fromAP) {
+  if (!ESPEasy::net::NetworkConnected())
+  {
     return false;
   }
 
@@ -185,10 +187,11 @@ bool captivePortal() {
       && !getValue(LabelType::M_DNS).equalsIgnoreCase(web_server.hostHeader())
 #endif
 ) {
+    const IPAddress client_localIP = web_server.client().localIP();
     String redirectURL = concat(F("http://"), formatIP(client_localIP));
     #ifdef WEBSERVER_SETUP
 
-    if (fromAP && !hasWiFiCredentials) {
+    if (ESPEasy::net::wifi::shouldRedirectTo_setup()) {
       redirectURL += F("/setup");
     }
     #endif // ifdef WEBSERVER_SETUP
@@ -199,6 +202,60 @@ bool captivePortal() {
     return true;
   }
   return false;
+}
+
+bool   clientConnectedToAP()
+{
+  const IPAddress client_localIP = web_server.client().localIP();
+  return IPAddressSet(client_localIP) && client_localIP == apIP;
+}
+
+ESPEasy::net::networkIndex_t getNetworkIndex_ClientConnectsTo()
+{
+  const IPAddress client_localIP = web_server.client().localIP();
+  if (!IPAddressSet(client_localIP))
+    return ESPEasy::net::INVALID_NETWORK_INDEX;
+  if (client_localIP == apIP) {
+    // Easy to check as this is a global variable
+    return NETWORK_INDEX_WIFI_AP;
+  }
+  #ifdef ESP8266
+  if (client_localIP == WiFi.IP()) {
+    return NETWORK_INDEX_WIFI_STA;
+  }
+  #endif
+  #ifdef ESP32
+  for (ESPEasy::net::networkIndex_t x = 0; x < NETWORK_MAX; ++x) {
+    if (Settings.getNetworkEnabled(x)) {
+      struct EventStruct TempEvent;
+      TempEvent.NetworkIndex = x;
+      String str;
+
+      if (ESPEasy::net::NWPluginCall(NWPlugin::Function::NWPLUGIN_GET_INTERFACE, &TempEvent, str))
+      {
+        const NWPlugin::IP_type ip_types[] = {
+          NWPlugin::IP_type::inet,
+      # if CONFIG_LWIP_IPV6
+          NWPlugin::IP_type::ipv6_unknown,
+          NWPlugin::IP_type::ipv6_global,
+          NWPlugin::IP_type::ipv6_link_local,
+          NWPlugin::IP_type::ipv6_site_local,
+          NWPlugin::IP_type::ipv6_unique_local,
+          NWPlugin::IP_type::ipv4_mapped_ipv6,
+      # endif // if CONFIG_LWIP_IPV6
+
+        };
+
+        for (size_t i = 0; i < NR_ELEMENTS(ip_types); ++i) {
+          const IPAddress ip(NWPlugin::get_IP_address(ip_types[i], TempEvent.networkInterface));
+          if (client_localIP == ip) return x;
+        }
+      }
+    }
+  }
+
+  #endif
+  return ESPEasy::net::INVALID_NETWORK_INDEX;
 }
 
 // ********************************************************************************

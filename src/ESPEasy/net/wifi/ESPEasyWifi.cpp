@@ -168,6 +168,10 @@ bool shouldStartAP_fallback() {
   return ESPEasyWiFi.shouldStartAP_fallback(); 
 }
 
+bool shouldRedirectTo_setup() {
+  return ESPEasyWiFi.shouldRedirectTo_setup();
+}
+
 # ifdef BOARD_HAS_SDIO_ESP_HOSTED
 
 // ********************************************************************************

@@ -27,7 +27,7 @@ void handleNotFound() {
   if (captivePortal()) { // If captive portal redirect instead of displaying the error page.
     return;
   }
-
+/*
   // if Wifi setup, launch setup wizard if AP_DONT_FORCE_SETUP is not set.
   if (//WiFiEventData.wifiSetup && 
       Settings.ApCaptivePortal())
@@ -35,6 +35,7 @@ void handleNotFound() {
     web_server.send_P(200, (PGM_P)F("text/html"), (PGM_P)F("<meta HTTP-EQUIV='REFRESH' content='0; url=/setup'>"));
     return;
   }
+*/
 
 #ifdef WEBSERVER_RULES
 
