@@ -221,7 +221,7 @@ ESPEasy::net::networkIndex_t getNetworkIndex_ClientConnectsTo()
     return NETWORK_INDEX_WIFI_AP;
   }
   #ifdef ESP8266
-  if (client_localIP == WiFi.IP()) {
+  if (client_localIP == WiFi.localIP()) {
     return NETWORK_INDEX_WIFI_STA;
   }
   #endif
