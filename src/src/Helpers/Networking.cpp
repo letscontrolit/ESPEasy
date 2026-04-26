@@ -167,7 +167,7 @@ void updateUDPport(bool force)
   // Or we may need to look into AsyncUDP as that allows to send to specific interfaces.
   const bool connected = ESPEasy::net::NWPluginCall(NWPlugin::Function::NWPLUGIN_WEBSERVER_SHOULD_RUN);
   //const bool connected = ESPEasy::net::NetworkConnected();
-  if (!connected || lastUsedUDPPort != 0) {
+  if (!connected || (Settings.UDPPort != lastUsedUDPPort)) {
     if (lastUsedUDPPort != 0) {
       portUDP.stop();
       lastUsedUDPPort = 0;
@@ -180,7 +180,7 @@ void updateUDPport(bool force)
     }
   }
 
-  if (Settings.UDPPort != 0) {
+  if ((Settings.UDPPort != lastUsedUDPPort) && Settings.UDPPort != 0) {
     if (portUDP.begin(Settings.UDPPort) == 0) {
 #ifndef BUILD_NO_DEBUG
       if (loglevelActiveFor(LOG_LEVEL_ERROR)) {

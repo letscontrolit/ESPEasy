@@ -153,7 +153,12 @@ void ESPEasyWiFi_t::loop()
               //  && !WiFiEventData.warnedNoValidWiFiSettings
               )
           {
-            addLog(LOG_LEVEL_ERROR, F("WIFI : No valid wifi settings"));
+            // Check for whether No Valid WiFi settings was already logged
+            static uint32_t lastTimeLoggedNoWiFiCredentials = 0;
+            if (timePassedSince(lastTimeLoggedNoWiFiCredentials) > 5000) {
+              addLog(LOG_LEVEL_ERROR, F("WIFI : No valid wifi settings"));
+              lastTimeLoggedNoWiFiCredentials = millis();
+            }
 
             //            WiFiEventData.warnedNoValidWiFiSettings = true;
           }
@@ -657,6 +662,7 @@ bool ESPEasyWiFi_t::shouldStartAP_fallback() const
 
 bool ESPEasyWiFi_t::shouldRedirectTo_setup() const
 {
+  if (!Settings.ApCaptivePortal()) return false;
   if (Settings.StartAPfallback_NoCredentials() && !SecuritySettings.hasWiFiCredentials()) {
     return true;
   }

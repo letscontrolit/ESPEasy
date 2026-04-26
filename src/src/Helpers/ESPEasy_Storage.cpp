@@ -991,7 +991,7 @@ void afterloadSettings() {
   #ifdef ESP32
   // FIXME TD-er: Must also update hostname on other interfaces for ESP32
   #endif
-  ESPEasy::net::CheckRunningServices(); // To update changes in hostname.
+  ESPEasy::net::CheckRunningServices(true); // To update changes in hostname.
 }
 
 /********************************************************************************************\

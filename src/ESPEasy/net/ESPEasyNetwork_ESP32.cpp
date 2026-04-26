@@ -2,12 +2,14 @@
 
 #include "../net/ESPEasyNetwork.h"
 
-#include "../../ESPEasy/net/Globals/NetworkState.h"
+#include "../net/Globals/NetworkState.h"
+#include "../net/eth/ESPEasyEth.h"
+#include "../net/Globals/NWPlugins.h"
 #include "../../src/ESPEasyCore/ESPEasy_Log.h"
 #include "../../src/Helpers/NetworkStatusLED.h"
 #include "../../src/Helpers/StringConverter.h"
-#include "../net/eth/ESPEasyEth.h"
-#include "../net/Globals/NWPlugins.h"
+#include "../../src/Globals/Settings.h"
+
 
 #include <NetworkManager.h>
 
@@ -114,6 +116,29 @@ NetworkInterface* getDefaultNonAP_interface()
     }
   }
   return network_if;
+}
+
+ESPEasy::net::networkIndex_t getNetworkIndex_defaultNetwork()
+{
+  auto network_if = getDefaultNonAP_interface();
+  if (network_if == nullptr) {
+    return ESPEasy::net::INVALID_NETWORK_INDEX;
+  }
+  for (ESPEasy::net::networkIndex_t x = 0; x < NETWORK_MAX; ++x) {
+    if (Settings.getNetworkEnabled(x)) {
+      struct EventStruct TempEvent;
+      TempEvent.NetworkIndex = x;
+      String str;
+
+      if (ESPEasy::net::NWPluginCall(NWPlugin::Function::NWPLUGIN_GET_INTERFACE, &TempEvent, str))
+      {
+        if (TempEvent.networkInterface->netif() == network_if->netif()) {
+          return x;
+        }  
+      }
+    }
+  }
+  return ESPEasy::net::INVALID_NETWORK_INDEX;
 }
 
 bool NetworkConnected(bool force) {

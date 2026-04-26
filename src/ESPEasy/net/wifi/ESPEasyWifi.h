@@ -40,6 +40,10 @@ namespace wifi {
 # define WIFI_SCAN_INTERVAL_AP_USED         125000  // in milliSeconds
 # define WIFI_SCAN_INTERVAL_MINIMAL          60000  // in milliSeconds
 
+bool validWiFiSSID(const String& ssid);
+
+bool validWiFiCredentials(const String& ssid, const String& pass);
+
 
 bool WiFiConnected();
 

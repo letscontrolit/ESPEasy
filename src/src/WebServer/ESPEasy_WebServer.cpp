@@ -126,6 +126,7 @@ void sendHeadandTail_stdtemplate(bool Tail, bool rebooting) {
   sendHeadandTail(F("TmplStd"), Tail, rebooting);
 
   if (!Tail) {
+    // TODO TD-er: Must check clientConnectedToAP()?
     if (!clientIPinSubnetDefaultNetwork() &&  ESPEasy::net::wifi::wifiAPmodeActivelyUsed()) {
       addHtmlError(F("Warning: Connected via AP"));
     }
@@ -504,7 +505,7 @@ void setWebserverRunning(bool state) {
     #endif
   }
   webserverRunning = state;
-  ESPEasy::net::CheckRunningServices(); // Uses webserverRunning state.
+  ESPEasy::net::CheckRunningServices(true); // Uses webserverRunning state.
 }
 
 void getWebPageTemplateDefault(const String& tmplName, WebTemplateParser& parser)
