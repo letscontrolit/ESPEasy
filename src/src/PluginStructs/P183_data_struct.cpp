@@ -3,6 +3,10 @@
 
 #ifdef USES_P183
 
+
+# define ACTION_DUMP_RANGE 0xFFFF
+# define ACTION_SCAN_BUS   0xFFFE
+
 // #######################################################################################################
 // ############## Data structure for plugin 183: Modbus RTU generic sensor interface       ###############
 // #######################################################################################################
@@ -11,20 +15,26 @@
 # endif // ifdef BUILD_NO_DEBUG
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Constructor of the plugin data structure. Initializes the data members to default values.
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 P183_data_struct::P183_data_struct(struct EventStruct *event) {
   _taskIndex = event->TaskIndex;
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Destructor of the plugin data structure. Clean up any resources used by the plugin.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 P183_data_struct::~P183_data_struct() {
   delete _modbusDevice;
   _modbusDevice = nullptr;
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Initialization. Takes the Modbus device address and link ID as parameters.
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool P183_data_struct::plugin_init(uint8_t slaveAddress, int linkId)
 {
-  //// TODO Implement
-    // Create a fresh Modbus_device object to handle the Modbus communication
+  // Create a fresh Modbus_device object to handle the Modbus communication
   if (_modbusDevice != nullptr) {
     delete _modbusDevice;
     _modbusDevice = nullptr;
@@ -38,12 +48,13 @@ bool P183_data_struct::plugin_init(uint8_t slaveAddress, int linkId)
 
   // Initialize our own Modbus_device with the provided serial link parameters
   // Note that the link configuration is expected to be the same for all plugins reusing the same serial port
-  if (!_modbusDevice->init(slaveAddress, linkId)) {
+  if (!_modbusDevice->init(slaveAddress, linkId, _taskIndex)) {
     return false;
   }
   _modbusDevice->setModbusTimeout(P183_MODBUS_TIMEOUT);
-    return false;
+  return false;
 }
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void P183_data_struct::plugin_exit()
 {
@@ -54,20 +65,8 @@ void P183_data_struct::plugin_exit()
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-bool P183_data_struct::plugin_once_a_second(struct EventStruct *event) {
-  // No actions
-  return true;
-}
-
+// Plugin read function. Queues a new request to read the Modbus registers.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-bool P183_data_struct::plugin_ten_per_second(struct EventStruct *event) {
-  // No actions
-  return true;
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Plugin read function implementataion.
-// A new request to update the Modbus registers is queued. The plugin output valuea are updated with the previous results
 bool P183_data_struct::plugin_read(struct EventStruct *event) {
   if (_modbusDevice == nullptr) {
     return false;
@@ -75,16 +74,57 @@ bool P183_data_struct::plugin_read(struct EventStruct *event) {
 
   for (int outputIndex = 0; outputIndex < P183_NR_OUTPUTS; ++outputIndex)
   {
-    _modbusDevice->readHoldingRegister(P183_ADDRESS(outputIndex), &(_registerValues[outputIndex]), &(_queueStates[outputIndex]));
-    UserVar.setFloat(event->TaskIndex, outputIndex, _registerValues[outputIndex]);
+    _modbusDevice->readHoldingRegister(P183_ADDRESS(outputIndex), outputIndex);
   }
   return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Handles the PLUGIN_TASKTIMER_IN event.
+// This is used to process the results of Modbus read requests and to trigger the next step in a Modbus scan sequence.
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+bool P183_data_struct::plugin_task_timer(EventStruct *event)
+{
+  addLogMove(LOG_LEVEL_INFO,
+             strformat(F("P183: TaskTimer called IDX=%d, par1=%d, par2=%d, par3=%d, par4=%d"),
+                       event->idx, event->Par1, event->Par2, event->Par3, event->Par4));
+
+  if (event->idx == ACTION_DUMP_RANGE) {
+    if (true) {
+      addLogMove(LOG_LEVEL_INFO, strformat(F("** Address %u (0x%02X) = %u (0x%02X)"), _lastAddress, _lastAddress, event->Par1, event->Par1));
+    } else {
+      addLogMove(LOG_LEVEL_INFO, strformat(F("** Address %u (0x%02X) no response"), _lastAddress, _lastAddress));
+    }
+    _lastAddress++;
+    scan_next_address();
+    return true;
+  }
+  else if (event->idx == ACTION_SCAN_BUS) {
+    if (true) {
+      addLogMove(LOG_LEVEL_INFO, strformat(F("** Device found at address %u (0x%02X)"), _lastAddress, _lastAddress));
+    }
+    _lastAddress++;
+    scan_next_module();
+    return true;
+  }
+  else  {
+    int outputIndex = event->idx;
+
+    if ((outputIndex < 0) || (outputIndex >= P183_NR_OUTPUTS)) {
+      addLogMove(LOG_LEVEL_ERROR, F("P183: Invalid output index in task timer event"));
+      return false;
+    }
+    UserVar.setFloat(event->TaskIndex, outputIndex, event->Par1); // Update the user variable with the value read from Modbus
+    return false;
+  }
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Start iterating over a register range of a Modbus device
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void P183_data_struct::scan_device(uint8_t node_id, uint8_t start_reg, uint8_t end_reg)
 {
-  uint16_t value            = 0;
+  uint16_t value          = 0;
   ModbusResultState state = ModbusResultState::Busy;
 
   addLogMove(LOG_LEVEL_INFO, F("Modbus: dumping module registers"));
@@ -93,48 +133,72 @@ void P183_data_struct::scan_device(uint8_t node_id, uint8_t start_reg, uint8_t e
     return;
   }
 
-  for (uint8_t reg = start_reg; reg <= end_reg; reg++) {
-    int result = _modbusDevice->readHoldingRegister(reg, &value, &state);
-
-    _modbusDevice->readHoldingRegister(1, &value, &state);
-
-    if (state == ModbusResultState::Success) {
-      addLogMove(LOG_LEVEL_INFO, strformat(F("** Address %u (0x%02X) = %u (0x%02X)"), reg, reg, value, value));
-    } else {
-      addLogMove(LOG_LEVEL_INFO, strformat(F("** Address %u (0x%02X) no response"), reg, reg));
-    }
+  if (start_reg < end_reg) {
+    _lastAddress = start_reg;
+    _endAddress  = end_reg;
+    _scanning    = true;
+    scan_next_address();
+  }
+  else
+  {
+    _scanning = false;
   }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Scan Modbus addreses from 0x00 to 0xFF for a given node ID
+// REad the next holding register from the Modbus device
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void P183_data_struct::scan_next_address()
+{
+  if (_scanning) {
+    if (_lastAddress <= _endAddress) {
+      _modbusDevice->readHoldingRegister(_lastAddress, ACTION_DUMP_RANGE);
+    } else {
+      _scanning = false;
+      addLogMove(LOG_LEVEL_INFO, F("Modbus: Finished scanning device"));
+    }
+    return;
+  }
+  _scanning = true;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Scan Modbus addreses on the bus and log the results
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void P183_data_struct::scan_modbus()
 {
-  uint16_t value            = 0;
-  ModbusResultState state = ModbusResultState::Busy;
-
   addLogMove(LOG_LEVEL_INFO, F("Modbus: Scanning for Modbus modules"));
 
   if (_modbusDevice == nullptr) {
     return;
   }
 
-  for (uint8_t id = 0; id <= 247; id++) {
-    _modbusDevice->readModuleHoldingRegister(id, 1, &value, &state);
+  _lastAddress = 1;
+  _endAddress  = 247;
+  _scanning    = true;
+  scan_next_module();
+}
 
-////    while (state == ModbusResultState::Busy) {
-////      _modbusDevice->processCommand(); // Trigger Modbus facilities to process the Modbus queue
-////    }
-    String s = state == ModbusResultState::Success ? F(" OK") : F(" no response");
-    addLogMove(LOG_LEVEL_INFO, strformat(F("** Address %u (0x%02X) %s"), id, id, s));
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void P183_data_struct::scan_next_module()
+{
+  if (_scanning) {
+    if (_lastAddress <= _endAddress) {
+      _modbusDevice->readModuleHoldingRegister(_lastAddress, 1, ACTION_SCAN_BUS);
+    } else {
+      _scanning = false;
+      addLogMove(LOG_LEVEL_INFO, F("Modbus: Finished scanning device"));
+    }
   }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Read a Modbus register from the device. Wait untial the data is available
 // Warning: this may take time as we waith for the  Modbus message to be exchanged
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 uint16_t P183_data_struct::readRegisterWait(uint16_t address) {
-  uint16_t value            = 0;
+  uint16_t value          = 0;
   ModbusResultState state = ModbusResultState::Busy;
 
   if (_modbusDevice == nullptr) {
@@ -145,7 +209,8 @@ uint16_t P183_data_struct::readRegisterWait(uint16_t address) {
 
   while (state == ModbusResultState::Busy) {
     delay(50);
-////    _modbusDevice->processCommand(); // Trigger Modbus facilities to process the Modbus queue
+
+    ////    _modbusDevice->processCommand(); // Trigger Modbus facilities to process the Modbus queue
   }
 
   return value;

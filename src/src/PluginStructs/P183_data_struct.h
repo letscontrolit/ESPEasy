@@ -43,21 +43,12 @@ struct P183_data_struct : public PluginTaskData_base {
   P183_data_struct() = delete;
   virtual ~P183_data_struct();
 
-  bool plugin_init(uint8_t                 slaveAddress,
-                   const ESPEasySerialPort port,
-                   const int16_t           serial_rx,
-                   const int16_t           serial_tx,
-                   int16_t                 baudrate,
-                   int8_t                  dere_pin,
-                   bool                    collision_detect);
-
   bool     plugin_init(uint8_t slaveAddress,
                        int     linkId);
 
   void     plugin_exit();
   bool     plugin_read(struct EventStruct *event);
-  bool     plugin_once_a_second(struct EventStruct *event);
-  bool     plugin_ten_per_second(struct EventStruct *event);
+  bool     plugin_task_timer(struct EventStruct *event);
   void     scan_device(uint8_t node_id,
                        uint8_t start_reg,
                        uint8_t end_reg);
@@ -68,12 +59,15 @@ struct P183_data_struct : public PluginTaskData_base {
 
 private:
 
-  taskIndex_t                 _taskIndex         = INVALID_TASK_INDEX;
-  struct ModbusDEVICE_struct *_modbusDevice      = nullptr;
-  uint16_t                    _registerValues[4] = {}; // Modus register values retrieved for output values
-  ModbusResultState           _queueStates[4]    = {}; // State of read hloding register transactions
-  ModbusResultState           _lastActionState   = ModbusResultState::Busy;
+  taskIndex_t                 _taskIndex       = INVALID_TASK_INDEX;
+  struct ModbusDEVICE_struct *_modbusDevice    = nullptr;
+  ModbusResultState           _lastActionState = ModbusResultState::Busy;
+  uint16_t                    _lastAddress     = 0;
+  uint16_t                    _endAddress      = 0;
+  bool                        _scanning        = false;
 
+  void scan_next_address();
+  void scan_next_module();
 };
 
 #endif // ifdef USES_P183

@@ -17,6 +17,7 @@ enum class ModbusResultState {
   Busy    = 0, // Transaction is not completed
   Success = 1, // Transaction successfully completed
   Error   = 2, // Transaction completed with an error
+
 };
 
 // ModbusDEVICE structure representing a MODBUS Device
@@ -34,8 +35,9 @@ public:
 
   void reset();
 
-bool init( uint8_t                 slaveAddress,
-           int                     linkId);
+  bool init(uint8_t     slaveAddress,
+            int         linkId,
+            taskIndex_t taskIndex);
 
   bool     isInitialized() const;
 
@@ -48,30 +50,43 @@ bool init( uint8_t                 slaveAddress,
   // Start reading a Modubus holding register. The result will be available later.
   // The function returns true if the request was queued.
   // The state variable will signal the processing state of the request.
-  bool readHoldingRegister(uint16_t             address,
-                           uint16_t            *valueptr,
+  bool readHoldingRegister(uint16_t           address,
+                           uint16_t          *valueptr,
                            ModbusResultState *stateptr);
 
-  bool writeSingleRegister(uint16_t             address,
-                           uint16_t             value,
+  bool readHoldingRegister(uint16_t address,
+                           uint16_t uid);
+
+  bool readHoldingRegisterResult(uint16_t  uid,
+                                 uint16_t *valuePtr);
+
+  bool writeSingleRegister(uint16_t           address,
+                           uint16_t           value,
                            ModbusResultState *stateptr);
-                           
-  bool readModuleHoldingRegister(uint8_t              busAddress,
-                                 uint16_t             registerAddress,
-                                 uint16_t            *valuePtr,
-                                 ModbusResultState *statePtr);
+
+  bool readModuleHoldingRegister(uint8_t  busAddress,
+                                 uint16_t registerAddress,
+                                 uint16_t uid);
 
 private:
 
   uint8_t            _modbus_address = MODBUS_BROADCAST_ADDRESS;
-  ModbusLINK_struct *_modbus_link    = nullptr; // Pointer to the Modbus link object
-  uint8_t            _deviceID       = 0;       // Identifier used by the Modbus manager to identify this device
-  uint16_t           _timeout        = 200;     // Timeout value in milliseconds for Modbus requests
+  ModbusLINK_struct *_modbus_link = nullptr; // Pointer to the Modbus link object
+  uint8_t            _deviceID    = 0;       // Identifier used by the Modbus manager to identify this device
+  uint16_t           _timeout     = 200;     // Timeout value in milliseconds for Modbus requests
+  taskIndex_t        _taskIndex   = 0;       // Task index for sending events to the task associated with this device
+
+  void sendEvent(Modbus_RequestQueueElement *req,
+                 int                         par1,
+                 int                         par2,
+                 int                         par3,
+                 int                         par4);
 
   static uint16_t CalculateCRC(uint8_t *buf,
                                int      len);
   static void     dump_buffer(const uint8_t *buffer,
                               size_t         length);
+
 };
 
 #endif // FEAURE_MODBUS_FAC

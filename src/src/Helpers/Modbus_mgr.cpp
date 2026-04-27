@@ -12,7 +12,7 @@
 # include <ESPeasySerial.h>
 # include "Modbus_mgr.h"
 
-# define MODBUS_DEBUG
+////# define MODBUS_DEBUG
 # ifdef BUILD_NO_DEBUG
 #  undef MODBUS_DEBUG // Debugging switched off
 # endif // ifdef BUILD_NO_DEBUG
@@ -101,9 +101,6 @@ bool ModbusMGR_struct::initialize()
       _modbus_links[i]->link = nullptr;
       _modbus_links[i]->kvs  = new (std::nothrow) ESPEasy_key_value_store;
       _modbus_links[i]->kvs->load(SettingsType::Enum::ModbusInterfaceSettings_Type, i, 0, 0);
-      ////# ifdef MODBUS_DEBUG
-      ////_modbus_links[i]->kvs->dump();
-      ////# endif
       _modbus_links[i]->kvs->getValue(MODBUS_PORT_KEY_INDEX, val);
       _modbus_links[i]->port = static_cast<ESPEasySerialPort>(val);
       _modbus_links[i]->kvs->getValue(MODBUS_RX_KEY_INDEX, _modbus_links[i]->serial_rx);
@@ -117,14 +114,14 @@ bool ModbusMGR_struct::initialize()
         _modbus_links[i]->link->init(_modbus_links[i]->port,
                                      _modbus_links[i]->serial_rx,
                                      _modbus_links[i]->serial_tx,
-                                     modbus_storageValueToBaudrate(_modbus_links[i]->baudrate),
+                                     _modbus_links[i]->baudrate,
                                      _modbus_links[i]->dere_pin,
                                      _modbus_links[i]->collision_detect);
       }
     }
   }
   _initialized = true;
-  
+
   # ifdef MODBUS_DEBUG
   dumpAdminInfo();
   # endif // ifdef MODBUS_DEBUG
@@ -233,7 +230,7 @@ bool ModbusMGR_struct::disconnect(uint8_t deviceID) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void ModbusMGR_struct::processLinks()
 {
-  if (_initialized) {
+  if (isInitialized()) {
     for (int i = 0; i < MAX_MODBUS_LINKS; i++) {
       if ((_modbus_links[i] != nullptr) && (_modbus_links[i]->link != nullptr)) {
         _modbus_links[i]->link->processCommand(); // Trigger processing of the command queue on the link
@@ -502,9 +499,9 @@ bool ModbusMGR_struct::save_modbus_interfaces(String& error)
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool ModbusMGR_struct::setLink(const int               linkIndex,
                                const ESPEasySerialPort port,
-                               const int8_t           serial_rx,
-                               const int8_t           serial_tx,
-                               int16_t                 baudrate,
+                               const int8_t            serial_rx,
+                               const int8_t            serial_tx,
+                               uint16_t                 baudrate,
                                int8_t                  dere_pin,
                                bool                    collision_detect)
 {
@@ -542,8 +539,8 @@ bool ModbusMGR_struct::setLink(const int               linkIndex,
     }
   }
   else {
-    log += strformat(F("Invalid link for linkIndex=%d"), linkIndex);
     # ifdef MODBUS_DEBUG
+    log += strformat(F("Invalid link for linkIndex=%d"), linkIndex);
     addLogMove(LOG_LEVEL_INFO, log);
     # endif // ifdef MODBUS_DEBUG
     return false;                       // Invalid link index

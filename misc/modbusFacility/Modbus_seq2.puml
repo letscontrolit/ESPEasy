@@ -23,6 +23,8 @@ plugin_struct <-- modbus_device --
 plugin <-- plugin_struct --
 system <-- plugin --
 
+== read ==
+
 system -> plugin ++ : read
 plugin -> plugin_struct ++ : read()
 plugin_struct -> modbus_device ++ : readHoldingRegister()
@@ -38,7 +40,11 @@ system -> modbus_mgr ++ : ten_per_second
 modbus_mgr -> modbus_link ++: processCommand()
 alt response available
   modbus_link -> modbus_device ++ : linkCallback()
-  modbus_device -> plugin : update event (new)
+  modbus_device -> plugin ++ : PLUGIN_TASKTIMER_IN
+  plugin -> plugin_struct ++ : plugin_task_timer()
+  plugin <-- plugin_struct --
+  modbus_device <-- plugin --
+  modbus_device -> modbus_link : freeTransaction()
   modbus_link <-- modbus_device --
 end
 alt no transaction

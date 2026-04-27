@@ -46,7 +46,7 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
     {
       auto& dev = Device[++deviceCount];
       dev.Number           = PLUGIN_ID_183;
-      dev.Type             = DEVICE_TYPE_CUSTOM0; //////DEVICE_TYPE_SERIAL_PLUS1; // connected through 3 datapins
+      dev.Type             = DEVICE_TYPE_CUSTOM0; // Custom device type, connects to Modbus
       dev.VType            = Sensor_VType::SENSOR_TYPE_QUAD;
       dev.FormulaOption    = true;
       dev.ValueCount       = P183_NR_OUTPUT_VALUES;
@@ -80,15 +80,14 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SHOW_CONFIG:
     {
-      //string += serialHelper_getSerialTypeLabel(event);
       success = true;
       break;
     }
 
     case PLUGIN_SET_DEFAULTS:
     {
-      P183_DEV_ID   = P183_DEV_ID_DFLT;
-      success = true;
+      P183_DEV_ID = P183_DEV_ID_DFLT;
+      success     = true;
       break;
     }
 
@@ -109,8 +108,8 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      addFormNumericBox(F("Modbus Link"), P183_LINK_ID_LABEL, P183_LINK_ID, 0, 3);
-      addFormNumericBox(F("Modbus Device Address"), P183_DEV_ID_LABEL, P183_DEV_ID, 1, 247);
+      addFormNumericBox(F("Modbus Link"),           P183_LINK_ID_LABEL, P183_LINK_ID, 0, 3);
+      addFormNumericBox(F("Modbus Device Address"), P183_DEV_ID_LABEL,  P183_DEV_ID,  1, 247);
 
       success = true;
       break;
@@ -118,8 +117,8 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      P183_DEV_ID   = getFormItemInt(P183_DEV_ID_LABEL);
-      P183_LINK_ID  = getFormItemInt(P183_LINK_ID_LABEL);
+      P183_DEV_ID     = getFormItemInt(P183_DEV_ID_LABEL);
+      P183_LINK_ID    = getFormItemInt(P183_LINK_ID_LABEL);
       P183_NR_OUTPUTS = getFormItemInt(P183_NR_OUTPUTS_LABEL);
 
       for (int outputIndex = 0; outputIndex < P183_NR_OUTPUT_VALUES; ++outputIndex)
@@ -169,6 +168,7 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
       success = P183_data->plugin_read(event); // Delegate to data_struct
       break;
     }
+    
     case PLUGIN_WRITE:
     {
       P183_data_struct *P183_data = static_cast<P183_data_struct *>(getPluginTaskData(event->TaskIndex));
@@ -236,6 +236,19 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
 
       break;
     }
+
+    case PLUGIN_TASKTIMER_IN:
+    {
+      P183_data_struct *P183_data = static_cast<P183_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (P183_data == nullptr) {
+        addLogMove(LOG_LEVEL_ERROR, F("P183 : Modbus task timer invalid data struct"));
+        return false;
+      }
+      success = P183_data->plugin_task_timer(event); // Delegate to data_struct
+      break;
+    }
+
     case PLUGIN_GET_CONFIG_VALUE:
     {
       P183_data_struct *P183_data = static_cast<P183_data_struct *>(getPluginTaskData(event->TaskIndex));

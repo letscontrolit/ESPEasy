@@ -45,6 +45,8 @@ struct Modbus_RequestQueueElement {
   ModbusTransactionType       _messageType = ModbusTransactionType::NONE;              // Type of Modbus message
   void                       *_userData    = nullptr;                                  // Pointer to user (device) data
   void                       *_userState   = nullptr;                                  // Pointer to user (device) defined state
+  uint16_t                    _userId      = 0;                                        // Cleint defined identifier for this transaction,
+                                                                                       // can be used to match responses to requests
   uint16_t                    _id          = 0;                                        // ID of the request
   struct ModbusDEVICE_struct *_device      = nullptr;                                  // Pointer to the Modbus device requesting the
                                                                                        // action
@@ -76,13 +78,13 @@ struct ModbusLINK_struct  {
   void reset();
 
   bool init(const ESPEasySerialPort port,
-            const int8_t           serial_rx,
-            const int8_t           serial_tx,
-            int16_t                 baudrate,
+            const int8_t            serial_rx,
+            const int8_t            serial_tx,
+            uint16_t                baudrate,
             int8_t                  dere_pin,
             bool                    collision_detect = false);
 
-  bool isInitialized() const;
+  bool                        isInitialized() const { return (_easySerial != nullptr) && _initialized; }
 
   Modbus_RequestQueueElement* newTransaction(struct ModbusDEVICE_struct *device);
   bool                        freeTransaction(Modbus_RequestQueueElement *transaction);
@@ -92,8 +94,6 @@ struct ModbusLINK_struct  {
 
   int16_t                     getBaudrate(void) const;
 
-  ESPEasySerialPort           getPort(void) const;
-
   int16_t                     getSerialRX(void) const;
 
   int16_t                     getSerialTX(void) const;
@@ -101,6 +101,7 @@ struct ModbusLINK_struct  {
   int8_t                      getDerePin(void) const;
 
   bool                        getCollisionDetect(void) const;
+
 
 private:
 

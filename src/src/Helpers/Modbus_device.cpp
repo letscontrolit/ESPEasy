@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // MODBUS device class
-// This class implements a single Modbus device connected over a serial link. 
+// This class implements a single Modbus device connected over a serial link.
 // It is part of the Modbus facilities supporting multiple Modbus devices on multiple serial Modbus links.
 // It supports queuing Modbus requests and responses for multiple Modbus devices sharing the same physical link.
 // The Modbus device class will interpret the Modbus messages for the connected hardware and queue it at the link class.
@@ -11,9 +11,9 @@
 
 # include "../Helpers/Modbus_device.h"
 # include "../Helpers/Modbus_mgr.h"
-#include "Modbus_device.h"
+# include "Modbus_device.h"
 
-# define MODBUS_DEBUG
+////# define MODBUS_DEBUG
 # ifdef BUILD_NO_DEBUG
 #  undef MODBUS_DEBUG // Debugging switched off
 # endif // ifdef BUILD_NO_DEBUG
@@ -52,20 +52,25 @@ void ModbusDEVICE_struct::reset() {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Initialization connected to an existing link. 
+// Initialization connected to an existing link.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-bool ModbusDEVICE_struct::init(uint8_t slaveAddress, int linkId)
+bool ModbusDEVICE_struct::init(uint8_t slaveAddress, int linkId, taskIndex_t taskIndex)
 {
-   bool success = ModbusMGR_singleton.connect(linkId, &_modbus_link, &_deviceID);
+  bool success = ModbusMGR_singleton.connect(linkId, &_modbus_link, &_deviceID);
+
   _modbus_address = slaveAddress;
-  # ifdef MODBUS_DEBUG 
+  _taskIndex      = taskIndex;
+  # ifdef MODBUS_DEBUG
+
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     addLogMove(LOG_LEVEL_INFO,
-               strformat(F("Modbus: Device Init, Slave address = %u, This = %p, deviceID = %u, linkId=%d"), slaveAddress, this, _deviceID, linkId));
+               strformat(F("Modbus: Device Init, Slave address = %u, This = %p, deviceID = %u, linkId=%d, taskIndex=%d"),
+                         slaveAddress, this,  _deviceID, linkId, taskIndex));
   }
   # endif // MODBUS_DEBUG
-    return success;
+  return success;
 }
+
 // Checker for device class initialization status
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool ModbusDEVICE_struct::isInitialized() const {
@@ -75,9 +80,7 @@ bool ModbusDEVICE_struct::isInitialized() const {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Set the Modbus timeout value for this device
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void ModbusDEVICE_struct::setModbusTimeout(uint16_t timeout) {
-  _timeout = timeout;
-}
+void ModbusDEVICE_struct::setModbusTimeout(uint16_t timeout) { _timeout = timeout; }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Retrieve the Modbus timeout value for this device
@@ -91,22 +94,24 @@ uint16_t ModbusDEVICE_struct::getModbusTimeout() const
 // Start reading a Modubus holding register. The result will be available later.
 // The function returns true if the request was queued.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-bool ModbusDEVICE_struct::readHoldingRegister(uint16_t             address,
-                                              uint16_t            *valuePtr,
-                                              ModbusResultState *statePtr) {
-  return readModuleHoldingRegister(_modbus_address, address, valuePtr, statePtr);
+bool ModbusDEVICE_struct::readHoldingRegister(uint16_t           address,
+                                              uint16_t          *valuePtr,
+                                              ModbusResultState *statePtr) { return false; }
+
+bool ModbusDEVICE_struct::readHoldingRegister(uint16_t address, uint16_t uid)
+{
+  return readModuleHoldingRegister(_modbus_address, address, uid);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Start reading a Modbus holding register from another module on the bus. The result will be available later.
 // The function returns true if the request was queued.
-// Note: This function accesses registers from other devices on the same Modbus bus. 
+// Note: This function accesses registers from other devices on the same Modbus bus.
 //       This should be used with care to prevent conflicts. This is beyond the intended scope of the Modbus device class.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-bool ModbusDEVICE_struct::readModuleHoldingRegister(uint8_t              busAddress,
-                                                    uint16_t             registerAddress,
-                                                    uint16_t            *valuePtr,
-                                                    ModbusResultState *statePtr)
+bool ModbusDEVICE_struct::readModuleHoldingRegister(uint8_t  busAddress,
+                                                    uint16_t registerAddress,
+                                                    uint16_t uid)
 {
   if (_modbus_link == nullptr) {
     return false;
@@ -114,8 +119,7 @@ bool ModbusDEVICE_struct::readModuleHoldingRegister(uint8_t              busAddr
   Modbus_RequestQueueElement *request = _modbus_link->newTransaction(this);
 
   request->_messageType  = ModbusTransactionType::READ_HOLDING_REGISTERS;
-  request->_userData     = valuePtr;
-  request->_userState    = statePtr;
+  request->_userId       = uid;
   request->_sendframe[0] = busAddress;
   request->_sendframe[1] = MODBUS_READ_HOLDING_REGISTERS;
   request->_sendframe[2] = highByte(registerAddress);
@@ -127,20 +131,22 @@ bool ModbusDEVICE_struct::readModuleHoldingRegister(uint8_t              busAddr
   request->_sendframe[7]     = highByte(crc); // CRC high byte
   request->_sendframe_length = 8;             // Size with CRC
   request->_rcvframe_length  = 7;             // Expect 8 bytes in response
-  ////dump_buffer(request->_sendframe, request->_sendframe_length);
   uint16_t queueID = _modbus_link->queueTransaction(request);
-  *statePtr = ModbusResultState::Busy;
-
-  // Don't touch *valueptr here, it might contain a previous valid result still to be handled.
   return true;
+}
+
+
+bool ModbusDEVICE_struct::readHoldingRegisterResult(uint16_t uid, uint16_t *valuePtr) 
+{ 
+  return false; 
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Start writing a Modbus single register.
-// The function returns true if the request was queued. 
+// The function returns true if the request was queued.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-bool ModbusDEVICE_struct::writeSingleRegister(uint16_t             address,
-                                              uint16_t             value,
+bool ModbusDEVICE_struct::writeSingleRegister(uint16_t           address,
+                                              uint16_t           value,
                                               ModbusResultState *statePtr)
 {
   if (_modbus_link == nullptr) {
@@ -197,18 +203,22 @@ void ModbusDEVICE_struct::linkCallback(Modbus_RequestQueueElement *req)
     # endif // MODBUS_DEBUG
   }
   else {
-    switch (req->_messageType) {
+    switch (req->_messageType)
+    {
       case ModbusTransactionType::READ_HOLDING_REGISTERS:
       {
         if ((req->_rcvframe[0] == _modbus_address) && (req->_rcvframe[1] == MODBUS_READ_HOLDING_REGISTERS) && (req->_rcvframe[2] == 2)) {
           uint16_t crc = CalculateCRC(req->_rcvframe, 5);
 
           if ((req->_rcvframe[5] == lowByte(crc)) && (req->_rcvframe[6] == highByte(crc))) {
+            int val = (req->_rcvframe[3] << 8) | req->_rcvframe[4]; // Combine high and low byte
+
             // Valid response
             if (req->_userData != nullptr) {
-              *(static_cast<uint16_t *>(req->_userData)) = (req->_rcvframe[3] << 8) | req->_rcvframe[4]; // Combine high and low byte
+              *(static_cast<uint16_t *>(req->_userData)) = val;
               resultState                                = ModbusResultState::Success;
             }
+            sendEvent(req, val, 0, 0, 0);
           }
         }
         break;
@@ -246,13 +256,35 @@ void ModbusDEVICE_struct::linkCallback(Modbus_RequestQueueElement *req)
     }
   }
 
-  *(static_cast<ModbusResultState *>(req->_userState)) = resultState;
+  if (req->_userState != nullptr) {
+    *(static_cast<ModbusResultState *>(req->_userState)) = resultState;
+  }
   _modbus_link->freeTransaction(req);
   # ifdef MODBUS_DEBUG
   log += F(", Result = ");
   log += (resultState == ModbusResultState::Success) ? F("SUCCESS") : F("ERROR");
   addLogMove(LOG_LEVEL_INFO, log);
   # endif // MODBUS_DEBUG
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Send a PLUGIN_TASKTIMER_IN event to the task associated with this device.
+// This is used by the Modbus link to notify the device of responses received for queued requests.
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void ModbusDEVICE_struct::sendEvent(Modbus_RequestQueueElement *req, int par1, int par2, int par3, int par4)
+{
+  struct EventStruct TempEvent;
+
+  TempEvent.Par1      = par1;
+  TempEvent.Par2      = par2;
+  TempEvent.Par3      = par3;
+  TempEvent.Par4      = par4;
+  TempEvent.TaskIndex = _taskIndex;   // Send to the task associated with this device
+  TempEvent.idx       = req->_userId; // Identifier as specified by the client in the request
+  TempEvent.Source    = EventValueSource::Enum::VALUE_SOURCE_SYSTEM;
+  String dummy;
+
+  PluginCall(PLUGIN_TASKTIMER_IN, &TempEvent, dummy);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -33,6 +33,7 @@ typedef struct ModbusMGR_struct  {
 
   void show_modbus_interfaces();
   bool save_modbus_interfaces(String& error);
+  bool isInitialized() const { return _initialized; }
 
 private:
 
@@ -63,12 +64,13 @@ private:
   ModbusLinkInfo_struct   *_modbus_links[MAX_MODBUS_LINKS]     = { nullptr }; // Pointer to the Modbus link object
   ModbusDeviceInfo_struct *_modbus_devices[MAX_MODBUS_DEVICES] = { nullptr }; // Array of connected Modbus devices
   bool                     _initialized                        = false;       // Flag indicating if the manager is initialized
+  bool                     _testing                            = false;
 
   bool setLink(const int               linkIndex,
                const ESPEasySerialPort port,
                const int8_t            serial_rx,
                const int8_t            serial_tx,
-               int16_t                 baudrate,
+               uint16_t                 baudrate,
                int8_t                  dere_pin,
                bool                    collision_detect);
 
