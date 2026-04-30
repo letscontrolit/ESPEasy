@@ -411,7 +411,31 @@ void addFormIPBox(const String   & label,
                   const IPAddress& ip)
 {
   const bool empty_IP = !IPAddressSet(ip);
+
   addFormTextBox(label, id, (empty_IP) ? EMPTY_STRING : formatIP(ip));
+
+  /*
+     // TODO TD-er: Option to validate IP in HTML
+     //
+     // IP input HTML validation from:
+     // Source - https://stackoverflow.com/a/54796814
+     // Posted by ptay, modified by community. See post 'Timeline' for change history
+     // Retrieved 2026-04-30, License - CC BY-SA 4.0
+     //
+     // <input type="text" minlength="7" maxlength="15" size="15" pattern="^(?>(\d|[1-9]\d{2}|1\d\d|2[0-4]\d|25[0-5])\.){3}(?1)$">
+
+     const String value = (empty_IP) ? EMPTY_STRING : formatIP(ip);
+     addRowLabel_tr_id(label, id);
+
+     // Validation only for IPv4 address
+     addHtml(strformat(
+              F("<input class='wide' type='text' minlength='7' maxlength='15' size='15'
+                 pattern='^(?>(\\d|[1-9]\\d{2}|1\\d\\d|2[0-4]\\d|25[0-5])\\.){3}(?1)$' name='%s' id='%s' value='%s'>"),
+              id.c_str(),
+              id.c_str(),
+              value.c_str()
+              ));
+   */
 }
 
 

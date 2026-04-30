@@ -553,6 +553,12 @@ bool NW003_data_struct_ETH_RMII::ETHConnectRelaxed() {
 
   if (!(data && iface)) { return false; }
 
+  {
+    IPAddress ip, gateway, sn, dns;
+    getStaticIPAddresses(ip, gateway, sn, dns);
+    data->setStaticIP(ip, gateway, sn, dns);
+  }
+
   if (data->started() && data->connected()) {
     if (EthLinkUp()) { return true; }
     data->mark_connect_failed();
@@ -595,6 +601,12 @@ bool NW003_data_struct_ETH_RMII::ETHConnectRelaxed() {
 
     IPAddress ip, gateway, sn, dns;
     if (getStaticIPAddresses(ip, gateway, sn, dns)) {
+      addLog(LOG_LEVEL_INFO, strformat(
+        F("ETH: static IP: %s, GW: %s, SN: %s, DNS:%s"),
+        ip.toString().c_str(),
+        gateway.toString().c_str(),
+        sn.toString().c_str(),
+        dns.toString().c_str()));
       iface->config(ip, gateway, sn, dns);
     }
 

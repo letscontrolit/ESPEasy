@@ -126,7 +126,7 @@ void NWPluginData_static_runtime::clear(networkIndex_t networkIndex)
 
   _connectionFailures = 0;
 
-  // FIXME TD-er: Should also clear dns cache?
+  // FIXME TD-er: Should also clear dns cache and/or static IP?
 }
 
 void NWPluginData_static_runtime::processEvent_and_clear()
@@ -304,6 +304,15 @@ void NWPluginData_static_runtime::processEvents()
   }
 }
 
+void NWPluginData_static_runtime::setStaticIP(const IPAddress & ip, const IPAddress & gateway, const IPAddress & subnetmask, const IPAddress & dns)
+{
+  _useStaticIP = IPAddressSet(ip) && IPAddressSet(gateway) && IPAddressSet(subnetmask);
+  _ip = ip;
+  _gateway = gateway;
+  _sn = subnetmask;
+  _dns = dns;
+}
+
 String NWPluginData_static_runtime::statusToString() const
 {
   String log;
@@ -314,6 +323,7 @@ String NWPluginData_static_runtime::statusToString() const
 
   if (hasIP()) {
     log += F("IP ");
+    if (_useStaticIP) log += F("(static) ");
   }
 
   if (operational()) {

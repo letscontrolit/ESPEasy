@@ -39,6 +39,13 @@ struct ETH_stats_and_cache_t {
 
       //      _eth.enableIPv6(_stats_and_cache._enableIPv6);
     }
+    if (_stats_and_cache._useStaticIP) {
+      _eth.config(
+        _stats_and_cache._ip,
+        _stats_and_cache._gateway,
+        _stats_and_cache._sn,
+        _stats_and_cache._dns);
+    }
   }
 
   void mark_stop(esp_eth_handle_t handle)
