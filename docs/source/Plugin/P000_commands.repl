@@ -402,6 +402,7 @@
     LoopTimerSetAndRun
     
     LoopTimerSetAndRun_ms","
+    :green:`Rules`","
     Set a Loop-Timer using ``LoopTimerSet`` or ``LoopTimerSet_ms`` and immediately run the first iteration.
 
     If a ``<nr of loops>`` value > 0 is included in the command, that count is decremented by 1 for the first iteration, as expected.
