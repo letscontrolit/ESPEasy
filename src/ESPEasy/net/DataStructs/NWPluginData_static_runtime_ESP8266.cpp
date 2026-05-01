@@ -39,19 +39,6 @@ bool NWPluginData_static_runtime::hasIP() const
 
 void NWPluginData_static_runtime::mark_start()
 {
-  if (!_isAP) {
-    ESPEasy::net::wifi::setUseStaticIP(_useStaticIP);
-    if (_useStaticIP) {
-      WiFi.config(
-        _ip,
-        _gateway,
-        _sn,
-        _dns);
-    } else {
-      WiFi.config((uint32_t)0, (uint32_t)0, (uint32_t)0);
-    }
-  }
-
   _startStopStats.setOn();
   # ifndef BUILD_NO_DEBUG
   addLog(LOG_LEVEL_INFO, _isAP ? F("AP: Started") : F("STA: Started"));
@@ -85,6 +72,20 @@ void NWPluginData_static_runtime::mark_lost_IP()
 
 void NWPluginData_static_runtime::mark_begin_establish_connection()
 {
+  if (!_isAP) {
+    ESPEasy::net::wifi::setUseStaticIP(_useStaticIP);
+    if (_useStaticIP) {
+      WiFi.config(
+        _ip,
+        _gateway,
+        _sn,
+        _dns);
+      mark_got_IP();
+    } else {
+      WiFi.config((uint32_t)0, (uint32_t)0, (uint32_t)0);
+    }
+  }
+
   _establishConnectStats.forceSet(true);
   _connectedStats.setOff();
   _operationalStats.setOff();
