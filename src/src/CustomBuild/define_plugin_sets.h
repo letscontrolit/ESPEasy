@@ -4552,6 +4552,14 @@ To create/register a plugin, you have to :
 #endif
 #endif
 
+#ifndef FEATURE_BUILD_DESCRIPTION
+#if (defined(ESP32) || defined(PLUGIN_BUILD_CUSTOM)) && !defined(PLUGIN_BUILD_MINIMAL_OTA)
+# define FEATURE_BUILD_DESCRIPTION 1
+#else
+# define FEATURE_BUILD_DESCRIPTION 0  // Won't fit in most ESP8266 builds, but very useful in Custom builds
+#endif // if (defined(ESP32) || defined(PLUGIN_BUILD_CUSTOM)) && !defined(PLUGIN_BUILD_MINIMAL_OTA)
+#endif // ifndef FEATURE_BUILD_DESCRIPTION
+
 
 #if !FEATURE_SPI && !FEATURE_I2C && !FEATURE_MODBUS && !FEATURE_CAN && !FEATURE_WRMBUS && !FEATURE_WIMBUS
 #ifdef WEBSERVER_INTERFACES

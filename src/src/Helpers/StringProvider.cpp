@@ -26,6 +26,9 @@
 #include "../Globals/Settings.h"
 
 #include "../Helpers/Convert.h"
+#if FEATURE_BUILD_DESCRIPTION
+#include "../Helpers/ESPEasy_Build_Description.h"
+#endif // if FEATURE_BUILD_DESCRIPTION
 #include "../Helpers/ESPEasy_Storage.h"
 # if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 #include "../Helpers/ESPEasy_UnitOfMeasure.h"
@@ -853,6 +856,12 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
     {
       return KeyValueStruct(F("Build Platform"), get_build_platform());
     }
+    #if FEATURE_BUILD_DESCRIPTION
+    case LabelType::BUILD_DESCRIPTION:
+    {
+      return KeyValueStruct(F("Build Description"), (const String)CreateBuildDescription(':'));
+    }
+    #endif // if FEATURE_BUILD_DESCRIPTION
     case LabelType::GIT_HEAD:
     {
       return KeyValueStruct(F("Git HEAD"), get_git_head());
