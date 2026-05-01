@@ -97,6 +97,16 @@ bool NW001_data_struct_WiFi_STA::init(EventStruct *event)
       //    ESPEasy::net::wifi::setWifiMode(WIFI_OFF);
    */
 
+  {
+    auto runtime_data = getNWPluginData_static_runtime();
+    if (runtime_data) {
+      IPAddress ip, gateway, sn, dns;
+      getStaticIPAddresses(ip, gateway, sn, dns);
+      runtime_data->setStaticIP(ip, gateway, sn, dns);
+    }
+  }
+  
+
   ESPEasy::net::wifi::initWiFi();
   return true;
 }

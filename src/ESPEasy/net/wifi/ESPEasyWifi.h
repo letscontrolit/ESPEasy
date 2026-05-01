@@ -113,7 +113,6 @@ bool    setAPinternal(bool enable); // FIXME TD-er: Move to ESPEasyWifi_abstract
 void    setUseStaticIP(bool enabled);
 bool    WiFiUseStaticIP();
 bool    wifiAPmodeActivelyUsed();
-void    setupStaticIPconfig();
 String  formatScanResult(int           i,
                          const String& separator);
 String  formatScanResult(int           i,

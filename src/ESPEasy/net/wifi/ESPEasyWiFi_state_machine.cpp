@@ -541,7 +541,6 @@ bool ESPEasyWiFi_t::connectSTA()
   //  WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE);
 # endif // if defined(ESP32)
   doSetConnectionSpeed();
-  setupStaticIPconfig();
 
   // Start the process of connecting or starting AP
   if (!WiFi_AP_Candidates.getNext(true))

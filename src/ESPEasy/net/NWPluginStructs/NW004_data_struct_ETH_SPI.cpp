@@ -293,6 +293,15 @@ bool NW004_data_struct_ETH_SPI::webform_getPort(KeyValueWriter *writer) { return
 bool NW004_data_struct_ETH_SPI::init(EventStruct *event)
 {
   _load();
+    {
+    auto runtime_data = getNWPluginData_static_runtime();
+    if (runtime_data) {
+      IPAddress ip, gateway, sn, dns;
+      getStaticIPAddresses(ip, gateway, sn, dns);
+      runtime_data->setStaticIP(ip, gateway, sn, dns);
+    }
+  }
+
   ETHConnectRelaxed();
 
   return true;
@@ -440,12 +449,6 @@ bool NW004_data_struct_ETH_SPI::ETHConnectRelaxed() {
   auto iface = ESPEasy::net::eth::ETH_NWPluginData_static_runtime::getInterface(_networkIndex);
 
   if (!(data && iface)) { return false; }
-
-  {
-    IPAddress ip, gateway, sn, dns;
-    getStaticIPAddresses(ip, gateway, sn, dns);
-    data->setStaticIP(ip, gateway, sn, dns);
-  }
 
   if (data->started() && data->connected()) {
     if (EthLinkUp()) { return true; }

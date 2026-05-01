@@ -582,7 +582,9 @@ void fileSystemCheck()
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("fileSystemCheck"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
+# ifndef BUILD_NO_DEBUG
   addLog(LOG_LEVEL_INFO, F("FS   : Mounting..."));
+#endif
 #if defined(ESP32) && defined(USE_LITTLEFS)
 
   if ((getPartionCount(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_DATA_SPIFFS) != 0)
@@ -593,7 +595,7 @@ void fileSystemCheck()
 #endif // if defined(ESP32) && defined(USE_LITTLEFS)
   {
     clearAllCaches();
-
+# ifndef BUILD_NO_DEBUG
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       addLogMove(LOG_LEVEL_INFO, strformat(
                    F("FS   : "
@@ -605,6 +607,7 @@ void fileSystemCheck()
                      " mount successful, used %u bytes of %u"),
                    SpiffsUsedBytes(), SpiffsTotalBytes()));
     }
+# endif
 
     // Run garbage collection before any file is open.
     uint8_t retries = 3;
@@ -711,7 +714,7 @@ bool Erase_WiFi_Calibration() {
   ESPEasy::net::wifi::setWifiMode(WIFI_OFF);
   if (!ESP.eraseConfig())
     return false;
-  #ifndef LIMIT_BUILD_SIZE
+  # ifndef BUILD_NO_DEBUG
   addLog(LOG_LEVEL_INFO, F("WiFi : Erased WiFi calibration data"));
   #endif
   #endif
@@ -1064,8 +1067,6 @@ String LoadSettings()
   SecuritySettings_deviceSpecific.load();
 #endif
 
-
-  //  setupStaticIPconfig();
   // FIXME TD-er: Must check if static/dynamic IP was changed and trigger a reconnect? Or is a reboot better when changing those settings?
   afterloadSettings();
   SecuritySettings.validate();
@@ -1446,7 +1447,7 @@ String SaveTaskSettings(taskIndex_t TaskIndex)
                      reinterpret_cast<const uint8_t *>(&ExtraTaskSettings),
                      sizeof(struct ExtraTaskSettingsStruct));
 
-#ifndef LIMIT_BUILD_SIZE
+#ifndef BUILD_NO_DEBUG
     if (err.isEmpty()) {
       err = checkTaskSettings(TaskIndex);
     }
@@ -1455,7 +1456,7 @@ String SaveTaskSettings(taskIndex_t TaskIndex)
     // FIXME TD-er: Is this still needed as it is also cleared on PLUGIN_INIT and PLUGIN_EXIT?
     UserVar.clear_computed(ExtraTaskSettings.TaskIndex);
   }
-#ifndef LIMIT_BUILD_SIZE
+#ifndef BUILD_NO_DEBUG
   else {
     addLog(LOG_LEVEL_INFO, F("Skip saving task settings, not changed"));
   }

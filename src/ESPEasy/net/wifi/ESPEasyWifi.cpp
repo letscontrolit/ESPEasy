@@ -507,31 +507,6 @@ bool wifiAPmodeActivelyUsed()
   // reconnect?
 }
 
-void setupStaticIPconfig() {
-  setUseStaticIP(WiFiUseStaticIP());
-
-  if (!WiFiUseStaticIP()) { return; }
-  const IPAddress ip(Settings.IP);
-  const IPAddress gw(Settings.Gateway);
-  const IPAddress subnet(Settings.Subnet);
-  const IPAddress dns(Settings.DNS);
-
-  //  WiFiEventData.dns0_cache = dns;
-
-  WiFi.config(ip, gw, subnet, dns);
-# ifndef BUILD_NO_DEBUG
-
-  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    addLogMove(LOG_LEVEL_INFO, strformat(
-                 F("IP   : Static IP : %s GW: %s SN: %s DNS: %s"),
-                 formatIP(ip).c_str(),
-                 formatIP(gw).c_str(),
-                 formatIP(subnet).c_str(),
-                 getValue(LabelType::DNS).c_str()));
-  }
-# endif // ifndef BUILD_NO_DEBUG
-}
-
 // ********************************************************************************
 // Formatting WiFi related strings
 // ********************************************************************************

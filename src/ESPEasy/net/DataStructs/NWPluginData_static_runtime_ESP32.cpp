@@ -96,6 +96,16 @@ void NWPluginData_static_runtime::mark_start()
 
   if (!_netif) { return; }
 
+  if (_useStaticIP) {
+    _netif->config(
+      _ip,
+      _gateway,
+      _sn,
+      _dns);
+  } else {
+    _netif->config((uint32_t)0, (uint32_t)0, (uint32_t)0);
+  }
+
   const String hostname = strformat(
     F("%s-%s"),
     NetworkCreateRFCCompliantHostname().c_str(), 
