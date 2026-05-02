@@ -54,27 +54,41 @@ public:
                            uint16_t          *valueptr,
                            ModbusResultState *stateptr);
 
+  // Start reading a Modbus holding register with reslt returned through event PLUGIN_TASKTIMER_IN
+  // The function returns true if the request was queued.
+  // Use uid to identify the request. This value will be passed back in the PLUGIN_TASKTIMER_IN event
   bool readHoldingRegister(uint16_t address,
                            uint16_t uid);
 
+  // Fetch the result of a readHoldingRegister request
+  // The function returns true if the result is available
+  // Use uid to identify the request.
   bool readHoldingRegisterResult(uint16_t  uid,
                                  uint16_t *valuePtr);
 
+  // Start writing a single Modbus register.
+  // The function returns true if the request was queued.
   bool writeSingleRegister(uint16_t           address,
                            uint16_t           value,
                            ModbusResultState *stateptr);
 
+  // Start reading a Modbus holding register from another module. The result will be available later.
+  // The function returns true if the request was queued.
+  // Note: This function accesses registers from other devices on the same Modbus bus. This is beyond the intended scope of the Modbus
+  // device class.
   bool readModuleHoldingRegister(uint8_t  busAddress,
                                  uint16_t registerAddress,
                                  uint16_t uid);
 
+  void processCommand(void);
+
 private:
 
   uint8_t            _modbus_address = MODBUS_BROADCAST_ADDRESS;
-  ModbusLINK_struct *_modbus_link = nullptr; // Pointer to the Modbus link object
-  uint8_t            _deviceID    = 0;       // Identifier used by the Modbus manager to identify this device
-  uint16_t           _timeout     = 200;     // Timeout value in milliseconds for Modbus requests
-  taskIndex_t        _taskIndex   = 0;       // Task index for sending events to the task associated with this device
+  ModbusLINK_struct *_modbus_link    = nullptr; // Pointer to the Modbus link object
+  uint8_t            _deviceID       = 0;       // Identifier used by the Modbus manager to identify this device
+  uint16_t           _timeout        = 200;     // Timeout value in milliseconds for Modbus requests
+  taskIndex_t        _taskIndex      = 0;       // Task index for sending events to the task associated with this device
 
   void sendEvent(Modbus_RequestQueueElement *req,
                  int                         par1,
@@ -82,8 +96,13 @@ private:
                  int                         par3,
                  int                         par4);
 
+  void createReadFrame(Modbus_RequestQueueElement *request,
+                       uint8_t                     busAddress,
+                       uint16_t                    registerAddress);
+
   static uint16_t CalculateCRC(uint8_t *buf,
                                int      len);
+
   static void     dump_buffer(const uint8_t *buffer,
                               size_t         length);
 

@@ -1,18 +1,19 @@
 #include "../PluginStructs/P183_data_struct.h"
-#include "P183_data_struct.h"
+
 
 #ifdef USES_P183
-
-
-# define ACTION_DUMP_RANGE 0xFFFF
-# define ACTION_SCAN_BUS   0xFFFE
 
 // #######################################################################################################
 // ############## Data structure for plugin 183: Modbus RTU generic sensor interface       ###############
 // #######################################################################################################
+# define P183_DEBUG
 # ifdef BUILD_NO_DEBUG
 #  undef P183_DEBUG // Debugging switched off
 # endif // ifdef BUILD_NO_DEBUG
+
+// Actions for PLUGIN_TASKTIMER_IN event to distinguish between regular read results and scan sequences
+# define ACTION_DUMP_RANGE 0xFFFF
+# define ACTION_SCAN_BUS   0xFFFE
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Constructor of the plugin data structure. Initializes the data members to default values.
@@ -42,12 +43,12 @@ bool P183_data_struct::plugin_init(uint8_t slaveAddress, int linkId)
   _modbusDevice = new (std::nothrow) ModbusDEVICE_struct();
 
   if (_modbusDevice == nullptr) {
+    # ifdef P183_DEBUG
     addLogMove(LOG_LEVEL_ERROR, F("P183: Unable to allocate Modbus device object"));
+    # endif // P183_DEBUG
     return false;
   }
 
-  // Initialize our own Modbus_device with the provided serial link parameters
-  // Note that the link configuration is expected to be the same for all plugins reusing the same serial port
   if (!_modbusDevice->init(slaveAddress, linkId, _taskIndex)) {
     return false;
   }
@@ -74,6 +75,8 @@ bool P183_data_struct::plugin_read(struct EventStruct *event) {
 
   for (int outputIndex = 0; outputIndex < P183_NR_OUTPUTS; ++outputIndex)
   {
+    // Queue a read request for each active output value. The result will be processed in the task timer event.
+    // Use the output index as the event index to identify which output value the result belongs to.
     _modbusDevice->readHoldingRegister(P183_ADDRESS(outputIndex), outputIndex);
   }
   return true;
@@ -82,16 +85,21 @@ bool P183_data_struct::plugin_read(struct EventStruct *event) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Handles the PLUGIN_TASKTIMER_IN event.
 // This is used to process the results of Modbus read requests and to trigger the next step in a Modbus scan sequence.
+// event->idx is used to identify which transaction the result belongs to.
+// event->Par1 is used to indicate whether the Modbus read was successful (true) or not (false).
+// event->Par2 is used to pass the value read from Modbus when the read was successful.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool P183_data_struct::plugin_task_timer(EventStruct *event)
 {
+  # ifdef P183_DEBUG
   addLogMove(LOG_LEVEL_INFO,
              strformat(F("P183: TaskTimer called IDX=%d, par1=%d, par2=%d, par3=%d, par4=%d"),
                        event->idx, event->Par1, event->Par2, event->Par3, event->Par4));
+  # endif // P183_DEBUG
 
   if (event->idx == ACTION_DUMP_RANGE) {
-    if (true) {
-      addLogMove(LOG_LEVEL_INFO, strformat(F("** Address %u (0x%02X) = %u (0x%02X)"), _lastAddress, _lastAddress, event->Par1, event->Par1));
+    if (event->Par1) {
+      addLogMove(LOG_LEVEL_INFO, strformat(F("** Address %u (0x%02X) = %u (0x%02X)"), _lastAddress, _lastAddress, event->Par2, event->Par2));
     } else {
       addLogMove(LOG_LEVEL_INFO, strformat(F("** Address %u (0x%02X) no response"), _lastAddress, _lastAddress));
     }
@@ -100,7 +108,7 @@ bool P183_data_struct::plugin_task_timer(EventStruct *event)
     return true;
   }
   else if (event->idx == ACTION_SCAN_BUS) {
-    if (true) {
+    if (event->Par1) {
       addLogMove(LOG_LEVEL_INFO, strformat(F("** Device found at address %u (0x%02X)"), _lastAddress, _lastAddress));
     }
     _lastAddress++;
@@ -111,10 +119,16 @@ bool P183_data_struct::plugin_task_timer(EventStruct *event)
     int outputIndex = event->idx;
 
     if ((outputIndex < 0) || (outputIndex >= P183_NR_OUTPUTS)) {
+      # ifdef P183_DEBUG
       addLogMove(LOG_LEVEL_ERROR, F("P183: Invalid output index in task timer event"));
+      # endif // P183_DEBUG
       return false;
     }
-    UserVar.setFloat(event->TaskIndex, outputIndex, event->Par1); // Update the user variable with the value read from Modbus
+
+    if (event->Par1) {
+      UserVar.setFloat(event->TaskIndex, outputIndex, event->Par2); // Update the user variable with the value read from Modbus
+      return true;
+    }
     return false;
   }
 }
@@ -210,7 +224,7 @@ uint16_t P183_data_struct::readRegisterWait(uint16_t address) {
   while (state == ModbusResultState::Busy) {
     delay(50);
 
-    ////    _modbusDevice->processCommand(); // Trigger Modbus facilities to process the Modbus queue
+    _modbusDevice->processCommand(); // Trigger Modbus facilities to process the Modbus queue
   }
 
   return value;

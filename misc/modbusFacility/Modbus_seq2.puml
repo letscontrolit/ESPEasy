@@ -3,21 +3,20 @@ actor       System       as system
 participant Plugin as plugin
 participant Plugin_struct as plugin_struct
 participant Modbus_device as modbus_device 
-participant Modbus_mgr    as modbus_mgr  
+participant Modbus_mgr    as modbus_mgr  <<singleton>>
 participant Modbus_link   as modbus_link
 queue       Queue       as queue
 
+system -> modbus_mgr ++ : init
+create modbus_link
+modbus_mgr -> modbus_link : new()
+system <-- modbus_mgr --
 system -> plugin ++ : init
 create plugin_struct
 plugin -> plugin_struct ++ : new()
 create modbus_device
 plugin_struct -> modbus_device ++ : new()
 modbus_device -> modbus_mgr ++ : connect()
-alt link not exists
-    create modbus_link
-modbus_mgr -> modbus_link  : new()
-end
-modbus_mgr -> modbus_link : init()
 modbus_device <-- modbus_mgr -- : link
 plugin_struct <-- modbus_device --
 plugin <-- plugin_struct --
@@ -44,7 +43,6 @@ alt response available
   plugin -> plugin_struct ++ : plugin_task_timer()
   plugin <-- plugin_struct --
   modbus_device <-- plugin --
-  modbus_device -> modbus_link : freeTransaction()
   modbus_link <-- modbus_device --
 end
 alt no transaction

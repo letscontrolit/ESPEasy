@@ -45,7 +45,7 @@ struct Modbus_RequestQueueElement {
   ModbusTransactionType       _messageType = ModbusTransactionType::NONE;              // Type of Modbus message
   void                       *_userData    = nullptr;                                  // Pointer to user (device) data
   void                       *_userState   = nullptr;                                  // Pointer to user (device) defined state
-  uint16_t                    _userId      = 0;                                        // Cleint defined identifier for this transaction,
+  uint16_t                    _userId      = 0;                                        // Client defined identifier for this transaction,
                                                                                        // can be used to match responses to requests
   uint16_t                    _id          = 0;                                        // ID of the request
   struct ModbusDEVICE_struct *_device      = nullptr;                                  // Pointer to the Modbus device requesting the

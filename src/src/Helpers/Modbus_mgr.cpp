@@ -10,7 +10,7 @@
 #if FEATURE_MODBUS_FAC
 
 # include <ESPeasySerial.h>
-# include "Modbus_mgr.h"
+# include "../Helpers/Modbus_mgr.h"
 
 ////# define MODBUS_DEBUG
 # ifdef BUILD_NO_DEBUG

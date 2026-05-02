@@ -10,8 +10,8 @@
 
 #if FEATURE_MODBUS_FAC
 
-# include "Modbus_device.h"
-# include "Modbus_link.h"
+# include "../Helpers/Modbus_device.h"
+# include "../Helpers/Modbus_link.h"
 
 ////# define MODBUS_DEBUG
 # ifdef BUILD_NO_DEBUG
@@ -98,16 +98,6 @@ bool ModbusLINK_struct::init(const ESPEasySerialPort port,
                 rs485Mode ? F("enabled") : F("disabled")
                 );
     addLogMove(LOG_LEVEL_INFO, log);
-
-    log =      strformat(F("+++> Modbus: Link %s, Init serial, RX pin %d, TX pin %d, baudrate %d, TxEnabled %s, RxEnabled %s"),
-                         ESPEasySerialPort_toString(port),
-                         _easySerial->getRxPin(),
-                         _easySerial->getTxPin(),
-                         _easySerial->getBaudRate(),
-                         _easySerial->isTxEnabled() ? F("enabled") : F("disabled"),
-                         _easySerial->isRxEnabled() ? F("enabled") : F("disabled")
-                         );
-    addLogMove(LOG_LEVEL_INFO, log);
   }
   # endif // MODBUS_DEBUG
   _initialized = true;
@@ -188,7 +178,7 @@ uint16_t ModbusLINK_struct::queueTransaction(Modbus_RequestQueueElement *transac
 void ModbusLINK_struct::processCommand()
 {
   if (!isInitialized() || (_requestQueue.empty())) {
-    return; // Serial port not initialized or queue is empty, nothing to process
+    return;                          // Serial port not initialized or queue is empty, nothing to process
   }
 
   auto it   = _requestQueue.begin(); // Iterator for the request queue

@@ -11,7 +11,6 @@
 
 # include "../Helpers/Modbus_device.h"
 # include "../Helpers/Modbus_mgr.h"
-# include "Modbus_device.h"
 
 ////# define MODBUS_DEBUG
 # ifdef BUILD_NO_DEBUG
@@ -92,12 +91,27 @@ uint16_t ModbusDEVICE_struct::getModbusTimeout() const
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Start reading a Modubus holding register. The result will be available later.
-// The function returns true if the request was queued.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool ModbusDEVICE_struct::readHoldingRegister(uint16_t           address,
                                               uint16_t          *valuePtr,
-                                              ModbusResultState *statePtr) { return false; }
+                                              ModbusResultState *statePtr)
+{
+  if (_modbus_link == nullptr) {
+    return false;
+  }
+  Modbus_RequestQueueElement *request = _modbus_link->newTransaction(this);
+  request->_userData    = valuePtr;
+  request->_userState   = statePtr;
+  request->_messageType = ModbusTransactionType::READ_HOLDING_REGISTERS;
+  createReadFrame(request, _modbus_address, address);
+  uint16_t queueID = _modbus_link->queueTransaction(request);
+  return true;
+}
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Start reading a Modubus holding register. The result will be available later through an task event.
+// The function returns true if the request was queued.
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool ModbusDEVICE_struct::readHoldingRegister(uint16_t address, uint16_t uid)
 {
   return readModuleHoldingRegister(_modbus_address, address, uid);
@@ -117,9 +131,23 @@ bool ModbusDEVICE_struct::readModuleHoldingRegister(uint8_t  busAddress,
     return false;
   }
   Modbus_RequestQueueElement *request = _modbus_link->newTransaction(this);
+  request->_messageType = ModbusTransactionType::READ_HOLDING_REGISTERS;
+  request->_userData    = nullptr;
+  request->_userState   = nullptr;
+  request->_userId      = uid;
+  createReadFrame(request, busAddress, registerAddress);
+  uint16_t queueID = _modbus_link->queueTransaction(request);
+  return true;
+}
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Construct a Modbus read holding registers message
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void ModbusDEVICE_struct::createReadFrame(Modbus_RequestQueueElement *request,
+                                          uint8_t                     busAddress,
+                                          uint16_t                    registerAddress)
+{
   request->_messageType  = ModbusTransactionType::READ_HOLDING_REGISTERS;
-  request->_userId       = uid;
   request->_sendframe[0] = busAddress;
   request->_sendframe[1] = MODBUS_READ_HOLDING_REGISTERS;
   request->_sendframe[2] = highByte(registerAddress);
@@ -131,15 +159,9 @@ bool ModbusDEVICE_struct::readModuleHoldingRegister(uint8_t  busAddress,
   request->_sendframe[7]     = highByte(crc); // CRC high byte
   request->_sendframe_length = 8;             // Size with CRC
   request->_rcvframe_length  = 7;             // Expect 8 bytes in response
-  uint16_t queueID = _modbus_link->queueTransaction(request);
-  return true;
 }
 
-
-bool ModbusDEVICE_struct::readHoldingRegisterResult(uint16_t uid, uint16_t *valuePtr) 
-{ 
-  return false; 
-}
+bool ModbusDEVICE_struct::readHoldingRegisterResult(uint16_t uid, uint16_t *valuePtr) { return false; }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Start writing a Modbus single register.
@@ -175,6 +197,13 @@ bool ModbusDEVICE_struct::writeSingleRegister(uint16_t           address,
   return true;
 }
 
+void ModbusDEVICE_struct::processCommand(void)
+{
+  if (_modbus_link != nullptr) {
+    _modbus_link->processCommand();
+  } 
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Callback function called by the Modbus link when a response is received for a queued request.
 // Note that the response might be an invalid response or a timeout
@@ -198,6 +227,7 @@ void ModbusDEVICE_struct::linkCallback(Modbus_RequestQueueElement *req)
   # endif // MODBUS_DEBUG
 
   if (req->_state == ModbusQueueState::ERROR_OCCURRED) {
+    sendEvent(req, false, 0, 0, 0);
     # ifdef MODBUS_DEBUG
     log += F(" Link error occurred");
     # endif // MODBUS_DEBUG
@@ -218,7 +248,10 @@ void ModbusDEVICE_struct::linkCallback(Modbus_RequestQueueElement *req)
               *(static_cast<uint16_t *>(req->_userData)) = val;
               resultState                                = ModbusResultState::Success;
             }
-            sendEvent(req, val, 0, 0, 0);
+            else
+            {
+              sendEvent(req, true, val, 0, 0);
+            }
           }
         }
         break;
@@ -226,7 +259,7 @@ void ModbusDEVICE_struct::linkCallback(Modbus_RequestQueueElement *req)
 
       case ModbusTransactionType::WRITE_SINGLE_REGISTER:
       {
-        if ((req->_rcvframe[0] == _modbus_address) && (req->_rcvframe[1] == MODBUS_READ_HOLDING_REGISTERS) && (req->_rcvframe[2] == 2)) {
+        if ((req->_rcvframe[0] == _modbus_address) && (req->_rcvframe[1] == MODBUS_WRITE_SINGLE_REGISTER) && (req->_rcvframe[2] == 2)) {
           uint16_t crc = CalculateCRC(req->_rcvframe, 5);
 
           if ((req->_rcvframe[5] == lowByte(crc)) && (req->_rcvframe[6] == highByte(crc))) {
@@ -259,7 +292,7 @@ void ModbusDEVICE_struct::linkCallback(Modbus_RequestQueueElement *req)
   if (req->_userState != nullptr) {
     *(static_cast<ModbusResultState *>(req->_userState)) = resultState;
   }
-  _modbus_link->freeTransaction(req);
+  _modbus_link->freeTransaction(req); // Free the transaction to prevent memory leaks.
   # ifdef MODBUS_DEBUG
   log += F(", Result = ");
   log += (resultState == ModbusResultState::Success) ? F("SUCCESS") : F("ERROR");
@@ -329,4 +362,4 @@ void ModbusDEVICE_struct::dump_buffer(const uint8_t *buffer, size_t length) {
   # endif // MODBUS_DEBUG
 }
 
-#endif // if FEATURE_MODBUS
+#endif // if FEATURE_MODBUS_FAC
