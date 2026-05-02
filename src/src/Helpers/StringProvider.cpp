@@ -1044,10 +1044,19 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
         uint32_t maxSketchSize;
         bool     use2step;
         OTA_possible(maxSketchSize, use2step);
-        str += strformat(
-          F("%d [kB] (%d kB not used)"),
-          (getSketchSize() >> 10),
-          (maxSketchSize - getSketchSize()) >> 10);
+        const uint32_t sketchsize_kB = getSketchSize() >> 10;
+        maxSketchSize >>= 10;
+
+        if (maxSketchSize >= sketchsize_kB)
+          str += strformat(
+            F("%d [kB] (%d kB not used)"),
+            sketchsize_kB,
+            (maxSketchSize - sketchsize_kB));
+        else
+          str += strformat(
+            F("%d [kB]"),
+            sketchsize_kB);
+
       } else {
         str = (getSketchSize() >> 10);
       }
