@@ -153,7 +153,7 @@ void Port_ESPEasySerial_HardwareSerial_t::begin(unsigned long baud)
     }
 
     if (_config.txBuffSize > 256) {
-      _config.txBuffSize = _serial->setRxBufferSize(_config.txBuffSize);
+      _config.txBuffSize = _serial->setTxBufferSize(_config.txBuffSize);
     }
 
     _serial->begin(baud, _config.config, _config.receivePin, _config.transmitPin, _config.inverse_logic);

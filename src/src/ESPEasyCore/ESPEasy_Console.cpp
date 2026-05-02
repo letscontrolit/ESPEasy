@@ -444,13 +444,3 @@ void EspEasy_Console_t::endPort()
 #endif // if USES_ESPEASY_CONSOLE_FALLBACK_PORT
   delay(10);
 }
-
-int EspEasy_Console_t::availableForWrite()
-{
-  auto serial = getPort();
-
-  if (serial != nullptr) {
-    return serial->availableForWrite();
-  }
-  return 0;
-}
