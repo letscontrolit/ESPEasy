@@ -79,8 +79,7 @@ void NWPluginData_static_runtime::mark_begin_establish_connection()
         _ip,
         _gateway,
         _sn,
-        _dns);
-      mark_got_IP();
+        _dns);      
     } else {
       WiFi.config((uint32_t)0, (uint32_t)0, (uint32_t)0);
     }
@@ -96,6 +95,10 @@ void NWPluginData_static_runtime::mark_connected()
 {
   _establishConnectStats.setOff();
   _connectedStats.setOn();
+  if (_useStaticIP) {
+    // Since we won't get an event stating we got an IP, we need to trigger it here
+    mark_got_IP();
+  }
 }
 
 void NWPluginData_static_runtime::log_connected()

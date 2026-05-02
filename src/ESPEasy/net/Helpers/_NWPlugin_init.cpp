@@ -2130,20 +2130,24 @@ bool         do_NWPluginCall(networkDriverIndex_t networkDriverIndex, NWPlugin::
         addLog(LOG_LEVEL_ERROR, strformat(F("Network %d was already initialized"), event->NetworkIndex + 1));
         return false;
       }
-      bitSet(networkIndex_initialized, event->NetworkIndex);
     } else if (Function == NWPlugin::Function::NWPLUGIN_EXIT) {
       if (!bitRead(networkIndex_initialized, event->NetworkIndex)) {
         // FIXME TD-er: What to do here? Was not (yet) initialized
         //        addLog(LOG_LEVEL_ERROR, strformat(F("Network %d was not (yet) initialized"), event->NetworkIndex + 1));
         return false;
       }
-      bitClear(networkIndex_initialized, event->NetworkIndex);
     }
 
 
     START_TIMER;
     NWPlugin_ptr_t nwplugin_call = (NWPlugin_ptr_t)pgm_read_ptr(NWPlugin_ptr + networkDriverIndex.value);
     const bool     res           = nwplugin_call(Function, event, string);
+    if (res && Function == NWPlugin::Function::NWPLUGIN_INIT) {
+      bitSet(networkIndex_initialized, event->NetworkIndex);
+    } else if (Function == NWPlugin::Function::NWPLUGIN_EXIT) {
+      bitClear(networkIndex_initialized, event->NetworkIndex);
+    }
+
     STOP_TIMER_NETWORK(networkDriverIndex, Function);
     return res;
   }

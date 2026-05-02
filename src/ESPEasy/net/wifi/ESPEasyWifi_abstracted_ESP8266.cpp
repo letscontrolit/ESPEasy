@@ -44,11 +44,13 @@ void doWiFiDisconnect() {
   if (doWifiIsSTA(WiFi.getMode())) {
     wifi_station_disconnect();
   }
+  /*
   station_config conf{};
   memset(&conf, 0, sizeof(conf));
   ETS_UART_INTR_DISABLE();
   wifi_station_set_config_current(&conf);
   ETS_UART_INTR_ENABLE();
+  */
 }
 
 bool doWifiIsAP(WiFiMode_t wifimode)  { return (wifimode == WIFI_AP) || (wifimode == WIFI_AP_STA); }
