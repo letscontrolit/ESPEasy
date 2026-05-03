@@ -34,6 +34,6 @@
     "require_upload_port": true,
     "speed": 1500000
   },
-  "url": "https://docs.espressif.com/projects/esp-dev-kits/en/latest/esp32p4/esp32-p4-function-ev-board/index.html",
+  "url": "https://docs.espressif.com/projects/esp-dev-kits/en/latest/esp32p4/esp32-p4x-function-ev-board/index.html",
   "vendor": "Espressif"
 }
