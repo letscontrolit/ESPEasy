@@ -109,6 +109,11 @@ bool ModbusLINK_struct::init(const ESPEasySerialPort port,
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 Modbus_RequestQueueElement * ModbusLINK_struct::newTransaction(struct ModbusDEVICE_struct *device)
 {
+  if (!isInitialized()) {
+    addLogMove(LOG_LEVEL_ERROR, F("Modbus: Link, Attempt to create transaction on uninitialized link"));
+    return nullptr;
+  }
+
   Modbus_RequestQueueElement *req = new (std::nothrow) Modbus_RequestQueueElement();
 
   if (req != nullptr) {
@@ -146,6 +151,11 @@ bool ModbusLINK_struct::freeTransaction(Modbus_RequestQueueElement *transaction)
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void ModbusLINK_struct::freeTransactions(ModbusDEVICE_struct *device)
 {
+  if (!isInitialized()) {
+    addLogMove(LOG_LEVEL_ERROR, F("Modbus: Link, Attempt to free transactions on uninitialized link"));
+    return;
+  }
+
   for ( auto it = _requestQueue.begin(); it != _requestQueue.end(); ++it ) {
     if ((*it)->_device == device) {
       (*it)->_state = ModbusQueueState::READY_FOR_DESTROY; // Mark to be destroyed
@@ -158,8 +168,12 @@ void ModbusLINK_struct::freeTransactions(ModbusDEVICE_struct *device)
 // The client can use this identifier to retrieve the response later.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 uint16_t ModbusLINK_struct::queueTransaction(Modbus_RequestQueueElement *transaction) {
+  if (!isInitialized()) {
+    addLogMove(LOG_LEVEL_ERROR, F("Modbus: Link, Attempt to queue transaction on uninitialized link"));
+    return 0;
+  }
+  
   # ifdef MODBUS_DEBUG
-
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     addLogMove(LOG_LEVEL_INFO,
                strformat(F("Modbus: Link, Queueing transaction ID %u, state %u"), transaction->_id, static_cast<uint>(transaction->_state)));

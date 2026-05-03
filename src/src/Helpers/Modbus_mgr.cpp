@@ -193,7 +193,7 @@ bool ModbusMGR_struct::connect(int linkId, ModbusLINK_struct **link, uint8_t *de
   dumpAdminInfo();
   # endif // ifdef MODBUS_DEBUG
 
-  return false;
+  return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

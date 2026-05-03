@@ -6,7 +6,6 @@
 // #######################################################################################################
 // ############## Data structure for plugin 183: Modbus RTU generic sensor interface       ###############
 // #######################################################################################################
-# define P183_DEBUG
 # ifdef BUILD_NO_DEBUG
 #  undef P183_DEBUG // Debugging switched off
 # endif // ifdef BUILD_NO_DEBUG
@@ -43,9 +42,9 @@ bool P183_data_struct::plugin_init(uint8_t slaveAddress, int linkId)
   _modbusDevice = new (std::nothrow) ModbusDEVICE_struct();
 
   if (_modbusDevice == nullptr) {
-    # ifdef P183_DEBUG
+    # ifndef LIMIT_BUILD_SIZE
     addLogMove(LOG_LEVEL_ERROR, F("P183: Unable to allocate Modbus device object"));
-    # endif // P183_DEBUG
+    # endif // LIMIT_BUILD_SIZE
     return false;
   }
 
@@ -53,7 +52,7 @@ bool P183_data_struct::plugin_init(uint8_t slaveAddress, int linkId)
     return false;
   }
   _modbusDevice->setModbusTimeout(P183_MODBUS_TIMEOUT);
-  return false;
+  return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -119,9 +118,9 @@ bool P183_data_struct::plugin_task_timer(EventStruct *event)
     int outputIndex = event->idx;
 
     if ((outputIndex < 0) || (outputIndex >= P183_NR_OUTPUTS)) {
-      # ifdef P183_DEBUG
+      # ifdef LIMIT_BUILD_SIZE
       addLogMove(LOG_LEVEL_ERROR, F("P183: Invalid output index in task timer event"));
-      # endif // P183_DEBUG
+      # endif // LIMIT_BUILD_SIZE
       return false;
     }
 
@@ -200,9 +199,11 @@ void P183_data_struct::scan_next_module()
   if (_scanning) {
     if (_lastAddress <= _endAddress) {
       _modbusDevice->readModuleHoldingRegister(_lastAddress, 1, ACTION_SCAN_BUS);
-    } else {
+    }
+    else
+    {
       _scanning = false;
-      addLogMove(LOG_LEVEL_INFO, F("Modbus: Finished scanning device"));
+      addLogMove(LOG_LEVEL_INFO, F("Modbus: Finished scanning for modules"));
     }
   }
 }

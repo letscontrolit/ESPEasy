@@ -8,35 +8,33 @@ class plugin_struct {
 
 }
 
+package "modbusFacility" {
   class Modbus_mgr <<singleton>> {
-    
   }
 
   class Modbus_link {
   }
 
   class Modbus_device {
-   
   }
 
-class Serial_port {
+  class Queue {
   }
 
-class Queue {
-
+  struct Transaction {
+  }
 }
 
-class Transaction {
-
+class Serial_port {
 }
 
 plugin *-- plugin_struct
-plugin_struct *-- Modbus_device
-Modbus_device "*" -right-> "1" Modbus_link
+plugin_struct *-right- Modbus_device
+Modbus_device "*" -down-> "1" Modbus_link
 Modbus_link "1" -right-> "1" Serial_port
 Modbus_mgr "1" *-- "*" Modbus_link
 Modbus_mgr "1" -- "*" Modbus_device
 Modbus_link *-- "1" Queue
-Queue o-- "*" Transaction
+Queue o-left- "*" Transaction
 Modbus_device "1" --> "*" Transaction
 @enduml

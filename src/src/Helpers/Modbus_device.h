@@ -96,7 +96,7 @@ private:
                  int                         par3,
                  int                         par4);
 
-  void createReadFrame(Modbus_RequestQueueElement *request,
+  void createReadFrame(Modbus_RequestQueueElement& request,
                        uint8_t                     busAddress,
                        uint16_t                    registerAddress);
 

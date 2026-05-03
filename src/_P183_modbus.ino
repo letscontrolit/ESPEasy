@@ -131,7 +131,9 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
         success = P183_data->plugin_init(P183_DEV_ID, P183_LINK_ID);
       }
       else {
+        # ifndef LIMIT_BUILD_SIZE
         addLogMove(LOG_LEVEL_ERROR, F("P183 : Cannot initialize"));
+        # endif // LIMIT_BUILD_SIZE
         success = false;
       }
       break;
@@ -153,9 +155,9 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
       P183_data_struct *P183_data = static_cast<P183_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (P183_data == nullptr) {
-        # ifdef P183_DEBUG
+        # ifndef LIMIT_BUILD_SIZE
         addLogMove(LOG_LEVEL_ERROR, F("P183 : Modbus read invalid data struct"));
-        # endif // P183_DEBUG
+        # endif // LIMIT_BUILD_SIZE
         return false;
       }
       success = P183_data->plugin_read(event); // Delegate to data_struct
@@ -167,7 +169,9 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
       P183_data_struct *P183_data = static_cast<P183_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (P183_data == nullptr) {
+        # ifndef LIMIT_BUILD_SIZE
         addLogMove(LOG_LEVEL_ERROR, F("P183 : Modbus write invalid data struct"));
+        # endif // LIMIT_BUILD_SIZE
         return false;
       }
 
@@ -226,11 +230,11 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
           ModbusMGR_singleton.dumpAdminInfo();
           success = true;
         }
-        # ifdef P183_DEBUG
+        # ifndef LIMIT_BUILD_SIZE
         else {
           addLogMove(LOG_LEVEL_ERROR, F("P183 : Modbus Unknown command"));
         }
-        # endif // P183_DEBUG
+        # endif // LIMIT_BUILD_SIZE
       }
 
       break;
@@ -241,9 +245,9 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
       P183_data_struct *P183_data = static_cast<P183_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (P183_data == nullptr) {
-        # ifdef P183_DEBUG
+        # ifndef LIMIT_BUILD_SIZE
         addLogMove(LOG_LEVEL_ERROR, F("P183 : Modbus task timer invalid data struct"));
-        # endif // P183_DEBUG
+        # endif // LIMIT_BUILD_SIZE
         return false;
       }
       success = P183_data->plugin_task_timer(event); // Delegate to data_struct
@@ -255,9 +259,9 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
       P183_data_struct *P183_data = static_cast<P183_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (P183_data == nullptr) {
-        # ifdef P183_DEBUG
+        # ifndef LIMIT_BUILD_SIZE
         addLogMove(LOG_LEVEL_ERROR, F("P183 : Modbus Get config invalid data struct"));
-        # endif // P183_DEBUG
+        # endif // LIMIT_BUILD_SIZE
         return false;
       }
 

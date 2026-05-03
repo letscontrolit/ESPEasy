@@ -1,5 +1,5 @@
 @startuml
-[*] --> NOT_QUEUED
+[*] --> NOT_QUEUED : newTransaction()
 state active {
 NOT_QUEUED --> QUEUED : queueTransaction()
 QUEUED --> MESSAGE_SENT : link inactive
@@ -7,5 +7,5 @@ MESSAGE_SENT --> RESPONSE_RECEIVED : received valid response
 MESSAGE_SENT --> ERROR_OCCURRED : response timeout or invalid response
 }
 active -down-> READY_FOR_DESTROY : freeTransaction()
-READY_FOR_DESTROY --> [*]
+READY_FOR_DESTROY --> [*] : processing
 @enduml

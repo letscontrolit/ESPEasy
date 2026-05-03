@@ -4,7 +4,7 @@
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P183
 
-# define P183_DEBUG // Switch on additional debug logging
+///# define P183_DEBUG // Switch on additional debug logging
 # ifdef BUILD_NO_DEBUG
 #  undef P183_DEBUG // Debugging switched off
 # endif // ifdef BUILD_NO_DEBUG
