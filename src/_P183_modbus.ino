@@ -130,13 +130,10 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
       if (P183_data  != nullptr) {
         success = P183_data->plugin_init(P183_DEV_ID, P183_LINK_ID);
       }
-      # ifdef P183_DEBUG
       else {
         addLogMove(LOG_LEVEL_ERROR, F("P183 : Cannot initialize"));
+        success = false;
       }
-      # endif // P183_DEBUG
-
-      success = true;
       break;
     }
 
@@ -170,9 +167,7 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
       P183_data_struct *P183_data = static_cast<P183_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (P183_data == nullptr) {
-        # ifdef P183_DEBUG
         addLogMove(LOG_LEVEL_ERROR, F("P183 : Modbus write invalid data struct"));
-        # endif // P183_DEBUG
         return false;
       }
 

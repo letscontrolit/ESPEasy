@@ -100,6 +100,9 @@ bool ModbusDEVICE_struct::readHoldingRegister(uint16_t           address,
     return false;
   }
   Modbus_RequestQueueElement *request = _modbus_link->newTransaction(this);
+  if (request == nullptr) {
+    return false; // Failed to allocate a request structure
+  }
   request->_userData    = valuePtr;
   request->_userState   = statePtr;
   request->_messageType = ModbusTransactionType::READ_HOLDING_REGISTERS;
@@ -127,10 +130,10 @@ bool ModbusDEVICE_struct::readModuleHoldingRegister(uint8_t  busAddress,
                                                     uint16_t registerAddress,
                                                     uint16_t uid)
 {
-  if (_modbus_link == nullptr) {
-    return false;
-  }
   Modbus_RequestQueueElement *request = _modbus_link->newTransaction(this);
+  if (request == nullptr) {
+    return false; // Failed to allocate a request structure
+  }
   request->_messageType = ModbusTransactionType::READ_HOLDING_REGISTERS;
   request->_userData    = nullptr;
   request->_userState   = nullptr;
