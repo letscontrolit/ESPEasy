@@ -26,7 +26,7 @@
     "arduino",
     "espidf"
   ],
-  "name": "Espressif Generic ESP32-P4 rev.3 16M Flash, ESPEasy 4096k Code/OTA 8M FS",
+  "name": "Espressif Generic ESP32-P4 rev.3 32M Flash, ESPEasy 6144k Code/OTA 20M FS",
   "upload": {
     "flash_size": "32MB",
     "maximum_ram_size": 768000,
@@ -34,6 +34,6 @@
     "require_upload_port": true,
     "speed": 1500000
   },
-  "url": "https://docs.espressif.com/projects/esp-dev-kits/en/latest/esp32p4/esp32-p4-function-ev-board/index.html",
+  "url": "https://docs.espressif.com/projects/esp-dev-kits/en/latest/esp32p4/esp32-p4x-function-ev-board/index.html",
   "vendor": "Espressif"
 }

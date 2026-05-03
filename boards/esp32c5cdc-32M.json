@@ -27,9 +27,9 @@
       "arduino",
       "espidf"
     ],
-    "name": "Espressif Generic ESP32-C5 16M Flash, ESPEasy 6144k Code/OTA 20M FS",
+    "name": "Espressif Generic ESP32-C5 32M Flash, ESPEasy 6144k Code/OTA 20M FS",
     "upload": {
-      "flash_size": "16MB",
+      "flash_size": "32MB",
       "maximum_ram_size": 327680,
       "maximum_size": 33554432,
       "require_upload_port": true,
