@@ -37,7 +37,7 @@ bool NWPlugin_003(NWPlugin::Function function, EventStruct *event, String& strin
       nw.enabledOnFactoryReset = true;
       nw.fixedNetworkIndex     = NWPLUGIN_ID_003 - 1; // Start counting at 0
 # else // ifdef ESP32P4
-      #  if DEFAULT_ENABLED_NETWORK_PLUGIN == NWPLUGIN_ID_003
+      #  if DEFAULT_ENABLED_NW003
       nw.enabledOnFactoryReset = true;
       #  endif
       nw.alwaysPresent = false;

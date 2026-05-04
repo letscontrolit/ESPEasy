@@ -65,7 +65,7 @@ bool NWPlugin_001(NWPlugin::Function function, EventStruct *event, String& strin
 
       //        ESPEasy::net::wifi::GetHostedMCUFwVersion() > 0x00020600;
 # else // ifdef ESP32P4
-      #  if DEFAULT_ENABLED_NETWORK_PLUGIN == NWPLUGIN_ID_001
+      #  if DEFAULT_ENABLED_NW001
       nw.enabledOnFactoryReset = true;
       #  endif
 # endif // ifdef ESP32P4

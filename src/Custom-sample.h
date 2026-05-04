@@ -319,7 +319,12 @@
 
 // #define DEFAULT_NETWORK_MEDIUM       ESPEasy::net::NetworkMedium_t::WIFI
 
-// #define DEFAULT_ENABLED_NETWORK_PLUGIN   1 // Enable this NWPLUGIN_ID number, 1,3..5, on factory reset/initial setup
+// #define DEFAULT_ENABLED_NW001            1 // Enable NWPLUGIN_001, on factory reset/initial setup
+// #define DEFAULT_ENABLED_NW002            1 // Enable NWPLUGIN_002, on factory reset/initial setup
+// #define DEFAULT_ENABLED_NW003            1 // Enable NWPLUGIN_003, on factory reset/initial setup
+// #define DEFAULT_ENABLED_NW004            1 // Enable NWPLUGIN_004, on factory reset/initial setup
+// #define DEFAULT_ENABLED_NW005            1 // Enable NWPLUGIN_005, on factory reset/initial setup
+// This list should be updated when adding new Network Interface plugins
 
 
 
