@@ -55,23 +55,13 @@ Configuration
 Sensor
 ^^^^^^
 
-.. image:: P183_sensor_config.png
+.. image:: P183_device_settings.png
 
-The available Serial protocol settings here depend on the build used.
+The available Modbus protocol settings here depend on the build used.
 
-* **Serial Port**: The serial port to use for Modbus communication.
-
-* **Baudrate**: The baudrate for the serial communication. Common values are 1200, 2400, 4800, 9600, 19200, 38400, 57600, 115200.
+* **Modbus Link**: The Modbs link teh device is connected to. The link must be configured in the Interafces page.
 
 * **Modbus Device Address**: The Modbus slave device ID to communicate with (1..247).
-
-* **Enable Collision Detection**: Enable collision detection to avoid data corruption when multiple devices are connected to the same serial bus. This requires a GPIO pin to be configured as input and connected to the bus transceiver's DE/RE pin.
-
-* **ESP RX GPIO ← TX (RO)**: The GPIO pin to use as RX input for the serial communication. This pin should be connected to the TX output of the RS-485 to TTL converter.
-
-* **ESP TX GPIO → RX (DI)**: The GPIO pin to use as TX output for the serial communication. This pin should be connected to the RX input of the RS-485 to TTL converter.
-
-* **GPIO → RE/DE(optional)**: The GPIO pin to use for collision detection. This pin should be connected to the DE/RE pin of the RS-485 to TTL converter.
 
 Output Configuration
 ^^^^^^^^^^^^^^^^^^^^

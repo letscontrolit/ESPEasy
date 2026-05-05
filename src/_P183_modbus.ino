@@ -198,12 +198,10 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
           int address    = event->Par2;
           uint16_t value = 0;
           value = P183_data->readRegisterWait(address);
-          # ifdef P183_DEBUG
 
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             addLogMove(LOG_LEVEL_INFO, strformat(F("P183 : Modbus read value %u from address 0x%04x"), value, address));
           }
-          # endif // P183_DEBUG
           success = true;
         }
         else if (equals(subcmd, F("dump"))) {
@@ -274,6 +272,12 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
         string  = String(value);
         success = true;
       }
+      break;
+    }
+    case PLUGIN_WEBFORM_SHOW_CONFIG:
+    {
+      string += strformat(F("Modbus %d"), P183_LINK_ID);
+      success = true;
       break;
     }
   }

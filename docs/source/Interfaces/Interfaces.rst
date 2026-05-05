@@ -205,5 +205,16 @@ NB: When selecting the *User-defined* option, **all 3 GPIO pins should be set**,
 Modbus
 ------
 
-TODO Modbus configuration and documentation to be added.
+When using devices that use the Modbus RTU protocol the Modbus interface can be configured here. The Modbus RTU devices are connected via a RS485 serial interface. Multiple devices can be connected to the same serial interface, and are distinguished by their Modbus address. Note that a serial to RS485 converter is required to connect Modbus RTU devices to the ESP board. 
 
+.. image:: Modbus_Interface.png
+
+Main configuration item is the selection of the serial interface to use for Modbus. The available options depend on the ESP board used. For details about the available serial interfaces, see  serial helper page. The option "Not set" means that Modbus link is not used. When a serial interface is selected, it will be initialized and the Modbus RTU devices can be connected to it.
+
+Selection of the RX and TX  pins is required.
+
+The Modbus RTU devices are connected to the selected serial interface via a RS485 converter. The converter has a DE (Driver Enable) pin that can be controlled by the ESP board to switch between sending and receiving data. The DE pin can be configured here. If the converter has an automatic DE function, this can be set to "-None-".  
+
+The Baud rate for the Modbus RTU communication shall be set. The default value is 9600 baud, but it can be set to other values as required by the connected devices.
+
+Collision Detection is a feature that can be used when the serial port hardware supports it, otherwise it is ignored.
