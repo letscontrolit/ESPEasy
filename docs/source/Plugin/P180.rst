@@ -42,6 +42,7 @@ Example device configurations
 * :ref:`sensirion-sdp-810-differential-pressure-sensor`
 * :ref:`tf-luna-lidar-distance-sensor`
 * :ref:`qmc6310-3-axis-magnetic-sensor`
+* :ref:`tca9554-io-extender`
 
 Configuration
 -------------
@@ -607,6 +608,61 @@ The plugin should be configured with these settings:
 * **I2C Commands 3**: ``read.16le.0x05`` Read 2 bytes starting at register 5, the ``z`` value, and store in third Value field.
 
 To reduce the logging content, **Single event with all values** can be enabled, to generate a single event ``<task-name>#All`` with all values as argument, and thus reduce the logging from 3 lines per Interval to a single line per Interval.
+
+|
+
+.. _tca9554-io-extender:
+
+TCA9554 8-port I/O extender
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This I/O extender provides 8 input/output pins, as documented in the Texas Instruments `TCA9554 Datasheet <https://www.ti.com/lit/ds/symlink/tca9554.pdf>`_
+
+Configuration below is intended to be used for a `Waveshare ESP32-S3-ETH-8DI-8RO <https://www.waveshare.com/wiki/ESP32-S3-ETH-8DI-8RO>`_ unit to control the relays.
+
+The plugin should be configured with these settings:
+
+* **I2C Address (Hex)**: ``0x20``
+
+* **Output Data Type**: ``Double`` To activate this setting, the page must be submitted to show the extra input fields.
+
+* **Values**: The names can be changed whatever is appropriate, they are not really used, though we need 2 cached command sequences.
+
+* **I2C Init Commands**: ``write.u8.0x03.0x00;calc.1``: Initializes the extender for all pins as output (and return a non-zero value for successful initialization).
+
+* **Cache-Name 1**: Use ``readout``, to match the rules, below, and the I2C Command sequence is cached for much improved execution-performance.
+
+* **I2C Commands 1**: ``read.u8.0x01;eval;let.bits.%value%`` Read the current relay state, and store in rules variable ``bits`` (referenced as ``%v_bits%``).
+
+* **Cache-Name 2**: Use ``writeout``, to match with the rules, below.
+
+* **I2C Commands 2**: ``write.u8.0x01.%v_bits%`` Set then outputs as updated in ``%v_bits%``.
+
+To reduce the logging content, **Single event with all values** can be enabled, to generate a single event ``<task-name>#All`` with all values as argument, and thus reduce the logging to a single line.
+
+Rules to add
+~~~~~~~~~~~~
+
+As this is an output-only configuration, there must be some command(s) to control these outputs. These commands are handled by a single rule (event handler):
+
+.. code-block:: none
+  
+  On relay Do // Usage: event,"relay=1..8,0/1"
+    If %eventvalue1% > 0 And %eventvalue1% < 9 And (%eventvalue2|-1% = 0 Or %eventvalue2% = 1)
+      geni2c,exec,readout // Read all output bits into v_bits
+      Let,bits,{bitWrite:%eventvalue1%-1:%v_bits%:%eventvalue2%} // Update requested bit = relay
+      geni2c,exec,writeout // Write new state in v_bits to the outputs
+      // LogEntry,'Setting relay %eventvalue1% to state %eventvalue2%, bits: %v_bits%'
+    Endif
+  Endon
+
+(The line with LogEntry can be uncommented to get some logging for test purposes)
+
+To switch a relay on or off, this command syntax can be used:
+
+``event,"relay=<1..8>,<1|0>"``
+
+There are 8 relays on the device, so the matching number should be used, and the second argument ``1`` to set the relay to On, and ``0`` for Off.
 
 |
 
