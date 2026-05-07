@@ -36,7 +36,7 @@ namespace wifi {
 # else
 #  define WIFI_CONNECTION_CONSIDERED_STABLE  60000  // in milliSeconds
 # endif // if FEATURE_CUSTOM_PROVISIONING
-# define WIFI_ALLOW_AP_AFTERBOOT_PERIOD     5       // in minutes
+//# define WIFI_ALLOW_AP_AFTERBOOT_PERIOD     5       // in minutes
 # define WIFI_SCAN_INTERVAL_AP_USED         125000  // in milliSeconds
 # define WIFI_SCAN_INTERVAL_MINIMAL          60000  // in milliSeconds
 

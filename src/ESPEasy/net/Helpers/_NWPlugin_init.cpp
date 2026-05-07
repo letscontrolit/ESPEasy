@@ -4,6 +4,7 @@
 #include "../../../src/DataStructs/TimingStats.h"
 #include "../../../src/DataTypes/ESPEasy_plugin_functions.h"
 #include "../../../src/Globals/Settings.h"
+#include "../../../src/Globals/ESPEasy_Scheduler.h"
 //#include "../../../src/Helpers/Misc.h"
 #include "../../../src/Helpers/StringConverter.h"
 #include "../Globals/NWPlugins.h"
@@ -2204,10 +2205,10 @@ void NWPlugin_Exit_Init(networkIndex_t networkIndex)
     String dummy;
 
     // May need to call init later, so make sure exit is called first
-    NWPluginCall(NWPlugin::Function::NWPLUGIN_EXIT, &TempEvent, dummy);
+    Scheduler.setNetworkExitTimer(0, networkIndex);
 
     if (Settings.getNetworkEnabled(networkIndex)) {
-      NWPluginCall(NWPlugin::Function::NWPLUGIN_INIT, &TempEvent, dummy);
+      Scheduler.setNetworkInitTimer(0, networkIndex);
     }
   }
 }

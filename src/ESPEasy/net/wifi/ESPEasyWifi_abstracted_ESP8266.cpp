@@ -42,7 +42,8 @@ bool WiFi_pre_STA_setup() {
 void doWiFiDisconnect() {
   // Only call disconnect when STA is active
   if (doWifiIsSTA(WiFi.getMode())) {
-    wifi_station_disconnect();
+    WiFi.disconnect(true);
+//    wifi_station_disconnect();
   }
   /*
   station_config conf{};

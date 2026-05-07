@@ -51,6 +51,7 @@ void ESPEasyWiFi_t::begin()   {
     setState(WiFiState_e::IdleWaiting, 100);
   } else {
     if (WiFi_AP_Candidates.hasScanned()) {
+      // Has no candidates, but scan was performed.
       if (shouldStartAP_fallback()) {
         setState(WiFiState_e::AP_only, WIFI_STATE_MACHINE_AP_ONLY_TIMEOUT);
       }
