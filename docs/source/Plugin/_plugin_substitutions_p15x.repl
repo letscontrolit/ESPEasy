@@ -68,6 +68,19 @@
 .. |P154_compileinfo| replace:: `.`
 .. |P154_usedlibraries| replace:: `Adafruit BMP3XX Library`
 
+.. |P155_name| replace:: :cyan:`SML Smartmeter`
+.. |P155_type| replace:: :cyan:`Energy`
+.. |P155_typename| replace:: :cyan:`Energy - SML Smartmeter`
+.. |P155_porttype| replace:: `.`
+.. |P155_status| replace:: :green:`NORMAL`
+.. |P155_status_lb| replace:: ``
+.. |P155_github| replace:: P155_Smartmeter.ino
+.. _P155_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P155_Smartmeter.ino
+.. |P155_usedby| replace:: `.`
+.. |P155_shortinfo| replace:: `SML/D0 Smartmeter energy sensor`
+.. |P155_maintainer| replace:: `Custom`
+.. |P155_compileinfo| replace:: `.`
+
 .. |P159_name| replace:: :cyan:`LD2410`
 .. |P159_type| replace:: :cyan:`Presence`
 .. |P159_typename| replace:: :cyan:`Presence - LD2410`
