@@ -72,6 +72,9 @@ void NWPluginData_static_runtime::mark_lost_IP()
 
 void NWPluginData_static_runtime::mark_begin_establish_connection()
 {
+  _connectedStats.setOff();
+  _operationalStats.setOff();
+
   if (!_isAP) {
     ESPEasy::net::wifi::setUseStaticIP(_useStaticIP);
     if (_useStaticIP) {
@@ -86,8 +89,6 @@ void NWPluginData_static_runtime::mark_begin_establish_connection()
   }
 
   _establishConnectStats.forceSet(true);
-  _connectedStats.setOff();
-  _operationalStats.setOff();
   WiFi.hostname(NetworkCreateRFCCompliantHostname().c_str());
 }
 

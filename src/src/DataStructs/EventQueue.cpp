@@ -33,6 +33,17 @@ void EventQueueStruct::add(const __FlashStringHelper *event, bool deduplicate)
   add(str, deduplicate);
 }
 
+void EventQueueStruct::addDeDup(const String& event)
+{
+  add(event, true);
+}
+
+void EventQueueStruct::addDeDup(const __FlashStringHelper *event)
+{
+  add(event, true);
+}
+
+
 void EventQueueStruct::addMove(String&& event, bool deduplicate)
 {
   if (!event.length()) { return; }

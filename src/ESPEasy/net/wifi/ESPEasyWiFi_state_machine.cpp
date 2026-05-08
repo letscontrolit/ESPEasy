@@ -305,7 +305,7 @@ void ESPEasyWiFi_t::loop()
         /*
            if (Settings.UseRules)
            {
-           eventQueue.add(F("WiFi#Disconnected"));
+           eventQueue.addDeDup(F("WiFi#Disconnected"));
            }
            statusLED(false);
          */
@@ -336,7 +336,7 @@ void ESPEasyWiFi_t::disconnect() { doWiFiDisconnect(); }
 
 void ESPEasyWiFi_t::setState(WiFiState_e newState, uint32_t timeout) {
   if (newState == _state) { return; }
-# ifndef BUILD_NO_DEBUG
+//# ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     addLog(
@@ -345,7 +345,7 @@ void ESPEasyWiFi_t::setState(WiFiState_e newState, uint32_t timeout) {
       concat(F(" to: "),                   toString(newState)) +
       concat(F(" timeout: "),              timeout));
   }
-# endif // ifndef BUILD_NO_DEBUG
+//# endif // ifndef BUILD_NO_DEBUG
 
   if ((_state == WiFiState_e::AP_only) ||
       (_state == WiFiState_e::AP_Fallback)) {
@@ -361,7 +361,7 @@ void ESPEasyWiFi_t::setState(WiFiState_e newState, uint32_t timeout) {
       wifi_STA_data->mark_disconnected();
 
       if (WiFi.status() == WL_CONNECTED) {
-        WiFi.disconnect();
+        WiFi.disconnect(true);
       }
     }
   }
@@ -467,13 +467,19 @@ void ESPEasyWiFi_t::setState(WiFiState_e newState, uint32_t timeout) {
       /*
          if (Settings.UseRules)
          {
-         eventQueue.add(F("WiFi#Connected"));
+         eventQueue.addDeDup(F("WiFi#Connected"));
          }
          statusLED(true);
        */
       break;
 
     }
+  }
+
+  auto wifi_STA_data = getWiFi_STA_NWPluginData_static_runtime();
+
+  if (wifi_STA_data) {
+    wifi_STA_data->processEvents();
   }
 }
 

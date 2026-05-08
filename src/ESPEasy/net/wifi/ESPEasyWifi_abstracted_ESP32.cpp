@@ -213,7 +213,7 @@ bool doSetWifiMode(WiFiMode_t new_mode)
   const bool new_mode_AP_enabled =  doWifiIsAP(new_mode);
 
   if (doWifiIsAP(cur_mode) && !new_mode_AP_enabled) {
-    eventQueue.add(F("WiFi#APmodeDisabled"));
+    eventQueue.addDeDup(F("WiFi#APmodeDisabled"));
   }
 
   if (doWifiIsAP(cur_mode) != new_mode_AP_enabled) {
