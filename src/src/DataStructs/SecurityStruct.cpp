@@ -5,6 +5,8 @@
 
 #include "../Globals/SecuritySettings.h"
 
+#include "../../ESPEasy/net/wifi/ESPEasyWifi.h"
+
 
 SecurityStruct::SecurityStruct() {
   ZERO_FILL(WifiSSID);
@@ -90,10 +92,12 @@ bool SecurityStruct::hasWiFiCredentials() const {
 }
 
 bool SecurityStruct::hasWiFiCredentials(SecurityStruct::WiFiCredentialsSlot slot) const {
+
+  
   if (slot == SecurityStruct::WiFiCredentialsSlot::first)
-      return (WifiSSID[0] != 0 && !String(WifiSSID).equalsIgnoreCase(F("ssid")));
+    return ESPEasy::net::wifi::validWiFiSSID(WifiSSID);
   if (slot == SecurityStruct::WiFiCredentialsSlot::second)
-      return (WifiSSID2[0] != 0 && !String(WifiSSID2).equalsIgnoreCase(F("ssid")));
+    return ESPEasy::net::wifi::validWiFiSSID(WifiSSID2);
 
   return false;
 }

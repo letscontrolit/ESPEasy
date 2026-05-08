@@ -23,6 +23,7 @@ public:
     float_type  = 10,
     double_type = 11,
     bool_type   = 12,
+    ip_type     = 13,
 
     MAX_Type,         // Leave this one after the generic type and before 'special' types
 

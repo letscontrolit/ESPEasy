@@ -3,10 +3,12 @@
 #ifdef USES_NW002
 
 # ifdef ESP32
-# include "../../../src/Globals/Settings.h"
-#endif
+#  include "../../../src/Globals/Settings.h"
+# endif
 
 # include "../wifi/ESPEasyWifi.h"
+
+# include "../../../src/Helpers/Networking.h"
 
 # ifdef ESP32
 #  include <esp_wifi.h>
@@ -89,6 +91,15 @@ bool NW002_data_struct_WiFi_AP::webform_getPort(KeyValueWriter *writer) { return
 
 bool NW002_data_struct_WiFi_AP::init(EventStruct *event)
 {
+  {
+    auto runtime_data = getNWPluginData_static_runtime();
+    if (runtime_data) {
+      IPAddress ip, gateway, sn, dns;
+      getStaticIPAddresses(ip, gateway, sn, dns);
+      runtime_data->setStaticIP(ip, gateway, sn, dns);
+    }
+  }
+
 # ifdef ESP32
   nw002_enable_NAPT = Settings.WiFi_AP_enable_NAPT();
 # endif
@@ -97,13 +108,13 @@ bool NW002_data_struct_WiFi_AP::init(EventStruct *event)
 # ifdef ESP32
   NW002_update_NAPT();
 # endif
-  #  if FEATURE_MDNS
-  #   ifdef ESP8266
+  # if FEATURE_MDNS
+  #  ifdef ESP8266
 
   // notifyAPChange() is not present in the ESP32 MDNSResponder
   MDNS.notifyAPChange();
-  #   endif // ifdef ESP8266
-  #  endif // if FEATURE_MDNS
+  #  endif // ifdef ESP8266
+  # endif // if FEATURE_MDNS
 
   return true;
 }
@@ -130,6 +141,32 @@ NWPluginData_static_runtime * NW002_data_struct_WiFi_AP::getNWPluginData_static_
     return &stats_and_cache;
   }
   return nullptr;
+}
+
+bool NW002_data_struct_WiFi_AP::getStaticIPAddress(IPAddressType addressType, IPAddress& ip) const
+{
+  // TODO TD-er: Implement for AP
+/*
+  IPAddress res;
+
+  switch (addressType)
+  {
+    case IPAddressType::IP: res = IPAddress(Settings.IP);
+      break;
+    case IPAddressType::Gateway: res = IPAddress(Settings.Gateway);
+      break;
+    case IPAddressType::Subnetmask: res = IPAddress(Settings.Subnet);
+      break;
+    case IPAddressType::DNS: res = IPAddress(Settings.DNS);
+      break;
+  }
+
+  if (IPAddressSet(res)) {
+    ip = res;
+    return true;
+  }
+*/
+  return false;
 }
 
 # ifdef ESP32
