@@ -127,6 +127,8 @@ struct NWPluginData_static_runtime {
 
   void     processEvents();
 
+  void setStaticIP(const IPAddress & ip, const IPAddress & gateway, const IPAddress & subnetmask, const IPAddress & dns);
+
   // =============================================
   // OnOffTimers for keeping track of:
   // - start/stop of interface
@@ -156,6 +158,9 @@ struct NWPluginData_static_runtime {
 #if FEATURE_USE_IPV6
   bool _enableIPv6{}; // Cached enableIPv6 flag as it is being used from callbacks
 #endif
+
+  IPAddress _ip, _gateway, _sn, _dns;
+  bool _useStaticIP{}; // Added to make sure we don't have to re-check IP from a callback
 
 private:
 

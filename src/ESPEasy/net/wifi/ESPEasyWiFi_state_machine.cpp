@@ -51,6 +51,7 @@ void ESPEasyWiFi_t::begin()   {
     setState(WiFiState_e::IdleWaiting, 100);
   } else {
     if (WiFi_AP_Candidates.hasScanned()) {
+      // Has no candidates, but scan was performed.
       if (shouldStartAP_fallback()) {
         setState(WiFiState_e::AP_only, WIFI_STATE_MACHINE_AP_ONLY_TIMEOUT);
       }
@@ -153,7 +154,12 @@ void ESPEasyWiFi_t::loop()
               //  && !WiFiEventData.warnedNoValidWiFiSettings
               )
           {
-            addLog(LOG_LEVEL_ERROR, F("WIFI : No valid wifi settings"));
+            // Check for whether No Valid WiFi settings was already logged
+            static uint32_t lastTimeLoggedNoWiFiCredentials = 0;
+            if (timePassedSince(lastTimeLoggedNoWiFiCredentials) > 5000) {
+              addLog(LOG_LEVEL_ERROR, F("WIFI : No valid wifi settings"));
+              lastTimeLoggedNoWiFiCredentials = millis();
+            }
 
             //            WiFiEventData.warnedNoValidWiFiSettings = true;
           }
@@ -299,7 +305,7 @@ void ESPEasyWiFi_t::loop()
         /*
            if (Settings.UseRules)
            {
-           eventQueue.add(F("WiFi#Disconnected"));
+           eventQueue.addDeDup(F("WiFi#Disconnected"));
            }
            statusLED(false);
          */
@@ -330,7 +336,7 @@ void ESPEasyWiFi_t::disconnect() { doWiFiDisconnect(); }
 
 void ESPEasyWiFi_t::setState(WiFiState_e newState, uint32_t timeout) {
   if (newState == _state) { return; }
-# ifndef BUILD_NO_DEBUG
+//# ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     addLog(
@@ -339,7 +345,7 @@ void ESPEasyWiFi_t::setState(WiFiState_e newState, uint32_t timeout) {
       concat(F(" to: "),                   toString(newState)) +
       concat(F(" timeout: "),              timeout));
   }
-# endif // ifndef BUILD_NO_DEBUG
+//# endif // ifndef BUILD_NO_DEBUG
 
   if ((_state == WiFiState_e::AP_only) ||
       (_state == WiFiState_e::AP_Fallback)) {
@@ -355,7 +361,7 @@ void ESPEasyWiFi_t::setState(WiFiState_e newState, uint32_t timeout) {
       wifi_STA_data->mark_disconnected();
 
       if (WiFi.status() == WL_CONNECTED) {
-        WiFi.disconnect();
+        WiFi.disconnect(true);
       }
     }
   }
@@ -461,13 +467,19 @@ void ESPEasyWiFi_t::setState(WiFiState_e newState, uint32_t timeout) {
       /*
          if (Settings.UseRules)
          {
-         eventQueue.add(F("WiFi#Connected"));
+         eventQueue.addDeDup(F("WiFi#Connected"));
          }
          statusLED(true);
        */
       break;
 
     }
+  }
+
+  auto wifi_STA_data = getWiFi_STA_NWPluginData_static_runtime();
+
+  if (wifi_STA_data) {
+    wifi_STA_data->processEvents();
   }
 }
 
@@ -536,7 +548,6 @@ bool ESPEasyWiFi_t::connectSTA()
   //  WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE);
 # endif // if defined(ESP32)
   doSetConnectionSpeed();
-  setupStaticIPconfig();
 
   // Start the process of connecting or starting AP
   if (!WiFi_AP_Candidates.getNext(true))
@@ -653,6 +664,16 @@ bool ESPEasyWiFi_t::shouldStartAP_fallback() const
 
   return (Settings.ConnectFailRetryCount > 0) &&
          (_connect_attempt > Settings.ConnectFailRetryCount);
+}
+
+bool ESPEasyWiFi_t::shouldRedirectTo_setup() const
+{
+  if (!Settings.ApCaptivePortal()) return false;
+  if (Settings.StartAPfallback_NoCredentials() && !SecuritySettings.hasWiFiCredentials()) {
+    return true;
+  }
+
+  return !Settings.DoNotStartAPfallback_ConnectFail();
 }
 
 } // namespace wifi

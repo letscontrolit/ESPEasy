@@ -167,7 +167,15 @@ bool doSetAPinternal(bool enable)
       return false;
     }
 
-    if (Settings.ApCaptivePortal()) {
+    if (ESPEasy::net::wifi::shouldRedirectTo_setup()) {
+    # if FEATURE_DNS_SERVER
+
+    if (dnsServerActive) {
+      dnsServerActive = false;
+      dnsServer.stop();
+    }
+    # endif // if FEATURE_DNS_SERVER
+
 # ifdef ESP32
 #  if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 2)
 

@@ -9,6 +9,12 @@ void LongTermOnOffTimer::clear()
   resetCount();
 }
 
+void LongTermOnOffTimer::reset()
+{
+  clear();
+  _changedSinceLastCheck = false;
+}
+
 bool LongTermOnOffTimer::setOn()
 {
   if (isOn()) { return false; }
@@ -43,7 +49,12 @@ bool LongTermOnOffTimer::set(bool onState)
 
 bool LongTermOnOffTimer::forceSet(bool onState)
 {
-  set(!onState);
+  /*
+  // TODO TD-er: Should we also change the timestamp?
+  if (onState) _onTimer.setNow();
+  else _offTimer.setNow();
+  */
+  _changedSinceLastCheck = true;
   return set(onState);
 }
 
