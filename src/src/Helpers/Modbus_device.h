@@ -60,12 +60,6 @@ public:
   bool readHoldingRegister(uint16_t address,
                            uint16_t uid);
 
-  // Fetch the result of a readHoldingRegister request
-  // The function returns true if the result is available
-  // Use uid to identify the request.
-  bool readHoldingRegisterResult(uint16_t  uid,
-                                 uint16_t *valuePtr);
-
   // Start writing a single Modbus register.
   // The function returns true if the request was queued.
   bool writeSingleRegister(uint16_t           address,

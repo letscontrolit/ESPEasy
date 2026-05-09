@@ -209,14 +209,9 @@ bool ModbusMGR_struct::disconnect(uint8_t deviceID) {
 
   for (int i = 0; i < MAX_MODBUS_DEVICES; i++) {
     if ((_modbus_devices[i] != nullptr) && (_modbus_devices[i]->deviceID == deviceID)) {
-      // Found the device to disconnect
-      ModbusLinkInfo_struct *linkInfoPtr = _modbus_devices[i]->link;
-
-      // Remove the device entry
+       // Remove the device entry
       delete _modbus_devices[i];
       _modbus_devices[i] = nullptr;
-
-      return true; // Successfully disconnected
     }
   }
   # ifdef MODBUS_DEBUG
@@ -296,7 +291,7 @@ void ModbusMGR_struct::show_modbus_interfaces()
   int portMap[static_cast<size_t>(ESPEasySerialPort::MAX_SERIAL_TYPE)];         // Map to keep track of valid ports and their indices in the
                                                                                 // options_port array
 
-  constexpr size_t optionBaudCount = NR_ELEMENTS(options_baudrate);
+  constexpr int optionBaudCount = static_cast<int>(NR_ELEMENTS(options_baudrate));
 
   for (int i = 0; i < optionBaudCount; ++i) {
     options_baudrate[i] = modbus_storageValueToBaudrate(i);

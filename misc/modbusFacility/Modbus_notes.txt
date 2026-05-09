@@ -1,8 +1,9 @@
-The MODBUS_FAC facilities intend to provide a framework that allows multiple Modbus RTU devices to connect to a single physical Modbus link. It supports multiple physical Modbus links in parallel.
+The MODBUS_FAC facilities intend to provide a framework that allows multiple Modbus RTU devices to connect to a single physical Modbus link. It supports multiple physical Modbus links in parallel on the ame bus.
 This is realized by introducing 3 classes:
-- Modbus_device: Represents a single device. The Modbus_device is responsibel for coding/decoding the Modus protocol.
-- Modbus_link: Represents a single Modbus conenction. Each Modbus_link object is connected to a separate serial link.
+- Modbus_device: Represents a single device. The Modbus_device is responsible for coding/decoding the Modus protocol.
+- Modbus_link: Represents a single Modbus connection. Each Modbus_link object is connected to a separate serial link.
 - Modbus_mgr: Singleton manager that manages all links and keeps track of which devices are connected to which link.
+See class diagram Modbus_class for relations.
 
 The main design requirement is to allow multiple plugins to use the same Modbus link. This is achieved by separating the link control from the device control. 
 Modbus connunication consists of a request-reply message exchange over a serial link. After a request is sent the bus is occupied until the reply is received or a timeout occurred. 
@@ -12,29 +13,43 @@ The main design constraint for the MODBUS_FAC is to reduce the time wasted in wa
 The queue is owned by the Modbus_link. A Modbus_device puts a request message on the queue and does not wait for the reply. 
 Once the matching reply is received by the Modbus_link the Modbus_device is notified by a callback function.
 
-The Modbus_device uses transactions to communicate to the associated hardware module. Messages are encoded in Modbus RTU protocol format by the Modbus_device. 
+The Modbus_device uses transactions to communicate to the associated Modbus hardware module. Messages are encoded in Modbus RTU protocol format by the Modbus_device. 
 Once the request message is created it is transferred to the Modbus_link where it is added the the transaction queue.
-When the transaction is done, either a response message is received or a timeout occurred, the Modbus_device callback function is called and the response message is decoded and evaluated.
+When the transaction is done, either a response message is received or a timeout has occurred, the Modbus_device callback function is called and the response message or timeout is decoded and evaluated.
 
-The Modbus_link uses a queue to handle transactions sequentially. Each transaction has a state to track if it is queued, being processed, or completed. At maximum one transaction is being processed at a time. 
-The modbus_link uses an ESPEasy serial link for the actual transmit and receive of the messages.
+The Modbus_link uses a queue to handle transactions sequentially. Each transaction has a state to track if it is queued, being processed, or completed. At maximum one single transaction per link is being processed at a time. 
+The modbus_link uses an ESPEasy serial link for the actual transmitting and receiving of the messages.
 
-To match a Modbus_device with a Modbus_link a singleton Modus_mgr is used. This Modbus_mgr owns all Modbus_links and determines to which link a Modbus_device is assigned. 
-In case no matching link is found the Modbus_mgr creates a corresponding Modbus_link. Currently ESPEasy has no means to configure a Modbus_link object with the serial link properties. Instead the serial link is configured in the plugin. 
-The plugin passes the configuration data to the device. When the Modbus_device requests the Modbus_mgr to connect to a Modbus_link it passes the serial parameters. The Modbus_mgr uses the serial port type to distinguish the links.
-Whenever a new device is connected to a Modbus_link the link will be reprogrammed with the new serial parameters. Note that all devices using the same serial link shall provide the same serial link parameters. 
-In case of different serial configuration parameters there is no guarantee which set will be used for the Modbus_link.
-
-In future a separate configuration screen should be implemented to configure each Modus_link. Once this is available the Modbus_device can mention the link identification without the need to pass all configuration parameters. 
-
-The current implementataion of the Modbus_mgr uses the serial port (ESPEasySerialPort enum) to identify the Modbus_link. This implies that only one software serial link can be used. 
-It should be possible to extend this by checking the assigned RX and TX pins when a software serial port is selected.
+A singleton Modbus_mgr owns the Modbus_links. The Modbus_mgt is responsible for creating and configuring the Modbus_links. Configuration is done through the interfaces page, tab Modbus. 
+The Modbus_device is configured with a link ID. The Modbus_device uses the link ID to register itself at the Modbus_mgr. The Modbus_mgr will return a pointer to the associated Modbus_link. Once connected the Modbus_device will access teh Modbus_link directly.
 
 Drawback of the queue mechanism is the need for the Modbus_device (and the associated plugin) to wait for the response message without blocking the CPU. For this the Modbus_device needs to track "state". 
-Either the plugin can queue only a single transaction or it must be able to track for which transaction in the queue a response is received. 
-To keep this state tracking generic the transaction contains a pointer to a userState and userData. The Modbus_device can use these values depending on the transaction type to return state information to the plugin. 
+A plugin can queue only a single transaction or it must be able to track for which transaction in the queue a response is received. 
+Sevaral mechanisms are used to track transactions at link level:
+1) The Modbus_link assigns a unique ID to each transaction. This is a 16 bit sequence number that will wrap around. The Modbus_device can use the ID to match a respose to the right pending transaction.
+2) The Modbus_device can use the field _userID to store a 16 bit identifier. This identifier is not changed or interpreted by the Modbus_link. It can be used to recognize the transaction based on a Modbus_device determined algorithm
+3) The Modbus_device can use the fields _userData and _userState to add two pointers that will not be changed or interpreted by the Modbus_link. These can be used to associate transaction related data with the transaction. 
+
+The Modbus_device provides Modbus access functions (commands) to the plugin. Access like reading or writing registers is translated into a Modbus send message and queued on the Modbus_link. Once the message is queued the Modbus_devcie will return. 
+The Modbus_device may have multiple pending transactions. The Modbus_device uses one of the mentioned tracking mechanisms to recognize to which Modbus command the response message belongs. The response will be decoded. 
+In case the plugin needs to be informed about the results, e.g. a read command, the Modbus_device will send a PLUGIN_TASKTIMER_IN event to the plugin. This allows the plugin to process the results. See Modbus_seq2 sequence diagram.
+
+The PLUGIN_TASKTIMER_IN event works well for plugin functions that allow independent processing once the data is available. Some plugin functions like PLUGIN_GET_CONFIG_VALUE require a direct response. 
+If this response depends on Modbus tarnsactions the plugin shall either regularly poll the data and cache it or take the penalty and use a blocking funtion to retrieve this data. 
  
-The owning plugin can only return a value once it is received. For repetitive read events the previous received value can be returned. 
-For specific read commands either a polling mechanism must be implemented or the plugin blocks until the response is received. 
-The most efficient mechanism would be a trigger event that can be sent by the Modbus_device once the data is received. Such trigger event for plugins can reduce the CPU load by removing the need for regular polling (e.g. ten_per_second) or blocking on a transaction.
-For this the plugin event must be extended with the possibility to send "updates" to the plugin. Such an extension shall be generic and not Modbus specific. It is beyond the Modbus facilities development to add such new generic plugin features.
+The Modbus_device provides the following functions to a plugin:
+
+1) bool readHoldingRegister(uint16_t address, uint16_t *valueptr, ModbusResultState *stateptr);
+This function reads a single holding register from the Modbus hardware. The valueptr returns the value from the register once the transaction is finished. The stateptr shows the actual state of the transaction. The plugin shall poll the state until the tranaction is finished.
+The Modbus_device will not use a PLUGIN_TASKTIMER_IN event to indicate the function has finished
+
+2) bool readHoldingRegister(uint16_t address,  uint16_t uid);
+This function reads a single holding register from the Modbus hardware. The uid shall be used by the plugin to recognize which read action the result belongs to. This uid will also be used in the PLUGIN_TASKTIMER_IN event to indicate the command. 
+At the end of the transaction the Modbus_device sends a PLUGIN_TASKTIMER_IN event with the following data:
+  idx: The uid given with the command
+  par1: Success of the transaction  0=not succseful 1=succesful, result available
+  par2: The value of the holding register cast to a int
+
+3)   bool writeSingleRegister(uint16_t address, uint16_t value, ModbusResultState *stateptr);
+This function writes a single holding register to the Modbus hardware. The value will be written to the specified register address. The stateptr shows the actual state of the transaction. The plugin may poll the state until the tranaction is finished.
+The Modbus_device will not use a PLUGIN_TASKTIMER_IN event to indicate the function has finished

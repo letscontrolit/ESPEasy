@@ -256,6 +256,10 @@ unsigned int SettingsType::getSVGcolor(Enum settingsType) {
     case Enum::CdnSettings_Type:
       return 0xff6600;
 #endif
+# if FEATURE_MODBUS_FAC
+    case Enum::ModbusInterfaceSettings_Type:
+      return 0x0066FF;
+# endif
     case Enum::SettingsType_MAX:
       break;
   }

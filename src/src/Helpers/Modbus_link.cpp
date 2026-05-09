@@ -172,6 +172,14 @@ uint16_t ModbusLINK_struct::queueTransaction(Modbus_RequestQueueElement *transac
     addLogMove(LOG_LEVEL_ERROR, F("Modbus: Link, Attempt to queue transaction on uninitialized link"));
     return 0;
   }
+  if (transaction == nullptr) {
+    addLogMove(LOG_LEVEL_ERROR, F("Modbus: Link, Attempt to queue null transaction"));
+    return 0;
+  }
+  if (transaction->_rcvframe_length > MODBUS_RCV_BUFFER ) {
+    addLogMove(LOG_LEVEL_ERROR, F("Modbus: Link, receive buffer too large"));
+    return 0;
+  }
   
   # ifdef MODBUS_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {

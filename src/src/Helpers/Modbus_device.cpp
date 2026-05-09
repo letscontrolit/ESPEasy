@@ -108,7 +108,7 @@ bool ModbusDEVICE_struct::readHoldingRegister(uint16_t           address,
   request->_userState   = statePtr;
   request->_messageType = ModbusTransactionType::READ_HOLDING_REGISTERS;
   createReadFrame(*request, _modbus_address, address);
-  uint16_t queueID = _modbus_link->queueTransaction(request);
+  (void) _modbus_link->queueTransaction(request);
   return true;
 }
 
@@ -144,7 +144,7 @@ bool ModbusDEVICE_struct::readModuleHoldingRegister(uint8_t  busAddress,
   request->_userState   = nullptr;
   request->_userId      = uid;
   createReadFrame(*request, busAddress, registerAddress);
-  uint16_t queueID = _modbus_link->queueTransaction(request);
+  (void) _modbus_link->queueTransaction(request);
   return true;
 }
 
@@ -168,8 +168,6 @@ void ModbusDEVICE_struct::createReadFrame(Modbus_RequestQueueElement& request,
   request._sendframe_length = 8;             // Size with CRC
   request._rcvframe_length  = 7;             // Expect 8 bytes in response
 }
-
-bool ModbusDEVICE_struct::readHoldingRegisterResult(uint16_t uid, uint16_t *valuePtr) { return false; }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Start writing a Modbus single register.
@@ -199,7 +197,7 @@ bool ModbusDEVICE_struct::writeSingleRegister(uint16_t           address,
   request->_sendframe_length = 8;             // Size with CRC
   request->_rcvframe_length  = 8;             // Expect 8 bytes in response
   ////dump_buffer(request->_sendframe, request->_sendframe_length);
-  uint16_t queueID = _modbus_link->queueTransaction(request);
+  (void) _modbus_link->queueTransaction(request);
   *statePtr = ModbusResultState::Busy;
 
   return true;

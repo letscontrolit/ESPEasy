@@ -138,7 +138,6 @@ bool P183_data_struct::plugin_task_timer(EventStruct *event)
 void P183_data_struct::scan_device(uint8_t node_id, uint8_t start_reg, uint8_t end_reg)
 {
   uint16_t value          = 0;
-  ModbusResultState state = ModbusResultState::Busy;
 
   addLogMove(LOG_LEVEL_INFO, F("Modbus: dumping module registers"));
 
