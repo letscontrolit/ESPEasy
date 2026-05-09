@@ -43,7 +43,8 @@ void ESPEasy_Scheduler::setNetworkTimer(unsigned long                msecFromNow
 {
   if (!validNetworkIndex(networkIndex)) { return; }
 
-  if (!Settings.getNetworkEnabled(networkIndex)) { return; }
+  if (function != NWPlugin::Function::NWPLUGIN_EXIT &&
+      !Settings.getNetworkEnabled(networkIndex)) { return; }
 
   const NWPluginTimerID timerID(networkIndex, Par1, function);
 

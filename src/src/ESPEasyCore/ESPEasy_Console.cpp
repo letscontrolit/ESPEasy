@@ -127,8 +127,6 @@ void EspEasy_Console_t::reInit()
 
   if (!mustHaveFallback) {
     if (_fallbackSerial._serial != nullptr) {
-      _fallbackSerial._serial->flush();
-      _fallbackSerial._serial->end();
       delete _fallbackSerial._serial;
       _fallbackSerial._serial = nullptr;
       somethingChanged        = true;
@@ -142,8 +140,6 @@ void EspEasy_Console_t::reInit()
       (_console_serial_txpin != Settings.console_serial_txpin) ||
       !mustHaveSerial) {
     if (_mainSerial._serial != nullptr) {
-      _mainSerial._serial->flush();
-      _mainSerial._serial->end();
       delete _mainSerial._serial;
       _mainSerial._serial = nullptr;
       somethingChanged    = true;
@@ -443,14 +439,4 @@ void EspEasy_Console_t::endPort()
   _fallbackSerial.endPort();
 #endif // if USES_ESPEASY_CONSOLE_FALLBACK_PORT
   delay(10);
-}
-
-int EspEasy_Console_t::availableForWrite()
-{
-  auto serial = getPort();
-
-  if (serial != nullptr) {
-    return serial->availableForWrite();
-  }
-  return 0;
 }

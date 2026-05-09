@@ -4,6 +4,7 @@
 #include "../../../src/DataStructs/TimingStats.h"
 #include "../../../src/DataTypes/ESPEasy_plugin_functions.h"
 #include "../../../src/Globals/Settings.h"
+#include "../../../src/Globals/ESPEasy_Scheduler.h"
 //#include "../../../src/Helpers/Misc.h"
 #include "../../../src/Helpers/StringConverter.h"
 #include "../Globals/NWPlugins.h"
@@ -2130,20 +2131,24 @@ bool         do_NWPluginCall(networkDriverIndex_t networkDriverIndex, NWPlugin::
         addLog(LOG_LEVEL_ERROR, strformat(F("Network %d was already initialized"), event->NetworkIndex + 1));
         return false;
       }
-      bitSet(networkIndex_initialized, event->NetworkIndex);
     } else if (Function == NWPlugin::Function::NWPLUGIN_EXIT) {
       if (!bitRead(networkIndex_initialized, event->NetworkIndex)) {
         // FIXME TD-er: What to do here? Was not (yet) initialized
         //        addLog(LOG_LEVEL_ERROR, strformat(F("Network %d was not (yet) initialized"), event->NetworkIndex + 1));
         return false;
       }
-      bitClear(networkIndex_initialized, event->NetworkIndex);
     }
 
 
     START_TIMER;
     NWPlugin_ptr_t nwplugin_call = (NWPlugin_ptr_t)pgm_read_ptr(NWPlugin_ptr + networkDriverIndex.value);
     const bool     res           = nwplugin_call(Function, event, string);
+    if (res && Function == NWPlugin::Function::NWPLUGIN_INIT) {
+      bitSet(networkIndex_initialized, event->NetworkIndex);
+    } else if (Function == NWPlugin::Function::NWPLUGIN_EXIT) {
+      bitClear(networkIndex_initialized, event->NetworkIndex);
+    }
+
     STOP_TIMER_NETWORK(networkDriverIndex, Function);
     return res;
   }
@@ -2200,10 +2205,10 @@ void NWPlugin_Exit_Init(networkIndex_t networkIndex)
     String dummy;
 
     // May need to call init later, so make sure exit is called first
-    NWPluginCall(NWPlugin::Function::NWPLUGIN_EXIT, &TempEvent, dummy);
+    Scheduler.setNetworkExitTimer(0, networkIndex);
 
     if (Settings.getNetworkEnabled(networkIndex)) {
-      NWPluginCall(NWPlugin::Function::NWPLUGIN_INIT, &TempEvent, dummy);
+      Scheduler.setNetworkInitTimer(0, networkIndex);
     }
   }
 }

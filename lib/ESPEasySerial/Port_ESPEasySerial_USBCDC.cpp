@@ -128,6 +128,7 @@ Port_ESPEasySerial_USBCDC_t::Port_ESPEasySerial_USBCDC_t(const ESPEasySerialConf
 Port_ESPEasySerial_USBCDC_t::~Port_ESPEasySerial_USBCDC_t()
 {
   if (_serial != nullptr) {
+    _serial->flush();
     _serial->end();
   }
 }

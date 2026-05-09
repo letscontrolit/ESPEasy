@@ -2,6 +2,8 @@
 
 #include "../../../src/DataStructs/ESPEasy_EventStruct.h"
 #include "../../../src/Helpers/StringConverter.h"
+#include "../../../src/Helpers/Misc.h"
+#include "../../../src/Helpers/Networking.h"
 #if FEATURE_STORE_NETWORK_INTERFACE_SETTINGS
 # include "../../../src/Helpers/_ESPEasy_key_value_store.h"
 #include "../_NWPlugin_Helper.h"
@@ -65,6 +67,15 @@ bool NWPluginData_base::isDefaultRoute() const {
 
 #endif
 
+bool NWPluginData_base::getStaticIPAddresses(IPAddress & ip, IPAddress & gateway, IPAddress & subnetmask, IPAddress & dns ) const
+{
+  getStaticIPAddress(IPAddressType::IP, ip);
+  getStaticIPAddress(IPAddressType::Gateway, gateway);
+  getStaticIPAddress(IPAddressType::Subnetmask, subnetmask);
+  getStaticIPAddress(IPAddressType::DNS, dns);
+
+  return IPAddressSet(ip) && IPAddressSet(gateway) && IPAddressSet(subnetmask);
+}
 
 bool NWPluginData_base::hasPluginStats() const {
 #if FEATURE_NETWORK_STATS
@@ -333,7 +344,7 @@ bool NWPluginData_base::handle_priority_route_changed()
     for (size_t i = 0; i < NR_ELEMENTS(cache->_dns_cache); ++i) {
       auto tmp = _netif->dnsIP(i);
 
-      if ((cache->_dns_cache[i] != INADDR_NONE) && (cache->_dns_cache[i] != tmp)) {
+      if (valid_DNS_address(cache->_dns_cache[i]) && (cache->_dns_cache[i] != tmp)) {
         addLog(LOG_LEVEL_INFO, strformat(
                  F("%s: Restore cached DNS server %d from %s to %s"),
                  _netif->desc(),
@@ -409,7 +420,7 @@ bool NWPluginData_base::_restore_DNS_cache()
     for (size_t i = 0; i < NR_ELEMENTS(cache->_dns_cache); ++i) {
       auto tmp = _netif->dnsIP(i);
 
-      if ((cache->_dns_cache[i] != INADDR_NONE) && (cache->_dns_cache[i] != tmp)) {
+      if (valid_DNS_address(cache->_dns_cache[i]) && (cache->_dns_cache[i] != tmp)) {
         addLog(LOG_LEVEL_INFO, strformat(
                  F("NW%03%d: Restore cached DNS server %d from %s to %s"),
                  _nw_data_pluginID,

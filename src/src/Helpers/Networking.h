@@ -196,6 +196,8 @@ bool connectClient(WiFiClient& client, IPAddress ip, uint16_t port, uint32_t tim
 
 void scrubDNS();
 
+bool IPAddressSet(const IPAddress& ip);
+
 bool valid_DNS_address(const IPAddress& dns);
 
 bool setDNS(int index, const IPAddress& dns);
