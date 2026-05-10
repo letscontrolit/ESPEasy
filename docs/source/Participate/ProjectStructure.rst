@@ -10,9 +10,14 @@ ESPEasy Project Directories
 
 Below a list of the most important directories and files used in this project.
 
-* ``.pio/`` Working dir for PlatformIO (Ignored by Git)
-* ``build_output/`` The output directory where all built files are collected.
-* ``dist/`` Files also includd in the nightly builds (e.g. blank flash files and ESPEasy flasher)
+* ``.github/`` Buildscripts used by the Github Actions build and release CI jobs.
+* ``.pio/`` Working dir for pioarduino (Ignored by Git)
+* ``.platformio/`` Working dir for pioarduino (Ignored by Git)
+* ``.platformio/penv/`` Directory to store the used Python Virtual Environment.
+* ``boards/`` Used board definitions.
+* ``boards/partitions/`` Used partition layout in ESP32 builds.
+* ``build_output/`` The output directory where all built files are collected. (Ignored by Git)
+* ``dist/`` Files also includd in the nightly builds (e.g. blank flash files and Espressif flash download tool)
 * ``docs/`` Documentation tree using Sphinx to build the documents.
 * ``hooks/`` Used for the continous integration process, used by Travis CI.
 * ``include/`` PlatformIO's suggested folder for .h files (not yet used)
@@ -20,16 +25,14 @@ Below a list of the most important directories and files used in this project.
 * ``misc/`` Additional files needed for some use cases, like specialized a firmware for some boards or decoder files for the TTN project.
 * ``patches/`` Patches we apply during build for core libraries.
 * ``src/`` The source code of ESPeasy
+* ``src/ESPEasy/`` Parts of ESPeasy use C++ namespaces, and are placed in this directory, matching the namespace structure.
 * ``static/`` Static files we use in ESPEasy, like CSS/JS/ICO files.
 * ``test/`` Test scripts to be used in the continous integration process.
 * ``tools/`` Tools to help build ESPeasy.
-* ``tools/pio/pre_custom_esp32.py`` Python helper script for building custom ESP32 binary.
-* ``tools/pio/pre_custom_esp8266.py`` Python helper script for building custom ESP8266 binary.
-* ``venv/`` Directory to store the used Python Virtual Environment. (Ignored by Git)
-* ``platformio.ini``  Configuration file for PlatformIO to define various build setups.
-* ``uncrustify.cfg``  Configuration file for Uncrustify, to format source code using some uniform formatting rules.
+* ``tools/pio/pre_custom_esp*.py`` Python helper scripts for building custom ESP binaries.
+* ``platformio.ini``  Configuration file for pioarduino to define various build setups.
 * ``requirements.txt``  List of used Python libraries and their version (result of ``pip freeze`` with Virtual env active)
-* ``boards/partitions/esp32_partition_app1810k_spiffs316k.csv`` Used partition layout in ESP32 4M builds.
+* ``uncrustify.cfg``  Configuration file for Uncrustify, to format source code using some uniform formatting rules.
 
 
 ESPEasy src dir
@@ -107,14 +110,17 @@ There is also a number of special builds:
 ESP Chip Type
 -------------
 
-* ``ESP8266`` Most likely option.
+* ``ESP8266`` Deprecated for new projects, as support from Espressif has been stopped, even though new chips are still being produced.
 * ``ESP8285`` Supported in ``ESP8266`` builds. Used in some Sonoff modules. This chip has embedded flash, so no extra flash chip.
 * ``ESP32``   Allows for more memory and more GPIO pins.
 * ``ESP32-S2`` Newer version of ESP32. Has even more GPIO pins, but some specific features of ESP32 were removed.
 * ``ESP32-S3`` Newer version of ESP32 and ESP32-S2. Has even more GPIO pins, some specific features of ESP32 were removed, and some design choices of ESP32-S2 are reverted and implemented differently.
-* ``ESP32-C2`` Preliminary supported. Cheaper variant of ESP32-C3, and also an ESP8266 replacement. Available as pin-compatible module for ESP8266. Single core, and max 120 MHz clock speed.
+* ``ESP32-C2`` Cheaper variant of ESP32-C3, and also an ESP8266 replacement. Available as pin-compatible module for ESP8266. Single core, and max 120 MHz clock speed.
 * ``ESP32-C3`` Intended as a replacement for ESP8266, using ESP32 technology, though single-core and with limited clock speed (160 MHz, some models 120 MHz).
-* ``ESP32-C6`` Preliminary supported. Will allow connectivity with IEEE 802.15.4 (Thread/Zigbee) wireless protocol.
+* ``ESP32-C6`` Will allow connectivity with IEEE 802.15.4 (Thread/Zigbee) wireless protocol.
+* ``ESP32-C61`` Preliminary supported. Will allow connectivity with IEEE 802.15.4 (Thread/Zigbee) wireless protocol.
+* ``ESP32-C5`` Will allow connectivity with WiFi 2.4GHz and 5GHz support.
+* ``ESP32-P4`` High-end dual-core MCU, with many GPIO pins and support for camera, display, RMII Ethernet and many other protocols. No on-chip WiFi support. Often has an additional ESP32-C6 with ESP-HostedMCU to provide wireless support via an SDIO connection.
 
 Memory Size and Partitioning
 ----------------------------
@@ -123,12 +129,12 @@ Memory Size and Partitioning
 * ``2M`` 2 MB flash modules (e.g. Shelly1/WROOM02)
 * ``4M`` 4 MB flash modules (e.g. NodeMCU/ESP32)
 * ``16M`` 16 MB flash modules (e.g. Wemos D1 mini pro) (has 14 MB LittleFS filesystem, as SPIFFS is unstable > 2 MB)
-* ``4M1M`` 4 MB flash modules with 1 MB filesystem (usually SPIFFS)
-* ``4M2M`` 4 MB flash modules with 2 MB filesystem (usually SPIFFS)
-* ``4M316k`` 4 MB flash modules using 1.8 MB sketch size, with 316 kB filesystem (usually SPIFFS) (for ESP32)
-* ``8M1M`` 8 MB flash modules using 3.5MB sketch size, with 1 MB filesystem (LittleFS) (ESP32 only a.t.m.)
-* ``16M1M`` 16 MB flash modules using 4MB sketch size, with 1 MB filesystem (usually SPIFFS) (ESP32 only a.t.m.)
-* ``16M8M`` 16 MB flash modules using 4MB sketch size, with 8 MB filesystem (LittleFS) (ESP32 only a.t.m.)
+* ``4M1M`` 4 MB flash modules with 1 MB filesystem (SPIFFS)
+* ``4M2M`` 4 MB flash modules with 2 MB filesystem (SPIFFS)
+* ``4M316k`` 4 MB flash modules using 1.8 MB sketch size, with 316 kB filesystem (LittleFS) (for ESP32)
+* ``8M1M`` 8 MB flash modules using 3.5MB sketch size, with 1 MB filesystem (LittleFS) (ESP32 only)
+* ``16M8M`` 16 MB flash modules using 4MB sketch size, with 8 MB filesystem (LittleFS) (ESP32 only)
+* ``32M20M`` 32 MB flash modules using 6MB sketch size, with 20 MB filesystem (LittleFS) (ESP32 only)
 
 Optional build options
 ----------------------
@@ -143,7 +149,7 @@ Optional build options
 * ``OPI`` Flash via OPI protocol support (ESP32 only)
 * ``QIO`` Flash via QIO protocol support (ESP32 only)
 * ``CDC`` CDC Serial (built-in USB) support (ESP32 only)
-* ``ETH`` Ethernet interface enabled (ESP32 only)
+* ``ETH`` Ethernet interface enabled (ESP32 only, no longer used, as all ESP32, except for ESP32-C2, have support for Ethernet included)
 
 
 Please note that the performance of 14MB SPIFFS (16M flash ESP8266 modules) is really slow.
@@ -183,17 +189,15 @@ This also means we still need to update the 2-step updater to support .bin.gz fi
 ESP32 builds
 ------------
 
-There are several builds for ESP32:
+There are several builds for ESP32, this is just a selection:
 
-* ``normal_ESP32_4M316k``  Build using the "stable" set of plugins for ESP32
-* ``normal_ESP32_4M316k_ETH``  Build using the "stable" set of plugins for ESP32, with support for an on-board Ethernet controller
+* ``normal_ESP32_4M316k``  Build using the "stable" set of plugins for ESP32, with support for an on-board Ethernet controller
 * ``custom_ESP32_4M316k``  Build template using either the plugin set defined in ``Custom.h`` or ``tools/pio/pre_custom_esp32.py``
 * ``collection_A_ESP32_4M316k``  Build using the "Collection" set "A" of plugins for ESP32
 * ``collection_B_ESP32_4M316k``  Build using the "Collection" set "B" of plugins for ESP32
 * ``collection_C_ESP32_4M316k``  Build using the "Collection" set "C" of plugins for ESP32
 * ``collection_D_ESP32_4M316k``  Build using the "Collection" set "D" of plugins for ESP32
-* ``collection_A_ESP32-wrover-kit_4M316k``  A build for ESP32 including build flags for the official WRover test kit.
-* ``max_ESP32_16M8M_LittleFS``  Build using all available plugins and controllers for ESP32 with 16 MB flash (some lolin_d32_pro boards)
+* ``max_ESP32_16M8M``  Build using all available plugins and controllers for ESP32 with 16 MB flash (like lolin_d32_pro boards)
 
 Since ESP32 does have its flash partitioned in several blocks, we have 2 bin files of each ESP32 build, f.e.:
 

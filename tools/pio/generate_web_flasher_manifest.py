@@ -160,7 +160,7 @@ def parse_filename(file, version, variant, file_suffix):
                 group = 'NeoPixel'
             elif 'normal_' in variant:
                 group = 'Normal'
-            elif 'max_' in variant:
+            elif 'max_' in variant or 'max32_' in variant or 'max8_' in variant:
                 group = 'MAX'
             elif 'custom_' in variant:
                 group = 'Custom'
