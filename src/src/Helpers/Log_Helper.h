@@ -21,7 +21,7 @@ public:
 
   uint32_t getNrMessages(LogDestination logDestination) const;
 
-  void     loop();
+  void     loop(bool serialOnly);
 
   bool     logActiveRead(LogDestination logDestination);
 
