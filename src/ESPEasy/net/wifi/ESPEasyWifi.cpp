@@ -504,6 +504,14 @@ bool wifiAPmodeActivelyUsed()
     // AP not active or soon to be disabled in processDisableAPmode()
     return false;
   }
+#ifdef BOARD_HAS_SDIO_ESP_HOSTED
+  if (GetHostedMCUFwVersion() < 0x010000) {
+    // Hosted fw is too old, function below is not yet implemented
+    // When calling that function the ESP32-P4 will crash.
+    return false;
+  }
+#endif
+
   return SOFTAP_STATION_COUNT != 0;
 
   // FIXME TD-er: is effectively checking for AP active enough or must really check for connected clients to prevent automatic wifi
