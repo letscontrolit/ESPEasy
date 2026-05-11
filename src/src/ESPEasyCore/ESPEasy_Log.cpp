@@ -219,6 +219,7 @@ void addLog(uint8_t logLevel, const __FlashStringHelper *str)
   }
   #endif // ifdef ESP32
   Logging.addLogEntry(LogEntry_t(logLevel, str));
+  processLogs();
 }
 
 void addLog(uint8_t logLevel, const char *line) {
@@ -233,6 +234,7 @@ void addLog(uint8_t logLevel, const char *line) {
   }
   #endif // ifdef ESP32
   Logging.addLogEntry(LogEntry_t(logLevel, line));
+  processLogs();
 }
 
 void addLog(uint8_t logLevel, String&& str) { addToLogMove(logLevel, std::move(str)); }
@@ -250,6 +252,7 @@ void addLog(uint8_t logLevel, const String& str)
   }
   #endif // ifdef ESP32
   Logging.addLogEntry(LogEntry_t(logLevel, str));
+  processLogs();
 }
 
 void addToLogMove(uint8_t logLevel, String&& str)
@@ -265,4 +268,16 @@ void addToLogMove(uint8_t logLevel, String&& str)
   }
   #endif // ifdef ESP32
   Logging.addLogEntry(LogEntry_t(logLevel, std::move(str)));
+  processLogs();
+}
+
+void processLogs(bool serialOnly)
+{
+  process_serialWriteBuffer();
+  Logging.loop(serialOnly);
+#if FEATURE_SYSLOG
+  if (!serialOnly) {
+    syslogWriter.process();
+  }
+#endif
 }

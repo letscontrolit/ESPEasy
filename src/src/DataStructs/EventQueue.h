@@ -17,6 +17,11 @@ struct EventQueueStruct {
   void        add(const __FlashStringHelper *event,
                   bool                       deduplicate = false);
 
+  void        addDeDup(const String& event);
+
+  void        addDeDup(const __FlashStringHelper *event);
+
+
   void        addMove(String&& event,
                       bool     deduplicate = false);
 

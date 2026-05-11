@@ -5,6 +5,8 @@
 # include "../../../src/DataTypes/ESPEasy_plugin_functions.h"
 # include "../../../src/WebServer/HTML_wrappers.h"
 # include "../../../src/WebServer/Markup.h"
+# include "../../../src/Globals/Settings.h"
+# include "../../../src/Helpers/Networking.h"
 
 # include "../wifi/ESPEasyWifi.h"
 
@@ -42,9 +44,9 @@ void NW001_data_struct_WiFi_STA::webform_load(EventStruct *event)
 
 }
 
-void NW001_data_struct_WiFi_STA::webform_save(EventStruct *event) {}
+void NW001_data_struct_WiFi_STA::webform_save(EventStruct *event)        {}
 
-bool NW001_data_struct_WiFi_STA::webform_getPort(KeyValueWriter *writer)     { return true; }
+bool NW001_data_struct_WiFi_STA::webform_getPort(KeyValueWriter *writer) { return true; }
 
 bool NW001_data_struct_WiFi_STA::init(EventStruct *event)
 {
@@ -95,6 +97,16 @@ bool NW001_data_struct_WiFi_STA::init(EventStruct *event)
       //    ESPEasy::net::wifi::setWifiMode(WIFI_OFF);
    */
 
+  {
+    auto runtime_data = getNWPluginData_static_runtime();
+    if (runtime_data) {
+      IPAddress ip, gateway, sn, dns;
+      getStaticIPAddresses(ip, gateway, sn, dns);
+      runtime_data->setStaticIP(ip, gateway, sn, dns);
+    }
+  }
+  
+
   ESPEasy::net::wifi::initWiFi();
   return true;
 }
@@ -106,6 +118,30 @@ bool NW001_data_struct_WiFi_STA::exit(EventStruct *event) {
 
 NWPluginData_static_runtime * NW001_data_struct_WiFi_STA::getNWPluginData_static_runtime() {
   return _WiFiEventHandler.getNWPluginData_static_runtime();
+}
+
+bool NW001_data_struct_WiFi_STA::getStaticIPAddress(IPAddressType addressType, IPAddress& ip) const
+{
+  IPAddress res;
+
+  switch (addressType)
+  {
+    case IPAddressType::IP:
+      res = IPAddress(Settings.IP);
+      break;
+    case IPAddressType::Gateway:
+      res = IPAddress(Settings.Gateway);
+      break;
+    case IPAddressType::Subnetmask:
+      res = IPAddress(Settings.Subnet);
+      break;
+    case IPAddressType::DNS:
+      res = IPAddress(Settings.DNS);
+      break;
+  }
+  ip = res;
+
+  return IPAddressSet(ip);
 }
 
 const __FlashStringHelper * NW001_data_struct_WiFi_STA::getWiFi_encryptionType() const

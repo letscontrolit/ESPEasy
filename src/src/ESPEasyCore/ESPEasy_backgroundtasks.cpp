@@ -28,6 +28,7 @@
 * run background tasks
 \*********************************************************************************************/
 bool runningBackgroundTasks = false;
+
 void backgroundtasks()
 {
   // checkRAM(F("backgroundtasks"));
@@ -74,11 +75,8 @@ void backgroundtasks()
      }
    */
 
-  process_serialWriteBuffer();
-  #if FEATURE_SYSLOG
-  syslogWriter.process();
-  #endif
-  Logging.loop();
+
+  processLogs();
 
   if (!UseRTOSMultitasking) {
     serial();

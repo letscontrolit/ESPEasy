@@ -35,6 +35,8 @@ struct NW002_data_struct_WiFi_AP : public NWPluginData_base {
 
   NWPluginData_static_runtime* getNWPluginData_static_runtime() override;
 
+  bool getStaticIPAddress(IPAddressType addressType, IPAddress & ip) const override;
+
 private:
 
 # ifdef ESP32

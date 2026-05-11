@@ -140,8 +140,8 @@ uint32_t getFlashRealSizeInBytes() {
   if (res == 0) {
     #if defined(ESP32)
     #ifdef ESP32P4
-    // TODO TD-er: Implement
-    res = 1 << 24;
+    const int32_t flash_cap_MB = getEmbeddedFlashSize();
+    res = flash_cap_MB << 20;
     #else
     res = (1 << ((getFlashChipId() >> 16) & 0xFF));
     #endif

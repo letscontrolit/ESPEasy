@@ -410,7 +410,7 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
     }
     case LabelType::ENABLE_SERIAL_PORT_CONSOLE:
     {
-      return KeyValueStruct(F("Enable Serial Port Console"), !!Settings.UseSerial);
+      return KeyValueStruct(F("Enable Serial Port Console"), !!Settings.UseSerial); // Cast to bool to make sure it is shown as a checkmark
     }
     case LabelType::CONSOLE_SERIAL_PORT:
     {
@@ -419,7 +419,7 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
 #if USES_ESPEASY_CONSOLE_FALLBACK_PORT
     case LabelType::CONSOLE_FALLBACK_TO_SERIAL0:
     {
-      return KeyValueStruct(F("Fallback to Serial 0"), Settings.console_serial0_fallback);
+      return KeyValueStruct(F("Fallback to Serial 0"), !!Settings.console_serial0_fallback); // Cast to bool to make sure it is shown as a checkmark
     }
     case LabelType::CONSOLE_FALLBACK_PORT:
     {
@@ -755,7 +755,10 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
     }
     case LabelType::RESTART_WIFI_LOST_CONN:
     {
+      #ifndef BOARD_HAS_SDIO_ESP_HOSTED
+      // Disable option for ESP-hosted WiFi as this always needs to restart when forcing disconnect.
       return KeyValueStruct(F("Restart WiFi Lost Conn"), Settings.WiFiRestart_connection_lost());
+      #endif
     }
     case LabelType::FORCE_WIFI_NOSLEEP:
     {
@@ -1050,10 +1053,19 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
         uint32_t maxSketchSize;
         bool     use2step;
         OTA_possible(maxSketchSize, use2step);
-        str += strformat(
-          F("%d [kB] (%d kB not used)"),
-          (getSketchSize() >> 10),
-          (maxSketchSize - getSketchSize()) >> 10);
+        const uint32_t sketchsize_kB = getSketchSize() >> 10;
+        maxSketchSize >>= 10;
+
+        if (maxSketchSize >= sketchsize_kB)
+          str += strformat(
+            F("%d [kB] (%d kB not used)"),
+            sketchsize_kB,
+            (maxSketchSize - sketchsize_kB));
+        else
+          str += strformat(
+            F("%d [kB]"),
+            sketchsize_kB);
+
       } else {
         str = (getSketchSize() >> 10);
       }

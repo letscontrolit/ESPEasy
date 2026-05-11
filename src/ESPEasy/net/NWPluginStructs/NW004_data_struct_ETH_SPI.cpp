@@ -6,6 +6,7 @@
 
 # include "../../../src/Helpers/Hardware_GPIO.h"
 # include "../../../src/Helpers/Hardware_SPI.h"
+# include "../../../src/Helpers/Networking.h"
 # include "../../../src/Helpers/SPI_Helper.h"
 # include "../../../src/Helpers/StringConverter.h"
 
@@ -53,16 +54,16 @@ const __FlashStringHelper * NW004_data_struct_ETH_SPI::getLabelString(uint32_t k
     case NW004_KEY_ETH_PIN_RST: return displayString ? F("Ethernet RST pin") : F("RST");
     case NW004_KEY_SPI_BUS: return displayString ? F("SPI Bus") : F("ethspibus");
     case NW004_KEY_IP:
-      storageType = KVS_StorageType::Enum::string_type;
+      storageType = KVS_StorageType::Enum::ip_type;
       return F("IP");
     case NW004_KEY_GW:
-      storageType = KVS_StorageType::Enum::string_type;
+      storageType = KVS_StorageType::Enum::ip_type;
       return displayString ? F("Gateway") : F("gw");
     case NW004_KEY_SN:
-      storageType = KVS_StorageType::Enum::string_type;
+      storageType = KVS_StorageType::Enum::ip_type;
       return displayString ? F("Subnetmask") : F("sn");
     case NW004_KEY_DNS:
-      storageType = KVS_StorageType::Enum::string_type;
+      storageType = KVS_StorageType::Enum::ip_type;
       return F("DNS");
   }
   return F("");
@@ -141,7 +142,17 @@ void NW004_data_struct_ETH_SPI::loadDefaults(ESPEasy_key_value_store     *kvs,
       kvs->setValue(NW004_KEY_ETH_PIN_IRQ,  static_cast<int8_t>(Settings.ETH_Pin_mdio_irq));
       kvs->setValue(NW004_KEY_ETH_PIN_RST,  static_cast<int8_t>(Settings.ETH_Pin_power_rst));
 
-      // TODO TD-er: Copy IP info
+      const IPAddress ip     = Settings.ETH_IP;
+      const IPAddress gw     = Settings.ETH_Gateway;
+      const IPAddress subnet = Settings.ETH_Subnet;
+      const IPAddress dns    = Settings.ETH_DNS;
+
+      // TODO TD-er: Must clear the previous ETH IP settings, once converted
+
+      kvs->setValue(NW004_KEY_IP,  ip);
+      kvs->setValue(NW004_KEY_GW,  gw);
+      kvs->setValue(NW004_KEY_SN,  subnet);
+      kvs->setValue(NW004_KEY_DNS, dns);
 
       store_nwpluginTaskData_KVS(kvs, networkIndex, nwPluginID);
     }
@@ -157,8 +168,6 @@ void NW004_data_struct_ETH_SPI::loadDefaults(ESPEasy_key_value_store     *kvs,
       kvs->setValue(NW004_KEY_ETH_PIN_IRQ,  static_cast<int8_t>(DEFAULT_ETH_PIN_MDIO));
       kvs->setValue(NW004_KEY_ETH_PIN_RST,  static_cast<int8_t>(DEFAULT_ETH_PIN_POWER));
 
-      // TODO TD-er: Copy IP info
-
       store_nwpluginTaskData_KVS(kvs, networkIndex, nwPluginID);
     }
     # endif // if defined(DEFAULT_ETH_PHY_TYPE) && defined(DEFAULT_ETH_CLOCK_MODE) && defined(DEFAULT_ETH_PHY_ADDR) &&
@@ -171,11 +180,18 @@ void NW004_data_struct_ETH_SPI::webform_load(EventStruct *event)
   _load();
   NW004_data_struct_ETH_SPI::loadDefaults(_kvs, event->NetworkIndex, nwpluginID_t(4));
   addFormSubHeader(F("Ethernet IP Settings"));
+  {
+    const int keys[] = {
+      NW004_KEY_IP,
+      NW004_KEY_GW,
+      NW004_KEY_SN,
+      NW004_KEY_DNS
+    };
 
-  addFormIPBox(F("ESP Ethernet IP"),         F("espethip"),      Settings.ETH_IP);
-  addFormIPBox(F("ESP Ethernet Gateway"),    F("espethgateway"), Settings.ETH_Gateway);
-  addFormIPBox(F("ESP Ethernet Subnetmask"), F("espethsubnet"),  Settings.ETH_Subnet);
-  addFormIPBox(F("ESP Ethernet DNS"),        F("espethdns"),     Settings.ETH_DNS);
+    for (uint32_t i = 0; i < NR_ELEMENTS(keys); ++i) {
+      showWebformItem(*_kvs, NW004_makeWebFormItemParams(keys[i]));
+    }
+  }
   addFormNote(F("Leave empty for DHCP"));
 
   addFormSubHeader(F("Ethernet"));
@@ -277,6 +293,15 @@ bool NW004_data_struct_ETH_SPI::webform_getPort(KeyValueWriter *writer) { return
 bool NW004_data_struct_ETH_SPI::init(EventStruct *event)
 {
   _load();
+    {
+    auto runtime_data = getNWPluginData_static_runtime();
+    if (runtime_data) {
+      IPAddress ip, gateway, sn, dns;
+      getStaticIPAddresses(ip, gateway, sn, dns);
+      runtime_data->setStaticIP(ip, gateway, sn, dns);
+    }
+  }
+
   ETHConnectRelaxed();
 
   return true;
@@ -286,6 +311,37 @@ bool                          NW004_data_struct_ETH_SPI::exit(EventStruct *event
 
 NWPluginData_static_runtime * NW004_data_struct_ETH_SPI::getNWPluginData_static_runtime() {
   return ESPEasy::net::eth::ETH_NWPluginData_static_runtime::getNWPluginData_static_runtime(_networkIndex);
+}
+
+bool NW004_data_struct_ETH_SPI::getStaticIPAddress(IPAddressType addressType, IPAddress& ip) const
+{
+  ip = IPAddress();
+
+  if (!_kvs) { return false; }
+  uint32_t key = NW004_MAX_KEY;
+
+  switch (addressType)
+  {
+    case IPAddressType::IP:
+      key = NW004_KEY_IP;
+      break;
+    case IPAddressType::Gateway:
+      key = NW004_KEY_GW;
+      break;
+    case IPAddressType::Subnetmask:
+      key = NW004_KEY_SN;
+      break;
+    case IPAddressType::DNS:
+      key = NW004_KEY_DNS;
+      break;
+  }
+
+  if ((key == NW004_MAX_KEY) || !_kvs->getValue(key, ip)) {
+    return false;
+  }
+
+  return IPAddressSet(ip);
+
 }
 
 bool NW004_data_struct_ETH_SPI::write_Eth_HW_Address(KeyValueWriter *writer)
@@ -448,6 +504,12 @@ bool NW004_data_struct_ETH_SPI::ETHConnectRelaxed() {
     // else
     if (spi_instance)
     {
+      IPAddress ip, gateway, sn, dns;
+
+      if (getStaticIPAddresses(ip, gateway, sn, dns)) {
+        iface->config(ip, gateway, sn, dns);
+      }
+
       // TODO TD-er: Do we need to include the CLK, MISO, MOSI pins in the call or do we need to start the SPI bus first?
 # if ETH_SPI_SUPPORTS_CUSTOM
       success = iface->begin(

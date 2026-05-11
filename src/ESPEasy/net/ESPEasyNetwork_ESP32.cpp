@@ -2,12 +2,14 @@
 
 #include "../net/ESPEasyNetwork.h"
 
-#include "../../ESPEasy/net/Globals/NetworkState.h"
+#include "../net/Globals/NetworkState.h"
+#include "../net/eth/ESPEasyEth.h"
+#include "../net/Globals/NWPlugins.h"
 #include "../../src/ESPEasyCore/ESPEasy_Log.h"
 #include "../../src/Helpers/NetworkStatusLED.h"
 #include "../../src/Helpers/StringConverter.h"
-#include "../net/eth/ESPEasyEth.h"
-#include "../net/Globals/NWPlugins.h"
+#include "../../src/Globals/Settings.h"
+
 
 #include <NetworkManager.h>
 
@@ -116,13 +118,35 @@ NetworkInterface* getDefaultNonAP_interface()
   return network_if;
 }
 
+ESPEasy::net::networkIndex_t getNetworkIndex_defaultNetwork()
+{
+  auto network_if = getDefaultNonAP_interface();
+  if (network_if == nullptr) {
+    return ESPEasy::net::INVALID_NETWORK_INDEX;
+  }
+  for (ESPEasy::net::networkIndex_t x = 0; x < NETWORK_MAX; ++x) {
+    if (Settings.getNetworkEnabled(x)) {
+      struct EventStruct TempEvent;
+      TempEvent.NetworkIndex = x;
+      String str;
+
+      if (ESPEasy::net::NWPluginCall(NWPlugin::Function::NWPLUGIN_GET_INTERFACE, &TempEvent, str))
+      {
+        if (TempEvent.networkInterface->netif() == network_if->netif()) {
+          return x;
+        }  
+      }
+    }
+  }
+  return ESPEasy::net::INVALID_NETWORK_INDEX;
+}
+
 bool NetworkConnected(bool force) {
   static bool last_result           = false;
   static uint32_t last_check_millis = 0;
 
   if (force || (timePassedSince(last_check_millis) > 50) || (last_check_millis == 0)) {
     last_check_millis = millis();
-    last_result = Network.isOnline();
 
     // FIXME TD-er: This is checking for NonAP interfaces, however we also have
     // ESPEasy::net::NWPluginCall(NWPlugin::Function::NWPLUGIN_WEBSERVER_SHOULD_RUN);
@@ -136,6 +160,7 @@ bool NetworkConnected(bool force) {
     // - Webserver
 
     processNetworkEvents();
+    last_result = Network.isOnline();
   }
   return last_result;
 }
