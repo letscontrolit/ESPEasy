@@ -62,9 +62,9 @@ def create_display_text(description, version, families):
 def parse_filename(file, version, variant, file_suffix):
     # print("{} : {} {} {}".format(file, version, variant, file_suffix))
 
-    chipFamily = 'NotSet'
-    chipVariant = ''
-    manifest_suff = ''
+    chip_family = 'NotSet'
+    chip_variant = ''
+    manifest_suffix = ''
     add_improv = True
 
     main_group = 'Misc'    # e.g. "4M Flash" or "Device Specific"
@@ -80,35 +80,35 @@ def parse_filename(file, version, variant, file_suffix):
 
     if ".factory.bin" in file_suffix:
         if 'ESP32' in variant:
-            manifest_suff = '.manifest.json'
+            manifest_suffix = '.manifest.json'
             if 'ESP32s2' in variant:
-                chipFamily = 'ESP32-S2'
+                chip_family = 'ESP32-S2'
             elif 'ESP32s31' in variant:
-                chipFamily = 'ESP32-S31'
+                chip_family = 'ESP32-S31'
             elif 'ESP32s3' in variant:
-                chipFamily = 'ESP32-S3'
+                chip_family = 'ESP32-S3'
             elif 'ESP32c2' in variant:
-                chipFamily = 'ESP32-C2'
+                chip_family = 'ESP32-C2'
             elif 'ESP32c3' in variant:
-                chipFamily = 'ESP32-C3'
+                chip_family = 'ESP32-C3'
             elif 'ESP32c5' in variant:
-                chipFamily = 'ESP32-C5'
+                chip_family = 'ESP32-C5'
             elif 'ESP32c61' in variant:
-                chipFamily = 'ESP32-C61'
+                chip_family = 'ESP32-C61'
             elif 'ESP32c6' in variant:
-                chipFamily = 'ESP32-C6'
+                chip_family = 'ESP32-C6'
             elif 'ESP32h21' in variant:
-                chipFamily = 'ESP32-H21'
+                chip_family = 'ESP32-H21'
             elif 'ESP32h2' in variant:
-                chipFamily = 'ESP32-H2'
+                chip_family = 'ESP32-H2'
             elif 'ESP32p4' in variant:
-                chipFamily = 'ESP32-P4'
+                chip_family = 'ESP32-P4'
                 if 'rev300' in variant or 'r3' in variant:
-                    chipVariant = 'rev300'
+                    chip_variant = 'rev300'
                 else:
-                    chipVariant = 'rev0'
+                    chip_variant = 'rev0'
             else:
-                chipFamily = 'ESP32'
+                chip_family = 'ESP32'
 
             if '_4M316k' in variant:
                 flash_size = '4M'
@@ -131,8 +131,8 @@ def parse_filename(file, version, variant, file_suffix):
 
     else:
         if ".bin" in file_suffix and ".gz" not in file_suffix and 'ESP32' not in variant:
-            chipFamily = 'ESP8266'
-            manifest_suff = '.manifest.json'
+            chip_family = 'ESP8266'
+            manifest_suffix = '.manifest.json'
             add_improv = False
 
             if '_4M1M' in variant:
@@ -148,8 +148,7 @@ def parse_filename(file, version, variant, file_suffix):
                 flash_size = '1M'
                 main_group = '1M Flash'
 
-
-    if 'NotSet' not in chipFamily:
+    if 'NotSet' not in chip_family:
         for special in ['minimal_', 'core', '_302_', 'Domoticz', 'FHEM', 'hard_', 'beta', 'alt_wifi', 'OTA']:
             if special in variant:
                 sub_group = variant
@@ -180,7 +179,6 @@ def parse_filename(file, version, variant, file_suffix):
                 if '_4M1M' in variant:
                     main_group = '4M Flash Collection Builds'
 
-
             if 'NotSet' not in group:
                 sub_group_spit = group.split('_')
 
@@ -201,7 +199,6 @@ def parse_filename(file, version, variant, file_suffix):
                     specials.append('VCC')
                 if 'solo1' in variant:
                     specials.append('Solo1')
-
 
                 for sp in specials:
                     sub_group_spit.append(sp)
@@ -238,31 +235,28 @@ def parse_filename(file, version, variant, file_suffix):
             main_group = '4M Flash ESP32-solo1'
 
     if ".factory.bin" in file_suffix or 'ESP32' not in file:
-        #print('{:10s}: {:34s}\t{:10s} {} / {}'.format(state, sub_group, chipFamily, version, file))
+        # print('{:10s}: {:34s}\t{:10s} {} / {}'.format(state, sub_group, chipFamily, version, file))
 
-        print('{:10s}: {:34s}\t{:10s} {} / {}'.format(state, description, chipFamily, version, file))
+        print('{:10s}: {:34s}\t{:10s} {} / {}'.format(state, description, chip_family, version, file))
 
         if main_group not in manifest_binfiles:
             manifest_binfiles[main_group] = {}
 
-        builds = dict([('chipFamily', chipFamily)])
+        builds = dict([('chipFamily', chip_family)])
         if flash_size_mb > 0:
             builds['flashSizeMB'] = flash_size_mb
         if add_improv:
             builds['improv'] = True
-        if chipVariant:
-            builds['chipVariant'] = chipVariant
+        if chip_variant:
+            builds['chipVariant'] = chip_variant
         builds['parts'] = [dict([('path', file), ('offset', 0)])]
-
 
         if sub_group not in manifest_binfiles[main_group]:
             manifest = {}
-            families = []
-            families.append(chipFamily)
 
             manifest['name'] = description
             manifest['displaytext'] = description
-            manifest['families'] = families
+            manifest['families'] = [chip_family]
             manifest['version'] = version
             manifest['new_install_prompt_erase'] = True
             manifest['build_flags'] = build_flags
@@ -270,14 +264,14 @@ def parse_filename(file, version, variant, file_suffix):
             manifest_binfiles[main_group][sub_group] = manifest
         else:
             manifest_binfiles[main_group][sub_group]['builds'].append(builds)
-            manifest_binfiles[main_group][sub_group]['families'].append(chipFamily)
+            manifest_binfiles[main_group][sub_group]['families'].append(chip_family)
 
         display_string = create_display_text(description, version, manifest_binfiles[main_group][sub_group]['families'])
         manifest_binfiles[main_group][sub_group]['displaytext'] = display_string
         if 'ESP8266' in main_group:
-            manifest_binfiles[main_group][sub_group]['manifestfilename'] = '{}_ESP8266{}'.format(sub_group, manifest_suff)
+            manifest_binfiles[main_group][sub_group]['manifestfilename'] = '{}_ESP8266{}'.format(sub_group, manifest_suffix)
         else:
-            manifest_binfiles[main_group][sub_group]['manifestfilename'] = '{}{}'.format(sub_group, manifest_suff)
+            manifest_binfiles[main_group][sub_group]['manifestfilename'] = '{}{}'.format(sub_group, manifest_suffix)
 
 
 
@@ -319,7 +313,6 @@ def generate_manifest_files(bin_folder, output_prefix):
         'Custom',
         'Custom Misc',
         'Misc']
-
 
     for main_group in main_group_list:
         if main_group in manifest_binfiles:
@@ -405,7 +398,7 @@ def generate_manifest_files(bin_folder, output_prefix):
         lines_tail = [
             '      </select>\n',
             '    </div>\n',
-            '    <esp-web-install-button></esp-web-install-button>\n',
+            '    <esp-web-install-button baud-rate="460800"></esp-web-install-button>\n',
 
             '    <br>\n',
             '    <br>\n',
