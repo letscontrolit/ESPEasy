@@ -28,7 +28,7 @@ def create_display_text(description, version, families):
         esp32_split.append('S2')
     if 'ESP32-S31' in families:
         esp32_split.append('S31')
-    elif 'ESP32-S3' in families:
+    if 'ESP32-S3' in families:
         esp32_split.append('S3')
     if 'ESP32-C2' in families:
         esp32_split.append('C2')
@@ -38,7 +38,7 @@ def create_display_text(description, version, families):
         esp32_split.append('C5')
     if 'ESP32-C61' in families:
         esp32_split.append('C61')
-    elif 'ESP32-C6' in families:
+    if 'ESP32-C6' in families:
         esp32_split.append('C6')
     if 'ESP32-H2' in families:
         esp32_split.append('H2')
@@ -46,12 +46,13 @@ def create_display_text(description, version, families):
         esp32_split.append('H21')
     if 'ESP32-P4R3' in families:
         esp32_split.append('P4R3')
-    elif 'ESP32-P4' in families:
+    if 'ESP32-P4' in families:
         esp32_split.append('P4')
 
-
     if len(esp32_split) > 0:
-        fam_split.append('ESP32-' + '/'.join(esp32_split))
+        res = list(set(esp32_split))  # Make list unique
+        res.sort(key=str.lower)
+        fam_split.append('ESP32-' + '/'.join(res))
 
     fam_str = ','.join(fam_split)
 
@@ -59,7 +60,7 @@ def create_display_text(description, version, families):
 
 
 def parse_filename(file, version, variant, file_suffix):
-    #print("{} : {} {} {}".format(file, version, variant, file_suffix))
+    # print("{} : {} {} {}".format(file, version, variant, file_suffix))
 
     chipFamily = 'NotSet'
     chipVariant = ''
@@ -71,6 +72,7 @@ def parse_filename(file, version, variant, file_suffix):
     description = 'NotSet'
     sub_group = 'NotSet'
     flash_size = 'NotSet'
+    flash_size_mb = 0        # For separating different "MAX" builds
 
     build_flags = ''
 
@@ -113,16 +115,19 @@ def parse_filename(file, version, variant, file_suffix):
                 main_group = '4M Flash'
             elif '_8M1M' in variant:
                 flash_size = '8M1M'
-                main_group = '8M Flash'
+                flash_size_mb = 8
+                main_group = '8M/16M/32M Flash MAX Builds'
             elif '_16M1M' in variant:
                 flash_size = '16M1M'
                 main_group = '16M Flash'
             elif '_16M8M' in variant:
                 flash_size = '16M8M'
-                main_group = '16M Flash'
+                flash_size_mb = 16
+                main_group = '8M/16M/32M Flash MAX Builds'
             elif '_32M20M' in variant:
                 flash_size = '32M20M'
-                main_group = '32M Flash'
+                flash_size_mb = 32
+                main_group = '8M/16M/32M Flash MAX Builds'
 
     else:
         if ".bin" in file_suffix and ".gz" not in file_suffix and 'ESP32' not in variant:
@@ -182,7 +187,8 @@ def parse_filename(file, version, variant, file_suffix):
                 # Add some flags to differentiate the groups
                 # but also use this to sort the items per main group.
                 specials = []
-                specials.append(flash_size)
+                if 'MAX' not in group:
+                    specials.append(flash_size)
                 if '_PSRAM' in variant:
                     specials.append('PSRAM')
                 if 'LittleFS' in variant and 'ESP32' not in variant:
@@ -239,42 +245,30 @@ def parse_filename(file, version, variant, file_suffix):
         if main_group not in manifest_binfiles:
             manifest_binfiles[main_group] = {}
 
+        builds = dict([('chipFamily', chipFamily)])
+        if flash_size_mb > 0:
+            builds['flashSizeMB'] = flash_size_mb
+        if add_improv:
+            builds['improv'] = True
+        if chipVariant:
+            builds['chipVariant'] = chipVariant
+        builds['parts'] = [dict([('path', file), ('offset', 0)])]
+
+
         if sub_group not in manifest_binfiles[main_group]:
             manifest = {}
-            manifest['name'] = description
             families = []
             families.append(chipFamily)
+
+            manifest['name'] = description
             manifest['displaytext'] = description
             manifest['families'] = families
             manifest['version'] = version
             manifest['new_install_prompt_erase'] = True
             manifest['build_flags'] = build_flags
-            parts = dict([('path', file), ('offset', 0)])
-            if not chipVariant:
-                if add_improv:
-                    builds = dict([('chipFamily', chipFamily), ('improv', True), ('parts', [parts])])
-                else:
-                    builds = dict([('chipFamily', chipFamily), ('parts', [parts])])
-            else:
-                if add_improv:
-                    builds = dict([('chipFamily', chipFamily), ('chipVariant', chipVariant), ('improv', False), ('parts', [parts])])
-                else:
-                    builds = dict([('chipFamily', chipFamily), ('chipVariant', chipVariant), ('parts', [parts])])
             manifest['builds'] = [builds]
             manifest_binfiles[main_group][sub_group] = manifest
         else:
-            parts = dict([('path', file), ('offset', 0)])
-            if not chipVariant:
-                if add_improv:
-                    builds = dict([('chipFamily', chipFamily), ('improv', True), ('parts', [parts])])
-                else:
-                    builds = dict([('chipFamily', chipFamily), ('parts', [parts])])
-            else:
-                if add_improv:
-                    builds = dict([('chipFamily', chipFamily), ('chipVariant', chipVariant), ('improv', True), ('parts', [parts])])
-                else:
-                    builds = dict([('chipFamily', chipFamily), ('chipVariant', chipVariant), ('parts', [parts])])
-
             manifest_binfiles[main_group][sub_group]['builds'].append(builds)
             manifest_binfiles[main_group][sub_group]['families'].append(chipFamily)
 
@@ -315,12 +309,10 @@ def generate_manifest_files(bin_folder, output_prefix):
 
     # the main grouping in the combo box on the web flasher page
     main_group_list = [
+        '8M/16M/32M Flash MAX Builds',
         '4M Flash',
         '4M Flash ESP32-solo1',
         '4M Flash Collection Builds',
-        '8M Flash',
-        '16M Flash',
-        '32M Flash',
         '2M Flash',
         '1M Flash',
         'Device Specific',
