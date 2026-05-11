@@ -39,6 +39,10 @@ extern "C" {
 # endif // ifdef ESP32
 
 
+# ifdef BOARD_HAS_SDIO_ESP_HOSTED
+#  define MIN_REQUIRED_ESP_HOSTED_FW  0x00020600
+# endif
+
 namespace ESPEasy {
 namespace net {
 namespace wifi {
@@ -378,6 +382,12 @@ bool write_WiFi_Hosted_MCU_info(KeyValueWriter*writer)
   } else {
     writer->write({ F("ESP-Host Fw Version"), GetHostedFwVersion(EspHostTypes::ESP_HOST) });
     writer->write({ F("ESP-Hosted-MCU Fw Version"), GetHostedFwVersion(EspHostTypes::ESP_HOSTED) });
+    if (GetHostedMCUFwVersion() < MIN_REQUIRED_ESP_HOSTED_FW) {
+      writer->writeNote(F("ESP-Hosted-MCU firmware is too old, run <tt>wifiotahostedmcu</tt> via ESPEasy console"));
+    } else if (hostedHasUpdate()) {
+      writer->writeNote(F("ESP-Hosted-MCU firmware update available, run <tt>wifiotahostedmcu</tt> via ESPEasy console"));
+    }
+
     writer->write({ F("ESP-Hosted-MCU Chip"), GetHostedMCU() });
     writer->write({
             F("MAC"),
@@ -504,6 +514,14 @@ bool wifiAPmodeActivelyUsed()
     // AP not active or soon to be disabled in processDisableAPmode()
     return false;
   }
+#ifdef BOARD_HAS_SDIO_ESP_HOSTED
+  if (GetHostedMCUFwVersion() < MIN_REQUIRED_ESP_HOSTED_FW) {
+    // Hosted fw is too old, function below is not yet implemented
+    // When calling that function the ESP32-P4 will crash.
+    return false;
+  }
+#endif
+
   return SOFTAP_STATION_COUNT != 0;
 
   // FIXME TD-er: is effectively checking for AP active enough or must really check for connected clients to prevent automatic wifi

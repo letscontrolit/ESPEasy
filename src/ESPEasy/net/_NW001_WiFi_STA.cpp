@@ -57,17 +57,11 @@ bool NWPlugin_001(NWPlugin::Function function, EventStruct *event, String& strin
   {
     case NWPlugin::Function::NWPLUGIN_DRIVER_ADD:
     {
-      NetworkDriverStruct& nw = getNetworkDriverStruct(networkDriverIndex_t::toNetworkDriverIndex(event->idx));
-      nw.onlySingleInstance = true;
-      nw.alwaysPresent      = true;
-# ifdef ESP32P4
-      nw.enabledOnFactoryReset = false;
-
-      //        ESPEasy::net::wifi::GetHostedMCUFwVersion() > 0x00020600;
-# else // ifdef ESP32P4
+      NetworkDriverStruct& nw  = getNetworkDriverStruct(networkDriverIndex_t::toNetworkDriverIndex(event->idx));
+      nw.onlySingleInstance    = true;
+      nw.alwaysPresent         = true;
       nw.enabledOnFactoryReset = true;
-# endif // ifdef ESP32P4
-      nw.fixedNetworkIndex = NWPLUGIN_ID_001 - 1; // Start counting at 0
+      nw.fixedNetworkIndex     = NWPLUGIN_ID_001 - 1; // Start counting at 0
       break;
     }
 
