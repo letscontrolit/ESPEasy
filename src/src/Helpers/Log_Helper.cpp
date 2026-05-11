@@ -52,7 +52,7 @@ void LogHelper::addLogEntry(LogEntry_t&& logEntry)
 
   _logBuffer.add(std::move(logEntry));
 
-  loop();
+  loop(false);
 }
 
 bool LogHelper::getNext(LogDestination logDestination, uint32_t& timestamp, String& message, uint8_t& loglevel)
@@ -65,9 +65,10 @@ uint32_t LogHelper::getNrMessages(LogDestination logDestination) const
   return _logBuffer.getNrMessages(logDestination);
 }
 
-void LogHelper::loop()
+void LogHelper::loop(bool serialOnly)
 {
 #if FEATURE_SD
+  if (!serialOnly) {
     String   message;
     uint32_t timestamp{};
     uint8_t  loglevel{};
@@ -76,6 +77,7 @@ void LogHelper::loop()
     {
       addToSDLog(loglevel, message);
     }
+  }
 #endif
   _logBuffer.clearExpiredEntries();
 }

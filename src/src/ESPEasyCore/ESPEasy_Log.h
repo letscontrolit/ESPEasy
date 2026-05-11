@@ -47,3 +47,7 @@ void    addLog(uint8_t       logLevel,
 
 void    addToLogMove(uint8_t  logLevel,
                      String&& str);
+
+
+void processLogs(bool serialOnly = false);
+
