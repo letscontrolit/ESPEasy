@@ -120,6 +120,9 @@ def parse_filename(file, version, variant, file_suffix):
             elif '_16M8M' in variant:
                 flash_size = '16M8M'
                 main_group = '16M Flash'
+            elif '_32M20M' in variant:
+                flash_size = '32M20M'
+                main_group = '32M Flash'
 
     else:
         if ".bin" in file_suffix and ".gz" not in file_suffix and 'ESP32' not in variant:
@@ -317,6 +320,7 @@ def generate_manifest_files(bin_folder, output_prefix):
         '4M Flash Collection Builds',
         '8M Flash',
         '16M Flash',
+        '32M Flash',
         '2M Flash',
         '1M Flash',
         'Device Specific',
@@ -389,7 +393,7 @@ def generate_manifest_files(bin_folder, output_prefix):
             '    </style>\n',
             '    <script\n',
             '      type="module"\n',
-            '      src="https://unpkg.com/tasmota-esp-web-tools@12.0.0/dist/web/install-button.js?module"\n',
+            '      src="https://unpkg.com/tasmota-esp-web-tools@12.2.2/dist/web/install-button.js?module"\n',
             '    ></script>\n',
             '  </head>\n',
             '  <body>\n',
