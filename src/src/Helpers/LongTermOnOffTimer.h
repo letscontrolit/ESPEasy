@@ -6,7 +6,13 @@ class LongTermOnOffTimer
 {
 public:
 
+  // Clear all timers and counts
+  // _changedSinceLastCheck will be set when values were set before calling clear()
   void                    clear();
+
+  // Reset to default
+  // _changedSinceLastCheck is also set to false
+  void                    reset();
 
   void                    resetCount() { _changeToOffCount = 0; _changeToOnCount = 0; }
 

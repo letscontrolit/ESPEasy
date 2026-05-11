@@ -206,10 +206,20 @@ String Command_Wifi_OTA_hosted_mcu(
     return return_command_failed_flashstr();
   }
 
-  const String url = hostedGetUpdateURL();
+  uint32_t major, minor, patch;
+  hostedGetHostVersion(&major, &minor, &patch);
+
+  // https://pioarduino.github.io/esp-hosted-mcu-firmware/v2.12.7/network_adapter_esp32c6.bin
+  const String url = strformat(
+    F("https://pioarduino.github.io/esp-hosted-mcu-firmware/v%u.%u.%u/network_adapter_%s.bin"),
+    major, minor, patch,
+    CONFIG_ESP_HOSTED_IDF_SLAVE_TARGET);
+
 
   // Step 4: Begin the update process - display update URL
   addLog(LOG_LEVEL_INFO, concat(F("Updating esp-hosted co-processor from "), url));
+
+  processLogs();
 
   /*
   // Step 5: Create a secure network client for HTTPS communication
@@ -264,6 +274,7 @@ String Command_Wifi_OTA_hosted_mcu(
 
     // Step 11: Initialize the ESP-Hosted update process
     addLog(LOG_LEVEL_INFO, F("Beginning update process..."));
+    processLogs();
 
     // FIXME TD-er: Block actual update to see how far we get with making connection
 //          goto finish_ota;
@@ -343,6 +354,7 @@ String Command_Wifi_OTA_hosted_mcu(
       // Small delay to prevent overwhelming the system
       delay(1);
     }
+    processLogs(true);
 
     // Step 15: Clean up allocated buffer
     free(buff);
@@ -352,6 +364,7 @@ String Command_Wifi_OTA_hosted_mcu(
   } else {
     addLog(LOG_LEVEL_ERROR, strformat(F("ERROR: HTTP request failed with code %d!"), httpCode));
   }
+  processLogs(true);
 
   // Step 16: Close HTTP connection
   https.end();
@@ -360,6 +373,8 @@ finish_ota:
 
   // Step 17: Clean up network client
   //  delete client;
+
+  processLogs(true);
 
   if (updateSuccess) { return return_command_success_flashstr(); }
   return return_command_failed_flashstr();

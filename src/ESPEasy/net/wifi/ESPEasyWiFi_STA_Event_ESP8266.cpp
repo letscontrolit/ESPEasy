@@ -86,7 +86,7 @@ void ESPEasyWiFi_STA_EventHandler::onDisconnect(const WiFiEventStationModeDiscon
   if (WiFi.status() == WL_CONNECTED) {
     // See https://github.com/esp8266/Arduino/issues/5912
     WiFi.persistent(false);
-    WiFi.disconnect(false);
+    WiFi.disconnect(true);
     delay(0);
   }
 }

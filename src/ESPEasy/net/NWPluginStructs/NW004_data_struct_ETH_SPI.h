@@ -40,6 +40,8 @@ struct NW004_data_struct_ETH_SPI : public NWPluginData_base {
 
   NWPluginData_static_runtime* getNWPluginData_static_runtime() override;
 
+  bool getStaticIPAddress(IPAddressType addressType, IPAddress & ip) const override;
+
   bool write_Eth_HW_Address(KeyValueWriter *writer);
   bool write_Eth_port(KeyValueWriter *writer);
 

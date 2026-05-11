@@ -31,10 +31,11 @@ void DIRECT_pinWrite(IO_REG_TYPE pin, bool pinstate)
     digitalWrite(pin, pinstate);
     return;
   }
-  # endif // ifdef ARDUINO_ARCH_ESP8266
-
   if (pinstate) { DIRECT_WRITE_HIGH(reg, PIN_TO_BITMASK(pin)); }
   else { DIRECT_WRITE_LOW(reg, PIN_TO_BITMASK(pin)); }
+  #else
+  directWrite(pin, pinstate ? 1u : 0u);
+  # endif // ifdef ARDUINO_ARCH_ESP8266
 }
 
 void DIRECT_PINMODE_OUTPUT(IO_REG_TYPE pin)

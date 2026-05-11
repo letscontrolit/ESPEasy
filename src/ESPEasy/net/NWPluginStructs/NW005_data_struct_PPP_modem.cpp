@@ -926,12 +926,12 @@ bool NW005_data_struct_PPP_modem::init(EventStruct *event)
   }
   {
     String apn;
-    _kvs->getValue(NW005_KEY_APN, apn);
+    _kvs->getValue(NW005_KEY_APN, apn, KVS_StorageType::Enum::string_type);
     NW_PLUGIN_INTERFACE.setApn(apn.c_str());
   }
   {
     String pin;
-    _kvs->getValue(NW005_KEY_SIM_PIN, pin);
+    _kvs->getValue(NW005_KEY_SIM_PIN, pin, KVS_StorageType::Enum::string_type);
 
     if (pin.length() >= 4) {
       NW_PLUGIN_INTERFACE.setPin(pin.c_str());
@@ -1107,6 +1107,12 @@ bool NW005_data_struct_PPP_modem::record_stats()
 # endif // if FEATURE_NETWORK_STATS
 
 NWPluginData_static_runtime * NW005_data_struct_PPP_modem::getNWPluginData_static_runtime() { return &stats_and_cache; }
+
+bool NW005_data_struct_PPP_modem::getStaticIPAddress(IPAddressType addressType, IPAddress & ip) const
+{
+  // No static IP for PPP modem
+  return false;  
+}
 
 void                          NW005_data_struct_PPP_modem::onEvent(arduino_event_id_t event, arduino_event_info_t info) {
   // TODO TD-er: Must store flags from events in static (or global) object to act on it later.

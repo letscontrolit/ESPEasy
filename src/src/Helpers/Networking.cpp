@@ -167,7 +167,7 @@ void updateUDPport(bool force)
   // Or we may need to look into AsyncUDP as that allows to send to specific interfaces.
   const bool connected = ESPEasy::net::NWPluginCall(NWPlugin::Function::NWPLUGIN_WEBSERVER_SHOULD_RUN);
   //const bool connected = ESPEasy::net::NetworkConnected();
-  if (!connected || lastUsedUDPPort != 0) {
+  if (!connected || (Settings.UDPPort != lastUsedUDPPort)) {
     if (lastUsedUDPPort != 0) {
       portUDP.stop();
       lastUsedUDPPort = 0;
@@ -180,7 +180,7 @@ void updateUDPport(bool force)
     }
   }
 
-  if (Settings.UDPPort != 0) {
+  if ((Settings.UDPPort != lastUsedUDPPort) && Settings.UDPPort != 0) {
     if (portUDP.begin(Settings.UDPPort) == 0) {
 #ifndef BUILD_NO_DEBUG
       if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
@@ -1124,6 +1124,24 @@ void scrubDNS() {
   */
 }
 
+#ifdef ESP32
+bool IPAddressSet(const IPAddress& ip)
+{
+  return !(ip == INADDR_NONE
+    # if CONFIG_LWIP_IPV6
+      || ip == IN6ADDR_ANY
+    # endif
+    );
+}
+#endif
+#ifdef ESP8266
+bool IPAddressSet(const IPAddress& ip)
+{
+  return !(ip[0] == 0 && ip[1] == 0 && ip[2] == 0 && ip[3] == 0);
+}
+#endif
+
+
 bool valid_DNS_address(const IPAddress& dns) {
   return /*dns.v4() != (uint32_t)0x00000000 && */
          dns != IPAddress((uint32_t)0xFD000000) &&
@@ -1133,7 +1151,7 @@ bool valid_DNS_address(const IPAddress& dns) {
          // Global IPv6 prefixes currently start with 2xxx::
          (dns[0] & 0xF0) != 0x20 &&
 #endif // ifdef ESP32
-         dns != INADDR_NONE;
+         IPAddressSet(dns);
 }
 
 bool setDNS(int index, const IPAddress& dns) {
