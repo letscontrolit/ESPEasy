@@ -420,7 +420,6 @@ void handle_networks_NetworkSettingsPage(ESPEasy::net::networkIndex_t networkind
 
 # if FEATURE_NETWORK_STATS
     addFormCheckBox(F("Collect Network Stats"), F("collect_netw_stats"), Settings.getNetworkCollectStats(networkindex));
-    addFormNote(F("Needs reboot after change"));
 # endif // if FEATURE_NETWORK_STATS
 
     String str;
