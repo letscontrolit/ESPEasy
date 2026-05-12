@@ -170,6 +170,10 @@ constexpr tSizeSettings SizeSettings[] = {
     2,                                             // max. line count
     113, 15                                        // WiFi indicator
   },
+  { 72,                  40,                   28, // 72x40
+    3,                                             // max. line count
+    28,  12                                        // WiFi indicator
+  },
   { 64,                  48,                   32, // 64x48
     3,                                             // max. line count
     32,  10                                        // WiFi indicator
