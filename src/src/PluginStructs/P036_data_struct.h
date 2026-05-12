@@ -188,7 +188,8 @@ enum class eHeaderContent : uint8_t {
 enum class p036_resolution : uint8_t {
   pix128x64 = 0u,
   pix128x32 = 1u,
-  pix64x48  = 2u
+  pix72x40  = 2u,
+  pix64x48  = 4u
 };
 
 enum class ePageScrollSpeed : uint8_t {
