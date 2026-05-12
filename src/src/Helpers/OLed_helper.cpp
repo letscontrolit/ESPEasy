@@ -70,8 +70,8 @@ void OLedFormSizes(const __FlashStringHelper *id,
   const __FlashStringHelper *options3[] = {
     F("128x64"),
     F("128x32"),
-    F("72x40"),
-    F("64x48") };
+    F("64x48"),
+    F("72x40") };
   FormSelectorOptions selector(NR_ELEMENTS(options3), options3, values);
   selector.reloadonchange = reloadOnChange;
   selector.addFormSelector(
