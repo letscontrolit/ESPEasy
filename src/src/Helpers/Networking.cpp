@@ -154,9 +154,19 @@ void sendUDP(uint8_t unit, const uint8_t *data, uint8_t size)
 /*********************************************************************************************\
    Update UDP port (ESPEasy propiertary protocol)
 \*********************************************************************************************/
+uint16_t lastUsedUDPPort = 0;
+
+void stopUDPport()
+{
+  if (lastUsedUDPPort == 0) return;
+  if (ESPEasy::net::NetworkConnected(true)) {
+    portUDP.stop();
+  }
+  lastUsedUDPPort = 0;
+}
+
 void updateUDPport(bool force)
 {
-  static uint16_t lastUsedUDPPort = 0;
 
   if (!force && (Settings.UDPPort == lastUsedUDPPort)) {
     return;
@@ -169,7 +179,8 @@ void updateUDPport(bool force)
   //const bool connected = ESPEasy::net::NetworkConnected();
   if (!connected || (Settings.UDPPort != lastUsedUDPPort)) {
     if (lastUsedUDPPort != 0) {
-      portUDP.stop();
+      if (connected)
+        portUDP.stop();
       lastUsedUDPPort = 0;
 #ifndef BUILD_NO_DEBUG
       addLogMove(LOG_LEVEL_INFO, concat(F("UDP : Stop listening on port "), Settings.UDPPort));

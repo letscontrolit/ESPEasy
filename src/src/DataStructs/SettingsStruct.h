@@ -506,6 +506,13 @@ public:
 
   void setNetworkInterfaceStartupDelay(ESPEasy::net::networkIndex_t index, uint32_t delay_ms);
 
+# if FEATURE_NETWORK_STATS
+  bool getNetworkCollectStats(ESPEasy::net::networkIndex_t index) const;
+
+  void setNetworkCollectStats(ESPEasy::net::networkIndex_t index, bool enabled);
+#endif
+
+
   uint32_t PID = 0;
   int           Version = 0;
   int16_t       Build = 0;
@@ -581,7 +588,7 @@ public:
 
   uint32_t ConnectionFailuresThreshold = 0;
   int16_t       TimeZone = 0;
-  boolean       MQTTRetainFlag_unused = false;
+  uint8_t       NetworkCollectStats_bits = DEFAULT_NETWORK_COLLECT_STATS_BITS;
   uint8_t       InitSPI = 0; //0 = disabled, 1= enabled but for ESP32 there is option 2= SPI2 9 = User defined, see src/src/WebServer/HardwarePage.h enum SPI_Options_e
   // FIXME TD-er: Must change to cpluginID_t, but then also another check must be added since changing the pluginID_t will also render settings incompatible
   uint8_t       Protocol[CONTROLLER_MAX] = {0};
