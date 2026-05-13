@@ -23,7 +23,7 @@
 #elif defined(ESP32)
 #include <WiFi.h>
 #include <esp_random.h>
-#define BUILTIN_LED A0
+#define LED_BUILTIN A0
 #define RANDOM_REG32 esp_random()
 #else
 #error Platform not supported.
@@ -77,11 +77,11 @@ void callback(char* topic, uint8_t* payload, size_t plength) {
 
     // Switch on the LED if an 1 was received as first character
     if ((char)payload[0] == '1') {
-        digitalWrite(BUILTIN_LED, LOW);  // Turn the LED on (Note that LOW is the voltage level
+        digitalWrite(LED_BUILTIN, LOW);  // Turn the LED on (Note that LOW is the voltage level
                                          // but actually the LED is on; this is because
                                          // it is active low on the ESP-01)
     } else {
-        digitalWrite(BUILTIN_LED, HIGH);  // Turn the LED off by making the voltage HIGH
+        digitalWrite(LED_BUILTIN, HIGH);  // Turn the LED off by making the voltage HIGH
     }
 }
 
@@ -110,7 +110,7 @@ void reconnect() {
 }
 
 void setup() {
-    pinMode(BUILTIN_LED, OUTPUT);  // Initialize the BUILTIN_LED pin as an output
+    pinMode(LED_BUILTIN, OUTPUT);  // Initialize the LED_BUILTIN pin as an output
     Serial.begin(115200);
     setup_wifi();
     client.setServer(mqtt_server, 1883);
@@ -127,7 +127,7 @@ void loop() {
     if (now - lastMsg > 2000) {
         lastMsg = now;
         ++value;
-        snprintf(msg, MSG_BUFFER_SIZE, "hello world #%ld", value);
+        snprintf(msg, MSG_BUFFER_SIZE, "hello world #%d", value);
         Serial.print("Publish message: ");
         Serial.println(msg);
         client.publish("outTopic", msg);

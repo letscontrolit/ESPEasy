@@ -6,13 +6,15 @@
         "type": "git",
         "url": "https://github.com/hmueller01/pubsubclient3.git"
     },
-    "version": "3.1.0",
+    "version": "3.3.0",
     "license": "MIT",
     "exclude": "tests",
     "examples": "examples/*/*.ino",
     "frameworks": "arduino",
     "platforms": [
         "atmelavr",
+        "atmelsam",
+        "atmelmegaavr",
         "espressif8266",
         "espressif32"
     ]

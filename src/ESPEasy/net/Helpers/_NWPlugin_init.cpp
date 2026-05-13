@@ -6,6 +6,7 @@
 #include "../../../src/Globals/Settings.h"
 #include "../../../src/Globals/ESPEasy_Scheduler.h"
 //#include "../../../src/Helpers/Misc.h"
+#include "../../../src/Helpers/Networking.h"
 #include "../../../src/Helpers/StringConverter.h"
 #include "../Globals/NWPlugins.h"
 
@@ -2137,6 +2138,9 @@ bool         do_NWPluginCall(networkDriverIndex_t networkDriverIndex, NWPlugin::
         //        addLog(LOG_LEVEL_ERROR, strformat(F("Network %d was not (yet) initialized"), event->NetworkIndex + 1));
         return false;
       }
+#if FEATURE_ESPEASY_P2P
+      stopUDPport();
+#endif
     }
 
 

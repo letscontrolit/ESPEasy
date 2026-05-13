@@ -1,6 +1,8 @@
-tests/bin
-.pioenvs
-.piolibdeps
 .clang_complete
 .gcc-flags.json
+.pio/
+.pioenvs
+.piolibdeps
+.vscode/
 site/api
+tests/bin

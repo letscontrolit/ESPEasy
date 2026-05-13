@@ -409,7 +409,13 @@
 #define DEFAULT_ENABLE_TIMING_STATS false
 #endif
 
-
+#ifndef DEFAULT_NETWORK_COLLECT_STATS_BITS
+#ifdef PLUGIN_BUILD_MAX_ESP32
+#define DEFAULT_NETWORK_COLLECT_STATS_BITS   0xFF
+#else
+#define DEFAULT_NETWORK_COLLECT_STATS_BITS   0
+#endif
+#endif
 
 // --- Advanced Settings ---------------------------------------------------------------------------------
 #if defined(ESP32)
