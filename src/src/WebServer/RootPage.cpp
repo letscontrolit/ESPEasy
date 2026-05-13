@@ -64,7 +64,7 @@ void handle_root() {
   if (captivePortal()) { // If captive portal redirect instead of displaying the page.
     return;
   }
-
+/*
   // if Wifi setup, launch setup wizard if AP_FORCE_SETUP is set.
   if (!ESPEasy::net::NetworkConnected() &&
       Settings.ApCaptivePortal())
@@ -72,7 +72,7 @@ void handle_root() {
     web_server.send_P(200, (PGM_P)F("text/html"), (PGM_P)F("<meta HTTP-EQUIV='REFRESH' content='0; url=/setup'>"));
     return;
   }
-
+*/
   if (!MAIN_PAGE_SHOW_BASIC_INFO_NOT_LOGGED_IN) {
     if (!isLoggedIn()) { return; }
   }

@@ -7,7 +7,7 @@ name: Generate Doxygen API and deploy content to GitHub Pages
 on:
   # Runs on pushes targeting the default branch
   push:
-    branches: ["master"]
+    branches: ["release"]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -34,12 +34,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Update Doxyfile PROJECT_NUMBER
         run: bash .github/doxygen-update-version.sh
       - name: Doxygenize
-        #uses: langroodi/doxygenize@v1.7.1 # waiting for update ...
-        uses: langroodi/doxygenize@6e920681c5d838e9a1b5cd273b814d1e4023b63d
+        uses: langroodi/doxygenize@v1.7.1
         #uses: hmueller01/doxygenize@update-alpine-linux+patches
         with:
           # Doxygen configuration file path
@@ -54,12 +53,12 @@ jobs:
       #   run: |
       #     find ./site
       - name: Setup Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           #path: '.' # Upload entire repository
           path: './site'
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5

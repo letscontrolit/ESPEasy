@@ -38,6 +38,7 @@
 /*********************************************************************************************\
    Update UDP port (ESPEasy propiertary protocol)
 \*********************************************************************************************/
+void stopUDPport();
 void updateUDPport(bool force);
 
 
@@ -195,6 +196,8 @@ bool connectClient(WiFiClient& client, IPAddress ip, uint16_t port, uint32_t tim
 #endif // FEATURE_HTTP_CLIENT
 
 void scrubDNS();
+
+bool IPAddressSet(const IPAddress& ip);
 
 bool valid_DNS_address(const IPAddress& dns);
 

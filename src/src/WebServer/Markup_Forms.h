@@ -233,6 +233,14 @@ void addFormIPBox(const String& label,
                   const String& id,
                   const uint8_t ip[4]);
 
+void addFormIPBox(const __FlashStringHelper *label,
+                  const __FlashStringHelper *id,
+                  const IPAddress& ip);
+
+void addFormIPBox(const String& label,
+                  const String& id,
+                  const IPAddress& ip);
+
 // ********************************************************************************
 // Add a MAC address Box form
 // ********************************************************************************

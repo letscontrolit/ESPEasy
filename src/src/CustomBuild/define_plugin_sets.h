@@ -8,6 +8,11 @@
 #endif
 
 
+#if defined(PLUGIN_BUILD_MAX32_ESP32) && !defined(PLUGIN_BUILD_MAX_ESP32)
+  #define PLUGIN_BUILD_MAX_ESP32
+#endif
+
+
 /*
 #################################################
  This is the place where plugins are registered

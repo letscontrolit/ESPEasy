@@ -16,7 +16,7 @@
 # include "../../../src/WebServer/ESPEasy_key_value_store_webform.h"
 
 # if FEATURE_TASKVALUE_UNIT_OF_MEASURE
-# include "../../../src/Helpers/ESPEasy_UnitOfMeasure.h"
+#  include "../../../src/Helpers/ESPEasy_UnitOfMeasure.h"
 # endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 
 
@@ -875,7 +875,8 @@ void NW005_begin_modem_task(void *parameter)
         NW_PLUGIN_INTERFACE.cmd(F("AT&D1"), 9000);
         digitalWrite(modem_task_data->dtrPin, HIGH);
       }
-      if (!NW_PLUGIN_INTERFACE.attached()) modem_task_data->modem_init_failed = true;
+
+      if (!NW_PLUGIN_INTERFACE.attached()) { modem_task_data->modem_init_failed = true; }
     } else {
       modem_task_data->modem_init_failed = true;
     }
@@ -926,12 +927,12 @@ bool NW005_data_struct_PPP_modem::init(EventStruct *event)
   }
   {
     String apn;
-    _kvs->getValue(NW005_KEY_APN, apn);
+    _kvs->getValue(NW005_KEY_APN, apn, KVS_StorageType::Enum::string_type);
     NW_PLUGIN_INTERFACE.setApn(apn.c_str());
   }
   {
     String pin;
-    _kvs->getValue(NW005_KEY_SIM_PIN, pin);
+    _kvs->getValue(NW005_KEY_SIM_PIN, pin, KVS_StorageType::Enum::string_type);
 
     if (pin.length() >= 4) {
       NW_PLUGIN_INTERFACE.setPin(pin.c_str());
@@ -1047,6 +1048,7 @@ bool NW005_data_struct_PPP_modem::check_connect_failed()
   {
     _modem_task_data.modem_init_failed = false;
     auto stats = getNWPluginData_static_runtime();
+
     if (stats) {
       stats->mark_connect_failed();
     }
@@ -1059,6 +1061,7 @@ bool NW005_data_struct_PPP_modem::check_connect_failed()
 
 bool NW005_data_struct_PPP_modem::initPluginStats()
 {
+  if (!Settings.getNetworkCollectStats(_networkIndex)) { return false; }
   networkStatsVarIndex_t networkStatsVarIndex{};
   PluginStats_Config_t   displayConfig;
 
@@ -1108,7 +1111,13 @@ bool NW005_data_struct_PPP_modem::record_stats()
 
 NWPluginData_static_runtime * NW005_data_struct_PPP_modem::getNWPluginData_static_runtime() { return &stats_and_cache; }
 
-void                          NW005_data_struct_PPP_modem::onEvent(arduino_event_id_t event, arduino_event_info_t info) {
+bool                          NW005_data_struct_PPP_modem::getStaticIPAddress(IPAddressType addressType, IPAddress& ip) const
+{
+  // No static IP for PPP modem
+  return false;
+}
+
+void NW005_data_struct_PPP_modem::onEvent(arduino_event_id_t event, arduino_event_info_t info) {
   // TODO TD-er: Must store flags from events in static (or global) object to act on it later.
   switch (event)
   {

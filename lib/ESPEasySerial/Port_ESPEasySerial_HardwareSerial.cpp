@@ -10,7 +10,12 @@
 
 Port_ESPEasySerial_HardwareSerial_t::Port_ESPEasySerial_HardwareSerial_t() {}
 
-Port_ESPEasySerial_HardwareSerial_t::~Port_ESPEasySerial_HardwareSerial_t() {}
+Port_ESPEasySerial_HardwareSerial_t::~Port_ESPEasySerial_HardwareSerial_t() {
+  if (_serial != nullptr) {
+    _serial->flush();
+    _serial->end();
+  }
+}
 
 void Port_ESPEasySerial_HardwareSerial_t::resetConfig(const ESPEasySerialConfig& config)
 {
@@ -153,7 +158,7 @@ void Port_ESPEasySerial_HardwareSerial_t::begin(unsigned long baud)
     }
 
     if (_config.txBuffSize > 256) {
-      _config.txBuffSize = _serial->setRxBufferSize(_config.txBuffSize);
+      _config.txBuffSize = _serial->setTxBufferSize(_config.txBuffSize);
     }
 
     _serial->begin(baud, _config.config, _config.receivePin, _config.transmitPin, _config.inverse_logic);

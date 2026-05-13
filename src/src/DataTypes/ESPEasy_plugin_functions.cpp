@@ -3,6 +3,7 @@
 #ifdef ESP32
 
 # include "../Helpers/StringConverter.h"
+# include "../Helpers/Networking.h"
 
 # include <esp_netif.h>
 
@@ -154,7 +155,7 @@ bool NWPlugin::get_subnet(NWPlugin::IP_type ip_type, NetworkInterface*networkInt
   if (!networkInterface) { return false; }
   IPAddress ip = get_IP_address(ip_type, networkInterface);
 
-  if (ip == INADDR_NONE) { return false; }
+  if (!IPAddressSet(ip)) { return false; }
 
 # if CONFIG_LWIP_IPV6
 
