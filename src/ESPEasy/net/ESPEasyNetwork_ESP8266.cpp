@@ -56,6 +56,12 @@ void setNetworkMedium(NetworkMedium_t new_medium) {
 //  ESPEasy::net::wifi::WiFiConnectRelaxed();
 // }
 
+ESPEasy::net::networkIndex_t getNetworkIndex_defaultNetwork()
+{
+  if (NetworkConnected()) return NETWORK_INDEX_WIFI_STA;
+  return ESPEasy::net::INVALID_NETWORK_INDEX;
+}
+
 bool      NetworkConnected(bool force) { 
   static bool last_result = false;
   static uint32_t last_check_millis = 0;

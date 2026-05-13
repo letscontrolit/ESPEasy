@@ -4,6 +4,7 @@
 # ifdef ESP32
 
 #  include "../../../src/DataStructs/TimingStats.h"
+#  include "../../../src/Globals/ESPEasy_Scheduler.h"
 #  include "../../../src/Globals/EventQueue.h"
 #  include "../../../src/Globals/Services.h"
 #  include "../../../src/Globals/Settings.h"
@@ -45,19 +46,27 @@ bool WiFi_pre_STA_setup()
 
 void doWiFiDisconnect() {
   uint8_t retry = 3;
-  while (!WiFi.disconnect(Settings.WiFiRestart_connection_lost()) && retry) {
+
+  #ifdef BOARD_HAS_SDIO_ESP_HOSTED
+  bool wifioff = true;
+  #else
+  bool wifioff = Settings.WiFiRestart_connection_lost();
+  #endif
+
+  while (!WiFi.disconnect(wifioff) && retry) {
     --retry;
     delay(100);
   }
-/*
-  {
-    const IPAddress ip;
-    const IPAddress gw;
-    const IPAddress subnet;
-    const IPAddress dns;
-    WiFi.config(ip, gw, subnet, dns);
-  }
-*/
+
+  /*
+     {
+      const IPAddress ip;
+      const IPAddress gw;
+      const IPAddress subnet;
+      const IPAddress dns;
+      WiFi.config(ip, gw, subnet, dns);
+     }
+   */
 }
 
 bool doWifiIsAP(WiFiMode_t wifimode)  { return (wifimode == WIFI_MODE_AP) || (wifimode == WIFI_MODE_APSTA); }
@@ -67,12 +76,15 @@ bool doWifiIsSTA(WiFiMode_t wifimode) { return (wifimode == WIFI_MODE_STA) || (w
 bool doSetWifiMode(WiFiMode_t new_mode)
 {
   if (!Settings.getNetworkEnabled(NETWORK_INDEX_WIFI_AP)) {
-    if (new_mode == WIFI_MODE_AP) new_mode = WIFI_OFF;
-    if (new_mode == WIFI_MODE_APSTA) new_mode = WIFI_MODE_STA;
+    if (new_mode == WIFI_MODE_AP) { new_mode = WIFI_OFF; }
+
+    if (new_mode == WIFI_MODE_APSTA) { new_mode = WIFI_MODE_STA; }
   }
+
   if (!Settings.getNetworkEnabled(NETWORK_INDEX_WIFI_STA)) {
-    if (new_mode == WIFI_MODE_STA) new_mode = WIFI_OFF;
-    if (new_mode == WIFI_MODE_APSTA) new_mode = WIFI_MODE_AP;
+    if (new_mode == WIFI_MODE_STA) { new_mode = WIFI_OFF; }
+
+    if (new_mode == WIFI_MODE_APSTA) { new_mode = WIFI_MODE_AP; }
   }
 
   const WiFiMode_t cur_mode = WiFi.getMode();
@@ -112,21 +124,22 @@ bool doSetWifiMode(WiFiMode_t new_mode)
     doWiFiDisconnect();
 
     //    delay(100);
-    //processDisconnect();
+    // processDisconnect();
 
     //    WiFiEventData.clear_processed_flags();
   }
 
   addLog(LOG_LEVEL_INFO, concat(F("WIFI : Set WiFi to "), doGetWifiModeString(new_mode)));
 
-  # if FEATURE_DNS_SERVER
+  #  if FEATURE_DNS_SERVER
+
   if (!doWifiIsAP(new_mode)) {
     if (dnsServerActive) {
       dnsServerActive = false;
       dnsServer.stop();
     }
   }
-  #endif
+  #  endif // if FEATURE_DNS_SERVER
 
   int retry = 2;
 
@@ -200,20 +213,20 @@ bool doSetWifiMode(WiFiMode_t new_mode)
   const bool new_mode_AP_enabled =  doWifiIsAP(new_mode);
 
   if (doWifiIsAP(cur_mode) && !new_mode_AP_enabled) {
-    eventQueue.add(F("WiFi#APmodeDisabled"));
+    eventQueue.addDeDup(F("WiFi#APmodeDisabled"));
   }
 
   if (doWifiIsAP(cur_mode) != new_mode_AP_enabled) {
     // Mode has changed
-    doSetAPinternal(new_mode_AP_enabled);
+    // May cause recursive loop ????
+    // FIXME TD-er: Should we do this here???
+    if (new_mode_AP_enabled) {
+      Scheduler.setNetworkInitTimer(0, NETWORK_INDEX_WIFI_AP);
+    }
+    else {
+      Scheduler.setNetworkExitTimer(0, NETWORK_INDEX_WIFI_AP);
+    }
   }
-  #  if FEATURE_MDNS
-  #   ifdef ESP8266
-
-  // notifyAPChange() is not present in the ESP32 MDNSResponder
-  MDNS.notifyAPChange();
-  #   endif // ifdef ESP8266
-  #  endif // if FEATURE_MDNS
   return true;
 }
 
@@ -240,7 +253,8 @@ void doWifiScan(bool async, uint8_t channel) {
   }
 
   START_TIMER;
-//  WiFiEventData.lastScanMoment.setNow();
+
+  //  WiFiEventData.lastScanMoment.setNow();
   #  ifndef BUILD_NO_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -252,13 +266,15 @@ void doWifiScan(bool async, uint8_t channel) {
   }
   #  endif // ifndef BUILD_NO_DEBUG
   bool show_hidden = true;
-//  WiFiEventData.lastGetScanMoment.setNow();
-//  WiFiEventData.lastScanChannel = channel;
+
+  //  WiFiEventData.lastGetScanMoment.setNow();
+  //  WiFiEventData.lastScanChannel = channel;
 
   unsigned int nrScans = 1 + (async ? 0 : Settings.ConnectFailRetryCount);
 
   while (nrScans > 0) {
     WiFi_AP_Candidates.begin_scan();
+
     if (!async) {
       FeedSW_watchdog();
     }
@@ -283,7 +299,8 @@ void doWifiScan(bool async, uint8_t channel) {
     if (!async) {
       FeedSW_watchdog();
       WiFi_AP_Candidates.process_WiFiscan();
-//      processScanDone();
+
+      //      processScanDone();
     }
   }
 #  if FEATURE_TIMING_STATS
@@ -303,9 +320,10 @@ void doWifiScan(bool async, uint8_t channel) {
     addLog(LOG_LEVEL_INFO, F("WiFi : Disconnect after scan"));
     #   endif
 
-//    const bool needReconnect = WiFiEventData.wifiConnectAttemptNeeded;
+    //    const bool needReconnect = WiFiEventData.wifiConnectAttemptNeeded;
     WifiDisconnect();
-//    WiFiEventData.wifiConnectAttemptNeeded = needReconnect;
+
+    //    WiFiEventData.wifiConnectAttemptNeeded = needReconnect;
   }
 #  endif // if ESP_IDF_VERSION_MAJOR < 5
 #  if CONFIG_SOC_WIFI_SUPPORT_5G
@@ -467,11 +485,11 @@ void doSetConnectionSpeed(bool ForceWiFi_bg_mode)
   #  ifndef SOC_WIFI_SUPPORTED
   return;
   #  else
-#if ESP_IDF_VERSION_MAJOR < 6
+#   if ESP_IDF_VERSION_MAJOR < 6
   esp_wifi_set_bandwidth(WIFI_IF_STA, WIFI_BW_HT20);
-#else
+#   else
   esp_wifi_set_bandwidth(WIFI_IF_STA, WIFI_BW20);
-#endif
+#   endif // if ESP_IDF_VERSION_MAJOR < 6
 
 
 #   if CONFIG_SOC_WIFI_SUPPORT_5G

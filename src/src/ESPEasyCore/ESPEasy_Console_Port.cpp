@@ -148,6 +148,10 @@ bool EspEasy_Console_Port::process_serialWriteBuffer()
 
 bool EspEasy_Console_Port::process_consoleInput(uint8_t SerialInByte)
 {
+  if (!InputBuffer_Serial) {
+    return false;
+  }
+
   if (isprint(SerialInByte))
   {
     if (SerialInByteCounter < CONSOLE_INPUT_BUFFER_SIZE) { // add char to string if it still fits
@@ -163,14 +167,16 @@ bool EspEasy_Console_Port::process_consoleInput(uint8_t SerialInByte)
   {
     // Ignore empty command
     if (SerialInByteCounter != 0) {
-      InputBuffer_Serial[SerialInByteCounter] = 0; // serial data completed
+      if (SerialInByteCounter < CONSOLE_INPUT_BUFFER_SIZE) {
+        InputBuffer_Serial[SerialInByteCounter] = 0; // serial data completed
 
-      String cmd(InputBuffer_Serial);
+        String cmd(InputBuffer_Serial);
 #if !FEATURE_COLORIZE_CONSOLE_LOGS
-      Logging.consolePrintln(concat('>', cmd));
+        Logging.consolePrintln(concat('>', cmd));
 #endif
 
-      ExecuteCommand_all({ EventValueSource::Enum::VALUE_SOURCE_SERIAL, std::move(cmd) }, true);
+        ExecuteCommand_all({ EventValueSource::Enum::VALUE_SOURCE_SERIAL, std::move(cmd) }, true);
+      }
       SerialInByteCounter   = 0;
       InputBuffer_Serial[0] = 0; // serial data processed, clear buffer
       return true;

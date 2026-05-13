@@ -6,6 +6,7 @@
 
 # include "../ESPEasyNetwork.h"
 # include "../../../src/Helpers/StringConverter.h"
+# include "../wifi/ESPEasyWifi.h"
 
 namespace ESPEasy {
 namespace net {
@@ -71,9 +72,23 @@ void NWPluginData_static_runtime::mark_lost_IP()
 
 void NWPluginData_static_runtime::mark_begin_establish_connection()
 {
-  _establishConnectStats.forceSet(true);
   _connectedStats.setOff();
   _operationalStats.setOff();
+
+  if (!_isAP) {
+    ESPEasy::net::wifi::setUseStaticIP(_useStaticIP);
+    if (_useStaticIP) {
+      WiFi.config(
+        _ip,
+        _gateway,
+        _sn,
+        _dns);      
+    } else {
+      WiFi.config((uint32_t)0, (uint32_t)0, (uint32_t)0);
+    }
+  }
+
+  _establishConnectStats.forceSet(true);
   WiFi.hostname(NetworkCreateRFCCompliantHostname().c_str());
 }
 
@@ -81,6 +96,10 @@ void NWPluginData_static_runtime::mark_connected()
 {
   _establishConnectStats.setOff();
   _connectedStats.setOn();
+  if (_useStaticIP) {
+    // Since we won't get an event stating we got an IP, we need to trigger it here
+    mark_got_IP();
+  }
 }
 
 void NWPluginData_static_runtime::log_connected()

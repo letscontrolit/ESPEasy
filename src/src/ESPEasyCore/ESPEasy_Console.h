@@ -47,8 +47,6 @@ private:
 
   void            endPort();
 
-  int             availableForWrite();
-
   uint32_t _baudrate = 115200u;
   EspEasy_Console_Port _mainSerial;
 

@@ -1,4 +1,5 @@
 #include "../WebServer/SetupPage.h"
+#include "ESPEasy/net/Globals/ESPEasyWiFi.h"
 
 
 #ifdef WEBSERVER_SETUP
@@ -140,6 +141,7 @@ void handle_setup() {
             //              WiFiEventData.wifiSetupConnect         = true;
             //              WiFiEventData.wifiConnectAttemptNeeded = true;
             ESPEasy::net::wifi::WiFi_AP_Candidates.force_reload(); // Force reload of the credentials and found APs from the last scan
+            ESPEasyWiFi.setMode(ESPEasy::net::wifi::ESPEasyWiFi_t::ESPEasyWiFi_mode_e::Setup);
 # ifndef BUILD_NO_DEBUG
 
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {

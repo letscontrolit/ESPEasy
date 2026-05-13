@@ -3,10 +3,12 @@
 #ifdef USES_NW002
 
 # ifdef ESP32
-# include "../../../src/Globals/Settings.h"
-#endif
+#  include "../../../src/Globals/Settings.h"
+# endif
 
 # include "../wifi/ESPEasyWifi.h"
+
+# include "../../../src/Helpers/Networking.h"
 
 # ifdef ESP32
 #  include <esp_wifi.h>
@@ -89,6 +91,16 @@ bool NW002_data_struct_WiFi_AP::webform_getPort(KeyValueWriter *writer) { return
 
 bool NW002_data_struct_WiFi_AP::init(EventStruct *event)
 {
+  {
+    auto runtime_data = getNWPluginData_static_runtime();
+
+    if (runtime_data) {
+      IPAddress ip, gateway, sn, dns;
+      getStaticIPAddresses(ip, gateway, sn, dns);
+      runtime_data->setStaticIP(ip, gateway, sn, dns);
+    }
+  }
+
 # ifdef ESP32
   nw002_enable_NAPT = Settings.WiFi_AP_enable_NAPT();
 # endif
@@ -97,6 +109,14 @@ bool NW002_data_struct_WiFi_AP::init(EventStruct *event)
 # ifdef ESP32
   NW002_update_NAPT();
 # endif
+  # if FEATURE_MDNS
+  #  ifdef ESP8266
+
+  // notifyAPChange() is not present in the ESP32 MDNSResponder
+  MDNS.notifyAPChange();
+  #  endif // ifdef ESP8266
+  # endif // if FEATURE_MDNS
+
   return true;
 }
 
@@ -108,7 +128,7 @@ bool NW002_data_struct_WiFi_AP::exit(EventStruct *event)
   NW_PLUGIN_INTERFACE.end();
 # endif // ifdef ESP32
 # ifdef ESP8266
-  WiFi.softAPdisconnect();
+  WiFi.softAPdisconnect(true);
 # endif // ifdef ESP8266
 
   stats_and_cache.processEvents();
@@ -124,6 +144,33 @@ NWPluginData_static_runtime * NW002_data_struct_WiFi_AP::getNWPluginData_static_
   return nullptr;
 }
 
+bool NW002_data_struct_WiFi_AP::getStaticIPAddress(IPAddressType addressType, IPAddress& ip) const
+{
+  // TODO TD-er: Implement for AP
+
+  /*
+     IPAddress res;
+
+     switch (addressType)
+     {
+      case IPAddressType::IP: res = IPAddress(Settings.IP);
+        break;
+      case IPAddressType::Gateway: res = IPAddress(Settings.Gateway);
+        break;
+      case IPAddressType::Subnetmask: res = IPAddress(Settings.Subnet);
+        break;
+      case IPAddressType::DNS: res = IPAddress(Settings.DNS);
+        break;
+     }
+
+     if (IPAddressSet(res)) {
+      ip = res;
+      return true;
+     }
+   */
+  return false;
+}
+
 # ifdef ESP32
 
 bool NW002_data_struct_WiFi_AP::handle_priority_route_changed() { return NW002_update_NAPT(); }
@@ -135,6 +182,7 @@ bool NW002_data_struct_WiFi_AP::handle_priority_route_changed() { return NW002_u
 
 bool NW002_data_struct_WiFi_AP::initPluginStats()
 {
+  if (!Settings.getNetworkCollectStats(_networkIndex)) { return false; }
   networkStatsVarIndex_t networkStatsVarIndex{};
   PluginStats_Config_t   displayConfig;
 

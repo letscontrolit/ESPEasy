@@ -165,9 +165,15 @@ bool P180_data_struct::plugin_write(struct EventStruct *event,
       busCmd_Helper->setCommands(cmds,
                                  taskVar,
                                  0,
-                                 1, // Process single entry
+                                 1,                            // Process single entry
                                  BusCmd_CommandState_e::Processing);
-      Scheduler.schedule_task_device_timer(_taskIndex, millis() + 5);
+
+      if (EventValueSource::isExternalSource(event->Source)) { // Execute on next occasion
+        Scheduler.schedule_task_device_timer(_taskIndex, millis() + 5);
+      } else {                                                 // Execute immediately
+        busCmd_Helper->setCommandSource(BusCmd_CommandSource_e::PluginWrite);
+        busCmd_Helper->processCommands(event);
+      }
 
       success = true;
     }
@@ -180,6 +186,7 @@ bool P180_data_struct::plugin_write(struct EventStruct *event,
  * Handle get config value retrieval processing
  ********************************************************************************************/
 # ifndef LIMIT_BUILD_SIZE
+
 bool P180_data_struct::plugin_get_config(struct EventStruct *event,
                                          String            & string) {
   bool success         = false;
