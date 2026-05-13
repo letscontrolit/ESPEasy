@@ -57,11 +57,13 @@ bool NWPlugin_001(NWPlugin::Function function, EventStruct *event, String& strin
   {
     case NWPlugin::Function::NWPLUGIN_DRIVER_ADD:
     {
-      NetworkDriverStruct& nw  = getNetworkDriverStruct(networkDriverIndex_t::toNetworkDriverIndex(event->idx));
-      nw.onlySingleInstance    = true;
-      nw.alwaysPresent         = true;
+      NetworkDriverStruct& nw = getNetworkDriverStruct(networkDriverIndex_t::toNetworkDriverIndex(event->idx));
+      nw.onlySingleInstance = true;
+      nw.alwaysPresent      = true;
+      # if DEFAULT_ENABLED_NW001
       nw.enabledOnFactoryReset = true;
-      nw.fixedNetworkIndex     = NWPLUGIN_ID_001 - 1; // Start counting at 0
+      # endif
+      nw.fixedNetworkIndex = NWPLUGIN_ID_001 - 1; // Start counting at 0
       break;
     }
 
@@ -483,7 +485,7 @@ bool NWPlugin_001(NWPlugin::Function function, EventStruct *event, String& strin
 
       addFormNumericBox(LabelType::WIFI_NR_RECONNECT_ATTEMPTS, 0, 255);
       {
-        LabelType::Enum labels[]{ 
+        LabelType::Enum labels[]{
           LabelType::RESTART_WIFI_LOST_CONN
           , LabelType::WIFI_USE_LAST_CONN_FROM_RTC
 # ifndef ESP32
