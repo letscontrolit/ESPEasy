@@ -1648,21 +1648,12 @@ bool P073_data_struct::plugin_write_7dbin(const String& text) {
 // ---- TM1637 specific functions ----
 // ===================================
 
-# ifdef ESP32
 #  define CLK_HIGH() DIRECT_pinWrite(this->pin1, HIGH)
 #  define CLK_LOW() DIRECT_pinWrite(this->pin1, LOW)
 #  define DIO_HIGH() DIRECT_pinWrite(this->pin2, HIGH)
 #  define DIO_LOW() DIRECT_PINMODE_OUTPUT(this->pin2); DIRECT_pinWrite(this->pin2, LOW)
 #  define DIO_INPUT() DIRECT_PINMODE_INPUT(this->pin2)
 #  define DIO_OUTPUT() DIRECT_PINMODE_OUTPUT(this->pin2)
-# else // ifdef ESP32
-#  define CLK_HIGH() pinMode(this->pin1, INPUT_PULLUP)
-#  define CLK_LOW() pinMode(this->pin1, OUTPUT)
-#  define DIO_HIGH() pinMode(this->pin2, INPUT_PULLUP)
-#  define DIO_LOW() pinMode(this->pin2, OUTPUT); digitalWrite(this->pin2, LOW)
-#  define DIO_INPUT() pinMode(this->pin2, INPUT_PULLUP)
-#  define DIO_OUTPUT() pinMode(this->pin2, OUTPUT)
-# endif // ifdef ESP32
 
 void P073_data_struct::tm1637_i2cStart() {
   # if defined(P073_DEBUG) && !defined(BUILD_NO_DEBUG)
