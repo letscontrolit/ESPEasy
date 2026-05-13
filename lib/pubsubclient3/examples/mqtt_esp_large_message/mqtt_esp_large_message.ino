@@ -28,7 +28,6 @@
 #elif defined(ESP32)
 #include <WiFi.h>
 #include <esp_random.h>
-#define BUILTIN_LED A0
 #define RANDOM_REG32 esp_random()
 #else
 #error Platform not supported.
@@ -170,7 +169,6 @@ void reconnect() {
 }
 
 void setup() {
-    pinMode(BUILTIN_LED, OUTPUT);  // Initialize the BUILTIN_LED pin as an output
     Serial.begin(115200);
     setup_wifi();
     client.setServer(mqtt_server, 1883);

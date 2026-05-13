@@ -58,7 +58,9 @@ bool initNWPluginData(ESPEasy::net::networkIndex_t networkIndex, NWPluginData_ba
 #endif // if FEATURE_STORE_NETWORK_INTERFACE_SETTINGS
 #if FEATURE_NETWORK_STATS
 
-      NWPlugin_task_data[networkIndex]->initPluginStats();
+      if (Settings.getNetworkCollectStats(networkIndex)) {
+        NWPlugin_task_data[networkIndex]->initPluginStats();
+      }
 #endif // if FEATURE_NETWORK_STATS
 
     } else {
