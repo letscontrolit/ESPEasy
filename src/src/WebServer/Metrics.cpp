@@ -94,7 +94,7 @@ void handle_metrics() {
     const ESPEasy::net::nwpluginID_t nwpluginID = Settings.getNWPluginID_for_network(x);
     const bool nwplugin_set                     = nwpluginID.isValid();
 
-    if (nwplugin_set)
+    if (nwplugin_set && Settings.getNetworkCollectStats(x))
     {
       struct EventStruct TempEvent;
 
