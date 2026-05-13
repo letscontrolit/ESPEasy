@@ -23,13 +23,13 @@
 # include "../net/Helpers/_NWPlugin_init.h"
 # include "../net/NWPluginStructs/NW001_data_struct_WiFi_STA.h"
 # include "../net/wifi/ESPEasyWifi.h"
-#ifdef ESP8266
-# include "../net/ESPEasyNetwork.h"
-#endif
+# ifdef ESP8266
+#  include "../net/ESPEasyNetwork.h"
+# endif
 
-#if FEATURE_TASKVALUE_UNIT_OF_MEASURE
-# include "../../src/Helpers/ESPEasy_UnitOfMeasure.h"
-#endif
+# if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+#  include "../../src/Helpers/ESPEasy_UnitOfMeasure.h"
+# endif
 
 
 # if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE
@@ -57,11 +57,13 @@ bool NWPlugin_001(NWPlugin::Function function, EventStruct *event, String& strin
   {
     case NWPlugin::Function::NWPLUGIN_DRIVER_ADD:
     {
-      NetworkDriverStruct& nw  = getNetworkDriverStruct(networkDriverIndex_t::toNetworkDriverIndex(event->idx));
-      nw.onlySingleInstance    = true;
-      nw.alwaysPresent         = true;
+      NetworkDriverStruct& nw = getNetworkDriverStruct(networkDriverIndex_t::toNetworkDriverIndex(event->idx));
+      nw.onlySingleInstance = true;
+      nw.alwaysPresent      = true;
+      # if DEFAULT_ENABLED_NW001
       nw.enabledOnFactoryReset = true;
-      nw.fixedNetworkIndex     = NWPLUGIN_ID_001 - 1; // Start counting at 0
+      # endif
+      nw.fixedNetworkIndex = NWPLUGIN_ID_001 - 1; // Start counting at 0
       break;
     }
 
@@ -94,7 +96,7 @@ bool NWPlugin_001(NWPlugin::Function function, EventStruct *event, String& strin
 
     case NWPlugin::Function::NWPLUGIN_CREDENTIALS_CHANGED:
     {
-//                  ESPEasy::net::wifi::WiFi_AP_Candidates.force_reload(); // Force reload of the credentials and found APs from the last scan
+      // ESPEasy::net::wifi::WiFi_AP_Candidates.force_reload(); // Force reload of the credentials and found APs from the last scan
 
       break;
     }
@@ -106,6 +108,7 @@ bool NWPlugin_001(NWPlugin::Function function, EventStruct *event, String& strin
 
       if (NW_data) {
         auto runtime_data = NW_data->getNWPluginData_static_runtime();
+
         if (runtime_data) {
           success = runtime_data->connected();
         }
@@ -482,7 +485,7 @@ bool NWPlugin_001(NWPlugin::Function function, EventStruct *event, String& strin
 
       addFormNumericBox(LabelType::WIFI_NR_RECONNECT_ATTEMPTS, 0, 255);
       {
-        LabelType::Enum labels[]{ 
+        LabelType::Enum labels[]{
           LabelType::RESTART_WIFI_LOST_CONN
           , LabelType::WIFI_USE_LAST_CONN_FROM_RTC
 # ifndef ESP32

@@ -241,8 +241,16 @@ More uses of these system variables can be seen in the rules section and formula
 
        * ``0`` = disconnected
        * ``1`` = Connected
-       * ``3`` = Got IP && Connected
+       * ``3`` = *Got IP && Connected (No longer reported since 2026-05-01)*
        * ``7`` = Got IP && Connected && Completed to set all flags WiFi is initialized
+     - Yes
+   * - ``%iswifiap%``
+     - 1
+     - Status of WiFi AP mode
+     - Yes
+   * - ``%isppp%``
+     - 0
+     - Status of PPP Interface active (ESP32 only, with PPP Network Interface configured)
      - Yes
    * - ``%vcc%``
      - 5.2
