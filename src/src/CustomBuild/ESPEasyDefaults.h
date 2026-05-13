@@ -123,7 +123,7 @@
 #endif
 
 #ifndef DEFAULT_ENABLED_NW001
-#define DEFAULT_ENABLED_NW001               1   // Wifi-STA enabled by default, except for P4 (ESP-Hosted is not available on all boards)
+#define DEFAULT_ENABLED_NW001               1   // Wifi-STA enabled by default
 #endif
 #ifndef DEFAULT_ENABLED_NW002
 #define DEFAULT_ENABLED_NW002               1   // Wifi-AP enabled by default
