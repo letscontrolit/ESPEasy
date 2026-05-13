@@ -1,0 +1,105 @@
+name: Bug Report
+description: Create a report to help improve PubSubClient3
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Describe the bug
+      description: A clear and concise description of what the bug is.
+      placeholder: Tell us what happened...
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Steps to reproduce the behavior
+      placeholder: |
+        1. Connect to '...'
+        2. Publish message to '...'
+        3. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: A clear and concise description of what you expected to happen.
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Library version
+      description: What version of PubSubClient3 are you running?
+      placeholder: v3.3.0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      description: What platform are you using?
+      options:
+        - Arduino AVR
+        - ESP32
+        - ESP8266
+        - Other (specify in environment)
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: |
+        Provide details about your hardware and software environment, including:
+        - Board: (e.g., Arduino Uno, ESP12E, ESP32, NodeMCU, etc.)
+        - Framework Version: (e.g., Arduino AVR 5.2.0, ESP32 Arduino 3.3.2, ESP8266 Core 3.1.2 / 3.2.0-git)
+        - Development Environment: (e.g., Arduino IDE 2.3.6, PlatformIO Core 6.1.8)
+        - Platform: (if Other was selected above)
+      placeholder: |
+        - Board:
+        - Framework Version:
+        - Development Environment:
+      render: markdown
+    validations:
+      required: true
+
+  - type: textarea
+    id: example_code
+    attributes:
+      label: Minimal reproducible example (MVP)
+      description: Provide the smallest code/config and exact steps that reproduce the bug. Paste complete minimal sketch or commands.
+      placeholder: |
+        ```cpp
+        #include <ESP8266WiFi.h>
+        #include <PubSubClient.h>
+
+        // minimal setup showing the bug
+        void setup() {
+          // ...
+        }
+
+        void loop() {
+          // ...
+        }
+        ```
+      render: markdown
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output
+      description: Please copy and paste any relevant log output
+      render: shell
