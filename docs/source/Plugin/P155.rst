@@ -39,9 +39,9 @@ and older meters using the D0 protocol (IEC 62056-21).
 
 Tested devices:
 
-* DD3 (SML meter, use model: SML)
-* Holley DTZ541 (use model: DTZ541)
-* Any SML-compliant meter (use model: SML-Auto)
+* ebZ DD3 (use model: SML)
+* Holley DTZ541 (use model: SML)
+* Any SML-compliant meter (use model: SML)
 * Older meters with optical interface (use model: D0)
 
 Reading Head
@@ -80,9 +80,6 @@ Configuration
 
 **Enabled** The device can be enabled or disabled.
 
-Sensor
-^^^^^^
-
 **Model Type** Select the protocol matching your meter:
 
 .. csv-table::
@@ -90,9 +87,7 @@ Sensor
   :widths: 8, 15, 20
 
   "D0", "Older meters with optical interface",""
-  "SML", "DD3, EHZ and other SML meters",""
-  "DTZ541", "Holley DTZ541",""
-  "SML-Auto", "All SML-compliant meters", "Dynamic TL parsing, recommended"
+  "SML", "All SML-compliant meters", "Dynamic TL parsing, recommended"
 
 .. note::
 
@@ -104,15 +99,26 @@ Sensor
 
 * **Interval**: Recommended 1s for power values, 10s for energy values.
 
-Output
-^^^^^^
 
-Output values
-"""""""""""""
+Output
+~~~~~~~~~
 
 The available measurement values depend on the selected model.
 
-SML and SML-Auto share the same OBIS codes:
+D0:
+
+.. csv-table::
+  :header: "#", "Value Name", "OBIS", "Unit", "Description"
+  :widths: 2, 12, 12, 4, 15
+
+  "1", "Consumption_kWh", "1-0:1.8.0\*255", "kWh", "Total import energy"
+  "2", "L1_W", "1-0:21.7.0\*255", "W", "Active power L1"
+  "3", "L2_W", "1-0:41.7.0\*255", "W", "Active power L2"
+  "4", "L3_W", "1-0:61.7.0\*255", "W", "Active power L3"
+  "5", "L123_W", "1-0:1.7.0\*255", "W", "Total active power"
+
+SML has the following OBIS codes but not any model sends every code:
+You have to find out with testing. See, for example, the section on DTZ541 below, which has just 3 values to send.
 
 .. csv-table::
   :header: "#", "Value Name", "OBIS", "Unit", "Description"
@@ -131,19 +137,7 @@ SML and SML-Auto share the same OBIS codes:
   "11", "L2_A", "1-0:51.7.0", "A", "Current L2"
   "12", "L3_A", "1-0:71.7.0", "A", "Current L3"
 
-\* SML-Auto delivers energy values in Wh. Enter ``%VALUE%/1000`` in the formula field to get kWh.
-
-D0:
-
-.. csv-table::
-  :header: "#", "Value Name", "OBIS", "Unit", "Description"
-  :widths: 2, 12, 12, 4, 15
-
-  "1", "Consumption_kWh", "1-0:1.8.0\*255", "kWh", "Total import energy"
-  "2", "L1_W", "1-0:21.7.0\*255", "W", "Active power L1"
-  "3", "L2_W", "1-0:41.7.0\*255", "W", "Active power L2"
-  "4", "L3_W", "1-0:61.7.0\*255", "W", "Active power L3"
-  "5", "L123_W", "1-0:1.7.0\*255", "W", "Total active power"
+\* SML delivers energy values in Wh. Enter ``%VALUE%/1000`` in the formula field to get kWh.
 
 DTZ541:
 
@@ -156,20 +150,20 @@ DTZ541:
   "3", "Energy_FeedIn_kWh", "1-0:2.8.0", "kWh", "Total export energy"
 
 Indicators (recommended settings)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. csv-table::
   :header: "Indicator", "Value Name", "Interval", "Formula", "Extra information"
   :widths: 12, 10, 5, 8, 20
 
-  "Energy_Consumption_kWh", "Import_kWh", "10", "%VALUE%/1000", "SML-Auto only: Wh to kWh"
-  "Energy_FeedIn_kWh", "Export_kWh", "10", "%VALUE%/1000", "SML-Auto only: Wh to kWh"
+  "Energy_Consumption_kWh", "Import_kWh", "10", "%VALUE%/1000", "SML only: Wh to kWh"
+  "Energy_FeedIn_kWh", "Export_kWh", "10", "%VALUE%/1000", "SML only: Wh to kWh"
   "L123_W", "Power_W", "1", "", "No formula needed"
   "L1_V / L2_V / L3_V", "Voltage_V", "10", "", ""
 
 .. note::
 
-   With **SML-Auto**, energy registers deliver the raw value in Wh (scaler is read
+   With **SML**, energy registers deliver the raw value in Wh (scaler is read
    automatically from the telegram). Enter ``%VALUE%/1000`` in the ESPEasy formula
    field to get kWh. Power values (W) require no formula.
 

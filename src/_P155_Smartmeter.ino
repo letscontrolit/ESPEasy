@@ -7,20 +7,17 @@
 // #######################################################################################################
 //
 // Models:
-//   0 = D0      (IEC 62056-21, 7E1, 9600 Baud)
-//   1 = SML     (hardcoded posData per manufacturer, e.g. DD3)
-//   2 = DTZ541  (Holley DTZ541)
-//   3 = SML-Auto (dynamic TL-parsing, manufacturer-independent)
+//   P155_MODEL_D0  = D0  (IEC 62056-21, 7E1, 9600 Baud)
+//   P155_MODEL_SML = SML (dynamic TL-parsing, works with all SML-compliant meters)
 //
-// SML-Auto operation:
+// SML operation:
 //   After the OBIS code, each SML-ListEntry contains these fields,
 //   each preceded by a TL-byte (Type-Length):
 //     Status | Time | Unit | Scaler (int8) | Value
 //   TL-byte: Bits 7-4 = Type (5=int signed, 6=uint, 7=list, 0=optional)
 //            Bits 3-0 = Total length incl. TL-byte (0 = field absent)
 //            For lists (Type 7): Bits 3-0 = number of child elements (direct)
-//   SML-Auto reads these fields dynamically, works with all SML-compliant
-//   meters regardless of manufacturer.
+//   The parser reads these fields dynamically - no hardcoded byte offsets.
 
 // #######################################################################################################
 
@@ -35,7 +32,11 @@
 #define P155_QUERY3 PCONFIG(3)
 #define P155_QUERY4 PCONFIG(4)
 
-#define P155_MODEL_DFLT 1
+// Model index defines
+#define P155_MODEL_D0 0
+#define P155_MODEL_SML 1
+
+#define P155_MODEL_DFLT P155_MODEL_SML
 #define P155_BAUDRATE 9600
 #define P155_QUERY1_DFLT 1
 #define P155_QUERY2_DFLT 3
@@ -43,10 +44,8 @@
 #define P155_QUERY4_DFLT 0
 
 #define P155_NR_OUTPUT_VALUES 4
-#define P155_NR_OUTPUT_OPTIONS_MODEL0 6
-#define P155_NR_OUTPUT_OPTIONS_MODEL1 13 // SML (DD3 etc.)
-#define P155_NR_OUTPUT_OPTIONS_MODEL2 4  // Holley DTZ541
-#define P155_NR_OUTPUT_OPTIONS_MODEL3 13 // SML-Auto (same OBIS as Model 1)
+#define P155_NR_OUTPUT_OPTIONS_D0 6
+#define P155_NR_OUTPUT_OPTIONS_SML 13
 #define P155_QUERY1_CONFIG_POS 1
 #define P155_RX_BUFFER 64 // enlarged for 64-bit values
 
@@ -81,10 +80,11 @@ const __FlashStringHelper *p155_getQueryValueString(uint8_t query, uint8_t model
 unsigned int p155_getRegister(uint8_t query, uint8_t model);
 float p155_readVal(uint8_t query, unsigned int model);
 void p155_handleSerialInD0();
-void p155_handleSerialInSML(unsigned int model);
+void p155_handleSerialInSML();
 void p155_parseValuesD0();
-void p155_parseValuesSML(unsigned int model);
-void p155_parseValuesSMLAuto();
+void p155_parseValuesSML();
+bool p155_readUint32(int startByte, int numBytes, uint32_t &result);
+bool p155_readInt32(int startByte, int numBytes, int32_t &result);
 bool p155_byteArrayCompare(byte a1[], int a1len, byte a2[], int a2len);
 void p155_deleteValues(unsigned int model);
 
@@ -99,7 +99,7 @@ struct p155_dataStructD0
   p155_dataStructD0(const String &xID, float xvalue) : p155_rxID(xID), value(xvalue) {}
 };
 
-p155_dataStructD0 p155_myDataD0[P155_NR_OUTPUT_OPTIONS_MODEL0] = {
+p155_dataStructD0 p155_myDataD0[P155_NR_OUTPUT_OPTIONS_D0] = {
     p155_dataStructD0("x-x:x.x.x*x", 0.0f),    // [0] placeholder
     p155_dataStructD0("1-0:1.8.0*255", 0.0f),  // [1] Total active energy import
     p155_dataStructD0("1-0:21.7.0*255", 0.0f), // [2] Power L1
@@ -110,13 +110,9 @@ p155_dataStructD0 p155_myDataD0[P155_NR_OUTPUT_OPTIONS_MODEL0] = {
 
 struct p155_dataStructSML
 {
-  int posData;  // Bytes from OBIS to value (hardcoded models)
-  float factor; // Scaling factor (hardcoded models)
   byte p155_rxOrbis[6];
   float value;
-
-  p155_dataStructSML(int xposData, float xfactor, byte xOrbis[6], float xvalue)
-      : posData(xposData), factor(xfactor), value(xvalue)
+  p155_dataStructSML(byte xOrbis[6]) : value(0.0f)
   {
     for (int i = 0; i < 6; i++)
       p155_rxOrbis[i] = xOrbis[i];
@@ -138,51 +134,24 @@ byte p155_rxOrbis10[6] = {1, 0, 31, 7, 0, 255}; // 1-0:31.7.0  Current L1
 byte p155_rxOrbis11[6] = {1, 0, 51, 7, 0, 255}; // 1-0:51.7.0  Current L2
 byte p155_rxOrbis12[6] = {1, 0, 71, 7, 0, 255}; // 1-0:71.7.0  Current L3
 
-// Model 1: SML (DD3 etc.) - hardcoded byte positions
-p155_dataStructSML p155_myDataSML[P155_NR_OUTPUT_OPTIONS_MODEL1] = {
-    p155_dataStructSML(0, 1.0f, p155_rxOrbis0, 0.0f),
-    p155_dataStructSML(11, 0.0001f, p155_rxOrbis1, 0.0f), // kWh
-    p155_dataStructSML(7, 1.0f, p155_rxOrbis2, 0.0f),     // W
-    p155_dataStructSML(7, 1.0f, p155_rxOrbis3, 0.0f),
-    p155_dataStructSML(7, 1.0f, p155_rxOrbis4, 0.0f),
-    p155_dataStructSML(7, 1.0f, p155_rxOrbis5, 0.0f),
-    p155_dataStructSML(7, 0.0001f, p155_rxOrbis6, 0.0f), // kWh
-    p155_dataStructSML(7, 0.1f, p155_rxOrbis7, 0.0f),    // V
-    p155_dataStructSML(7, 0.1f, p155_rxOrbis8, 0.0f),
-    p155_dataStructSML(7, 0.1f, p155_rxOrbis9, 0.0f),
-    p155_dataStructSML(7, 0.01f, p155_rxOrbis10, 0.0f), // A
-    p155_dataStructSML(7, 0.01f, p155_rxOrbis11, 0.0f),
-    p155_dataStructSML(7, 0.01f, p155_rxOrbis12, 0.0f),
-};
-
-// Model 2: DTZ541 - different byte positions
-p155_dataStructSML p155_myDataDTZ[P155_NR_OUTPUT_OPTIONS_MODEL2] = {
-    p155_dataStructSML(0, 1.0f, p155_rxOrbis0, 0.0f),
-    p155_dataStructSML(18, 0.0001f, p155_rxOrbis1, 0.0f),
-    p155_dataStructSML(7, 1.0f, p155_rxOrbis5, 0.0f),
-    p155_dataStructSML(14, 0.0001f, p155_rxOrbis6, 0.0f),
-};
-
-// Model 3: SML-Auto - posData ignored, scaler read from telegram
-p155_dataStructSML p155_myDataAuto[P155_NR_OUTPUT_OPTIONS_MODEL3] = {
-    p155_dataStructSML(0, 1.0f, p155_rxOrbis0, 0.0f),
-    p155_dataStructSML(0, 1.0f, p155_rxOrbis1, 0.0f),
-    p155_dataStructSML(0, 1.0f, p155_rxOrbis2, 0.0f),
-    p155_dataStructSML(0, 1.0f, p155_rxOrbis3, 0.0f),
-    p155_dataStructSML(0, 1.0f, p155_rxOrbis4, 0.0f),
-    p155_dataStructSML(0, 1.0f, p155_rxOrbis5, 0.0f),
-    p155_dataStructSML(0, 1.0f, p155_rxOrbis6, 0.0f),
-    p155_dataStructSML(0, 1.0f, p155_rxOrbis7, 0.0f),
-    p155_dataStructSML(0, 1.0f, p155_rxOrbis8, 0.0f),
-    p155_dataStructSML(0, 1.0f, p155_rxOrbis9, 0.0f),
-    p155_dataStructSML(0, 1.0f, p155_rxOrbis10, 0.0f),
-    p155_dataStructSML(0, 1.0f, p155_rxOrbis11, 0.0f),
-    p155_dataStructSML(0, 1.0f, p155_rxOrbis12, 0.0f),
+p155_dataStructSML p155_myDataSML[P155_NR_OUTPUT_OPTIONS_SML] = {
+    p155_dataStructSML(p155_rxOrbis0),  // [0] placeholder
+    p155_dataStructSML(p155_rxOrbis1),  // [1] Total import
+    p155_dataStructSML(p155_rxOrbis2),  // [2] Power L1
+    p155_dataStructSML(p155_rxOrbis3),  // [3] Power L2
+    p155_dataStructSML(p155_rxOrbis4),  // [4] Power L3
+    p155_dataStructSML(p155_rxOrbis5),  // [5] Total power
+    p155_dataStructSML(p155_rxOrbis6),  // [6] Total export
+    p155_dataStructSML(p155_rxOrbis7),  // [7] Voltage L1
+    p155_dataStructSML(p155_rxOrbis8),  // [8] Voltage L2
+    p155_dataStructSML(p155_rxOrbis9),  // [9] Voltage L3
+    p155_dataStructSML(p155_rxOrbis10), // [10] Current L1
+    p155_dataStructSML(p155_rxOrbis11), // [11] Current L2
+    p155_dataStructSML(p155_rxOrbis12), // [12] Current L3
 };
 
 // ============================================================
 // State variables
-
 // ============================================================
 boolean p155_MyInit = false;
 uint8_t p155_step = 0;
@@ -193,12 +162,10 @@ byte p155_rxOrbis[6]{};
 String p155_rxID;
 
 int p155_anzBytes{};
-int p155_posDataAct{};
 int p155_registerAct{};
 int p155_outputOptionsAct{};
 
-// SML-Auto state variables
-
+// SML parser state
 float p155_scaleFactor = 1.0f; // 10^scaler, calculated once in state 32
 uint8_t p155_autoSubState = 0; // current field: 0=Status,1=Time,2=Unit,3=Scaler,4=Value
 uint8_t p155_skipBytes = 0;    // bytes still to skip
@@ -216,7 +183,6 @@ boolean Plugin_155(uint8_t function, struct EventStruct *event, String &string)
   {
   case PLUGIN_DEVICE_ADD:
   {
-
     auto &dev = Device[++deviceCount];
     dev.Number = PLUGIN_ID_155;
     dev.Type = DEVICE_TYPE_SERIAL; // enables serial port selector in UI
@@ -282,8 +248,6 @@ boolean Plugin_155(uint8_t function, struct EventStruct *event, String &string)
       const __FlashStringHelper *options_model[] = {
           F("D0"),
           F("SML"),
-          F("DTZ541"),
-          F("SML-Auto"),
       };
       FormSelectorOptions selector(NR_ELEMENTS(options_model), options_model);
       selector.reloadonchange = true;
@@ -291,10 +255,9 @@ boolean Plugin_155(uint8_t function, struct EventStruct *event, String &string)
     }
     {
       const uint8_t model = PCONFIG(0);
-      uint8_t outputOptions = (model == 1)   ? P155_NR_OUTPUT_OPTIONS_MODEL1
-                              : (model == 2) ? P155_NR_OUTPUT_OPTIONS_MODEL2
-                              : (model == 3) ? P155_NR_OUTPUT_OPTIONS_MODEL3
-                                             : P155_NR_OUTPUT_OPTIONS_MODEL0;
+      const uint8_t outputOptions = (model == P155_MODEL_SML)
+                                        ? P155_NR_OUTPUT_OPTIONS_SML
+                                        : P155_NR_OUTPUT_OPTIONS_D0;
 
       const __FlashStringHelper *options[outputOptions];
       for (int i = 0; i < outputOptions; ++i)
@@ -333,10 +296,9 @@ boolean Plugin_155(uint8_t function, struct EventStruct *event, String &string)
     }
     p155_deleteValues(P155_MODEL);
 
-    p155_outputOptionsAct = (P155_MODEL == 1)   ? P155_NR_OUTPUT_OPTIONS_MODEL1
-                            : (P155_MODEL == 2) ? P155_NR_OUTPUT_OPTIONS_MODEL2
-                            : (P155_MODEL == 3) ? P155_NR_OUTPUT_OPTIONS_MODEL3
-                                                : P155_NR_OUTPUT_OPTIONS_MODEL0;
+    p155_outputOptionsAct = (P155_MODEL == P155_MODEL_SML)
+                                ? P155_NR_OUTPUT_OPTIONS_SML
+                                : P155_NR_OUTPUT_OPTIONS_D0;
 
     const int16_t serial_rx = CONFIG_PIN1;
     const int16_t serial_tx = CONFIG_PIN2;
@@ -346,7 +308,7 @@ boolean Plugin_155(uint8_t function, struct EventStruct *event, String &string)
     if (P155_MySerial == nullptr)
       break;
 
-    const uint32_t serialConfig = (P155_MODEL == 0) ? SERIAL_7E1 : SERIAL_8N1;
+    const uint32_t serialConfig = (P155_MODEL == P155_MODEL_D0) ? SERIAL_7E1 : SERIAL_8N1;
     P155_MySerial->begin(P155_BAUDRATE, serialConfig);
 
     p155_step = 0;
@@ -383,8 +345,8 @@ boolean Plugin_155(uint8_t function, struct EventStruct *event, String &string)
       delete P155_MySerial;
       P155_MySerial = nullptr;
     }
-    for (int m = 0; m <= 3; m++)
-      p155_deleteValues(m);
+    p155_deleteValues(P155_MODEL_D0);
+    p155_deleteValues(P155_MODEL_SML);
     break;
   }
 
@@ -404,10 +366,10 @@ boolean Plugin_155(uint8_t function, struct EventStruct *event, String &string)
 
   case PLUGIN_TEN_PER_SECOND:
   {
-    if (P155_MODEL == 0)
+    if (P155_MODEL == P155_MODEL_D0)
       p155_handleSerialInD0();
     else
-      p155_handleSerialInSML(P155_MODEL);
+      p155_handleSerialInSML();
     success = true;
     break;
   }
@@ -420,20 +382,16 @@ boolean Plugin_155(uint8_t function, struct EventStruct *event, String &string)
 // ============================================================
 float p155_readVal(uint8_t query, unsigned int model)
 {
-  if (model == 0 && query < P155_NR_OUTPUT_OPTIONS_MODEL0)
+  if (model == P155_MODEL_D0 && query < P155_NR_OUTPUT_OPTIONS_D0)
     return p155_myDataD0[query].value;
-  if (model == 1 && query < P155_NR_OUTPUT_OPTIONS_MODEL1)
+  if (model == P155_MODEL_SML && query < P155_NR_OUTPUT_OPTIONS_SML)
     return p155_myDataSML[query].value;
-  if (model == 2 && query < P155_NR_OUTPUT_OPTIONS_MODEL2)
-    return p155_myDataDTZ[query].value;
-  if (model == 3 && query < P155_NR_OUTPUT_OPTIONS_MODEL3)
-    return p155_myDataAuto[query].value;
   return 0.0f;
 }
 
 unsigned int p155_getRegister(uint8_t query, uint8_t model)
 {
-  if (model == 0)
+  if (model == P155_MODEL_D0)
   {
     switch (query)
     {
@@ -449,7 +407,7 @@ unsigned int p155_getRegister(uint8_t query, uint8_t model)
       return Q3D_POWER_TOTAL;
     }
   }
-  else if (model == 1 || model == 3)
+  else if (model == P155_MODEL_SML)
   {
     switch (query)
     {
@@ -479,25 +437,12 @@ unsigned int p155_getRegister(uint8_t query, uint8_t model)
       return DD3_CURRENT_L3;
     }
   }
-  else if (model == 2)
-  {
-    switch (query)
-    {
-    case 1:
-      return DD3_TOTAL_ACTIVE_ENERGY_PLUS;
-    case 2:
-      return DD3_POWER_TOTAL;
-    case 3:
-      return DD3_TOTAL_ACTIVE_ENERGY_MINUS;
-    }
-  }
   return 0;
 }
 
 const __FlashStringHelper *p155_getQueryString(uint8_t query, uint8_t model)
 {
-  // D0
-  if (model == 0)
+  if (model == P155_MODEL_D0)
   {
     switch (query)
     {
@@ -513,8 +458,7 @@ const __FlashStringHelper *p155_getQueryString(uint8_t query, uint8_t model)
       return F("Power Total (W)");
     }
   }
-  // SML / SML-Auto –same OBIS-Names
-  else if (model == 1 || model == 3)
+  else if (model == P155_MODEL_SML)
   {
     switch (query)
     {
@@ -544,25 +488,12 @@ const __FlashStringHelper *p155_getQueryString(uint8_t query, uint8_t model)
       return F("Current L3 (A)");
     }
   }
-  // DTZ541
-  else if (model == 2)
-  {
-    switch (query)
-    {
-    case 1:
-      return F("Total Active Energy Plus (kWh)");
-    case 2:
-      return F("Power Total (W)");
-    case 3:
-      return F("Total Active Energy Minus (kWh)");
-    }
-  }
   return F("");
 }
 
 const __FlashStringHelper *p155_getQueryValueString(uint8_t query, uint8_t model)
 {
-  if (model == 0)
+  if (model == P155_MODEL_D0)
   {
     switch (query)
     {
@@ -578,7 +509,7 @@ const __FlashStringHelper *p155_getQueryValueString(uint8_t query, uint8_t model
       return F("L123_W");
     }
   }
-  else if (model == 1 || model == 3)
+  else if (model == P155_MODEL_SML)
   {
     switch (query)
     {
@@ -608,29 +539,26 @@ const __FlashStringHelper *p155_getQueryValueString(uint8_t query, uint8_t model
       return F("L3_A");
     }
   }
-  else if (model == 2)
-  {
-    switch (query)
-    {
-    case 1:
-      return F("Energy_Consumption_kWh");
-    case 2:
-      return F("L123_W");
-    case 3:
-      return F("Energy_FeedIn_kWh");
-    }
-  }
   return F("");
 }
 
+// SML start sequence (ring buffer order: newest byte first)
+// Stream: 1B 1B 1B 1B 01 01 01 01  →  ring buffer reversed: 01 01 01 01 1B 1B 1B 1B
+static constexpr uint8_t P155_SML_startseq[] = {0x01, 0x01, 0x01, 0x01, 0x1B, 0x1B, 0x1B, 0x1B};
+
 // ============================================================
-// Serial handler: shared for SML, DTZ541 and SML-Auto
+// Serial handler: SML (dynamic TL parsing)
 // ============================================================
-void p155_handleSerialInSML(unsigned int model)
+void p155_handleSerialInSML()
 {
   if (nullptr == P155_MySerial)
   {
-    addLog(LOG_LEVEL_INFO, F("SML: Serial nullptr"));
+    static uint32_t lastLogTime{};
+    if (timePassedSince(lastLogTime) > 1000)
+    {
+      addLog(LOG_LEVEL_INFO, F("SML: Serial nullptr"));
+      lastLogTime = millis();
+    }
     return;
   }
 
@@ -650,16 +578,20 @@ void p155_handleSerialInSML(unsigned int model)
       p155_ringBuffer[i] = p155_ringBuffer[i - 1];
     p155_ringBuffer[0] = b;
 
-    if ((p155_ringBuffer[0] == 0x01) && (p155_ringBuffer[1] == 0x01) &&
-        (p155_ringBuffer[2] == 0x01) && (p155_ringBuffer[3] == 0x01) &&
-        (p155_ringBuffer[4] == 0x1B) && (p155_ringBuffer[5] == 0x1B) &&
-        (p155_ringBuffer[6] == 0x1B) && (p155_ringBuffer[7] == 0x1B))
+    // static uint64_t p155_rxWindow = 0;
+    //  per Byte (one Operation instead of 8 writings in loop):
+    // p155_rxWindow = (p155_rxWindow << 8) | b;
+
+    //// Compare (one Operation instead memcmp with 8 Bytes):
+    // static constexpr uint64_t P155_SML_startseq = 0x1B1B1B1B01010101ULL;
+    // if (p155_rxWindow == P155_SML_startseq)
+
+    if (memcmp(p155_ringBuffer, P155_SML_startseq, NR_ELEMENTS(P155_SML_startseq)) == 0)
     {
       p155_step = 11;
       p155_charsRead = 0;
       p155_registerAct = 0;
       p155_anzBytes = 0;
-      p155_posDataAct = 0;
       p155_scaleFactor = 1.0f;
       p155_autoSubState = 0;
       p155_skipBytes = 0;
@@ -669,7 +601,7 @@ void p155_handleSerialInSML(unsigned int model)
     switch (p155_step)
     {
     // -------------------------------------------------------
-    // States 11-13: find OBIS code (all SML models)
+    // States 11-13: find OBIS code
     // -------------------------------------------------------
     case 11: // find ListEntry tag 0x77
       if (b == 0x77)
@@ -696,96 +628,31 @@ void p155_handleSerialInSML(unsigned int model)
         // search OBIS Number in table
         for (int i = 1; i < p155_outputOptionsAct; i++)
         {
-          byte *orbis = nullptr;
-          if (model == 1)
-            orbis = p155_myDataSML[i].p155_rxOrbis;
-          else if (model == 2)
-            orbis = p155_myDataDTZ[i].p155_rxOrbis;
-          else if (model == 3)
-            orbis = p155_myDataAuto[i].p155_rxOrbis;
-
-          if (orbis && p155_byteArrayCompare(p155_rxOrbis, 6, orbis, 6))
+          if (p155_byteArrayCompare(p155_rxOrbis, 6, p155_myDataSML[i].p155_rxOrbis, 6))
           {
-
-            if (i < p155_outputOptionsAct)
-            {
-              p155_registerAct = i;
-              if (model != 3)
-                p155_posDataAct = (model == 1) ? p155_myDataSML[i].posData
-                                               : p155_myDataDTZ[i].posData;
-            }
+            p155_registerAct = i;
             break;
           }
         }
 
         if (p155_registerAct != 0)
         {
-          if (model == 3)
-          {
-            p155_scaleFactor = 1.0f;
-            p155_autoSubState = 0;
-            p155_skipBytes = 0;
-            p155_listElems = 0;
-            p155_step = 30;
-          }
-          else
-          {
-            p155_step = 20;
-          }
+          p155_scaleFactor = 1.0f;
+          p155_autoSubState = 0;
+          p155_skipBytes = 0;
+          p155_listElems = 0;
+          p155_step = 30;
           p155_charsRead = 0;
         }
         else
         {
-          p155_step = 11; // Not found so continue searching
+          p155_step = 11; // not found, keep searching
         }
       }
       break;
 
     // -------------------------------------------------------
-    // States 20-21: hardcoded models (SML, DTZ541)
-    // -------------------------------------------------------
-    case 20: // read bytes up to posData, last byte = type byte
-      // bounds check
-      if (p155_charsRead < P155_RX_BUFFER)
-        p155_rxBuffer[p155_charsRead++] = b;
-
-      if (p155_charsRead >= p155_posDataAct)
-      {
-        byte ltyp = b;
-        p155_anzBytes = 4; // Default
-
-        if (ltyp == 0x52 || ltyp == 0x62)
-          p155_anzBytes = 1; //  8-bit
-        else if (ltyp == 0x53 || ltyp == 0x63)
-          p155_anzBytes = 2; // 16-bit
-        else if (ltyp == 0x55 || ltyp == 0x65)
-          p155_anzBytes = 4; // 32-bit
-        else if (ltyp == 0x59 || ltyp == 0x69)
-          p155_anzBytes = 8; // 64-bit
-
-        p155_step = 21;
-      }
-      break;
-
-    case 21: // collect data bytes
-      // bounds check
-      if (p155_charsRead < P155_RX_BUFFER)
-        p155_rxBuffer[p155_charsRead++] = b;
-
-      if (p155_charsRead >= p155_posDataAct + p155_anzBytes)
-      {
-        p155_parseValuesSML(model);
-        p155_step = 11;
-        p155_charsRead = 0;
-      }
-      else if (p155_charsRead >= P155_RX_BUFFER)
-      {
-        p155_step = 11; // buffer overflow - abort
-      }
-      break;
-
-    // -------------------------------------------------------
-    // States 30-33: SML-Auto - dynamic TL parsing
+    // States 30-33: dynamic TL parsing
     //
     // TL-byte format:
     //   Bits 7-4: Type (0=optional/absent, 5=signed int, 6=uint, 7=list)
@@ -902,7 +769,7 @@ void p155_handleSerialInSML(unsigned int model)
 
       if (p155_charsRead >= p155_anzBytes)
       {
-        p155_parseValuesSMLAuto();
+        p155_parseValuesSML();
         p155_step = 11;
       }
       break;
@@ -933,7 +800,6 @@ void p155_handleSerialInSML(unsigned int model)
           break;
         }
       }
-
       if (p155_listElems == 0)
       {
         p155_autoSubState++;
@@ -963,7 +829,6 @@ void p155_handleSerialInSML(unsigned int model)
       p155_charsRead = 0;
       p155_anzBytes = 0;
       p155_registerAct = 0;
-      p155_posDataAct = 0;
       p155_autoSubState = 0;
       p155_listElems = 0;
       break;
@@ -971,7 +836,6 @@ void p155_handleSerialInSML(unsigned int model)
   } // while serial available
 
 #ifndef BUILD_NO_DEBUG
-
   if (loglevelActiveFor(LOG_LEVEL_DEBUG))
   {
     String log1 = F("SML: step=");
@@ -992,7 +856,12 @@ void p155_handleSerialInD0()
 {
   if (nullptr == P155_MySerial)
   {
-    addLog(LOG_LEVEL_INFO, F("D0: Serial nullptr"));
+    static uint32_t lastLogTime{};
+    if (timePassedSince(lastLogTime) > 1000)
+    {
+      addLog(LOG_LEVEL_INFO, F("D0: Serial nullptr"));
+      lastLogTime = millis();
+    }
     return;
   }
 
@@ -1040,155 +909,46 @@ void p155_handleSerialInD0()
 }
 
 // ============================================================
-// Parse values: hardcoded SML models (1, 2)
+// Parse values: SML (dynamic TL)
 // ============================================================
-void p155_parseValuesSML(unsigned int model)
+void p155_parseValuesSML()
 {
-  // bounds check before using p155_registerAct as array index
-  if (model == 1 && p155_registerAct >= P155_NR_OUTPUT_OPTIONS_MODEL1)
-    return;
-  if (model == 2 && p155_registerAct >= P155_NR_OUTPUT_OPTIONS_MODEL2)
-    return;
-  byte *orbis = (model == 1) ? p155_myDataSML[p155_registerAct].p155_rxOrbis
-                             : p155_myDataDTZ[p155_registerAct].p155_rxOrbis;
-
-  if (!p155_byteArrayCompare(p155_rxOrbis, 6, orbis, 6))
+  if (p155_registerAct >= P155_NR_OUTPUT_OPTIONS_SML)
     return;
 
-  int lLen = p155_posDataAct;
-  if (lLen < 1 || lLen >= P155_RX_BUFFER)
-    return; // bounds check: prevent lLen-1 underflow
-  byte lTyp = p155_rxBuffer[lLen - 1];
-  float lvalue = 0.0f;
-
-  int8_t lint8;
-  uint8_t luint8;
-  int16_t lint16;
-  uint16_t luint16;
-  int32_t lint32;
-  uint32_t luint32;
-
-  switch (lTyp)
-  {
-  case 0x52:
-    lint8 = p155_rxBuffer[lLen];
-    lvalue = lint8;
-    break; //  S8
-  case 0x53:
-    lint16 = ((uint8_t)p155_rxBuffer[lLen] << 8) | (uint8_t)p155_rxBuffer[lLen + 1];
-    lvalue = lint16;
-    break; // S16
-  case 0x55:
-    lint32 = ((uint8_t)p155_rxBuffer[lLen] << 24) |
-             ((uint8_t)p155_rxBuffer[lLen + 1] << 16) |
-             ((uint8_t)p155_rxBuffer[lLen + 2] << 8) |
-             (uint8_t)p155_rxBuffer[lLen + 3];
-    lvalue = lint32;
-    break; // S32
-
-  case 0x59:
-    lint32 = ((uint8_t)p155_rxBuffer[lLen + 4] << 24) | // S64 → nur untere 32bit
-             ((uint8_t)p155_rxBuffer[lLen + 5] << 16) |
-             ((uint8_t)p155_rxBuffer[lLen + 6] << 8) |
-             (uint8_t)p155_rxBuffer[lLen + 7];
-    lvalue = lint32;
-    break;
-
-  case 0x62:
-    luint8 = p155_rxBuffer[lLen];
-    lvalue = luint8;
-    break; // U8
-  case 0x63:
-    luint16 = ((uint8_t)p155_rxBuffer[lLen] << 8) | (uint8_t)p155_rxBuffer[lLen + 1];
-    lvalue = luint16;
-    break; // U16
-  case 0x65:
-    luint32 = ((uint8_t)p155_rxBuffer[lLen] << 24) |
-              ((uint8_t)p155_rxBuffer[lLen + 1] << 16) |
-              ((uint8_t)p155_rxBuffer[lLen + 2] << 8) |
-              (uint8_t)p155_rxBuffer[lLen + 3];
-    lvalue = luint32;
-    break; // U32
-
-  case 0x69:
-    luint32 = ((uint8_t)p155_rxBuffer[lLen + 4] << 24) | // U64 → untere 32bit
-              ((uint8_t)p155_rxBuffer[lLen + 5] << 16) |
-              ((uint8_t)p155_rxBuffer[lLen + 6] << 8) |
-              (uint8_t)p155_rxBuffer[lLen + 7];
-    lvalue = luint32;
-    break;
-  }
-
-  const float factor = (model == 1) ? p155_myDataSML[p155_registerAct].factor
-                                    : p155_myDataDTZ[p155_registerAct].factor;
-  if (model == 1)
-    p155_myDataSML[p155_registerAct].value = lvalue * factor;
-  if (model == 2)
-    p155_myDataDTZ[p155_registerAct].value = lvalue * factor;
-
-#ifndef BUILD_NO_DEBUG
-  if (loglevelActiveFor(LOG_LEVEL_DEBUG))
-  {
-    String log = F("SML Parse: reg=");
-    log += p155_registerAct;
-    log += F(" typ=0x");
-    log += String(lTyp, HEX);
-    log += F(" val=");
-    log += lvalue;
-    addLogMove(LOG_LEVEL_DEBUG, log);
-  }
-#endif
-}
-
-// ============================================================
-// Parse values: SML-Auto (Model 3)
-
-// ============================================================
-void p155_parseValuesSMLAuto()
-{
-  // For >4 bytes (e.g. int64), skip upper bytes, read lower 4
   const int startByte = (p155_anzBytes > 4) ? (p155_anzBytes - 4) : 0;
   const int readBytes = (p155_anzBytes > 4) ? 4 : p155_anzBytes;
-
-  uint32_t rawU = 0;
-  for (int i = 0; i < readBytes; i++)
-    rawU = (rawU << 8) | (uint8_t)p155_rxBuffer[startByte + i];
 
   float lvalue = 0.0f;
   if (p155_autoDataTyp == 5) // signed int
   {
-    int32_t raw = (int32_t)rawU;
-    if (readBytes == 1 && (rawU & 0x80))
-      raw |= (int32_t)0xFFFFFF00;
-    else if (readBytes == 2 && (rawU & 0x8000))
-      raw |= (int32_t)0xFFFF0000;
+    int32_t raw = 0;
+    if (!p155_readInt32(startByte, readBytes, raw))
+      return;
     lvalue = raw;
   }
-  else // unsigned (typ 6) or unkwnown
+  else // unsigned (type 6) or unknown
   {
-    lvalue = rawU;
+    uint32_t raw = 0;
+    if (!p155_readUint32(startByte, readBytes, raw))
+      return;
+    lvalue = raw;
   }
 
-  const float scaledValue = lvalue * p155_scaleFactor;
-
-  p155_myDataAuto[p155_registerAct].value = scaledValue;
+  p155_myDataSML[p155_registerAct].value = lvalue * p155_scaleFactor;
 
   if (loglevelActiveFor(LOG_LEVEL_INFO))
   {
-    String log = F("SML-Auto: reg=");
+    String log = F("SML: reg=");
     log += p155_registerAct;
     log += F(" typ=");
     log += p155_autoDataTyp;
     log += F(" bytes=");
     log += p155_anzBytes;
-    log += F(" start=");
-    log += startByte;
     log += F(" factor=");
     log += p155_scaleFactor;
-    log += F(" raw=");
-    log += lvalue;
     log += F(" val=");
-    log += scaledValue;
+    log += p155_myDataSML[p155_registerAct].value;
     addLogMove(LOG_LEVEL_INFO, log);
   }
 }
@@ -1198,7 +958,6 @@ void p155_parseValuesSMLAuto()
 // ============================================================
 void p155_parseValuesD0()
 {
-
   int i = 1;
   for (; i < p155_outputOptionsAct; i++)
   {
@@ -1230,6 +989,41 @@ void p155_parseValuesD0()
 #endif
 }
 
+// ============================================================
+// Buffer read helpers (bounds-checked)
+// ============================================================
+
+// Read numBytes (1-4) big-endian from rxBuffer at startByte → uint32_t
+bool p155_readUint32(int startByte, int numBytes, uint32_t &result)
+{
+  if (numBytes < 1 || numBytes > 4)
+    return false;
+  if ((startByte + numBytes) > p155_charsRead)
+    return false;
+  if ((startByte + numBytes) > P155_RX_BUFFER)
+    return false;
+  result = 0;
+  for (int i = 0; i < numBytes; i++)
+    result = (result << 8) | (uint8_t)p155_rxBuffer[startByte + i];
+  return true;
+}
+
+// Read numBytes (1-4) big-endian from rxBuffer at startByte → int32_t (sign-extended)
+bool p155_readInt32(int startByte, int numBytes, int32_t &result)
+{
+  uint32_t raw = 0;
+  if (!p155_readUint32(startByte, numBytes, raw))
+    return false;
+  result = static_cast<int32_t>(raw);
+  if (numBytes == 1 && (raw & 0x80))
+    result |= (int32_t)0xFFFFFF00;
+  else if (numBytes == 2 && (raw & 0x8000))
+    result |= (int32_t)0xFFFF0000;
+  else if (numBytes == 3 && (raw & 0x800000))
+    result |= (int32_t)0xFF000000;
+  return true;
+}
+
 bool p155_byteArrayCompare(byte a1[], int a1len, byte a2[], int a2len)
 {
   if (a1len != a2len)
@@ -1242,18 +1036,12 @@ bool p155_byteArrayCompare(byte a1[], int a1len, byte a2[], int a2len)
 
 void p155_deleteValues(unsigned int model)
 {
-  if (model == 0)
-    for (int i = 0; i < P155_NR_OUTPUT_OPTIONS_MODEL0; i++)
+  if (model == P155_MODEL_D0)
+    for (int i = 0; i < P155_NR_OUTPUT_OPTIONS_D0; i++)
       p155_myDataD0[i].value = 0;
-  else if (model == 1)
-    for (int i = 0; i < P155_NR_OUTPUT_OPTIONS_MODEL1; i++)
+  else if (model == P155_MODEL_SML)
+    for (int i = 0; i < P155_NR_OUTPUT_OPTIONS_SML; i++)
       p155_myDataSML[i].value = 0;
-  else if (model == 2)
-    for (int i = 0; i < P155_NR_OUTPUT_OPTIONS_MODEL2; i++)
-      p155_myDataDTZ[i].value = 0;
-  else if (model == 3)
-    for (int i = 0; i < P155_NR_OUTPUT_OPTIONS_MODEL3; i++)
-      p155_myDataAuto[i].value = 0;
 }
 
 #endif // USES_P155
