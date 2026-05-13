@@ -25,8 +25,14 @@ Maintainer: |P155_maintainer|
 
 Used libraries: |P155_usedlibraries|
 
-Supported hardware
-------------------
+Hardware
+--------
+This plugin uses an infrared reader to read data via the optical infrared interface of an electricity meter.
+
+.. image:: P155_Meter.png
+
+Devices
+~~~~~~~~~~~~
 
 Supports all smart meters using the SML protocol (Smart Message Language)
 and older meters using the D0 protocol (IEC 62056-21).
@@ -42,44 +48,30 @@ Reading Head
 ~~~~~~~~~~~~
 
 To connect a smart meter to the ESP, an IR reading head is required.
-A compatible TTL/UART reading head is available:
+Example for a compatible TTL/UART reading head :
 
-.. csv-table::
-  :header: "Store", "Link"
-  :widths: 5, 40
+* Hichi TTL, IR Reader
+* bitShake SmartMeterReader - UART | IR Reader
 
-  "eBay","`TTL/UART IR Reading Head <https://www.ebay.de/itm/314015465828>`_"
+.. image:: P155_IR_Reader.png
 
 The reading head includes a fully assembled PCB with IR diode and phototransistor,
 a ring magnet to attach to the meter, and a housing with cover.
-
-Precautions
------------
-
-The plugin uses Hardware Serial2 on fixed pins:
-
-* RX = GPIO 16
-* TX = GPIO 17
-
+The plugin uses Hardware Serial which can be configured in ESPEasy UI.
 The meter's serial interface operates at 9600 baud with 3.3V logic levels.
 No level converter is required for 3.3V meters.
 
-Hardware
---------
-
-Connect the meter to the ESP32-S3 as follows:
+Wiring
+~~~~~~~~~~~~
+Example how to connect the Reader to the ESP32 as follows:
 
 .. code-block:: none
 
-  Smart Meter    ESP32-S3
+  IR-Reader    ESP32
   TXD        --> GPIO 16 (RX2)
   RXD        --> GPIO 17 (TX2)
+  VCC        --> 3.3V
   GND        --> GND
-
-.. note::
-
-   GPIO 16 and 17 are fixed as Hardware Serial2 (UART2) on the ESP32-S3.
-   These pins cannot be changed via the web interface.
 
 Configuration
 -------------
@@ -139,7 +131,7 @@ SML and SML-Auto share the same OBIS codes:
   "11", "L2_A", "1-0:51.7.0", "A", "Current L2"
   "12", "L3_A", "1-0:71.7.0", "A", "Current L3"
 
-\* SML-Auto delivers energy values in Wh. Enter ``VALUE/1000`` in the formula field to get kWh.
+\* SML-Auto delivers energy values in Wh. Enter ``%VALUE%/1000`` in the formula field to get kWh.
 
 D0:
 
@@ -170,15 +162,15 @@ Indicators (recommended settings)
   :header: "Indicator", "Value Name", "Interval", "Formula", "Extra information"
   :widths: 12, 10, 5, 8, 20
 
-  "Energy_Consumption_kWh", "Import_kWh", "10", "VALUE/1000", "SML-Auto only: Wh to kWh"
-  "Energy_FeedIn_kWh", "Export_kWh", "10", "VALUE/1000", "SML-Auto only: Wh to kWh"
+  "Energy_Consumption_kWh", "Import_kWh", "10", "%VALUE%/1000", "SML-Auto only: Wh to kWh"
+  "Energy_FeedIn_kWh", "Export_kWh", "10", "%VALUE%/1000", "SML-Auto only: Wh to kWh"
   "L123_W", "Power_W", "1", "", "No formula needed"
   "L1_V / L2_V / L3_V", "Voltage_V", "10", "", ""
 
 .. note::
 
    With **SML-Auto**, energy registers deliver the raw value in Wh (scaler is read
-   automatically from the telegram). Enter ``VALUE/1000`` in the ESPEasy formula
+   automatically from the telegram). Enter ``%VALUE%/1000`` in the ESPEasy formula
    field to get kWh. Power values (W) require no formula.
 
 Change log
