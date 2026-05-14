@@ -101,7 +101,7 @@ Configuration
 
 
 Output
-~~~~~~~~~
+~~~~~~
 
 The available measurement values depend on the selected model.
 
@@ -150,7 +150,7 @@ DTZ541:
   "3", "Energy_FeedIn_kWh", "1-0:2.8.0", "kWh", "Total export energy"
 
 Indicators (recommended settings)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. csv-table::
   :header: "Indicator", "Value Name", "Interval", "Formula", "Extra information"
