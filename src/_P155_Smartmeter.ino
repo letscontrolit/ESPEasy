@@ -1086,7 +1086,7 @@ bool p155_readInt32(int startByte, int numBytes, int32_t& result)
     return false;
   }
   const int shift = (4 - numBytes) * 8;
-  result = (raw << shift) >> shift;
+  result = static_cast<int32_t>(raw << shift) >> shift;
   return true;
 }
 
