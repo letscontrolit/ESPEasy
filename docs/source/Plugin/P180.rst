@@ -58,7 +58,7 @@ I2C options
 
 * **I2C Address (Hex)**: Because of the flexible nature of the plugin, setting the I2C address requires typing the hexadecimal I2C address of the device. This should be in the range 0x01 .. 0x7F.
 
-The available I2C settings here depend on the build used. At least the **Force Slow I2C speed** option is available. This plugin can also be used with an I2C Multiplexer, or use a separate I2C Bus when configured, to allow for multiple sensors on a single ESP. For details see the :ref:`Hardware_page`.
+The available I2C settings here depend on the build used. At least the **Force Slow I2C speed** option is available. This plugin can also be used with an I2C Multiplexer, or use a separate I2C Bus when configured, to allow for multiple sensors on a single ESP. For details see the :ref:`i2c-bus` page.
 
 Device Settings
 ^^^^^^^^^^^^^^^
