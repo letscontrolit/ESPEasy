@@ -66,10 +66,10 @@ ESP32 now has a number of builds:
 - custom_ESP32_4M316k  Build template using either the plugin set defined in ``Custom.h`` or ``tools/pio/pre_custom_esp32.py``
 - test_ESP32_4M316k  Build using the "testing" set of plugins for ESP32
 - test_ESP32-wrover-kit_4M316k  A build for ESP32 including build flags for the official WRover test kit.
-- max_ESP32_16M1M  A build for ESP32 with larger flash size including all plugins.
+- max_ESP32_16M8M  A build for ESP32 with larger flash size including all plugins.
 
 ESP32 also supports Ethernet.
-Ethernet support is included in similar builds as mentioned before, only ending with "_ETH" in the file name.
+Ethernet support is included in nearly all ESP32 builds, only ESP32-C2 doesn't have support for Ethernet.
 
 
 

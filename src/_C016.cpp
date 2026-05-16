@@ -31,7 +31,7 @@
 
 # define CPLUGIN_016
 # define CPLUGIN_ID_016         16
-# define CPLUGIN_NAME_016       "Cache Controller [Experimental]"
+# define CPLUGIN_NAME_016       "Cache Controller"
 
 // #include <ArduinoJson.h>
 
@@ -46,19 +46,12 @@ bool CPlugin_016(CPlugin::Function function, struct EventStruct *event, String& 
     case CPlugin::Function::CPLUGIN_PROTOCOL_ADD:
     {
       ProtocolStruct& proto = getProtocolStruct(event->idx); //              = CPLUGIN_ID_016;
-      proto.usesMQTT             = false;
-      proto.usesTemplate         = false;
-      proto.usesAccount          = false;
-      proto.usesPassword         = false;
-      proto.usesExtCreds         = false;
       proto.defaultPort          = 80;
-      proto.usesID               = false;
       proto.usesHost             = false;
       proto.usesPort             = false;
       proto.usesQueue            = false;
       proto.usesCheckReply       = false;
       proto.usesTimeout          = false;
-      proto.usesSampleSets       = false;
       proto.needsNetwork         = false;
       proto.allowsExpire         = false;
       proto.allowLocalSystemTime = true;
@@ -115,10 +108,12 @@ bool CPlugin_016(CPlugin::Function function, struct EventStruct *event, String& 
       uint8_t valueCount = getValueCountForTask(event->TaskIndex);
 
       if (event->timestamp_sec == 0) {
-        if (C016_allowLocalSystemTime)
+        if (C016_allowLocalSystemTime) {
           event->setLocalTimeTimestamp();
-        else 
+        }
+        else {
           event->setUnixTimeTimestamp();
+        }
       }
       const C016_queue_element element(
         event,
