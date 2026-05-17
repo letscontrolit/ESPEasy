@@ -9,6 +9,8 @@
 #include "../Helpers/Hardware_I2C.h"
 #include "../Helpers/StringConverter.h"
 
+#include "../Helpers/I2C_access.h"
+
 #if FEATURE_I2C_MULTIPLE
 # include "../WebServer/Markup_Forms.h"
 #endif // if FEATURE_I2C_MULTIPLE

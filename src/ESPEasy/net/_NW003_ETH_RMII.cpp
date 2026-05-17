@@ -37,6 +37,9 @@ bool NWPlugin_003(NWPlugin::Function function, EventStruct *event, String& strin
       nw.enabledOnFactoryReset = true;
       nw.fixedNetworkIndex     = NWPLUGIN_ID_003 - 1; // Start counting at 0
 # else // ifdef ESP32P4
+      #  if DEFAULT_ENABLED_NW003
+      nw.enabledOnFactoryReset = true;
+      #  endif
       nw.alwaysPresent = false;
 # endif // ifdef ESP32P4
       break;
@@ -46,7 +49,7 @@ bool NWPlugin_003(NWPlugin::Function function, EventStruct *event, String& strin
     {
       // Make sure the first listed Eth device is default set to have the highest route prio
       Settings.setRoutePrio_for_network(
-        event->NetworkIndex, 
+        event->NetworkIndex,
         DEFAULT_ETH_ROUTE_PRIO - (5 * event->NetworkIndex));
       Settings.setNetworkInterfaceSubnetBlockClientIP(event->NetworkIndex, false);
       Settings.setNetworkInterfaceStartupDelay(event->NetworkIndex, 500 * event->NetworkIndex);

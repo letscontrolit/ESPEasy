@@ -25,9 +25,10 @@ bool NPlugin_002(NPlugin::Function function, struct EventStruct *event, String& 
   {
     case NPlugin::Function::NPLUGIN_PROTOCOL_ADD:
       {
-        Notification[++notificationCount].Number = NPLUGIN_ID_002;
-        Notification[notificationCount].usesMessaging = false;
-        Notification[notificationCount].usesGPIO=1;
+        auto& notif         = Notification[++notificationCount];
+        notif.Number        = NPLUGIN_ID_002;
+        notif.usesMessaging = false;
+        notif.usesGPIO      = 1;
         break;
       }
 

@@ -2,7 +2,7 @@
 
 #ifdef USES_P073
 
-#include <GPIO_Direct_Access.h>
+# include <GPIO_Direct_Access.h>
 
 uint8_t P073_getDefaultDigits(uint8_t displayModel,
                               uint8_t digits) {
@@ -1648,34 +1648,25 @@ bool P073_data_struct::plugin_write_7dbin(const String& text) {
 // ---- TM1637 specific functions ----
 // ===================================
 
-# ifdef ESP32
-#  define CLK_HIGH()   DIRECT_pinWrite(this->pin1, HIGH)
-#  define CLK_LOW()    DIRECT_pinWrite(this->pin1, LOW)
-#  define DIO_HIGH()   DIRECT_pinWrite(this->pin2, HIGH)
-#  define DIO_LOW()    DIRECT_PINMODE_OUTPUT(this->pin2); DIRECT_pinWrite(this->pin2, LOW)
-#  define DIO_INPUT()  DIRECT_PINMODE_INPUT(this->pin2)
+#  define CLK_HIGH() DIRECT_pinWrite(this->pin1, HIGH)
+#  define CLK_LOW() DIRECT_pinWrite(this->pin1, LOW)
+#  define DIO_HIGH() DIRECT_pinWrite(this->pin2, HIGH)
+#  define DIO_LOW() DIRECT_PINMODE_OUTPUT(this->pin2); DIRECT_pinWrite(this->pin2, LOW)
+#  define DIO_INPUT() DIRECT_PINMODE_INPUT(this->pin2)
 #  define DIO_OUTPUT() DIRECT_PINMODE_OUTPUT(this->pin2)
-# else // ifdef ESP32
-#  define CLK_HIGH()   pinMode(this->pin1, INPUT_PULLUP)
-#  define CLK_LOW()    pinMode(this->pin1, OUTPUT)
-#  define DIO_HIGH()   pinMode(this->pin2, INPUT_PULLUP)
-#  define DIO_LOW()    pinMode(this->pin2, OUTPUT);digitalWrite(this->pin2, LOW)
-#  define DIO_INPUT()  pinMode(this->pin2, INPUT_PULLUP)
-#  define DIO_OUTPUT() pinMode(this->pin2, OUTPUT)
-# endif // ifdef ESP32
 
 void P073_data_struct::tm1637_i2cStart() {
-  # ifdef P073_DEBUG
+  # if defined(P073_DEBUG) && !defined(BUILD_NO_DEBUG)
   addLog(LOG_LEVEL_DEBUG, F("7DGT : Comm Start"));
-  # endif // ifdef P073_DEBUG
+  # endif // if defined(P073_DEBUG) && !defined(BUILD_NO_DEBUG)
   DIO_LOW();
   delayMicroseconds(TM1637_CLOCKDELAY);
 }
 
 void P073_data_struct::tm1637_i2cStop() {
-  # ifdef P073_DEBUG
+  # if defined(P073_DEBUG) && !defined(BUILD_NO_DEBUG)
   addLog(LOG_LEVEL_DEBUG, F("7DGT : Comm Stop"));
-  # endif // ifdef P073_DEBUG
+  # endif // if defined(P073_DEBUG) && !defined(BUILD_NO_DEBUG)
   DIO_LOW();
   delayMicroseconds(TM1637_CLOCKDELAY);
   CLK_HIGH();
@@ -1693,14 +1684,15 @@ bool P073_data_struct::tm1637_i2cAck() {
   const uint32_t start_wait = micros();
 
   const bool acknowledged = -1 !=
-  DIRECT_measureWaitForPinState_ISR(this->pin2, start_wait, TM1637_CLOCKDELAY, 0);
+                            DIRECT_measureWaitForPinState_ISR(this->pin2, start_wait, TM1637_CLOCKDELAY, 0);
 
   const int32_t timePassed = usecPassedSince_fast(start_wait);
+
   if (timePassed < TM1637_CLOCKDELAY) {
     delayMicroseconds(TM1637_CLOCKDELAY - timePassed);
   }
 
-  # ifdef P073_DEBUG
+  # if defined(P073_DEBUG) && !defined(BUILD_NO_DEBUG)
 
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log = F("7DGT : Comm ACK=");
@@ -1712,13 +1704,13 @@ bool P073_data_struct::tm1637_i2cAck() {
     }
     addLogMove(LOG_LEVEL_DEBUG, log);
   }
-  # endif // ifdef P073_DEBUG
-   CLK_HIGH();
+  # endif // if defined(P073_DEBUG) && !defined(BUILD_NO_DEBUG)
+  CLK_HIGH();
 
-   delayMicroseconds(TM1637_CLOCKDELAY);
-   CLK_LOW();
-   delayMicroseconds(TM1637_CLOCKDELAY);
-   DIO_OUTPUT();
+  delayMicroseconds(TM1637_CLOCKDELAY);
+  CLK_LOW();
+  delayMicroseconds(TM1637_CLOCKDELAY);
+  DIO_OUTPUT();
 
   return acknowledged;
 }
@@ -1745,9 +1737,9 @@ void P073_data_struct::tm1637_i2cWriteByte_ack(uint8_t bytetoprint) {
 }
 
 void P073_data_struct::tm1637_i2cWrite(uint8_t bytetoprint) {
-  # ifdef P073_DEBUG
+  # if defined(P073_DEBUG) && !defined(BUILD_NO_DEBUG)
   addLog(LOG_LEVEL_DEBUG, F("7DGT : WriteByte"));
-  # endif // ifdef P073_DEBUG
+  # endif // if defined(P073_DEBUG) && !defined(BUILD_NO_DEBUG)
 
   for (uint8_t i = 0; i < 8; ++i) {
     CLK_LOW();
@@ -1785,19 +1777,19 @@ void P073_data_struct::tm1637_SetPowerBrightness(uint8_t brightlvl,
     brightlvl |= TM1637_POWER_OFF;
   }
 
-  uint8_t bytesToPrint[]{brightlvl};
+  uint8_t bytesToPrint[]{ brightlvl };
   tm1637_i2cWrite_ack(bytesToPrint, NR_ELEMENTS(bytesToPrint));
 }
 
 void P073_data_struct::tm1637_InitDisplay() {
   pinMode(this->pin1, OUTPUT);
   pinMode(this->pin2, OUTPUT);
-  
-	digitalWrite(this->pin1, HIGH);
-	digitalWrite(this->pin2, HIGH);
+
+  digitalWrite(this->pin1, HIGH);
+  digitalWrite(this->pin2, HIGH);
 
   delayMicroseconds(TM1637_CLOCKDELAY);
-  uint8_t bytesToPrint[]{0x40};
+  uint8_t bytesToPrint[]{ 0x40 };
   tm1637_i2cWrite_ack(bytesToPrint, NR_ELEMENTS(bytesToPrint));
   tm1637_ClearDisplay();
 }

@@ -57,7 +57,7 @@ I2C options
     "0x52",  "Connect ADDR GND"
     "0x53",  "Connect ADDR to VDD (default on most boards)"
 
-The available I2C settings here depend on the build used. At least the **Force Slow I2C speed** option is available, but selections for the I2C Multiplexer can also be shown. For details see the :ref:`Hardware_page`
+The available I2C settings here depend on the build used. At least the **Force Slow I2C speed** option is available, but selections for the I2C Multiplexer can also be shown. For details see the :ref:`i2c-bus` page
 
 The chip supports both SPI and I2C. The plugin only support I2C using the following pins:
 

@@ -40,10 +40,12 @@ bool NWPlugin_002(NWPlugin::Function function, EventStruct *event, String& strin
     case NWPlugin::Function::NWPLUGIN_DRIVER_ADD:
     {
       NetworkDriverStruct& nw = getNetworkDriverStruct(networkDriverIndex_t::toNetworkDriverIndex(event->idx));
-      nw.onlySingleInstance    = true;
-      nw.alwaysPresent         = true;
+      nw.onlySingleInstance = true;
+      nw.alwaysPresent      = true;
+      # if DEFAULT_ENABLED_NW002
       nw.enabledOnFactoryReset = true;
-      nw.fixedNetworkIndex     = NWPLUGIN_ID_002 - 1; // Start counting at 0
+      # endif
+      nw.fixedNetworkIndex = NWPLUGIN_ID_002 - 1; // Start counting at 0
       break;
     }
 
@@ -288,7 +290,7 @@ bool NWPlugin_002(NWPlugin::Function function, EventStruct *event, String& strin
           ,169                                                               // 5 GHz U-NII-3/4
           ,173,  177                                                         // 5 GHz U-NII-4
         };
-        // *INDENT-ON*
+ // *INDENT-ON*
         constexpr int nrwifiChannels = NR_ELEMENTS(wifiChannels);
         const FormSelectorOptions selector(
           nrwifiChannels,

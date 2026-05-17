@@ -52,7 +52,7 @@ Settings
 I2C Options 
 ^^^^^^^^^^^^
 
-The available settings here depend on the build used. At least the **Force Slow I2C speed** option is available, but selections for the I2C Multiplexer can also be shown. For details see the :ref:`Hardware_page`
+The available settings here depend on the build used. At least the **Force Slow I2C speed** option is available, but selections for the I2C Multiplexer can also be shown. For details see the :ref:`i2c-bus` page
 
 * **I2C Address**: The address the device is using. The AHT10 sensor allows to select a secondary address by pulling the AO (sometimes marked as A0) pin to high (3.3V) to select the secondary address. That address should then be selected here too. The AHT20/AHT21 based sensors only support a single I2C address, so it will be forced to the default address.
 

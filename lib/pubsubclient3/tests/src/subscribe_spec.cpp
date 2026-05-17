@@ -10,6 +10,10 @@ byte server[] = {172, 16, 0, 2};
 void callback(char* topic, uint8_t* payload, size_t plength);
 int test_subscribe_no_qos();
 int test_subscribe_qos_1();
+int test_subscribe_P();
+int test_subscribe_P_qos_1();
+int test_subscribe_FlashStringHelper();
+int test_subscribe_FlashStringHelper_qos_1();
 int test_subscribe_not_connected();
 int test_subscribe_invalid_qos();
 int test_subscribe_too_long();
@@ -63,6 +67,108 @@ int test_subscribe_qos_1() {
     shimClient.respond(suback, 5);
 
     rc = client.subscribe("topic", MQTT_QOS1);
+    IS_TRUE(rc);
+
+    IS_FALSE(shimClient.error());
+
+    END_IT
+}
+
+int test_subscribe_P() {
+    IT("subscribe using PROGMEM");
+    ShimClient shimClient;
+    shimClient.setAllowConnect(true);
+
+    byte connack[] = {0x20, 0x02, 0x00, 0x00};
+    shimClient.respond(connack, 4);
+
+    PubSubClient client(server, 1883, callback, shimClient);
+    bool rc = client.connect("client_test1");
+    IS_TRUE(rc);
+
+    byte subscribe[] = {0x82, 0xa, 0x0, 0x2, 0x0, 0x5, 0x74, 0x6f, 0x70, 0x69, 0x63, 0x0};
+    shimClient.expect(subscribe, 12);
+    byte suback[] = {0x90, 0x3, 0x0, 0x2, 0x0};
+    shimClient.respond(suback, 5);
+
+    char topic[] PROGMEM = "topic";
+    rc = client.subscribe_P(topic);
+    IS_TRUE(rc);
+
+    IS_FALSE(shimClient.error());
+
+    END_IT
+}
+
+int test_subscribe_P_qos_1() {
+    IT("subscribe using PROGMEM with QoS 1");
+    ShimClient shimClient;
+    shimClient.setAllowConnect(true);
+
+    byte connack[] = {0x20, 0x02, 0x00, 0x00};
+    shimClient.respond(connack, 4);
+
+    PubSubClient client(server, 1883, callback, shimClient);
+    bool rc = client.connect("client_test1");
+    IS_TRUE(rc);
+
+    byte subscribe[] = {0x82, 0xa, 0x0, 0x2, 0x0, 0x5, 0x74, 0x6f, 0x70, 0x69, 0x63, 0x1};
+    shimClient.expect(subscribe, 12);
+    byte suback[] = {0x90, 0x3, 0x0, 0x2, 0x1};
+    shimClient.respond(suback, 5);
+
+    char topic[] PROGMEM = "topic";
+    rc = client.subscribe_P(topic, MQTT_QOS1);
+    IS_TRUE(rc);
+
+    IS_FALSE(shimClient.error());
+
+    END_IT
+}
+
+int test_subscribe_FlashStringHelper() {
+    IT("subscribe using FlashStringHelper");
+    ShimClient shimClient;
+    shimClient.setAllowConnect(true);
+
+    byte connack[] = {0x20, 0x02, 0x00, 0x00};
+    shimClient.respond(connack, 4);
+
+    PubSubClient client(server, 1883, callback, shimClient);
+    bool rc = client.connect("client_test1");
+    IS_TRUE(rc);
+
+    byte subscribe[] = {0x82, 0xa, 0x0, 0x2, 0x0, 0x5, 0x74, 0x6f, 0x70, 0x69, 0x63, 0x0};
+    shimClient.expect(subscribe, 12);
+    byte suback[] = {0x90, 0x3, 0x0, 0x2, 0x0};
+    shimClient.respond(suback, 5);
+
+    rc = client.subscribe(F("topic"));
+    IS_TRUE(rc);
+
+    IS_FALSE(shimClient.error());
+
+    END_IT
+}
+
+int test_subscribe_FlashStringHelper_qos_1() {
+    IT("subscribe using FlashStringHelper with QoS 1");
+    ShimClient shimClient;
+    shimClient.setAllowConnect(true);
+
+    byte connack[] = {0x20, 0x02, 0x00, 0x00};
+    shimClient.respond(connack, 4);
+
+    PubSubClient client(server, 1883, callback, shimClient);
+    bool rc = client.connect("client_test1");
+    IS_TRUE(rc);
+
+    byte subscribe[] = {0x82, 0xa, 0x0, 0x2, 0x0, 0x5, 0x74, 0x6f, 0x70, 0x69, 0x63, 0x1};
+    shimClient.expect(subscribe, 12);
+    byte suback[] = {0x90, 0x3, 0x0, 0x2, 0x1};
+    shimClient.respond(suback, 5);
+
+    rc = client.subscribe(F("topic"), MQTT_QOS1);
     IS_TRUE(rc);
 
     IS_FALSE(shimClient.error());
@@ -176,6 +282,10 @@ int main() {
     SUITE("Subscribe");
     test_subscribe_no_qos();
     test_subscribe_qos_1();
+    test_subscribe_P();
+    test_subscribe_P_qos_1();
+    test_subscribe_FlashStringHelper();
+    test_subscribe_FlashStringHelper_qos_1();
     test_subscribe_not_connected();
     test_subscribe_invalid_qos();
     test_subscribe_too_long();

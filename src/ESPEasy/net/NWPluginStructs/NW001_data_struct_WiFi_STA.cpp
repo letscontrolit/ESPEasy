@@ -99,13 +99,14 @@ bool NW001_data_struct_WiFi_STA::init(EventStruct *event)
 
   {
     auto runtime_data = getNWPluginData_static_runtime();
+
     if (runtime_data) {
       IPAddress ip, gateway, sn, dns;
       getStaticIPAddresses(ip, gateway, sn, dns);
       runtime_data->setStaticIP(ip, gateway, sn, dns);
     }
   }
-  
+
 
   ESPEasy::net::wifi::initWiFi();
   return true;
@@ -171,6 +172,7 @@ bool NW001_data_struct_WiFi_STA::handle_priority_route_changed()
 
 bool NW001_data_struct_WiFi_STA::initPluginStats()
 {
+  if (!Settings.getNetworkCollectStats(_networkIndex)) { return false; }
   networkStatsVarIndex_t networkStatsVarIndex{};
   PluginStats_Config_t   displayConfig;
 

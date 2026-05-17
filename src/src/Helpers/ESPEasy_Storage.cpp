@@ -392,7 +392,7 @@ bool BuildFixes()
         safe_strncpy(ControllerSettings->ClientID, clientid, sizeof(ControllerSettings->ClientID));
 
         ControllerSettings->mqtt_uniqueMQTTclientIdReconnect(Settings.uniqueMQTTclientIdReconnect_unused());
-        ControllerSettings->mqtt_retainFlag(Settings.MQTTRetainFlag_unused);
+        ControllerSettings->mqtt_retainFlag(DEFAULT_MQTT_RETAIN);
         SaveControllerSettings(controller_idx, *ControllerSettings);
       }
     }

@@ -311,7 +311,7 @@ I2C options
 
 Available addresses are in the range ``0x01`` to ``0x03``.
 
-The available I2C settings here depend on the build used. At least the **Force Slow I2C speed** option is available, but selections for the I2C Multiplexer can also be shown. For details see the :ref:`Hardware_page`
+The available I2C settings here depend on the build used. At least the **Force Slow I2C speed** option is available, but selections for the I2C Multiplexer can also be shown. For details see the :ref:`i2c-bus` page
 
 Device Settings
 ^^^^^^^^^^^^^^^

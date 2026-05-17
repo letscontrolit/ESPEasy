@@ -93,6 +93,7 @@ bool NW002_data_struct_WiFi_AP::init(EventStruct *event)
 {
   {
     auto runtime_data = getNWPluginData_static_runtime();
+
     if (runtime_data) {
       IPAddress ip, gateway, sn, dns;
       getStaticIPAddresses(ip, gateway, sn, dns);
@@ -146,26 +147,27 @@ NWPluginData_static_runtime * NW002_data_struct_WiFi_AP::getNWPluginData_static_
 bool NW002_data_struct_WiFi_AP::getStaticIPAddress(IPAddressType addressType, IPAddress& ip) const
 {
   // TODO TD-er: Implement for AP
-/*
-  IPAddress res;
 
-  switch (addressType)
-  {
-    case IPAddressType::IP: res = IPAddress(Settings.IP);
-      break;
-    case IPAddressType::Gateway: res = IPAddress(Settings.Gateway);
-      break;
-    case IPAddressType::Subnetmask: res = IPAddress(Settings.Subnet);
-      break;
-    case IPAddressType::DNS: res = IPAddress(Settings.DNS);
-      break;
-  }
+  /*
+     IPAddress res;
 
-  if (IPAddressSet(res)) {
-    ip = res;
-    return true;
-  }
-*/
+     switch (addressType)
+     {
+      case IPAddressType::IP: res = IPAddress(Settings.IP);
+        break;
+      case IPAddressType::Gateway: res = IPAddress(Settings.Gateway);
+        break;
+      case IPAddressType::Subnetmask: res = IPAddress(Settings.Subnet);
+        break;
+      case IPAddressType::DNS: res = IPAddress(Settings.DNS);
+        break;
+     }
+
+     if (IPAddressSet(res)) {
+      ip = res;
+      return true;
+     }
+   */
   return false;
 }
 
@@ -180,6 +182,7 @@ bool NW002_data_struct_WiFi_AP::handle_priority_route_changed() { return NW002_u
 
 bool NW002_data_struct_WiFi_AP::initPluginStats()
 {
+  if (!Settings.getNetworkCollectStats(_networkIndex)) { return false; }
   networkStatsVarIndex_t networkStatsVarIndex{};
   PluginStats_Config_t   displayConfig;
 

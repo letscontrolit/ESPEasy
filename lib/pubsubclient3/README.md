@@ -29,7 +29,7 @@ Full API documentation is available here: https://hmueller01.github.io/pubsubcli
 ## Limitations
 
  - The client is based on the [MQTT Version 3.1.1 specification](https://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html) with some limitations.
- - It can publish at QoS 0, 1 or 2.
+ - It can publish at QoS 0 and since [v3.2.0](https://github.com/hmueller01/pubsubclient3/releases/tag/v3.2.0) also at QoS 1 or 2.
 
    **WARNING:** No retransmission is supported to keep the library as much memory friendly as possible.
 
@@ -45,7 +45,17 @@ Full API documentation is available here: https://hmueller01.github.io/pubsubcli
    `PubSubClient::setKeepAlive(keepAlive)`.
  - The client uses MQTT 3.1.1 by default. It can be changed to use MQTT 3.1 by
    changing value of `MQTT_VERSION` in `PubSubClient.h`.
-
+ - Since [v3.3.0](https://github.com/hmueller01/pubsubclient3/releases/tag/v3.3.0) it can publish and subscribe to `PROGMEM` or `__FlashStringHelper` topics.
+   Details see [mqtt_progmem](https://github.com/hmueller01/pubsubclient3/blob/aae84e4d1aa65e752e19e30239b5796b4fe2705b/examples/mqtt_progmem/src/mqtt_progmem.cpp#L39-L48) example.
+   But if you like to publish `PROGMEM` topics you have to use
+   ```c
+   const char TOPIC[] PROGMEM = "test";
+   const char HELLO_WORLD[] PROGMEM = "hello world";
+   client.beginPublish_P(TOPIC, strlen_P(HELLO_WORLD), MQTT_QOS0, false);
+   client.write_P(HELLO_WORLD);
+   client.endPublish();
+   ```
+   as `client.publish_P(...)` is already used for `PROGMEM` payloads.
 
 ## Compatible Hardware
 
@@ -69,6 +79,10 @@ The library cannot currently be used with hardware based on the ENC28J60 chip â€
 such as the Nanode or the Nuelectronics Ethernet Shield. For those, there is an
 [alternative library](https://github.com/njh/NanodeMQTT) available.
 
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md)
+
 ## License
 
-This code is released under the MIT License.
+This code is released under the [MIT License](LICENSE.txt).

@@ -107,10 +107,6 @@ void handle_advanced() {
     Settings.ArduinoOTAEnable            = isFormItemChecked(F("arduinootaenable"));
     Settings.UseRTOSMultitasking         = isFormItemChecked(F("usertosmultitasking"));
 
-    // MQTT settings now moved to the controller settings.
-//    Settings.MQTTRetainFlag_unused              = isFormItemChecked(F("mqttretainflag"));
-//    Settings.MQTTUseUnitNameAsClientId   = isFormItemChecked(F("mqttuseunitnameasclientid"));
-//    Settings.uniqueMQTTclientIdReconnect(isFormItemChecked(F("uniquemqttclientidreconnect")));
     Settings.Latitude  = getFormItemFloat(F("latitude"));
     Settings.Longitude = getFormItemFloat(F("longitude"));
     #ifdef WEBSERVER_NEW_RULES
@@ -198,18 +194,6 @@ void handle_advanced() {
   addFormNote(F("Perform less strict parsing on last argument of some commands (e.g. publish and sendToHttp)"));
   addFormCheckBox(F("SendToHTTP wait for ack"), F("sendtohttp_ack"), Settings.SendToHttp_ack());
   addFormCheckBox(F("SendToHTTP Follow Redirects"), F("sendtohttp_redir"), Settings.SendToHTTP_follow_redirects());
-
-  /*
-  // MQTT settings now moved to the controller settings.
-  addFormSubHeader(F("Controller Settings"));
-
-  addFormNumericBox(F("Message Interval"), F("messagedelay"), Settings.MessageDelay_unused, 0, INT_MAX);
-  addUnit(F("ms"));
-
-  addFormCheckBox(F("MQTT Retain Msg"), F("mqttretainflag"), Settings.MQTTRetainFlag_unused);
-  addFormCheckBox(F("MQTT use unit name as ClientId"),    F("mqttuseunitnameasclientid"),   Settings.MQTTUseUnitNameAsClientId);
-  addFormCheckBox(F("MQTT change ClientId at reconnect"), F("uniquemqttclientidreconnect"), Settings.uniqueMQTTclientIdReconnect_unused());
-*/
 
   addFormSubHeader(F("Time Source"));
 

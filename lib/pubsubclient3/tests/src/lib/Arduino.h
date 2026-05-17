@@ -20,9 +20,14 @@ extern void loop(void);
 unsigned long millis(void);
 }
 
+class __FlashStringHelper;
 #define PROGMEM
+#define PGM_P  const char*
+#define memcpy_P memcpy
+#define strlen_P strlen
 #define strnlen_P strnlen
 #define pgm_read_byte_near(x) *(x)
+#define F(x) (reinterpret_cast<const __FlashStringHelper*>(x))
 
 #define yield(x) {}
 

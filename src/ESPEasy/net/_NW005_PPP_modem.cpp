@@ -35,6 +35,9 @@ bool NWPlugin_005(NWPlugin::Function function, EventStruct *event, String& strin
       NetworkDriverStruct& nw = getNetworkDriverStruct(networkDriverIndex_t::toNetworkDriverIndex(event->idx));
       nw.onlySingleInstance = true;
       nw.alwaysPresent      = false;
+      # if DEFAULT_ENABLED_NW005
+      nw.enabledOnFactoryReset = true;
+      # endif
       break;
     }
 

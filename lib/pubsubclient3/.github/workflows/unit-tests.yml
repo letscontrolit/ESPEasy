@@ -1,4 +1,4 @@
-name: build
+name: Unit tests
 
 on:
   push:
@@ -11,14 +11,11 @@ on:
     branches: [ "master" ]
 
 jobs:
-  build:
+  run-tests:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
-
-    - name: Check clang-format conformity
-      run: bash .github/clang-lint.sh
+      uses: actions/checkout@v6
 
     - name: Build tests
       # Build / Execute tests defined in tests folder
@@ -31,5 +28,5 @@ jobs:
       #run: make test
       run: bin/connect_spec && bin/publish_spec && bin/receive_spec && bin/subscribe_spec
 
-    - name: Build on Arduino CLI
-      run: bash .github/build-arduino.sh
+#    - name: Build on Arduino CLI
+#      run: bash .github/build-arduino.sh

@@ -55,7 +55,7 @@ Device configuration
 I2C options
 ^^^^^^^^^^^
 
-The available settings here depend on the build used. At least the **Force Slow I2C speed** option is available, but selections for the I2C Multiplexer can also be shown. For details see the :ref:`Hardware_page`
+The available settings here depend on the build used. At least the **Force Slow I2C speed** option is available, but selections for the I2C Multiplexer can also be shown. For details see the :ref:`i2c-bus` page
 
 When loading the Device configuration page, the plugin will try to detect the type of sensor connected based on the selected I2C addresses. If no sensor is found, the message in red will be shown.
 

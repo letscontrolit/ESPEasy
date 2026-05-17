@@ -55,7 +55,7 @@ I2C options
 
 .. image:: P057_I2CAddressOptions.png
 
-The available settings here depend on the build and hardware configuration used. At least the **Force Slow I2C speed** option is available, but selections for the I2C Multiplexer can also be shown. For details see the :ref:`Hardware_page`
+The available settings here depend on the build and hardware configuration used. At least the **Force Slow I2C speed** option is available, but selections for the I2C Multiplexer can also be shown. For details see the :ref:`i2c-bus` page
 
 
 
