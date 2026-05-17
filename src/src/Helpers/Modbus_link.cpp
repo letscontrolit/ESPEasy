@@ -172,16 +172,19 @@ uint16_t ModbusLINK_struct::queueTransaction(Modbus_RequestQueueElement *transac
     addLogMove(LOG_LEVEL_ERROR, F("Modbus: Link, Attempt to queue transaction on uninitialized link"));
     return 0;
   }
+
   if (transaction == nullptr) {
     addLogMove(LOG_LEVEL_ERROR, F("Modbus: Link, Attempt to queue null transaction"));
     return 0;
   }
-  if (transaction->_rcvframe_length > MODBUS_RCV_BUFFER ) {
+
+  if (transaction->_rcvframe_length > MODBUS_RCV_BUFFER) {
     addLogMove(LOG_LEVEL_ERROR, F("Modbus: Link, receive buffer too large"));
     return 0;
   }
-  
+
   # ifdef MODBUS_DEBUG
+
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     addLogMove(LOG_LEVEL_INFO,
                strformat(F("Modbus: Link, Queueing transaction ID %u, state %u"), transaction->_id, static_cast<uint>(transaction->_state)));
@@ -315,19 +318,25 @@ void ModbusLINK_struct::dumpQueueElement(Modbus_RequestQueueElement *el) {
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     String log = strformat(F("Modbus: [ID=%u, Device=%p, State="), el->_id, el->_device);
     log += toString(el->_state);
-    log += F(", TX=");
+    log += F(", TX=(");
 
     for (int i = 0; i < el->_sendframe_length; i++) {
       log += String(el->_sendframe[i], HEX);
-      log += F(",");
+
+      if (i < el->_sendframe_length - 1) {
+        log += F(",");
+      }
     }
-    log += F(", RX=");
+    log += F("), RX=(");
 
     for (int i = 0; i < el->_rcvframe_length; i++) {
       log += String(el->_rcvframe[i], HEX);
-      log += F(",");
+
+      if (i < el->_rcvframe_length - 1) {
+        log += F(",");
+      }
     }
-    log += F("] ");
+    log += F(")] ");
     addLogMove(LOG_LEVEL_INFO, log);
   }
   # endif // MODBUS_DEBUG

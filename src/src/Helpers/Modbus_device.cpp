@@ -93,8 +93,8 @@ uint16_t ModbusDEVICE_struct::getModbusTimeout() const
 // Start reading a Modubus holding register. The result will be available later.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool ModbusDEVICE_struct::readHoldingRegister(uint16_t           address,
-                                              uint16_t          *valuePtr,
-                                              ModbusResultState *statePtr)
+                                              uint16_t         & valuePtr,
+                                              ModbusResultState& statePtr)
 {
   if (!isInitialized()) {
     return false;
@@ -104,11 +104,11 @@ bool ModbusDEVICE_struct::readHoldingRegister(uint16_t           address,
   if (request == nullptr) {
     return false; // Failed to allocate a request structure
   }
-  request->_userData    = valuePtr;
-  request->_userState   = statePtr;
+  request->_userData    = &valuePtr;
+  request->_userState   = &statePtr;
   request->_messageType = ModbusTransactionType::READ_HOLDING_REGISTERS;
   createReadFrame(*request, _modbus_address, address);
-  (void) _modbus_link->queueTransaction(request);
+  (void)_modbus_link->queueTransaction(request);
   return true;
 }
 
@@ -119,6 +119,25 @@ bool ModbusDEVICE_struct::readHoldingRegister(uint16_t           address,
 bool ModbusDEVICE_struct::readHoldingRegister(uint16_t address, uint16_t uid)
 {
   return readModuleHoldingRegister(_modbus_address, address, uid);
+}
+
+bool ModbusDEVICE_struct::readHoldingRegisters(uint16_t address, uint16_t size, uint16_t uid)
+{
+  if (!isInitialized()) {
+    return false;
+  }
+  Modbus_RequestQueueElement *request = _modbus_link->newTransaction(this);
+
+  if (request == nullptr) {
+    return false; // Failed to allocate a request structure
+  }
+  request->_userData    = nullptr;
+  request->_userState   = nullptr;
+  request->_userId      = uid;
+  request->_messageType = ModbusTransactionType::READ_HOLDING_REGISTERS;
+  createReadFrame(*request, _modbus_address, address, size);
+  (void)_modbus_link->queueTransaction(request);
+  return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -144,7 +163,7 @@ bool ModbusDEVICE_struct::readModuleHoldingRegister(uint8_t  busAddress,
   request->_userState   = nullptr;
   request->_userId      = uid;
   createReadFrame(*request, busAddress, registerAddress);
-  (void) _modbus_link->queueTransaction(request);
+  (void)_modbus_link->queueTransaction(request);
   return true;
 }
 
@@ -153,20 +172,21 @@ bool ModbusDEVICE_struct::readModuleHoldingRegister(uint8_t  busAddress,
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void ModbusDEVICE_struct::createReadFrame(Modbus_RequestQueueElement& request,
                                           uint8_t                     busAddress,
-                                          uint16_t                    registerAddress)
+                                          uint16_t                    registerAddress,
+                                          uint16_t                    registerCount)
 {
-  request._messageType   = ModbusTransactionType::READ_HOLDING_REGISTERS;
+  request._messageType  = ModbusTransactionType::READ_HOLDING_REGISTERS;
   request._sendframe[0] = busAddress;
   request._sendframe[1] = MODBUS_READ_HOLDING_REGISTERS;
   request._sendframe[2] = highByte(registerAddress);
   request._sendframe[3] = lowByte(registerAddress);
-  request._sendframe[4] = 0;
-  request._sendframe[5] = 1;                 // Read 1 register
+  request._sendframe[4] = highByte(registerCount);     // Number of registers to read
+  request._sendframe[5] = lowByte(registerCount);
   uint16_t crc = CalculateCRC(request._sendframe, 6);
-  request._sendframe[6]     = lowByte(crc);  // CRC low byte
-  request._sendframe[7]     = highByte(crc); // CRC high byte
-  request._sendframe_length = 8;             // Size with CRC
-  request._rcvframe_length  = 7;             // Expect 8 bytes in response
+  request._sendframe[6]     = lowByte(crc);            // CRC low byte
+  request._sendframe[7]     = highByte(crc);           // CRC high byte
+  request._sendframe_length = 8;                       // Size with CRC
+  request._rcvframe_length  = 5 + (2 * registerCount); // Expected # bytes in response
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -175,7 +195,7 @@ void ModbusDEVICE_struct::createReadFrame(Modbus_RequestQueueElement& request,
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool ModbusDEVICE_struct::writeSingleRegister(uint16_t           address,
                                               uint16_t           value,
-                                              ModbusResultState *statePtr)
+                                              ModbusResultState& statePtr)
 {
   if (!isInitialized()) {
     return false;
@@ -183,7 +203,7 @@ bool ModbusDEVICE_struct::writeSingleRegister(uint16_t           address,
   Modbus_RequestQueueElement *request =    _modbus_link->newTransaction(this);
 
   request->_messageType = ModbusTransactionType::WRITE_SINGLE_REGISTER;
-  request->_userState   = statePtr;
+  request->_userState   = &statePtr;
 
   request->_sendframe[0] = _modbus_address;
   request->_sendframe[1] = MODBUS_WRITE_SINGLE_REGISTER;
@@ -196,16 +216,15 @@ bool ModbusDEVICE_struct::writeSingleRegister(uint16_t           address,
   request->_sendframe[7]     = highByte(crc); // CRC high byte
   request->_sendframe_length = 8;             // Size with CRC
   request->_rcvframe_length  = 8;             // Expect 8 bytes in response
-  ////dump_buffer(request->_sendframe, request->_sendframe_length);
-  (void) _modbus_link->queueTransaction(request);
-  *statePtr = ModbusResultState::Busy;
+  (void)_modbus_link->queueTransaction(request);
+  statePtr = ModbusResultState::Busy;
 
   return true;
 }
 
 void ModbusDEVICE_struct::processCommand(void)
 {
-  if (!isInitialized()) {
+  if (isInitialized()) {
     _modbus_link->processCommand();
   }
 }
@@ -233,7 +252,7 @@ void ModbusDEVICE_struct::linkCallback(Modbus_RequestQueueElement *req)
   # endif // MODBUS_DEBUG
 
   if (req->_state == ModbusQueueState::ERROR_OCCURRED) {
-    sendEvent(req, false, 0, 0, 0);
+    sendEvent(*req, ModbusResultMessageType::Error, 0, 0, 0);
     # ifdef MODBUS_DEBUG
     log += F(" Link error occurred");
     # endif // MODBUS_DEBUG
@@ -243,22 +262,51 @@ void ModbusDEVICE_struct::linkCallback(Modbus_RequestQueueElement *req)
     {
       case ModbusTransactionType::READ_HOLDING_REGISTERS:
       {
-        if ((req->_rcvframe[0] == _modbus_address) && (req->_rcvframe[1] == MODBUS_READ_HOLDING_REGISTERS) && (req->_rcvframe[2] == 2)) {
-          uint16_t crc = CalculateCRC(req->_rcvframe, 5);
+        int registerCount = req->_sendframe[4] << 8 | req->_sendframe[5]; // Number of registers requested in the original request
 
-          if ((req->_rcvframe[5] == lowByte(crc)) && (req->_rcvframe[6] == highByte(crc))) {
-            int val = (req->_rcvframe[3] << 8) | req->_rcvframe[4]; // Combine high and low byte
+        // Validate the response: Check slave address, function code and byte count
+        if ((req->_rcvframe[0] == _modbus_address) && (req->_rcvframe[1] == MODBUS_READ_HOLDING_REGISTERS) &&
+            (registerCount == req->_rcvframe[2] >> 1))
+        {
+          uint16_t crc = CalculateCRC(req->_rcvframe, req->_rcvframe_length - 2);
 
-            // Valid response
+          if ((req->_rcvframe[req->_rcvframe_length - 2] == lowByte(crc)) && (req->_rcvframe[req->_rcvframe_length -1] == highByte(crc))) {
+
+            // Check which return mode is used by the client and return the value accordingly
             if (req->_userData != nullptr) {
-              *(static_cast<uint16_t *>(req->_userData)) = val;
-              resultState                                = ModbusResultState::Success;
+              // Return value through user data pointer specified by the client when queuing the request
+              // Note: this is only the first register value if multiple registers were read. Returning multiple register values through
+              // user data pointer is not supported.
+              *(static_cast<uint16_t *>(req->_userData)) = (req->_rcvframe[3] << 8) | req->_rcvframe[4];;
+            }
+            else if (registerCount == 1)
+            {
+              // Return value through an event with one parameter.
+              sendEvent(*req, ModbusResultMessageType::SingleValue, (req->_rcvframe[3] << 8) | req->_rcvframe[4]);
             }
             else
             {
-              sendEvent(req, true, val, 0, 0);
+              // Return value through an event with a ModbusRegisterSet_struct.
+
+              for (int i = 0; i < registerCount && i < 8; i++) {
+                _registerSet.data[i] = (req->_rcvframe[3 + (i * 2)] << 8) | req->_rcvframe[4 + (i * 2)];
+              }
+              _registerSet.size = registerCount;
+              sendEvent(*req, ModbusResultMessageType::MultiValue, &_registerSet);
             }
+            resultState = ModbusResultState::Success;
           }
+          else {
+            # ifdef MODBUS_DEBUG
+            log += F(" CRC check failed");
+            # endif // ifdef MODBUS_DEBUG
+          }
+
+        }
+        else {
+          # ifdef MODBUS_DEBUG
+          log += F(" Invalid response format");
+          # endif // ifdef MODBUS_DEBUG
         }
         break;
       }
@@ -309,20 +357,57 @@ void ModbusDEVICE_struct::linkCallback(Modbus_RequestQueueElement *req)
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Send a PLUGIN_TASKTIMER_IN event to the task associated with this device.
 // This is used by the Modbus link to notify the device of responses received for queued requests.
+// This version of the function is used to pass data through parameters in the event.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void ModbusDEVICE_struct::sendEvent(Modbus_RequestQueueElement *req, int par1, int par2, int par3, int par4)
+void ModbusDEVICE_struct::sendEvent(Modbus_RequestQueueElement& req,
+                                    ModbusResultMessageType     messageType,
+                                    int                         par2,
+                                    int                         par3,
+                                    int                         par4,
+                                    int                         par5,
+                                    int                         par6,
+                                    int                         par7,
+                                    int                         par8)
 {
   struct EventStruct TempEvent;
 
-  TempEvent.Par1      = par1;
+  TempEvent.Par1      = static_cast<int>(messageType);
   TempEvent.Par2      = par2;
   TempEvent.Par3      = par3;
   TempEvent.Par4      = par4;
-  TempEvent.TaskIndex = _taskIndex;   // Send to the task associated with this device
-  TempEvent.idx       = req->_userId; // Identifier as specified by the client in the request
+  TempEvent.Par5      = par5;
+  TempEvent.Par6      = par6;
+  TempEvent.Par7      = par7;
+  TempEvent.Par8      = par8;
+  TempEvent.TaskIndex = _taskIndex;  // Send to the task associated with this device
+  TempEvent.idx       = req._userId; // Identifier as specified by the client in the request
   TempEvent.Source    = EventValueSource::Enum::VALUE_SOURCE_SYSTEM;
   String dummy;
 
+  PluginCall(PLUGIN_TASKTIMER_IN, &TempEvent, dummy);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Send a PLUGIN_TASKTIMER_IN event to the task associated with this device.
+// This is used by the Modbus link to notify the device of responses received for queued requests.
+// This version of the function is used to pass multiple register values in a ModbusRegisterSet_struct.
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void ModbusDEVICE_struct::sendEvent(Modbus_RequestQueueElement& req,
+                                    ModbusResultMessageType     messageType,
+                                    ModbusRegisterSet_struct   *registerSet)
+{
+  struct EventStruct TempEvent;
+
+  TempEvent.Par1      = static_cast<int>(messageType);
+  TempEvent.Data      = reinterpret_cast<uint8_t *>(registerSet);
+  TempEvent.TaskIndex = _taskIndex;  // Send to the task associated with this device
+  TempEvent.idx       = req._userId; // Identifier as specified by the client in the request
+  TempEvent.Source    = EventValueSource::Enum::VALUE_SOURCE_SYSTEM;
+  String dummy;
+
+  // Note: The ModbusRegisterSet_struct is passed as a pointer in the Data field of the event to avoid a deep copy.
+  // This assumes PluginCall will secure that the pointer will remain valid when the event is processed. 
+  // And the data is consumed when the function returns (No multi-threading)
   PluginCall(PLUGIN_TASKTIMER_IN, &TempEvent, dummy);
 }
 

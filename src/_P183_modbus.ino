@@ -100,8 +100,10 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      addFormNumericBox(F("Modbus Link"),           P183_LINK_ID_LABEL, P183_LINK_ID, 0, 3);
-      addFormNumericBox(F("Modbus Device Address"), P183_DEV_ID_LABEL,  P183_DEV_ID,  1, 247);
+      addFormNumericBox(F("Modbus Link"),           P183_LINK_ID_LABEL,     P183_LINK_ID,                       0, 3);
+      addFormNumericBox(F("Modbus Device Address"), P183_DEV_ID_LABEL,      P183_DEV_ID,                        1, P183_MAX_MODBUS_NODES);
+      addFormNumericBox(F("Cache size"),            P183_CACHE_SIZE_LABEL,  static_cast<int>(P183_CACHE_SIZE),  0, P183_CACHE_SIZE_MAX);
+      addFormNumericBox(F("Cache start address"),   P183_CACHE_START_LABEL, static_cast<int>(P183_CACHE_START), 0, P183_CACHE_START_MAX);
 
       success = true;
       break;
@@ -109,9 +111,11 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SAVE:
     {
-      P183_DEV_ID     = getFormItemInt(P183_DEV_ID_LABEL);
-      P183_LINK_ID    = getFormItemInt(P183_LINK_ID_LABEL);
-      P183_NR_OUTPUTS = getFormItemInt(P183_NR_OUTPUTS_LABEL);
+      P183_DEV_ID      = getFormItemInt(P183_DEV_ID_LABEL);
+      P183_LINK_ID     = getFormItemInt(P183_LINK_ID_LABEL);
+      P183_NR_OUTPUTS  = getFormItemInt(P183_NR_OUTPUTS_LABEL);
+      P183_CACHE_START = getFormItemInt(P183_CACHE_START_LABEL);
+      P183_CACHE_SIZE  = getFormItemInt(P183_CACHE_SIZE_LABEL);
 
       for (int outputIndex = 0; outputIndex < P183_NR_OUTPUT_VALUES; ++outputIndex)
       {
@@ -195,9 +199,15 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
         }
         else if (equals(subcmd, F("read"))) {
           // Read a value from a Modbus register
-          int address    = event->Par2;
-          uint16_t value = 0;
-          value = P183_data->readRegisterWait(address);
+          uint16_t address = event->Par2;
+          uint16_t value   = 0;
+
+          if ((address >= P183_CACHE_START) && (address < P183_CACHE_START + P183_CACHE_SIZE)) {
+            value = P183_data->readRegisterCache(address);
+          }
+          else {
+            value = P183_data->readRegisterWait(address); // Warning: this may take time as we waith for the  Modbus message to be exchanged
+          }
 
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             addLogMove(LOG_LEVEL_INFO, strformat(F("P183 : Modbus read value %u from address 0x%04x"), value, address));
@@ -205,8 +215,8 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
           success = true;
         }
         else if (equals(subcmd, F("dump"))) {
-          int start_address = event->Par2;
-          int end_address   = event->Par3;
+          uint16_t start_address = event->Par2;
+          uint16_t end_address   = event->Par3;
 
           if (end_address < start_address) {
             end_address = start_address;
@@ -266,20 +276,43 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
       const String cmd = parseString(string, 1);
 
       if (equals(cmd, F("register"))) {
-        int address    = parseString(string, 2).toInt();
-        uint16_t value = 0;
-        value   = P183_data->readRegisterWait(address);
+        uint16_t address = parseString(string, 2).toInt();
+        uint16_t value   = 0;
+
+        if ((address >= P183_CACHE_START) && (address < P183_CACHE_START + P183_CACHE_SIZE)) {
+          value = P183_data->readRegisterCache(address);
+        }
+        else {
+          value = P183_data->readRegisterWait(address); // Warning: this may take time as we waith for the  Modbus message to be exchanged
+        }
         string  = String(value);
         success = true;
       }
       break;
     }
+
     case PLUGIN_WEBFORM_SHOW_CONFIG:
     {
       string += strformat(F("Modbus %d"), P183_LINK_ID);
       success = true;
       break;
     }
+
+    case PLUGIN_ONCE_A_SECOND:
+    {
+      P183_data_struct *P183_data = static_cast<P183_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (P183_data == nullptr) {
+        # ifndef LIMIT_BUILD_SIZE
+        addLogMove(LOG_LEVEL_ERROR, F("P183 : Modbus Get config invalid data struct"));
+        # endif // LIMIT_BUILD_SIZE
+        return false;
+      }
+
+      success = P183_data->plugin_once_per_second(event);
+      break;
+    }
+
   }
 
   return success;
