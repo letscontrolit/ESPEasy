@@ -152,7 +152,7 @@ bool EspEasy_Console_Port::process_consoleInput(uint8_t SerialInByte)
     return false;
   }
 
-  if (isprint(SerialInByte))
+  if (SerialInByte >= 32)                                  // Any character from space and up
   {
     if (SerialInByteCounter < CONSOLE_INPUT_BUFFER_SIZE) { // add char to string if it still fits
       InputBuffer_Serial[SerialInByteCounter++] = SerialInByte;
