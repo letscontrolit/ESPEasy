@@ -1,0 +1,25 @@
+{
+  "name": "HeatpumpIR",
+  "description": "Heatpump / Air Conditioner infrared control",
+  "keywords": "ac, ir, remote",
+  "authors": {
+    "name": "Toni Arte",
+    "email": "toni.arte@iki.fi",
+    "url": "https://github.com/ToniA"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ToniA/arduino-heatpumpir.git"
+  },
+  "frameworks": "arduino",
+  "platforms": ["atmelavr", "espressif32", "espressif8266"],
+  "version": "1.0.27",
+  "dependencies": [
+    {
+      "owner": "crankyoldgit",
+      "name": "IRremoteESP8266",
+      "version": "~2.8.4",
+      "platforms": ["espressif8266", "espressif32"]
+    }
+  ]
+}

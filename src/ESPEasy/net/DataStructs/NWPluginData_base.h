@@ -33,6 +33,13 @@ struct NWPluginData_base {
 #endif // ifdef ESP32
                     );
 
+  enum class IPAddressType {
+    IP,
+    Gateway,
+    Subnetmask,
+    DNS
+  };
+
   virtual ~NWPluginData_base();
 
   virtual bool init(EventStruct *event) = 0;
@@ -109,6 +116,10 @@ struct NWPluginData_base {
 #endif // if FEATURE_NETWORK_TRAFFIC_COUNT
 
   virtual NWPluginData_static_runtime* getNWPluginData_static_runtime() = 0;
+
+  virtual bool getStaticIPAddress(IPAddressType addressType, IPAddress & ip) const = 0;
+
+  bool getStaticIPAddresses(IPAddress & ip, IPAddress & gateway, IPAddress & subnetmask, IPAddress & dns ) const;
 
 
 #if FEATURE_NETWORK_STATS

@@ -118,7 +118,8 @@ size_t LogStreamWriter::write_part(String& str, Print& stream, size_t  nrBytesTo
     const size_t bytesLeft = str.length() - _readpos;
     bytesWritten = stream.write(&str[_readpos], bytesLeft);
     _readpos    += bytesWritten;
-  } else {
+  }
+  if (_readpos >= str.length()) {
     // Clear str
     str.clear();
     _readpos = 0;

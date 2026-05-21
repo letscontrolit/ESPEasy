@@ -2,6 +2,9 @@
 #define _HELPERS_BUSCMD_HELPER_H
 
 /** Changelog:
+ * 2026-04-19 tonhuisman: Allow also variables to be used for register in write commands
+ * 2026-04-18 tonhuisman: Limit variable expansion to read (register) and put/write (value) commands
+ * 2026-04-12 tonhuisman: Allow rules-variables to be used for get/read and put/write commands
  * 2025-08-16 tonhuisman: Extend If I2C command to optionally skip forward N commands on false (0) result
  * 2025-08-07 tonhuisman: Add LetStr I2C command, analogue to Rules LetStr command
  * 2025-06-03 tonhuisman: Add PLUGIN_GET_CONFIG_VALUE support, guarded with ifndef LIMIT_BUILD_SIZE
@@ -11,32 +14,67 @@
 
 #include "../../_Plugin_Helper.h"
 #if FEATURE_BUS_COMMAND
-#include "../Helpers/IBusCmd_Handler.h"
+# include "../Helpers/IBusCmd_Handler.h"
 
-#define BUSCMD_EVENT_SEPARATOR     '|'
-#define BUSCMD_COMMAND_SEPARATOR   ';'
-#define BUSCMD_ARGUMENT_SEPARATOR  '.'
+# define BUSCMD_EVENT_SEPARATOR     '|'
+# define BUSCMD_COMMAND_SEPARATOR   ';'
+# define BUSCMD_ARGUMENT_SEPARATOR  '.'
+# define BUSCMD_VARIABLE_SEPARATOR  ';'
 
-enum class BusCmd_Command_e : uint8_t {
-  NOP = 0u,        // 'n'
-  Read,            // 'g'
-  Write,           // 'p'
-  RegisterRead,    // 'r' 8 bit register value
-  RegisterWrite,   // 'w'
-  Register16Read,  // 's' 16 bit register value
-  Register16Write, // 't'
-  Eval,            // 'e'
-  Calculate,       // 'c'
-  Value,           // 'v'
-  Delay,           // 'd'
-  EnableGPIO,      // 'a'
-  ResetGPIO,       // 'z'
-  If,              // 'i'
-  Let,             // 'l'
-  #if FEATURE_BUSCMD_STRING && FEATURE_STRING_VARIABLES
-  LetStr,          // 'm'
-  #endif // if FEATURE_BUSCMD_STRING && FEATURE_STRING_VARIABLES
-};
+// enum class with methods (workaround): https://stackoverflow.com/questions/21295935/can-a-c-enum-class-have-methods
+class BusCmd_Command_e
+{
+public:
+
+  enum Cmds : uint8_t {
+    NOP = 0u,        // 'n'
+    Read,            // 'g'
+    Write,           // 'p'
+    RegisterRead,    // 'r' 8 bit register value
+    RegisterWrite,   // 'w'
+    Register16Read,  // 's' 16 bit register value
+    Register16Write, // 't'
+    Eval,            // 'e'
+    Calculate,       // 'c'
+    Value,           // 'v'
+    Delay,           // 'd'
+    EnableGPIO,      // 'a'
+    ResetGPIO,       // 'z'
+    If,              // 'i'
+    Let,             // 'l'
+  # if FEATURE_BUSCMD_STRING && FEATURE_STRING_VARIABLES
+    LetStr,          // 'm'
+  # endif // if FEATURE_BUSCMD_STRING && FEATURE_STRING_VARIABLES
+
+  };
+
+  BusCmd_Command_e() = default;
+  constexpr BusCmd_Command_e(Cmds aCmd): value(aCmd) {}
+
+  constexpr BusCmd_Command_e(uint8_t uCmd): value(static_cast<Cmds>(uCmd)) {}
+
+  constexpr operator Cmds() const {
+    return value;
+  }
+  explicit operator bool() const = delete;
+
+  constexpr bool isReadCmd() const                       {
+    return Cmds::Read == value || Cmds::RegisterRead == value || Cmds::Register16Read == value;
+  }
+
+  constexpr bool isWriteCmd() const                       {
+    return Cmds::Write == value || Cmds::RegisterWrite == value || Cmds::Register16Write == value;
+  }
+
+  constexpr bool isRegisterCmd() const                       {
+    return Cmds::RegisterRead == value || Cmds::RegisterWrite == value ||
+           Cmds::Register16Read == value || Cmds::Register16Write == value;
+  }
+
+private:
+
+  Cmds value;
+}; // class BusCmd_Command_e
 
 enum class BusCmd_DataFormat_e : uint8_t {
   undefined = 0u,
@@ -56,9 +94,10 @@ enum class BusCmd_DataFormat_e : uint8_t {
   int32_t_LE,
   bytes,
   words,
-  #if FEATURE_BUSCMD_STRING
+  # if FEATURE_BUSCMD_STRING
   string,
-  #endif // if FEATURE_BUSCMD_STRING
+  # endif // if FEATURE_BUSCMD_STRING
+
 };
 
 enum class BusCmd_CommandState_e :uint8_t {
@@ -67,6 +106,7 @@ enum class BusCmd_CommandState_e :uint8_t {
   StartingDelay,   // Interrupts the command execution loop
   WaitingForDelay,
   ConditionalExit, // Cancels further command execution
+
 };
 
 enum class BusCmd_CommandSource_e : uint8_t {
@@ -77,6 +117,7 @@ enum class BusCmd_CommandSource_e : uint8_t {
   PluginTenPerSecond,
   PluginFiftyPerSecond,
   PluginGetConfigVar,
+
 };
 
 struct BusCmd_Command_struct {
@@ -89,19 +130,18 @@ struct BusCmd_Command_struct {
                         uint32_t            _len,
                         String              _calculation,
                         String              _variable);
-  #ifndef LIMIT_BUILD_SIZE
+  # ifndef LIMIT_BUILD_SIZE
   String   toString();
-  #endif // ifndef LIMIT_BUILD_SIZE
+  # endif // ifndef LIMIT_BUILD_SIZE
   String   getHexValue();
   String   getHexValue(const bool withPrefix);
   int64_t  getIntValue();
-  uint32_t getUIntValue() {
-    return static_cast<uint32_t>(getIntValue());
-  }
 
-  #if FEATURE_BUSCMD_STRING
-  String getString();
-  #endif // if FEATURE_BUSCMD_STRING
+  uint32_t getUIntValue() { return static_cast<uint32_t>(getIntValue()); }
+
+  # if FEATURE_BUSCMD_STRING
+  String   getString();
+  # endif // if FEATURE_BUSCMD_STRING
 
   BusCmd_Command_e    command = BusCmd_Command_e::NOP;
   BusCmd_DataFormat_e format  = BusCmd_DataFormat_e::undefined;
@@ -113,28 +153,39 @@ struct BusCmd_Command_struct {
       uint8_t d1_uint8_t;
       uint8_t d2_uint8_t;
       uint8_t d3_uint8_t;
+
     };
+
     struct {
       int8_t d0_int8_t;
       int8_t d1_int8_t;
       int8_t d2_int8_t;
       int8_t d3_int8_t;
+
     };
+
     struct {
       uint16_t d0_uint16_t;
       uint16_t d1_uint16_t;
+
     };
+
     struct {
       int16_t d0_int16_t;
       int16_t d1_int16_t;
+
     };
+
     int32_t  d0_int32_t;
     uint32_t d0_uint32_t{};
+
   };
+
   std::vector<uint8_t> data_b;
   std::vector<uint16_t>data_w;
   String               calculation;
   String               variable;
+
 };
 
 struct BusCmd_Buffer {
@@ -142,6 +193,7 @@ struct BusCmd_Buffer {
                 const String& line);
   String cacheName;
   String commandSet;
+
 };
 
 struct BusCmd_Helper_struct {
@@ -158,10 +210,10 @@ struct BusCmd_Helper_struct {
   bool plugin_once_a_second(struct EventStruct *event);
   bool plugin_ten_per_second(struct EventStruct *event);
   bool plugin_fifty_per_second(struct EventStruct *event);
-  #ifndef LIMIT_BUILD_SIZE
+  # ifndef LIMIT_BUILD_SIZE
   bool plugin_get_config(struct EventStruct *event,
                          String            & string);
-  #endif // ifndef LIMIT_BUILD_SIZE
+  # endif // ifndef LIMIT_BUILD_SIZE
 
   std::vector<BusCmd_Command_struct>parseBusCmdCommands(const String& name,
                                                         const String& line);
@@ -174,11 +226,10 @@ struct BusCmd_Helper_struct {
   bool parseAndExecute(BusCmd_CommandSource_e source,
                        const String         & line,
                        const String         & logFormat);
+  bool processCommands(struct EventStruct *event);
 
   // Setters
-  void setLog(bool showLog) {
-    _showLog = showLog;
-  }
+  void setLog(bool showLog) { _showLog = showLog; }
 
   void setCommands(std::vector<BusCmd_Command_struct>commands,
                    taskVarIndex_t                    taskVarIndex,
@@ -190,9 +241,7 @@ struct BusCmd_Helper_struct {
                  const String& name,
                  const String& line);
 
-  inline void setCommandSource(BusCmd_CommandSource_e commandSource) {
-    _commandSource = commandSource;
-  }
+  inline void                   setCommandSource(BusCmd_CommandSource_e commandSource) { _commandSource = commandSource; }
 
   inline BusCmd_CommandSource_e getCommandSource() const {
     return _commandSource;
@@ -208,7 +257,6 @@ struct BusCmd_Helper_struct {
 private:
 
   String replacePluginValues(const String& inVar);
-  bool   processCommands(struct EventStruct *event);
 
   IBusCmd_Handler*_iBusCmd_Handler = nullptr;
 
@@ -238,6 +286,8 @@ private:
   std::vector<BusCmd_Command_struct>::iterator         _evalCommand;
   std::vector<BusCmd_Command_struct>::iterator         _it;
   std::vector<BusCmd_Buffer>                           _buffer;
+
 };
-#endif
+
+#endif // if FEATURE_BUS_COMMAND
 #endif // ifndef _HELPERS_BUSCMD_HELPER_H

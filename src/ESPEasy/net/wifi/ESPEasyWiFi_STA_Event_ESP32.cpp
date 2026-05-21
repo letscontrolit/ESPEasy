@@ -13,6 +13,7 @@
 
 #  include "../../../src/DataTypes/ESPEasyTimeSource.h"
 #  include "../../../src/ESPEasyCore/ESPEasy_Log.h"
+#  include "../../../src/Helpers/Networking.h"
 #  include "../../../src/Helpers/StringConverter.h"
 #  include "../../../src/Helpers/StringGenerator_WiFi.h"
 #  include "../DataStructs/NWPluginData_static_runtime.h"
@@ -65,7 +66,7 @@ bool                          ESPEasyWiFi_STA_EventHandler::restore_dns_from_cac
     for (size_t i = 0; i < NR_ELEMENTS(stats_and_cache._dns_cache); ++i) {
       auto tmp = WiFi.STA.dnsIP(i);
 
-      if ((stats_and_cache._dns_cache[i] != INADDR_NONE) && (stats_and_cache._dns_cache[i] != tmp)) {
+      if (valid_DNS_address(stats_and_cache._dns_cache[i]) && (stats_and_cache._dns_cache[i] != tmp)) {
         addLog(LOG_LEVEL_INFO, strformat(
                  F("WiFi STA: Restore cached DNS server %d from %s to %s"),
                  i,

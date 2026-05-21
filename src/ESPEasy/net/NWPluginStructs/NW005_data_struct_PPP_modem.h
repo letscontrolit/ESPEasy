@@ -80,6 +80,8 @@ static int32_t getNextKey_noCredentials(int32_t key);
 
   NWPluginData_static_runtime* getNWPluginData_static_runtime() override;
 
+  bool getStaticIPAddress(IPAddressType addressType, IPAddress & ip) const override;
+
 private:
 
   static void onEvent(arduino_event_id_t   event,

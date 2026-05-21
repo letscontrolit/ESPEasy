@@ -43,7 +43,8 @@ void ESPEasy_Scheduler::setNetworkTimer(unsigned long                msecFromNow
 {
   if (!validNetworkIndex(networkIndex)) { return; }
 
-  if (!Settings.getNetworkEnabled(networkIndex)) { return; }
+  if (function != NWPlugin::Function::NWPLUGIN_EXIT &&
+      !Settings.getNetworkEnabled(networkIndex)) { return; }
 
   const NWPluginTimerID timerID(networkIndex, Par1, function);
 
@@ -54,6 +55,10 @@ void ESPEasy_Scheduler::setNetworkTimer(unsigned long                msecFromNow
     timer_data.fromEvent(networkIndex, Par1, Par2, Par3, Par4, Par5);
     systemTimers[timerID.mixed_id] = timer_data;
     setNewTimerAt(timerID, millis() + msecFromNow);
+  }
+
+  if (msecFromNow == 0) {
+    process_network_timer(timerID);
   }
 }
 

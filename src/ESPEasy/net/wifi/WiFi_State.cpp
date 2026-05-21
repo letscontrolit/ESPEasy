@@ -21,6 +21,7 @@ const __FlashStringHelper* toString(WiFiState_e state)
     case ESPEasy::net::wifi::WiFiState_e::STA_Connecting: return F("STA_Connecting");
     case ESPEasy::net::wifi::WiFiState_e::STA_Reconnecting: return F("STA_Reconnecting");
     case ESPEasy::net::wifi::WiFiState_e::STA_Connected: return F("STA_Connected");
+    case ESPEasy::net::wifi::WiFiState_e::STA_Connected_Setup: return F("STA_Connected_Setup");
   }
   return F("");
 }

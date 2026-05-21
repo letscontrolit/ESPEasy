@@ -17,7 +17,7 @@ The Thingspeak Parser
 * ``SendToHTTP`` generates an event with the response of a thingspeak request (https://www.mathworks.com/help/thingspeak/readlastfieldentry.html & https://www.mathworks.com/help/thingspeak/readdata.html)
 * There are two options:
 
-  1. Get the value of a single field: 
+  1. Get the latest value of a single field: 
   
      - Example command:
      	``SendToHTTP,api.thingspeak.com,80,/channels/143789/fields/5/last.csv``
@@ -28,7 +28,7 @@ The Thingspeak Parser
         | field number = ``%eventvalue2%``
         | value = ``%eventvalue3%``
         
-  2. Get the values of all fields:
+  2. Get the latest values of all fields:
   
      - Example command:
      	``SendToHTTP,api.thingspeak.com,80,/channels/143789/feeds/last.csv``
@@ -140,7 +140,7 @@ The gerneric JSON Parser
   
 **How-To:**
 
-1. Add either #json or ?json to the end of the URL (either will always work) to tell ESPEasy that the response is in JSON format. 
+1. Add #json to the end of the URL to tell ESPEasy that the response is in JSON format. 
    
    Example: ``SendToHTTP 192.168.1.199,80,"/solar_api/v1/GetInverterRealtimeData.cgi?Scope=System#json"`` 
     .. code-block:: json
@@ -201,7 +201,7 @@ The gerneric JSON Parser
 
 - Grouping or separate calls with different URLs.
 
-1. Add a number to #json or ?json:
+1. Add a number to #json:
      
    e.g.: ``SendToHTTP 192.168.1.199,80,"/solar_api/v1/GetInverterRealtimeData.cgi?Scope=System#json1"``
 

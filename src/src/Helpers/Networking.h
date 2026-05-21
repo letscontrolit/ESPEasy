@@ -7,13 +7,25 @@
 #include <WiFiClient.h>
 #include <WiFiUdp.h>
 
-#if FEATURE_HTTP_CLIENT
-#ifdef ESP8266
-# include <ESP8266HTTPClient.h>
-#endif // ifdef ESP8266
-#ifdef ESP32
-# include <HTTPClient.h>
-#endif // ifdef ESP32
+#if FEATURE_HTTP_CLIENT || FEATURE_DOWNLOAD
+# if FEATURE_TLS
+
+#  include "HttpClientLight.h"
+#  include <WiFiClientSecureLightBearSSL.h>
+#  define ESPEasy_HTTPClient HTTPClientLight
+
+# else
+
+#  ifdef ESP8266
+#   include <ESP8266HTTPClient.h>
+#  endif // ifdef ESP8266
+#  ifdef ESP32
+#   include <HTTPClient.h>
+#  endif // ifdef ESP32
+
+#  define ESPEasy_HTTPClient HTTPClient
+
+# endif
 #endif
 
 #if FEATURE_HTTP_TLS
@@ -21,12 +33,12 @@
 #endif // if FEATURE_HTTP_TLS
 
 
-
 #if FEATURE_ESPEASY_P2P
 
 /*********************************************************************************************\
    Update UDP port (ESPEasy propiertary protocol)
 \*********************************************************************************************/
+void stopUDPport();
 void updateUDPport(bool force);
 
 
@@ -185,6 +197,8 @@ bool connectClient(WiFiClient& client, IPAddress ip, uint16_t port, uint32_t tim
 
 void scrubDNS();
 
+bool IPAddressSet(const IPAddress& ip);
+
 bool valid_DNS_address(const IPAddress& dns);
 
 bool setDNS(int index, const IPAddress& dns);
@@ -214,7 +228,9 @@ bool splitUserPass_HostPortString(const String& hostPortString, String& user, St
 
 // Split a full URL like "http://hostname:port/path/file.htm"
 // Return value is everything after the hostname:port section (including /)
-String splitURL(const String& fullURL, String& user, String& pass, String& host, uint16_t& port, String& file);
+String splitURL(const String& fullURL, String& user, String& pass, String& host, uint16_t& port, String& file, String& protocol);
+
+String joinURL(const String& user, const String& pass, const String& host, uint16_t& port, const String& uri, const String& protocol = EMPTY_STRING );
 
 
 #if FEATURE_HTTP_CLIENT
@@ -223,13 +239,18 @@ String splitURL(const String& fullURL, String& user, String& pass, String& host,
 // @retval HTTP return code.
 int http_authenticate(const String& logIdentifier,
                       WiFiClient  & client,
-                      HTTPClient  & http,
+                      ESPEasy_HTTPClient  & http,
                       uint16_t      timeout,
                       const String& user,
                       const String& pass,
                       const String& host,
                       uint16_t      port,
+                      const String& protocol,
+                     # if FEATURE_JSON_EVENT
+                      String        uri,
+                     # else // if FEATURE_JSON_EVENT
                       const String& uri,
+                     # endif // if FEATURE_JSON_EVENT
                       const String& HttpMethod,
                       const String& header,
                       const String& postStr,
@@ -247,7 +268,8 @@ String send_via_http(const String& logIdentifier,
                      const String& header,
                      const String& postStr,
                      int         & httpCode,
-                     bool          must_check_reply
+                     bool          must_check_reply,
+                     const String& protocol
                      #if FEATURE_HTTP_TLS
                      , TLS_types   tlsType = TLS_types::NoTLS
                      #endif // if FEATURE_HTTP_TLS
