@@ -307,7 +307,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(p036_resolution::pix128x32),
           static_cast<int>(p036_resolution::pix64x48),
           static_cast<int>(p036_resolution::pix72x40) };
-        OLedFormSizes(F("size"), optionValues, P036_RESOLUTION, true);
+        OLedFormSizes(F("size"), optionValues, P036_RESOLUTION, NR_ELEMENTS(optionValues), true);
       }
 
       OLedFormRotation(F("rotate"), P036_ROTATE);
