@@ -73,7 +73,8 @@ void OLedFormSizes(const __FlashStringHelper *id,
     F("128x32"),
     F("64x48"),
     F("72x40") };
-  FormSelectorOptions selector(optionsSize, options3, values);  selector.reloadonchange = reloadOnChange;
+  FormSelectorOptions selector(optionsSize, options3, values);  
+  selector.reloadonchange = reloadOnChange;
   selector.addFormSelector(
     F("Display Size"), 
     id,
