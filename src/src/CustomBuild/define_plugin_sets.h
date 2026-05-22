@@ -2069,6 +2069,9 @@ To create/register a plugin, you have to :
   #if !defined(USES_P148) && defined(ESP32)
     #define USES_P148   // Sonoff POWR3xxD and THR3xxD display
   #endif
+  #if !defined(USES_P157) && defined(ESP32)
+    #define USES_P157   // Display - HT16K33 14 segment
+  #endif
   // #if !defined(USES_P165) && defined(ESP32)
   //   #define USES_P165   // Display - NeoPixel (7-Segment)
   // #endif
@@ -2179,6 +2182,9 @@ To create/register a plugin, you have to :
   #endif
   #if !defined(USES_P148) && defined(ESP32)
     #define USES_P148   // Sonoff POWR3xxD and THR3xxD display
+  #endif
+  #if !defined(USES_P157) && defined(ESP32)
+    #define USES_P157   // Display - HT16K33 14 segment
   #endif
   // #if !defined(USES_P165) && defined(ESP32)
   //   #define USES_P165   // Display - NeoPixel (7-Segment)
@@ -2956,6 +2962,9 @@ To create/register a plugin, you have to :
   #endif
   #ifndef USES_P154
     #define USES_P154   // Environment - BMP3xx I2C
+  #endif
+  #ifndef USES_P157
+    #define USES_P157   // Display - HT16K33 14 segment
   #endif
   #ifndef USES_P172
     #define USES_P172   // Environment - BMP3xx SPI
