@@ -1719,6 +1719,9 @@ To create/register a plugin, you have to :
       #if !defined(USES_P139) && defined(ESP32)
         #define USES_P139   // AXP2101
       #endif
+      #if !defined(USES_P157) && defined(ESP32)
+        #define USES_P157   // HT16K33 14 segment
+      #endif
     #endif
     #if !defined(USES_P180) && defined(ESP32)
       #define USES_P180   // Generic - I2C Generic

@@ -26,11 +26,11 @@
 # endif // if P165_FEATURE_P073
 
 # if P165_FEATURE_P073
-#  ifdef P073_EXTRA_FONTS // FIXME to use #if instead of #ifdef after P073 improvements from PR #5091 are merged
+#  if P073_EXTRA_FONTS
 #   define P165_EXTRA_FONTS 1
-#  else // ifdef P073_EXTRA_FONTS
+#  else // if P073_EXTRA_FONTS
 #   define P165_EXTRA_FONTS 0
-#  endif // ifdef P073_EXTRA_FONTS
+#  endif // if P073_EXTRA_FONTS
 # endif // if P165_FEATURE_P073
 
 # ifndef P165_FEATURE_GROUPCOLOR

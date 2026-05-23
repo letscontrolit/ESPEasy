@@ -47,6 +47,10 @@ void P157_display_output_selector(const __FlashStringHelper *id, int16_t value) 
   selector.addFormSelector(F("Display Output"), id, value);
 }
 
+bool P157_is7SegmentDisplay(uint8_t model) { return (P157_MODEL_4DGT_7SEG == model) || (P157_MODEL_8DGT_7SEG == model); }
+
+bool P157_is4DigitDisplay(uint8_t model)   { return (P157_MODEL_4DGT == model) || (P157_MODEL_4DGT_7SEG == model); }
+
 P157_data_struct::~P157_data_struct() {
   if (nullptr != ht16k33) {
     ht16k33->off();
@@ -86,7 +90,7 @@ bool P157_data_struct::init(struct EventStruct *event)
     addLog(LOG_LEVEL_INFO, strformat(F("P157 : Model: %s, displays: %d"), FsP(P157_DisplayModel(displayModel)), displays));
   }
 
-  if ((P157_MODEL_4DGT == displayModel) || (P157_MODEL_8DGT == displayModel)) {
+  if (!P157_is7SegmentDisplay(displayModel)) {
     ht16k33 = new (std::nothrow) Noiasca_ht16k33_hw_14(); // 14 segment
   } else {
     ht16k33 = new (std::nothrow) Noiasca_ht16k33_hw_7();  // 7 segment
@@ -99,7 +103,7 @@ bool P157_data_struct::init(struct EventStruct *event)
   if (0 == ht16k33->begin(i2cAddress, displays)) {
     if (ht16k33->isConnected()) // Happy flow
     {
-      ht16k33->setDigits((P157_MODEL_4DGT == displayModel) || (P157_MODEL_4DGT_7SEG == displayModel) ? 4 : 8);
+      ht16k33->setDigits(P157_is4DigitDisplay(displayModel) ? 4 : 8);
       ht16k33->setBrightness(brightness);
       ht16k33->on();
       return true;
@@ -583,13 +587,39 @@ void P157_data_struct::printBuffer() {
       }
       # endif // ifdef P157_DEBUG
 
-      for (uint8_t i = 0; i < buf.length(); ++i) {
-        ht16k33->write(buf[i]);
+      uint8_t i = 0;
+      # if P157_EXTRA_FONTS
+      uint8_t pos = ht16k33->getCursor();
+      # endif
 
-        if (showperiods[i + dotOff] || (dotpos == (i + dotOff))) {
-          ht16k33->write('.');
+      while (i < buf.length()) {
+        # if P157_EXTRA_FONTS
 
+        if (P157_is7SegmentDisplay(displayModel)) {
+          // Re-use the fonts from P073, but they use the MAX7219 layout, that has bits 0..6 reverted
+          char toPrint = P073_revert7bits(P073_getFontChar(P073_mapCharToFontPosition(buf[i], fontSet), fontSet));
+
+          if (showperiods[i + dotOff] || (dotpos == (i + dotOff))) {
+            toPrint |= SEG_DP;
+          }
+
+          if (((i + 1) < buf.length()) && isPeriodChar(buf[i + 1])) {
+            toPrint |= SEG_DP;
+            ++i;
+          }
+          ht16k33->writeLowLevel(pos, toPrint);
+          ++pos;
+        } else
+        # endif // if P157_EXTRA_FONTS
+        {
+          ht16k33->write(buf[i]);
+
+          if (showperiods[i + dotOff] || (dotpos == (i + dotOff))) {
+            ht16k33->write('.');
+
+          }
         }
+        ++i;
       }
     }
     ht16k33->setCursor(0);
@@ -654,6 +684,9 @@ const char P157_commands[] PROGMEM =
   "7ddt|"
   # endif // if P157_7DDT_COMMAND
   "7dst|7dsd|7dtext|"
+  # if P157_EXTRA_FONTS
+  "7dfont|"
+  # endif // if P157_EXTRA_FONTS
   # if P157_7DBIN_COMMAND
   "7dbin|"
   # endif // if P157_7DBIN_COMMAND
@@ -669,6 +702,9 @@ enum class P157_commands_e : int8_t {
   c7dst,
   c7dsd,
   c7dtext,
+  # if P157_EXTRA_FONTS
+  c7dfont,
+  # endif // if P157_EXTRA_FONTS
   # if P157_7DBIN_COMMAND
   c7dbin,
   # endif // if P157_7DBIN_COMMAND
@@ -732,6 +768,13 @@ bool P157_data_struct::plugin_write(struct EventStruct *event,
       setScrollEnabled(true); // Scrolling allowed for 7dtext command
       # endif // if P157_SCROLL_TEXT
       return plugin_write_7dtext(text);
+    # if P157_EXTRA_FONTS
+    case P157_commands_e::c7dfont:
+      #  if P157_SCROLL_TEXT
+      setScrollEnabled(currentScroll); // Restore state
+      #  endif // if P157_SCROLL_TEXT
+      return plugin_write_7dfont(event, text);
+    # endif // if P157_EXTRA_FONTS
     # if P157_7DBIN_COMMAND
     case P157_commands_e::c7dbin:
       #  if P157_SCROLL_TEXT
@@ -1053,6 +1096,32 @@ bool P157_data_struct::plugin_write_7dtext(const String& text) {
   return true;
 }
 
+# if P157_EXTRA_FONTS
+
+bool P157_data_struct::plugin_write_7dfont(struct EventStruct *event,
+                                           const String      & text) {
+  if (!P157_is7SegmentDisplay(displayModel)) { return false; }
+
+  if (!text.isEmpty()) {
+    int32_t fontNr = P073_parse_7dfont(event, text);
+    #  ifdef P157_DEBUG
+
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      addLog(LOG_LEVEL_INFO, strformat(F("P157 7dfont,%s -> %d"), parseString(text, 1).c_str(), fontNr));
+    }
+    #  endif // ifdef P157_DEBUG
+
+    if ((fontNr >= 0) && (fontNr <= 3)) {
+      fontSet          = fontNr;
+      P157_CFG_FONTSET = fontNr;
+      return true;
+    }
+  }
+  return false;
+}
+
+# endif // if P157_EXTRA_FONTS
+
 # if P157_7DBIN_COMMAND
 
 bool P157_data_struct::plugin_write_7dbin(const String& text,
@@ -1088,10 +1157,22 @@ bool P157_data_struct::plugin_write_7dbin(const String& text,
         uint16_t i = 0;
 
         while (i < argValue.length()) {
-          uint16_t bitmap = ht16k33->getCharacterBitmap(argValue.charAt(i));
+          uint16_t bitmap;
+
+          #  if P157_EXTRA_FONTS
+
+          if (P157_is7SegmentDisplay(displayModel)) {
+            // Re-use the fonts from P073, but they use the MAX7219 layout, that has bits 0..6 reverted
+            bitmap = P073_revert7bits(P073_getFontChar(P073_mapCharToFontPosition(argValue.charAt(i), fontSet), fontSet));
+
+          } else
+          #  endif // if P157_EXTRA_FONTS
+          {
+            bitmap = ht16k33->getCharacterBitmap(argValue.charAt(i));
+          }
 
           if ((i < argValue.length()) && isPeriodChar(argValue.charAt(i + 1))) {
-            bitmap |= ((displayModel == P157_MODEL_4DGT) || (displayModel == P157_MODEL_8DGT)) ? SEG14_DP : SEG_DP;
+            bitmap |= P157_is7SegmentDisplay(displayModel) ? SEG_DP : SEG14_DP;
             ++i;
           }
           binData.push_back(bitmap);

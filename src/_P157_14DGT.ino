@@ -16,6 +16,10 @@
 //  "7ddt,<temperature>,<temperature>"   (Dual temperatures on Max7219/74HC595 (8 digits) only, temperature can be negative or
 //                                        positive and containing decimals)
 //  "7dtext,<text>"       (show free text - supported low ascii, period, comma, colon, semicolon are displayed as dot)
+//  "7dfont,<font>"       7-segment only: (select the used font: 0/7DGT/Default = default, 1/Siekoo = Siekoo, 2/Siekoo_Upper = Siekoo
+//                         with uppercase CHNORUX, 3/dSEG7 = dSEG7)
+//                        Siekoo: https://www.fakoo.de/siekoo (uppercase CHNORUX is a local extension)
+//                        dSEG7 : https://www.keshikan.net/fonts-e.html
 //  "7dbin,[uint16_t],..."    (show data binary formatted, bits clock-wise from left to right, dot, top, right 2x, bottom,
 //                            left 2x, center), scroll-enabled
 //
@@ -26,12 +30,13 @@
 //
 
 /** History
+ * 2026-05-23 tonhuisman: Add font-selector for 7-segment displays, re-using the fonts available in P073
  * 2026-05-15 tonhuisman: Start plugin, based on P073
  */
 
 # define PLUGIN_157
 # define PLUGIN_ID_157           157
-# define PLUGIN_NAME_157         "Display - HT16K33 14-segment"
+# define PLUGIN_NAME_157         "Display - HT16K33 14-/7-segment"
 
 # include "src/PluginStructs/P157_data_struct.h"
 
@@ -103,7 +108,8 @@ boolean Plugin_157(uint8_t function, struct EventStruct *event, String& string) 
           P157_MODEL_8DGT_7SEG,
         };
         constexpr size_t optionCount = NR_ELEMENTS(displtype);
-        const FormSelectorOptions selector(optionCount, displtype, displOption);
+        FormSelectorOptions selector(optionCount, displtype, displOption);
+        selector.reloadonchange = true;
         selector.addFormSelector(F("Display Type"), F("displtype"), P157_CFG_DISPLAYTYPE);
       }
 
@@ -119,9 +125,15 @@ boolean Plugin_157(uint8_t function, struct EventStruct *event, String& string) 
       addFormNumericBox(F("Brightness"), F("brightness"), P157_CFG_BRIGHTNESS, 0, 15);
       addUnit(F("0..15"));
 
-      addFormSubHeader(F("Options"));
+      # if P157_EXTRA_FONTS
 
-      // addFormCheckBox(F("Text show periods as dot"),    F("periods"),     bitRead(P157_CFG_FLAGS, P157_OPTION_PERIOD));
+      if (P157_is7SegmentDisplay(P157_CFG_DISPLAYTYPE)) {
+        P073_font_selector(F("fontset"), P157_CFG_FONTSET);
+        addFormNote(F("Only available for 7-segment displays"));
+      }
+      # endif // if P157_EXTRA_FONTS
+
+      addFormSubHeader(F("Options"));
 
       addFormCheckBox(F("Hide &deg; for Temperatures"), F("hide_degree"), bitRead(P157_CFG_FLAGS, P157_OPTION_HIDEDEGREE));
       # if P157_7DDT_COMMAND
@@ -155,6 +167,16 @@ boolean Plugin_157(uint8_t function, struct EventStruct *event, String& string) 
       P157_CFG_DISPLAYS    = getFormItemInt(F("dspls"));
       P157_CFG_OUTPUTTYPE  = getFormItemInt(F("displout"));
       P157_CFG_BRIGHTNESS  = getFormItemInt(F("brightness"));
+
+      # if P157_EXTRA_FONTS
+
+      if (P157_is7SegmentDisplay(P157_CFG_DISPLAYTYPE)) {
+        P157_CFG_FONTSET = getFormItemInt(F("fontset"));
+      } else
+      # endif // if P157_EXTRA_FONTS
+      {
+        P157_CFG_FONTSET = 0;
+      }
       uint32_t lSettings = 0;
 
       // bitWrite(lSettings, P157_OPTION_PERIOD,     isFormItemChecked(F("periods")));

@@ -144,6 +144,14 @@ void Noiasca_ht16k33::setCursor(uint8_t newPosition) {               // Set the 
 
 
 /*
+  get the cursor for the next writing position
+*/
+uint8_t Noiasca_ht16k33::getCursor() {                              // Get the cursor for the next writing position
+  return _currentPosition;
+}
+
+
+/*
   set the number of digits per device
 */
 void Noiasca_ht16k33::setDigits(uint8_t newDigits)

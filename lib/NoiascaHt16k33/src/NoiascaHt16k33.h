@@ -196,6 +196,11 @@ const uint16_t SEG14_DP = (1<<14);
     void setCursor(uint8_t newPosition);
     
     /** 
+      \brief get the cursor for the next writing position
+    */ 
+    uint8_t getCursor();
+    
+    /** 
       \brief set the number of digits per device
       \param newDigits modify the used digits
     */ 

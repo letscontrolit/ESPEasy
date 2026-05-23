@@ -13,6 +13,7 @@
 # define P157_CFG_SCROLLSPEED    PCONFIG(3)
 # define P157_CFG_I2C_ADDRESS    PCONFIG(4)
 # define P157_CFG_DISPLAYS       PCONFIG(5)
+# define P157_CFG_FONTSET        PCONFIG(6)
 # define P157_CFG_FLAGS          PCONFIG_ULONG(0)
 
 # define P157_DISP_MANUAL        0
@@ -38,9 +39,30 @@
 # define P157_OPTION_SUPPRESS0   5 // Suppress leading zero on day/hour of Date/Time display
 # define P157_OPTION_BLINK_DOT   6 // Use dot on second digit for flashing instead of colon
 
+# ifdef USES_P073
+#  define P157_FEATURE_P073     1           // Use P073 shared functions and fonts when available
+# else // ifdef USES_P073
+#  define P157_FEATURE_P073     0
+# endif // ifdef USES_P073
+
+# if P157_FEATURE_P073 // Use shared fonts and functions from P073 Display - 7-segment display when available
+#  include "../PluginStructs/P073_data_struct.h"
+# endif // if P157_FEATURE_P073
+
+# if P157_FEATURE_P073
+#  if P073_EXTRA_FONTS
+#   define P157_EXTRA_FONTS 1
+#  else // if P073_EXTRA_FONTS
+#   define P157_EXTRA_FONTS 0
+#  endif // if P073_EXTRA_FONTS
+# endif // if P157_FEATURE_P073
+
 # ifndef P157_7DDT_COMMAND
 #  define P157_7DDT_COMMAND     1  // Enable 7ddt by default
 # endif // ifndef P157_7DDT_COMMAND
+# ifndef P157_EXTRA_FONTS
+#  define P157_EXTRA_FONTS      1  // Enable extra fonts
+# endif // ifndef P157_EXTRA_FONTS
 # ifndef P157_SCROLL_TEXT
 #  define P157_SCROLL_TEXT      1  // Enable scrolling of 7dtext by default
 # endif // ifndef P157_SCROLL_TEXT
@@ -56,6 +78,10 @@
 #   undef P157_7DDT_COMMAND // Optionally activate if .bin file space is problematic, remove the 7ddt command
 #   define P157_7DDT_COMMAND    0
 #  endif // if P157_7DDT_COMMAND
+#  if P157_EXTRA_FONTS
+#   undef P157_EXTRA_FONTS // Optionally activate if .bin file space is problematic, remove the font selection and 7dfont command
+#   define P157_EXTRA_FONTS     0
+#  endif // if  P157_EXTRA_FONTS
 #  if P157_SCROLL_TEXT
 #   undef P157_SCROLL_TEXT // Optionally activate if .bin file space is problematic, remove the scrolling text feature
 #   define P157_SCROLL_TEXT     0
@@ -76,7 +102,8 @@ uint8_t                    P157_getDefaultDigits(uint8_t displayModel,
                                                  uint8_t digits = 0);
 void                       P157_display_output_selector(const __FlashStringHelper *id,
                                                         int16_t                    value);
-uint8_t                    P157_revert7bits(uint8_t character);
+bool                       P157_is7SegmentDisplay(uint8_t model);
+bool                       P157_is4DigitDisplay(uint8_t model);
 
 struct P157_data_struct : public PluginTaskData_base {
 public:
@@ -156,6 +183,7 @@ public:
   uint8_t output                = 0;
   uint8_t brightness            = 0;
   uint8_t displays              = 4;
+  uint8_t fontSet               = 0;
   bool    timesep               = false;
   bool    shift                 = false;
   bool    periods               = false;
@@ -204,6 +232,10 @@ private:
   bool plugin_write_7dst(struct EventStruct *event);
   bool plugin_write_7dsd(struct EventStruct *event);
   bool plugin_write_7dtext(const String& text);
+  # if P157_EXTRA_FONTS
+  bool plugin_write_7dfont(struct EventStruct *event,
+                           const String      & text);
+  # endif // if P157_EXTRA_FONTS
   # if P157_7DBIN_COMMAND
   bool plugin_write_7dbin(const String& text,
                           const uint8_t offset);
