@@ -68,6 +68,20 @@
 .. |P154_compileinfo| replace:: `.`
 .. |P154_usedlibraries| replace:: `Adafruit BMP3XX Library`
 
+.. |P157_name| replace:: :cyan:`HT16K33 14-/7-segment`
+.. |P157_type| replace:: :cyan:`Display`
+.. |P157_typename| replace:: :cyan:`Display - HT16K33 14-/7-segment`
+.. |P157_porttype| replace:: `.`
+.. |P157_status| replace:: :green:`DISPLAY` :yellow:`CLIMATE`
+.. |P157_status_lb| replace:: `.`
+.. |P157_github| replace:: P157_14DGT.ino
+.. _P157_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P157_14DGT.ino
+.. |P157_usedby| replace:: `.`
+.. |P157_shortinfo| replace:: `.`
+.. |P157_maintainer| replace:: `tonhuisman`
+.. |P157_compileinfo| replace:: `.`
+.. |P157_usedlibraries| replace:: `Noiasca HT16K33 (with a few minor modifications)`
+
 .. |P159_name| replace:: :cyan:`LD2410`
 .. |P159_type| replace:: :cyan:`Presence`
 .. |P159_typename| replace:: :cyan:`Presence - LD2410`
