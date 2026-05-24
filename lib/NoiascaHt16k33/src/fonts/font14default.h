@@ -82,7 +82,7 @@ const uint16_t charTable14 [] PROGMEM  = {
   SEG14_A | SEG14_D | SEG14_E | SEG14_F,                                                 // [   91
   SEG14_K | SEG14_P,                                                                     /* \   92 backslash*/
   SEG14_A | SEG14_B | SEG14_C | SEG14_D,                                                 // ]   93
-  SEG14_F | SEG14_K,                                                                     // ^   94
+  SEG14_A | SEG14_B | SEG14_H | SEG14_G | SEG14_F,                                       // ^   94 ESPEasy change: ° degree symbol, like P073 7-digit fonts
   SEG14_D,                                                                               // _   95 underscore
   SEG14_K,                                                                               // `   96
   SEG14_D | SEG14_E | SEG14_G | SEG14_O,                                                 // a   97
