@@ -304,7 +304,10 @@ bool NWPlugin_001(NWPlugin::Function function, EventStruct *event, String& strin
       } else if (SecuritySettings.IPblockLevel == ONLY_IP_RANGE_ALLOWED) {
         const IPAddress low(SecuritySettings.AllowedIPrangeLow);
         const IPAddress high(SecuritySettings.AllowedIPrangeHigh);
-        success = NWPlugin::ipInRange(client_ip, low, high);
+        success = 
+          !IPAddressSet(low) || 
+          !IPAddressSet(high) ||
+          NWPlugin::ipInRange(client_ip, low, high);
       } else {
         success = true;
       }
