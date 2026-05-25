@@ -73,13 +73,12 @@ bool P157_data_struct::init(struct EventStruct *event)
   scrollFull   = bitRead(P157_CFG_FLAGS, P157_OPTION_SCROLLFULL);
   setScrollSpeed(P157_CFG_SCROLLSPEED);
   # endif // if P157_SCROLL_TEXT
-  rightAlignTempMAX7219 = bitRead(P157_CFG_FLAGS, P157_OPTION_RIGHTALIGN);
-  suppressLeading0      = bitRead(P157_CFG_FLAGS, P157_OPTION_SUPPRESS0);
-  timesep               = true;
+  suppressLeading0 = bitRead(P157_CFG_FLAGS, P157_OPTION_SUPPRESS0);
+  timesep          = true;
 
-  // # if P157_EXTRA_FONTS
-  // fontset = P157_CFG_FONTSET;
-  // # endif // if P157_EXTRA_FONTS
+  # if P157_EXTRA_FONTS
+  fontSet = P157_CFG_FONTSET;
+  # endif // if P157_EXTRA_FONTS
   displays = P157_CFG_DISPLAYS;
   bufLen   = P157_getDefaultDigits(displayModel, displays);
 
@@ -120,7 +119,6 @@ void P157_data_struct::fillBufferWithTime(bool    sevendgt_now,
                                           bool    flag12h,
                                           bool    suppressLeading0) {
   clearBuffer();
-  const int bufToFill = P157_getDefaultDigits(displayModel, displays);
 
   if (sevendgt_now) {
     sevendgt_hours   = node_time.hour();
@@ -135,7 +133,7 @@ void P157_data_struct::fillBufferWithTime(bool    sevendgt_now,
   if (flag12h && (sevendgt_hours == 0)) {
     sevendgt_hours = 12; // if flag 12h is TRUE and h=0  adjust to h=12
   }
-  put4NumbersInBuffer(sevendgt_hours, sevendgt_minutes, bufToFill > 4 ? sevendgt_seconds : -1, -1
+  put4NumbersInBuffer(sevendgt_hours, sevendgt_minutes, bufLen > 4 ? sevendgt_seconds : -1, -1
                       # if P157_SUPPRESS_ZERO
                       , suppressLeading0
                       # endif // if P157_SUPPRESS_ZERO
@@ -333,18 +331,17 @@ void P157_data_struct::fillBufferWithDualTemp(int  leftTemperature,
 void P157_data_struct::fillBufferWithString(const String& textToShow,
                                             bool          useBinaryData) {
   clearBuffer();
-  const size_t bufToFill = P157_getDefaultDigits(displayModel, displays);
 
   String buf(textToShow);
 
-  while (getEffectiveTextLength(buf) > bufToFill && !buf.isEmpty()) {
+  while (getEffectiveTextLength(buf) > bufLen && !buf.isEmpty()) {
     buf = buf.substring(0, buf.length() - 1);
   }
 
-  while (buf.length() < bufToFill) {
+  while (buf.length() < bufLen) {
     buf += ' ';
   }
-  memcpy(showbuffer, buf.c_str(), bufToFill);
+  memcpy(showbuffer, buf.c_str(), bufLen);
 
   # ifdef P157_DEBUG
   logBufferContent(F("7dtext"));
@@ -396,59 +393,37 @@ bool P157_data_struct::nextScroll() {
     if (scrollCount == 0) {
       scrollCount = 0xFFFF; // Max value to avoid interference when scrolling long texts
       result      = true;
-      const int bufToFill = P157_getDefaultDigits(displayModel, displays);
       #  if P157_7DBIN_COMMAND
 
       if (binData.size() > 0) {
         scrollPos++;
 
-        if (scrollPos > (binData.size() - bufToFill)) {
+        if (scrollPos > (binData.size() - bufLen)) {
           scrollPos = 0;            // Redisplay
         }
         scrollCount = _scrollSpeed; // Restart countdown
       } else
       #  endif // if P157_7DBIN_COMMAND
-      { const int P157_txtlength = _textToScroll.length();
+      {
         clearBuffer();
 
         if (isPeriodChar(_textToScroll.charAt(scrollPos))) {
           scrollPos++;
         }
 
-        String part = _textToScroll.substring(scrollPos, scrollPos + 1.5 * bufToFill);
+        String part = _textToScroll.substring(scrollPos, scrollPos + 1.5 * bufLen);
 
-        while (getEffectiveTextLength(part) > bufToFill && !part.isEmpty()) {
+        while (getEffectiveTextLength(part) > bufLen && !part.isEmpty()) {
           part = part.substring(0, part.length() - 1);
         }
 
-        for (uint16_t i = 0; i < bufToFill && i < part.length(); ++i) {
+        for (uint16_t i = 0; i < bufLen && i < part.length(); ++i) {
           showbuffer[i] = part.charAt(i);
         }
 
-        // for (uint16_t i = scrollPos; i < P157_txtlength && p <= bufToFill; ++i) { // p <= bufToFill to allow a period after last digit
-        //   const char *isPeriod = std::find(std::begin(periodchars), std::end(periodchars), _textToScroll.charAt(i));
-
-        //   if (periods && (isPeriod != std::end(periodchars))) {                   // If setting periods true
-        //     if (p == 0) {                                                         // Text starts with a period, becomes a space with a
-        // dot
-        //       showperiods[p] = true;
-        //       p++;
-        //     } else {
-        //       showperiods[p - 1] = true;                                  // The period displays as a dot on the previous digit!
-        //     }
-
-        //     if ((i > scrollPos) && (isPeriod != std::end(periodchars))) { // Handle consecutive periods
-        //       showperiods[p - 1] = true;                                  // The period displays as a dot on the previous digit!
-        //       p++;
-        //     }
-        //   } else if (p < bufToFill) {
-        //     showbuffer[p] = _textToScroll.charAt(i);
-        //     p++;
-        //   }
-        // }
         scrollPos++;
 
-        if (scrollPos > _textToScroll.length() - bufToFill) {
+        if (scrollPos > _textToScroll.length() - bufLen) {
           scrollPos = 0;            // Restart when all text displayed
         }
         scrollCount = _scrollSpeed; // Restart countdown
@@ -465,15 +440,14 @@ void P157_data_struct::setTextToScroll(const String& text) {
   free_string(_textToScroll);
 
   if (!text.isEmpty()) {
-    const int bufToFill = P157_getDefaultDigits(displayModel, displays);
-    _textToScroll.reserve(text.length() + bufToFill + (scrollFull ? bufToFill : 0));
+    _textToScroll.reserve(text.length() + bufLen + (scrollFull ? bufLen : 0));
 
-    for (int i = 0; scrollFull && i < bufToFill; ++i) { // Scroll text in from the right, so start with all spaces
+    for (int i = 0; scrollFull && i < bufLen; ++i) { // Scroll text in from the right, so start with all spaces
       _textToScroll += ' ';
     }
     _textToScroll += text;
 
-    for (int i = 0; i < bufToFill; ++i) { // Scroll text off completely before restarting
+    for (int i = 0; i < bufLen; ++i) { // Scroll text off completely before restarting
       _textToScroll += ' ';
     }
   }
@@ -539,7 +513,6 @@ void P157_data_struct::clearBuffer() {
 
 void P157_data_struct::printBuffer() {
   if (isInitialized()) {
-    const size_t maxLen = P157_getDefaultDigits(displayModel, displays);
     # if P157_7DBIN_COMMAND
 
     if (binData.size() > 0) {
@@ -547,7 +520,7 @@ void P157_data_struct::printBuffer() {
       String log;
       #  endif // ifdef P157_DEBUG
 
-      for (uint16_t j = 0; j < maxLen && (scrollPos + j) < binData.size(); ++j) {
+      for (uint16_t j = 0; j < bufLen && (scrollPos + j) < binData.size(); ++j) {
         ht16k33->writeLowLevel(j, binData[scrollPos + j]);
         #  ifdef P157_DEBUG
         log += formatToHex(binData[scrollPos + j]);
@@ -558,7 +531,7 @@ void P157_data_struct::printBuffer() {
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         addLog(LOG_LEVEL_INFO, strformat(F("P157 : printBuffer len: %u maxLen: %u data: %s"),
-                                         binData.size(), maxLen, log.c_str()));
+                                         binData.size(), bufLen, log.c_str()));
       }
       #  endif // ifdef P157_DEBUG
     } else
@@ -567,16 +540,16 @@ void P157_data_struct::printBuffer() {
       String  buf = String(showbuffer);
       uint8_t dotOff{};
 
-      if ((maxLen < 8) && (buf.length() > maxLen) && buf.startsWith(F("    "))) {
+      if ((bufLen < 8) && (buf.length() > bufLen) && buf.startsWith(F("    "))) {
         dotOff = 4;
         buf    = buf.substring(4);
       }
 
-      while (getEffectiveTextLength(buf) > maxLen && !buf.isEmpty()) {
+      while (getEffectiveTextLength(buf) > bufLen && !buf.isEmpty()) {
         buf = buf.substring(0, buf.length() - 1);
       }
 
-      while (buf.length() < maxLen) { // TODO Account for offset?
+      while (buf.length() < bufLen) { // TODO Account for offset?
         buf += ' ';
       }
 
@@ -584,7 +557,7 @@ void P157_data_struct::printBuffer() {
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         addLog(LOG_LEVEL_INFO, strformat(F("P157 : printBuffer len: %u buffer: %s, maxLen: %u raw: '%s'"),
-                                         buf.length(), buf.c_str(), maxLen, showbuffer));
+                                         buf.length(), buf.c_str(), bufLen, showbuffer));
       }
       # endif // ifdef P157_DEBUG
 
@@ -684,7 +657,7 @@ const char P157_commands[] PROGMEM =
   # if P157_7DDT_COMMAND
   "7ddt|"
   # endif // if P157_7DDT_COMMAND
-  "7dst|7dsd|7dtext|"
+  "7dst|7dsd|7dtext|7digit|"
   # if P157_EXTRA_FONTS
   "7dfont|"
   # endif // if P157_EXTRA_FONTS
@@ -703,6 +676,7 @@ enum class P157_commands_e : int8_t {
   c7dst,
   c7dsd,
   c7dtext,
+  c7digit,
   # if P157_EXTRA_FONTS
   c7dfont,
   # endif // if P157_EXTRA_FONTS
@@ -769,6 +743,8 @@ bool P157_data_struct::plugin_write(struct EventStruct *event,
       setScrollEnabled(true); // Scrolling allowed for 7dtext command
       # endif // if P157_SCROLL_TEXT
       return plugin_write_7dtext(text);
+    case P157_commands_e::c7digit:
+      return plugin_write_7digit(text);
     # if P157_EXTRA_FONTS
     case P157_commands_e::c7dfont:
       #  if P157_SCROLL_TEXT
@@ -868,7 +844,7 @@ void P157_data_struct::getDisplayLimits(int32_t& lLimit,
                                         int32_t& uLimit,
                                         int8_t   offset,
                                         uint8_t  displays) {
-  uint8_t dgts = P157_getDefaultDigits(displayModel, displays);
+  uint8_t dgts = min((uint8_t)8, bufLen);
 
   dgts  -= offset;           // Subtract an offset, used for extra symbol
   lLimit = -pow10(dgts - 1); // Lowest value we can display - 1
@@ -912,7 +888,6 @@ bool P157_data_struct::plugin_write_7dt(const String& text) {
   }
 
   float P157_temptemp    = 0.0f;
-  bool  P157_tempflagdot = false;
 
   if (!text.isEmpty()) {
     validFloatFromString(text, P157_temptemp);
@@ -942,7 +917,6 @@ bool P157_data_struct::plugin_write_7dt(const String& text) {
   } else {
     if ((P157_temptemp < uLimitDec) && (P157_temptemp > lLimitDec)) {
       P157_temptemp    = roundf(P157_temptemp * 10.0f);
-      P157_tempflagdot = true;
     }
     fillBufferWithTemp(P157_temptemp);
   }
@@ -964,7 +938,6 @@ bool P157_data_struct::plugin_write_7ddt(const String& text) {
 
   float P157_lefttemp    = 0.0f;
   float P157_righttemp   = 0.0f;
-  bool  P157_tempflagdot = false;
 
   if (!text.isEmpty()) {
     validFloatFromString(parseString(text, 1), P157_lefttemp);
@@ -1083,9 +1056,10 @@ bool P157_data_struct::plugin_write_7dtext(const String& text) {
   # endif // ifndef BUILD_NO_DEBUG
   # if P157_SCROLL_TEXT
   setTextToScroll(EMPTY_STRING);
-  const uint8_t bufLen = P157_getDefaultDigits(displayModel, displays);
 
-  if (isScrollEnabled() && (getEffectiveTextLength(text) > bufLen)) {
+  setScrollEnabled(getEffectiveTextLength(text) > bufLen);
+
+  if (isScrollEnabled()) {
     setTextToScroll(text);
   } else
   # endif // if P157_SCROLL_TEXT
@@ -1127,6 +1101,10 @@ bool P157_data_struct::plugin_write_7dfont(struct EventStruct *event,
 
 bool P157_data_struct::plugin_write_7dbin(const String& text,
                                           const uint8_t offset) {
+  if (output != P157_DISP_MANUAL) {
+    return false;
+  }
+
   if (!text.isEmpty()) {
     binData.clear();
     scrollPos = 0;
@@ -1186,21 +1164,21 @@ bool P157_data_struct::plugin_write_7dbin(const String& text,
 
     if (binData.size() > 0) {
       #  if P157_SCROLL_TEXT
+      setScrollEnabled(binData.size() > bufLen);
 
       if (isScrollEnabled()) {
-        const uint8_t bufLen = P157_getDefaultDigits(displayModel, displays);
+        uint8_t i = 0;
 
-        for (uint8_t i = 0; scrollFull && i < bufLen; ++i) { // prepend to start display empty
+        for (; scrollFull && i < bufLen; ++i) { // prepend to start display empty
           binData.insert(binData.begin(), 0);
         }
 
-        for (uint8_t i; i < bufLen; ++i) { // append empty to scroll until empty
+        for (i = 0; i < bufLen; ++i) { // append empty to scroll until empty
           binData.push_back(0);
         }
-      }
+      } else
       #  endif // if P157_SCROLL_TEXT
-
-      if (!isScrollEnabled()) {
+      {
         printBuffer();
       }
       return true;

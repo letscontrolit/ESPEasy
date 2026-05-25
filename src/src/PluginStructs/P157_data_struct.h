@@ -33,14 +33,14 @@
 
 // # define P157_OPTION_PERIOD      0 // Period as dot
 # define P157_OPTION_HIDEDEGREE  1 // Hide degree symbol for temperatures
-# define P157_OPTION_RIGHTALIGN  2 // Align 7dt output to the right
+// # define P157_OPTION_RIGHTALIGN  2 // Align 7dt output to the right
 # define P157_OPTION_SCROLLTEXT  3 // Scroll text > display width
 # define P157_OPTION_SCROLLFULL  4 // Scroll text from the right in, starting with a blank display
 # define P157_OPTION_SUPPRESS0   5 // Suppress leading zero on day/hour of Date/Time display
 # define P157_OPTION_BLINK_DOT   6 // Use dot on second digit for flashing instead of colon
 
 # ifdef USES_P073
-#  define P157_FEATURE_P073     1           // Use P073 shared functions and fonts when available
+#  define P157_FEATURE_P073     1  // Use P073 shared functions and fonts when available
 # else // ifdef USES_P073
 #  define P157_FEATURE_P073     0
 # endif // ifdef USES_P073
@@ -58,19 +58,19 @@
 # endif // if P157_FEATURE_P073
 
 # ifndef P157_7DDT_COMMAND
-#  define P157_7DDT_COMMAND     1  // Enable 7ddt by default
+#  define P157_7DDT_COMMAND     1 // Enable 7ddt by default
 # endif // ifndef P157_7DDT_COMMAND
 # ifndef P157_EXTRA_FONTS
-#  define P157_EXTRA_FONTS      1  // Enable extra fonts
+#  define P157_EXTRA_FONTS      0 // Disable extra fonts
 # endif // ifndef P157_EXTRA_FONTS
 # ifndef P157_SCROLL_TEXT
-#  define P157_SCROLL_TEXT      1  // Enable scrolling of 7dtext by default
+#  define P157_SCROLL_TEXT      1 // Enable scrolling of 7dtext by default
 # endif // ifndef P157_SCROLL_TEXT
 # ifndef P157_7DBIN_COMMAND
-#  define P157_7DBIN_COMMAND    1  // Enable input of binary data via 7dbin,uint8_t,... command
+#  define P157_7DBIN_COMMAND    1 // Enable input of binary data via 7dbin,uint8_t,... command
 # endif // ifndef P157_7DBIN_COMMAND
 # ifndef P157_SUPPRESS_ZERO
-#  define P157_SUPPRESS_ZERO    1  // Enable Suppress leading zero on day/hour
+#  define P157_SUPPRESS_ZERO    1 // Enable Suppress leading zero on day/hour
 # endif // ifndef P157_SUPPRESS_ZERO
 
 # if defined(PLUGIN_SET_COLLECTION) && defined(ESP8266)
@@ -95,7 +95,7 @@
 #   define P157_SUPPRESS_ZERO   0
 #  endif // if P157_SUPPRESS_ZERO
 # endif // if defined(PLUGIN_SET_COLLECTION) && defined(ESP8266)
-# define P157_DEBUG // Leave out some debugging on demand, activates extra log info in the debug
+// # define P157_DEBUG // Leave out some debugging on demand, activates extra log info in the debug
 
 const __FlashStringHelper* P157_DisplayModel(uint8_t model);
 uint8_t                    P157_getDefaultDigits(uint8_t displayModel,
@@ -166,31 +166,26 @@ public:
   void setScrollEnabled(bool scroll) { scrollAllowed = scroll; }
 
   # endif // if P157_SCROLL_TEXT
-  // # if P157_7DBIN_COMMAND
-  // void setBinaryData(const String& data);
-  // # endif // if P157_7DBIN_COMMAND
   # ifdef P157_DEBUG
   void logBufferContent(String prefix);
   # endif // ifdef P157_DEBUG
   void fillBufferWithDash();
   void clearBuffer();
 
-  int     dotpos                = -1;
-  char    showbuffer[64]        = { 0 };
-  bool    showperiods[64]       = { 0 };
-  uint8_t i2cAddress            = 0;
-  uint8_t displayModel          = 0;
-  uint8_t output                = 0;
-  uint8_t brightness            = 0;
-  uint8_t displays              = 4;
-  uint8_t fontSet               = 0;
-  bool    timesep               = false;
-  bool    shift                 = false;
-  bool    periods               = false;
-  bool    hideDegree            = false;
-  bool    rightAlignTempMAX7219 = false;
-  bool    suppressLeading0      = false;
-  uint8_t fontset               = 0;
+  int     dotpos           = -1;
+  char    showbuffer[64]   = { 0 };
+  bool    showperiods[64]  = { 0 };
+  uint8_t i2cAddress       = 0;
+  uint8_t displayModel     = 0;
+  uint8_t output           = 0;
+  uint8_t brightness       = 0;
+  uint8_t displays         = 4;
+  uint8_t fontSet          = 0;
+  bool    timesep          = false;
+  bool    periods          = false;
+  bool    hideDegree       = false;
+  bool    suppressLeading0 = false;
+  uint8_t fontset          = 0;
   # if P157_7DBIN_COMMAND
   bool                 binaryData = false;
   std::vector<uint16_t>binData;
@@ -209,9 +204,6 @@ private:
   # if defined(P157_SCROLL_TEXT) || defined(P157_7DBIN_COMMAND)
   String _textToScroll;
   # endif // if defined(P157_SCROLL_TEXT) || defined(P157_7DBIN_COMMAND)
-  # ifdef P157_DEBUG
-  uint32_t counter50 = 0;
-  # endif // ifdef P157_DEBUG
 
 private:
 

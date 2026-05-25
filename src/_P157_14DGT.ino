@@ -2,7 +2,7 @@
 #ifdef USES_P157
 
 // #######################################################################################################
-// ######################      Plugin 157 - 14-segment display plugin HT16K33       ######################
+// ######################     Plugin 157 - 14-/7-segment display plugin HT16K33     ######################
 // #######################################################################################################
 //
 // Chips/displays supported:
@@ -30,6 +30,9 @@
 //
 
 /** History
+ * 2026-05-25 tonhuisman: Add 7digit,<dgt>,<char/text> command for writing content from a specific digit 1..len
+ *                        Remove right-align option, as this isn't implemented
+ *                        Clean up source
  * 2026-05-23 tonhuisman: Add font-selector for 7-segment displays, re-using the fonts available in P073
  * 2026-05-15 tonhuisman: Start plugin, based on P073
  */
@@ -154,7 +157,7 @@ boolean Plugin_157(uint8_t function, struct EventStruct *event, String& string) 
       addUnit(F("1..600 = 0.1..60 sec/step"));
       # endif // if P157_SCROLL_TEXT
 
-      addFormCheckBox(F("Right-align Temperature (7dt)"), F("temp_rightalign"), bitRead(P157_CFG_FLAGS, P157_OPTION_RIGHTALIGN));
+      // addFormCheckBox(F("Right-align Temperature (7dt)"), F("temp_rightalign"), bitRead(P157_CFG_FLAGS, P157_OPTION_RIGHTALIGN));
 
       success = true;
       break;
@@ -181,7 +184,8 @@ boolean Plugin_157(uint8_t function, struct EventStruct *event, String& string) 
 
       // bitWrite(lSettings, P157_OPTION_PERIOD,     isFormItemChecked(F("periods")));
       bitWrite(lSettings, P157_OPTION_HIDEDEGREE, isFormItemChecked(F("hide_degree")));
-      bitWrite(lSettings, P157_OPTION_RIGHTALIGN, isFormItemChecked(F("temp_rightalign")));
+
+      // bitWrite(lSettings, P157_OPTION_RIGHTALIGN, isFormItemChecked(F("temp_rightalign")));
       # if P157_SCROLL_TEXT
       bitWrite(lSettings, P157_OPTION_SCROLLTEXT, isFormItemChecked(F("scroll_text")));
       bitWrite(lSettings, P157_OPTION_SCROLLFULL, isFormItemChecked(F("scroll_full")));
