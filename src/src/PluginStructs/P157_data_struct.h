@@ -216,6 +216,7 @@ private:
 private:
 
   Noiasca_ht16k33*ht16k33 = nullptr;
+  uint8_t         bufLen{};
 
   bool isInitialized() const { return nullptr != ht16k33; }
 
@@ -240,6 +241,7 @@ private:
   bool plugin_write_7dbin(const String& text,
                           const uint8_t offset);
   # endif // if P157_7DBIN_COMMAND
+  bool plugin_write_7digit(const String& text);
   const char periodchars[4] = { '.', ',', ':', ';' };
 
 };

@@ -81,6 +81,7 @@ bool P157_data_struct::init(struct EventStruct *event)
   // fontset = P157_CFG_FONTSET;
   // # endif // if P157_EXTRA_FONTS
   displays = P157_CFG_DISPLAYS;
+  bufLen   = P157_getDefaultDigits(displayModel, displays);
 
   if (0 == displays) {
     displays = 1;
@@ -1209,5 +1210,45 @@ bool P157_data_struct::plugin_write_7dbin(const String& text,
 }
 
 # endif // if P157_7DBIN_COMMAND
+
+/****************************************************************************
+ * Write a character or string to an explicit digit
+ ***************************************************************************/
+bool P157_data_struct::plugin_write_7digit(const String& text) {
+  if (output != P157_DISP_MANUAL) {
+    return false;
+  }
+
+  if (!text.isEmpty()) {
+    setTextToScroll(EMPTY_STRING); // Clear scrolling text and binary data
+    binData.clear();
+    setScrollEnabled(false);
+
+    int32_t  dgt         = 0;
+    uint32_t bitmap      = 0;
+    const String data    = parseStringKeepCaseNoTrim(text, 2);
+    const bool   isValid = validIntFromString(parseString(text, 1), dgt);
+
+    if (isValid && (dgt > 0) && (dgt <= bufLen) &&
+        !data.isEmpty()) {
+      dgt--;
+      ht16k33->setCursor(dgt);
+      uint8_t per = 0;
+
+      for (uint8_t i = 0; i < data.length() && (i + dgt - per) < (bufLen + (isPeriodChar(data.charAt(i)) ? 1 : 0)); ++i) {
+        ht16k33->write(data.charAt(i));
+        per += isPeriodChar(data.charAt(i)) ? 1 : 0;
+      }
+      return true;
+    } else if (isValid && (dgt < 0) && (abs(dgt) <= bufLen) &&
+               !data.isEmpty() && validUIntFromString(data, bitmap) && (bitmap < 0xFFFF)) {
+      dgt = abs(dgt);
+      dgt--;
+      ht16k33->writeLowLevel(dgt, bitmap);
+      return true;
+    }
+  }
+  return false;
+}
 
 #endif    // ifdef USES_P157
