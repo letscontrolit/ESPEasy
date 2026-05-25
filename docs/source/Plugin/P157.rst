@@ -134,7 +134,6 @@ Options
 
 (The Scroll options and feature are not included in some builds for size reasons)
 
-* **Right align Temperature (7dt)**: By default the temperature display on 8 digit or wider displays, is shown right aligned on position 1..7. This option enabled right-aligns the temperature to position 8.
 
 Commands available
 ^^^^^^^^^^^^^^^^^^

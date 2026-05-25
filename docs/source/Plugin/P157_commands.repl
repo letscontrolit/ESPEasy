@@ -117,3 +117,13 @@
         * 4 - Clock 12h - No Blink
         * 5 - Date
         "
+        "
+        ``7digit,<dgt>,<char/text>``
+
+        ","
+        Write content to a specific digit, or range of digits up to the end of the display (no scrolling supported)
+
+        ``7digit,8,C.`` : Write a C with a period attached to digit 8 of the display (assuming it has at least 8 digits available).
+
+        ``7digit,-4,0b110110`` : Write a bitmap (``||`` used here), similar to ``7dbin`` command, to a digit (the ``abs(dgt)`` value is used).
+        "
