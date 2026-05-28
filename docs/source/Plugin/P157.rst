@@ -38,6 +38,26 @@ Periods, comma's, colons and semicolons in text are always shown on the dots of 
 
 For temperature display commands, ``7dt,<temp>`` and ``7ddt,<temp1>,<temp2>``, the degree symbol after the temperature can be turned off so there's room for 1 more digit of temperature on the display.
 
+Hardware
+^^^^^^^^
+
+Most available 14-segment display units have 4 digits:
+
+.. image:: P157_ht16k33-4-dgt-module.png
+
+When multiple modules are combined to form a single display, the adjacent modules must get consecutive addresses, and placed from left to right with low to high addresses. The address for each unit (0x70 .. 0x77) is adjusted by adding a connection on the A0/A1/A2 solder bridges at the backside of the module. All 3 bridges open is address 0x70:
+
+.. image:: P157_ht16k33-address.png
+
+Wiring
+~~~~~~
+
+Wiring multiple modules is as simple as connecting the ``Vi2c``, ``VCC``, ``GND``, ``SDA`` and ``SCL`` of all modules in parallel, and connect ``Vi2c`` to ``3V3``, ``VCC`` to ``5V``, ``GND`` to ``GND`` at the ESP, and ``SDA`` and ``SCL`` to the configured I2C pins of the ESP. The modules using red LEDs will usually work at a VCC of 3V3, but connecting more than 1 module to the 3V3 of the ESP will overload the 3V3 regulator, installed on the ESP board. This split power pinout design makes it very easy to connect these modules, as no level-converter is needed to protect the GPIO pins of the ESP.
+
+.. image:: P157_ht16k33-pinout.png
+
+When connecting more than 4 modules to the same ESP, it's best to **not** connect ``Vi2c`` to more than 4 modules, as each module comes with its own pair of 10k pull-up resistors, and having too many of these in parallel will result in a too low value, causing possible display errors.
+
 Configuration
 ^^^^^^^^^^^^^^
 
