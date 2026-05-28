@@ -41,18 +41,29 @@ typedef enum class ModbusTransactionType {
 // This structure represents a single Modbus request and its associated response.
 struct Modbus_RequestQueueElement {
   Modbus_RequestQueueElement() = default;
+  Modbus_RequestQueueElement(ModbusDEVICE_struct    *device,
+                             ModbusTransactionType_t messageType,
+                             uint16_t                userId,
+                             void                   *userData,
+                             void                   *userState)
+  {
+    _device      = device;
+    _messageType = messageType;
+    _userId      = userId;
+    _userData    = userData;
+    _userState   = userState;
+  }
 
-  ModbusTransactionType       _messageType = ModbusTransactionType::NONE;              // Type of Modbus message
-  void                       *_userData    = nullptr;                                  // Pointer to user (device) data
-  void                       *_userState   = nullptr;                                  // Pointer to user (device) defined state
-  uint16_t                    _userId      = 0;                                        // Client defined identifier for this transaction,
+  ModbusTransactionType _messageType = ModbusTransactionType::NONE;                    // Type of Modbus message
+  void                 *_userData    = nullptr;                                        // Pointer to user (device) data
+  void                 *_userState   = nullptr;                                        // Pointer to user (device) defined state
+  uint16_t              _userId      = 0;                                              // Client defined identifier for this transaction,
                                                                                        // can be used to match responses to requests
-  uint16_t                    _id          = 0;                                        // ID of the request
-  struct ModbusDEVICE_struct *_device      = nullptr;                                  // Pointer to the Modbus device requesting the
+  uint16_t                    _id     = 0;                                             // Unique ID of the request (for debugging)
+  struct ModbusDEVICE_struct *_device = nullptr;                                       // Pointer to the Modbus device requesting the
                                                                                        // action
   uint16_t _sendframe_length = 0;                                                      // Length of the request frame
   uint16_t _rcvframe_length  = 0;                                                      // Expected length of the response frame
-                                                                                       // expected
   enum ModbusQueueState _state                         = ModbusQueueState::NOT_QUEUED; // State of the request exchange
   uint16_t              _timeout                       = 0;                            // Specified timeout value for the request
   unsigned long         _startTime                     = 0;                            // Time the request was issued
@@ -84,41 +95,41 @@ struct ModbusLINK_struct  {
             int8_t                  dere_pin,
             bool                    collision_detect = false);
 
-  bool                        isInitialized() const { return (_easySerial != nullptr) && _initialized; }
+  bool     isInitialized() const { return (_easySerial != nullptr) && _initialized; }
 
-  Modbus_RequestQueueElement* newTransaction(struct ModbusDEVICE_struct *device);
-  bool                        freeTransaction(Modbus_RequestQueueElement *transaction);
-  void                        freeTransactions(struct ModbusDEVICE_struct *device);
-  uint16_t                    queueTransaction(Modbus_RequestQueueElement *transaction);
-  void                        processCommand();
+  void     freeTransactions(struct ModbusDEVICE_struct *device);
+  uint16_t queueTransaction(Modbus_RequestQueueElement *transaction);
+  void     processCommand();
 
-  int16_t                     getBaudrate(void) const;
+  int16_t  getBaudrate(void) const;
 
-  int16_t                     getSerialRX(void) const;
+  int16_t  getSerialRX(void) const;
 
-  int16_t                     getSerialTX(void) const;
+  int16_t  getSerialTX(void) const;
 
-  int8_t                      getDerePin(void) const;
+  int8_t   getDerePin(void) const;
 
-  bool                        getCollisionDetect(void) const;
-
+  bool     getCollisionDetect(void) const;
 
 private:
 
   static void dumpQueueElement(Modbus_RequestQueueElement *el);
   static void dumpState(ModbusQueueState_t state);
 
-  ESPeasySerial      *_easySerial       = nullptr; // Pointer to the serial port object
-  Modbus_RequestQueue _requestQueue     = {};      // Queue of Modbus requests to process
-  uint16_t            _queueID          = 0;       // ID for the last request queued
-  uint16_t            _modbus_timeout   = 180;     // Default Modbus timeout in milliseconds
-  uint32_t            _reads_pass       = 0;       // TODO: statistics
-  uint32_t            _reads_crc_failed = 0;       // TODO: statistics
-  uint32_t            _reads_nodata     = 0;       // TODO: statistics
-  uint8_t             _dere_pin         = 0;       // Pin for RS485 direction control
-  bool                _collision_detect = false;   // Flag to indicate if collision detection is enabled
-  bool                _initialized      = false;
-  uint8_t             _last_error       = 0;
+  ESPeasySerial      *_easySerial     = nullptr; // Pointer to the serial port object
+  Modbus_RequestQueue _requestQueue   = {};      // Queue of Modbus requests to process
+  uint16_t            _queueID        = 0;       // ID for the last request queued
+  uint16_t            _modbus_timeout = 180;     // Default Modbus timeout in milliseconds
+
+  uint8_t _dere_pin         = 0;                 // Pin for RS485 direction control
+  bool    _collision_detect = false;             // Flag to indicate if collision detection is enabled
+  bool    _initialized      = false;
+
+  ////uint32_t            _reads_pass       = 0;       // TODO: statistics
+  ////uint32_t            _reads_crc_failed = 0;       // TODO: statistics
+  ////uint32_t            _reads_nodata     = 0;       // TODO: statistics
+  ////uint8_t             _last_error       = 0;       // TODO: statistics, last error code received from Modbus device
+  bool _processing = false; // Flag to indicate if the command queue is currently being processed, used to prevent reentrancy issues
 
 };
 

@@ -66,9 +66,9 @@ public:
   // Start reading a Modubus holding register. The result will be available later.
   // The function returns true if the request was queued.
   // The state variable will signal the processing state of the request.
-  bool readHoldingRegister(uint16_t           address,
-                           uint16_t         & valueptr,
-                           ModbusResultState& stateptr);
+  bool readHoldingRegister(uint16_t          address,
+                           uint16_t         *valueptr,
+                           ModbusResultState*stateptr);
 
   // Start reading a Modbus holding register with reslt returned through event PLUGIN_TASKTIMER_IN
   // The function returns true if the request was queued.
@@ -84,7 +84,7 @@ public:
   // The function returns true if the request was queued.
   bool writeSingleRegister(uint16_t           address,
                            uint16_t           value,
-                           ModbusResultState& stateptr);
+                           ModbusResultState * stateptr);
 
   // Start reading a Modbus holding register from another module. The result will be available later.
   // The function returns true if the request was queued.

@@ -17,6 +17,7 @@
 #  undef MODBUS_DEBUG // Debugging switched off
 # endif // ifdef BUILD_NO_DEBUG
 
+// Modbus function codes, see Modbus specification
 const uint8_t MODBUS_READ_HOLDING_REGISTERS   = 0x03;
 const uint8_t MODBUS_READ_INPUT_REGISTERS     = 0x04;
 const uint8_t MODBUS_WRITE_SINGLE_REGISTER    = 0x06;
@@ -51,7 +52,7 @@ void ModbusDEVICE_struct::reset() {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Initialization connected to an existing link.
+// Initializae the Modbus device and connect it to the given Modbus link
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool ModbusDEVICE_struct::init(uint8_t slaveAddress, int linkId, taskIndex_t taskIndex)
 {
@@ -70,6 +71,7 @@ bool ModbusDEVICE_struct::init(uint8_t slaveAddress, int linkId, taskIndex_t tas
   return success;
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Checker for device class initialization status
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool ModbusDEVICE_struct::isInitialized() const {
@@ -90,54 +92,37 @@ uint16_t ModbusDEVICE_struct::getModbusTimeout() const
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Start reading a Modubus holding register. The result will be available later.
+// Start reading a Modubus holding register. The result will be available later through the provided pointers.
+// The function returns true if the request was queued.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-bool ModbusDEVICE_struct::readHoldingRegister(uint16_t           address,
-                                              uint16_t         & valuePtr,
-                                              ModbusResultState& statePtr)
+bool ModbusDEVICE_struct::readHoldingRegister(uint16_t          address,
+                                              uint16_t         *valuePtr,
+                                              ModbusResultState*statePtr)
 {
   if (!isInitialized()) {
     return false;
   }
-  Modbus_RequestQueueElement *request = _modbus_link->newTransaction(this);
+  Modbus_RequestQueueElement *request = new (std::nothrow) Modbus_RequestQueueElement(this,
+                                                                                      ModbusTransactionType::READ_HOLDING_REGISTERS,
+                                                                                      0,
+                                                                                      valuePtr,
+                                                                                      statePtr);
 
   if (request == nullptr) {
-    return false; // Failed to allocate a request structure
+    return false;                                // Failed to allocate a request structure
   }
-  request->_userData    = &valuePtr;
-  request->_userState   = &statePtr;
-  request->_messageType = ModbusTransactionType::READ_HOLDING_REGISTERS;
   createReadFrame(*request, _modbus_address, address);
-  (void)_modbus_link->queueTransaction(request);
+  (void)_modbus_link->queueTransaction(request); // Transaction is now owned by the Modbus link
   return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Start reading a Modubus holding register. The result will be available later through an task event.
+// Start reading a Modubus holding register. The result will be available later through a task event.
 // The function returns true if the request was queued.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool ModbusDEVICE_struct::readHoldingRegister(uint16_t address, uint16_t uid)
 {
   return readModuleHoldingRegister(_modbus_address, address, uid);
-}
-
-bool ModbusDEVICE_struct::readHoldingRegisters(uint16_t address, uint16_t size, uint16_t uid)
-{
-  if (!isInitialized()) {
-    return false;
-  }
-  Modbus_RequestQueueElement *request = _modbus_link->newTransaction(this);
-
-  if (request == nullptr) {
-    return false; // Failed to allocate a request structure
-  }
-  request->_userData    = nullptr;
-  request->_userState   = nullptr;
-  request->_userId      = uid;
-  request->_messageType = ModbusTransactionType::READ_HOLDING_REGISTERS;
-  createReadFrame(*request, _modbus_address, address, size);
-  (void)_modbus_link->queueTransaction(request);
-  return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -153,17 +138,40 @@ bool ModbusDEVICE_struct::readModuleHoldingRegister(uint8_t  busAddress,
   if (!isInitialized()) {
     return false;
   }
-  Modbus_RequestQueueElement *request = _modbus_link->newTransaction(this);
+  Modbus_RequestQueueElement *request = new (std::nothrow) Modbus_RequestQueueElement(this,
+                                                                                      ModbusTransactionType::READ_HOLDING_REGISTERS,
+                                                                                      uid,
+                                                                                      nullptr,
+                                                                                      nullptr);
 
   if (request == nullptr) {
-    return false; // Failed to allocate a request structure
+    return false;                                // Failed to allocate a request structure
   }
-  request->_messageType = ModbusTransactionType::READ_HOLDING_REGISTERS;
-  request->_userData    = nullptr;
-  request->_userState   = nullptr;
-  request->_userId      = uid;
   createReadFrame(*request, busAddress, registerAddress);
-  (void)_modbus_link->queueTransaction(request);
+  (void)_modbus_link->queueTransaction(request); // Transaction is now owned by the Modbus link
+  return true;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Start reading multiple Modubus holding registers. The result will be available later through a task event.
+// The function returns true if the request was queued.
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+bool ModbusDEVICE_struct::readHoldingRegisters(uint16_t address, uint16_t size, uint16_t uid)
+{
+  if (!isInitialized()) {
+    return false;
+  }
+  Modbus_RequestQueueElement *request = new (std::nothrow) Modbus_RequestQueueElement(this,
+                                                                                      ModbusTransactionType::READ_HOLDING_REGISTERS,
+                                                                                      uid,
+                                                                                      nullptr,
+                                                                                      nullptr);
+
+  if (request == nullptr) {
+    return false;                                // Failed to allocate a request structure
+  }
+  createReadFrame(*request, _modbus_address, address, size);
+  (void)_modbus_link->queueTransaction(request); // Transaction is now owned by the Modbus link
   return true;
 }
 
@@ -195,15 +203,16 @@ void ModbusDEVICE_struct::createReadFrame(Modbus_RequestQueueElement& request,
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool ModbusDEVICE_struct::writeSingleRegister(uint16_t           address,
                                               uint16_t           value,
-                                              ModbusResultState& statePtr)
+                                              ModbusResultState *statePtr)
 {
   if (!isInitialized()) {
     return false;
   }
-  Modbus_RequestQueueElement *request =    _modbus_link->newTransaction(this);
-
-  request->_messageType = ModbusTransactionType::WRITE_SINGLE_REGISTER;
-  request->_userState   = &statePtr;
+  Modbus_RequestQueueElement *request = new (std::nothrow) Modbus_RequestQueueElement(this,
+                                                                                      ModbusTransactionType::WRITE_SINGLE_REGISTER,
+                                                                                      0,
+                                                                                      nullptr,
+                                                                                      statePtr);
 
   request->_sendframe[0] = _modbus_address;
   request->_sendframe[1] = MODBUS_WRITE_SINGLE_REGISTER;
@@ -217,11 +226,15 @@ bool ModbusDEVICE_struct::writeSingleRegister(uint16_t           address,
   request->_sendframe_length = 8;             // Size with CRC
   request->_rcvframe_length  = 8;             // Expect 8 bytes in response
   (void)_modbus_link->queueTransaction(request);
-  statePtr = ModbusResultState::Busy;
+  *statePtr = ModbusResultState::Busy;
 
   return true;
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Process any pending commands for this device.
+// Should only be used when polling for an immediate response, not for regular asynchronous requests.
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void ModbusDEVICE_struct::processCommand(void)
 {
   if (isInitialized()) {
@@ -270,14 +283,14 @@ void ModbusDEVICE_struct::linkCallback(Modbus_RequestQueueElement *req)
         {
           uint16_t crc = CalculateCRC(req->_rcvframe, req->_rcvframe_length - 2);
 
-          if ((req->_rcvframe[req->_rcvframe_length - 2] == lowByte(crc)) && (req->_rcvframe[req->_rcvframe_length -1] == highByte(crc))) {
+          if ((req->_rcvframe[req->_rcvframe_length - 2] == lowByte(crc)) && (req->_rcvframe[req->_rcvframe_length - 1] == highByte(crc))) {
 
             // Check which return mode is used by the client and return the value accordingly
             if (req->_userData != nullptr) {
               // Return value through user data pointer specified by the client when queuing the request
               // Note: this is only the first register value if multiple registers were read. Returning multiple register values through
               // user data pointer is not supported.
-              *(static_cast<uint16_t *>(req->_userData)) = (req->_rcvframe[3] << 8) | req->_rcvframe[4];;
+              *(static_cast<uint16_t *>(req->_userData)) = (req->_rcvframe[3] << 8) | req->_rcvframe[4];
             }
             else if (registerCount == 1)
             {
@@ -346,7 +359,6 @@ void ModbusDEVICE_struct::linkCallback(Modbus_RequestQueueElement *req)
   if (req->_userState != nullptr) {
     *(static_cast<ModbusResultState *>(req->_userState)) = resultState;
   }
-  _modbus_link->freeTransaction(req); // Free the transaction to prevent memory leaks.
   # ifdef MODBUS_DEBUG
   log += F(", Result = ");
   log += (resultState == ModbusResultState::Success) ? F("SUCCESS") : F("ERROR");
@@ -406,7 +418,7 @@ void ModbusDEVICE_struct::sendEvent(Modbus_RequestQueueElement& req,
   String dummy;
 
   // Note: The ModbusRegisterSet_struct is passed as a pointer in the Data field of the event to avoid a deep copy.
-  // This assumes PluginCall will secure that the pointer will remain valid when the event is processed. 
+  // This assumes PluginCall will secure that the pointer will remain valid when the event is processed.
   // And the data is consumed when the function returns (No multi-threading)
   PluginCall(PLUGIN_TASKTIMER_IN, &TempEvent, dummy);
 }

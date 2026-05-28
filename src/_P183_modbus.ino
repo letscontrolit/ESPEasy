@@ -100,10 +100,10 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      addFormNumericBox(F("Modbus Link"),           P183_LINK_ID_LABEL,     P183_LINK_ID,                       0, 3);
-      addFormNumericBox(F("Modbus Device Address"), P183_DEV_ID_LABEL,      P183_DEV_ID,                        1, P183_MAX_MODBUS_NODES);
-      addFormNumericBox(F("Cache size"),            P183_CACHE_SIZE_LABEL,  static_cast<int>(P183_CACHE_SIZE),  0, P183_CACHE_SIZE_MAX);
-      addFormNumericBox(F("Cache start address"),   P183_CACHE_START_LABEL, static_cast<int>(P183_CACHE_START), 0, P183_CACHE_START_MAX);
+      addFormNumericBox(F("Modbus Link"),           P183_LINK_ID_LABEL,     P183_LINK_ID,     0, 3);
+      addFormNumericBox(F("Modbus Device Address"), P183_DEV_ID_LABEL,      P183_DEV_ID,      1, P183_MAX_MODBUS_NODES);
+      addFormNumericBox(F("Cache size"),            P183_CACHE_SIZE_LABEL,  P183_CACHE_SIZE,  0, P183_CACHE_SIZE_MAX);
+      addFormNumericBox(F("Cache start address"),   P183_CACHE_START_LABEL, P183_CACHE_START, 0, P183_CACHE_START_MAX);
 
       success = true;
       break;
@@ -248,6 +248,7 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    // Event from Modbus device for a response received on a queued request
     case PLUGIN_TASKTIMER_IN:
     {
       P183_data_struct *P183_data = static_cast<P183_data_struct *>(getPluginTaskData(event->TaskIndex));

@@ -41,6 +41,7 @@ void ModbusLINK_struct::reset() {
     if ((*it)->_device != nullptr) {
       (*it)->_device->linkCallback(*it); // Notify the device that the request finished with an error
     }
+    delete (*it);                        // destroy the queue element
     it = _requestQueue.erase(it);
   }
 }
@@ -105,48 +106,6 @@ bool ModbusLINK_struct::init(const ESPEasySerialPort port,
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Provide a new transaction structure that can be used to build a Modbus request and queue it at this link
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-Modbus_RequestQueueElement * ModbusLINK_struct::newTransaction(struct ModbusDEVICE_struct *device)
-{
-  if (!isInitialized()) {
-    addLogMove(LOG_LEVEL_ERROR, F("Modbus: Link, Attempt to create transaction on uninitialized link"));
-    return nullptr;
-  }
-
-  Modbus_RequestQueueElement *req = new (std::nothrow) Modbus_RequestQueueElement();
-
-  if (req != nullptr) {
-    req->_id      = ++(_queueID);                 // Assign a unique ID to the transaction
-    req->_device  = device;                       // The Modbus device making the request
-    req->_timeout = _modbus_timeout;              // Default timeout value
-    req->_state   = ModbusQueueState::NOT_QUEUED; // Initial state
-    return req;
-  }
-  else {
-    return nullptr;
-  }
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Free a previously allocated transaction structure
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-bool ModbusLINK_struct::freeTransaction(Modbus_RequestQueueElement *transaction) {
-  if (transaction != nullptr) {
-    if (transaction->_state == ModbusQueueState::NOT_QUEUED) {   // Not on the queue, can be directly deleted
-      delete transaction;
-    } else {
-      transaction->_state = ModbusQueueState::READY_FOR_DESTROY; // Mark to be freed by queue processing
-    }
-    return true;
-  }
-  else {
-    addLogMove(LOG_LEVEL_ERROR, F("Modbus: Link, Attempt to free null transaction"));
-    return false;
-  }
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Free all queued transactions for the given device
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void ModbusLINK_struct::freeTransactions(ModbusDEVICE_struct *device)
@@ -166,20 +125,24 @@ void ModbusLINK_struct::freeTransactions(ModbusDEVICE_struct *device)
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Queue a Modbus transaction. The request is appended to the queue and assigned a unique identifier.
 // The client can use this identifier to retrieve the response later.
+// This function will transfer ownership of the transaction to the Modbus link, which is responsible for freeing
+// the associated resources when the transaction is completed.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 uint16_t ModbusLINK_struct::queueTransaction(Modbus_RequestQueueElement *transaction) {
-  if (!isInitialized()) {
-    addLogMove(LOG_LEVEL_ERROR, F("Modbus: Link, Attempt to queue transaction on uninitialized link"));
-    return 0;
-  }
-
   if (transaction == nullptr) {
     addLogMove(LOG_LEVEL_ERROR, F("Modbus: Link, Attempt to queue null transaction"));
     return 0;
   }
 
+  if (!isInitialized()) {
+    addLogMove(LOG_LEVEL_ERROR, F("Modbus: Link, Attempt to queue transaction on uninitialized link"));
+    delete transaction; // Free the transaction since it won't be queued
+    return 0;
+  }
+
   if (transaction->_rcvframe_length > MODBUS_RCV_BUFFER) {
     addLogMove(LOG_LEVEL_ERROR, F("Modbus: Link, receive buffer too large"));
+    delete transaction; // Free the transaction since it won't be queued
     return 0;
   }
 
@@ -190,9 +153,14 @@ uint16_t ModbusLINK_struct::queueTransaction(Modbus_RequestQueueElement *transac
                strformat(F("Modbus: Link, Queueing transaction ID %u, state %u"), transaction->_id, static_cast<uint>(transaction->_state)));
   }
   # endif // MODBUS_DEBUG
-  transaction->_state = ModbusQueueState::QUEUED; // Initial state
-  _requestQueue.push_back(transaction);           // Append the request to the queue
-  processCommand();                               // Trigger processing of the command queue
+  transaction->_id      = ++(_queueID);             // Assign a unique ID to the transaction
+  transaction->_timeout = _modbus_timeout;          // Default timeout value
+  transaction->_state   = ModbusQueueState::QUEUED; // Transaction is now queued
+  _requestQueue.push_back(transaction);             // Append the request to the queue
+
+  if (!_processing) {                               // Prevent reentrancy issues
+    processCommand();                               // Trigger processing of the command queue
+  }
   return transaction->_id;
 }
 
@@ -202,6 +170,8 @@ uint16_t ModbusLINK_struct::queueTransaction(Modbus_RequestQueueElement *transac
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void ModbusLINK_struct::processCommand()
 {
+  _processing = true;                // Set processing flag to prevent reentrancy issues
+
   if (!isInitialized() || (_requestQueue.empty())) {
     return;                          // Serial port not initialized or queue is empty, nothing to process
   }
@@ -240,47 +210,44 @@ void ModbusLINK_struct::processCommand()
         if (_easySerial->available() >= (*it)->_rcvframe_length) {
           _easySerial->readBytes((*it)->_rcvframe, (*it)->_rcvframe_length);
           (*it)->_state = ModbusQueueState::RESPONSE_RECEIVED; // Mark as response received
-
-          if ((*it)->_device != nullptr) {
-            (*it)->_device->linkCallback((*it));               // Notify the device that a response was received
-          }
         }
         else if (timePassedSince((*it)->_startTime) > (*it)->_timeout) {
           // Timeout expired
           (*it)->_state = ModbusQueueState::ERROR_OCCURRED; // Mark as error
-
-          if ((*it)->_device != nullptr) {
-            (*it)->_device->linkCallback((*it));            // Notify the device that a response was received
-          }
-          else {}
-          it++;
         }
         else {
           // Still waiting
-          busy = true; // Only process one request at a time
+          busy = true;                           // Only process one request at a time
+        }
+
+        if (!busy) {                             // We received a response or an error occurred, process the result
+          if ((*it)->_device != nullptr) {
+            (*it)->_device->linkCallback((*it)); // Notify the device that a response was received
+          }
+
+          delete (*it);                          // destroy the queue element
+          it = _requestQueue.erase(it);          // Remove it from the list
+        }
+        else {
+          it++;                                  // Move to the next transaction in the queue
         }
         break;
       }
 
-      case ModbusQueueState::ERROR_OCCURRED:
+      case ModbusQueueState::NOT_QUEUED: // This state should not be on the queue
       {
-        it++;
-        break;
+        it++;                            // Not queued yet, move to the next transaction in the queue
       }
-
-      case ModbusQueueState::READY_FOR_DESTROY:
+      default:
       {
         delete (*it);                 // destroy the queue element
         it = _requestQueue.erase(it); // Remove it from the list
         break;
       }
+    }                                 // switch
+  }                                   // next iterarion
 
-      default:
-        it++;
-        break;
-    } // switch
-  }   // next iterarion
-
+  _processing = false;                // Clear processing flag to allow new processing cycles
   return;
 }
 

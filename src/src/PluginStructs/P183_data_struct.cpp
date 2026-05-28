@@ -120,6 +120,10 @@ bool P183_data_struct::plugin_task_timer(EventStruct *event)
   else if (event->idx == ACTION_READ_CACHE) {
     // This is the result of the regular cache read triggered in plugin_once_per_second. Update the user variables with the cache values.
 
+    if (event->Data == nullptr) {
+      addLogMove(LOG_LEVEL_ERROR, F("P183: No data received for cache read"));
+      return false;
+    }
     ModbusRegisterSet_struct *registerSet = reinterpret_cast<ModbusRegisterSet_struct *>(event->Data);
     int count                             = registerSet->size;
 
@@ -128,7 +132,7 @@ bool P183_data_struct::plugin_task_timer(EventStruct *event)
     }
 
     for (int i = 0; i < count; i++) {
-      _RegisterCache[i] = registerSet->data[i];
+      _RegisterCache[i] = registerSet->data[i]; // Copy the received values to the cache
     }
     return true;
   }
@@ -196,7 +200,7 @@ void P183_data_struct::scan_device(uint8_t node_id, uint16_t start_reg, uint16_t
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// REad the next holding register from the Modbus device
+// Read the next holding register from the Modbus device
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void P183_data_struct::scan_next_address()
 {
@@ -247,23 +251,24 @@ void P183_data_struct::scan_next_module()
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Read a Modbus register from the device. Wait untial the data is available
-// Warning: this may take time as we waith for the  Modbus message to be exchanged
+// Warning: this may take time as we wait for the  Modbus message to be exchanged
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 uint16_t P183_data_struct::readRegisterWait(uint16_t address) {
   uint16_t value          = 0;
-  ulong startTime       = millis();
+  uint32_t startTime      = millis();
   ModbusResultState state = ModbusResultState::Busy;
 
   if (_modbusDevice == nullptr) {
     return 0;
   }
 
-  _modbusDevice->readHoldingRegister(address, value, state); // Queue the read action
+  _modbusDevice->readHoldingRegister(address, &value, &state); // Queue the read action
 
   while (state == ModbusResultState::Busy) {
     delay(50);
-    _modbusDevice->processCommand(); // Trigger Modbus facilities to process the Modbus queue
-    if (millis() - startTime > P183_MODBUS_TIMEOUT) {
+    _modbusDevice->processCommand();    // Trigger Modbus facilities to process the Modbus queue
+
+    if (timePassedSince(startTime) > P183_MODBUS_TIMEOUT) {
       state = ModbusResultState::Error; // Timeout, exit the loop with an error state
     }
   }
@@ -274,7 +279,7 @@ uint16_t P183_data_struct::readRegisterWait(uint16_t address) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 uint16_t P183_data_struct::readRegisterCache(uint16_t address)
 {
-  if ( (address < _cacheStart) || (address >= _cacheStart + _cacheSize)) {
+  if ((address < _cacheStart) || (address >= _cacheStart + _cacheSize)) {
     return 0;
   }
   else {
@@ -289,7 +294,7 @@ void P183_data_struct::writeRegister(uint16_t address, uint16_t value)
     return;
   }
 
-  _modbusDevice->writeSingleRegister(address, value, _lastActionState); // Queue the action (and for now forget it)
+  _modbusDevice->writeSingleRegister(address, value, &_lastActionState); // Queue the action (and for now forget it)
 }
 
 #endif // ifdef USES_P183
