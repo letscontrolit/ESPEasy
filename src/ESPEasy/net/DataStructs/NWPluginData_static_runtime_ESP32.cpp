@@ -96,14 +96,18 @@ void NWPluginData_static_runtime::mark_start()
 
   if (!_netif) { return; }
 
-  if (_useStaticIP) {
-    _netif->config(
-      _ip,
-      _gateway,
-      _sn,
-      _dns);
-  } else {
-    _netif->config((uint32_t)0, (uint32_t)0, (uint32_t)0);
+  // AP IP and DHCP server are configured via softAPConfig().
+  // Calling config(0,0,0) on the AP netif enables DHCP client and breaks AP DHCP.
+  if (!_isAP) {
+    if (_useStaticIP) {
+      _netif->config(
+        _ip,
+        _gateway,
+        _sn,
+        _dns);
+    } else {
+      _netif->config((uint32_t)0, (uint32_t)0, (uint32_t)0);
+    }
   }
 
   const String hostname = strformat(

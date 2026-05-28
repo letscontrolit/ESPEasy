@@ -2,12 +2,10 @@
 
 #ifdef USES_NW002
 
-# ifdef ESP32
-#  include "../../../src/Globals/Settings.h"
-# endif
-
 # include "../wifi/ESPEasyWifi.h"
+# include "../Globals/NetworkState.h"
 
+# include "../../../src/Globals/Settings.h"
 # include "../../../src/Helpers/Networking.h"
 
 # ifdef ESP32
@@ -105,8 +103,13 @@ bool NW002_data_struct_WiFi_AP::init(EventStruct *event)
   nw002_enable_NAPT = Settings.WiFi_AP_enable_NAPT();
 # endif
 
-  ESPEasy::net::wifi::setAPinternal(true);
+  if (!ESPEasy::net::wifi::setAPinternal(true)) {
+    return false;
+  }
 # ifdef ESP32
+  if (NW_PLUGIN_INTERFACE.hasIP()) {
+    stats_and_cache.mark_got_IP();
+  }
   NW002_update_NAPT();
 # endif
   # if FEATURE_MDNS
@@ -146,28 +149,25 @@ NWPluginData_static_runtime * NW002_data_struct_WiFi_AP::getNWPluginData_static_
 
 bool NW002_data_struct_WiFi_AP::getStaticIPAddress(IPAddressType addressType, IPAddress& ip) const
 {
-  // TODO TD-er: Implement for AP
-
-  /*
-     IPAddress res;
-
-     switch (addressType)
-     {
-      case IPAddressType::IP: res = IPAddress(Settings.IP);
-        break;
-      case IPAddressType::Gateway: res = IPAddress(Settings.Gateway);
-        break;
-      case IPAddressType::Subnetmask: res = IPAddress(Settings.Subnet);
-        break;
-      case IPAddressType::DNS: res = IPAddress(Settings.DNS);
-        break;
-     }
-
-     if (IPAddressSet(res)) {
-      ip = res;
+  switch (addressType)
+  {
+    case IPAddressType::IP:
+      ip = apIP;
       return true;
-     }
-   */
+    case IPAddressType::Gateway:
+      ip = apIP;
+      return true;
+    case IPAddressType::Subnetmask:
+      ip = IPAddress(DEFAULT_AP_SUBNET);
+      return true;
+    case IPAddressType::DNS:
+      if (Settings.ApCaptivePortal()) {
+        ip = apIP;
+      } else {
+        ip = IPAddress(DEFAULT_AP_DNS);
+      }
+      return true;
+  }
   return false;
 }
 
@@ -264,6 +264,10 @@ void NW002_data_struct_WiFi_AP::onEvent(arduino_event_id_t   event,
   {
     case ARDUINO_EVENT_WIFI_AP_START:
       stats_and_cache.mark_start();
+
+      if (NW_PLUGIN_INTERFACE.hasIP()) {
+        stats_and_cache.mark_got_IP();
+      }
       break;
     case ARDUINO_EVENT_WIFI_AP_STOP:
       stats_and_cache.mark_stop();
@@ -283,6 +287,10 @@ void NW002_data_struct_WiFi_AP::onEvent(arduino_event_id_t   event,
       break;
     case ARDUINO_EVENT_WIFI_AP_STAIPASSIGNED:
       addLog(LOG_LEVEL_INFO, F("AP_STAIPASSIGNED"));
+
+      if (!stats_and_cache.hasIP() && NW_PLUGIN_INTERFACE.hasIP()) {
+        stats_and_cache.mark_got_IP();
+      }
       break;
     case ARDUINO_EVENT_WIFI_AP_PROBEREQRECVED:
       addLog(LOG_LEVEL_INFO, F("AP_PROBEREQRECVED"));
