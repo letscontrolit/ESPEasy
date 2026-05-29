@@ -44,7 +44,7 @@ I2C options
 
 .. note:: According to manufacturer specification, the I2C ClockStretchLimit setting should be configured at a minimum value of 20 milliseconds, and can take up to 150 msec once a day. For ESP8266 and ESP32 there are somewhat different values to fill, ESP8266 expects microseconds (usec) there, 20000 to 150000, and ESP32 needs 1/80 usec, 1600000 to 12000000, so a factor 80 difference.
 
-The available settings here depend on the build used. At least the **Force Slow I2C speed** option is available, but selections for the I2C Multiplexer can also be shown. For details see the :ref:`Hardware_page`
+The available settings here depend on the build used. At least the **Force Slow I2C speed** option is available, but selections for the I2C Multiplexer can also be shown. For details see the :ref:`i2c-bus` page
 
 .. note:: The SCD30 sensor supports a max. I2C Clock Speed of 100 kHz, so **Force Slow I2C speed** should be checked! (ESPEasy has a default setting of 100 kHz for I2C Slow device Clock Speed).
 

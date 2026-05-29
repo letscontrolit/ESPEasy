@@ -408,9 +408,10 @@ void processMQTTdelayQueue() {
 }
 
 void updateMQTTclient_connected() {
-  const bool actual_MQTTclient_connected = MQTTclient.connected();
+  const bool actual_MQTTclient_connected = ESPEasy::net::NetworkConnected(true) && MQTTclient.connected();
   if (MQTTclient_connected != actual_MQTTclient_connected) {
     MQTTclient_connected = actual_MQTTclient_connected;
+    if (!actual_MQTTclient_connected) mqtt.stop();  // Make sure PubSubClient isn't trying to do a graceful disconnect
     MQTTclient_connected_stats.set(actual_MQTTclient_connected);
     if (!MQTTclient_connected) {
       if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
@@ -455,7 +456,7 @@ void updateMQTTclient_connected() {
 void runPeriodicalMQTT() {
   START_TIMER
   // MQTT_KEEPALIVE = 15 seconds.
-  if (!NetworkConnected(10)) {
+  if (!ESPEasy::net::NetworkConnected()) {
     updateMQTTclient_connected();
     return;
   }

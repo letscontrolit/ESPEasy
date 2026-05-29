@@ -3,6 +3,7 @@
 #include "../../ESPEasy_common.h"
 
 #include "../net/DataStructs/MAC_address.h"
+#include "../net/DataTypes/NetworkIndex.h"
 
 #include <IPAddress.h>
 
@@ -22,6 +23,9 @@ namespace ESPEasy {
 namespace net {
 
 void           setNetworkMedium(NetworkMedium_t medium);
+
+
+ESPEasy::net::networkIndex_t getNetworkIndex_defaultNetwork();
 
 // void           NetworkConnectRelaxed();
 bool           NetworkConnected(bool force = false);
@@ -63,7 +67,7 @@ MAC_address WifiSoftAPmacAddress();
 MAC_address WifiSTAmacAddress();
 #endif // if FEATURE_WIFI
 
-void        CheckRunningServices();
+void        CheckRunningServices(bool force = false);
 
 #if FEATURE_ETHERNET
 bool        EthFullDuplex();

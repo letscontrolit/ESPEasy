@@ -16,6 +16,18 @@
 # define MAX_KEYS 20 // Maximum number of keys allowed in json.keys
 # define RESPONSE_MAX_LENGTH 5000
 
+
+/**
+ * @brief Processes the response of an HTTP request and triggers the corresponding events.
+ */
+void eventFromResponse(const String& host,
+                       const int   & httpCode,
+                       const String& uri,
+                       ESPEasy_HTTPClient  & http,
+                       const int   & parseJson);
+
+# if FEATURE_JSON_EVENT
+
 /**
  * @brief Reads and processes keys from a json.keys file and navigates the JSON document.
  */
@@ -23,11 +35,18 @@ void readAndProcessJsonKeys(DynamicJsonDocument*root,
                             int                 numJson);
 
 /**
- * @brief Processes the response of an HTTP request, extracts the JSON, and processes it using keys from `json.keys`.
+ * @brief Result of parsing a URI for JSON flag.
  */
-void eventFromResponse(const String& host,
-                       const int   & httpCode,
-                       const String& uri,
-                       HTTPClient  & http);
+struct UriParseResult {
+  String cleanedPath;
+  int parseJson;
+};
+
+/**
+ * @brief Parses the URI, detects the JSON flag (#json), extracts the associated number if present, and returns both the cleaned path and the parseJson value.
+ */
+UriParseResult parseUriPath(const String& path);
+# endif // if FEATURE_JSON_EVENT
+
 #endif // RESPONSE_PARSER_SUPPORT
 #endif // HELPERS_HTTPRESPONSEPARSER_H

@@ -747,7 +747,9 @@ void SettingsStruct_tmpl<N_TASKS>::clearMisc() {
   SyslogPort                       = 514;
   VariousBits_3._all_bits          = 0;
   ConnectionFailuresThreshold      = 0;
-  MQTTRetainFlag_unused            = false;
+  #if FEATURE_NETWORK_STATS
+  NetworkCollectStats_bits         = DEFAULT_NETWORK_COLLECT_STATS_BITS;
+  #endif
   InitSPI                          = DEFAULT_SPI;
   deepSleepOnFail                  = false;
   UseValueLogger                   = false;
@@ -1619,6 +1621,26 @@ void SettingsStruct_tmpl<N_TASKS>::setNetworkInterfaceStartupDelay(ESPEasy::net:
     NetworkInterfaceStartupDelay[index] = delay_ms/10ul;
   }
 }
+
+
+# if FEATURE_NETWORK_STATS
+
+template<uint32_t N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::getNetworkCollectStats(ESPEasy::net::networkIndex_t index) const
+{
+  if (validNetworkIndex(index)) { return bitRead(NetworkCollectStats_bits, index); }
+  return false;
+}
+
+template<uint32_t N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::setNetworkCollectStats(ESPEasy::net::networkIndex_t index, bool enabled)
+{
+  if (validNetworkIndex(index)) {
+    bitWrite(NetworkCollectStats_bits, index, enabled);
+  }
+}
+
+# endif // if FEATURE_NETWORK_STATS
 
 
 #endif // ifndef DATASTRUCTS_SETTINGSSTRUCT_CPP

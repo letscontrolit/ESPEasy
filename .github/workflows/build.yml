@@ -53,7 +53,7 @@ jobs:
       - id: set-matrix
         run: |
           pip install uv
-          uv pip install --system platformio
+          uv pip install --system pioarduino
           python tools/ci/generate-matrix.py
 
   build:

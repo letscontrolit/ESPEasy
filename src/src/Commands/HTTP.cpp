@@ -12,6 +12,10 @@
 
 #include "../Helpers/Networking.h"
 
+#if FEATURE_JSON_EVENT
+# include "../Helpers/HTTPResponseParser.h"
+#endif // if FEATURE_JSON_EVENT
+
 #if FEATURE_SEND_TO_HTTP || FEATURE_POST_TO_HTTP || FEATURE_PUT_TO_HTTP
 const __FlashStringHelper* httpEmitToHTTP(struct EventStruct        *event,
                                           const __FlashStringHelper *logIdentifier,
@@ -24,7 +28,7 @@ const __FlashStringHelper* httpEmitToHTTP(struct EventStruct        *event,
                                           const bool                 useHttps)
 {
   if (ESPEasy::net::NetworkConnected()) {
-    String   user, pass, host, file, path, header, postBody;
+    String   user, pass, host, file, path, header, postBody, protocol;
     uint16_t port;
     uint8_t  idx;
 
@@ -32,7 +36,7 @@ const __FlashStringHelper* httpEmitToHTTP(struct EventStruct        *event,
 
     if (arg1.indexOf(F("://")) != -1) {
       // Full url given
-      path = splitURL(arg1, user, pass, host, port, file);
+      path = splitURL(arg1, user, pass, host, port, file, protocol);
       idx  = 3;
 
       if (useHeader || useBody) {
@@ -94,6 +98,7 @@ const __FlashStringHelper* httpEmitToHTTP(struct EventStruct        *event,
     #endif // if FEATURE_HTTP_TLS
 
     int httpCode = -1;
+
     send_via_http(
       logIdentifier,
       timeout,
@@ -106,7 +111,8 @@ const __FlashStringHelper* httpEmitToHTTP(struct EventStruct        *event,
       header,
       postBody,
       httpCode,
-      waitForAck
+      waitForAck,
+      protocol
       #if FEATURE_HTTP_TLS
       , tlsType
       #endif // if FEATURE_HTTP_TLS

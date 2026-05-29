@@ -9,6 +9,8 @@
 #include "../Helpers/Hardware_I2C.h"
 #include "../Helpers/StringConverter.h"
 
+#include "../Helpers/I2C_access.h"
+
 #if FEATURE_I2C_MULTIPLE
 # include "../WebServer/Markup_Forms.h"
 #endif // if FEATURE_I2C_MULTIPLE
@@ -484,10 +486,14 @@ bool I2C_deviceCheck(uint8_t     i2caddr,
       if (maxRetries > 0) {
         deviceCheckI2C[taskIndex]++;
 
+        // If the number of retries is reached, disable the device
         if (deviceCheckI2C[taskIndex] >= maxRetries) {
           // Disable temporarily as device check failed
           // FIXME TD-er: Should reschedule call to PLUGIN_INIT????
-          Settings.TaskDeviceEnabled[taskIndex] = false; // If the number of retries is reached, disable the device
+          struct EventStruct TempEvent(taskIndex);
+          String dummy;
+
+          PluginCall(PLUGIN_EXIT, &TempEvent, dummy);
           # ifndef BUILD_NO_DEBUG
           addLog(LOG_LEVEL_ERROR, concat(F("I2C  : Device doesn't respond for task: "), static_cast<int>(taskIndex + 1)));
           # endif // ifndef BUILD_NO_DEBUG

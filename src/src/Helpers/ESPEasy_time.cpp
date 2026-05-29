@@ -509,7 +509,7 @@ bool ESPEasy_time::systemTimePresent() const {
 
 bool ESPEasy_time::getNtpTime(double& unixTime_d)
 {
-  if (!Settings.UseNTP() || !ESPEasy::net::NetworkConnected()) {
+  if (!Settings.UseNTP() || !ESPEasy::net::NetworkConnected(true)) {
     return false;
   }
 

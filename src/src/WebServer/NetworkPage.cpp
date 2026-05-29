@@ -6,7 +6,6 @@
 # include "../DataStructs/ESPEasy_EventStruct.h"
 # include "../Globals/Settings.h"
 # include "../Helpers/ESPEasy_Storage.h"
-# include "../Helpers/ESPEasy_Storage.h"
 # include "../Helpers/StringConverter.h"
 # include "../WebServer/ESPEasy_WebServer.h"
 # include "../WebServer/HTML_wrappers.h"
@@ -173,6 +172,9 @@ void handle_networks_CopySubmittedSettings_NWPluginCall(ESPEasy::net::networkInd
 # if FEATURE_USE_IPV6
     Settings.setNetworkEnabled_IPv6(networkindex, isFormItemChecked(F("en_ipv6")));
 # endif
+# if FEATURE_NETWORK_STATS
+    Settings.setNetworkCollectStats(networkindex, isFormItemChecked(F("collect_netw_stats")));
+# endif
     Settings.setNetworkInterfaceStartupDelay(networkindex, getFormItemInt(F("delay_start")));
     String dummy;
     ESPEasy::net::NWPluginCall(NWPlugin::Function::NWPLUGIN_WEBFORM_SAVE, &TempEvent, dummy);
@@ -197,9 +199,9 @@ void handle_networks_ShowAllNetworksTable()
   html_table_header(F("Hostname/SSID"));
   html_table_header(F("HW Address"));
   html_table_header(F("IP"));
-#  ifdef ESP32
+# ifdef ESP32
   html_table_header(F("Port"));
-#  endif
+# endif
 
   for (ESPEasy::net::networkIndex_t x = 0; x < MAX_NR_NETWORKS_IN_TABLE; x++)
   {
@@ -362,7 +364,7 @@ void handle_networks_NetworkSettingsPage(ESPEasy::net::networkIndex_t networkind
         ++tmpNetworkDriverIndex;
       }
     }
-    addSelector_Foot();
+    addSelector_Foot(!networkDriverSelectorDisabled);
 
   }
 
@@ -415,6 +417,10 @@ void handle_networks_NetworkSettingsPage(ESPEasy::net::networkIndex_t networkind
     }
 # endif // if FEATURE_USE_IPV6
 
+# if FEATURE_NETWORK_STATS
+    addFormCheckBox(F("Collect Network Stats"), F("collect_netw_stats"), Settings.getNetworkCollectStats(networkindex));
+# endif // if FEATURE_NETWORK_STATS
+
     String str;
     ESPEasy::net::NWPluginCall(NWPlugin::Function::NWPLUGIN_WEBFORM_LOAD, &TempEvent, str);
 
@@ -427,6 +433,7 @@ void handle_networks_NetworkSettingsPage(ESPEasy::net::networkIndex_t networkind
 
       if (NW_data && NW_data->hasPluginStats()) {
         addFormSubHeader(F("Statistics"));
+        addFormDetailsStart(false);
 #  if FEATURE_CHART_JS
 
         if (NW_data->nrSamplesPresent() > 0) {
@@ -447,6 +454,7 @@ void handle_networks_NetworkSettingsPage(ESPEasy::net::networkIndex_t networkind
           //        } else {
           //          somethingAdded = true;
         }
+        addFormDetailsEnd();
       }
     }
 

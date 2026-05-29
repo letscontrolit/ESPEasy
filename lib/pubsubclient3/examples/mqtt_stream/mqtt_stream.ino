@@ -14,6 +14,8 @@
 #include <SPI.h>
 #include <SRAM.h>
 
+#define _UNUSED_ __attribute__((unused))
+
 // Update these with values suitable for your network.
 byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0xFE, 0xED};
 IPAddress ip(172, 16, 0, 100);
@@ -21,7 +23,7 @@ IPAddress server(172, 16, 0, 2);
 
 SRAM sram(4, SRAM_1024);
 
-void callback(char* topic, uint8_t* payload, size_t plength) {
+void callback(_UNUSED_ char* topic, _UNUSED_ uint8_t* payload, size_t plength) {
     sram.seek(1);
 
     // do something with the message

@@ -23,13 +23,13 @@
 # include "../net/Helpers/_NWPlugin_init.h"
 # include "../net/NWPluginStructs/NW001_data_struct_WiFi_STA.h"
 # include "../net/wifi/ESPEasyWifi.h"
-#ifdef ESP8266
-# include "../net/ESPEasyNetwork.h"
-#endif
+# ifdef ESP8266
+#  include "../net/ESPEasyNetwork.h"
+# endif
 
-#if FEATURE_TASKVALUE_UNIT_OF_MEASURE
-# include "../../src/Helpers/ESPEasy_UnitOfMeasure.h"
-#endif
+# if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+#  include "../../src/Helpers/ESPEasy_UnitOfMeasure.h"
+# endif
 
 
 # if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE
@@ -60,13 +60,9 @@ bool NWPlugin_001(NWPlugin::Function function, EventStruct *event, String& strin
       NetworkDriverStruct& nw = getNetworkDriverStruct(networkDriverIndex_t::toNetworkDriverIndex(event->idx));
       nw.onlySingleInstance = true;
       nw.alwaysPresent      = true;
-# ifdef ESP32P4
-      nw.enabledOnFactoryReset = false;
-
-      //        ESPEasy::net::wifi::GetHostedMCUFwVersion() > 0x00020600;
-# else // ifdef ESP32P4
+      # if DEFAULT_ENABLED_NW001
       nw.enabledOnFactoryReset = true;
-# endif // ifdef ESP32P4
+      # endif
       nw.fixedNetworkIndex = NWPLUGIN_ID_001 - 1; // Start counting at 0
       break;
     }
@@ -74,10 +70,11 @@ bool NWPlugin_001(NWPlugin::Function function, EventStruct *event, String& strin
     case NWPlugin::Function::NWPLUGIN_LOAD_DEFAULTS:
     {
 # ifdef ESP32
-      Settings.setRoutePrio_for_network(event->NetworkIndex, 100);
+      Settings.setRoutePrio_for_network(event->NetworkIndex, DEFAULT_STA_ROUTE_PRIO);
 # endif // ifdef ESP32
       Settings.setNetworkInterfaceSubnetBlockClientIP(event->NetworkIndex, false);
-      Settings.setNetworkInterfaceStartupDelay(event->NetworkIndex, 1000);
+      Settings.setNetworkInterfaceStartupDelay(event->NetworkIndex, DEFAULT_STA_STARTUP_DELAY);
+      Settings.setNetworkInterface_isFallback(event->NetworkIndex, DEFAULT_STA_IS_FALLBACK);
 
       Settings.ConnectFailRetryCount = 1;
       break;
@@ -97,6 +94,13 @@ bool NWPlugin_001(NWPlugin::Function function, EventStruct *event, String& strin
     }
 # endif // ifdef ESP32
 
+    case NWPlugin::Function::NWPLUGIN_CREDENTIALS_CHANGED:
+    {
+      // ESPEasy::net::wifi::WiFi_AP_Candidates.force_reload(); // Force reload of the credentials and found APs from the last scan
+
+      break;
+    }
+
     case NWPlugin::Function::NWPLUGIN_WEBSERVER_SHOULD_RUN:
     {
       ESPEasy::net::wifi::NW001_data_struct_WiFi_STA *NW_data =
@@ -104,6 +108,7 @@ bool NWPlugin_001(NWPlugin::Function function, EventStruct *event, String& strin
 
       if (NW_data) {
         auto runtime_data = NW_data->getNWPluginData_static_runtime();
+
         if (runtime_data) {
           success = runtime_data->connected();
         }

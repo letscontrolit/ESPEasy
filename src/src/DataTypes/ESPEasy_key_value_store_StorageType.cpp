@@ -29,6 +29,7 @@ size_t KVS_StorageType::getStorageSizePerType(KVS_StorageType::Enum storageType)
   {
     case KVS_StorageType::Enum::not_set:      break;
     case KVS_StorageType::Enum::string_type:  break;
+    case KVS_StorageType::Enum::ip_type:      break;
     case KVS_StorageType::Enum::int8_type:    return 4 + 1;
     case KVS_StorageType::Enum::uint8_type:   return 4 + 1;
     case KVS_StorageType::Enum::int16_type:   return 4 + 2;

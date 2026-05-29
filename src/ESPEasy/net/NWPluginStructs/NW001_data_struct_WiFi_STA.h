@@ -41,6 +41,7 @@ struct NW001_data_struct_WiFi_STA : public NWPluginData_base {
 # endif // if FEATURE_NETWORK_STATS
 
   NWPluginData_static_runtime* getNWPluginData_static_runtime() override;
+  bool getStaticIPAddress(IPAddressType addressType, IPAddress & ip) const override;
   const __FlashStringHelper*   getWiFi_encryptionType() const;
 
   WiFiDisconnectReason getWiFi_disconnectReason() const;
