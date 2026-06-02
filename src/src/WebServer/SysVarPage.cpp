@@ -52,6 +52,16 @@ void handle_sysvars() {
   html_table_header(F("URL encoded"), F("RTDReference/SystemVariable.html"), 0);
 
   addTableSeparator(F("Custom Variables"), 3, 3);
+  # if !defined(LIMIT_BUILD_SIZE) || FEATURE_STRING_VARIABLES
+  auto numAlphaSort = [](const String& a, const String& b) {
+                        const int32_t ai = a.toInt();
+
+                        if (!ai) { return false; } // Alphanum after num
+                        return ai < b.toInt();     // Numerical order
+                      };
+  std::vector<String> customStringSort;
+
+  # endif // if !defined(LIMIT_BUILD_SIZE) || FEATURE_STRING_VARIABLES
 
   if (customFloatVar.empty()) {
     html_TR_TD();
@@ -59,14 +69,33 @@ void handle_sysvars() {
     html_TD();
     html_TD();
   } else {
+    # if !defined(LIMIT_BUILD_SIZE) || FEATURE_STRING_VARIABLES
+
+    for (auto it = customFloatVar.begin(); it != customFloatVar.end(); ++it) {
+      customStringSort.push_back(it->first);
+    }
+    std::sort(customStringSort.begin(), customStringSort.end(), numAlphaSort);
+
+    for (auto& it : customStringSort) {
+      NumericalType detectedType;
+      bool isv_ = true;
+
+      if (getNumerical(it, NumericalType::HexadecimalUInt, detectedType).length() > 0) {
+        isv_ = detectedType != NumericalType::Integer;
+      }
+      addSysVar_html(strformat(F("%%%s%s%%"), FsP(isv_ ? F("v_") : F("v")), it.c_str()), false);
+    }
+    # else // if !defined(LIMIT_BUILD_SIZE) || FEATURE_STRING_VARIABLES
     for (auto it = customFloatVar.begin(); it != customFloatVar.end(); ++it) {
       NumericalType detectedType;
       bool isv_ = true;
+
       if (getNumerical(it->first, NumericalType::HexadecimalUInt, detectedType).length() > 0) {
         isv_ = detectedType != NumericalType::Integer;
       }
       addSysVar_html(strformat(F("%%%s%s%%"), FsP(isv_ ? F("v_") : F("v")), it->first.c_str()), false);
     }
+    # endif // if !defined(LIMIT_BUILD_SIZE) || FEATURE_STRING_VARIABLES
   }
 
   # if FEATURE_STRING_VARIABLES
@@ -78,8 +107,15 @@ void handle_sysvars() {
     html_TD();
     html_TD();
   } else {
+    customStringSort.clear();
+
     for (auto it = customStringVar.begin(); it != customStringVar.end(); ++it) {
-      addSysVar_html(strformat(F("[str#%s]"), it->first.c_str()), false);
+      customStringSort.push_back(it->first);
+    }
+    std::sort(customStringSort.begin(), customStringSort.end(), numAlphaSort);
+
+    for (auto& it : customStringSort) {
+      addSysVar_html(strformat(F("[str#%s]"), it.c_str()), false);
     }
   }
   # endif // if FEATURE_STRING_VARIABLES
