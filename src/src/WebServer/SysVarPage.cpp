@@ -55,9 +55,12 @@ void handle_sysvars() {
   # if !defined(LIMIT_BUILD_SIZE) || FEATURE_STRING_VARIABLES
   auto numAlphaSort = [](const String& a, const String& b) {
                         const int32_t ai = a.toInt();
+                        const int32_t bi = b.toInt();
+
+                        if (!ai && !bi) { return a < b; } // a..z
 
                         if (!ai) { return false; } // Alphanum after num
-                        return ai < b.toInt();     // Numerical order
+                        return ai < bi;     // Numerical order
                       };
   std::vector<String> customStringSort;
 
