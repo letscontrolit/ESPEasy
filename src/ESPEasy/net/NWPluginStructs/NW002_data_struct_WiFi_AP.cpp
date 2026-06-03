@@ -93,6 +93,7 @@ bool NW002_data_struct_WiFi_AP::init(EventStruct *event)
     auto runtime_data = getNWPluginData_static_runtime();
 
     if (runtime_data) {
+      runtime_data->clear(event->NetworkIndex);
       IPAddress ip, gateway, sn, dns;
       getStaticIPAddresses(ip, gateway, sn, dns);
       runtime_data->setStaticIP(ip, gateway, sn, dns);

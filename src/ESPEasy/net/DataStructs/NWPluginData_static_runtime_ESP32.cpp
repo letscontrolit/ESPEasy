@@ -241,9 +241,7 @@ void NWPluginData_static_runtime::mark_begin_establish_connection()
     _enableIPv6 = false;
   }
 # endif // if FEATURE_USE_IPV6
-# ifdef ESP32
   _routePrio = Settings.getRoutePrio_for_network(_networkIndex);
-# endif
 }
 
 void NWPluginData_static_runtime::mark_connected()
