@@ -473,8 +473,7 @@ public:
   }
 
   bool getNetworkEnabled(ESPEasy::net::networkIndex_t index) const;
-  bool isCAN_valid() const;
-
+  
   void setNetworkEnabled(ESPEasy::net::networkIndex_t index, bool enabled);
 
   bool getNetworkInterface_isFallback(ESPEasy::net::networkIndex_t index) const;
@@ -511,8 +510,12 @@ public:
   void setNetworkCollectStats(ESPEasy::net::networkIndex_t index, bool enabled);
 #endif
 
+#if FEATURE_CAN
+  bool isCAN_valid() const;
 
   bool isCAN_pin(int8_t pin) const;
+#endif
+
 
   uint32_t PID = 0;
   int           Version = 0;

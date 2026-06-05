@@ -406,6 +406,12 @@ const __FlashStringHelper* getConflictingUse_flashstr(int gpio, PinSelectPurpose
 # endif // ifdef BOARD_HAS_SDIO_ESP_HOSTED
 #endif // ifdef ESP32P4
 
+#if FEATURE_CAN
+  if (includeCAN && Settings.isCAN_pin(gpio))
+  {
+    return (Settings.CAN_Rx_pin == gpio) ? F("CAN RX") : F("CAN TX");
+  }
+#endif
 
   if (isBootModePin(gpio)) {
     return F("Boot Mode");
@@ -507,12 +513,6 @@ String getConflictingUse_fromPeriman(int gpio, PinSelectPurpose purpose, bool ig
         break;
     }
 
-  #if FEATURE_CAN
-  if (includeCAN && Settings.isCAN_pin(gpio))
-  {
-    return (Settings.CAN_Rx_pin == gpio) ? F("CAN RX") : F("CAN TX");
-  }
-  #endif
   
     conflict = typeName;
 

@@ -1306,7 +1306,11 @@ To create/register a plugin, you have to :
     #define FEATURE_CUSTOM_PROVISIONING 1
 
     #ifndef FEATURE_CAN
+    #if CONFIG_SOC_TWAI_SUPPORTED
       #define FEATURE_CAN 1
+    #else
+      #define FEATURE_CAN 0
+    #endif
     #endif
 
 

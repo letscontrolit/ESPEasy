@@ -15,6 +15,7 @@
 #include "../Globals/Settings.h"
 
 #include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/Hardware.h"
 #include "../Helpers/Hardware_GPIO.h"
 #include "../Helpers/I2C_access.h"
 #include "../Helpers/SPI_Helper.h"
@@ -76,6 +77,7 @@ void handle_hardware() {
     error += SaveSettings();
     addHtmlError(error);
     if (error.isEmpty()) {
+      // FIXME TD-er: Must move this to be handled the same as other interfaces.
       #if FEATURE_CAN
       initCAN();
       #endif

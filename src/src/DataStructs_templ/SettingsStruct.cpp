@@ -1403,18 +1403,7 @@ int8_t SettingsStruct_tmpl<N_TASKS>::getI2CMultiplexerResetPin(uint8_t i2cBus) c
   return -1;
 }
 #endif // if FEATURE_I2CMULTIPLEXER
-
-template<unsigned int N_TASKS>
-bool SettingsStruct_tmpl<N_TASKS>::isCAN_valid() const {
-  return CAN_Rx_pin != -1 && CAN_Tx_pin != -1 && CAN_baudrate == 500e3;
-}
-
-
-template<unsigned int N_TASKS>
-bool SettingsStruct_tmpl<N_TASKS>::isCAN_pin(int8_t pin) const {
-  if (pin < 0) { return false; }
-  return CAN_Rx_pin == pin || CAN_Tx_pin == pin;
-}
+#endif
 
 #if FEATURE_ETHERNET
 template<uint32_t N_TASKS>
@@ -1653,6 +1642,20 @@ void SettingsStruct_tmpl<N_TASKS>::setNetworkCollectStats(ESPEasy::net::networkI
 }
 
 # endif // if FEATURE_NETWORK_STATS
+
+#if FEATURE_CAN
+template<uint32_t N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::isCAN_valid() const {
+  return CAN_Rx_pin != -1 && CAN_Tx_pin != -1 && CAN_baudrate == 500e3;
+}
+
+
+template<uint32_t N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::isCAN_pin(int8_t pin) const {
+  if (pin < 0) { return false; }
+  return CAN_Rx_pin == pin || CAN_Tx_pin == pin;
+}
+#endif
 
 
 #endif // ifndef DATASTRUCTS_SETTINGSSTRUCT_CPP
