@@ -2560,7 +2560,8 @@ To create/register a plugin, you have to :
     #define USES_P180   // Generic - I2C Generic
   #endif
   #if !defined(USES_P183) && defined(ESP32)
-    #define USES_P183   // Communication - Modbus RTU
+// #define USES_P183   // Communication - Modbus RTU
+// Disabled for now due to build size
   #endif
 
 

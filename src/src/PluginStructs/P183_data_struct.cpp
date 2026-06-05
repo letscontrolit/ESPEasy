@@ -6,9 +6,9 @@
 // ############## Data structure for plugin 183: Modbus RTU generic sensor interface       ###############
 // #######################################################################################################
 ////# define P183_DEBUG
-# ifdef BUILD_NO_DEBUG
+# ifndef PLUGIN_BUILD_MAX_ESP32
 #  undef P183_DEBUG // Debugging switched off
-# endif // ifdef BUILD_NO_DEBUG
+# endif
 
 // Actions for PLUGIN_TASKTIMER_IN event to distinguish between regular read results and scan sequences
 # define ACTION_DUMP_RANGE 0xFFFF
