@@ -13,7 +13,9 @@ Type: |P126_type|
 
 Name: |P126_name|
 
-Status: |P126_status|
+Status ESP32: |P126_status|
+
+Status ESP8266: |P126_status_lb|
 
 GitHub: |P126_github|_
 

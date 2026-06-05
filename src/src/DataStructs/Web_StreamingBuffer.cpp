@@ -1,18 +1,17 @@
 #include "../DataStructs/Web_StreamingBuffer.h"
 
-#include "../DataStructs/tcp_cleanup.h"
 #include "../DataTypes/ESPEasyTimeSource.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
-#include "../ESPEasyCore/ESPEasyNetwork.h"
 
 // FIXME TD-er: Should keep a pointer to the webserver as a member, not use the global defined one.
 #include "../Globals/Services.h"
 
 #include "../Helpers/ESPEasy_time_calc.h"
-#include "../Helpers/Convert.h"
 #include "../Helpers/StringConverter.h"
 
-#include "../../ESPEasy_common.h"
+#ifdef ESP8266
+#include "../../../src/ESPEasy/net/Helpers/tcp_cleanup_ESP8266.h"
+#endif
 
 #ifdef ESP8266
 #define CHUNKED_BUFFER_SIZE         512
@@ -203,7 +202,7 @@ void Web_StreamingBuffer::startStream(const __FlashStringHelper * content_type,
 
 
 void Web_StreamingBuffer::startJsonStream() {
-  startStream(true, F("application/json"), F("*"));
+  startStream(false, F("application/json"), F(""));
 }
 
 void Web_StreamingBuffer::startStream(bool allowOriginAll, 

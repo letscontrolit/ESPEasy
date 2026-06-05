@@ -21,12 +21,6 @@ public:
   // Process data from serial port
   void loop();
 
-  void addToSerialBuffer(const __FlashStringHelper *line);
-  void addToSerialBuffer(const String& line);
-  void addToSerialBuffer(char c);
-
-  void addNewlineToSerialBuffer();
-
   // Return true when something got written, or when the buffer was already empty
   bool process_serialWriteBuffer();
 
@@ -52,8 +46,6 @@ private:
 #endif // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
 
   void            endPort();
-
-  int             availableForWrite();
 
   uint32_t _baudrate = 115200u;
   EspEasy_Console_Port _mainSerial;

@@ -16,6 +16,15 @@ bool ESPeasySerialType::getSerialTypePins(ESPEasySerialPort serType, int& rxPin,
 # if USABLE_SOC_UART_NUM > 2
     case ESPEasySerialPort::serial2:  rxPin = SOC_RX2; txPin = SOC_TX2; return true;
 # endif // if USABLE_SOC_UART_NUM > 2
+# if USABLE_SOC_UART_NUM > 3
+    case ESPEasySerialPort::serial3:   return true;
+# endif 
+# if USABLE_SOC_UART_NUM > 4
+    case ESPEasySerialPort::serial4:   return true;
+# endif 
+# if USABLE_SOC_UART_NUM > 5
+    case ESPEasySerialPort::serial5:   return true;
+# endif 
 # if USES_I2C_SC16IS752
     case ESPEasySerialPort::sc16is752:     return true;
 # endif // if USES_I2C_SC16IS752

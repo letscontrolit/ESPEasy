@@ -3,9 +3,10 @@
 #ifdef USES_P146
 
 # include "../ControllerQueue/C016_queue_element.h"
+# include "../ESPEasyCore/ESPEasyRules.h"
 # include "../Globals/C016_ControllerCache.h"
 # include "../Globals/MQTT.h"
-
+# include "../Helpers/_CPlugin_init.h"
 
 P146_data_struct::P146_data_struct(struct EventStruct *event)
 {
@@ -27,7 +28,7 @@ P146_data_struct::~P146_data_struct()
 
 uint32_t writeToMqtt(const String& str, bool send) {
   if (send) {
-    MQTTclient.write((const uint8_t*)str.c_str(), str.length());
+    MQTTclient.write((const uint8_t *)str.c_str(), str.length());
   }
   return str.length();
 }
@@ -338,16 +339,21 @@ bool P146_data_struct::sendViaOriginalTask(
   const int peekReadPos =  ControllerCache.getPeekFilePos(peekFileNr);
 
 
-  unsigned long timestamp;
-  uint8_t valueCount;
-  float   taskValues[VARS_PER_TASK] = {};
-  EventStruct tmpEvent(C016_getTaskSample(
-                         timestamp, valueCount,
-                         taskValues[0], taskValues[1], taskValues[2], taskValues[3]));
+  C016_binary_element element{};
 
-  if (!validTaskIndex(tmpEvent.TaskIndex)) {
+  if (!C016_getTaskSample(element)) {
     return false;
   }
+
+  if (!validTaskIndex(element.TaskIndex)) {
+    return false;
+  }
+
+  if (Settings.UseRules) {
+    EventStruct tmpEvent(element.TaskIndex);
+    createRuleEvents(&tmpEvent);
+  }
+
 
   bool success        = false;
   bool unusableSample = false;
@@ -362,16 +368,23 @@ bool P146_data_struct::sendViaOriginalTask(
   // - Copy values from the cache bin files to the task it had
   // - Call CPLUGIN_PROTOCOL_SEND
   // - Restore the values
-  for (int valIndex = 0; valIndex < VARS_PER_TASK; ++valIndex) {
-    const float tmp = UserVar.getFloat(tmpEvent.TaskIndex, valIndex);
-    UserVar.setFloat(tmpEvent.TaskIndex, valIndex, taskValues[valIndex]);
-    taskValues[valIndex] = tmp;
+
+  TaskValues_Data_t tmp;
+  {
+    const TaskValues_Data_t*data = UserVar.getRawTaskValues_Data(element.TaskIndex);
+
+    if (data != nullptr) {
+      for (uint8_t i = 0; i < element.valueCount; ++i) {
+        tmp.copyValue(*data, i, element.sensorType);
+      }
+    }
   }
 
   for (controllerIndex_t x = 0; !unusableSample && x < CONTROLLER_MAX; x++)
   {
     // Make sure we are not sending to the cache controller.
     if (Settings.Protocol[x] != 16) {
+      EventStruct tmpEvent(element.TaskIndex);
       tmpEvent.ControllerIndex = x;
       tmpEvent.idx             = Settings.TaskDeviceID[x][P146_TaskIndex];
 
@@ -385,7 +398,9 @@ bool P146_data_struct::sendViaOriginalTask(
           String dummy;
 
           // FIXME TD-er: Must think about how to include the timestamp
-          if (CPluginCall(ProtocolIndex, CPlugin::Function::CPLUGIN_PROTOCOL_SEND, &tmpEvent, dummy)) {
+          // FIXME TD-er: Must this one call CPluginCall instead of do_CPluginCall ????
+          // Device VType might not be correct when calling do_CPluginCall
+          if (do_CPluginCall(ProtocolIndex, CPlugin::Function::CPLUGIN_PROTOCOL_SEND, &tmpEvent, dummy)) {
             // FIXME TD-er: What to do when multiple controllers are selected and one fails?
             // Also, what if we only sent 1 value instead of all?
             success = true;
@@ -397,10 +412,14 @@ bool P146_data_struct::sendViaOriginalTask(
     }
   }
 
-  for (int valIndex = 0; valIndex < VARS_PER_TASK; ++valIndex) {
-    const float tmp = UserVar.getFloat(tmpEvent.TaskIndex, valIndex);
-    UserVar.setFloat(tmpEvent.TaskIndex, valIndex, taskValues[valIndex]);
-    taskValues[valIndex] = tmp;
+  {
+    TaskValues_Data_t*data = UserVar.getRawTaskValues_Data(element.TaskIndex);
+
+    if (data != nullptr) {
+      for (uint8_t i = 0; i < element.valueCount; ++i) {
+        data->copyValue(tmp, i, element.sensorType);
+      }
+    }
   }
 
   if (!success && !unusableSample) {
@@ -408,6 +427,54 @@ bool P146_data_struct::sendViaOriginalTask(
     ControllerCache.setPeekFilePos(peekFileNr, peekReadPos);
   }
   return success;
+}
+
+bool P146_data_struct::sendViaEvent_AllCache(taskIndex_t P146_TaskIndex,
+                                             bool        sendTimestamp)
+{
+  if (!Settings.UseRules) { return false; }
+
+  C016_binary_element element{};
+
+  if (!C016_getTaskSample(element)) {
+    return false;
+  }
+
+  if (!validTaskIndex(element.TaskIndex)) {
+    return false;
+  }
+
+  const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(element.TaskIndex);
+
+  if (!validDeviceIndex(DeviceIndex)) {
+    return false;
+  }
+
+  // Need to send the 'next' peek file position info, since it will reflect the last completed position.
+  int peekFileNr        = 0;
+  const int peekReadPos =  ControllerCache.getPeekFilePos(peekFileNr);
+
+  String eventvalues;
+  reserve_special(eventvalues, 64); // Enough for most use cases, prevent lots of memory allocations.
+  eventvalues = strformat(
+    F("%d,%d,%d,%d"),
+    element.unixTime,
+    element.valueCount,
+    peekFileNr,
+    peekReadPos);
+
+  for (uint8_t varNr = 0; varNr < element.valueCount; ++varNr) {
+    eventvalues += ',';
+    uint8_t nrDecimals = 0;
+
+    if (Device[DeviceIndex].configurableDecimals()) {
+      nrDecimals = Cache.getTaskDeviceValueDecimals(element.TaskIndex, varNr);
+    }
+
+    eventvalues += element.values.getAsString(varNr, element.sensorType, nrDecimals);
+  }
+  eventQueue.add(element.TaskIndex, F("AllCache"), eventvalues);
+  return true;
 }
 
 bool P146_data_struct::setPeekFilePos(int peekFileNr, int peekReadPos)
@@ -427,9 +494,7 @@ bool P146_data_struct::setPeekFilePos(int peekFileNr, int peekReadPos)
   return true;
 }
 
-void P146_data_struct::flush() {
-  C016_flush();
-}
+void P146_data_struct::flush() { C016_flush(); }
 
 bool P146_data_struct::getPeekFilePos(int& peekFileNr, int& peekReadPos, int& peekFileSize) const {
   peekFileNr  = 0;

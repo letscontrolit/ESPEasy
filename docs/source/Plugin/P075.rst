@@ -16,7 +16,9 @@ Type: |P075_type|
 
 Name: |P075_name|
 
-Status: |P075_status|
+Status ESP32: |P075_status|
+
+Status ESP8266: |P075_status_lb|
 
 GitHub: |P075_github|_
 
@@ -411,7 +413,7 @@ Configure your development station as follows:
         At the bottom of the Debug screen enable User MCU input and select your ESP8266's USB port.
         If the Nextion display board is connected it will be ignored. It does NOT need to be removed.
 
-You can now use the Nextion IDE instead of an actual HMI display board to test out your EPSEasy application.
+You can now use the Nextion IDE instead of an actual HMI display board to test out your ESPEasy application.
 
 
 

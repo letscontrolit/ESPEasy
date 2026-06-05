@@ -7,6 +7,7 @@
 #if FEATURE_CHART_JS
 
 # include "../DataStructs/PluginStats_Config.h"
+# include "../Helpers/KeyValueWriter.h"
 # include "../WebServer/Chart_JS_title.h"
 
 # include <vector>
@@ -45,7 +46,7 @@ struct ChartJS_options_scale {
   int tickCount{};
   int weight{};
 
-  String toString() const;
+  void toString(KeyValueWriter& parent) const;
 
   bool   is_Y_axis() const;
 };
@@ -57,7 +58,7 @@ struct ChartJS_options_scales {
 
   void   update_Yaxis_TickCount();
 
-  String toString() const;
+  void toString(KeyValueWriter & parent) const;
 
   size_t nr_Y_scales() const;
 

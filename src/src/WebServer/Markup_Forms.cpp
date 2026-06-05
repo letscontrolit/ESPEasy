@@ -8,9 +8,14 @@
 #include "../Globals/Settings.h"
 
 #include "../Helpers/Hardware_GPIO.h"
+#include "../Helpers/Hardware_device_info.h"
+#include "../Helpers/Networking.h"
 #include "../Helpers/Numerical.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_GPIO.h"
+
+
+#define MARKUP_FORMS_PASSWORD_MASK_ASTERISKS "****"
 
 # if FEATURE_MQTT_DISCOVER && FEATURE_MQTT_DEVICECLASS
 #include "../Helpers/_CPlugin_Helper_mqtt.h"
@@ -21,9 +26,8 @@
 // ********************************************************************************
 void addFormSeparator(int clspan)
 {
-  addHtml(strformat(
-    F("<TR><TD colspan='%d'><hr>"),
-    clspan));
+  addRowColspan(clspan);
+  addHtml(F("<hr>"));
 }
 
 // ********************************************************************************
@@ -32,9 +36,7 @@ void addFormSeparator(int clspan)
 void addFormNote(const __FlashStringHelper * text)
 {
   addRowLabel_tr_id(EMPTY_STRING, EMPTY_STRING);
-  addHtml(F(" <div class='note'>Note: "));
-  addHtml(text);
-  addHtml(F("</div>"));
+  addHtmlDiv(F("note"), concat(F("Note: "), text));
 }
 
 void addFormNote(const String& text, const String& id)
@@ -42,12 +44,6 @@ void addFormNote(const String& text, const String& id)
   if (text.isEmpty())  return;
   addRowLabel_tr_id(EMPTY_STRING, id);
   addHtmlDiv(F("note"), concat(F("Note: "), text));
-}
-
-void addFormNote(const LabelType::Enum& label)
-{
-  addUnit(getFormUnit(label));
-  addFormNote(getFormNote(label));
 }
 
 // ********************************************************************************
@@ -97,40 +93,59 @@ void addFormCheckBox(const String& label, const String& id, bool checked, bool d
               );
 }
 
-void addFormCheckBox(LabelType::Enum label, bool checked, bool disabled
+void addFormCheckBoxes(const LabelType::Enum* label, size_t nrLabels)
+{
+  if (label == nullptr) return;
+  for (size_t i = 0; i < nrLabels; ++i) {
+    addFormCheckBox(*label);
+    ++label;
+  }    
+}
+
+void addFormCheckBox(LabelType::Enum label, bool disabled
                      #if FEATURE_TOOLTIPS
                      , const String& tooltip
                      #endif // if FEATURE_TOOLTIPS
                      ) {
-  addFormCheckBox(getLabel(label), getInternalLabel(label), checked, disabled
+  auto kv = getKeyValue(label);
+  const bool checked = getValue_int(kv) != 0;
+
+  addFormCheckBox(getLabel(kv), getInternalLabel(kv), checked, disabled
                   #if FEATURE_TOOLTIPS
                   , tooltip
                   #endif // if FEATURE_TOOLTIPS
                   );
-  addFormNote(label);
+  #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+  addUnit(kv.getUnit());
+  #endif
+  addFormNote(getFormNote(label));
 }
 
-void addFormCheckBox_disabled(LabelType::Enum label, bool checked) {
-  addFormCheckBox(label, checked, true);
+void addFormCheckBox_disabled(LabelType::Enum label) {
+  addFormCheckBox(label, true);
 }
 
 // ********************************************************************************
 // Add a Numeric Box form
 // ********************************************************************************
-void addFormNumericBox(LabelType::Enum label, int value, int min, int max
+void addFormNumericBox(LabelType::Enum label, int min, int max
                        #if FEATURE_TOOLTIPS
                        , const String& tooltip
                        #endif // if FEATURE_TOOLTIPS
                        , bool disabled
                        )
 {
-  addFormNumericBox(getLabel(label), getInternalLabel(label), value, min, max
+  auto kv = getKeyValue(label);
+  addFormNumericBox(getLabel(kv), getInternalLabel(kv), getValue(kv).toInt(), min, max
                     #if FEATURE_TOOLTIPS
                     , tooltip
                     #endif // if FEATURE_TOOLTIPS
                     , disabled
                     );
-  addFormNote(label);
+  #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+  addUnit(kv.getUnit());
+  #endif
+  addFormNote(getFormNote(label));
 }
 
 void addFormNumericBox(const __FlashStringHelper * label, 
@@ -172,17 +187,22 @@ void addFormNumericBox(const String& label, const String& id, int value, int min
                 );
 }
 
-void addFormFloatNumberBox(LabelType::Enum label, float value, float min, float max, uint8_t nrDecimals, float stepsize
+void addFormFloatNumberBox(LabelType::Enum label, float min, float max, uint8_t nrDecimals, float stepsize
                            #if FEATURE_TOOLTIPS
                            , const String& tooltip
                            #endif // if FEATURE_TOOLTIPS
                            ) {
-  addFormFloatNumberBox(getLabel(label), getInternalLabel(label), value, min, max, nrDecimals, stepsize
+  auto kv = getKeyValue(label);
+
+  addFormFloatNumberBox(getLabel(kv), getInternalLabel(kv), getValue_float(kv), min, max, nrDecimals, stepsize
                         #if FEATURE_TOOLTIPS
                         , tooltip
                         #endif // if FEATURE_TOOLTIPS
                         );
-  addFormNote(label);
+  #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+  addUnit(kv.getUnit());
+  #endif
+  addFormNote(getFormNote(label));
 }
 
 void addFormFloatNumberBox(const String& label,
@@ -346,7 +366,7 @@ void addFormPasswordBox(const String& label, const String& id, const String& pas
   #if FEATURE_TOOLTIPS
   addTooltip(tooltip);
   #endif // if FEATURE_TOOLTIPS
-  addHtmlAttribute(F("value"), (password.length() == 0) ? F("") : F("*****"));
+  addHtmlAttribute(F("value"), (password.length() == 0) ? F("") : F(MARKUP_FORMS_PASSWORD_MASK_ASTERISKS));
   addHtml('>');
 }
 
@@ -358,17 +378,7 @@ bool getFormPassword(const String& id, String& password)
     addLog(LOG_LEVEL_DEBUG, concat(F("getFormPassword: "), password));
   } 
   */ 
-  return !equals(password, F("*****"));
-}
-
-// ********************************************************************************
-// Add a IP Box form
-// ********************************************************************************
-void addFormIPBox(const __FlashStringHelper *label,
-                  const __FlashStringHelper *id,
-                  const uint8_t ip[4])
-{
-  addFormIPBox(String(label), String(id), ip);
+  return !equals(password, F(MARKUP_FORMS_PASSWORD_MASK_ASTERISKS));
 }
 
 void addFormTextBox(const String& label, const String& id, const String& value)
@@ -376,19 +386,58 @@ void addFormTextBox(const String& label, const String& id, const String& value)
   addRowLabel_tr_id(label, id);
 
   addHtml(strformat(
-    F("<input class='wide' type='text' name='%s' id='%s' value='%s'>"),
-    id.c_str(),
-    id.c_str(),
-    value.c_str()
-  ));
+            F("<input class='wide' type='text' name='%s' id='%s' value='%s'>"),
+            id.c_str(),
+            id.c_str(),
+            value.c_str()
+            ));
 }
 
-void addFormIPBox(const String& label, const String& id, const uint8_t ip[4])
+// ********************************************************************************
+// Add a IP Box form
+// ********************************************************************************
+void addFormIPBox(const __FlashStringHelper *label,
+                  const __FlashStringHelper *id,
+                  const uint8_t              ip[4]) { addFormIPBox(String(label), String(id), IPAddress(ip)); }
+
+void addFormIPBox(const String& label, const String& id, const uint8_t ip[4]) { addFormIPBox(label, id, IPAddress(ip)); }
+
+void addFormIPBox(const __FlashStringHelper *label,
+                  const __FlashStringHelper *id,
+                  const IPAddress          & ip) { addFormIPBox(String(label), String(id), ip); }
+
+void addFormIPBox(const String   & label,
+                  const String   & id,
+                  const IPAddress& ip)
 {
-  const bool empty_IP = (ip[0] == 0 && ip[1] == 0 && ip[2] == 0 && ip[3] == 0);
+  const bool empty_IP = !IPAddressSet(ip);
 
   addFormTextBox(label, id, (empty_IP) ? EMPTY_STRING : formatIP(ip));
+
+  /*
+     // TODO TD-er: Option to validate IP in HTML
+     //
+     // IP input HTML validation from:
+     // Source - https://stackoverflow.com/a/54796814
+     // Posted by ptay, modified by community. See post 'Timeline' for change history
+     // Retrieved 2026-04-30, License - CC BY-SA 4.0
+     //
+     // <input type="text" minlength="7" maxlength="15" size="15" pattern="^(?>(\d|[1-9]\d{2}|1\d\d|2[0-4]\d|25[0-5])\.){3}(?1)$">
+
+     const String value = (empty_IP) ? EMPTY_STRING : formatIP(ip);
+     addRowLabel_tr_id(label, id);
+
+     // Validation only for IPv4 address
+     addHtml(strformat(
+              F("<input class='wide' type='text' minlength='7' maxlength='15' size='15'
+                 pattern='^(?>(\\d|[1-9]\\d{2}|1\\d\\d|2[0-4]\\d|25[0-5])\\.){3}(?1)$' name='%s' id='%s' value='%s'>"),
+              id.c_str(),
+              id.c_str(),
+              value.c_str()
+              ));
+   */
 }
+
 
 // ********************************************************************************
 // Add a MAC Box form
@@ -446,6 +495,11 @@ void addFormPinSelect(PinSelectPurpose purpose, const String& label, const __Fla
   addPinSelect(purpose, id, choice);
 }
 
+void addFormPinSelect(PinSelectPurpose purpose, const String& label, const String& id, int choice) {
+  addRowLabel_tr_id(label, id);
+  addPinSelect(purpose, id, choice);
+}
+
 void addFormPinSelect(PinSelectPurpose purpose, const __FlashStringHelper * label, const __FlashStringHelper * id, int choice)
 {
   addRowLabel_tr_id(label, id);
@@ -473,7 +527,7 @@ void addFormPinSelect(const String& label, const String & id, int choice)
   addPinSelect(PinSelectPurpose::Generic, id, choice);
 }
 */
-
+#if FEATURE_I2C
 void addFormPinSelectI2C(const String& label, const String& id, uint8_t i2cBus, int choice)
 {
   addRowLabel_tr_id(label, id);
@@ -511,7 +565,7 @@ void addFormSelectorI2C(const String& id,
   }
   addSelector_Foot();
 }
-
+#endif
 void addFormSelector_YesNo(const __FlashStringHelper * label,
                            const __FlashStringHelper * id,
                            int           selectedIndex,
@@ -545,10 +599,12 @@ void addFormPinStateSelect(int gpio, int choice)
     // do not add the pin state select for these pins.
     enabled = false;
   }
+#if FEATURE_ETHERNET
   if (Settings.isEthernetPin(gpio)) {
     // do not add the pin state select for non-optional Ethernet pins
     enabled = false;
   }
+#endif
   int  pinnr = -1;
   bool input, output, warning;
 
@@ -600,11 +656,14 @@ void addFormPinStateSelect(int gpio, int choice)
         createGPIO_label(gpio, pinnr, input, output, warning)), 
       id,
       choice);
-    addUnit(getConflictingUse(gpio));
     #ifdef ESP32
     if (isPSRAMInterfacePin(gpio)) {
       addUnit(getConflictingUse(gpio, PinSelectPurpose::Generic, true));
+    } else {
+      addUnit(getConflictingUse(gpio));
     }
+    #else
+    addUnit(getConflictingUse(gpio));
     #endif // ifdef ESP32
   }
 }
@@ -633,6 +692,16 @@ bool getCheckWebserverArg_int(const String& key, int& value) {
   return res;
 }
 
+bool getCheckWebserverArg_int(const String& key,
+                              uint32_t      & value) {
+  const String valueStr = webArg(key);
+  if (valueStr.isEmpty()) return false;
+  uint32_t tmp{};
+  const bool res = validUIntFromString(valueStr, tmp);
+  value = tmp;
+  return res;
+}
+
 bool update_whenset_FormItemInt(const __FlashStringHelper * key,
                                 int         & value) 
 {
@@ -648,6 +717,25 @@ bool update_whenset_FormItemInt(const String& key, int& value) {
   }
   return false;
 }
+
+bool update_whenset_FormItemInt(const __FlashStringHelper * key,
+                                uint32_t    & value) 
+{
+  return update_whenset_FormItemInt(String(key), value);
+}
+
+bool update_whenset_FormItemInt(const String& key,
+                                uint32_t    & value)
+{
+  uint32_t tmpVal;
+
+  if (getCheckWebserverArg_int(key, tmpVal)) {
+    value = tmpVal;
+    return true;
+  }
+  return false;
+}
+
 
 bool update_whenset_FormItemInt(const __FlashStringHelper * key,
                                 int8_t& value) 
@@ -742,6 +830,13 @@ bool isFormItem(const String& id)
 
 void copyFormPassword(const __FlashStringHelper * id, char *pPassword, int maxlength)
 {
+  copyFormPassword(String(id), pPassword, maxlength);
+}
+
+void  copyFormPassword(const String& id,
+                       char         *pPassword,
+                       int           maxlength)
+{
   String password;
 
   if (getFormPassword(id, password)) {
@@ -764,6 +859,9 @@ void addFormSelector_binarySensorDeviceClass(const __FlashStringHelper*label,
   if (MQTT_binary_deviceClassTwoWay(devClassIndex)) {
     devClassName += F("²");
   }
+  if (MQTT_binary_deviceClassSwitch(devClassIndex)) {
+    devClassName += F("÷"); // These are multi-byte chars, so we have to use the F() macro
+  }
 
   while (!devClassName.isEmpty() || (0 == devClassIndex)) {
     binaryDeviceClasses.push_back(devClassName);
@@ -771,6 +869,9 @@ void addFormSelector_binarySensorDeviceClass(const __FlashStringHelper*label,
     devClassName = MQTT_binary_deviceClassName(devClassIndex);
     if (MQTT_binary_deviceClassTwoWay(devClassIndex)) {
       devClassName += F("²");
+    }
+    if (MQTT_binary_deviceClassSwitch(devClassIndex)) {
+      devClassName += F("÷");
     }
   }
   const FormSelectorOptions deviceClass(

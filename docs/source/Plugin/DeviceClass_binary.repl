@@ -1,0 +1,12 @@
+MQTT Device class
+^^^^^^^^^^^^^^^^^
+
+(Only available if both MQTT Auto Discovery and Device Class features are included in the build.)
+
+* **MQTT Device class**: Select the Binary Device class that's to be used for this task device. Device classes marked with ``²`` are 'two-way' devices, meaning that the state will be updated when changed, either on the ESPEasy side, or on the MQTT (Home Assistant) side. For the MQTT Device classes ``switch`` and ``outlet``, both also marked with ``÷``, the discovery is marked as ``switch`` instead of ``light``.
+
+The default value used is ``switch``, also when not set (empty), and can be updated in Home Assistant by resending the MQTT Discovery.
+
+The available options are based on the Summer 2025 version of this `Home Assistant MQTT Binary sensor documentation page <https://www.home-assistant.io/integrations/binary_sensor/#device-class>`_ and also related to this `Home Assistant MQTT Switch device page <https://www.home-assistant.io/integrations/switch.mqtt/>`_ (though that doesn't document *any* Auto Discovery information)
+
+The ``switch`` device class shows an On/Off icon, the default icon shown for other ``light`` or ``binary_sensor`` devices in Home Assistant (HA) can be changed for an alternative in the HA configuration, if desired, after Auto Discovery has created the device there.

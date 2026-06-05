@@ -55,6 +55,7 @@ boolean Plugin_093(uint8_t function, struct EventStruct *event, String& string) 
       dev.TimerOption    = true;
       dev.TimerOptional  = true;
       dev.CustomVTypeVar = true;
+      dev.MqttStateClass = true;
       break;
     }
 

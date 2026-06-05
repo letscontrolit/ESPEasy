@@ -104,19 +104,20 @@ void SDM::startReadVal(uint16_t reg, uint8_t node, uint8_t functionCode) {
 
 uint16_t SDM::readValReady(uint8_t node, uint8_t functionCode) {
   uint16_t readErr = SDM_ERR_NO_ERROR;
-  if (sdmSer.available() < FRAMESIZE && ((millis() - resptime) < msturnaround)) 
+  int available = sdmSer.available();
+  if (available < FRAMESIZE && ((millis() - resptime) < msturnaround)) 
   {
     return SDM_ERR_STILL_WAITING;
   }
 
-  while (sdmSer.available() < FRAMESIZE) {
+  while (available < FRAMESIZE) {
     if ((millis() - resptime) > msturnaround) {
       readErr = SDM_ERR_TIMEOUT;                                                //err debug (4)
 
-      if (sdmSer.available() == 5) {
-        for(int n=0; n<5; n++) {
-          sdmarr[n] = sdmSer.read();
-        }
+      if (available == 5) {
+        memset(sdmarr, 0, NR_ELEMENTS(sdmarr));
+        sdmSer.read(sdmarr, available);
+  
         if (validChecksum(sdmarr, 5)) {
           readErr = sdmarr[2];
         }
@@ -124,15 +125,15 @@ uint16_t SDM::readValReady(uint8_t node, uint8_t functionCode) {
       break;
     }
     delay(1);
+    available = sdmSer.available();
   }
 
   if (readErr == SDM_ERR_NO_ERROR) {                                            //if no timeout...
 
-    if (sdmSer.available() >= FRAMESIZE) {
+    if (available >= FRAMESIZE) {
 
-      for(int n=0; n<FRAMESIZE; n++) {
-        sdmarr[n] = sdmSer.read();
-      }
+      memset(sdmarr, 0, NR_ELEMENTS(sdmarr));
+      sdmSer.read(sdmarr, FRAMESIZE);
 
       if (sdmarr[0] == node && 
           sdmarr[1] == functionCode && 

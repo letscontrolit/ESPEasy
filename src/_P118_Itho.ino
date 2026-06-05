@@ -17,6 +17,7 @@
 // https://github.com/arjenhiemstra/IthoEcoFanRFT
 
 /** Changelog:
+ * 2025-08-13 tonhuisman: Enable use of secondary SPI bus
  * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported for ITHO)
  *                        Changelog is reverted and reformatted!
  * 05-03-2023 tonhuisman: Deprecate 'state' command, and add support for 'itho' as the main command
@@ -135,6 +136,7 @@ boolean Plugin_118(uint8_t function, struct EventStruct *event, String& string)
       dev.VType          = Sensor_VType::SENSOR_TYPE_TRIPLE;
       dev.ValueCount     = 3;
       dev.SendDataOption = true;
+      dev.SpiBusSelect   = true;
       break;
     }
 

@@ -48,6 +48,7 @@ struct C018_ConfigStruct
   uint32_t      rx2_freq                                        = 0;
 };
 
+DEF_UP(C018_ConfigStruct);
 
 #endif // ifdef USES_C018
 

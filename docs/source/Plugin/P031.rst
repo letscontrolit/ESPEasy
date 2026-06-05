@@ -13,7 +13,9 @@ Type: |P031_type|
 
 Name: |P031_name|
 
-Status: |P031_status|
+Status ESP32: |P031_status|
+
+Status ESP8266: |P031_status_lb|
 
 GitHub: |P031_github|_
 

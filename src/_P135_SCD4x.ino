@@ -77,7 +77,8 @@ boolean Plugin_135(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_GET_DISCOVERY_VTYPES:
     {
       event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_CO2_ONLY);
-      event->Par2 = static_cast<int>(Sensor_VType::SENSOR_TYPE_TEMP_HUM);
+      event->Par2 = static_cast<int>(Sensor_VType::SENSOR_TYPE_HUM_ONLY);
+      event->Par3 = static_cast<int>(Sensor_VType::SENSOR_TYPE_TEMP_ONLY);
       success     = true;
       break;
     }
@@ -120,7 +121,7 @@ boolean Plugin_135(uint8_t function, struct EventStruct *event, String& string)
         selector.reloadonchange = true;
         selector.addFormSelector(F("Sensor model"), F("ptype"), P135_SENSOR_TYPE);
         # ifndef LIMIT_BUILD_SIZE
-        addFormNote(F("Page will reload on change."));
+        // addFormNote(F("Page will reload on change."));
         # endif // ifndef LIMIT_BUILD_SIZE
       }
 

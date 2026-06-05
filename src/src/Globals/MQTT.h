@@ -9,13 +9,40 @@
 # include "../DataTypes/TaskIndex.h"
 
 # include "../Helpers/LongTermTimer.h"
+# include "../Helpers/LongTermOnOffTimer.h"
 
 # include <WiFiClient.h>
 # include <PubSubClient.h>
 
 # if FEATURE_MQTT_TLS
   #  include <WiFiClientSecureLightBearSSL.h>
+  #  include "../CustomBuild/Certificate_CA.h"
 # endif // if FEATURE_MQTT_TLS
+
+# if FEATURE_MQTT_CONNECT_BACKGROUND
+enum MQTT_connect_status_e : uint8_t {
+  Disconnected = 0,
+  Connecting   = 1,
+  Connected    = 2,
+  Failure      = 3,
+  Ready        = 4,
+};
+
+struct MQTT_connect_request {
+  MQTT_connect_status_e status          = MQTT_connect_status_e::Disconnected;
+  controllerIndex_t     ControllerIndex = INVALID_CONTROLLER_INDEX;
+  uint32_t              startTime{};
+  uint32_t              loopTime{};
+  uint32_t              endTime{};
+  uint32_t              timeout{};
+  bool                  result{};
+  bool                  logged{};
+
+  // This is C-code, so not set to nullptr, but to NULL
+  TaskHandle_t taskHandle = NULL;
+};
+extern MQTT_connect_request MQTT_task_data;
+# endif // if FEATURE_MQTT_CONNECT_BACKGROUND
 
 // MQTT client
 extern WiFiClient mqtt;
@@ -23,6 +50,7 @@ extern WiFiClient mqtt;
 extern String  mqtt_tls_last_errorstr;
 extern int32_t mqtt_tls_last_error;
 extern BearSSL::WiFiClientSecure_light*mqtt_tls;
+extern int32_t mqtt_tls_last_cipher_suite;
 
 // extern BearSSL::X509List mqtt_X509List;
 
@@ -31,11 +59,13 @@ extern String mqtt_fingerprint;
 
 # endif  // if FEATURE_MQTT_TLS
 extern PubSubClient MQTTclient;
+extern LongTermOnOffTimer MQTTclient_connected_stats;
 extern bool MQTTclient_should_reconnect;
 extern bool MQTTclient_must_send_LWT_connected;
 extern bool MQTTclient_connected;
 extern int  mqtt_reconnect_count;
 extern LongTermTimer MQTTclient_next_connect_attempt;
+
 #endif // if FEATURE_MQTT
 
 #ifdef USES_P037

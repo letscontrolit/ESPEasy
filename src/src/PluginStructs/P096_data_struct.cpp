@@ -2,6 +2,7 @@
 
 #ifdef USES_P096
 
+#include "../Helpers/Hardware_SPI.h"
 
 /****************************************************************************
  * EPD_type_toString: Display-value for the device selected
@@ -120,21 +121,46 @@ bool P096_data_struct::plugin_init(struct EventStruct *event) {
   bool success = false;
 
   if (nullptr == eInkScreen) {
+    # ifdef ESP32
+    auto spi_ptr = getSPIBusForTask(event->TaskIndex);
+    if (!spi_ptr) {
+      addLog(LOG_LEVEL_ERROR, F("EPD  : No SPI configured"));
+      return false;
+    }
+    #endif
+
+
     addLog(LOG_LEVEL_INFO, F("EPD  : Init start."));
 
     switch (_display) {
       case EPD_type_e::EPD_IL3897:
-        eInkScreen = new (std::nothrow) LOLIN_IL3897(_xpix, _ypix, PIN(1), PIN(2), PIN(0), PIN(3));  // HSPI
+        eInkScreen = new (std::nothrow) LOLIN_IL3897(_xpix, _ypix, PIN(1), PIN(2), PIN(0), PIN(3)
+                                                     # ifdef ESP32
+                                                     , *spi_ptr
+                                                     # endif // ifdef ESP32
+                                                     ); // HSPI
         break;
       case EPD_type_e::EPD_UC8151D:
-        eInkScreen = new (std::nothrow) LOLIN_UC8151D(_xpix, _ypix, PIN(1), PIN(2), PIN(0), PIN(3)); // HSPI
+        eInkScreen = new (std::nothrow) LOLIN_UC8151D(_xpix, _ypix, PIN(1), PIN(2), PIN(0), PIN(3)
+                                                      # ifdef ESP32
+                                                      , *spi_ptr
+                                                      # endif // ifdef ESP32
+                                                      ); // HSPI
         break;
       case EPD_type_e::EPD_SSD1680:
-        eInkScreen = new (std::nothrow) LOLIN_SSD1680(_xpix, _ypix, PIN(1), PIN(2), PIN(0), PIN(3)); // HSPI
+        eInkScreen = new (std::nothrow) LOLIN_SSD1680(_xpix, _ypix, PIN(1), PIN(2), PIN(0), PIN(3)
+                                                      # ifdef ESP32
+                                                      , *spi_ptr
+                                                      # endif // ifdef ESP32
+                                                      ); // HSPI
         break;
       # if P096_USE_WAVESHARE_2IN7
       case EPD_type_e::EPD_WS2IN7:
-        eInkScreen = new (std::nothrow) Waveshare_2in7(_xpix, _ypix, PIN(1), PIN(2), PIN(0), PIN(3)); // HSPI
+        eInkScreen = new (std::nothrow) Waveshare_2in7(_xpix, _ypix, PIN(1), PIN(2), PIN(0), PIN(3)
+                                                       #  ifdef ESP32
+                                                       , *spi_ptr
+                                                       #  endif // ifdef ESP32
+                                                       ); // HSPI
         break;
       # endif // if P096_USE_WAVESHARE_2IN7
       case EPD_type_e::EPD_MAX:

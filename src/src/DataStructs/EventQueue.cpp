@@ -1,11 +1,8 @@
 #include "../DataStructs/EventQueue.h"
 
-#include "../../ESPEasy_common.h"
-
 #include "../Globals/Settings.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/StringConverter.h"
-
 
 
 void EventQueueStruct::add(const String& event, bool deduplicate)
@@ -35,6 +32,17 @@ void EventQueueStruct::add(const __FlashStringHelper *event, bool deduplicate)
   move_special(str, String(event));
   add(str, deduplicate);
 }
+
+void EventQueueStruct::addDeDup(const String& event)
+{
+  add(event, true);
+}
+
+void EventQueueStruct::addDeDup(const __FlashStringHelper *event)
+{
+  add(event, true);
+}
+
 
 void EventQueueStruct::addMove(String&& event, bool deduplicate)
 {

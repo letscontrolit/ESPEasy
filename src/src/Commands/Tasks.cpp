@@ -1,12 +1,9 @@
 #include "../Commands/Tasks.h"
 
 
-#include "../../ESPEasy_common.h"
 #include "../../_Plugin_Helper.h"
 
 #include "../Commands/Common.h"
-
-#include "../DataStructs/TimingStats.h"
 
 #include "../ESPEasyCore/Controller.h"
 #include "../ESPEasyCore/Serial.h"
@@ -16,6 +13,9 @@
 #include "../Globals/RuntimeData.h"
 #include "../Globals/Settings.h"
 
+#if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+#include "../Helpers/ESPEasy_UnitOfMeasure.h"
+#endif
 #include "../Helpers/Misc.h"
 #include "../Helpers/Numerical.h"
 #include "../Helpers/StringConverter.h"
@@ -128,25 +128,48 @@ const __FlashStringHelper * taskValueSet(struct EventStruct *event, const char *
   EventStruct tmpEvent(taskIndex);
   if (GetArgv(Line, TmpStr1, 4)) {
     const Sensor_VType sensorType = tmpEvent.getSensorType();
+#if FEATURE_EXTENDED_TASK_VALUE_TYPES
+    bool done = false;
+    if (isUInt64OutputDataType(sensorType))
+    {
+      // Don't try to do calculations as storing as double will loose accuracy
+      uint64_t val{};
+      if (validUInt64FromString(TmpStr1, val)) {
+        done = true;
+        UserVar.setUint64(taskIndex, varNr, val);
+      }
+    } else if (isInt64OutputDataType(sensorType))
+    {
+      // Don't try to do calculations as storing as double will loose accuracy
+      int64_t val{};
+      if (validInt64FromString(TmpStr1, val)) {
+        done = true;
+        UserVar.setInt64(taskIndex, varNr, val);
+      }
+    } 
+    if (!done) {
+#endif
+      // FIXME TD-er: Must check if the value has to be computed and not convert to double when sensor type is 64 bit int.
 
-    // FIXME TD-er: Must check if the value has to be computed and not convert to double when sensor type is 64 bit int.
+      // Perform calculation with float result.
+      ESPEASY_RULES_FLOAT_TYPE result{};
 
-    // Perform calculation with float result.
-    ESPEASY_RULES_FLOAT_TYPE result{};
+      if (isError(Calculate(TmpStr1, result))) {
+        success = false;
+        return F("CALCULATION_ERROR");
+      }
+      #ifndef BUILD_NO_DEBUG
+      addLog(LOG_LEVEL_INFO, strformat(
+        F("taskValueSet: %s  taskindex: %d varNr: %d result: %f type: %d"),
+        Line,
+        taskIndex,
+        varNr, result, sensorType));
+      #endif
 
-    if (isError(Calculate(TmpStr1, result))) {
-      success = false;
-      return F("CALCULATION_ERROR");
+      UserVar.set(taskIndex, varNr, result, sensorType);
+#if FEATURE_EXTENDED_TASK_VALUE_TYPES
     }
-    #ifndef BUILD_NO_DEBUG
-    addLog(LOG_LEVEL_INFO, strformat(
-      F("taskValueSet: %s  taskindex: %d varNr: %d result: %f type: %d"),
-      Line,
-      taskIndex,
-      varNr, result, sensorType));
-    #endif
-
-    UserVar.set(taskIndex, varNr, result, sensorType);
+#endif
   } else  {
     // TODO: Get Task description and var name
     serialPrintln(formatUserVarNoCheck(&tmpEvent, varNr));
@@ -293,7 +316,24 @@ const __FlashStringHelper * taskValueSetString(struct EventStruct *event, const 
       if (GetArgv(Line, argument, 5)) { // check for extra argument holding UoM
         key = strformat(uomTemplate, taskName.c_str(), valueName.c_str());
         if (!argument.isEmpty()) {
-          setCustomStringVar(key, argument);
+          #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+
+          uint8_t i = 1; // Index 0 is empty/None
+          String uom = toUnitOfMeasureName(i);
+          while (i < 255 && !uom.isEmpty()) {
+            if (argument.equalsIgnoreCase(uom)) {
+              setCustomStringVar(key, uom);
+              argument.clear();
+              break;
+            }
+            ++i;
+            uom = toUnitOfMeasureName(i);
+          }
+          if (!argument.isEmpty()) 
+          #endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+          {
+            setCustomStringVar(key, argument);
+          }
         } else {
           clearCustomStringVar(key);
         }

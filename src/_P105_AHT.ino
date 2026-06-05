@@ -155,7 +155,7 @@ boolean Plugin_105(uint8_t function, struct EventStruct *event, String& string)
         FormSelectorOptions selector(optionCount, options, indices);
         selector.reloadonchange = true;
         selector.addFormSelector(F("Sensor model"), F("ahttype"), P105_AHT_TYPE);
-        addFormNote(F("Changing Sensor model will reload the page."));
+        // addFormNote(F("Changing Sensor model will reload the page."));
 
         if (static_cast<int>(AHTx_device_type::AHT10_DEVICE) == P105_AHT_TYPE) {
           addFormCheckBox(F("AHT10 Alternative initialization"), F("altinit"), P105_ALT_INIT);

@@ -7,6 +7,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2025-05-15 tonhuisman: Optimize I2C function calls
  * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported for PME)
  * 2024-04-14 tonhuisman: Add support for Get Config Values, to obtain a port state/value without instantiating a task for each pin.
  *                        Only a single, enabled, task is required to handle the Get Config Values.
@@ -166,7 +167,7 @@ boolean Plugin_011(uint8_t function, struct EventStruct *event, String& string)
         tempStatus.command = 1; // set to 1 in order to display the status in the PinStatus page
         savePortStatus(key, tempStatus);
 
-        Plugin_011_Write(event->Par1, event->Par2);
+        Plugin_011_Write(1, event->Par1, event->Par2);
 
         // setPinState(PLUGIN_ID_011, event->Par1, PIN_MODE_OUTPUT, event->Par2);
         log = strformat(F("PME  : GPIO %d Set to %d"), event->Par1, event->Par2);
@@ -179,13 +180,7 @@ boolean Plugin_011(uint8_t function, struct EventStruct *event, String& string)
       if (equals(command, F("extpwm")))
       {
         success = true;
-        uint8_t address = PLUGIN_011_I2C_ADDRESS;
-        Wire.beginTransmission(address);
-        Wire.write(3);
-        Wire.write(event->Par1);
-        Wire.write(event->Par2 & 0xff);
-        Wire.write(event->Par2 >> 8);
-        Wire.endTransmission();
+        Plugin_011_Write(3, event->Par1, event->Par2);
 
         portStatusStruct tempStatus;
         const uint32_t   key = createKey(P011_PLUGIN_ID, event->Par1);
@@ -213,11 +208,11 @@ boolean Plugin_011(uint8_t function, struct EventStruct *event, String& string)
           const int factor   = equals(command, F("extlongpulse")) ? 1000 : 1;
           const int duration = event->Par3 * factor;
           success = true;
-          Plugin_011_Write(event->Par1, event->Par2);
+          Plugin_011_Write(1, event->Par1, event->Par2);
 
           if (duration <= 10) { // Short pulses (<= 10 msec) only use direct delay
             delay(event->Par3);
-            Plugin_011_Write(event->Par1, !event->Par2);
+            Plugin_011_Write(1, event->Par1, !event->Par2);
             log = strformat(F("PME  : GPIO %d Pulsed for %d mS"), event->Par1, duration);
           } else {
             Scheduler.setPluginTaskTimer(duration, event->TaskIndex, event->Par1, !event->Par2);
@@ -276,7 +271,7 @@ boolean Plugin_011(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_TASKTIMER_IN:
     {
-      Plugin_011_Write(event->Par1, event->Par2);
+      Plugin_011_Write(1, event->Par1, event->Par2);
       portStatusStruct tempStatus;
 
       // WARNING: operator [] creates an entry in the map if key does not exist
@@ -328,18 +323,7 @@ int Plugin_011_Read(uint8_t Par1, uint8_t Par2)
   int value       = -1;
   uint8_t address = PLUGIN_011_I2C_ADDRESS;
 
-  Wire.beginTransmission(address);
-
-  if (Par1 == P011_TYPE_DIGITAL) {
-    Wire.write(2); // Digital Read
-  }
-  else {
-    Wire.write(4); // Analog Read
-  }
-  Wire.write(Par2);
-  Wire.write(0);
-  Wire.write(0);
-  Wire.endTransmission();
+  Plugin_011_Write(Par1 == P011_TYPE_DIGITAL ? 2 : 4, Par2, 0);
   delay(1); // remote unit needs some time for conversion...
   Wire.requestFrom(address, (uint8_t)0x4);
   uint8_t buffer[4];
@@ -357,12 +341,12 @@ int Plugin_011_Read(uint8_t Par1, uint8_t Par2)
 // ********************************************************************************
 // PME write
 // ********************************************************************************
-void Plugin_011_Write(uint8_t Par1, uint8_t Par2)
+void Plugin_011_Write(uint8_t fnc, uint8_t Par1, uint8_t Par2)
 {
   uint8_t address = PLUGIN_011_I2C_ADDRESS;
 
   Wire.beginTransmission(address);
-  Wire.write(1);
+  Wire.write(fnc);
   Wire.write(Par1);
   Wire.write(Par2 & 0xff);
   Wire.write(Par2 >> 8);

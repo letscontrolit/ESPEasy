@@ -12,6 +12,8 @@
 #include "../WebServer/ESPEasy_WebServer.h"
 #include "../WebServer/Markup.h"
 #include "../WebServer/Markup_Forms.h"
+#include "../ESPEasyCore/Controller.h"
+#include "../DataStructs/ControllerSettingsStruct.h"
 
 /*********************************************************************************************\
 * Functions to load and store controller settings on the web page.
@@ -92,7 +94,8 @@ String getControllerParameterName(protocolIndex_t                   ProtocolInde
     EventStruct tmpEvent;
     tmpEvent.idx = parameterIdx;
 
-    if (CPluginCall(ProtocolIndex, CPlugin::Function::CPLUGIN_GET_PROTOCOL_DISPLAY_NAME, &tmpEvent, name)) {
+    // Only Controller Plugin specific call, so may call do_CPluginCall directly 
+    if (do_CPluginCall(ProtocolIndex, CPlugin::Function::CPLUGIN_GET_PROTOCOL_DISPLAY_NAME, &tmpEvent, name)) {
       // Found an alternative name for it.
       isAlternative = true;
       return name;
@@ -138,7 +141,7 @@ void addControllerEnabledForm(controllerIndex_t controllerindex) {
   addFormCheckBox(displayName, internalName, Settings.ControllerEnabled[controllerindex]);
 }
 
-#if FEATURE_MQTT_TLS
+#if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS
 void addCertificateFileNote(const ControllerSettingsStruct& ControllerSettings, const String& description, TLS_types tls_type) {
   const String certFile = ControllerSettings.getCertificateFilename(tls_type);
 
@@ -200,7 +203,7 @@ void addControllerParameterForm(const ControllerSettingsStruct  & ControllerSett
       addFormNumericBox(displayName, internalName, ControllerSettings.Port, 1, 65535);
       break;
     }
-#if FEATURE_MQTT_TLS
+#if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS
     case ControllerSettingsStruct::CONTROLLER_MQTT_TLS_TYPE:
     {
       const int choice                     = static_cast<int>(ControllerSettings.TLStype());
@@ -265,7 +268,7 @@ void addControllerParameterForm(const ControllerSettingsStruct  & ControllerSett
        */
       break;
     }
-#endif // if FEATURE_MQTT_TLS
+#endif // if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS
     case ControllerSettingsStruct::CONTROLLER_USER:
     {
       const size_t fieldMaxLength =
@@ -454,7 +457,7 @@ void saveControllerParameterForm(ControllerSettingsStruct        & ControllerSet
     case ControllerSettingsStruct::CONTROLLER_PORT:
       ControllerSettings.Port = getFormItemInt(internalName, ControllerSettings.Port);
       break;
-#if FEATURE_MQTT_TLS
+#if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS
     case ControllerSettingsStruct::CONTROLLER_MQTT_TLS_TYPE:
     {
       const int current        = static_cast<int>(ControllerSettings.TLStype());
@@ -492,7 +495,7 @@ void saveControllerParameterForm(ControllerSettingsStruct        & ControllerSet
       }
       break;
     }
-#endif // if FEATURE_MQTT_TLS
+#endif // if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS
     case ControllerSettingsStruct::CONTROLLER_USER:
       setControllerUser(controllerindex, ControllerSettings, webArg(internalName));
       break;

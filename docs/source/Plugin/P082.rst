@@ -15,7 +15,9 @@ Port Type: |P082_porttype|
 
 Name: |P082_name|
 
-Status: |P082_status|
+Status ESP32: |P082_status|
+
+Status ESP8266: |P082_status_lb|
 
 GitHub: |P082_github|_
 

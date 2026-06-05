@@ -51,7 +51,8 @@ enum class SDM_UOM {
   VA,
   VAr,
   kVAh,
-  kVArh
+  kVArh,
+  nat_load
 };
 
 const __FlashStringHelper* SDM_UOMtoString(SDM_UOM uom,
@@ -65,7 +66,8 @@ enum class SDM_MODEL {
   DDM18SD                = 3,
   SDM630                 = 4,
   SDM72_V2               = 5,
-  SDM320C                = 6
+  SDM320C                = 6,
+  TAC2100                = 7,
 };
 
 enum class SDM_DIRECTION {
@@ -97,7 +99,8 @@ struct p078_register_description {
     uint8_t  SDM120,
     uint8_t  SDM72D,
     uint8_t  SDM72_V2,
-    uint8_t  DDM18SD
+    uint8_t  DDM18SD,
+    uint8_t  TAC2100
     ) : val(
       (static_cast<uint32_t>(uom) & 0xF) |
       static_cast<uint32_t>(phase & 0x3) << 4 |
@@ -111,6 +114,7 @@ struct p078_register_description {
         static_cast<uint32_t>(SDM72D & 0x1)    << 12 |
         static_cast<uint32_t>(SDM72_V2 & 0x1)  << 13 |
         static_cast<uint32_t>(DDM18SD & 0x1)   << 14 |
+        static_cast<uint32_t>(TAC2100 & 0x1)   << 15 |
         static_cast<uint32_t>(reg & 0xFFFF)    << 16)
   {}
 
@@ -142,8 +146,12 @@ String       SDM_getValueNameForModel(SDM_MODEL model,
                                       int       choice);
 # if FEATURE_MQTT_DISCOVER
 Sensor_VType Plugin_078_QueryVType(SDM_MODEL model,
-                            int       choice);
+                                   int       choice);
 # endif // if FEATURE_MQTT_DISCOVER
+# if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+uint64_t Plugin_078_QueryUOMGroup(SDM_MODEL model,
+                                  int       choice);
+# endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 
 struct SDM_RegisterReadQueueElement {
   SDM_RegisterReadQueueElement(taskIndex_t TaskIndex, taskVarIndex_t TaskVarIndex, uint16_t reg, uint8_t dev_id)

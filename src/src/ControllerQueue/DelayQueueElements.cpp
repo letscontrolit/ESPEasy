@@ -167,11 +167,11 @@ DEFINE_Cxxx_DELAY_QUEUE_MACRO_CPP(0, 18) // -V522
  #endif
  */
 
-/*
- #ifdef USES_C023
-   DEFINE_Cxxx_DELAY_QUEUE_MACRO_CPP(0, 23)  // -V522
- #endif
- */
+
+#ifdef USES_C023
+  DEFINE_Cxxx_DELAY_QUEUE_MACRO_CPP(0, 23)  // -V522
+#endif
+
 
 /*
  #ifdef USES_C024

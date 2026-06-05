@@ -75,21 +75,23 @@ bool ControllerDelayHandlerStruct::queueFull(controllerIndex_t controller_idx) c
   int freeHeap = FreeMem();
   {
     /*
-      #ifdef USE_SECOND_HEAP
-    const int freeHeap2 = FreeMem2ndHeap();
+     #ifdef USE_SECOND_HEAP
+       const int freeHeap2 = FreeMem2ndHeap();
 
-    if (freeHeap2 < freeHeap) {
-      freeHeap = freeHeap2;
-    }
-      #endif // ifdef USE_SECOND_HEAP
-      */
+       if (freeHeap2 < freeHeap) {
+       freeHeap = freeHeap2;
+       }
+     #endif // ifdef USE_SECOND_HEAP
+     */
   }
 
 #ifdef ESP32
-  if (freeHeap > 50000) 
-#else
-  if (freeHeap > 5000) 
-#endif
+
+  if (freeHeap > 50000)
+#else // ifdef ESP32
+
+  if (freeHeap > 5000)
+#endif // ifdef ESP32
   {
     return false; // Memory is not an issue.
   }
@@ -146,10 +148,11 @@ bool ControllerDelayHandlerStruct::isDuplicate(const Queue_element_base& element
 
 // Try to add to the queue, if permitted by "delete_oldest"
 // Return true when item was added, or skipped as it was considered a duplicate
-bool ControllerDelayHandlerStruct::addToQueue(std::unique_ptr<Queue_element_base>element) {
-  if (!element) { 
+bool ControllerDelayHandlerStruct::addToQueue(UP_Queue_element_base element) {
+  if (!element) {
     return false;
   }
+
   if (isDuplicate(*element)) {
     return true;
   }
@@ -165,11 +168,12 @@ bool ControllerDelayHandlerStruct::addToQueue(std::unique_ptr<Queue_element_base
 
   if (!queueFull(element->_controller_idx)) {
     #ifdef USE_SECOND_HEAP
+
     // Do not store in 2nd heap, std::list cannot handle 2nd heap well
     HeapSelectDram ephemeral;
     #endif // ifdef USE_SECOND_HEAP
 
-    sendQueue.push_back(std::move(element));
+    sendQueue.emplace_back(std::move(element));
 
     return true;
   }
@@ -213,7 +217,7 @@ Queue_element_base * ControllerDelayHandlerStruct::getNext() {
 // Mark as processed and return time to schedule for next process.
 // Return 0 when nothing to process.
 // @param remove_from_queue indicates whether the elements should be removed from the queue.
-unsigned long ControllerDelayHandlerStruct::markProcessed(bool remove_from_queue) {
+uint32_t ControllerDelayHandlerStruct::markProcessed(bool remove_from_queue) {
   if (sendQueue.empty()) { return 0; }
 
   if (remove_from_queue) {
@@ -226,9 +230,9 @@ unsigned long ControllerDelayHandlerStruct::markProcessed(bool remove_from_queue
   return getNextScheduleTime();
 }
 
-unsigned long ControllerDelayHandlerStruct::getNextScheduleTime() const {
+uint32_t ControllerDelayHandlerStruct::getNextScheduleTime() const {
   if (sendQueue.empty()) { return 0; }
-  unsigned long nextTime = lastSend + minTimeBetweenMessages;
+  uint32_t nextTime = lastSend + minTimeBetweenMessages;
 
   if (timePassedSince(nextTime) > 0) {
     nextTime = millis();
@@ -242,9 +246,7 @@ unsigned long ControllerDelayHandlerStruct::getNextScheduleTime() const {
 // Set the "lastSend" to "now" + some additional delay.
 // This will cause the next schedule time to be delayed to
 // msecFromNow + minTimeBetweenMessages
-void ControllerDelayHandlerStruct::setAdditionalDelay(unsigned long msecFromNow) {
-  lastSend = millis() + msecFromNow;
-}
+void   ControllerDelayHandlerStruct::setAdditionalDelay(uint32_t msecFromNow) { lastSend = millis() + msecFromNow; }
 
 size_t ControllerDelayHandlerStruct::getQueueMemorySize() const {
   size_t totalSize = 0;
@@ -258,10 +260,10 @@ size_t ControllerDelayHandlerStruct::getQueueMemorySize() const {
 }
 
 void ControllerDelayHandlerStruct::process(
-  cpluginID_t                        cpluginID,
-  do_process_function                func,
-  TimingStatsElements                timerstats_id,
-  SchedulerIntervalTimer_e timerID) 
+  cpluginID_t              cpluginID,
+  do_process_function      func,
+  TimingStatsElements      timerstats_id,
+  SchedulerIntervalTimer_e timerID)
 {
   Queue_element_base *element(static_cast<Queue_element_base *>(getNext()));
 

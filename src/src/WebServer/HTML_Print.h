@@ -6,11 +6,25 @@
 
 
 // Class to redirect any function expecting a Print stream to output to the TXBuffer of our webserver.
+// Converts newline to HTML <br>
 class HTML_Print : public Print
 {
 public:
 
   virtual ~HTML_Print() {}
+
+  size_t write(uint8_t c) override;
+
+};
+
+
+// Streaming replacement for writing to WebServer TXBuffer
+// Inherits from Print
+class PrintToWebServer : public Print
+{
+public:
+
+  virtual ~PrintToWebServer() {}
 
   size_t write(uint8_t c) override;
 

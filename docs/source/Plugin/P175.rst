@@ -15,7 +15,9 @@ Port Type: |P175_porttype|
 
 Name: |P175_name|
 
-Status: |P175_status|
+Status ESP32: |P175_status|
+
+Status ESP8266: |P175_status_lb|
 
 GitHub: |P175_github|_
 
@@ -69,7 +71,7 @@ Configuration
 I2C options
 ^^^^^^^^^^^
 
-The available I2C settings here depend on the build used. At least the **Force Slow I2C speed** option is available. This sensor can also be used with an I2C Multiplexer. For details see the :ref:`Hardware_page`.
+The available I2C settings here depend on the build used. At least the **Force Slow I2C speed** option is available. This sensor can also be used with an I2C Multiplexer. For details see the :ref:`i2c-bus` page.
 
 According to the documentation, the max. communication speed for this sensor is 100 kHz, the default Slow I2C speed setting, so this option is enabled by default.
 

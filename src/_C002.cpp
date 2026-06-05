@@ -8,6 +8,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2025-08-23 tonhuisman: Add 10/sec call to poll background connection process while not connected
  * 2024-03-24 tonhuisman: Add support for 'Invert On/Off value' in P029 - Domoticz MQTT Helper
  * 2024-03-24 tonhuisman: Start Changelog (newest on top)
  */
@@ -42,7 +43,7 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
       proto.usesExtCreds = true;
       proto.defaultPort  = 1883;
       proto.usesID       = true;
-      # if FEATURE_MQTT_TLS
+      #if FEATURE_MQTT_TLS 
       proto.usesTLS = true;
       # endif // if FEATURE_MQTT_TLS
       break;
@@ -214,8 +215,14 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
         String pubname = CPlugin_002_pubname;
         parseControllerVariables(pubname, event, false);
 
+        const bool taskRetained = Settings.SendRetainedTaskValues(event->TaskIndex, event->ControllerIndex);
+
         // Publish using move operator, thus pubname and json are empty after this call
-        success = MQTTpublish(event->ControllerIndex, event->TaskIndex, std::move(pubname), std::move(json), CPlugin_002_mqtt_retainFlag);
+        success = MQTTpublish(event->ControllerIndex,
+                              event->TaskIndex,
+                              std::move(pubname),
+                              std::move(json),
+                              CPlugin_002_mqtt_retainFlag || taskRetained);
       } // if idx !=0
       else
       {
@@ -230,6 +237,14 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
       delay(0);
       break;
     }
+
+    # if FEATURE_MQTT_CONNECT_BACKGROUND
+    case CPlugin::Function::CPLUGIN_TEN_PER_SECOND:
+    {
+      MQTTConnectInBackground(CONTROLLER_MAX, true); // Report state
+      break;
+    }
+    # endif // if FEATURE_MQTT_CONNECT_BACKGROUND
 
     default:
       break;

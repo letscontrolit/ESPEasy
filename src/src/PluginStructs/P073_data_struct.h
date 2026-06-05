@@ -105,7 +105,7 @@
 
 # define TM1637_POWER_ON    0b10001000
 # define TM1637_POWER_OFF   0b10000000
-# define TM1637_CLOCKDELAY  40
+# define TM1637_CLOCKDELAY  10  // FIXME TD-er: Maybe lower this as we can get as low as 2 usec to remain below the max 250 kHz
 # define TM1637_4DIGIT      4
 # define TM1637_6DIGIT      2
 
@@ -308,9 +308,9 @@ public:
   bool    rightAlignTempMAX7219 = false;
   bool    suppressLeading0      = false;
   uint8_t fontset               = 0;
-  #if P073_BLINK_DOT
+  # if P073_BLINK_DOT
   bool blinkdot = false;
-  #endif // if P073_BLINK_DOT
+  # endif // if P073_BLINK_DOT
   # if P073_7DBIN_COMMAND
   bool binaryData = false;
   # endif // P073_7DBIN_COMMAND
@@ -362,10 +362,10 @@ private:
   // ---- TM1637 specific functions ----
   void    tm1637_i2cStart();
   void    tm1637_i2cStop();
-  void    tm1637_i2cAck();
+  bool    tm1637_i2cAck();
   void    tm1637_i2cWrite_ack(uint8_t bytesToPrint[],
                               uint8_t length);
-  void    tm1637_i2cWrite_ack(uint8_t bytetoprint);
+  void    tm1637_i2cWriteByte_ack(uint8_t bytetoprint);
   void    tm1637_i2cWrite(uint8_t bytetoprint);
   void    tm1637_ClearDisplay();
   void    tm1637_SetPowerBrightness(uint8_t brightlvl,
@@ -404,12 +404,12 @@ private:
   void hc595_ShowBuffer();
   void hc595_ToOutputBuffer();
   void hc595_AdjustBuffer();
-  bool hc595_Sequential() {
-    return P073_HC595_SEQUENTIAL;
-  }
+
+  bool hc595_Sequential() { return P073_HC595_SEQUENTIAL; }
 
   uint8_t outputbuffer[8]{};
   # endif // if P073_USE_74HC595
+
 };
 
 #endif    // ifdef USES_P073

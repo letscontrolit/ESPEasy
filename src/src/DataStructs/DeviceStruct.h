@@ -17,12 +17,16 @@
 #define DEVICE_TYPE_DUAL                    2 // connected through 2 datapins
 #define DEVICE_TYPE_TRIPLE                  3 // connected through 3 datapins
 #define DEVICE_TYPE_ANALOG                 10 // AIN/tout pin
+#if FEATURE_I2C
 #define DEVICE_TYPE_I2C                    20 // connected through I2C
+#endif
 #define DEVICE_TYPE_SERIAL                 21 // connected through UART/Serial
 #define DEVICE_TYPE_SERIAL_PLUS1           22 // connected through UART/Serial + 1 extra signal pin
+#if FEATURE_SPI
 #define DEVICE_TYPE_SPI                    23 // connected through SPI
 #define DEVICE_TYPE_SPI2                   24 // connected through SPI, 2 GPIOs
 #define DEVICE_TYPE_SPI3                   25 // connected through SPI, 3 GPIOs
+#endif
 #define DEVICE_TYPE_CUSTOM0                30 // Custom labels, Not using TaskDevicePin1 ... TaskDevicePin3
 #define DEVICE_TYPE_CUSTOM1                31 // Custom labels, 1 GPIO
 #define DEVICE_TYPE_CUSTOM2                32 // Custom labels, 2 GPIOs
@@ -47,6 +51,11 @@
 // #define I2C_PERIPHERAL_BUS_???    9 // bit-offset for I2C bus used for the ???
 #endif // if FEATURE_I2C_MULTIPLE
 
+// Stored in Settings.I2C_SPI_bus_Flags !!!
+#define SPI_FLAGS_TASK_BUS_NUMBER           0 // 2 bit, stores the configured bus for a task
+// Stored in Settings.I2C_SPI_bus_Flags for Task 1 settings
+// #define SPI_FLAGS_xxx_unused            2 // 2 bit, available
+#define SPI_FLAGS_SDCARD_BUS_NUMBER         4 // 2 bit, stores the configured bus for the SDCard
 
 /*********************************************************************************************\
 * DeviceStruct
@@ -68,8 +77,9 @@ struct DeviceStruct
   }
 
   bool isSerial() const;
-
+#if FEATURE_SPI
   bool isSPI() const;
+#endif
 
   bool isCustom() const;
 
@@ -115,10 +125,10 @@ struct DeviceStruct
       uint32_t I2CNoBusSelection  : 1;       // Dis-allow I2C Bus selection in device configuration
 
       uint32_t CustomVTypeVar     : 1;       // User-selectable VType per value
-      uint32_t Dummy22            : 1;       // Dummy added to force alignment, can be re-used
-      uint32_t Dummy23            : 1;       // Dummy added to force alignment, can be re-used
-      uint32_t Dummy24            : 1;       // Dummy added to force alignment, can be re-used
-      uint32_t Dummy25            : 1;       // Dummy added to force alignment, can be re-used
+      uint32_t MqttStateClass     : 1;       // MQTT StateClass setting in DevicesPage
+      uint32_t HideDerivedValues  : 1;       // Hide the options for derived values
+      uint32_t NoDeviceSettings   : 1;       // Indicating the device is not referencing actual hardware, like the Dummy task
+      uint32_t SpiBusSelect       : 1;       // Allow selection of the SPI bus, if multiple buses are configured
       uint32_t Dummy26            : 1;       // Dummy added to force alignment, can be re-used
       uint32_t Dummy27            : 1;       // Dummy added to force alignment, can be re-used
       uint32_t Dummy28            : 1;       // Dummy added to force alignment, can be re-used

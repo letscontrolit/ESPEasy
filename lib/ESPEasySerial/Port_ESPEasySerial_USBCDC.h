@@ -11,7 +11,11 @@
 
 # include "Port_ESPEasySerial_base.h"
 
-class Port_ESPEasySerial_USBCDC_t : public Port_ESPEasySerial_base {
+# include <cstdint>
+
+
+class Port_ESPEasySerial_USBCDC_t : public Port_ESPEasySerial_base
+{
 public:
 
   Port_ESPEasySerial_USBCDC_t(const ESPEasySerialConfig& config);
@@ -41,27 +45,27 @@ public:
   size_t      setRxBufferSize(size_t new_size);
   size_t      setTxBufferSize(size_t new_size);
 
-  bool setRS485Mode(int8_t rtsPin, bool enableCollisionDetection = false);
+  bool        setRS485Mode(int8_t rtsPin,
+                           bool   enableCollisionDetection = false);
 
   virtual int getBaudRate() const override;
 
 private:
 
-# if ARDUINO_USB_CDC_ON_BOOT
-  USBCDC *_serial = &Serial;
+#if USB_SERIAL_IS_DEFINED
+  USBCDC *_serial = &USBSerial;
 # else // if ARDUINO_USB_CDC_ON_BOOT
   USBCDC *_serial = nullptr;
 # endif // if ARDUINO_USB_CDC_ON_BOOT
-};
+}; // class Port_ESPEasySerial_USBCDC_t
 
 
 // Need to define these objects as extern as they need to be defined before setup() is being called.
-# if ARDUINO_USB_CDC_ON_BOOT
-# else
+# if !USB_SERIAL_IS_DEFINED
 extern USBCDC ESPEasySerial_USBCDC_port0;
 
 // extern USBCDC ESPEasySerial_USBCDC_port1;
-# endif // if ARDUINO_USB_CDC_ON_BOOT
+# endif
 
 
 #endif // if USES_USBCDC

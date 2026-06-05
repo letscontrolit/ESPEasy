@@ -6,17 +6,19 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2025-08-23 tonhuisman: Add 10/sec call to poll background connection process while not connected
  * 2025-06-17 tonhuisman: Enable sending Derived values when available and enabled
  * 2023-08-18 tonhuisman: Clean up source for pull request
  * 2023-03-15 tonhuisman: Handle setting payload to (Dummy) Devices via topic SysName/TaskName/ValueName/set
  * 2023-03 Changelog started
  */
+
 // # include "src/Commands/InternalCommands.h"
 # include "src/Commands/ExecuteCommand.h"
 # include "src/ESPEasyCore/Controller.h"
 # include "src/Globals/Settings.h"
 # include "src/Helpers/_CPlugin_Helper_mqtt.h"
-# include "src/Helpers/Network.h"
+# include "src/Helpers/NetworkStatusLED.h"
 # include "src/Helpers/PeriodicalActions.h"
 # include "_Plugin_Helper.h"
 
@@ -44,9 +46,9 @@ bool CPlugin_006(CPlugin::Function function, struct EventStruct *event, String& 
       proto.usesExtCreds = true;
       proto.defaultPort  = 1883;
       proto.usesID       = false;
-      #if FEATURE_MQTT_TLS
-      proto.usesTLS      = true;
-      #endif
+      # if FEATURE_MQTT_TLS
+      proto.usesTLS = true;
+      # endif // if FEATURE_MQTT_TLS
       # if FEATURE_STRING_VARIABLES
       proto.allowSendDerived = true;
       # endif // if FEATURE_STRING_VARIABLES
@@ -130,7 +132,9 @@ bool CPlugin_006(CPlugin::Function function, struct EventStruct *event, String& 
         break;
       }
 
-      success = MQTT_protocol_send(event, CPlugin_006_pubname, CPlugin_006_mqtt_retainFlag);
+      const bool taskRetained = Settings.SendRetainedTaskValues(event->TaskIndex, event->ControllerIndex);
+
+      success = MQTT_protocol_send(event, CPlugin_006_pubname, CPlugin_006_mqtt_retainFlag || taskRetained);
 
       break;
     }
@@ -141,6 +145,14 @@ bool CPlugin_006(CPlugin::Function function, struct EventStruct *event, String& 
       delay(0);
       break;
     }
+
+    # if FEATURE_MQTT_CONNECT_BACKGROUND
+    case CPlugin::Function::CPLUGIN_TEN_PER_SECOND:
+    {
+      MQTTConnectInBackground(CONTROLLER_MAX, true); // Report state
+      break;
+    }
+    # endif // if FEATURE_MQTT_CONNECT_BACKGROUND
 
     default:
       break;

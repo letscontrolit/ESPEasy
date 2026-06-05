@@ -39,10 +39,10 @@ int Plugin_108_QueryVType(uint8_t value_nr) {
     Sensor_VType::SENSOR_TYPE_POWER_USG_ONLY,
     Sensor_VType::SENSOR_TYPE_REACTIVE_POWER_ONLY,
     Sensor_VType::SENSOR_TYPE_POWER_FACT_ONLY,
-    Sensor_VType::SENSOR_TYPE_NONE, // FIXME To implement Frequency and Energy options
-    Sensor_VType::SENSOR_TYPE_NONE,
-    Sensor_VType::SENSOR_TYPE_NONE,
-    Sensor_VType::SENSOR_TYPE_NONE,
+    Sensor_VType::SENSOR_TYPE_FREQUENCY,
+    Sensor_VType::SENSOR_TYPE_ENERGY,
+    Sensor_VType::SENSOR_TYPE_ENERGY,
+    Sensor_VType::SENSOR_TYPE_ENERGY,
   };
   constexpr uint8_t  valueCount = NR_ELEMENTS(vtypes);
   Sensor_VType result           = Sensor_VType::SENSOR_TYPE_NONE;

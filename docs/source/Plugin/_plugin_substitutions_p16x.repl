@@ -3,6 +3,7 @@
 .. |P162_typename| replace:: :cyan:`Output - MCP42xxx Digipot`
 .. |P162_porttype| replace:: `.`
 .. |P162_status| replace:: :yellow:`COLLECTION G`
+.. |P162_status_lb| replace:: :yellow:`COLLECTION G`
 .. |P162_github| replace:: P162_MCP42xxx.ino
 .. _P162_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P162_MCP42xxx.ino
 .. |P162_usedby| replace:: `.`
@@ -16,6 +17,7 @@
 .. |P163_typename| replace:: :cyan:`Environment - RadSens I2C radiation counter`
 .. |P163_porttype| replace:: `.`
 .. |P163_status| replace:: :yellow:`COLLECTION G`
+.. |P163_status_lb| replace:: `.`
 .. |P163_github| replace:: P163_RadSens.ino
 .. _P163_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P163_RadSens.ino
 .. |P163_usedby| replace:: `.`
@@ -29,6 +31,7 @@
 .. |P164_typename| replace:: :cyan:`Gases - ENS16x TVOC/eCO2`
 .. |P164_porttype| replace:: `.`
 .. |P164_status| replace:: :yellow:`COLLECTION G` :yellow:`CLIMATE`
+.. |P164_status_lb| replace:: :yellow:`COLLECTION G` :yellow:`CLIMATE`
 .. |P164_github| replace:: P164_gases_ens160.ino
 .. _P164_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P164_gases_ens160.ino
 .. |P164_usedby| replace:: `.`
@@ -41,7 +44,8 @@
 .. |P165_type| replace:: :cyan:`Display`
 .. |P165_typename| replace:: :cyan:`Display - NeoPixel (7-Segment)`
 .. |P165_porttype| replace:: `.`
-.. |P165_status| replace:: :yellow:`DISPLAY` :yellow:`NEOPIXEL`
+.. |P165_status| replace:: :yellow:`NEOPIXEL`
+.. |P165_status_lb| replace:: :yellow:`NEOPIXEL`
 .. |P165_github| replace:: P165_7SegNeopixel.ino
 .. _P165_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P165_7SegNeopixel.ino
 .. |P165_usedby| replace:: `.`
@@ -55,6 +59,7 @@
 .. |P166_typename| replace:: :cyan:`Output - GP8403 Dual channel DAC 0-10V`
 .. |P166_porttype| replace:: `.`
 .. |P166_status| replace:: :yellow:`COLLECTION G`
+.. |P166_status_lb| replace:: :yellow:`COLLECTION G`
 .. |P166_github| replace:: P166_GP8403.ino
 .. _P166_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P166_GP8403.ino
 .. |P166_usedby| replace:: `.`
@@ -67,7 +72,8 @@
 .. |P167_type| replace:: :cyan:`Environment`
 .. |P167_typename| replace:: :cyan:`Environment - Sensirion SEN5x (IKEA Vindstyrka)`
 .. |P167_porttype| replace:: `.`
-.. |P167_status| replace:: :yellow:`CLIMATE`
+.. |P167_status| replace:: :yellow:`CLIMATE A`
+.. |P167_status_lb| replace:: :yellow:`CLIMATE A`
 .. |P167_github| replace:: P167_Vindstyrka.ino
 .. _P167_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P167_Vindstyrka.ino
 .. |P167_usedby| replace:: `.`
@@ -80,7 +86,8 @@
 .. |P168_type| replace:: :cyan:`Light/Lux`
 .. |P168_typename| replace:: :cyan:`Light/Lux - VEML6030/VEML7700`
 .. |P168_porttype| replace:: `.`
-.. |P168_status| replace:: :yellow:`COLLECTION G` :yellow:`CLIMATE`
+.. |P168_status| replace:: :yellow:`COLLECTION G` :yellow:`CLIMATE B`
+.. |P168_status_lb| replace:: :yellow:`COLLECTION G` :yellow:`CLIMATE B`
 .. |P168_github| replace:: P168_VEML6030_7700.ino
 .. _P168_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P168_VEML6030_7700.ino
 .. |P168_usedby| replace:: `.`
@@ -93,7 +100,8 @@
 .. |P169_type| replace:: :cyan:`Environment`
 .. |P169_typename| replace:: :cyan:`Environment - AS3935 Lightning Detector`
 .. |P169_porttype| replace:: `.`
-.. |P169_status| replace:: :yellow:`CLIMATE`
+.. |P169_status| replace:: :yellow:`CLIMATE B`
+.. |P169_status_lb| replace:: `.`
 .. |P169_github| replace:: P169_AS3935_LightningDetector.ino
 .. _P169_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P169_AS3935_LightningDetector.ino
 .. |P169_usedby| replace:: `.`

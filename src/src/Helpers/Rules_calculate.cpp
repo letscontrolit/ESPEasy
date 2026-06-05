@@ -73,6 +73,15 @@ bool RulesCalculate_t::is_unary_operator(char c)
   */
 }
 
+#if !defined(LIMIT_BUILD_SIZE) && FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
+// binary = 2-argument functions
+bool RulesCalculate_t::is_binary_operator(char c)
+{
+  return (c >= static_cast<char>(BinaryOperator::ArcTan2) &&
+          c <= static_cast<char>(BinaryOperator::FMod));
+}
+#endif // if !defined(LIMIT_BUILD_SIZE) && FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
+
 // quinary = 5-argument functions
 bool RulesCalculate_t::is_quinary_operator(char c)
 {
@@ -271,6 +280,33 @@ ESPEASY_RULES_FLOAT_TYPE RulesCalculate_t::apply_unary_operator(char op, ESPEASY
   return ret;
 }
 
+#if !defined(LIMIT_BUILD_SIZE) && FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
+ESPEASY_RULES_FLOAT_TYPE RulesCalculate_t::apply_binary_operator(char op, ESPEASY_RULES_FLOAT_TYPE first, ESPEASY_RULES_FLOAT_TYPE second)
+{
+  ESPEASY_RULES_FLOAT_TYPE ret{};
+  const BinaryOperator bin_op = static_cast<BinaryOperator>(op);
+  
+  const bool useDegree = angleDegree(bin_op);
+  switch (bin_op) {
+    case BinaryOperator::ArcTan2:
+    case BinaryOperator::ArcTan2_d:
+      #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+      ret = atan2(first, second);
+      #else
+      ret = atan2f(first, second);
+      #endif
+      return useDegree ? degrees(ret) : ret;
+    case BinaryOperator::FMod:
+      #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+      return fmod(first, second);
+      #else // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+      return fmodf(first, second);
+      #endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+  }      
+  return ret;
+}
+#endif // if !defined(LIMIT_BUILD_SIZE) && FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
+
 ESPEASY_RULES_FLOAT_TYPE RulesCalculate_t::apply_quinary_operator(char op, 
                                                                   ESPEASY_RULES_FLOAT_TYPE first,
                                                                   ESPEASY_RULES_FLOAT_TYPE second,
@@ -315,7 +351,7 @@ CalculateReturnCode RulesCalculate_t::RPNCalculate(char *token)
     ESPEASY_RULES_FLOAT_TYPE first  = pop();
 
     ret = push(apply_operator(token[0], first, second));
-    // addLog(LOG_LEVEL_INFO, strformat(F("RPNCalculate operator %c: 1: %.2f 2: %.2f"), token[0], first, second));
+    // addLog(LOG_LEVEL_INFO, strformat(F("RPNCalculate operator %c: 1: %.4f 2: %.4f"), token[0], first, second));
 
 // FIXME TD-er: Regardless whether it is an error, all code paths return ret;
 //    if (isError(ret)) { return ret; }
@@ -324,10 +360,20 @@ CalculateReturnCode RulesCalculate_t::RPNCalculate(char *token)
     ESPEASY_RULES_FLOAT_TYPE first = pop();
 
     ret = push(apply_unary_operator(token[0], first));
-    // addLog(LOG_LEVEL_INFO, strformat(F("RPNCalculate unary %d: 1: %.2f"), token[0], first));
+    // addLog(LOG_LEVEL_INFO, strformat(F("RPNCalculate unary %d: 1: %.4f"), token[0], first));
 
 // FIXME TD-er: Regardless whether it is an error, all code paths return ret;
 //    if (isError(ret)) { return ret; }
+  #if !defined(LIMIT_BUILD_SIZE) && FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
+  } else if (is_binary_operator(token[0]) && (token[1] == 0))
+  {
+    const ESPEASY_RULES_FLOAT_TYPE second = pop();
+    const ESPEASY_RULES_FLOAT_TYPE first  = pop();
+    
+    ret = push(apply_binary_operator(token[0], first, second));
+    // addLog(LOG_LEVEL_INFO, strformat(F("RPNCalculate binary %d: 1: %.4f 2: %.4f"), token[0], first, second));
+  
+  #endif // if !defined(LIMIT_BUILD_SIZE) && FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
   } else if (is_quinary_operator(token[0]) && (token[1] == 0))
   {
     ESPEASY_RULES_FLOAT_TYPE fifth  = pop();
@@ -337,14 +383,14 @@ CalculateReturnCode RulesCalculate_t::RPNCalculate(char *token)
     ESPEASY_RULES_FLOAT_TYPE first  = pop();
 
     ret = push(apply_quinary_operator(token[0], first, second, third, fourth, fifth));
-    // addLog(LOG_LEVEL_INFO, strformat(F("RPNCalculate quinary %d: 1: %.2f 2: %.2f 3: %.2f 4: %.2f 5: %.2f"), token[0], first, second, third, fourth, fifth));
+    // addLog(LOG_LEVEL_INFO, strformat(F("RPNCalculate quinary %d: 1: %.4f 2: %.4f 3: %.4f 4: %.4f 5: %.4f"), token[0], first, second, third, fourth, fifth));
 
   } else {
     // Fetch next if there is any
     ESPEASY_RULES_FLOAT_TYPE value{};
     if (validDoubleFromString(token, value)) {
 
-    //   addLog(LOG_LEVEL_INFO, strformat(F("RPNCalculate push value: %.2f token: %s"), value, token));
+    //   addLog(LOG_LEVEL_INFO, strformat(F("RPNCalculate push value: %.4f token: %s"), value, token));
     // } else {
     //   addLog(LOG_LEVEL_INFO, strformat(F("RPNCalculate unknown token: %s"), token));
     }
@@ -464,7 +510,11 @@ CalculateReturnCode RulesCalculate_t::doCalculate(const char *input, ESPEASY_RUL
       }
 
       // If the token is any operator, op1, then:
-      else if (is_operator(c) || is_unary_operator(c) || is_quinary_operator(c))
+      else if (is_operator(c) || is_unary_operator(c) ||
+               #if !defined(LIMIT_BUILD_SIZE) && FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
+               is_binary_operator(c) ||
+               #endif // if !defined(LIMIT_BUILD_SIZE) && FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
+               is_quinary_operator(c))
       {
         *(TokenPos) = 0; // Mark end of token string
         error       = RPNCalculate(token);
@@ -540,15 +590,14 @@ CalculateReturnCode RulesCalculate_t::doCalculate(const char *input, ESPEASY_RUL
           *(TokenPos) = 0; // Mark end of token string
           // addLog(LOG_LEVEL_INFO, strformat(F("doCalculate popping stack sl: %u token: %s sc: %d"), sl, token, sc));
           if (sc == '(') {
-            ESPEASY_RULES_FLOAT_TYPE first = pop(); // Get last value from stack
-            error = push(first); // push back
-            error = push(first); // Push as a result of ()
-            // addLog(LOG_LEVEL_INFO, strformat(F("doCalculate pop&push 2x last value: %.2f sl: %u"), first, sl));
+            // const auto first = pop(); // Get last value from stack
+            // push(first); // push back
+            // addLog(LOG_LEVEL_INFO, strformat(F("doCalculate at ( last value: %.4f sl: %u"), first, sl));
           } else {
             error = RPNCalculate(token);
-            // ESPEASY_RULES_FLOAT_TYPE first = pop(); // Get last value from stack
-            // error = push(first); // push back
-            // addLog(LOG_LEVEL_INFO, strformat(F("doCalculate last value on stack: %.2f sl: %u"), first, sl));
+            // const auto first = pop(); // Get last value from stack
+            // push(first); // push back
+            // addLog(LOG_LEVEL_INFO, strformat(F("doCalculate last value on stack: %.4f sl: %u"), first, sl));
           }
           TokenPos = token;
 
@@ -567,8 +616,18 @@ CalculateReturnCode RulesCalculate_t::doCalculate(const char *input, ESPEASY_RUL
             pe = true;
             if (sl > 1) {
               sc = stack[sl - 2];
-              if (!(is_operator(sc) || is_unary_operator(sc) || is_quinary_operator(sc))) {
-                sc = '(';
+              if (is_operator(sc)) { // Not a function call
+                // Don't touch
+              } else if (is_unary_operator(sc) ||
+                         #if !defined(LIMIT_BUILD_SIZE) && FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
+                         is_binary_operator(sc) ||
+                         #endif // if !defined(LIMIT_BUILD_SIZE) && FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
+                         is_quinary_operator(sc)) { // Function call, so process the function too
+                *TokenPos = sc;
+                ++TokenPos;
+                stack[sl - 2] = '\0'; // Don't process again on stack wind-down
+              } else {
+                sc = '\0'; // Reset
               }
             }
           }
@@ -606,6 +665,7 @@ CalculateReturnCode RulesCalculate_t::doCalculate(const char *input, ESPEASY_RUL
     ++strpos;
   }
 
+  // addLog(LOG_LEVEL_INFO, strformat(F("doCalculate final stack content 0x%s"), formatToHex_array(reinterpret_cast<const uint8_t*>(stack), sl + 1).c_str()));
   // When there are no more tokens to read:
   // While there are still operator tokens in the stack:
   while (sl > 0)
@@ -617,8 +677,12 @@ CalculateReturnCode RulesCalculate_t::doCalculate(const char *input, ESPEASY_RUL
     }
 
     *(TokenPos) = 0; // Mark end of token string
+    // addLog(LOG_LEVEL_INFO, strformat(F("doCalculate closing up stack sl: %u token: %s sc: %d"), sl, token, sc));
     error       = RPNCalculate(token);
     TokenPos    = token;
+    // const auto first = pop(); // Get last value from stack
+    // push(first); // push back
+    // addLog(LOG_LEVEL_INFO, strformat(F("doCalculate closing, last value on stack: %.4f sl: %u"), first, sl));
 
     if (isError(error)) { return error; }
     *TokenPos = sc;
@@ -629,6 +693,9 @@ CalculateReturnCode RulesCalculate_t::doCalculate(const char *input, ESPEASY_RUL
   *(TokenPos) = 0; // Mark end of token string
   error       = RPNCalculate(token);
   TokenPos    = token;
+  // const auto first = pop(); // Get last value from stack
+  // push(first); // push back
+  // addLog(LOG_LEVEL_INFO, strformat(F("doCalculate final value on stack: %.4f sl: %u"), first, sl));
 
   if (isError(error))
   {
@@ -653,6 +720,19 @@ void preProcessReplace(String& input, UnaryOperator op) {
   input.replace(find, replace);
 }
 
+#if !defined(LIMIT_BUILD_SIZE) && FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
+void preProcessReplace(String& input, BinaryOperator op) {
+  String find = toString(op);
+
+  if (find.isEmpty()) { return; }
+  find += '('; // Add opening parenthesis.
+
+  const String replace = String(static_cast<char>(op)) + '(';
+
+  input.replace(find, replace);
+}
+#endif // if !defined(LIMIT_BUILD_SIZE) && FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
+
 bool angleDegree(UnaryOperator op)
 {
   switch (op) {
@@ -668,6 +748,22 @@ bool angleDegree(UnaryOperator op)
   }
   return false;
 }
+
+#if !defined(LIMIT_BUILD_SIZE) && FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
+bool angleDegree(BinaryOperator op)
+{
+  return BinaryOperator::ArcTan2_d == op;
+  // switch (op) // Future extension for 4 or more BinaryOperator options and multiple _d options
+  // {
+  // case BinaryOperator::ArcTan2_d:
+  //   return true;
+  // case BinaryOperator::ArcTan2:
+  // case BinaryOperator::FMod:
+  //   return false;
+  // }
+  // return false;
+}
+#endif // if !defined(LIMIT_BUILD_SIZE) && FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
 
 const __FlashStringHelper* toString(UnaryOperator op)
 {
@@ -720,6 +816,21 @@ const __FlashStringHelper* toString(UnaryOperator op)
   return F("");
 }
 
+#if !defined(LIMIT_BUILD_SIZE) && FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
+const __FlashStringHelper* toString(BinaryOperator op)
+{
+  switch (op) {
+    case BinaryOperator::ArcTan2:
+      return F("atan2");
+    case BinaryOperator::ArcTan2_d:
+      return F("atan2_d");
+    case BinaryOperator::FMod:
+      return F("fmod");
+  }
+  return F("");
+}
+#endif // if !defined(LIMIT_BUILD_SIZE) && FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
+
 String RulesCalculate_t::preProces(const String& input)
 {
   String preprocessed = input;
@@ -751,7 +862,7 @@ String RulesCalculate_t::preProces(const String& input)
     ,UnaryOperator::Tan
     ,UnaryOperator::Tan_d
     #endif // if FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
-    ,UnaryOperator::Map
+    ,UnaryOperator::Map // FIXME ?Move to new QuintaryOperator enum?
     ,UnaryOperator::MapC
 
   };
@@ -770,6 +881,22 @@ String RulesCalculate_t::preProces(const String& input)
       preProcessReplace(preprocessed, op);
     }
   }
+
+  #if !defined(LIMIT_BUILD_SIZE) && FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
+
+  const BinaryOperator operators2[] = {
+    BinaryOperator::ArcTan2,
+    BinaryOperator::ArcTan2_d,
+    BinaryOperator::FMod,
+  };
+
+  constexpr size_t nrOperators2 = NR_ELEMENTS(operators2);
+  for (size_t i = 0; i < nrOperators2; ++i) {
+    const BinaryOperator op = operators2[i];
+    preProcessReplace(preprocessed, op);
+  }
+  #endif // if !defined(LIMIT_BUILD_SIZE) && FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
+
   return preprocessed;
 }
 

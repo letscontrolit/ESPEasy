@@ -16,6 +16,9 @@
 #include "../Helpers/_CPlugin_init.h"
 #include "../Helpers/ESPEasy_math.h"
 #include "../Helpers/ESPEasy_Storage.h"
+#if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+#include "../Helpers/ESPEasy_UnitOfMeasure.h"
+#endif
 #include "../Helpers/Misc.h"
 #include "../Helpers/Numerical.h"
 #include "../Helpers/StringConverter.h"
@@ -319,7 +322,7 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
             }
           }
           #if FEATURE_STRING_VARIABLES
-          if (!isHandled) {
+          if (!isHandled && Settings.TaskDeviceEnabled[taskIndex]) {
             String value;
             const String valName = parseString(valueName, 1);
             String derived = getCustomStringVar(strformat(F(TASK_VALUE_DERIVED_PREFIX_TEMPLATE), deviceName.c_str(), valName.c_str()));
@@ -333,6 +336,7 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
               }
             }
           }
+          #endif // if FEATURE_STRING_VARIABLES
 
           #if FEATURE_TASKVALUE_ATTRIBUTES
           if (!isHandled && valueName.indexOf('.') > -1) { // TaskValue specific attributes
@@ -376,6 +380,7 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
           }
           #endif // if FEATURE_TASKVALUE_ATTRIBUTES
 
+          #if FEATURE_STRING_VARIABLES
           if (!isHandled && valueName.indexOf('.') > -1) {
             String value;
             const String fullValueName = parseString(valueName, 1);

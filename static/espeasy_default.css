@@ -8,7 +8,6 @@
 	--bg5: #dbff0075;
 	--c2: #444;
 	--bg6: #fff;
-	--bdc2: #444 #444 #fff;
 	--c3: #000;
 	--bg7: #bdbdbd;
 	--bg8: #029b34;
@@ -19,6 +18,7 @@
 	--c6: #fff;
 	--ro: 0deg;
 	--iv: 0;
+	--tpm2: 140px;
 }
 
 [data-theme="dark"] {
@@ -31,7 +31,6 @@
 	--bg5: #553044;
 	--c2: #fff;
 	--bg6: #222;
-	--bdc2: transparent;
 	--c3: #fff;
 	--bg7: #00000030;
 	--bg8: #30553d;
@@ -55,7 +54,6 @@
 		--bg5: #553044;
 		--c2: #fff;
 		--bg6: #222;
-		--bdc2: transparent;
 		--c3: #fff;
 		--bg7: #00000030;
 		--bg8: #30553d;
@@ -111,7 +109,7 @@ textarea {
 
 h1 {
 	font-size: 16pt;
-	margin: 8px 0
+	white-space: nowrap
 }
 
 h3 {
@@ -187,7 +185,8 @@ textarea {
 
 input,
 select,
-textarea {
+textarea,
+summary {
 	margin: 4px;
 	padding: 4px 8px
 }
@@ -429,7 +428,8 @@ textarea,
 }
 
 .apheader,
-.headermenu {
+.headermenu,
+.headermenu2 {
 	padding: 8px 12px;
 	width: 100vw
 }
@@ -439,31 +439,72 @@ textarea,
 	font-style: italic
 }
 
-.headermenu {
+.headermenu,
+.headermenu2 {
 	background-color: var(--bg11);
-	border-bottom: .1px solid #444;
-	height: 100px;
 	position: fixed;
 	top: 0;
-	z-index: 1
+	z-index: 1;
+	box-shadow: 0 0 10px 1px rgb(0 0 0 / 30%)
+}
+
+.headermenu {
+	height: 100px;
+	border-bottom: .1px solid #444;
+}
+
+.headermenu2 {
+	height: var(--tpm2);
 }
 
 .bodymenu {
-	height: 100vh;
+	min-height: 100vh;
 	padding-top: 100px
 }
 
-.menubar {
+.bodymenu2 {
+	min-height: 100vh;
+	padding-top: var(--tpm2)
+}
+
+.menubar,
+.menubar2 {
+	display: flex;
 	position: inherit;
+	overflow-x: scroll;
+	scrollbar-width: none
+}
+
+[class^="menubar"]::-webkit-scrollbar {
+  display: none;
+}
+
+.menubar {
 	top: 54px;
-	width: 100%
+	max-width: 1180px;
+}
+
+.menubar2 {
+	top: 99px;
+	background: var(--bg2);
+	width: 100vw;
+	left: 0;
+  border-block: .1px solid #222
 }
 
 a.menu {
 	align-items: center;
 	display: flex;
 	height: 46px;
-	justify-content: center
+	justify-content: center;
+	gap: 2px;
+	width: 100%
+}
+
+.menubar2 a.menu {
+	max-width: 70px;
+	height: 41px;
+	border-bottom: 0
 }
 
 .menu {
@@ -476,7 +517,7 @@ a.menu {
 
 .menu.active {
 	background-color: var(--bg6);
-	border-color: var(--bdc2);
+  border-color: #222;
 	color: var(--c3);
 	border-width: .1px
 }
@@ -545,6 +586,10 @@ section {
 	padding: 10px 0
 }
 
+summary {
+	cursor: pointer;
+}
+
 footer {
 	padding: 0 5px;
 	word-break: break-all
@@ -576,13 +621,25 @@ canvas {
 	filter: invert(var(--iv)) hue-rotate(var(--ro));
 }
 
-@media screen and (max-width:780px) {
+.tc1 {
+	width: 15vw;
+}
+
+@media screen and (max-width:1280px) {
+	.tc1 {
+		width: 25vw;
+	}
+}
+
+@media screen and (max-width:975px) {
 	.showmenulabel {
 		display: none
 	}
 
-	a.menu {
-		width: 12%
+	.menubar {
+		width: 100%;
+		max-width: 700px;
+		left: 0
 	}
 }
 

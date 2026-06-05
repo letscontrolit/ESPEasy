@@ -3,13 +3,15 @@
 #include "../Commands/Common.h"
 #include "../ESPEasyCore/Serial.h"
 
-#include "../Globals/I2Cdev.h"
 #include "../Globals/Settings.h"
 
 #include "../Helpers/Hardware_I2C.h"
 #include "../Helpers/StringConverter.h"
 
-#include "../../ESPEasy_common.h"
+
+#if FEATURE_I2C
+
+#include <Wire.h>
 
 void i2c_scanI2Cbus(bool dbg, int8_t channel, uint8_t i2cBus) {
   uint8_t error, address;
@@ -70,3 +72,4 @@ const __FlashStringHelper* Command_i2c_Scanner(struct EventStruct *event, const 
   I2CSelectHighClockSpeed(0); // By default the bus is in standard speed
   return return_see_serial(event);
 }
+#endif

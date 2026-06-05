@@ -63,6 +63,7 @@ bool ControllerCache_struct::deleteOldestCacheBlock() {
 
 void ControllerCache_struct::closeOpenFiles() {
   if (_RTC_cache_handler != nullptr) {
+    _RTC_cache_handler->flush();
     _RTC_cache_handler->closeOpenFiles();
   }
 }
@@ -87,7 +88,7 @@ void ControllerCache_struct::resetpeek() {
   }
 }
 
-bool ControllerCache_struct::peekDataAvailable() const {
+bool ControllerCache_struct::peekDataAvailable() {
   if (_RTC_cache_handler == nullptr) {
     return false;
   }

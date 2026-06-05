@@ -14,7 +14,9 @@ Type: |C005_type|
 
 Name: |C005_name|
 
-Status: |C005_status|
+Status ESP32: |C005_status|
+
+Status ESP8266: |C005_status_lb|
 
 GitHub: |C005_github|_
 
@@ -84,6 +86,8 @@ A group of MQTT specific settings:
 * **Current Client ID**: Shows the calculated Client ID at load-time of the page.
 
 * **Publish Retain Flag**: When publishing data accompanied by the Retain flag, the server will store the last sent data, and publish that when reconnecting.
+
+This will override the **Retained** setting per Task that can be set for a MQTT Controller.
 
 * **Controller Subscribe**: The topic(s) to subscribe to, so the MQTT Server can send data and optionally commands to this client-instance.
 

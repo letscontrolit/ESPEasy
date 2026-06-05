@@ -13,7 +13,9 @@ Type: |P162_type|
 
 Name: |P162_name|
 
-Status: |P162_status|
+Status ESP32: |P162_status|
+
+Status ESP8266: |P162_status_lb|
 
 GitHub: |P162_github|_
 

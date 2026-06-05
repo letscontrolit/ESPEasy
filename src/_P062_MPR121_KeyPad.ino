@@ -359,10 +359,11 @@ boolean Plugin_062(uint8_t function, struct EventStruct *event, String& string)
                   uint16_t min     = 0;
                   uint16_t max     = 0;
                   P062_data->getCalibrationData(col, &current, &min, &max);
+#ifndef BUILD_NO_DEBUG
                   addLog(LOG_LEVEL_INFO,
                          strformat(F("P062 touch #%d current: %d min: %d max: %d"),
                                    col, current, min, max));
-
+#endif
                   if (!PCONFIG(1)) {
                     break;
                   }

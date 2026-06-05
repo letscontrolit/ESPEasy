@@ -29,9 +29,12 @@ License along with NeoPixel.  If not, see
 #include <Arduino.h>
 
 // ESP32C3 I2S is not supported yet
-#if !defined(CONFIG_IDF_TARGET_ESP32C3) && !defined(CONFIG_IDF_TARGET_ESP32C2) && !defined(CONFIG_IDF_TARGET_ESP32C6)
+#if !defined(CONFIG_IDF_TARGET_ESP32C5) && !defined(CONFIG_IDF_TARGET_ESP32C3) && !defined(CONFIG_IDF_TARGET_ESP32C2) && !defined(CONFIG_IDF_TARGET_ESP32C6) && !defined(CONFIG_IDF_TARGET_ESP32C61) && !defined(CONFIG_IDF_TARGET_ESP32P4)
 #if !defined(ARDUINO_ARCH_ESP8266)
 #include "soc/gpio_periph.h"
+#if ESP_IDF_VERSION_MAJOR >= 6
+#include "soc/gpio_struct.h"
+#endif
 #endif
 
 static inline uint32_t getCycleCount(void)
@@ -74,7 +77,7 @@ void IRAM_ATTR NeoEspBitBangBase_send_pixels(uint8_t* pixels, uint8_t* end, uint
 
         // reset pin start
 #if defined(ARDUINO_ARCH_ESP32)
-        GPIO.out_w1tc = pinRegister;
+        GPIO.out_w1ts = pinRegister;
 #else
         GPIO_REG_WRITE(GPIO_OUT_W1TC_ADDRESS, pinRegister);
 #endif

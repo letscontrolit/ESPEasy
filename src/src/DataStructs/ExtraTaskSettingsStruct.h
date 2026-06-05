@@ -84,6 +84,12 @@ struct ExtraTaskSettingsStruct
                                       uint8_t        customVType);
   #endif // if FEATURE_CUSTOM_TASKVAR_VTYPE
 
+  #if FEATURE_MQTT_STATE_CLASS
+  uint8_t       getTaskVarStateClass(taskVarIndex_t taskVarIndex) const;
+  void          setTaskVarStateClass(taskVarIndex_t taskVarIndex,
+                                     uint8_t        stateClass);
+  #endif // if FEATURE_MQTT_STATE_CLASS
+
   void          populateDeviceValueNamesSeq(const __FlashStringHelper *valuename,
                                             size_t                     nrValues,
                                             uint8_t                    defaultDecimals,

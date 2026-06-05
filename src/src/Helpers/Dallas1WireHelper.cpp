@@ -77,29 +77,9 @@ void DALLAS_IRAM_ATTR Dallas_pinWrite(uint32_t gpio_pin_rx, uint32_t gpio_pin_tx
   }
 }
 
-int32_t DALLAS_IRAM_ATTR Dallas_measureWaitForPinState(uint32_t gpio_pin_rx, uint32_t start_usec, int32_t timeout_usec, bool newState)
-{
-  int32_t passed{};
-
-  do {
-    passed = usecPassedSince_fast(start_usec);
-  } while (passed < timeout_usec &&
-           (!DIRECT_pinRead_ISR(gpio_pin_rx) == newState)); // Using '!' to do a quick cast to bool
-
-  if ((passed > timeout_usec) ||
-      (!DIRECT_pinRead_ISR(gpio_pin_rx) == newState)) {
-    return -1;
-  }
-
-  // N.B. we allow the situation where passed == timeout_usec
-  // and pin might have reached the state we're waiting for.
-  // This way we don't need to average for time before reading pin state and after.
-  return passed;
-}
-
 inline bool Dallas_waitForPinState(int8_t gpio_pin_rx, uint32_t start_usec, int32_t timeout_usec, uint32_t newState)
 {
-  return Dallas_measureWaitForPinState(gpio_pin_rx, start_usec, timeout_usec, newState) >= 0;
+  return DIRECT_measureWaitForPinState_ISR(gpio_pin_rx, start_usec, timeout_usec, newState) >= 0;
 }
 
 # define Dallas_pinLow   Dallas_pinWrite(gpio_pin_rx, gpio_pin_tx, false)
@@ -108,8 +88,8 @@ inline bool Dallas_waitForPinState(int8_t gpio_pin_rx, uint32_t start_usec, int3
 
 // # define Dallas_waitForPinLow(P, S, T) Dallas_waitForPinState(P, S, T, 0)
 # define Dallas_waitForPinHigh(P, S, T) Dallas_waitForPinState(P, S, T, 1)
-# define Dallas_measureWaitForPinLow(P, S, T) Dallas_measureWaitForPinState(P, S, T, 0)
-# define Dallas_measureWaitForPinHigh(P, S, T) Dallas_measureWaitForPinState(P, S, T, 1)
+# define Dallas_measureWaitForPinLow(P, S, T) DIRECT_measureWaitForPinState_ISR(P, S, T, 0)
+# define Dallas_measureWaitForPinHigh(P, S, T) DIRECT_measureWaitForPinState_ISR(P, S, T, 1)
 
 int Dallas_measure_rise_time(int8_t gpio_pin_rx, int8_t gpio_pin_tx)
 {

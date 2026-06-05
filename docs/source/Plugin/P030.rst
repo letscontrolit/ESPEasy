@@ -6,7 +6,9 @@
 
 Name: |P030_name|
 
-Status: |P030_status|
+Status ESP32: |P030_status|
+
+Status ESP8266: |P030_status_lb|
 
 .. note:: 
   This plugin has been replaced by :ref:`p028_page` (though that will need reconfiguration)

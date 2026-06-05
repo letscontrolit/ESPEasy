@@ -36,10 +36,6 @@ bool CPluginCall(CPlugin::Function   Function,
 bool CPluginCall(CPlugin::Function   Function,
                  struct EventStruct *event,
                  String            & str);
-bool CPluginCall(protocolIndex_t     protocolIndex,
-                 CPlugin::Function   Function,
-                 struct EventStruct *event,
-                 String            & str);
 
 bool              anyControllerEnabled();
 controllerIndex_t findFirstEnabledControllerWithId(cpluginID_t cpluginid);

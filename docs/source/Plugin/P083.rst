@@ -13,7 +13,9 @@ Type: |P083_type|
 
 Name: |P083_name|
 
-Status: |P083_status|
+Status ESP32: |P083_status|
+
+Status ESP8266: |P083_status_lb|
 
 GitHub: |P083_github|_
 

@@ -17,7 +17,7 @@
 #include <ESPEasySerialType.h>
 
 
-String serialHelper_getSerialTypeLabel(ESPEasySerialPort serType, bool shortName) {
+const __FlashStringHelper* serialHelper_getSerialTypeLabel(ESPEasySerialPort serType, bool shortName) {
   return ESPEasySerialPort_toString(serType, shortName);
 }
 
@@ -227,6 +227,18 @@ void serialHelper_webformLoad(ESPEasySerialPort port, int rxPinDef, int txPinDef
 //"	  document.querySelector('#taskdevicepin2').value =" STRINGIFY(SOC_TX2) ";"
 "   style = '';"
 #endif
+# if USABLE_SOC_UART_NUM > 3
+"	} else if (elem.value == 10) {"
+"   style = '';"
+#endif
+# if USABLE_SOC_UART_NUM > 4
+"	} else if (elem.value == 11) {"
+"   style = '';"
+#endif
+# if USABLE_SOC_UART_NUM > 5
+"	} else if (elem.value == 12) {"
+"   style = '';"
+#endif
 #if USES_SW_SERIAL
 "	} else if (elem.value == 6) {"
 "   style = '';"
@@ -256,6 +268,15 @@ void serialHelper_webformLoad(ESPEasySerialPort port, int rxPinDef, int txPinDef
 #if USABLE_SOC_UART_NUM > 2
     ,static_cast<int>(ESPEasySerialPort::serial2)
 #endif // if USABLE_SOC_UART_NUM > 2
+#if USABLE_SOC_UART_NUM > 3
+    ,static_cast<int>(ESPEasySerialPort::serial3)
+#endif 
+#if USABLE_SOC_UART_NUM > 4
+    ,static_cast<int>(ESPEasySerialPort::serial4)
+#endif 
+#if USABLE_SOC_UART_NUM > 5
+    ,static_cast<int>(ESPEasySerialPort::serial5)
+#endif 
 #if USES_SW_SERIAL
     ,static_cast<int>(ESPEasySerialPort::software)
 #endif // if USES_SW_SERIAL

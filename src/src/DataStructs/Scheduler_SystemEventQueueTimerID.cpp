@@ -24,10 +24,9 @@ String SystemEventQueueTimerID::decode() const
   result += ',';
 
   if (ptr_type == SchedulerPluginPtrType_e::ControllerPlugin) {
-    result += getCPluginNameFromProtocolIndex(index);
+    result += getCPluginID_from_ControllerIndex(index);
   } else if (ptr_type == SchedulerPluginPtrType_e::TaskPlugin) {
-    const deviceIndex_t dev_index = deviceIndex_t::toDeviceIndex(index);
-    result += getPluginNameFromDeviceIndex(dev_index);
+    result += getPluginNameFromPluginID(getPluginID_from_TaskIndex(index));
   } else {
     result += (index + 1);
   }

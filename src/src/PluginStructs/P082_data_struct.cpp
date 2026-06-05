@@ -8,9 +8,9 @@
 # include <TinyGPS++.h>
 # include <ESPeasySerial.h>
 
-
 const __FlashStringHelper* Plugin_082_valuename(P082_query value_nr, bool displayString) {
-  switch (value_nr) {
+  switch (value_nr)
+  {
     case P082_query::P082_QUERY_LONG:        return displayString ? F("Longitude")          : F("long");
     case P082_query::P082_QUERY_LAT:         return displayString ? F("Latitude")           : F("lat");
     case P082_query::P082_QUERY_ALT:         return displayString ? F("Altitude")           : F("alt");
@@ -40,7 +40,8 @@ P082_query Plugin_082_from_valuename(const String& valuename)
 }
 
 const __FlashStringHelper* toString(P082_PowerMode mode) {
-  switch (mode) {
+  switch (mode)
+  {
     case P082_PowerMode::Max_Performance: return F("Max Performance");
     case P082_PowerMode::Power_Save:      return F("Power Save");
     case P082_PowerMode::Eco:             return F("ECO");
@@ -49,7 +50,8 @@ const __FlashStringHelper* toString(P082_PowerMode mode) {
 }
 
 const __FlashStringHelper* toString(P082_DynamicModel model) {
-  switch (model) {
+  switch (model)
+  {
     case P082_DynamicModel::Portable:    return F("Portable");
     case P082_DynamicModel::Stationary:  return F("Stationary");
     case P082_DynamicModel::Pedestrian:  return F("Pedestrian");
@@ -89,7 +91,7 @@ void P082_software_pps::setSentenceType(
     const uint64_t endOfLine_received_usec = getMicros64() - bytesToUsec(bytesAvailableInSerialBuffer);
     const int64_t  sentence_duration       = timeDiff64(_cur_start_sentence_usec, endOfLine_received_usec);
 
-//    if (usecPassedSince(_cur_start_sentence_usec) < 1000000ll) {
+    //    if (usecPassedSince(_cur_start_sentence_usec) < 1000000ll) {
 
     // Assume a NMEA sentence cannot be over 80 bytes
     // Apply some tolerance, thus check for duration to receive 120 bytes
@@ -144,34 +146,43 @@ uint64_t P082_software_pps::bytesToUsec(uint32_t bytes) const
   return duration_usec;
 }
 
-#ifndef BUILD_NO_DEBUG
+# ifndef BUILD_NO_DEBUG
+
 String P082_software_pps::getStats() const
 {
   String res;
   constexpr uint32_t nrelements = NR_ELEMENTS(_second_frac_in_usec);
+
   for (size_t i = 0; i < nrelements; ++i) {
     uint32_t value{};
     _second_frac_in_usec[i].peek(value);
     {
 
-      switch (i) {
-        case TinyGPSPlus::GPS_SENTENCE_GPGGA: res += F("GGA"); break;
-        case TinyGPSPlus::GPS_SENTENCE_GPRMC: res += F("RMC"); break;
-        case TinyGPSPlus::GPS_SENTENCE_GPGSA: res += F("GSA"); break;
-        case TinyGPSPlus::GPS_SENTENCE_GPGSV: res += F("GSV"); break;
-        case TinyGPSPlus::GPS_SENTENCE_GPGLL: res += F("GLL"); break;
-        case TinyGPSPlus::GPS_SENTENCE_GPTXT: res += F("TXT"); break;
+      switch (i)
+      {
+        case TinyGPSPlus::GPS_SENTENCE_GPGGA: res += F("GGA");
+          break;
+        case TinyGPSPlus::GPS_SENTENCE_GPRMC: res += F("RMC");
+          break;
+        case TinyGPSPlus::GPS_SENTENCE_GPGSA: res += F("GSA");
+          break;
+        case TinyGPSPlus::GPS_SENTENCE_GPGSV: res += F("GSV");
+          break;
+        case TinyGPSPlus::GPS_SENTENCE_GPGLL: res += F("GLL");
+          break;
+        case TinyGPSPlus::GPS_SENTENCE_GPTXT: res += F("TXT");
+          break;
         default:
-        res += F("---");
-        break;
+          res += F("---");
+          break;
       }
       res += strformat(F(": %06d (%d)<br>"), value, _second_frac_in_usec[i].getCount());
     }
   }
-  return res;  
+  return res;
 }
-#endif
 
+# endif // ifndef BUILD_NO_DEBUG
 
 
 P082_data_struct::P082_data_struct() : gps(nullptr), easySerial(nullptr) {
@@ -297,7 +308,8 @@ bool P082_data_struct::loop() {
               const int c = easySerial->read();
 
               if (c >= 0) {
-                switch (bytesRead) {
+                switch (bytesRead)
+                {
                   case 0:
 
                     if (c != 0x62) {
@@ -341,7 +353,7 @@ bool P082_data_struct::loop() {
         if (gps->encode(c)) {
           // Full sentence received
 # ifdef P082_SEND_GPS_TO_LOG
-          _lastSentence    = _currentSentence;
+          _lastSentence = _currentSentence;
           free_string(_currentSentence);
 # endif // ifdef P082_SEND_GPS_TO_LOG
           completeSentence = true;
@@ -352,6 +364,7 @@ bool P082_data_struct::loop() {
             available = easySerial->available();
             _softwarePPS.addStartOfSentence(available);
           }
+
           if (available == 0) {
             available = easySerial->available();
           }
@@ -397,10 +410,10 @@ ESPEASY_RULES_FLOAT_TYPE P082_data_struct::distanceSinceLast(unsigned int maxAge
 // @param age is the time in msec since the last update of the time +
 // additional centiseconds given by the GPS.
 bool P082_data_struct::getDateTime(
-  struct tm& dateTime,
-  uint8_t  & centiseconds,
-  uint32_t & age,
-  bool     & updated) {
+  struct tm&dateTime,
+  uint8_t & centiseconds,
+  uint32_t& age,
+  bool    & updated) {
   updated = false;
 
   if (!isInitialized()) {
@@ -453,7 +466,7 @@ bool P082_data_struct::getDateTime(
   return true;
 }
 
-bool P082_data_struct::getDateTime(struct tm& dateTime) const
+bool P082_data_struct::getDateTime(struct tm&dateTime) const
 {
   uint64_t value_usec{};
 
@@ -559,8 +572,10 @@ bool P082_data_struct::wakeUp() {
 }
 
 # ifdef P082_USE_U_BLOX_SPECIFIC
+
 bool P082_data_struct::setPowerMode(P082_PowerMode mode) {
-  switch (mode) {
+  switch (mode)
+  {
     case P082_PowerMode::Max_Performance:
     {
       const uint8_t UBLOX_command[] = { 0xB5, 0x62, 0x06, 0x11, 0x02, 0x00, 0x08, 0x00, 0x21, 0x91 };
@@ -612,6 +627,7 @@ bool P082_data_struct::setDynamicModel(P082_DynamicModel model) {
 # endif // ifdef P082_USE_U_BLOX_SPECIFIC
 
 # ifdef P082_USE_U_BLOX_SPECIFIC
+
 void P082_data_struct::computeUbloxChecksum(const uint8_t *data, size_t size, uint8_t& CK_A, uint8_t& CK_B) {
   CK_A = 0;
   CK_B = 0;
@@ -647,12 +663,10 @@ bool P082_data_struct::writeToGPS(const uint8_t *data, size_t size) {
   return false;
 }
 
-void ICACHE_RAM_ATTR P082_data_struct::pps_interrupt(P082_data_struct *self)
-{
-  self->_pps_time_micros = getMicros64();
-}
+void ICACHE_RAM_ATTR P082_data_struct::pps_interrupt(P082_data_struct *self) { self->_pps_time_micros = getMicros64(); }
 
 # if FEATURE_PLUGIN_STATS
+
 bool P082_data_struct::webformLoad_show_stats(struct EventStruct *event, uint8_t var_index, P082_query query_type) const
 {
   bool somethingAdded = false;
@@ -670,7 +684,8 @@ bool P082_data_struct::webformLoad_show_stats(struct EventStruct *event, uint8_t
     ESPEASY_RULES_FLOAT_TYPE dist_stddev{};
 
     if (gps != nullptr) {
-      switch (query_type) {
+      switch (query_type)
+      {
         case P082_query::P082_QUERY_LAT:
           show_custom = true;
 
@@ -738,6 +753,7 @@ bool P082_data_struct::webformLoad_show_stats(struct EventStruct *event, uint8_t
 }
 
 #  if FEATURE_CHART_JS
+
 void P082_data_struct::webformLoad_show_position_scatterplot(struct EventStruct *event)
 {
   taskVarIndex_t stats_long = INVALID_TASKVAR_INDEX;
@@ -747,7 +763,8 @@ void P082_data_struct::webformLoad_show_position_scatterplot(struct EventStruct 
     const uint8_t pconfigIndex = var_index + P082_QUERY1_CONFIG_POS;
     const P082_query query     = static_cast<P082_query>(PCONFIG(pconfigIndex));
 
-    switch (query) {
+    switch (query)
+    {
       case P082_query::P082_QUERY_LONG:
         stats_long = var_index;
         break;
@@ -758,26 +775,27 @@ void P082_data_struct::webformLoad_show_position_scatterplot(struct EventStruct 
         break;
     }
   }
-
+  addRowColspan(2);
   plot_ChartJS_scatter(
     stats_long,
     stats_lat,
     F("positionscatter"),
     { F("Position Scatter Plot") },
-    { F("Coordinates"), F("rgb(255, 99, 132)") },
-    500,
-    500);
+    { F("Coordinates"), F("rgb(255, 99, 132)") });
+  addHtml(F("</td></tr>"));
 }
 
 #  endif // if FEATURE_CHART_JS
 # endif  // if FEATURE_PLUGIN_STATS
 
-#ifndef BUILD_NO_DEBUG
+# ifndef BUILD_NO_DEBUG
+
 String P082_data_struct::getPPSStats() const
 {
   return _softwarePPS.getStats();
 }
-#endif
+
+# endif // ifndef BUILD_NO_DEBUG
 
 
 #endif   // ifdef USES_P082

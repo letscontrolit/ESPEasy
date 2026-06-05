@@ -22,7 +22,7 @@ Depending on the controller capabilities, some configuration settings may be sho
 
 .. image:: Task_config_page_Controllers_section.png
 
-All configured Controllers are shown here, including their enabled or disabled state (only a single MQTT Controller can be enabled at one time).
+All configured Controllers are shown here, including the enabled or disabled state (multiple Controllers can be enabled, only a single MQTT Controller can be enabled at one time!).
 
 For each controller the user can select wether the data should be sent on each Interval (or explicit TaskRun).
 
@@ -30,12 +30,14 @@ For the Domoticz controllers the value index (IDX) has to be configured.
 
 For some controllers, like Home Assistant/openHAB, there are extra options available.
 
-* **Group**: This represents the group id to combine all values from multiple tasks into a single grouped-device during MQTT AutoDiscovery. Groups, by design, can span multiple ESPEasy devices, if desired, as long as the Task/Valuename combinations are unique. If a group should only combine Tasks from a single ESPEasy unit, the group id should be unique across multiple ESPEasy units. The group description, default *Group <n>*, can be adjusted in Home Assistant.
+* **Group**: This represents the group id to combine all values from multiple tasks into a single grouped-device during MQTT AutoDiscovery. Groups, by design, can span multiple ESPEasy devices, if desired, as long as the Task/Valuename combinations are unique. If a group should only combine Tasks from a single ESPEasy unit, the group id should be unique across multiple ESPEasy units. The group description, default *Group <n>*, can be adjusted in Home Assistant. If the Group value matches the current Unit nr, the Unit name, ``%sysname%``, is used instead of Group <nr>.
+
+* **Retained**: For MQTT Controllers, this setting can be enabled to send the values for the current task with the Retain flag set. The **Publish Retain flag** in the Controller settings will override this by sending *all* task values with Retain flag enabled.
 
 * **Send derived**: This checkbox determines if any configured Derived values should also be sent to the controller (and included in the AutoDiscovery if that's available and enabled).
 
-* **Resend MQTT Discovery**: When checked, will start a resend of the MQTT Discovery process for this task after a random delay, when Submit is clicked, so any chenged settings can be updated in the MQTT server. This setting is only available if the controller is enabled, the Auto Discovery feature is available and enabled for the controller. This setting is not stored.
+* **Resend MQTT Discovery**: When checked, will start a resend of the MQTT Discovery process for this task after a random delay, when Submit is clicked, so any changed settings will be updated in the MQTT broker. This setting is only available if the controller is enabled, the Auto Discovery feature is available and enabled for the controller. This setting is not stored.
 
-Other controllers, like FHEM HTTP, do not support additional settings besides the checkbox to enable sending the data.
+Other controllers, like f.e. FHEM HTTP, do not support additional settings besides the checkbox to enable sending the data.
 
 |

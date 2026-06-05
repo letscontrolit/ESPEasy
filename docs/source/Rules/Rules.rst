@@ -436,7 +436,7 @@ For example, there is a task named "bme280" which has a value named "temperature
 
 Its value can be referenced like this: ``[bme280#temperature]``.
 This can be used in some plugins like the "OLED Framed" plugin to populate some lines on the display.
-It can also be used in rules. Every occurance of this text will then be replaced by its value.
+It can also be used in rules. Every occurrence of this text will then be replaced by its value.
 
 When having a rule to handle the value of a task, like this:
 
@@ -1549,6 +1549,25 @@ With:
 * ``<low>`` Lower end of range, if it is representing a valid numerical value.
 * ``<high>`` Higher end of range, if it is representing a valid numerical value.
 
+crc8/crc32
+^^^^^^^^^^
+
+(Added: 2025-04-15)
+
+Calculates the crc8 / crc32 for a range of bytes provided in hex format, and optionally compares it to an expected checksum.
+
+Usage: ``{crc8:<hex_bytes_range>[:<expected_crc>]}`` or ``{crc32:<hex_bytes_range>[:<expected_crc>]}``
+
+With:
+
+* ``<hex_bytes_range>`` Text and/or hex byte(s) (having 0x prefix) that will be converted to bytes and a crc calculated from. If spaces, commas, colons etc. are to be used, the bytes range should be quoted.
+* ``<expected_crc>`` An optional expected-crc value. When provided, it is compared with the calculated crc, and the function will return ``1`` if the values are equal, else ``0`` is returned.
+
+Result:
+
+* ``crc8``: 8-bit checksum or 1 if the calculated crc equals the expected crc, 0 when it doesn't match.
+* ``crc32``: 32-bit checksum or 1 if the calculated crc equals the expected crc, 0 when it doesn't match.
+
 Math Functions
 --------------
 
@@ -1568,8 +1587,10 @@ Basic Math Functions
 * ``round(x)`` Rounds to the nearest integer, but rounds halfway cases away from zero (instead of to the nearest even integer). 
 * ``^`` The caret is used as the exponentiation operator for calculating the value of x to the power of y (x\ :sup:`y`). 
 
-* ``map(value:fromLow:fromHigh:toLow:toHigh)`` Maps value x in the fromLow/fromHigh range to toLow/toHigh values. Similar to the Arduino map() function. See examples below. (Using a colon as an argument separator to not interfere with regular argument processing)
+* ``map(value:fromLow:fromHigh:toLow:toHigh)`` Maps ``value`` in the fromLow/fromHigh range to toLow/toHigh values. Similar to the Arduino map() function. See examples below. (Using a colon as an argument separator to not interfere with regular argument processing)
 * ``mapc(value:fromLow:fromHigh:toLow:toHigh)`` same as map, but constrains the result to the fromLow/fromHigh range.
+
+* ``fmod(x:y)`` Like the modulo operator ``%`` that returns an integer remainder, ``fmod`` returns the floating-point remainder of the division ``x / y``. Added: 2025-12-13 (Not available in limited builds)
 
 
 Rules example:
@@ -1643,6 +1664,7 @@ Radian Angle:
 * ``aSin(x)`` Arc Sine of x (radian)
 * ``aCos(x)`` Arc Cosine of x (radian)
 * ``aTan(x)`` Arc Tangent of x (radian)
+* ``aTan2(x:y)`` Arc Tangent of x / y (radian) Added: 2025-12-13
 
 Degree Angle:
 
@@ -1652,6 +1674,7 @@ Degree Angle:
 * ``aSin_d(x)`` Arc Sine of x (degree)
 * ``aCos_d(x)`` Arc Cosine of x (degree)
 * ``aTan_d(x)`` Arc Tangent of x (degree)
+* ``aTan2_d(x:y)`` Arc Tangent of x / y (degree) Added: 2025-12-13
 
 
 

@@ -14,6 +14,10 @@
 #define REG_PF          0x0008
 #define REG_ALARM       0x0009
 
+#define REG_CURRENT     0x0001
+#define REG_HVALARM     0x0006
+#define REG_LVALARM     0x0007
+
 #define CMD_RHR         0x03
 #define CMD_RIR         0X04
 #define CMD_WSR         0x06
@@ -23,6 +27,9 @@
 
 #define WREG_ALARM_THR   0x0001
 #define WREG_ADDR        0x0002
+
+#define WREG_HV_ALARM_THR   0x0000
+#define WREG_LV_ALARM_THR   0x0001
 
 #define UPDATE_TIME     200
 
@@ -84,6 +91,23 @@ PZEM004Tv30::~PZEM004Tv30()
  //       delete this->_serial;
 }
 
+
+void PZEM004Tv30::setModel(PZEM_model model) {
+  if (model == _model) {
+    return;
+  }
+  _model = model;
+  switch (_model) {
+  case PZEM_model::PZEM004Tv30:
+    _expectedResponse = PZEM004Tv30_EXPECTED_RESPONSE;
+    _requestRegisters = PZEM004Tv30_REQUEST_REGISTERS;
+    break;
+  case PZEM_model::PZEM017Tv1:
+    _expectedResponse = PZEM017v1_EXPECTED_RESPONSE;
+    _requestRegisters = PZEM017v1_REQUEST_REGISTERS;
+    break;
+  }
+}
 /*! * PZEM004Tv30::voltage *
  * Get line voltage in Volts *
  * @return current L-N volage*/
@@ -222,28 +246,97 @@ uint8_t PZEM004Tv30::getAddress()
  * Set power alarm threshold in watts *
  * @param[in] watts Alamr theshold *
  * @return success*/
-bool PZEM004Tv30::setPowerAlarm(uint16_t watts)
-{
-    if (watts > 25000){ // Sanitych check
-        watts = 25000;
-    }
+// bool PZEM004Tv30::setPowerAlarm(uint16_t watts)
+// {
+//     if (watts > 25000){ // Sanitych check
+//         watts = 25000;
+//     }
 
-    // Write the watts threshold to the Alarm register
-    if(!sendCmd8(CMD_WSR, WREG_ALARM_THR, watts, true))
-        return false;
-    return true;
-}
+//     // Write the watts threshold to the Alarm register
+//     if(!sendCmd8(CMD_WSR, WREG_ALARM_THR, watts, true))
+//         return false;
+//     return true;
+// }
 
 /*! * PZEM004Tv30::getPowerAlarm *
  * Is the power alarm set * *
  * @return arlam triggerd*/
-bool PZEM004Tv30::getPowerAlarm()
-{
-    if(!updateValues()) // Update vales if necessary
-        return NAN; // Update did not work, return NAN
+// bool PZEM004Tv30::getPowerAlarm()
+// {
+//     if(!updateValues()) // Update vales if necessary
+//         return NAN; // Update did not work, return NAN
 
-    return _currentValues.alarms != 0x0000;
-}
+//     return _currentValues.alarms != 0x0000;
+// }
+
+ /*!
+ * PZEM004Tv30::setHighVoltAlarm
+ * Set HV alarm threshold in volts
+ * @param[in] volt Alarm theshold
+ * @return success */
+// bool PZEM004Tv30::setHighvoltAlarm(uint16_t volts)
+// {
+//     if (volts < 500){ // Sanity check
+//         volts = 500;
+//     }
+
+//     if (volts > 34999){ // Sanity check
+//         volts = 34999;
+//     }
+
+//     // Write the volts threshold to the alarm register
+//     if(!sendCmd8(CMD_WSR, WREG_HV_ALARM_THR, volts, true))
+//         return false;
+
+//     return true;
+// }
+
+/*!
+ * PZEM004Tv30::setLowVoltAlarm
+ * Set LV alarm threshold in volts
+ * @param[in] volt Alarm theshold
+ * @return success */
+// bool PZEM004Tv30::setLowvoltAlarm(uint16_t volts)
+// {
+//     if (volts < 100){ // Sanity check
+//         volts = 100;
+//     }
+
+//     if (volts > 34999){ // Sanity check
+//         volts = 34999;
+//     }
+
+//     // Write the volts threshold to the alarm register
+//     if(!sendCmd8(CMD_WSR, WREG_LV_ALARM_THR, volts, true))
+//         return false;
+
+//     return true;
+// }
+
+/*!
+ * PZEM004Tv30::isHighVoltAlarmOn GET
+ * Is the HV alarm set
+ * @return alarm triggerd*/
+// bool PZEM004Tv30::isHighvoltAlarmOn()
+// {
+//     if(!updateValues()) // Update vales if necessary
+//         return NAN; // Update did not work, return NAN
+
+//     return _currentValues.HVAlarms != 0x0000;
+// }
+
+/*!
+ * PZEM004Tv30::isLowVoltAlarmOn GET
+ * Is the LV alarm set
+ * @return alarm triggerd*/
+// bool PZEM004Tv30::isLowvoltAlarmOn()
+// {
+//     if(!updateValues()) // Update vales if necessary
+//         return NAN; // Update did not work, return NAN
+
+//     return _currentValues.LVAlarms != 0x0000;
+// }
+
 
 /*! * PZEM004Tv30::init *
  * initialization common to all consturctors *
@@ -266,52 +359,75 @@ void PZEM004Tv30::init(uint8_t addr){
  * @return success*/
 bool PZEM004Tv30::updateValues()
 {
-    //static uint8_t buffer[] = {0x00, CMD_RIR, 0x00, 0x00, 0x00, 0x0A, 0x00, 0x00};
-    static uint8_t response[25];
-
     // If we read before the update time limit, do not update
     if(_lastRead + UPDATE_TIME > millis()){
         return true;
     }
 
-    // Read 10 registers starting at 0x00 (no check)
-    sendCmd8(CMD_RIR, 0x00, 0x0A, false);
+    // Read <model> registers starting at 0x00 (no check)
+    sendCmd8(CMD_RIR, 0x00, _requestRegisters, false);
 
 
-    if(recieve(response, 25) != 25){ // Something went wrong
+    if(recieve(_response, _expectedResponse) != _expectedResponse){ // Something went wrong
         return false;
     }
 
 
 
     // Update the current values
-    _currentValues.voltage = ((uint32_t)response[3] << 8 | // Raw voltage in 0.1V
-                              (uint32_t)response[4])/10.0;
+    switch(_model) {
+      case PZEM_model::PZEM004Tv30:
+        _currentValues.voltage = ((uint32_t)_response[3] << 8 | // Raw voltage in 0.1V
+                                  (uint32_t)_response[4]) / 10.0;
 
-    _currentValues.current = ((uint32_t)response[5] << 8 | // Raw current in 0.001A
-                              (uint32_t)response[6] |
-                              (uint32_t)response[7] << 24 |
-                              (uint32_t)response[8] << 16) / 1000.0;
+        _currentValues.current = ((uint32_t)_response[5] << 8 | // Raw current in 0.001A
+                                  (uint32_t)_response[6] |
+                                  (uint32_t)_response[7] << 24 |
+                                  (uint32_t)_response[8] << 16) / 1000.0;
 
-    _currentValues.power =   ((uint32_t)response[9] << 8 | // Raw power in 0.1W
-                              (uint32_t)response[10] |
-                              (uint32_t)response[11] << 24 |
-                              (uint32_t)response[12] << 16) / 10.0;
+        _currentValues.power =   ((uint32_t)_response[9] << 8 | // Raw power in 0.1W
+                                  (uint32_t)_response[10] |
+                                  (uint32_t)_response[11] << 24 |
+                                  (uint32_t)_response[12] << 16) / 10.0;
 
-    _currentValues.energy =  ((uint32_t)response[13] << 8 | // Raw Energy in 1Wh
-                              (uint32_t)response[14] |
-                              (uint32_t)response[15] << 24 |
-                              (uint32_t)response[16] << 16) / 1000.0;
+        _currentValues.energy =  ((uint32_t)_response[13] << 8 | // Raw Energy in 1Wh
+                                  (uint32_t)_response[14] |
+                                  (uint32_t)_response[15] << 24 |
+                                  (uint32_t)_response[16] << 16) / 1000.0;
 
-    _currentValues.frequeny =((uint32_t)response[17] << 8 | // Raw Frequency in 0.1Hz
-                              (uint32_t)response[18]) / 10.0;
+        _currentValues.frequeny =((uint32_t)_response[17] << 8 | // Raw Frequency in 0.1Hz
+                                  (uint32_t)_response[18]) / 10.0;
 
-    _currentValues.pf =      ((uint32_t)response[19] << 8 | // Raw pf in 0.01
-                              (uint32_t)response[20])/100.0;
+        _currentValues.pf =      ((uint32_t)_response[19] << 8 | // Raw pf in 0.01
+                                  (uint32_t)_response[20]) / 100.0;
 
-    _currentValues.alarms =  ((uint32_t)response[21] << 8 | // Raw alarm value
-                              (uint32_t)response[22]);
+        _currentValues.alarms =  ((uint32_t)_response[21] << 8 | // Raw alarm value
+                                  (uint32_t)_response[22]);
+        break;
+      case PZEM_model::PZEM017Tv1:
+        _currentValues.voltage = ((uint32_t)_response[3] << 8 | // Raw voltage in 0.01V
+                                  (uint32_t)_response[4]) / 100.0;
 
+        _currentValues.current = ((uint32_t)_response[5] << 8 | // Raw voltage in 0.01A
+                                  (uint32_t)_response[6]) / 100.0;
+
+        _currentValues.power =   ((uint32_t)_response[7] << 8 | // Raw power in 0.1W
+                                  (uint32_t)_response[8] |
+                                  (uint32_t)_response[9] << 24 |
+                                  (uint32_t)_response[10] << 16) / 10.0;
+
+        _currentValues.energy =  ((uint32_t)_response[11] << 8 | // Raw Energy in 1Wh
+                                  (uint32_t)_response[12] |
+                                  (uint32_t)_response[13] << 24 |
+                                  (uint32_t)_response[14] << 16) / 1000.0;
+
+        _currentValues.HVAlarms = ((uint32_t)_response[15] << 8 | // Raw alarm value
+                                   (uint32_t)_response[16]);
+
+        _currentValues.LVAlarms = ((uint32_t)_response[17] << 8 | // Raw alarm value
+                                   (uint32_t)_response[18]);
+        break;
+    }
     // Record current time as _lastRead
     _lastRead = millis();
 

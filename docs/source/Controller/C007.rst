@@ -14,7 +14,9 @@ Type: |C007_type|
 
 Name: |C007_name|
 
-Status: |C007_status|
+Status ESP32: |C007_status|
+
+Status ESP8266: |C007_status_lb|
 
 GitHub: |C007_github|_
 

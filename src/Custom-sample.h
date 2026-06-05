@@ -47,6 +47,15 @@
 #define DEFAULT_AP_SUBNET   255, 255, 255, 0                         // Enter IP address (comma separated) for AP (config) mode
 #define DEFAULT_AP_KEY      "configesp"                              // Enter network WPA key for AP (config) mode
 
+// #define DEFAULT_AP_DNS      1,1,1,1                                  // Used by PPP/NAPT feature (mind the comma-separated parts!),
+                                                                     // Cloudflare DNS: 1.1.1.1 and 1.0.0.1 and 1.1.1.2 (secure) and 1.1.1.3 (censored)
+                                                                     // Alternatives
+                                                                     // Cleanbrowsing: 185.228.168.9 and 185.228.169.9
+                                                                     // Google Public DNS: 8.8.8.8 and 8.8.4.4
+                                                                     // Quad9:  9.9.9.9 and 149.112.112.112
+                                                                     // OpenDNS: 208.67.222.222 and 208.67.220.220
+                                                                     // Comodo Secure DNS: 8.26.56.26 and 8.20.247.20
+
 // --- Wifi Client Mode -----------------------------------------------------------------------------
 #define DEFAULT_SSID                         "MyHomeSSID"            // Enter your network SSID
 #define DEFAULT_KEY                          "MySuperSecretPassword" // Enter your network WPA key
@@ -77,7 +86,7 @@
                                                    // See: https://github.com/letscontrolit/ESPEasy/issues/2724
 #define DEFAULT_SEND_TO_HTTP_ACK             false // Wait for ack with SendToHttp command.
 
-#define DEFAULT_AP_DONT_FORCE_SETUP          false // Allow optional usage of Sensor without WIFI avaiable // When set you can use the Sensor in AP-Mode without beeing forced to /setup
+#define DEFAULT_AP_FORCE_SETUP               true  // When set, start Captive Portal to redirect user to web interface when connecting to AP
 #define DEFAULT_DONT_ALLOW_START_AP          false // Usually the AP will be started when no WiFi is defined, or the defined one cannot be found. This flag may prevent it.
 
 // --- Default Controller ------------------------------------------------------------------------------
@@ -250,7 +259,25 @@
 // #define FEATURE_ANYRTTTL_LIB 1 // Use AnyRttl library for RTTTL handling
 // #define FEATURE_ANYRTTTL_ASYNC 1 // When AnyRttl enabled, use Async (nonblocking) mode instead of the default Blocking mode
 // #define FEATURE_RTTTL_EVENTS   1 // Enable RTTTL events for Async use, for blocking it doesn't make sense
+// #define FEATURE_BUSCMD_STRING   1  // Enable support for String data-format in Helpers/BusCmd_Handler, default disabled for LIMIT_BUILD_SIZE only
 // #define FEATURE_STRING_VARIABLES 1 // Enable String variable support (enabled on ESP32, NOT supported on ESP8266 for memory restrictions!)
+// #define FEATURE_COMMAND_OWSCAN 0 // Disable 1-wire scanner support, only feasible when 1-wire support is included in the build (P004, P080, P100), default disabled for MINIMAL_OTA builds
+// #define FEATURE_MQTT_CONNECT_BACKGROUND 1 // Enable connecting to an MQTT broker in an ESP32 RTOS background thread (not possible on ESP8266)
+// #define FEATURE_I2C_MULTIPLE 0 // Disable multiple I2C buses, only available for ESP32, default enabled on ESP32, can be disabled here
+// #define FEATURE_PLUGIN_LIST 1 // Enable the Tools / Plugin list page (default enabled for ESP32)
+// #define FEATURE_LAT_LONG_VAR_CMD 1 // Enable the %latitude% and %longitude% system variables, and Latitude and Longitude commands (default enabled for ESP32)
+
+// #define FEATURE_TASKVALUE_ATTRIBUTES 1 // Enable extra Task Value attributes (default enabled for ESP32)
+// #define FEATURE_TASKVALUE_UNIT_OF_MEASURE 1 // Enable Unit of Measure per Task Value (default enabled for ESP32), also useful for MQTT Discovery
+// #define FEATURE_CUSTOM_TASKVAR_VTYPE 1 // Enable Custom Value Type per Task Value (default enabled for ESP32), also useful for MQTT Discovery
+
+// #define FEATURE_MQTT_DISCOVER 1    // Enable MQTT Auto Discovery (currently only available for Home Assistant C005)
+// #define FEATURE_MQTT_DEVICECLASS 1 // Enable selectable Device Class for Auto Discovery
+// #define FEATURE_MQTT_STATE_CLASS 1 // Enable selectable State Class per Task Valie for Auto Discovery
+
+// #define FEATURE_MQTT_TLS 1 // Enable TLS support for MQTT Controller connections (only available on ESP32)
+// #define FEATURE_EMAIL_TLS 1 // Enable TLS support for Email Notifications (only available on ESP32)
+// #define FEATURE_HTTP_TLS 1 // Enable TLS support for HTTP connections (only available on ESP32)
 
 #if FEATURE_CUSTOM_PROVISIONING
 // For device models, see src/src/DataTypes/DeviceModel.h
@@ -277,6 +304,27 @@
 //  #define DEFAULT_PROVISIONING_PASS               ""
 #endif
 
+/*
+ #######################################################################################################
+   Defining Ethernet & GPIO
+ #######################################################################################################
+ */
+// Actual values can be obtained from product documentation and ESPEasyDefaults.h 
+// #define DEFAULT_ETH_PHY_ADDR             0
+// #define DEFAULT_ETH_PHY_TYPE             0 // See EthernetParameters.h enum EthPhyType_t
+// #define DEFAULT_ETH_PIN_MDC              -1
+// #define DEFAULT_ETH_PIN_MDIO             -1
+// #define DEFAULT_ETH_PIN_POWER            -1
+// #define DEFAULT_ETH_CLOCK_MODE           (0) // See EthernetParameters.h enum EthClockMode_t
+
+// #define DEFAULT_NETWORK_MEDIUM       ESPEasy::net::NetworkMedium_t::WIFI
+
+// #define DEFAULT_ENABLED_NW001            1 // Enable NWPLUGIN_001, on factory reset/initial setup
+// #define DEFAULT_ENABLED_NW002            1 // Enable NWPLUGIN_002, on factory reset/initial setup
+// #define DEFAULT_ENABLED_NW003            1 // Enable NWPLUGIN_003, on factory reset/initial setup
+// #define DEFAULT_ENABLED_NW004            1 // Enable NWPLUGIN_004, on factory reset/initial setup
+// #define DEFAULT_ENABLED_NW005            1 // Enable NWPLUGIN_005, on factory reset/initial setup
+// This list should be updated when adding new Network Interface plugins
 
 
 
@@ -290,7 +338,9 @@
 /*
 #define MENU_INDEX_CONFIG_VISIBLE        false
 #define MENU_INDEX_CONTROLLERS_VISIBLE   false
+#define MENU_INDEX_NETWORK_VISIBLE       false
 #define MENU_INDEX_HARDWARE_VISIBLE      false
+#define MENU_INDEX_BUSES_VISIBLE         false
 #define MENU_INDEX_DEVICES_VISIBLE       false
 #define MENU_INDEX_RULES_VISIBLE         false
 #define MENU_INDEX_NOTIFICATIONS_VISIBLE false
@@ -520,6 +570,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 
 // #define USES_P131   // NeoPixel Matrix
 // #define USES_P132   // INA3221
+//   #define P132_EXTENDED 1 // Extend support with INA219, INA226, INA228, INA230, INA231 and INA260
 // #define USES_P133   // LTR390 UV
 // #define USES_P134   // A02YYUW
 // #define USES_P135   // SCD4x
@@ -566,7 +617,10 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P173   // Environment - SHTC3
 // #define USES_P175   // Dust - PMSx003i I2C
 // #define USES_P176   // Communication - Victron VE.Direct
+// #define USES_P177   // XDB401 I2C Pressure
 // #define USES_P178   // LU9685 Servo controller
+
+// #define USES_P180   // I2C Generic
 
 /*
  #######################################################################################################
@@ -593,7 +647,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_C016   // Cache controller
 // #define USES_C017   // Zabbix
 // #define USES_C018   // TTN/RN2483
-
+// #define USES_C023   // AT-command LoRaWAN
 
 /*
  #######################################################################################################

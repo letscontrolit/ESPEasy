@@ -2,19 +2,22 @@
 #include "../WebServer/Markup.h"
 
 #include "../WebServer/HTML_wrappers.h"
+#include "../WebServer/KeyValueWriter_WebForm.h"
 #include "../WebServer/Markup_Forms.h"
 
 #include "../CustomBuild/ESPEasyLimits.h"
 
 #include "../Globals/Settings.h"
 
-#include "../Helpers/Convert.h"
+#if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+#include "../Helpers/ESPEasy_UnitOfMeasure.h"
+#endif
 #include "../Helpers/Hardware_GPIO.h"
-#include "../Helpers/StringConverter_Numerical.h"
+#include "../Helpers/Hardware_device_info.h"
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringGenerator_GPIO.h"
 
-#include "../../ESPEasy_common.h"
+
 
 #ifdef ESP32
 # include "soc/soc_caps.h"
@@ -112,8 +115,12 @@ void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int
     bool input, output, warning;
 
     if (getGpioInfo(gpio, pinnr, input, output, warning)) {
+#if FEATURE_I2C
       bool includeI2C = true;
+#endif
+#if FEATURE_SPI
       bool includeSPI = true;
+#endif
       bool includeSerial = true;
       #if FEATURE_ETHERNET
       bool includeEthernet = true;
@@ -128,6 +135,7 @@ void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int
       #endif
 
       switch (purpose) {
+#if FEATURE_SPI
         case PinSelectPurpose::SPI:
         case PinSelectPurpose::SPI_MISO:
           includeSPI = false;
@@ -135,11 +143,12 @@ void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int
             return;
           }
           break;
+#endif
+#if FEATURE_ETHERNET
         case PinSelectPurpose::Ethernet:
-          #if FEATURE_ETHERNET
           includeEthernet = false;
-          #endif // if FEATURE_ETHERNET
           break;
+#endif
         case PinSelectPurpose::Generic:
 
           if (!input && !output) {
@@ -161,7 +170,7 @@ void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int
             return;
           }
           break;
-
+#if FEATURE_I2C
         case PinSelectPurpose::I2C:
 #if FEATURE_I2C_MULTIPLE
         case PinSelectPurpose::I2C_2:
@@ -170,6 +179,7 @@ void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int
 #endif
 #endif
           includeI2C = false;
+#endif
           // fallthrough
         case PinSelectPurpose::Generic_bidir:
 
@@ -223,19 +233,20 @@ void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int
           break;
         #endif
       }
-
+#if FEATURE_I2C
       if (includeI2C && Settings.isI2C_pin(gpio)) {
         disabled = true;
       }
+#endif
 
       if (includeSerial && isSerialConsolePin(gpio)) {
         disabled = true;
       }
-
+#if FEATURE_SPI
       if (includeSPI && Settings.isSPI_pin(gpio)) {
         disabled = true;
       }
-
+#endif
       // Not blocking these GPIO pins, as they may already be in dual-purpose use, just a place-holder
       // if (includeStatusLed && (Settings.Pin_status_led == gpio)) {
       //   disabled = true;
@@ -252,9 +263,10 @@ void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int
   #endif
 
   #if FEATURE_ETHERNET
-
-      if (Settings.isEthernetPin(gpio) || (includeEthernet && Settings.isEthernetPinOptional(gpio))) {
-        disabled = true;
+      if (includeEthernet) {
+        if (Settings.isEthernetPin(gpio) || Settings.isEthernetPinOptional(gpio)) {
+          disabled = true;
+        }
       }
   #endif // if FEATURE_ETHERNET
 
@@ -274,25 +286,7 @@ void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int
 
 void addSelector_Item(const __FlashStringHelper *option, int index, bool    selected, bool    disabled, const String& attr)
 {
-  addHtml(F("<option "));
-  addHtmlAttribute(F("value"), index);
-
-  if (selected) {
-    addHtml(F(" selected"));
-  }
-
-  if (disabled) {
-    addDisabled();
-  }
-
-  if (attr.length() > 0)
-  {
-    addHtml(' ');
-    addHtml(attr);
-  }
-  addHtml('>');
-  addHtml(option);
-  addHtml(F("</option>"));
+  addSelector_Item(String(option), index, selected, disabled, attr);
 }
 
 void addSelector_Item(const String& option, int index, bool    selected, bool    disabled, const String& attr)
@@ -304,7 +298,10 @@ void addSelector_Item(const String& option, int index, bool    selected, bool   
     addHtml(F(" selected"));
   }
 
-  if (disabled) {
+  if (disabled && !selected) {
+    // Make sure something that's selected isn't marked disabled.
+    // Disabled items are not sent in the POST, so if saving settings 
+    // where a chosen option is marked 'disabled' you may get odd results.
     addDisabled();
   }
 
@@ -365,128 +362,11 @@ void addUnit(char unit)
 }
 
 #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
-const char unit_of_measure_list[] PROGMEM = // *** DO NOT CHANGE ORDER, SAVED IN TASK SETTINGS! ***
- "|" // 0 = Empty/none
- "°C|°F|K|" // 1..3
- "%|" // 4
- "Pa|hPa|bar|mbar|inHg|psi|" // 5..10
- "W|kW|" // 11..12
- "V|" // 13
- "Wh|kWh|" // 14..15
- "A|VA|" // 16..17
- "mm|cm|m|km|" // 18..21
- "L|mL|m³|ft³|" // 22..25
- "m³/h|ft³/h|" // 26..27
- "lx|" // 28
- "UV index|" // 29
- "µg/m³|mg/m³|p/m³|ppm|ppb|" // 30..34
- "°|" // 35
- "€|$|¢|" // 36..38
- "μs|ms|s|min|h|d|w|m|y|" // 39..47
- "in|ft|yd|mi|" // 48..51
- "Hz|GHz|" // 52..53
- "gal|fl. oz|" // 54..55
- "m²|" // 56
- "g|kg|mg|µg|" // 57..60
- "oz|lb|" // 61..62
- "µS/cm|" // 63
- "W/m²|" // 64
- "mm/h|" // 65
- "mm/s|in/s|m/s|in/h|km/h|mph|" // 66..71
- "db|dBm|" // 72..73
- "bit|kbit|Mbit|Gbit|B|kB|MB|GB|TB|PB|EB|ZB|YB|KiB|MiB|GiB|TiB|PiB|EiB|ZiB|YiB|" // 74..94
- "bit/s|kbit/s|Mbit/s|Gbit/s|B/s|kB/s|MB/s|GB/s|KiB/s|MiB/s|GiB/s|" // 95..105
- "ft/s|kn|" // 106..107
- "mW|MW|GW|TW|" // 108..111
- "BTU/(h⋅ft²)|" // 112
- "pH|" // 113
- "cbar|mmHg|kPa|" // 114..116
- "mA|µA|mV|µV|kV|" // 117..121
- "cm²|km²|mm²|in²|ft²|yd²|mi²|ac|ha|" // 122..130
- "kHz|MHz|" // 131..132
- "mWh|MWh|GWh|TWh|cal|kcal|Mcal|Gcal|J|kJ|MJ|GJ|" // 133..144
- "var|kvar|varh|kvarh|" // 145..148
- "st|" // 149
- "mg/dL|mmol/L|" // 150..151
- "μSv|μSv/h|" // 152..153
- "m³/s|ft³/min|L/h|L/min|L/s|gal/min|mL/s|" // 154..160
- ; // *** DO NOT CHANGE ORDER, SAVED IN TASK SETTINGS! ***
-
-
-const char unit_of_measure_labels[] PROGMEM = // Not stored, when UoM index >= 1024 it's a label-index with 1024 subtracted
- "Apparent power|Air quality/CO/CO2|Area|(Atmospheric) Pressure|" // A 1024..1027
- "Blood glucose concentr.|" // B 1028
- "Data rate|Data size|Distance|Duration|" // D 1029..1032
- "Energy distance|Energy(-storage)|" // E 1033..1034
- "Frequency|" // F 1035
- "Gas|" // G 1036
- "Percent Hum./Batt./Moist.|" // H 1037
- "Illuminance|Irradiance|" // I 1038..1039
- "Monetary|" // M 1040
- "Nitrogen (di-/mon-)oxide|" // N 1041
- "Voc/Ozone|" // O 1042
- "Ph|PM/CO/CO2/NO(x)/Voc/Ozone|Power|" // P 1043..1045
- "Radiation|Reactive energy/power|" // R 1046..1047
- "Signal strength|Sound pressure|Speed|" // S 1048..1050
- "Temperature|" // T 1051
- "Voltage/Current|Volume/Water cons.|Volume flow rate|" // V 1052..1054
- "Weight|Wind direction|" // W 1055..1056
- "Various units|" // Additional 1057
- ;
-
-const uint16_t unit_of_measure_map[] PROGMEM = {
-  1051, 1, 2, 3, // Temperature
-  1037, 4, // Percent Battery, Humidity, Moisture
-  1027, 8, 6, 116, 7, 115, 10, 5, 114, 9, // (Atmospheric) Pressure
-  1052, 13, 119, 120, 121, 16, 117, 118, // Voltage/Current
-  1045, 11, 12, 108, 109, 110, 111, // Power
-  1024, 17, // Apparent power
-  1047, 145, 146, 147, 148, // Reactive power/energy
-  1044, 30, 31, 32, 33, 34, // Particle matter
-  1031, 18, 19, 20, 21, 48, 49, 50, 51, // Distance
-  1055, 57, 58, 59, 60, 61, 62, 149, // Weight
-  1053, 22, 23, 24, 25, 54, 55, // Volume/Water
-  1054, 26, 27, 153, 154, 155, 156, 157, 158, 159, 160, // Volume flow rate
-  1032, 39, 40, 41, 42, 43, 44, 45, 46, 47, // Duration
-  1034, 14, 15, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, // Energy(-storage)
-  1050, 66, 67, 68, 69, 70, 71, 65, 106, 107, // Speed
-  1056, 35, // (Wind) direction
-  1038, 28, // Illuminance
-  1039, 64, 112, // Irradiance
-  1046, 152, 153, // Radiation
-  1057, 29, 63, // Various units
-  1035, 52, 53, 131, 132, // Frequency
-  1043, 113, // Potential hydrogen
-  1026, 56, 122, 123, 124, 125, 126, 127, 128, 129, 130, // Area
-  1029, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, // Data rate
-  1030, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 91, 92, 93, 94, // Data size
-  1049, 72, 73, // Sound pressure
-  1028, 150, 151, // Blood glucose
-  1040, 36, 37, 38, // Monetary
-};
-
-String toUnitOfMeasureName(const uint32_t unitOfMeasureIndex,
-                           const String & defUoM) {
-  char tmp[26]{};
-  String result;
-
-  if (unitOfMeasureIndex < 1024) {
-    result = GetTextIndexed(tmp, sizeof(tmp), unitOfMeasureIndex, unit_of_measure_list);
-  } else {
-    result = GetTextIndexed(tmp, sizeof(tmp), unitOfMeasureIndex - 1024, unit_of_measure_labels);
-  }
-
-  return result.isEmpty() ? defUoM : result;
-}
-
-int getUnitOfMeasureIndex(const String& uomName) {
-  return GetCommandCode(uomName.c_str(), unit_of_measure_list);
-}
-
-void addUnitOfMeasureSelector(const String& id,
-                              const uint8_t unitOfMeasure) {
-  constexpr uint16_t asize = NR_ELEMENTS(unit_of_measure_map);
-  bool firstGrp = true;
+void addUnitOfMeasureSelector(const String&  id,
+                              const uint8_t  unitOfMeasure,
+                              const uint64_t groupMap) {
+  bool firstGrp   = true;
+  bool includeGrp = false;
 
   do_addSelector_Head(id, F("xwide"), EMPTY_STRING, false
                       #if FEATURE_TOOLTIPS
@@ -498,19 +378,24 @@ void addUnitOfMeasureSelector(const String& id,
     0,
     unitOfMeasure == 0);
 
-  for (uint16_t idx = 0; idx < asize; ++idx) {
+  for (uint16_t idx = 0; idx < unit_of_measure_map_size; ++idx) {
     const uint16_t uomIdx = pgm_read_word_near(&unit_of_measure_map[idx]);
     if (uomIdx < 1024) {
-      addSelector_Item(
-        toUnitOfMeasureName(uomIdx),
-        uomIdx,
-        unitOfMeasure == uomIdx);
-    } else {
-      if (!firstGrp) {
-        addSelector_OptGroupFoot();
+      if (includeGrp) {
+        addSelector_Item(
+          toUnitOfMeasureName(uomIdx),
+          uomIdx,
+          unitOfMeasure == uomIdx);
       }
-      addSelector_OptGroup(toUnitOfMeasureName(uomIdx));
-      firstGrp = false;
+    } else {
+      includeGrp = bitRead(groupMap, uomIdx - 1024);
+      if (includeGrp) {
+        if (!firstGrp) {
+          addSelector_OptGroupFoot();
+        }
+        addSelector_OptGroup(toUnitOfMeasureName(uomIdx));
+        firstGrp = false;
+      }
     }
     if ((idx & 0x07) == 0) { delay(0); }
   }
@@ -528,11 +413,7 @@ void addRowLabel_tr_id(const __FlashStringHelper *label, const __FlashStringHelp
 
 void addRowLabel_tr_id(const __FlashStringHelper *label, const String& id)
 {
-  if (id.isEmpty()) {
-    addRowLabel(label);
-  } else {
-    addRowLabel_tr_id(String(label), id);
-  }
+  addRowLabel_tr_id(String(label), id);
 }
 
 void addRowLabel_tr_id(const String& label, const String& id)
@@ -546,9 +427,7 @@ void addRowLabel_tr_id(const String& label, const String& id)
 
 void addRowLabel(const __FlashStringHelper *label)
 {
-  html_TR_TD();
-  addHtml(concat(label, F(":</td>")));
-  html_TD();
+  addRowLabel(String(label), EMPTY_STRING);
 }
 
 void addRowLabel(const String& label, const String& id)
@@ -568,15 +447,10 @@ void addRowLabel(const String& label, const String& id)
   addHtml(F("</td>"));
   html_TD();
 }
-
+#ifdef WEBSERVER_GITHUB_COPY
 // Add a row label and mark it with copy markers to copy it to clipboard.
 void addRowLabel_copy(const __FlashStringHelper *label) {
-  addHtml(F("<TR>"));
-  html_copyText_TD();
-  addHtml(label);
-  addHtml(':');
-  html_copyText_marker();
-  html_copyText_TD();
+  addRowLabel_copy(String(label));
 }
 
 void addRowLabel_copy(const String& label) {
@@ -587,36 +461,38 @@ void addRowLabel_copy(const String& label) {
   html_copyText_marker();
   html_copyText_TD();
 }
+#endif
 
 void addRowLabel(LabelType::Enum label) {
   addRowLabel(getLabel(label));
 }
 
-void addRowLabelValue(LabelType::Enum label) {
+void addRowLabelValue(LabelType::Enum label, bool extendedValue) {
   addRowLabel(getLabel(label));
-  addHtml(getValue(label));
+  addHtml(extendedValue ? getExtendedValue(label) : getValue(label));
+#if FEATURE_TASKVALUE_UNIT_OF_MEASURE
   addUnit(getFormUnit(label));
+#endif
 }
 
-void addRowLabelValues(const LabelType::Enum labels[]) {
-  size_t i = 0;
-  LabelType::Enum cur  = static_cast<const LabelType::Enum>(pgm_read_byte(labels + i));
+void addRowLabelValues(const LabelType::Enum labels[], bool extendedValue) {
 
-  while (true) {
-    const LabelType::Enum next = static_cast<const LabelType::Enum>(pgm_read_byte(labels + i + 1));
-    addRowLabelValue(cur);
-    if (next == LabelType::MAX_LABEL) {
-      return;
-    }
-    ++i;
-    cur = next;
-  }
+  KeyValueWriter_WebForm writer(true);
+  writer.writeLabels(labels, extendedValue);
 }
 
-void addRowLabelValue_copy(LabelType::Enum label) {
+void addRowLabelValue_copy(LabelType::Enum label, bool extendedValue) {
   addRowLabel_copy(getLabel(label));
-  addHtml(getValue(label));
+  addHtml(extendedValue ? getExtendedValue(label) : getValue(label));
+#if FEATURE_TASKVALUE_UNIT_OF_MEASURE
   addUnit(getFormUnit(label));
+#endif
+}
+
+void addRowColspan(int colspan) {
+  addHtml(strformat(
+    F("<TR><TD colspan=\"%d\">"),
+    colspan));
 }
 
 // ********************************************************************************
@@ -624,13 +500,7 @@ void addRowLabelValue_copy(LabelType::Enum label) {
 // ********************************************************************************
 void addTableSeparator(const __FlashStringHelper *label, int colspan, int h_size)
 {
-  addHtml(strformat(
-    F("<TR><TD colspan=%d><H%d>"),
-    colspan, h_size));
-  addHtml(label);
-  addHtml(strformat(
-    F("</H%d></TD></TR>"),
-    h_size));
+  addTableSeparator(String(label), colspan, h_size);
 }
 
 void addTableSeparator(const __FlashStringHelper *label, int colspan, int h_size, const __FlashStringHelper *helpButton)
@@ -639,10 +509,8 @@ void addTableSeparator(const __FlashStringHelper *label, int colspan, int h_size
 }
 
 void addTableSeparator(const String& label, int colspan, int h_size, const String& helpButton) {
-  addHtml(strformat(
-    F("<TR><TD colspan=%d><H%d>"),
-    colspan, h_size));
-  addHtml(label);
+  addRowColspan(colspan);
+  addHtml(strformat(F("<H%d>%s"), h_size, label.c_str()));
 
   if (!helpButton.isEmpty()) {
     addHelpButton(helpButton);
@@ -671,6 +539,15 @@ void addFormHeader(const __FlashStringHelper *header,
   html_table_header(F(""));
 }
 
+void addFormHeader(const String&              header,
+                   const __FlashStringHelper *helpButton,
+                   const __FlashStringHelper *rtdHelpButton)
+{
+  html_TR();
+  html_table_header(header, helpButton, rtdHelpButton, 300);
+  html_table_header(F(""));
+}
+
 /*
 void addFormHeader(const String& header, const String& helpButton) {
   addFormHeader(header, helpButton, EMPTY_STRING);
@@ -683,6 +560,41 @@ void addFormHeader(const String& header, const String& helpButton, const String&
   html_table_header(F(""));
 }
 */
+
+// ********************************************************************************
+// Add a detail wrapper start & end, terminates the page-table, and starts a new page table
+// ********************************************************************************
+#ifndef BUILD_MINIMAL_OTA
+void addFormDetailsStart(const bool initialOpen) {
+  addFormDetailsStart(F("Details..."), initialOpen);
+}
+
+void addFormDetailsStart(const __FlashStringHelper *caption, const bool initialOpen)
+{
+  html_end_table();
+  addHtml(strformat(F("<details %s>"), FsP(initialOpen ? F("open") : F(""))));
+  addHtml(F("<summary>"));
+  addHtml(caption);
+  addHtml(F("</summary>"));
+  html_table_class_normal();
+  addFormFixedFirstColumn();
+}
+
+void addFormDetailsEnd()
+{
+  html_end_table();
+  addHtml(F("</details>"));
+  html_table_class_normal();
+  addFormFixedFirstColumn();
+}
+
+// Fix first table column at 25vw (view width %) via css class 'tc1', as we work with multiple tables that should be vertically aligned
+// This must be added as the first element in a table definition
+void addFormFixedFirstColumn()
+{
+  addHtml(F("<colgroup><col span=\"1\" class=\"tc1\"/></colgroup>"));
+}
+#endif // ifndef BUILD_MINIMAL_OTA
 
 // ********************************************************************************
 // Add a sub header
@@ -795,7 +707,7 @@ void addNumericBox(const String& id, int value, int min, int max, bool disabled)
 
 #endif // if FEATURE_TOOLTIPS
 
-void addFloatNumberBox(const String& id, float value, float min, float max, unsigned int nrDecimals, float stepsize
+void addFloatNumberBox(const String& id, float value, float min, float max, uint8_t nrDecimals, float stepsize
                        #if FEATURE_TOOLTIPS
                        , const String& tooltip
                        #endif // if FEATURE_TOOLTIPS
@@ -1020,6 +932,14 @@ void addRTDControllerButton(cpluginID_t cpluginID) {
     strformat(
       F("Controller/%s.html"),
       get_formatted_Controller_number(cpluginID).c_str()));
+}
+
+void   addRTDNetworkDriverButton(ESPEasy::net::nwpluginID_t nwpluginID)
+{
+  addRTDHelpButton(
+    strformat(
+      F("Network/%s.html"),
+      nwpluginID.toDisplayString().c_str()));
 }
 # endif // ifndef LIMIT_BUILD_SIZE
 

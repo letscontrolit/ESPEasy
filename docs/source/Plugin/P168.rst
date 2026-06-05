@@ -13,7 +13,9 @@ Type: |P168_type|
 
 Name: |P168_name|
 
-Status: |P168_status|
+Status ESP32: |P168_status|
+
+Status ESP8266: |P168_status_lb|
 
 GitHub: |P168_github|_
 
@@ -41,7 +43,7 @@ Configuration
 I2C options
 ^^^^^^^^^^^
 
-The available settings here depend on the build used. At least the **Force Slow I2C speed** option is available, but selections for the I2C Multiplexer can also be shown. For details see the :ref:`Hardware_page`
+The available settings here depend on the build used. At least the **Force Slow I2C speed** option is available, but selections for the I2C Multiplexer can also be shown. For details see the :ref:`i2c-bus` page
 
 The VEML6030 has the option of selecting an alternative I2C address of ``0x48`` by pulling up the ADDR pin to VCC, when that pin is available on the board used. The VEML6030 also supports interrupt-driven operation, but that's not implemented in this plugin.
 
@@ -53,15 +55,9 @@ Device Settings
 .. image:: P168_LuxReadMethodOptions.png
   :alt: Lux read-method options
 
-* *Normal*: Normal read mode, will report the uncorrected ``Lux`` value.
+* *Normal (no wait)*: Normal read mode, will report the uncorrected ``Lux`` value, doesn't wait for the sensor to complete a measurement, but retrieves it later after starting the read.
 
-* *Corrected*: Corrected read mode, Raw calculated to ``Lux`` and corrected for non-linearity.
-
-* *Auto*: Show the corrected value, auto-scaled with Gain factor and Integration time to avoid measuring errors because of over-exposing the sensor. This is the default setting.
-
-* *Normal (no wait)*: Normal read mode, will report the uncorrected ``Lux`` value, doesn't wait for the sensor to complete a measurement.
-
-* *Corrected (no wait)*: Corrected read mode, Raw calculated to ``Lux`` and corrected for non-linearity, doesn't wait for the sensor to complete a measurement.
+* *Corrected (no wait)*: Corrected read mode, Raw calculated to ``Lux`` and corrected for non-linearity, doesn't wait for the sensor to complete a measurement, but retrieves it later after starting the read.
 
 | 
 
@@ -74,8 +70,6 @@ Device Settings
 * **Integration time**: Manually configure the Integration time. Longer integration times increase accuracy of the measurement.
 
 .. image:: P168_IntegrationTimeOptions.png
-
-.. warning:: When the **Lux Read-method** is set to *Auto* the Gain factor and Integration time settings are ignored.
 
 * **Power Save Mode**: The sensor can go into Power Save Mode on several levels, to conserve power when used in a battery operated device. When in power save mode, the integration time increases.
 

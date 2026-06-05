@@ -5,7 +5,8 @@
 #include "../../ESPEasy_common.h"
 
 #ifdef ESP32
-#include "soc/soc_caps.h"
+# include "soc/soc_caps.h"
+# include <esp32-hal-periman.h>
 #endif
 
 // ********************************************************************************
@@ -17,6 +18,11 @@ bool getGpioInfo(int   gpio,
                  bool& input,
                  bool& output,
                  bool& warning);
+
+
+// For ESP32, see: https://github.com/espressif/arduino-esp32/blob/9d84c78cf2d44911639530e54a9dbb9ee9164f6c/cores/esp32/esp32-hal.h#L64-L75
+// BOOT_PIN is defined for all ESP32 chips.
+bool isBootModePin(int gpio);
 
 bool isBootStrapPin(int gpio);
 
@@ -48,6 +54,11 @@ int  touchPinToGpio(int touch_pin);
 bool getDAC_gpio_info(int  gpio_pin,
                       int& dac);
 #endif
+
+bool getPeriman_gpio_info(int  gpio_pin,
+    peripheral_bus_type_t& bus_type,
+    String& gpio_str,
+    String& typeName,int& bus_number, int& bus_channel);
 
 #endif // ifdef ESP32
 

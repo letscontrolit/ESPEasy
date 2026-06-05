@@ -13,13 +13,10 @@
 #include "../WebServer/Markup_Forms.h"
 
 #include "../ESPEasyCore/ESPEasyRules.h"
-#include "../ESPEasyCore/Serial.h"
 
 #include "../Globals/Settings.h"
 #include "../Helpers/ESPEasy_Storage.h"
-#include "../Helpers/Numerical.h"
 #include "../Helpers/StringConverter.h"
-#include "../Static/WebStaticData.h"
 
 #include <FS.h>
 
@@ -48,9 +45,11 @@ void handle_rules() {
   // Make sure file exists
   if (!fileExists(fileName))
   {
+#ifndef BUILD_NO_DEBUG
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       addLogMove(LOG_LEVEL_INFO, concat(F("Rules : Create new file: %s"), fileName));
     }
+#endif
     fs::File f = tryOpenFile(fileName, "w");
 
     if (f) { f.close(); }
@@ -520,7 +519,7 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
     addHelpButton(F("Tutorial_Rules"));
 
     // load form data from flash
-    addHtml(F("<TR><TD colspan='2'>"));
+    addRowColspan(2);
 
     Rule_showRuleTextArea(fileName);
 
@@ -549,7 +548,7 @@ void Rule_showRuleTextArea(const String& fileName) {
   size = streamFromFS(fileName, true);
   addHtml(F("</textarea>"));
   #if FEATURE_RULES_EASY_COLOR_CODE
-  addHtml(F("<script>initCM();</script>"));
+  html_add_script(F("initCM();"), false);
   #endif
 
   html_TR_TD();
@@ -575,7 +574,7 @@ bool Rule_Download(const String& path)
   filename.replace(RULE_FILE_SEPARAROR, '_');
   String str = concat(F("attachment; filename="), filename);
   sendHeader(F("Content-Disposition"), str);
-  sendHeader(F("Cache-Control"),       F("max-age=3600, public"));
+  sendHeader(F("Cache-Control"),       F("public,max-age=3600"));
   sendHeader(F("Vary"),                "*");
   sendHeader(F("ETag"),                F("\"2.0.0\""));
 

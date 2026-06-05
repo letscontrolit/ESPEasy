@@ -34,12 +34,26 @@
     # define BUILD_NOTES                 " - Mega32-s2"
   #elif defined(ESP32S3)
     # define BUILD_NOTES                 " - Mega32-s3"
-  #elif defined(ESP32C6)
-    # define BUILD_NOTES                 " - Mega32-c6"
-  #elif defined(ESP32C3)
-    # define BUILD_NOTES                 " - Mega32-c3"
   #elif defined(ESP32C2)
     # define BUILD_NOTES                 " - Mega32-c2"
+  #elif defined(ESP32C3)
+    # define BUILD_NOTES                 " - Mega32-c3"
+  #elif defined(ESP32C5)
+    # define BUILD_NOTES                 " - Mega32-c5"
+  #elif defined(ESP32C6)
+    # define BUILD_NOTES                 " - Mega32-c6"
+  #elif defined(ESP32C61)
+    # define BUILD_NOTES                 " - Mega32-c61"
+  #elif defined(ESP32H2)
+    # define BUILD_NOTES                 " - Mega32-h2"
+  #elif defined(ESP32H21)
+    # define BUILD_NOTES                 " - Mega32-h21"
+  #elif defined(ESP32P4)
+  #ifdef CONFIG_ESP32P4_SELECTS_REV_LESS_V3 
+    # define BUILD_NOTES                 " - Mega32-p4"
+  #else
+    # define BUILD_NOTES                 " - Mega32-p4r3"
+  #endif
   # elif defined(ESP32_CLASSIC)
     # define BUILD_NOTES                 " - Mega32"
   # else
@@ -61,21 +75,33 @@
 #ifdef ESP32
 
 /*
- #if CONFIG_IDF_TARGET_ESP32C6 ||  // support USB via HWCDC using JTAG interface
+ #if CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32C61 ||  // support USB via HWCDC using JTAG interface
      CONFIG_IDF_TARGET_ESP32C3 ||  // support USB via HWCDC using JTAG interface
      CONFIG_IDF_TARGET_ESP32S2 ||  // support USB via USBCDC
      CONFIG_IDF_TARGET_ESP32S3     // support USB via HWCDC using JTAG interface or USBCDC
  */
-# if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3
+# if !defined(CONFIG_IDF_TARGET_ESP32) && !defined(CONFIG_IDF_TARGET_ESP32C2)
 
 // #if CONFIG_TINYUSB_CDC_ENABLED              // This define is not recognized here so use USE_USB_CDC_CONSOLE
 #  ifdef USE_USB_CDC_CONSOLE
 #   if ARDUINO_USB_MODE
 
 // ESP32C3/S3 embedded USB using JTAG interface
-#    define USES_HWCDC 1
+#    ifndef USES_HWCDC
+#     if CONFIG_IDF_TARGET_ESP32S2
+#      define USES_HWCDC 0
+#      ifndef USES_USBCDC
+#       define USES_USBCDC 1
+#      endif // ifndef USES_USBCDC
+#     else
+#      define USES_HWCDC 1
+#     endif
+#    endif // ifndef USES_HWCDC
+
 #   else // No ARDUINO_USB_MODE
-#    define USES_USBCDC 1
+#    ifndef USES_USBCDC
+#     define USES_USBCDC 1
+#    endif // ifndef USES_USBCDC
 #   endif // if ARDUINO_USB_MODE
 #  endif // ifdef USE_USB_CDC_CONSOLE
 # endif // if CONFIG_IDF_TARGET_ESP32C3 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3

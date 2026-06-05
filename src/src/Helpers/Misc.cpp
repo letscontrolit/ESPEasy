@@ -7,6 +7,7 @@
 #include "../ESPEasyCore/Serial.h"
 #include "../Globals/ESPEasy_time.h"
 #include "../Globals/Statistics.h"
+#include "../Helpers/_CPlugin_init.h"
 #include "../Helpers/ESPEasy_FactoryDefault.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Numerical.h"
@@ -14,10 +15,11 @@
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringParser.h"
 
+#include "../../ESPEasy/net/_NWPlugin_Helper.h"
+
 #if FEATURE_SD
 # include <SD.h>
 #endif // if FEATURE_SD
-
 
 bool remoteConfig(struct EventStruct *event, const String& string)
 {
@@ -69,6 +71,43 @@ void delayBackground(unsigned long dsdelay)
 }
 
 /********************************************************************************************\
+   Toggle network enabled state
+ \*********************************************************************************************/
+bool setNetworkEnableStatus(ESPEasy::net::networkIndex_t networkIndex, bool enabled)
+{
+  if (!validNetworkIndex(networkIndex)) { return false; }
+  #ifndef BUILD_NO_RAM_TRACKER
+  checkRAM(F("setNetworkEnableStatus"));
+  #endif // ifndef BUILD_NO_RAM_TRACKER
+
+  // Only enable network if it has a network interface configured
+  if ((Settings.getNWPluginID_for_network(networkIndex) != ESPEasy::net::INVALID_NW_PLUGIN_ID) || !enabled) {
+    struct EventStruct TempEvent;
+    TempEvent.NetworkIndex = networkIndex;
+    String dummy;
+
+    if (!enabled) {
+      // Use the scheduler as this also removes any pending init calls.
+      Scheduler.setNetworkExitTimer(0, networkIndex);
+    }
+    Settings.setNetworkEnabled(networkIndex, enabled);
+
+    if (enabled) {
+      if (ESPEasy::net::getNWPluginData(networkIndex) == nullptr) {
+        // Only init when not yet started
+
+        if (!ESPEasy::net::NWPluginCall(NWPlugin::Function::NWPLUGIN_INIT, &TempEvent, dummy)) {
+          return false;
+        }
+      }
+    }
+
+    return true;
+  }
+  return false;
+}
+
+/********************************************************************************************\
    Toggle controller enabled state
  \*********************************************************************************************/
 bool setControllerEnableStatus(controllerIndex_t controllerIndex, bool enabled)
@@ -80,8 +119,25 @@ bool setControllerEnableStatus(controllerIndex_t controllerIndex, bool enabled)
 
   // Only enable controller if it has a protocol configured
   if ((Settings.Protocol[controllerIndex] != 0) || !enabled) {
+    struct EventStruct TempEvent;
+    TempEvent.ControllerIndex = controllerIndex;
+    String dummy;
+
+    if (!enabled) {
+      CPluginCall(CPlugin::Function::CPLUGIN_EXIT, &TempEvent, dummy);
+    }
+
     Settings.ControllerEnabled[controllerIndex] = enabled;
-    return true;
+    const protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(controllerIndex);
+
+    if (validProtocolIndex(ProtocolIndex)) {
+      struct EventStruct TempEvent;
+      TempEvent.ControllerIndex = controllerIndex;
+      String dummy;
+      const CPlugin::Function cfunction =
+        enabled ? CPlugin::Function::CPLUGIN_INIT : CPlugin::Function::CPLUGIN_EXIT;
+      return do_CPluginCall(ProtocolIndex, cfunction, &TempEvent, dummy) || CPlugin::Function::CPLUGIN_EXIT == cfunction;
+    }
   }
   return false;
 }
@@ -98,24 +154,27 @@ bool setTaskEnableStatus(struct EventStruct *event, bool enabled)
 
   // Only enable task if it has a Plugin configured
   if (validPluginID(Settings.getPluginID_for_task(event->TaskIndex)) || !enabled) {
-    String dummy;
+    if (enabled != Settings.TaskDeviceEnabled[event->TaskIndex])
+    {
+      String dummy;
 
-    if (!enabled) {
-      PluginCall(PLUGIN_EXIT, event, dummy);
-    }
+      if (!enabled) {
+        PluginCall(PLUGIN_EXIT, event, dummy);
+      }
 
-    // Toggle enable/disable state via command
-    // FIXME TD-er: Should this be a 'runtime' change, or actually change the intended state?
-    // Settings.TaskDeviceEnabled[event->TaskIndex].enabled = enabled;
-    Settings.TaskDeviceEnabled[event->TaskIndex] = enabled;
+      // Toggle enable/disable state via command
+      // FIXME TD-er: Should this be a 'runtime' change, or actually change the intended state?
+      // Settings.TaskDeviceEnabled[event->TaskIndex].enabled = enabled;
+      Settings.TaskDeviceEnabled[event->TaskIndex] = enabled;
 
-    if (enabled) {
-      // Schedule the plugin to be read.
-      // Do this before actual init, to allow the plugin to schedule a specific first read.
-      Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 10);
+      if (enabled) {
+        // Schedule the plugin to be read.
+        // Do this before actual init, to allow the plugin to schedule a specific first read.
+        Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + 10);
 
-      if (!PluginCall(PLUGIN_INIT, event, dummy)) {
-        return false;
+        if (!PluginCall(PLUGIN_INIT, event, dummy)) {
+          return false;
+        }
       }
     }
     return true;
@@ -144,7 +203,7 @@ void taskClear(taskIndex_t taskIndex, bool save)
   ExtraTaskSettings.TaskIndex = taskIndex;
 
   if (save) {
-    #ifndef BUILD_MINIMAL_OTA
+    #ifndef LIMIT_BUILD_SIZE
     addLog(LOG_LEVEL_INFO, F("taskClear() save settings"));
     #endif // ifndef BUILD_MINIMAL_OTA
     SaveTaskSettings(taskIndex);
@@ -166,6 +225,7 @@ void taskClear(taskIndex_t taskIndex, bool save)
    it is excluded from the calculation !
  \*********************************************************************************************/
 #if defined(ARDUINO_ESP8266_RELEASE_2_3_0)
+
 void dump(uint32_t addr) { // Seems already included in core 2.4 ...
   serialPrint(String(addr, HEX));
   serialPrint(": ");
@@ -224,9 +284,7 @@ void dump(uint32_t addr) { // Seems already included in core 2.4 ...
 /********************************************************************************************\
    Handler for keeping ExtraTaskSettings up to date using cache
  \*********************************************************************************************/
-String getTaskDeviceName(taskIndex_t TaskIndex) {
-  return Cache.getTaskDeviceName(TaskIndex);
-}
+String getTaskDeviceName(taskIndex_t TaskIndex) { return Cache.getTaskDeviceName(TaskIndex); }
 
 /********************************************************************************************\
    Handler for getting Value Names from TaskIndex
@@ -527,22 +585,16 @@ void RGB2HSV(uint8_t r, uint8_t g, uint8_t b, float hsv[3]) {
   hsv[2] = v * 255.0f;
 }
 
-float getCPUload() {
-  return 100.0f - Scheduler.getIdleTimePct();
-}
+float getCPUload()         { return 100.0f - Scheduler.getIdleTimePct(); }
 
-int getLoopCountPerSec() {
-  return loopCounterLast / 30;
-}
+int   getLoopCountPerSec() { return loopCounterLast / 30; }
 
-int getUptimeMinutes() {
-  return wdcounter / 2;
-}
+int   getUptimeMinutes()   { return wdcounter / 2; }
 
 /******************************************************************************
  * scan an int array of specified size for a value
  *****************************************************************************/
-bool intArrayContains(const int arraySize, const int array[], const int& value) {
+bool  intArrayContains(const int arraySize, const int array[], const int& value) {
   for (int i = 0; i < arraySize; i++) {
     if (array[i] == value) { return true; }
   }
@@ -557,6 +609,7 @@ bool intArrayContains(const int arraySize, const uint8_t array[], const uint8_t&
 }
 
 #ifndef BUILD_NO_RAM_TRACKER
+
 void logMemUsageAfter(const __FlashStringHelper *function, int value) {
   // Store free memory in an int, as subtracting may sometimes result in negative value.
   // The recorded used memory is not an exact value, as background (or interrupt) tasks may also allocate or free heap memory.
@@ -574,11 +627,13 @@ void logMemUsageAfter(const __FlashStringHelper *function, int value) {
         log += value;
       }
 
-      while (log.length() < 30) { log += ' '; }
+      while (log.length() < 30) { log += ' ';
+      }
       log += F("Free mem after: ");
       log += freemem_end;
 
-      while (log.length() < 55) { log += ' '; }
+      while (log.length() < 55) { log += ' ';
+      }
       log += F("diff: ");
       log += last_freemem - freemem_end;
       addLogMove(LOG_LEVEL_DEBUG, log);

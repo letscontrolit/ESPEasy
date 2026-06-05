@@ -12,6 +12,7 @@ void addButton(const String& url, const String& label);
 
 void addButton(const String& url, const String& label, const String& classes, bool enabled = true);
 
+# ifdef WEBSERVER_NEW_RULES
 void addButtonWithSvg(const String& url, const String& label);
 
 void addButtonWithSvg(const String& url, const String& label, const String& svgPath, bool needConfirm);
@@ -19,7 +20,7 @@ void addButtonWithSvg(const String& url, const String& label, const String& svgP
 void addSaveButton(const String& url, const String& label);
 
 void addDeleteButton(const String& url, const String& label);
-
+#endif
 void addWideButton(const __FlashStringHelper * url, const __FlashStringHelper * label);
 void addWideButton(const String& url, const String& label);
 
@@ -36,9 +37,12 @@ void addSubmitButton(const String& value, const String& name);
 void addSubmitButton(const __FlashStringHelper * value, const __FlashStringHelper * name, const __FlashStringHelper * classes);
 void addSubmitButton(const String& value, const String& name, const String& classes);
 
+#ifdef WEBSERVER_GITHUB_COPY
 // add copy to clipboard button
 void addCopyButton(const String& value, const String& delimiter, const String& name);
+#endif
 
+void addPlugin_Add_Edit_Button(const __FlashStringHelper * urlPrefix, size_t index, bool plugin_set, bool plugin_supported, const String& symbol = EMPTY_STRING);
 
 
 #endif

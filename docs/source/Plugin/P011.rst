@@ -13,7 +13,9 @@ Type: |P011_type|
 
 Name: |P011_name|
 
-Status: |P011_status|
+Status ESP32: |P011_status|
+
+Status ESP8266: |P011_status_lb|
 
 GitHub: |P011_github|_
 
@@ -53,7 +55,7 @@ Sensor
 I2C Options 
 ^^^^^^^^^^^^
 
-The available settings here depend on the build used. At least the **Force Slow I2C speed** option is available, but selections for the I2C Multiplexer can also be shown. For details see the :ref:`Hardware_page`
+The available settings here depend on the build used. At least the **Force Slow I2C speed** option is available, but selections for the I2C Multiplexer can also be shown. For details see the :ref:`i2c-bus` page
 
 Device Settings
 ^^^^^^^^^^^^^^^

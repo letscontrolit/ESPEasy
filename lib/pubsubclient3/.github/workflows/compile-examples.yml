@@ -1,0 +1,103 @@
+name: Compile examples
+
+# See: https://docs.github.com/en/free-pro-team@latest/actions/reference/events-that-trigger-workflows
+on:
+  push:
+    paths:
+      - ".github/workflows/compile-examples.yml"
+      - 'examples/**'
+      - 'src/**'
+  pull_request:
+    paths:
+      - ".github/workflows/compile-examples.yml"
+      - 'examples/**'
+      - 'src/**'
+
+jobs:
+  build:
+    name: ${{ matrix.board.fqbn }}
+    runs-on: ubuntu-latest
+
+    env:
+      SKETCHES_REPORTS_PATH: sketches-reports
+
+    strategy:
+      fail-fast: false
+
+      matrix:
+        board:
+          - fqbn: arduino:avr:uno
+            platforms: |
+              - name: arduino:avr
+            libraries: ""
+            artifact-name-suffix: arduino-avr-uno
+          - fqbn: arduino:megaavr:uno2018
+            platforms: |
+              - name: arduino:megaavr
+            libraries: |
+              - name: WiFiNINA
+            artifact-name-suffix: arduino-megaavr-uno2018
+          - fqbn: arduino:samd:mkr1000
+            platforms: |
+              - name: arduino:samd
+            libraries: |
+              - name: WiFi101
+            artifact-name-suffix: arduino-samd-mkr1000
+          - fqbn: esp8266:esp8266:generic
+            platforms: |
+              - name: esp8266:esp8266
+                source-url: https://arduino.esp8266.com/stable/package_esp8266com_index.json
+            libraries: ""
+            artifact-name-suffix: esp8266-esp8266-generic
+          - fqbn: "esp32:esp32:esp32"
+            platforms: |
+              - name: esp32:esp32
+            libraries: ""
+            artifact-name-suffix: esp32-esp32-esp32
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Download SRAM library
+        run: |
+          mkdir -p ./arduino-libraries
+          git -C ./arduino-libraries clone https://github.com/ennui2342/arduino-sram.git
+
+      - name: Filter examples
+        if: success()
+        run: |
+          if [[ "${{ matrix.board.fqbn }}" == esp32:esp32:* ]]; then
+            echo "Removing non-ESP32 specific examples"
+            rm -rf examples/mqtt_stream
+          fi
+          if [[ ! "${{ matrix.board.fqbn }}" == *:esp*:* ]]; then
+            echo "Removing ESP specific examples"
+            rm -rf examples/mqtt_esp*
+          fi
+
+      - name: Compile examples
+        uses: arduino/compile-sketches@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          fqbn: ${{ matrix.board.fqbn }}
+          platforms: ${{ matrix.board.platforms }}
+          libraries: |
+            # Install the library from the local path
+            - source-path: ./
+            - source-path: ./arduino-libraries/arduino-sram
+            # Install libraries from GitHub
+            #- source-url: https://github.com/ennui2342/arduino-sram
+            - name: Ethernet
+            ${{ matrix.board.libraries }}
+          sketch-paths: |
+            - examples
+          enable-deltas-report: true
+          sketches-report-path: ${{ env.SKETCHES_REPORTS_PATH }}
+
+      - name: Save sketches report as workflow artifact
+        uses: actions/upload-artifact@v7
+        with:
+          if-no-files-found: error
+          path: ${{ env.SKETCHES_REPORTS_PATH }}
+          name: sketches-report-${{ matrix.board.artifact-name-suffix }}

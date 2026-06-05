@@ -10,7 +10,12 @@
 
 Port_ESPEasySerial_HardwareSerial_t::Port_ESPEasySerial_HardwareSerial_t() {}
 
-Port_ESPEasySerial_HardwareSerial_t::~Port_ESPEasySerial_HardwareSerial_t() {}
+Port_ESPEasySerial_HardwareSerial_t::~Port_ESPEasySerial_HardwareSerial_t() {
+  if (_serial != nullptr) {
+    _serial->flush();
+    _serial->end();
+  }
+}
 
 void Port_ESPEasySerial_HardwareSerial_t::resetConfig(const ESPEasySerialConfig& config)
 {
@@ -40,6 +45,16 @@ void Port_ESPEasySerial_HardwareSerial_t::resetConfig(const ESPEasySerialConfig&
     #if USABLE_SOC_UART_NUM > 2
     case  ESPEasySerialPort::serial2:
     #endif // if USABLE_SOC_UART_NUM > 2
+    #if USABLE_SOC_UART_NUM > 3
+    case ESPEasySerialPort::serial3:
+#endif 
+#if USABLE_SOC_UART_NUM > 4
+    case ESPEasySerialPort::serial4:
+#endif 
+#if USABLE_SOC_UART_NUM > 5
+    case ESPEasySerialPort::serial5:
+#endif 
+
       _config.port = config.port;
       break;
     default:
@@ -64,6 +79,18 @@ void Port_ESPEasySerial_HardwareSerial_t::resetConfig(const ESPEasySerialConfig&
   } else if (_config.port == ESPEasySerialPort::serial2) {
     _serial = &Serial2;
 #endif // if USABLE_SOC_UART_NUM > 2
+#if USABLE_SOC_UART_NUM > 3
+  } else if (_config.port == ESPEasySerialPort::serial3) {
+    _serial = &Serial3;
+#endif
+#if USABLE_SOC_UART_NUM > 4
+  } else if (_config.port == ESPEasySerialPort::serial4) {
+    _serial = &Serial4;
+#endif
+#if USABLE_SOC_UART_NUM > 5
+  } else if (_config.port == ESPEasySerialPort::serial5) {
+    _serial = &Serial5;
+#endif
   } else {
     _config.port = ESPEasySerialPort::not_set;
   }
@@ -131,7 +158,7 @@ void Port_ESPEasySerial_HardwareSerial_t::begin(unsigned long baud)
     }
 
     if (_config.txBuffSize > 256) {
-      _config.txBuffSize = _serial->setRxBufferSize(_config.txBuffSize);
+      _config.txBuffSize = _serial->setTxBufferSize(_config.txBuffSize);
     }
 
     _serial->begin(baud, _config.config, _config.receivePin, _config.transmitPin, _config.inverse_logic);

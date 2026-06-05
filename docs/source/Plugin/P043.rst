@@ -13,7 +13,9 @@ Type: |P043_type|
 
 Name: |P043_name|
 
-Status: |P043_status|
+Status ESP32: |P043_status|
+
+Status ESP8266: |P043_status_lb|
 
 GitHub: |P043_github|_
 

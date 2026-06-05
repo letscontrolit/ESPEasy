@@ -1,11 +1,15 @@
 #include "../Helpers/I2C_access.h"
 
+#if FEATURE_I2C
+
 #include "../DataStructs/TimingStats.h"
 #include "../Globals/I2Cdev.h"
 #include "../Globals/Settings.h"
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/Hardware_I2C.h"
 #include "../Helpers/StringConverter.h"
+
+#include "../Helpers/I2C_access.h"
 
 #if FEATURE_I2C_MULTIPLE
 # include "../WebServer/Markup_Forms.h"
@@ -195,10 +199,44 @@ bool I2C_write8_reg(uint8_t i2caddr, uint8_t reg, uint8_t value) {
 }
 
 // **************************************************************************/
+// Writes an 8 bit value over I2C to a 16 bit register
+// **************************************************************************/
+bool I2C_write8_reg16(uint8_t i2caddr, uint16_t reg, uint8_t value) {
+  Wire.beginTransmission(i2caddr);
+  Wire.write((uint8_t)(reg >> 8));
+  Wire.write((uint8_t)reg);
+  Wire.write((uint8_t)value);
+  return Wire.endTransmission() == 0;
+}
+
+// **************************************************************************/
 // Writes an 16 bit value over I2C
 // **************************************************************************/
 bool I2C_write16(uint8_t i2caddr, uint16_t value) {
   Wire.beginTransmission(i2caddr);
+  Wire.write((uint8_t)(value >> 8));
+  Wire.write((uint8_t)value);
+  return Wire.endTransmission() == 0;
+}
+
+// **************************************************************************/
+// Writes an 24 bit value over I2C
+// **************************************************************************/
+bool I2C_write24(uint8_t i2caddr, uint32_t value) {
+  Wire.beginTransmission(i2caddr);
+  Wire.write((uint8_t)(value >> 16));
+  Wire.write((uint8_t)(value >> 8));
+  Wire.write((uint8_t)value);
+  return Wire.endTransmission() == 0;
+}
+
+// **************************************************************************/
+// Writes an 32 bit value over I2C
+// **************************************************************************/
+bool I2C_write32(uint8_t i2caddr, uint32_t value) {
+  Wire.beginTransmission(i2caddr);
+  Wire.write((uint8_t)(value >> 24));
+  Wire.write((uint8_t)(value >> 16));
   Wire.write((uint8_t)(value >> 8));
   Wire.write((uint8_t)value);
   return Wire.endTransmission() == 0;
@@ -217,6 +255,31 @@ bool I2C_write16_LE(uint8_t i2caddr, uint16_t value) {
 bool I2C_write16_reg(uint8_t i2caddr, uint8_t reg, uint16_t value) {
   Wire.beginTransmission(i2caddr);
   Wire.write((uint8_t)reg);
+  Wire.write((uint8_t)(value >> 8));
+  Wire.write((uint8_t)value);
+  return Wire.endTransmission() == 0;
+}
+
+// **************************************************************************/
+// Writes a 24 bit value over I2C to a register
+// **************************************************************************/
+bool I2C_write24_reg(uint8_t i2caddr, uint8_t reg, uint32_t value) {
+  Wire.beginTransmission(i2caddr);
+  Wire.write((uint8_t)reg);
+  Wire.write((uint8_t)(value >> 16));
+  Wire.write((uint8_t)(value >> 8));
+  Wire.write((uint8_t)value);
+  return Wire.endTransmission() == 0;
+}
+
+// **************************************************************************/
+// Writes a 32 bit value over I2C to a register
+// **************************************************************************/
+bool I2C_write32_reg(uint8_t i2caddr, uint8_t reg, uint32_t value) {
+  Wire.beginTransmission(i2caddr);
+  Wire.write((uint8_t)reg);
+  Wire.write((uint8_t)(value >> 24));
+  Wire.write((uint8_t)(value >> 16));
   Wire.write((uint8_t)(value >> 8));
   Wire.write((uint8_t)value);
   return Wire.endTransmission() == 0;
@@ -292,6 +355,26 @@ uint16_t I2C_read16(uint8_t i2caddr, bool *is_ok) {
 
   if (I2C_requestFrom(i2caddr, 2, is_ok)) {
     value = (Wire.read() << 8) | Wire.read();
+  }
+
+  return value;
+}
+
+uint32_t I2C_read24(uint8_t i2caddr, bool *is_ok) {
+  uint32_t value{};
+
+  if (I2C_requestFrom(i2caddr, 3, is_ok)) {
+    value = (Wire.read() << 16) | (Wire.read() << 8) | Wire.read();
+  }
+
+  return value;
+}
+
+uint32_t I2C_read32(uint8_t i2caddr, bool *is_ok) {
+  uint32_t value{};
+
+  if (I2C_requestFrom(i2caddr, 4, is_ok)) {
+    value = (Wire.read() << 24) | (Wire.read() << 16) | (Wire.read() << 8) | Wire.read();
   }
 
   return value;
@@ -403,10 +486,14 @@ bool I2C_deviceCheck(uint8_t     i2caddr,
       if (maxRetries > 0) {
         deviceCheckI2C[taskIndex]++;
 
+        // If the number of retries is reached, disable the device
         if (deviceCheckI2C[taskIndex] >= maxRetries) {
           // Disable temporarily as device check failed
           // FIXME TD-er: Should reschedule call to PLUGIN_INIT????
-          Settings.TaskDeviceEnabled[taskIndex] = false; // If the number of retries is reached, disable the device
+          struct EventStruct TempEvent(taskIndex);
+          String dummy;
+
+          PluginCall(PLUGIN_EXIT, &TempEvent, dummy);
           # ifndef BUILD_NO_DEBUG
           addLog(LOG_LEVEL_ERROR, concat(F("I2C  : Device doesn't respond for task: "), static_cast<int>(taskIndex + 1)));
           # endif // ifndef BUILD_NO_DEBUG
@@ -430,13 +517,7 @@ void I2CInterfaceSelector(String  label,
                           String  id,
                           uint8_t choice,
                           bool    reloadWhenNeeded) {
-  const uint8_t i2cMaxBusCount = (getI2CBusCount() > 1
-                                  ? ((Settings.isI2CEnabled(1) ? 1 : 0)
-                                    # if FEATURE_I2C_INTERFACE_3
-                                     + (Settings.isI2CEnabled(2) ? 1 : 0)
-                                    # endif // if FEATURE_I2C_INTERFACE_3
-                                     )
-                                  : 0) + (Settings.isI2CEnabled(0) ? 1 : 0);
+  const uint8_t i2cMaxBusCount = Settings.getNrConfiguredI2C_buses();
 
   if (i2cMaxBusCount > 1) {
     static uint8_t i2cBusCount = 0;
@@ -484,3 +565,4 @@ void I2CInterfaceSelector(String  label,
 }
 
 #endif // if FEATURE_I2C_MULTIPLE
+#endif

@@ -9,21 +9,24 @@
 #include "../WebServer/ConfigPage.h"
 #include "../WebServer/ControlPage.h"
 #include "../WebServer/ControllerPage.h"
-#include "../WebServer/CustomPage.h"
+//#include "../WebServer/CustomPage.h"
 #include "../WebServer/DevicesPage.h"
 #include "../WebServer/DownloadPage.h"
 #include "../WebServer/FactoryResetPage.h"
 #include "../WebServer/FileList.h"
 #include "../WebServer/HTML_wrappers.h"
 #include "../WebServer/HardwarePage.h"
+#include "../WebServer/InterfacesPage.h"
 #include "../WebServer/I2C_Scanner.h"
 #include "../WebServer/JSON.h"
-#include "../WebServer/LoadFromFS.h"
+//#include "../WebServer/LoadFromFS.h"
 #include "../WebServer/Log.h"
-#include "../WebServer/Markup.h"
-#include "../WebServer/Markup_Buttons.h"
-#include "../WebServer/Markup_Forms.h"
+//#include "../WebServer/Markup.h"
+//#include "../WebServer/Markup_Buttons.h"
+//#include "../WebServer/Markup_Forms.h"
+#include "../WebServer/NetworkPage.h"
 #include "../WebServer/NotificationPage.h"
+#include "../WebServer/PluginListPage.h"
 #include "../WebServer/PinStates.h"
 #include "../WebServer/RootPage.h"
 #include "../WebServer/Rules.h"
@@ -44,21 +47,18 @@
 #include "../../_Plugin_Helper.h"
 #include "../../ESPEasy_common.h"
 
-#include "../CustomBuild/CompiletimeDefines.h"
-
 #include "../DataStructs/TimingStats.h"
 
 #include "../DataTypes/SettingsType.h"
 
-#include "../ESPEasyCore/ESPEasyNetwork.h"
+#include "../../ESPEasy/net/ESPEasyNetwork.h"
 #include "../ESPEasyCore/ESPEasyRules.h"
-#include "../ESPEasyCore/ESPEasyWifi.h"
+#include "../../ESPEasy/net/wifi/ESPEasyWifi.h"
 
-#include "../Globals/CPlugins.h"
-#include "../Globals/Device.h"
-#include "../Globals/NetworkState.h"
+#include "../../ESPEasy/net/Globals/NetworkState.h"
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Settings.h"
+#include "../Globals/Services.h"
 
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Hardware_device_info.h"
@@ -127,7 +127,8 @@ void sendHeadandTail_stdtemplate(bool Tail, bool rebooting) {
   sendHeadandTail(F("TmplStd"), Tail, rebooting);
 
   if (!Tail) {
-    if (!clientIPinSubnet() && WifiIsAP(WiFi.getMode()) && (WiFi.softAPgetStationNum() > 0)) {
+    // TODO TD-er: Must check clientConnectedToAP()?
+    if (!clientIPinSubnetDefaultNetwork() &&  ESPEasy::net::wifi::wifiAPmodeActivelyUsed()) {
       addHtmlError(F("Warning: Connected via AP"));
     }
 
@@ -170,19 +171,29 @@ void sendHeadandTail_stdtemplate(bool Tail, bool rebooting) {
 }
 
 bool captivePortal() {
-  const IPAddress client_localIP = web_server.client().localIP();
-  const bool fromAP              = client_localIP == apIP;
-  const bool hasWiFiCredentials  = SecuritySettings.hasWiFiCredentials();
+  // We only need to check if a client connected here via AP 
+  // as currently we don't have any interface which allows forwarding
+  // packets and thus acting as a gateway for others.
+  if (!Settings.ApCaptivePortal() || !clientConnectedToAP()) return false;
 
-  if (hasWiFiCredentials || !fromAP) {
+#ifndef BUILD_NO_DEBUG
+  addLog(LOG_LEVEL_DEBUG, concat(F("CaptivePortal: hostHeader: "), web_server.hostHeader()));
+#endif
+  if (!ESPEasy::net::NetworkConnected())
+  {
     return false;
   }
 
-  if (!isIP(web_server.hostHeader()) && (web_server.hostHeader() != (NetworkGetHostname() + F(".local")))) {
+  if (!isIP(web_server.hostHeader()) 
+#if FEATURE_MDNS
+      && !getValue(LabelType::M_DNS).equalsIgnoreCase(web_server.hostHeader())
+#endif
+) {
+    const IPAddress client_localIP = web_server.client().localIP();
     String redirectURL = concat(F("http://"), formatIP(client_localIP));
     #ifdef WEBSERVER_SETUP
 
-    if (fromAP && !hasWiFiCredentials) {
+    if (ESPEasy::net::wifi::shouldRedirectTo_setup()) {
       redirectURL += F("/setup");
     }
     #endif // ifdef WEBSERVER_SETUP
@@ -193,6 +204,60 @@ bool captivePortal() {
     return true;
   }
   return false;
+}
+
+bool   clientConnectedToAP()
+{
+  const IPAddress client_localIP = web_server.client().localIP();
+  return IPAddressSet(client_localIP) && client_localIP == apIP;
+}
+
+ESPEasy::net::networkIndex_t getNetworkIndex_ClientConnectsTo()
+{
+  const IPAddress client_localIP = web_server.client().localIP();
+  if (!IPAddressSet(client_localIP))
+    return ESPEasy::net::INVALID_NETWORK_INDEX;
+  if (client_localIP == apIP) {
+    // Easy to check as this is a global variable
+    return NETWORK_INDEX_WIFI_AP;
+  }
+  #ifdef ESP8266
+  if (client_localIP == WiFi.localIP()) {
+    return NETWORK_INDEX_WIFI_STA;
+  }
+  #endif
+  #ifdef ESP32
+  for (ESPEasy::net::networkIndex_t x = 0; x < NETWORK_MAX; ++x) {
+    if (Settings.getNetworkEnabled(x)) {
+      struct EventStruct TempEvent;
+      TempEvent.NetworkIndex = x;
+      String str;
+
+      if (ESPEasy::net::NWPluginCall(NWPlugin::Function::NWPLUGIN_GET_INTERFACE, &TempEvent, str))
+      {
+        const NWPlugin::IP_type ip_types[] = {
+          NWPlugin::IP_type::inet,
+      # if CONFIG_LWIP_IPV6
+          NWPlugin::IP_type::ipv6_unknown,
+          NWPlugin::IP_type::ipv6_global,
+          NWPlugin::IP_type::ipv6_link_local,
+          NWPlugin::IP_type::ipv6_site_local,
+          NWPlugin::IP_type::ipv6_unique_local,
+          NWPlugin::IP_type::ipv4_mapped_ipv6,
+      # endif // if CONFIG_LWIP_IPV6
+
+        };
+
+        for (size_t i = 0; i < NR_ELEMENTS(ip_types); ++i) {
+          const IPAddress ip(NWPlugin::get_IP_address(ip_types[i], TempEvent.networkInterface));
+          if (client_localIP == ip) return x;
+        }
+      }
+    }
+  }
+
+  #endif
+  return ESPEasy::net::INVALID_NETWORK_INDEX;
 }
 
 // ********************************************************************************
@@ -213,7 +278,14 @@ void WebServerInit()
   // Entries for several captive portal URLs.
   // Maybe not needed. Might be handled by notFound handler.
   web_server.on(UriGlob("/generate_204*"), handle_root); // Android captive portal. Handle "/generate_204_<uuid>"-like requests.
+//web_server.on(F("/generate_204"),        handle_root); // android captive portal redirect
   web_server.on(F("/fwlink"),              handle_root); // Microsoft captive portal.
+  web_server.on(F("/redirect"),            handle_root); // microsoft redirect
+  web_server.on(F("/hotspot-detect.html"), handle_root); // apple call home
+  web_server.on(F("/canonical.html"),      handle_root); // firefox captive portal call home
+  web_server.on(F("/success.txt"),         handle_root); // firefox captive portal call home
+  web_server.on(F("/ncsi.txt"),            handle_root); // windows call home
+
   #endif // ifdef WEBSERVER_ROOT
   #ifdef WEBSERVER_ADVANCED
   web_server.on(F("/advanced"),            handle_advanced);
@@ -225,6 +297,9 @@ void WebServerInit()
   #ifdef WEBSERVER_CONFIG
   web_server.on(F("/config"),      handle_config);
   #endif // ifdef WEBSERVER_CONFIG
+  #ifdef WEBSERVER_NETWORK
+  web_server.on(F("/network"),     handle_networks);
+  #endif // ifdef WEBSERVER_NETWORK
   #ifdef WEBSERVER_CONTROL
   web_server.on(F("/control"),     handle_control);
   #endif // ifdef WEBSERVER_CONTROL
@@ -257,15 +332,40 @@ void WebServerInit()
   #ifdef WEBSERVER_HARDWARE
   web_server.on(F("/hardware"),        handle_hardware);
   #endif // ifdef WEBSERVER_HARDWARE
+  #ifdef WEBSERVER_INTERFACES
+  web_server.on(F("/interfaces"),      handle_interfaces);
+#if FEATURE_I2C
+  web_server.on(F("/interfaces_i2c"),  handle_interfaces_i2c);
+#endif // if FEATURE_I2C
+#if FEATURE_SPI
+  web_server.on(F("/interfaces_spi"),  handle_interfaces_spi);
+#endif // if FEATURE_SPI
+#if FEATURE_MODBUS && FEATURE_MODBUS_INTERFACES_TAB
+  web_server.on(F("/interfaces_modbus"),  handle_interfaces_modbus);
+#endif // if FEATURE_MODBUS
+#if FEATURE_CAN
+  web_server.on(F("/interfaces_can"),  handle_interfaces_can);
+#endif // if FEATURE_CAN
+#if FEATURE_WRMBUS
+  web_server.on(F("/interfaces_wrmbus"),  handle_interfaces_wrmbus);
+#endif // if FEATURE_WRMBUS
+#if FEATURE_WIMBUS
+  web_server.on(F("/interfaces_wimbus"),  handle_interfaces_wimbus);
+#endif // if FEATURE_WIMBUS
+  #endif // ifdef WEBSERVER_INTERFACES
   #ifdef WEBSERVER_I2C_SCANNER
   web_server.on(F("/i2cscanner"),      handle_i2cscanner);
   #endif // ifdef WEBSERVER_I2C_SCANNER
+  #ifdef WEBSERVER_JSON
   web_server.on(F("/json"),            handle_json);     // Also part of WEBSERVER_NEW_UI
+  #endif
   #ifdef WEBSERVER_CSVVAL
   web_server.on(F("/csv"),             handle_csvval);
   #endif
+  #ifdef WEBSERVER_LOG
   web_server.on(F("/log"),             handle_log);
   web_server.on(F("/logjson"),         handle_log_JSON); // Also part of WEBSERVER_NEW_UI
+  #endif
 #if FEATURE_NOTIFIER
   web_server.on(F("/notifications"),   handle_notifications);
 #endif // if FEATURE_NOTIFIER
@@ -299,6 +399,9 @@ void WebServerInit()
 #ifdef WEBSERVER_SYSVARS
   web_server.on(F("/sysvars"),     handle_sysvars);
 #endif // WEBSERVER_SYSVARS
+#if FEATURE_PLUGIN_LIST
+  web_server.on(F("/pluginlist"),  handle_pluginlist);
+#endif // if FEATURE_PLUGIN_LIST
 #ifdef WEBSERVER_TIMINGSTATS
   web_server.on(F("/timingstats"), handle_timingstats);
 #endif // WEBSERVER_TIMINGSTATS
@@ -357,6 +460,8 @@ void WebServerInit()
 
   #if defined(ESP8266)
 
+  web_server.enableCORS(true);
+
   # if FEATURE_SSDP
 
   if (Settings.UseSSDP)
@@ -384,22 +489,24 @@ void setWebserverRunning(bool state) {
   if (webserverRunning == state) {
     return;
   }
+  ESPEasy::net::processNetworkEvents();
 
   if (state) {
     WebServerInit();
     web_server.begin(Settings.WebserverPort);
-    #ifndef BUILD_MINIMAL_OTA
+    #ifndef LIMIT_BUILD_SIZE
     addLog(LOG_LEVEL_INFO, F("Webserver: start"));
     #endif
   } else {
     web_server.client().stop();
     web_server.stop();
-    #ifndef BUILD_MINIMAL_OTA
+
+    #ifndef LIMIT_BUILD_SIZE
     addLog(LOG_LEVEL_INFO, F("Webserver: stop"));
     #endif
   }
   webserverRunning = state;
-  CheckRunningServices(); // Uses webserverRunning state.
+  ESPEasy::net::CheckRunningServices(true); // Uses webserverRunning state.
 }
 
 void getWebPageTemplateDefault(const String& tmplName, WebTemplateParser& parser)
@@ -468,7 +575,7 @@ void getWebPageTemplateDefault(const String& tmplName, WebTemplateParser& parser
     getWebPageTemplateDefaultHead(parser, addMeta, addJS);
 
     if (!parser.isTail()) {
-      parser.process(F("<body class='bodymenu'"));
+      parser.process(strformat(F("<body class='bodymenu%c'"), isGpMenuSecondLevel(navMenuIndex) ? '2' : ' '));
       #if FEATURE_AUTO_DARK_MODE
 
       if (0 == Settings.getCssMode()) {
@@ -507,7 +614,7 @@ void getWebPageTemplateDefaultHeader(WebTemplateParser& parser, const __FlashStr
   {
     if (parser.isTail()) { return; }
   #ifndef WEBPAGE_TEMPLATE_DEFAULT_HEADER
-    parser.process(F("<header class='headermenu'><h1>ESP Easy Mega: "));
+    parser.process(strformat(F("<header class='headermenu%c'><h1>ESP Easy Mega: "), isGpMenuSecondLevel(navMenuIndex) ? '2' : ' '));
     parser.process(title);
     # if BUILD_IN_WEBHEADER
     parser.process(F(
@@ -590,7 +697,7 @@ void writeDefaultCSS(void)
 // FIXME TD-er: replace stream_xxx_json_object* into this code.
 // N.B. handling of numerical values differs (string vs. no string)
 // ********************************************************************************
-
+#ifdef WEBSERVER_NEW_UI
 int8_t level     = 0;
 int8_t lastLevel = -1;
 
@@ -610,9 +717,7 @@ void json_quote_name(const String& val) {
 }
 
 void json_quote_val(const String& val) {
-  addHtml('\"');
-  addHtml(val);
-  addHtml('\"');
+  addHtml(to_json_value(val));
 }
 
 void json_open(bool arr) {
@@ -673,59 +778,39 @@ void json_prop(const String& name, const String& value) {
 void json_prop(LabelType::Enum label) {
   json_prop(getInternalLabel(label, '-'), getValue(label));
 }
-
+#endif
 // ********************************************************************************
 // Add a task select dropdown list
 // This allows to select a task index based on the existing tasks.
 // ********************************************************************************
-void addTaskSelect(const String& name,  taskIndex_t choice, const String& cssclass)
+void addTaskSelect(const String& name,  taskIndex_t choice)
 {
   String deviceName;
-
-  addHtml(F("<select "));
-  addHtmlAttribute(F("id"),   F("selectwidth"));
-  addHtmlAttribute(F("name"), name);
-
-  if (!cssclass.isEmpty()) {
-    addHtmlAttribute(F("class"), cssclass);
-  }
-  addHtmlAttribute(F("onchange"), F("return task_select_onchange(frmselect)"));
-  addHtml('>');
+  String deviceNr;
+  String options[TASKS_MAX + 1];
+  String attrs[TASKS_MAX + 1];
 
   for (taskIndex_t x = 0; x <= TASKS_MAX; x++)
   {
+    deviceNr.clear();
     if (validTaskIndex(x)) {
       const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(x);
       deviceName = getPluginNameFromDeviceIndex(DeviceIndex);
+      deviceNr += (x + 1);
     } else {
       deviceName = F("Not Set");
     }
-    {
-      addHtml(F("<option value='"));
-      addHtmlInt(x);
-      addHtml('\'');
-
-      if (choice == x) {
-        addHtml(F(" selected"));
-      }
-    }
 
     if (validTaskIndex(x) && !validPluginID_fullcheck(Settings.getPluginID_for_task(x))) {
-      addDisabled();
+      attrs[x] = F("disabled");
     }
-    {
-      addHtml('>');
-
-      if (validTaskIndex(x)) {
-        addHtmlInt(x + 1);
-      }
-      addHtml(F(" - "));
-      addHtml(deviceName);
-      addHtml(F(" - "));
-      addHtml(getTaskDeviceName(x));
-      addHtml(F("</option>"));
-    }
+    options[x] = strformat(F("%s - %s - %s"), deviceNr.c_str(), deviceName.c_str(), getTaskDeviceName(x).c_str());
   }
+
+  FormSelectorOptions selector(TASKS_MAX + 1, options, nullptr, attrs);
+  selector.reloadonchange = true;
+  selector.classname = F("wide");
+  selector.addSelector(name, choice);
 }
 
 // ********************************************************************************

@@ -3,27 +3,30 @@
 #ifdef USES_P162
 
 # include "../PluginStructs/P162_data_struct.h"
+# include "../Helpers/Hardware_SPI.h"
 
 # include <SPI.h>
 
 // Needed also here for PlatformIO's library finder as the .h file
 // is in a directory which is excluded in the src_filter
 
-P162_data_struct::P162_data_struct(int8_t csPin,
-                                   int8_t rstPin,
-                                   int8_t shdPin)
-  : _csPin(csPin), _rstPin(rstPin), _shdPin(shdPin)
-{}
+P162_data_struct::P162_data_struct(int8_t  rstPin,
+                                   int8_t  shdPin)
+  : _rstPin(rstPin), _shdPin(shdPin)
+{
+}
 
 P162_data_struct::~P162_data_struct() {
   //
 }
 
 bool P162_data_struct::plugin_init(struct EventStruct *event) {
-  if (validGpio(_csPin) && Settings.isSPI_valid()) {
-    pinMode(_csPin, OUTPUT);
-    _initialized = true;
+  if (!validGpio(P162_CS_PIN) || !Settings.isSPI_validForTask(event->TaskIndex)) {
+    return false;
   }
+  pinMode(P162_CS_PIN, OUTPUT);
+  _initialized = true;
+  
 
   if (validGpio(_rstPin)) {
     pinMode(_rstPin, OUTPUT);
@@ -35,18 +38,18 @@ bool P162_data_struct::plugin_init(struct EventStruct *event) {
     // Set default values
     if (P162_SHUTDOWN_W0) {
       _pot0_value = P162_SHUTDOWN_VALUE;
-      write_pot(P162_POT0_SHUTDOWN, _pot0_value); // Value ignored for shutdown
+      write_pot(event, P162_POT0_SHUTDOWN, _pot0_value); // Value ignored for shutdown
     } else {
       _pot0_value = P162_INIT_W0;
-      write_pot(P162_POT0_SEL, _pot0_value);
+      write_pot(event, P162_POT0_SEL, _pot0_value);
     }
 
     if (P162_SHUTDOWN_W1) {
       _pot1_value = P162_SHUTDOWN_VALUE;
-      write_pot(P162_POT1_SHUTDOWN, _pot1_value); // Value ignored for shutdown
+      write_pot(event, P162_POT1_SHUTDOWN, _pot1_value); // Value ignored for shutdown
     } else {
       _pot1_value = P162_INIT_W1;
-      write_pot(P162_POT1_SEL, _pot1_value);
+      write_pot(event, P162_POT1_SEL, _pot1_value);
     }
     updateUserVars(event);
 
@@ -101,7 +104,7 @@ bool P162_data_struct::plugin_write(struct EventStruct *event,
         _pot0_value = P162_RESET_VALUE;
         _pot1_value = P162_RESET_VALUE;
         updateUserVars(event);
-        write_pot(P162_BOTH_POT_SEL, _pot0_value); // Single command
+        write_pot(event, P162_BOTH_POT_SEL, _pot0_value); // Single command
         success = true;
         addLog(LOG_LEVEL_INFO, F("Digipot: Software reset applied."));
       }
@@ -127,7 +130,7 @@ bool P162_data_struct::plugin_write(struct EventStruct *event,
           _pot1_value = P162_SHUTDOWN_VALUE;
         }
         updateUserVars(event);
-        write_pot(shd, 0);
+        write_pot(event, shd, 0);
         success = true;
       }
     } else
@@ -148,7 +151,7 @@ bool P162_data_struct::plugin_write(struct EventStruct *event,
           _pot1_value = event->Par2;
         }
         updateUserVars(event);
-        write_pot(sel, event->Par2);
+        write_pot(event, sel, event->Par2);
         success = true;
       }
     }
@@ -160,19 +163,26 @@ bool P162_data_struct::plugin_write(struct EventStruct *event,
 /********************************************************************************************
  * Write to pot
  *******************************************************************************************/
-void P162_data_struct::write_pot(uint8_t cmd,
-                                 uint8_t val) {
+void P162_data_struct::write_pot(
+  struct EventStruct *event,
+  uint8_t cmd,
+  uint8_t val) {
   if (!_initialized) { return; }
 
+  auto spi_ptr = getSPIBusForTask(event->TaskIndex);
+  if (!spi_ptr) return;
+
+  const uint8_t csPin = P162_CS_PIN;
+
   // set the CS pin to low to select the chip:
-  digitalWrite(_csPin, LOW);
+  digitalWrite(csPin, LOW);
 
   // send the command and value via SPI:
-  SPI.transfer(cmd);
-  SPI.transfer(val);
+  spi_ptr->transfer(cmd);
+  spi_ptr->transfer(val);
 
   // Set the CS pin high to execute the command:
-  digitalWrite(_csPin, HIGH);
+  digitalWrite(csPin, HIGH);
 }
 
 /*********************************************************************************

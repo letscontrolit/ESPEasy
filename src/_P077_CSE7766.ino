@@ -55,6 +55,7 @@ boolean Plugin_077(uint8_t function, struct EventStruct *event, String& string) 
       dev.TimerOptional    = true;
       dev.PluginStats      = true;
       dev.TaskLogsOwnPeaks = true;
+      dev.MqttStateClass   = true;
       break;
     }
 
@@ -96,7 +97,7 @@ boolean Plugin_077(uint8_t function, struct EventStruct *event, String& string) 
     # if FEATURE_MQTT_DISCOVER
     case PLUGIN_GET_DISCOVERY_VTYPES:
     {
-      success = getDiscoveryVType(event, Plugin_077_QueryVType, P077_QUERY1_CONFIG_POS, event->Par5);;
+      success = getDiscoveryVType(event, Plugin_077_QueryVType, P077_QUERY1_CONFIG_POS, event->Par5);
       break;
     }
     # endif // if FEATURE_MQTT_DISCOVER

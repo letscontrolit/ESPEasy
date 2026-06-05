@@ -13,7 +13,9 @@ Type: |P044_type|
 
 Name: |P044_name|
 
-Status: |P044_status|
+Status ESP32: |P044_status|
+
+Status ESP8266: |P044_status_lb|
 
 GitHub: |P044_github|_
 

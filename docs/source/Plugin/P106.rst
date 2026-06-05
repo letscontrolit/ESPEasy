@@ -13,7 +13,9 @@ Type: |P106_type|
 
 Name: |P106_name|
 
-Status: |P106_status|
+Status ESP32: |P106_status|
+
+Status ESP8266: |P106_status_lb|
 
 GitHub: |P106_github|_
 
@@ -49,7 +51,7 @@ I2C options
 
 * **I2C Address**: The device supports 2 addresses, that can be configured using the ``SDO`` pin: (not all boards have that pin available, but could use soldering-pads to configure the address)
 
-The available I2C settings here depend on the build used. At least the **Force Slow I2C speed** option is available, but selections for the I2C Multiplexer can also be shown. For details see the :ref:`Hardware_page`
+The available I2C settings here depend on the build used. At least the **Force Slow I2C speed** option is available, but selections for the I2C Multiplexer can also be shown. For details see the :ref:`i2c-bus` page
 
 Device Settings
 ^^^^^^^^^^^^^^^

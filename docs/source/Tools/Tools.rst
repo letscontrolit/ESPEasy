@@ -482,6 +482,16 @@ If the Unit of Measure, configurable per Task Value, should not be displayed on 
 
 NB: This option is excluded from the build if this feature is not enabled.
 
+MQTT Connect in background
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Added: 2025-08-23
+
+Depending on the internet connection, f.e. when connecting via a low-end mobile network or other slow connection type, starting a connection to a MQTT Broker can take quite some time.
+
+On ESP32, tasks like starting the MQTT connection can be delegated to an independent background task, to avoid blocking the normal working of ESPEasy, that will report the result when completed. This feature is enabled by default, as it is the preferred setting, but when this way of connecting is causing issues, it can be disabled.
+
+
 Allow OTA without size-check
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -950,6 +960,18 @@ System Variables
 ================
 
 Shows an overview of the available variables set from rules, and available ``%variable%`` variables in several categories.
+
+Included Plugins
+================
+
+Show a list of all plugins available in the build, Plugins, Controllers and Notifications.
+
+For Devices, the plugins are listed both sorted by Description and by Plugin ID, for easier retrieval.
+
+Controller plugins also show columns for MQTT and TLS (when included in the build).
+
+.. image:: images/Tools_PluginList_Controllers.png
+
 
 
 Interfaces

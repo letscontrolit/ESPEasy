@@ -4,16 +4,17 @@
 
 #include "../../ESPEasy-Globals.h"
 #include "../DataStructs/TimingStats.h"
-#include "../ESPEasyCore/ESPEasyNetwork.h"
+#include "../../ESPEasy/net/ESPEasyNetwork.h"
 #include "../ESPEasyCore/Serial.h"
-#include "../Globals/NetworkState.h"
+#include "../../ESPEasy/net/Globals/NetworkState.h"
+#include "../Globals/Logging.h"
 #include "../Globals/Services.h"
 #include "../Globals/Settings.h"
 #if FEATURE_RTTTL && FEATURE_ANYRTTTL_LIB && FEATURE_ANYRTTTL_ASYNC
 #include "../Helpers/Audio.h"
 #endif // if FEATURE_RTTTL && FEATURE_ANYRTTTL_LIB && FEATURE_ANYRTTTL_ASYNC
 #include "../Helpers/ESPEasy_time_calc.h"
-#include "../Helpers/Network.h"
+#include "../Helpers/NetworkStatusLED.h"
 #include "../Helpers/Networking.h"
 
 
@@ -27,6 +28,7 @@
 * run background tasks
 \*********************************************************************************************/
 bool runningBackgroundTasks = false;
+
 void backgroundtasks()
 {
   // checkRAM(F("backgroundtasks"));
@@ -57,9 +59,9 @@ void backgroundtasks()
 
   START_TIMER
   #if FEATURE_MDNS || FEATURE_ESPEASY_P2P
-  const bool networkConnected = NetworkConnected();
+  const bool networkConnected = ESPEasy::net::NetworkConnected();
   #else
-  NetworkConnected();
+  ESPEasy::net::NetworkConnected();
   #endif
 
   runningBackgroundTasks = true;
@@ -73,7 +75,8 @@ void backgroundtasks()
      }
    */
 
-  process_serialWriteBuffer();
+
+  processLogs();
 
   if (!UseRTOSMultitasking) {
     serial();

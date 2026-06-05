@@ -96,7 +96,7 @@ boolean Plugin_139(uint8_t function, struct EventStruct *event, String& string)
     {
       const bool isPowerManagerTask = Settings.isPowerManagerTask(event->TaskIndex);
       #  ifndef BUILD_NO_DEBUG
-      addLogMove(LOG_LEVEL_DEBUG, F("P139: PLUGIN_PRIORITY_INIT"));
+      addLog(LOG_LEVEL_DEBUG, F("P139: PLUGIN_PRIORITY_INIT"));
       #  endif // ifndef BUILD_NO_DEBUG
       success = isPowerManagerTask; // Are we the PowerManager task?
       break;
@@ -262,13 +262,13 @@ boolean Plugin_139(uint8_t function, struct EventStruct *event, String& string)
 
       if (nullptr != P139_init) {
         #  ifndef BUILD_NO_DEBUG
-        addLogMove(LOG_LEVEL_INFO, F("P139: Already initialized, skipped."));
+        addLog(LOG_LEVEL_INFO, F("P139: Already initialized, skipped."));
         #  endif // ifndef BUILD_NO_DEBUG
         // has been initialized so nothing to do here
         success = true; // Still was successful (to keep plugin enabled!)
       } else {
         #  ifndef BUILD_NO_DEBUG
-        addLogMove(LOG_LEVEL_DEBUG, F("P139: PLUGIN_INIT"));
+        addLog(LOG_LEVEL_DEBUG, F("P139: PLUGIN_INIT"));
         #  endif // ifndef BUILD_NO_DEBUG
         success = initPluginTaskData(event->TaskIndex, new (std::nothrow) P139_data_struct(event));
       }

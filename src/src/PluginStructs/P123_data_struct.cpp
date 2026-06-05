@@ -144,7 +144,7 @@ bool P123_data_struct::init(struct EventStruct *event) {
     addLogMove(LOG_LEVEL_INFO,
                concat(concat(F("P123 DEBUG Plugin"), nullptr != touchscreen ? F(" & touchscreen") : F("")), F(" initialized.")));
   } else {
-    addLogMove(LOG_LEVEL_INFO, F("P123 DEBUG Touchscreen initialization FAILED."));
+    addLog(LOG_LEVEL_INFO, F("P123 DEBUG Touchscreen initialization FAILED."));
   # endif // PLUGIN_123_DEBUG
   }
   return isInitialized();

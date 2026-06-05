@@ -52,4 +52,77 @@ String floatToString(const float& value,
                       unsigned int  decimalPlaces     = 2,
                       bool          trimTrailingZeros = false);
 
+
+/********************************************************************************************\
+   Handling HEX strings
+ \*********************************************************************************************/
+
+// Convert max. 8 hex decimals to unsigned long
+unsigned long hexToUL(const String& input_c,
+                      size_t        nrHexDecimals);
+
+unsigned long hexToUL(const String& input_c);
+
+unsigned long hexToUL(const String& input_c,
+                      size_t        startpos,
+                      size_t        nrHexDecimals);
+
+// Convert max. 16 hex decimals to unsigned long long
+unsigned long long hexToULL(const String& input_c,
+                            size_t        nrHexDecimals); 
+
+unsigned long long hexToULL(const String& input_c);
+
+unsigned long long hexToULL(const String& input_c,
+                            size_t        startpos,
+                            size_t        nrHexDecimals);
+
+void appendHexChar(uint8_t data, String& string);
+
+// Binary data to HEX
+// Returned string length will be twice the size of the data array.
+String formatToHex_array(const uint8_t* data, size_t size);
+String formatToHex_wordarray(const uint16_t* data, size_t size);
+
+String formatULLtoHex(const uint64_t& value,
+                   const __FlashStringHelper * prefix,
+                   unsigned int minimal_hex_digits);
+
+String formatULLtoHex(const uint64_t& value,
+                   const __FlashStringHelper * prefix);
+
+String formatULLtoHex(const uint64_t& value, unsigned int minimal_hex_digits = 0);
+
+String formatULLtoHex_no_prefix(const uint64_t& value, unsigned int minimal_hex_digits = 0);
+
+String formatULLtoHex_decimal(const uint64_t& value);
+
+
+String formatToHex(unsigned long value,
+                   const __FlashStringHelper * prefix,
+                   unsigned int minimal_hex_digits);
+
+String formatToHex(unsigned long value,
+                   const __FlashStringHelper * prefix);
+
+String formatToHex(unsigned long value, unsigned int minimal_hex_digits = 0);
+
+String formatToHex_no_prefix(unsigned long value, unsigned int minimal_hex_digits = 0);
+
+String formatHumanReadable(uint64_t value,
+                           uint32_t factor);
+
+String formatHumanReadable(uint64_t value,
+                           uint32_t factor,
+                           int           NrDecimals);
+
+String formatToHex_decimal(unsigned long value);
+
+String formatToHex_decimal(unsigned long value,
+                           unsigned long factor);
+
+int intFromHexChar(char a);
+
+String stringFromHexArray(const String& arr);
+
 #endif // ifndef HELPERS_STRINGCONVERTER_NUMERICAL_H

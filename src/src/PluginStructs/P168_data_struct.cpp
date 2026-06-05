@@ -12,7 +12,15 @@ P168_data_struct::P168_data_struct(uint8_t alsGain,
                                    uint8_t psmMode,
                                    uint8_t readMethod) :
   _als_gain(alsGain), _als_integration(alsIntegration), _psm_mode(psmMode), _readMethod(readMethod), initialized(false)
-{}
+{
+  // We already apply the correct WAIT for a read, so no need or desire to wait any longer.
+  // AUTO enforces multiple WAIT options sequentially, so that's inhibited
+  if (static_cast<uint8_t>(VEML_LUX_NORMAL) == _readMethod) {
+    _readMethod = static_cast<uint8_t>(VEML_LUX_NORMAL_NOWAIT);
+  } else if ((static_cast<uint8_t>(VEML_LUX_CORRECTED) == _readMethod) || (static_cast<uint8_t>(VEML_LUX_AUTO) == _readMethod)) {
+    _readMethod = static_cast<uint8_t>(VEML_LUX_CORRECTED_NOWAIT);
+  }
+}
 
 P168_data_struct::~P168_data_struct() {
   delete veml;
@@ -51,10 +59,10 @@ bool P168_data_struct::plugin_read(struct EventStruct *event)           {
     float    lux = veml->readLux(static_cast<luxMethod>(_readMethod));
     uint16_t whi = veml->readWhite();
 
-    if (luxMethod::VEML_LUX_AUTO == static_cast<luxMethod>(_readMethod)) {
-      addLog(LOG_LEVEL_INFO, strformat(F("VEML : 6030/7700 AutoLux, Lux: %.2f, Gain: %.3f, Integration: %d"),
-                                       lux, veml->getGainValue(), veml->getIntegrationTimeValue()));
-    }
+    // if (luxMethod::VEML_LUX_AUTO == static_cast<luxMethod>(_readMethod)) {
+    //   addLog(LOG_LEVEL_INFO, strformat(F("VEML : 6030/7700 AutoLux, Lux: %.2f, Gain: %.3f, Integration: %d"),
+    //                                    lux, veml->getGainValue(), veml->getIntegrationTimeValue()));
+    // }
     UserVar.setFloat(event->TaskIndex, 0, lux);
     UserVar.setFloat(event->TaskIndex, 1, whi);
     UserVar.setFloat(event->TaskIndex, 2, amb);

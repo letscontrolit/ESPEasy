@@ -47,13 +47,13 @@ bool C013_SensorInfoStruct::prepareForSend(size_t& sizeToSend)
       TaskDeviceErrorValue[x]    = ExtraTaskSettings.TaskDeviceErrorValue[x];
       VariousBits[x]             = ExtraTaskSettings.VariousBits[x];
 
-/*
-      ZERO_FILL(TaskDeviceFormula[x]);
+      /*
+            ZERO_FILL(TaskDeviceFormula[x]);
 
-      if (ExtraTaskSettings.TaskDeviceFormula[x][0] != 0) {
-        safe_strncpy(TaskDeviceFormula[x], ExtraTaskSettings.TaskDeviceFormula[x], sizeof(TaskDeviceFormula[x]));
-      }
-*/
+            if (ExtraTaskSettings.TaskDeviceFormula[x][0] != 0) {
+              safe_strncpy(TaskDeviceFormula[x], ExtraTaskSettings.TaskDeviceFormula[x], sizeof(TaskDeviceFormula[x]));
+            }
+       */
     }
 
     for (uint8_t x = 0; x < PLUGIN_CONFIGVAR_MAX; ++x) {
@@ -94,54 +94,70 @@ bool C013_SensorInfoStruct::prepareForSend(size_t& sizeToSend)
   return true;
 }
 
-bool C013_SensorInfoStruct::setData(const uint8_t *data, size_t size)
+UP_C013_SensorInfoStruct C013_SensorInfoStruct::create(const uint8_t *data, size_t size)
 {
-  // First clear entire struct
-  memset(this, 0, sizeof(C013_SensorInfoStruct));
+  {
+    UP_C013_SensorInfoStruct invalid_res{};
 
-  if (size < 6) {
-    return false;
+    if (size < 6) {
+      return invalid_res;
+    }
+
+    if ((data[0] != 255) || // header
+        (data[1] != 3)) {   // ID
+      return invalid_res;
+    }
+
+    // Before copying the data, compute the checksum of the entire packet
+    constexpr unsigned len_upto_checksum = offsetof(C013_SensorInfoStruct, checksum);
+    const ShortChecksumType tmpChecksum(
+      data,
+      size,
+      len_upto_checksum);
+
+    if (size >= (len_upto_checksum + 4)) {
+      // Data could have checksum, see if it is valid.
+      uint8_t buf[4];
+      memcpy(buf, data + len_upto_checksum, sizeof(buf));
+      const ShortChecksumType checksum_data(buf);
+
+      if (checksum_data.isSet()) {
+        if (!(tmpChecksum == checksum_data)) {
+          return invalid_res;
+        }
+      }
+    }
   }
-
-  if ((data[0] != 255) || // header
-      (data[1] != 3)) {   // ID
-    return false;
-  }
-
-  // Before copying the data, compute the checksum of the entire packet
-  constexpr unsigned len_upto_checksum = offsetof(C013_SensorInfoStruct, checksum);
-  const ShortChecksumType tmpChecksum(
-    data,
-    size,
-    len_upto_checksum);
 
   // Need to keep track of different possible versions of data which still need to be supported.
   if (size > sizeof(C013_SensorInfoStruct)) {
     size = sizeof(C013_SensorInfoStruct);
   }
 
+  MakeC013_SensorInfo(res);
+
+  if (!AllocatedC013_SensorInfo(res)) { return res; }
+
+  memcpy((uint8_t *)res.get(), data, size);
+
   if (size <= 138) {
-    deviceNumber = INVALID_PLUGIN_ID;
-    sensorType   = Sensor_VType::SENSOR_TYPE_NONE;
+    res->deviceNumber = INVALID_PLUGIN_ID;
+    res->sensorType   = Sensor_VType::SENSOR_TYPE_NONE;
 
     NodeStruct *sourceNode = Nodes.getNode(data[2]); // sourceUnit
 
     if (sourceNode != nullptr) {
-      sourceNodeBuild = sourceNode->build;
+      res->sourceNodeBuild = sourceNode->build;
     }
   }
 
-  memcpy(this, data, size);
-
-  if (checksum.isSet()) {
-    if (!(tmpChecksum == checksum)) {
-      return false;
-    }
+  if (!(validTaskIndex(res->sourceTaskIndex) &&
+        validTaskIndex(res->destTaskIndex) &&
+        validPluginID(res->deviceNumber)))
+  {
+    res.reset();
   }
-
-  return validTaskIndex(sourceTaskIndex) &&
-         validTaskIndex(destTaskIndex) &&
-         validPluginID(deviceNumber);
+  return res;
 }
 
 #endif // ifdef USES_C013

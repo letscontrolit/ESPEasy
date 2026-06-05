@@ -15,59 +15,8 @@
 #pragma GCC system_header
 #endif
 
-
-/******************************************************************************\
- * Detect core versions *******************************************************
-\******************************************************************************/
-
-#ifndef ESP32
-  #if defined(ARDUINO_ESP8266_RELEASE_2_4_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_1)  || defined(ARDUINO_ESP8266_RELEASE_2_4_2)
-    #ifndef CORE_2_4_X
-      #define CORE_2_4_X
-    #endif
-  #endif
-
-  #if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_0) || defined(ARDUINO_ESP8266_RELEASE_2_4_1)
-    #ifndef CORE_PRE_2_4_2
-      #define CORE_PRE_2_4_2
-    #endif
-  #endif
-
-  #if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(CORE_2_4_X)
-    #ifndef CORE_PRE_2_5_0
-      #define CORE_PRE_2_5_0
-    #endif
-  #else
-    #ifndef CORE_POST_2_5_0
-      #define CORE_POST_2_5_0
-    #endif
-  #endif
-
-
-  #ifdef FORCE_PRE_2_5_0
-    #ifdef CORE_POST_2_5_0
-      #undef CORE_POST_2_5_0
-    #endif
-  #endif
-
-/*
-  #ifndef CORE_POST_2_5_0
- #define STR_HELPER(x) #x
- #define STR(x) STR_HELPER(x)
-  #endif
-*/
-
-#endif
-
-
-#if defined(ESP8266)
-  #include <c_types.h>
-
-  #ifndef CORE_POST_3_0_0
-    #ifndef IRAM_ATTR
-      #define IRAM_ATTR ICACHE_RAM_ATTR
-    #endif
-  #endif
+#ifdef ESP8266
+#include "../include/esp8266_soc_caps.h"
 #endif
 
 #if defined(ESP32)
@@ -80,11 +29,16 @@
   #endif
 #endif
 
+#include <memory>
+
 #define ZERO_FILL(S)  memset((S), 0, sizeof(S))
 #define ZERO_TERMINATE(S)  S[sizeof(S) - 1] = 0
 
 #define NR_ELEMENTS(ARR)   (sizeof (ARR) / sizeof *(ARR))
 //#define NR_ELEMENTS(ARR) sizeof(ARR) / sizeof(ARR[0])
+
+// Shortcut to typedef an unique pointer of a given type
+#define DEF_UP(T)  typedef std::unique_ptr<T> UP_##T
 
 
 constexpr unsigned FLOOR_LOG2(unsigned x)
@@ -149,7 +103,7 @@ constexpr unsigned CEIL_LOG2(unsigned x)
 # endif // ifdef ESP8266
 
 # ifdef ESP32
-  #  if defined(ESP32C2) || defined(ESP32C3) || defined(ESP32C6)
+  #  if defined(ESP32C2) || defined(ESP32C3) || defined(ESP32C5) || defined(ESP32C6) || defined(ESP32C61) || defined(ESP32P4)
 
     // (ESP32) FsP: FlashstringHelper to String-Pointer
     #   define FsP

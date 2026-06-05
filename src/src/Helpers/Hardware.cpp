@@ -2,12 +2,10 @@
 
 #include "../Commands/GPIO.h"
 #include "../CustomBuild/ESPEasyLimits.h"
-#include "../DataTypes/SPI_options.h"
 #include "../ESPEasyCore/ESPEasyGPIO.h"
 #include "../ESPEasyCore/ESPEasy_Log.h"
 
 #include "../Globals/Device.h"
-#include "../Globals/ESPEasyWiFiEvent.h"
 #include "../Globals/ExtraTaskSettings.h"
 #include "../Globals/Settings.h"
 #include "../Globals/Statistics.h"
@@ -15,11 +13,13 @@
 
 #include "../Helpers/ESPEasy_FactoryDefault.h"
 #include "../Helpers/ESPEasy_Storage.h"
-#include "../Helpers/FS_Helper.h"
+#if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+#include "../Helpers/ESPEasy_UnitOfMeasure.h"
+#endif
 #include "../Helpers/Hardware_device_info.h"
 #include "../Helpers/Hardware_GPIO.h"
 #include "../Helpers/Hardware_I2C.h"
-#include "../Helpers/I2C_access.h"
+#include "../Helpers/Hardware_SPI.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/PortStatus.h"
 #include "../Helpers/StringConverter.h"
@@ -34,8 +34,6 @@
   # include <WiFi.h>
 #endif // if defined(ESP32)
 
-// #include "../../ESPEasy-Globals.h"
-
 #ifdef ESP32
   # include <soc/soc.h>
   # include <soc/efuse_reg.h>
@@ -43,45 +41,14 @@
   # include <soc/spi_reg.h>
   # include <soc/rtc.h>
 
-  # if ESP_IDF_VERSION_MAJOR == 4
-    #  if CONFIG_IDF_TARGET_ESP32S3   // ESP32-S3
-      #   include <esp32s3/rom/spi_flash.h>
-      #   include <esp32s3/spiram.h>
-      #   include <esp32s3/rom/rtc.h>
-    #  elif CONFIG_IDF_TARGET_ESP32S2   // ESP32-S2
-      #   include <esp32s2/rom/spi_flash.h>
-      #   include <esp32s2/spiram.h>
-      #   include <esp32s2/rom/rtc.h>
-    #  elif CONFIG_IDF_TARGET_ESP32C3 // ESP32-C3
-      #   include <esp32c3/rom/spi_flash.h>
-      #   include <esp32c3/rom/rtc.h>
-    #  elif CONFIG_IDF_TARGET_ESP32   // ESP32/PICO-D4
-      #   include <esp32/rom/spi_flash.h>
-      #   include <esp32/rom/rtc.h>
-      #   include <esp32/spiram.h>
-    #  else // if CONFIG_IDF_TARGET_ESP32S3
-      #   error Target CONFIG_IDF_TARGET is not supported
-    #  endif // if CONFIG_IDF_TARGET_ESP32S3
-  # else // ESP32 IDF 5.x and later
-    #  include <rom/spi_flash.h>
-    #  include <rom/rtc.h>
-    #  include <bootloader_common.h>
-  # endif // if ESP_IDF_VERSION_MAJOR == 4
+  // ESP32 IDF 5.x and later
+  # include <rom/spi_flash.h>
+  # include <rom/rtc.h>
+  # include <bootloader_common.h>
 
-#if CONFIG_IDF_TARGET_ESP32   // ESP32/PICO-D4
-  #  if ESP_IDF_VERSION_MAJOR < 5
-  #   define HAS_HALL_EFFECT_SENSOR  1
-  #  else // if ESP_IDF_VERSION_MAJOR < 5
+  // Support for Hall Effect sensor was removed in ESP_IDF 5.x
+  # define HAS_HALL_EFFECT_SENSOR  0
 
-// Support for Hall Effect sensor was removed in ESP_IDF 5.x
-  #   define HAS_HALL_EFFECT_SENSOR  0
-  #  endif // if ESP_IDF_VERSION_MAJOR < 5
-# else 
-  #  define HAS_HALL_EFFECT_SENSOR  0
-# endif
-
-
-# if ESP_IDF_VERSION_MAJOR >= 5
 
 #  include <esp_chip_info.h>
 #  include <soc/soc.h>
@@ -90,28 +57,14 @@
 
 // #include <hal/ledc_hal.h>
 
-# endif // if ESP_IDF_VERSION_MAJOR >= 5
-
 # include "../Helpers/Hardware_ADC_cali.h"
-
-#if FEATURE_ETHERNET
-#include <ETH.h>
-#endif
 
 #endif // ifdef ESP32
 
 
-#if FEATURE_SD
-# include <SD.h>
-#endif // if FEATURE_SD
-
 #if FEATURE_CAN
 #include <CAN.h>
 #endif
-#include <SPI.h>
-
-
-# define GPIO_PLUGIN_ID  1
 
 /********************************************************************************************\
  * Initialize specific hardware settings (only global ones, others are set through devices)
@@ -207,79 +160,24 @@ void hardwareInit()
     }
   }
 
+  // Initialize I2C buses
+#if FEATURE_I2C
   initI2C();
+#endif
 
   #if FEATURE_PLUGIN_PRIORITY
   String dummy;
   PluginCall(PLUGIN_PRIORITY_INIT_ALL, nullptr, dummy);
   #endif // if FEATURE_PLUGIN_PRIORITY
 
-  bool tryInitSPI = true;
-#if FEATURE_ETHERNET
-  if ((Settings.NetworkMedium == NetworkMedium_t::Ethernet) &&
-      isValid(Settings.ETH_Phy_Type) && 
-      isSPI_EthernetType(Settings.ETH_Phy_Type)) 
-  {
-#if !ETH_SPI_SUPPORTS_CUSTOM
-      tryInitSPI = false;
+#if FEATURE_SPI
+  // Initialize SPI buses, also initializes SD-card when available in build and configured
+  initializeSPIBuses();
 #endif
-  }
-#endif
-
-
-  // SPI Init
-  bool SPI_initialized = false;
-  if (tryInitSPI && Settings.isSPI_valid())
-  {
-    SPI.setHwCs(false);
-
-    // MFD: for ESP32 enable the SPI on HSPI as the default is VSPI
-    #ifdef ESP32
-
-    const SPI_Options_e SPI_selection = static_cast<SPI_Options_e>(Settings.InitSPI);
-    int8_t spi_gpios[3]               = {};
-
-    if (Settings.getSPI_pins(spi_gpios)) {
-      if (SPI_selection == SPI_Options_e::Vspi_Fspi) {
-        SPI.begin(); // Default SPI bus
-      } else {
-        SPI.begin(spi_gpios[0], spi_gpios[1], spi_gpios[2]);
-      }
-      SPI_initialized = true;
-    }
-    #else // ifdef ESP32
-    SPI.begin();
-    SPI_initialized = true;
-    #endif // ifdef ESP32
-  }
-
-  if (SPI_initialized)
-  {
-    addLog(LOG_LEVEL_INFO, F("INIT : SPI Init (without CS)"));
-    #if FEATURE_SD
-
-    if (Settings.Pin_sd_cs >= 0)
-    {
-      if (SD.begin(Settings.Pin_sd_cs))
-      {
-        addLog(LOG_LEVEL_INFO, F("SD   : Init OK"));
-      }
-      else
-      {
-        SD.end();
-        addLog(LOG_LEVEL_ERROR, F("SD   : Init failed"));
-      }
-    }
-#endif // if FEATURE_SD
-  } else {
-    addLog(LOG_LEVEL_INFO, F("INIT : SPI not enabled"));
-  }
-
   #if FEATURE_CAN
   initCAN();
   #endif
 }
-
 
 void checkResetFactoryPin() {
   static uint8_t factoryResetCounter = 0;
@@ -310,13 +208,13 @@ void checkResetFactoryPin() {
 int lastADCvalue = 0;
 
 int espeasy_analogRead(int pin) {
-  if (!WiFiEventData.wifiConnectInProgress) {
+//  if (!WiFiEventData.wifiConnectInProgress) {
     #if FEATURE_ADC_VCC
       lastADCvalue = ESP.getVcc();
     #else
       lastADCvalue = analogRead(A0);
     #endif // if FEATURE_ADC_VCC
-  }
+//  }
   return lastADCvalue;
 }
 
@@ -452,11 +350,19 @@ int  getCPU_MaxFreqMHz()
     return 160;
 #elif CONFIG_IDF_TARGET_ESP32C6
     return 160;
+#elif CONFIG_IDF_TARGET_ESP32C61
+    return 160;
+#elif CONFIG_IDF_TARGET_ESP32C5
+    return 240;
 #elif CONFIG_IDF_TARGET_ESP32H2
     //IDF-6570
     return 96;
 #elif CONFIG_IDF_TARGET_ESP32P4
+  #ifdef CONFIG_ESP32P4_SELECTS_REV_LESS_V3 
+    return 360;
+  #else
     return 400;
+  #endif
 #elif CONFIG_IDF_TARGET_ESP32S2
     return 240;
 #elif CONFIG_IDF_TARGET_ESP32S3
@@ -681,6 +587,30 @@ void readBootCause() {
     case POWER_GLITCH_RESET     : lastBootCause = BOOT_CAUSE_POWER_UNSTABLE;   break; /**<23, power glitch reset digital core and rtc module*/
   }
 
+#elif defined(ESP32C5)
+  switch (rtc_get_reset_reason(0)) {
+    case NO_MEAN                : break;
+    case POWERON_RESET          : lastBootCause = BOOT_CAUSE_MANUAL_REBOOT;    break; /**<1, Vbat power on reset*/
+    case RTC_SW_SYS_RESET       : lastBootCause = BOOT_CAUSE_SOFT_RESTART;     break; /**<3, Software reset digital core*/
+    case DEEPSLEEP_RESET        : lastBootCause = BOOT_CAUSE_DEEP_SLEEP;       break; /**<5, Deep Sleep reset digital core*/
+//    case SDIO_RESET             : lastBootCause = BOOT_CAUSE_MANUAL_REBOOT;    break; /**<6, Reset by SLC module, reset digital core (hp system)*/
+    case TG0WDT_SYS_RESET       : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<7, Timer Group0 Watch dog reset digital core*/
+    case TG1WDT_SYS_RESET       : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<8, Timer Group1 Watch dog reset digital core*/
+    case RTCWDT_SYS_RESET       : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<9, RTC Watch dog Reset digital core*/
+    case TG0WDT_CPU_RESET       : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<11, Time Group0 reset CPU*/
+    case RTC_SW_CPU_RESET       : lastBootCause = BOOT_CAUSE_SOFT_RESTART;     break; /**<12, Software reset CPU*/
+    case RTCWDT_CPU_RESET       : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<13, RTC Watch dog Reset CPU*/
+    case RTCWDT_BROWN_OUT_RESET : lastBootCause = BOOT_CAUSE_POWER_UNSTABLE;   break; /**<15, Reset when the vdd voltage is not stable*/
+    case RTCWDT_RTC_RESET       : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<16, RTC Watch dog reset digital core and rtc module*/
+    case TG1WDT_CPU_RESET       : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<17, Time Group1 reset CPU*/
+    case SUPER_WDT_RESET        : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<18, super watchdog reset digital core and rtc module*/
+    case EFUSE_RESET            : lastBootCause = BOOT_CAUSE_MANUAL_REBOOT;    break; /**<20, efuse reset digital core*/
+    case USB_UART_CHIP_RESET    : lastBootCause = BOOT_CAUSE_MANUAL_REBOOT;    break; /**<21, usb uart reset digital core */
+    case USB_JTAG_CHIP_RESET    : lastBootCause = BOOT_CAUSE_MANUAL_REBOOT;    break; /**<22, usb jtag reset digital core */
+    case JTAG_RESET             : lastBootCause = BOOT_CAUSE_MANUAL_REBOOT;    break; /**<24, jtag reset CPU*/
+  }
+
+
 #elif defined(ESP32C6)
   switch (rtc_get_reset_reason(0)) {
     case NO_MEAN                : break;
@@ -703,6 +633,55 @@ void readBootCause() {
     case USB_JTAG_CHIP_RESET    : lastBootCause = BOOT_CAUSE_MANUAL_REBOOT;    break; /**<22, usb jtag reset digital core */
     case JTAG_RESET             : lastBootCause = BOOT_CAUSE_MANUAL_REBOOT;    break; /**<24, jtag reset CPU*/
   }
+
+#elif defined(ESP32C61)
+  switch (rtc_get_reset_reason(0)) {
+    case NO_MEAN                : break;
+    case POWERON_RESET          : lastBootCause = BOOT_CAUSE_MANUAL_REBOOT;    break; /**<1, Vbat power on reset*/
+    case RTC_SW_SYS_RESET       : lastBootCause = BOOT_CAUSE_SOFT_RESTART;     break; /**<3, Software reset digital core*/
+    case DEEPSLEEP_RESET        : lastBootCause = BOOT_CAUSE_DEEP_SLEEP;       break; /**<5, Deep Sleep reset digital core*/
+
+    case RTC_PWR_GLITCH_RESET   : lastBootCause = BOOT_CAUSE_POWER_UNSTABLE;    break;
+    case CPU_LOCKUP_RESET       : lastBootCause = BOOT_CAUSE_EXT_WD;    break;
+
+    case TG0WDT_SYS_RESET       : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<7, Timer Group0 Watch dog reset digital core*/
+    case TG1WDT_SYS_RESET       : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<8, Timer Group1 Watch dog reset digital core*/
+    case RTCWDT_SYS_RESET       : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<9, RTC Watch dog Reset digital core*/
+    case TG0WDT_CPU_RESET       : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<11, Time Group0 reset CPU*/
+    case RTC_SW_CPU_RESET       : lastBootCause = BOOT_CAUSE_SOFT_RESTART;     break; /**<12, Software reset CPU*/
+    case RTCWDT_CPU_RESET       : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<13, RTC Watch dog Reset CPU*/
+    case RTCWDT_BROWN_OUT_RESET : lastBootCause = BOOT_CAUSE_POWER_UNSTABLE;   break; /**<15, Reset when the vdd voltage is not stable*/
+    case RTCWDT_RTC_RESET       : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<16, RTC Watch dog reset digital core and rtc module*/
+    case TG1WDT_CPU_RESET       : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<17, Time Group1 reset CPU*/
+    case SUPER_WDT_RESET        : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<18, super watchdog reset digital core and rtc module*/
+    case EFUSE_RESET            : lastBootCause = BOOT_CAUSE_MANUAL_REBOOT;    break; /**<20, efuse reset digital core*/
+    case USB_UART_CHIP_RESET    : lastBootCause = BOOT_CAUSE_MANUAL_REBOOT;    break; /**<21, usb uart reset digital core */
+    case USB_JTAG_CHIP_RESET    : lastBootCause = BOOT_CAUSE_MANUAL_REBOOT;    break; /**<22, usb jtag reset digital core */
+    case JTAG_RESET             : lastBootCause = BOOT_CAUSE_MANUAL_REBOOT;    break; /**<24, jtag reset CPU*/
+  }
+
+#elif defined(ESP32P4)
+  switch (rtc_get_reset_reason(0)) {
+    case NO_MEAN                : break;
+    case POWERON_RESET          : lastBootCause = BOOT_CAUSE_MANUAL_REBOOT;    break; /**<1, Vbat power on reset*/
+    case SW_SYS_RESET           : lastBootCause = BOOT_CAUSE_SOFT_RESTART;     break; /**<3, Software reset digital core*/
+    case PMU_SYS_PWR_DOWN_RESET : lastBootCause = BOOT_CAUSE_DEEP_SLEEP;       break; /**<5, PMU HP system power down reset*/
+    case HP_SYS_HP_WDT_RESET    : lastBootCause = BOOT_CAUSE_MANUAL_REBOOT;    break; /**<7, HP system reset from HP watchdog*/
+    case HP_SYS_LP_WDT_RESET    : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<9, HP system reset from LP watchdog*/
+    case HP_CORE_HP_WDT_RESET   : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<11, HP core reset from HP watchdog*/
+    case SW_CPU_RESET           : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<12, software reset cpu*/
+    case HP_CORE_LP_WDT_RESET   : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<13, HP core reset from LP watchdog*/
+    case BROWN_OUT_RESET        : lastBootCause = BOOT_CAUSE_POWER_UNSTABLE;   break; /**<15, Reset when the vdd voltage is not stable*/
+    case CHIP_LP_WDT_RESET      : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<16, LP watchdog chip reset*/
+    case SUPER_WDT_RESET        : lastBootCause = BOOT_CAUSE_EXT_WD;           break; /**<18, super watchdog reset*/
+    case GLITCH_RTC_RESET       : lastBootCause = BOOT_CAUSE_POWER_UNSTABLE;   break; /**<19, glitch reset*/
+    case EFUSE_CRC_ERR_RESET    : lastBootCause = BOOT_CAUSE_POWER_UNSTABLE;   break; /**<20, efuse ecc error reset*/
+    case CHIP_USB_JTAG_RESET    : lastBootCause = BOOT_CAUSE_MANUAL_REBOOT;    break; /**<22, HP usb jtag chip reset*/
+    case CHIP_USB_UART_RESET    : lastBootCause = BOOT_CAUSE_MANUAL_REBOOT;    break; /**<23, HP usb uart chip reset*/
+    case JTAG_RESET             : lastBootCause = BOOT_CAUSE_MANUAL_REBOOT;    break; /**<24, jtag reset*/
+    case CPU_LOCKUP_RESET       : lastBootCause = BOOT_CAUSE_MANUAL_REBOOT;    break; /**<26, cpu lockup reset*/
+  }
+
 
 # elif defined(ESP32_CLASSIC)
   switch (rtc_get_reset_reason(0)) {
@@ -750,7 +729,7 @@ const __FlashStringHelper* getDeviceModelBrandString(DeviceModel model) {
     case DeviceModel::DeviceModel_Sonoff_POWr2:   return F("Sonoff");
     case DeviceModel::DeviceModel_Shelly1:
     case DeviceModel::DeviceModel_ShellyPLUG_S:   return F("Shelly");
-# if CONFIG_ETH_USE_ESP32_EMAC
+# if CONFIG_ETH_USE_ESP32_EMAC && FEATURE_ETHERNET
     case DeviceModel::DeviceModel_Olimex_ESP32_PoE:
     case DeviceModel::DeviceModel_Olimex_ESP32_EVB:
     case DeviceModel::DeviceModel_Olimex_ESP32_GATEWAY:
@@ -803,13 +782,13 @@ const __FlashStringHelper* getDeviceModelTypeString(DeviceModel model)
     case DeviceModel::DeviceModel_ShellyPLUG_S:
       return F("default");
 #endif // if defined(ESP8266) && !defined(LIMIT_BUILD_SIZE)
-#if CONFIG_ETH_USE_ESP32_EMAC
+#if CONFIG_ETH_USE_ESP32_EMAC && FEATURE_ETHERNET
     case DeviceModel::DeviceModel_Olimex_ESP32_PoE:      return F(" ESP32-PoE");
     case DeviceModel::DeviceModel_Olimex_ESP32_EVB:      return F(" ESP32-EVB");
     case DeviceModel::DeviceModel_Olimex_ESP32_GATEWAY:  return F(" ESP32-GATEWAY");
     case DeviceModel::DeviceModel_wESP32:                break;
     case DeviceModel::DeviceModel_WT32_ETH01:            return F(" add-on");
-#endif // if CONFIG_ETH_USE_ESP32_EMAC
+#endif // if CONFIG_ETH_USE_ESP32_EMAC && FEATURE_ETHERNET
 
     case DeviceModel::DeviceModel_default:
     case DeviceModel::DeviceModel_MAX:             return F("default");
@@ -862,7 +841,7 @@ bool modelMatchingFlashSize(DeviceModel model) {
 #endif // ifdef ESP8266
 
       // These Olimex boards all have Ethernet
-#if CONFIG_ETH_USE_ESP32_EMAC
+#if CONFIG_ETH_USE_ESP32_EMAC && FEATURE_ETHERNET
     case DeviceModel::DeviceModel_Olimex_ESP32_PoE:
     case DeviceModel::DeviceModel_Olimex_ESP32_EVB:
     case DeviceModel::DeviceModel_Olimex_ESP32_GATEWAY:
@@ -873,7 +852,7 @@ bool modelMatchingFlashSize(DeviceModel model) {
 # else // if  defined(ESP32_CLASSIC) && FEATURE_ETHERNET
       return false;
 # endif // if  defined(ESP32_CLASSIC) && FEATURE_ETHERNET
-#endif // if CONFIG_ETH_USE_ESP32_EMAC
+#endif // if CONFIG_ETH_USE_ESP32_EMAC && FEATURE_ETHERNET
     case DeviceModel::DeviceModel_default:
     case DeviceModel::DeviceModel_MAX:
       return true;

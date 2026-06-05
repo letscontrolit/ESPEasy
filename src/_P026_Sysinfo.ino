@@ -44,6 +44,8 @@ boolean Plugin_026(uint8_t function, struct EventStruct *event, String& string)
       dev.OutputDataType = Output_Data_type_t::Simple;
       dev.PluginStats    = true;
       dev.CustomVTypeVar = true;
+      dev.MqttStateClass = true;
+      dev.NoDeviceSettings = true;
       break;
     }
 
