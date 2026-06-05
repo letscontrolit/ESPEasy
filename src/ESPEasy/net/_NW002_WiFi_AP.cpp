@@ -219,6 +219,7 @@ bool NWPlugin_002(NWPlugin::Function function, EventStruct *event, String& strin
       }
       break;
     }
+# endif // ifdef ESP8266
 
     case NWPlugin::Function::NWPLUGIN_CLIENT_IP_WEB_ACCESS_ALLOWED:
     {
@@ -240,7 +241,6 @@ bool NWPlugin_002(NWPlugin::Function function, EventStruct *event, String& strin
       }
       break;
     }
-# endif // ifdef ESP8266
 
     case NWPlugin::Function::NWPLUGIN_WEBFORM_SAVE:
     {
