@@ -1306,7 +1306,7 @@ To create/register a plugin, you have to :
     #define FEATURE_CUSTOM_PROVISIONING 1
 
     #ifndef FEATURE_CAN
-    #if CONFIG_SOC_TWAI_SUPPORTED
+    #if CONFIG_SOC_TWAI_SUPPORTED && defined(ESP32_CLASSIC)
       #define FEATURE_CAN 1
     #else
       #define FEATURE_CAN 0
@@ -4199,9 +4199,10 @@ To create/register a plugin, you have to :
 
 #ifdef FEATURE_CAN
  #if FEATURE_CAN
-  #if defined(ESP8266) || defined(ESP32C2)|| defined(ESP32C3)|| defined(ESP32C6)|| defined(ESP32S2)|| defined(ESP32S3)
+  #if defined(ESP8266) || !(CONFIG_SOC_TWAI_SUPPORTED && defined(ESP32_CLASSIC))
    #undef FEATURE_CAN  // No HW support or massive changes needed in library
-   #define FEATURE_CAN 0
+   // TODO TD-er: Maybe have a look at:
+   //  https://github.com/handmade0octopus/ESP32-TWAI-CAN/blob/master/src/ESP32-TWAI-CAN.cpp
   #endif
  #endif
 #endif
