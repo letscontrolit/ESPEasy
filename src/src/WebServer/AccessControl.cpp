@@ -33,22 +33,12 @@ bool clientIPallowed()
 //  return true;
   #endif
   const IPAddress remoteIP = web_server.client().remoteIP();
-  if (remoteIP == IPAddress(0, 0, 0, 0) 
-  #if ESP_IDF_VERSION_MAJOR>=5
-  || remoteIP.type() == IPv6
-  #else
-  || !remoteIP.isV4()
-  #endif
-  ) {
+  if (!IPAddressSet(remoteIP))
+  {
     // FIXME TD-er: Must see what's going on here, why the client doesn't send remote IP for some reason
     return true;
   }
   if (ESPEasy::net::ipInAllowedSubnet(remoteIP)) {
-    return true;
-  }
-
-  if ( ESPEasy::net::wifi::WifiIsAP(WiFi.getMode())) {
-    // @TD-er Fixme: Should match subnet of SoftAP.
     return true;
   }
   String response = concat(F("IP blocked: "), formatIP(remoteIP));
