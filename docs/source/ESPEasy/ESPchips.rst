@@ -666,6 +666,8 @@ Sources:
 * `Espressif Product Selector <https://products.espressif.com/#/product-comparison>`_
 * `Espressif ESP32-xx modules overview <https://www.espressif.com/en/products/modules>`_
 * `Espressif Product overview SoCs <https://www.espressif.com/en/products/socs>`_
+* `Espressif Arduino Libraries: Supported Features and Peripherals <https://docs.espressif.com/projects/arduino-esp32/en/latest/libraries.html>`_
+
 
 Datasheets
 ==========
