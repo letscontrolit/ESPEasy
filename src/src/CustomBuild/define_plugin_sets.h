@@ -2093,6 +2093,9 @@ To create/register a plugin, you have to :
   #ifndef PLUGIN_DESCR
     #define PLUGIN_DESCR  "Display B"
   #endif
+  #ifndef BUILD_NO_DEBUG
+    #define BUILD_NO_DEBUG
+  #endif
   #if !defined(LIMIT_BUILD_SIZE) && (defined(ESP8266) || !(ESP_IDF_VERSION_MAJOR > 3))
     #ifndef PLUGIN_BUILD_MAX_ESP32
       #define LIMIT_BUILD_SIZE // Reduce buildsize (on ESP8266 / pre-IDF4.x) to fit in all Display plugins
@@ -2198,7 +2201,8 @@ To create/register a plugin, you have to :
     #define USES_P180   // Generic - I2C Generic
   #endif
   #if !defined(USES_P183) && defined(ESP32)
-    #define USES_P183   // Communication - Modbus RTU
+//    #define USES_P183   // Communication - Modbus RTU
+     // TODO TD-er: Disabled due to build size
   #endif
 
 #endif // ifdef PLUGIN_DISPLAY_B_COLLECTION
