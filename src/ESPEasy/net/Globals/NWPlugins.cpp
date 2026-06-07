@@ -472,21 +472,38 @@ bool NWPluginCall(NWPlugin::Function Function, EventStruct *event, String& str)
                     IPAddress client_ip;
                     client_ip.fromString(str);
 
+                    success = true;
+
                     if (SecuritySettings.IPblockLevel == LOCAL_SUBNET_ALLOWED) {
                       success = NWPlugin::IP_in_subnet(client_ip, event->networkInterface);
+
+                      const NWPlugin::IP_type ip_type = NWPlugin::get_IP_type(client_ip);
+
+                      IPAddress networkID;
+                      IPAddress broadcast;
+
+                      if (NWPlugin::get_subnet(ip_type, event->networkInterface, networkID, broadcast)) {
+                        # if FEATURE_USE_IPV6
+                        const bool includeZone = ip_type == NWPlugin::IP_type::ipv6_link_local;
+                        event->String1 = formatIP(networkID, includeZone);
+                        event->String2 = formatIP(broadcast, includeZone);
+                        # else // if FEATURE_USE_IPV6
+                        event->String1 = formatIP(networkID);
+                        event->String2 = formatIP(broadcast);
+                        # endif // if FEATURE_USE_IPV6
+                      }
                     } else if (SecuritySettings.IPblockLevel == ONLY_IP_RANGE_ALLOWED) {
                       const IPAddress low(SecuritySettings.AllowedIPrangeLow);
                       const IPAddress high(SecuritySettings.AllowedIPrangeHigh);
 
-                      if (IPAddressSet(low) && IPAddressSet(high))
+                      if (IPAddressSet(low) || IPAddressSet(high))
                       {
-                        success =
-                          NWPlugin::ipInRange(client_ip, low, high) &&
-                          NWPlugin::IP_in_subnet(low,  event->networkInterface) &&
-                          NWPlugin::IP_in_subnet(high, event->networkInterface);
-                      } else { success = true; }
-                    } else {
-                      success = true;
+                        // Use || as for example 0.0.0.0 ... 123.0.0.0 might also be a possible range.
+                        // Though I have no idea for what practical use case...
+                        success        = NWPlugin::ipInRange(client_ip, low, high);
+                        event->String1 = formatIP(low);
+                        event->String2 = formatIP(high);
+                      }
                     }
                   }
                   break;
