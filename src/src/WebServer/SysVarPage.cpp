@@ -57,7 +57,7 @@ void handle_sysvars() {
                         const int32_t ai = a.toInt();
                         const int32_t bi = b.toInt();
 
-                        if (!ai && !bi) { return a < b; } // a..z
+                        if (!ai && !bi) { return !!(a < b); } // a..z , need to cast to bool for ESP8266
 
                         if (!ai) { return false; } // Alphanum after num
                         return ai < bi;     // Numerical order
