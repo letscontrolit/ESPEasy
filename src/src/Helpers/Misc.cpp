@@ -615,7 +615,7 @@ void logMemUsageAfter(const __FlashStringHelper *function, int value) {
   // The recorded used memory is not an exact value, as background (or interrupt) tasks may also allocate or free heap memory.
   static int last_freemem = ESP.getFreeHeap();
   const int  freemem_end  = ESP.getFreeHeap();
-
+#ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log;
 
@@ -639,6 +639,7 @@ void logMemUsageAfter(const __FlashStringHelper *function, int value) {
       addLogMove(LOG_LEVEL_DEBUG, log);
     }
   }
+#endif
 
   last_freemem = freemem_end;
 }

@@ -668,7 +668,7 @@ void handle_sysinfo_Storage() {
   }
   #   endif // ifndef LIMIT_BUILD_SIZE
 
-#   if FEATURE_CHART_STORAGE_LAYOUT
+#if FEATURE_CHART_STORAGE_LAYOUT && !defined(BUILD_NO_DEBUG)
 
   if (showSettingsFileLayout) {
     addTableSeparator(F("Settings Files"), 2, 3);
