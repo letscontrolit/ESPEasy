@@ -18,6 +18,11 @@
 # include "../Helpers/SystemVariables.h"
 
 
+#if defined(ESP32) && (!defined(LIMIT_BUILD_SIZE) || FEATURE_STRING_VARIABLES)
+#define FEATURE_CUSTOM_STRING_SORT  1
+#else
+#define FEATURE_CUSTOM_STRING_SORT  0
+#endif
 // ********************************************************************************
 // Web Interface sysvars showing all system vars and their value.
 // ********************************************************************************
@@ -52,7 +57,7 @@ void handle_sysvars() {
   html_table_header(F("URL encoded"), F("RTDReference/SystemVariable.html"), 0);
 
   addTableSeparator(F("Custom Variables"), 3, 3);
-  # if !defined(LIMIT_BUILD_SIZE) || FEATURE_STRING_VARIABLES
+  #if FEATURE_CUSTOM_STRING_SORT
   auto numAlphaSort = [](const String& a, const String& b) {
                         const int32_t ai = a.toInt();
                         const int32_t bi = b.toInt();
@@ -64,7 +69,7 @@ void handle_sysvars() {
                       };
   std::vector<String> customStringSort;
 
-  # endif // if !defined(LIMIT_BUILD_SIZE) || FEATURE_STRING_VARIABLES
+  # endif // FEATURE_CUSTOM_STRING_SORT
 
   if (customFloatVar.empty()) {
     html_TR_TD();
@@ -72,7 +77,7 @@ void handle_sysvars() {
     html_TD();
     html_TD();
   } else {
-    # if !defined(LIMIT_BUILD_SIZE) || FEATURE_STRING_VARIABLES
+    #if FEATURE_CUSTOM_STRING_SORT
 
     for (auto it = customFloatVar.begin(); it != customFloatVar.end(); ++it) {
       customStringSort.push_back(it->first);
@@ -88,7 +93,7 @@ void handle_sysvars() {
       }
       addSysVar_html(strformat(F("%%%s%s%%"), FsP(isv_ ? F("v_") : F("v")), it.c_str()), false);
     }
-    # else // if !defined(LIMIT_BUILD_SIZE) || FEATURE_STRING_VARIABLES
+    # else // FEATURE_CUSTOM_STRING_SORT
     for (auto it = customFloatVar.begin(); it != customFloatVar.end(); ++it) {
       NumericalType detectedType;
       bool isv_ = true;
@@ -98,7 +103,7 @@ void handle_sysvars() {
       }
       addSysVar_html(strformat(F("%%%s%s%%"), FsP(isv_ ? F("v_") : F("v")), it->first.c_str()), false);
     }
-    # endif // if !defined(LIMIT_BUILD_SIZE) || FEATURE_STRING_VARIABLES
+    # endif // FEATURE_CUSTOM_STRING_SORT
   }
 
   # if FEATURE_STRING_VARIABLES
