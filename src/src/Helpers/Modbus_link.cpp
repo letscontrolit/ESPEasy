@@ -57,13 +57,22 @@ bool ModbusLINK_struct::init(const ESPEasySerialPort port,
                              bool                    collision_detect) {
   int available = 0;
 
+  _initialized = false; // In case of reinitialization the flag might already been set
+
   // (re)create the serial port object
   // If the serial port object already exists, delete it first.
   if (_easySerial != nullptr) {
     delete _easySerial;
     _easySerial = nullptr;
   }
-  _easySerial = new (std::nothrow) ESPeasySerial(port, serial_rx, serial_tx);
+
+  if (port == ESPEasySerialPort::not_set) {
+    return true; // No port configured, report this as a successful initialization of a not connected link
+    // Note that the link object exists, but is flagged as not initialized and has no serial port object
+  }
+  else {
+    _easySerial = new (std::nothrow) ESPeasySerial(port, serial_rx, serial_tx);
+  }
 
   if (_easySerial == nullptr) {
     return false;
@@ -100,6 +109,7 @@ bool ModbusLINK_struct::init(const ESPEasySerialPort port,
                 );
     addLogMove(LOG_LEVEL_INFO, log);
   }
+
   # endif // MODBUS_DEBUG
   _initialized = true;
   return true;
@@ -128,7 +138,7 @@ void ModbusLINK_struct::freeTransactions(ModbusDEVICE_struct *device)
 // This function will transfer ownership of the transaction to the Modbus link, which is responsible for freeing
 // the associated resources when the transaction is completed.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-uint16_t ModbusLINK_struct::queueTransaction(Modbus_RequestQueueElement *transaction) {
+uint16_t ModbusLINK_struct::queueTransaction(Modbus_Transaction *transaction) {
   if (transaction == nullptr) {
     addLogMove(LOG_LEVEL_ERROR, F("Modbus: Link, Attempt to queue null transaction"));
     return 0;
@@ -146,21 +156,20 @@ uint16_t ModbusLINK_struct::queueTransaction(Modbus_RequestQueueElement *transac
     return 0;
   }
 
-  # ifdef MODBUS_DEBUG
-
-  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    addLogMove(LOG_LEVEL_INFO,
-               strformat(F("Modbus: Link, Queueing transaction ID %u, state %u"), transaction->_id, static_cast<uint>(transaction->_state)));
-  }
-  # endif // MODBUS_DEBUG
   transaction->_id      = ++(_queueID);             // Assign a unique ID to the transaction
   transaction->_timeout = _modbus_timeout;          // Default timeout value
   transaction->_state   = ModbusQueueState::QUEUED; // Transaction is now queued
   _requestQueue.push_back(transaction);             // Append the request to the queue
 
-  if (!_processing) {                               // Prevent reentrancy issues
-    processCommand();                               // Trigger processing of the command queue
+  # ifdef MODBUS_DEBUG
+
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    addLogMove(LOG_LEVEL_INFO,
+               strformat(F("Modbus: Link=%p, Queueing transaction ID %u, state %s"), this, transaction->_id, toString(transaction->_state)));
   }
+  # endif // MODBUS_DEBUG
+
+  processCommand(); // Trigger processing of the command queue
   return transaction->_id;
 }
 
@@ -170,11 +179,10 @@ uint16_t ModbusLINK_struct::queueTransaction(Modbus_RequestQueueElement *transac
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void ModbusLINK_struct::processCommand()
 {
-  _processing = true;                // Set processing flag to prevent reentrancy issues
-
-  if (!isInitialized() || (_requestQueue.empty())) {
+  if (_processing || !isInitialized() || (_requestQueue.empty())) {
     return;                          // Serial port not initialized or queue is empty, nothing to process
   }
+  _processing = true;                // Set processing flag to prevent reentrancy issues
 
   auto it   = _requestQueue.begin(); // Iterator for the request queue
   bool busy = false;                 // Only process one request at a time
@@ -279,11 +287,11 @@ bool ModbusLINK_struct::getCollisionDetect(void) const
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Debugging function to dump the queue element contents to the log
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void ModbusLINK_struct::dumpQueueElement(Modbus_RequestQueueElement *el) {
+void ModbusLINK_struct::dumpQueueElement(Modbus_Transaction *el) {
   # ifdef MODBUS_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = strformat(F("Modbus: [ID=%u, Device=%p, State="), el->_id, el->_device);
+    String log = strformat(F("Modbus: Transaction [ID=%u, Device=%p, State="), el->_id, el->_device);
     log += toString(el->_state);
     log += F(", TX=(");
 

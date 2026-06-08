@@ -46,13 +46,6 @@ ModbusMGR_struct::ModbusMGR_struct()
   String log = F("Modbus: Manager, Constructor ");
   # endif // ifdef MODBUS_DEBUG
 
-  for (int i = 0; i < MAX_MODBUS_LINKS; i++) {
-    _modbus_links[i] = nullptr;
-  }
-
-  for (int i = 0; i < MAX_MODBUS_DEVICES; i++) {
-    _modbus_devices[i] = nullptr;
-  }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -63,28 +56,19 @@ ModbusMGR_struct::~ModbusMGR_struct()
   // This class is a singleton, so destructor should not be called.
   // However, in case it is called, we clean up the allocated resources.
 
-  for (int i = 0; i < MAX_MODBUS_DEVICES; i++) {
-    if (_modbus_devices[i] != nullptr) {
-      delete _modbus_devices[i];
-      _modbus_devices[i] = nullptr;
-    }
-  }
-
   for (int i = 0; i < MAX_MODBUS_LINKS; i++) {
-    if (_modbus_links[i] != nullptr) {
-      if (_modbus_links[i]->link != nullptr) {
-        delete _modbus_links[i]->link;
-        _modbus_links[i]->link = nullptr;
-      }
 
-      if (_modbus_links[i]->kvs != nullptr) {
-        delete _modbus_links[i]->kvs;
-        _modbus_links[i]->kvs = nullptr;
-      }
-      delete _modbus_links[i];
-      _modbus_links[i] = nullptr;
+    if (_modbus_links[i].link != nullptr) {
+      delete _modbus_links[i].link;
+      _modbus_links[i].link = nullptr;
+    }
+
+    if (_modbus_links[i].kvs != nullptr) {
+      delete _modbus_links[i].kvs;
+      _modbus_links[i].kvs = nullptr;
     }
   }
+
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -93,35 +77,36 @@ ModbusMGR_struct::~ModbusMGR_struct()
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool ModbusMGR_struct::initialize()
 {
+  if (!_initialized) {
+    for (int i = 0; i < MAX_MODBUS_LINKS; i++) {
 
-  for (int i = 0; i < MAX_MODBUS_LINKS; i++) {
-    if (_modbus_links[i] == nullptr) {
       int8_t val;
-      _modbus_links[i]       = new (std::nothrow) ModbusLinkInfo_struct();
-      _modbus_links[i]->link = nullptr;
-      _modbus_links[i]->kvs  = new (std::nothrow) ESPEasy_key_value_store;
-      _modbus_links[i]->kvs->load(SettingsType::Enum::ModbusInterfaceSettings_Type, i, 0, 0);
-      _modbus_links[i]->kvs->getValue(MODBUS_PORT_KEY_INDEX, val);
-      _modbus_links[i]->port = static_cast<ESPEasySerialPort>(val);
-      _modbus_links[i]->kvs->getValue(MODBUS_RX_KEY_INDEX, _modbus_links[i]->serial_rx);
-      _modbus_links[i]->kvs->getValue(MODBUS_TX_KEY_INDEX, _modbus_links[i]->serial_tx);
-      _modbus_links[i]->kvs->getValue(MODBUS_BAUDRATE_KEY_INDEX, _modbus_links[i]->baudrate);
-      _modbus_links[i]->kvs->getValue(MODBUS_DERE_PIN_KEY_INDEX, _modbus_links[i]->dere_pin);
-      _modbus_links[i]->kvs->getValue(MODBUS_COLLISION_DETECT_KEY_INDEX, _modbus_links[i]->collision_detect);
+      _modbus_links[i].link = nullptr; // Initialize link pointer to a safe value
+      // Create a key-value store for the link and load the persisted settings
+      _modbus_links[i].kvs = new (std::nothrow) ESPEasy_key_value_store;
+      _modbus_links[i].kvs->load(SettingsType::Enum::ModbusInterfaceSettings_Type, i, 0, 0);
+      _modbus_links[i].kvs->getValue(MODBUS_PORT_KEY_INDEX, val);
+      _modbus_links[i].port = static_cast<ESPEasySerialPort>(val);
+      _modbus_links[i].kvs->getValue(MODBUS_RX_KEY_INDEX, _modbus_links[i].serial_rx);
+      _modbus_links[i].kvs->getValue(MODBUS_TX_KEY_INDEX, _modbus_links[i].serial_tx);
+      _modbus_links[i].kvs->getValue(MODBUS_BAUDRATE_KEY_INDEX, _modbus_links[i].baudrate);
+      _modbus_links[i].kvs->getValue(MODBUS_DERE_PIN_KEY_INDEX, _modbus_links[i].dere_pin);
+      _modbus_links[i].kvs->getValue(MODBUS_COLLISION_DETECT_KEY_INDEX, _modbus_links[i].collision_detect);
 
-      if (_modbus_links[i]->port != ESPEasySerialPort::not_set) {
-        _modbus_links[i]->link = new (std::nothrow) ModbusLINK_struct();
-        _modbus_links[i]->link->init(_modbus_links[i]->port,
-                                     _modbus_links[i]->serial_rx,
-                                     _modbus_links[i]->serial_tx,
-                                     _modbus_links[i]->baudrate,
-                                     _modbus_links[i]->dere_pin,
-                                     _modbus_links[i]->collision_detect);
+      // Create the Modbus link object if a port is configured for the link
+      if (_modbus_links[i].port != ESPEasySerialPort::not_set) {
+        _modbus_links[i].link = new (std::nothrow) ModbusLINK_struct();
+        _modbus_links[i].link->init(_modbus_links[i].port,
+                                    _modbus_links[i].serial_rx,
+                                    _modbus_links[i].serial_tx,
+                                    _modbus_links[i].baudrate,
+                                    _modbus_links[i].dere_pin,
+                                    _modbus_links[i].collision_detect);
       }
-    }
-  }
-  _initialized = true;
 
+    }
+    _initialized = true;
+  }
   # ifdef MODBUS_DEBUG
   dumpAdminInfo();
   # endif // ifdef MODBUS_DEBUG
@@ -140,7 +125,10 @@ bool ModbusMGR_struct::connect(int linkId, ModbusLINK_struct **link, uint8_t *de
   log += linkId;
   # endif // ifdef MODBUS_DEBUG
 
-  initialize(); // TODO Initialization sequence to be refactored.
+  initialize();   // TODO Initialization sequence to be refactored.
+
+  *deviceID = -1; // Default to -1, currently not used anymore
+  *link     = nullptr;
 
   if ((linkId < 0) || (linkId >= MAX_MODBUS_LINKS)) {
     # ifdef MODBUS_DEBUG
@@ -150,27 +138,7 @@ bool ModbusMGR_struct::connect(int linkId, ModbusLINK_struct **link, uint8_t *de
     return false;
   }
 
-  *deviceID = -1; // Default to -1, will be set to a valid device ID if connection is successful
-  *link     = nullptr;
-
-  if (_modbus_links[linkId] != nullptr) {
-    for (int i = 0; i < MAX_MODBUS_DEVICES; i++) {
-      if (_modbus_devices[i] == nullptr) {
-        // Found an available device slot
-        _modbus_devices[i]           = new (std::nothrow) ModbusDeviceInfo_struct();
-        _modbus_devices[i]->deviceID = i + 1; // Assign a unique device ID (1-MAX_MODBUS_DEVICES)
-        _modbus_devices[i]->link     = _modbus_links[linkId];
-        *deviceID                    = _modbus_devices[i]->deviceID;
-        *link                        = _modbus_devices[i]->link->link;
-        # ifdef MODBUS_DEBUG
-        log += F(" Assigned deviceID= ");
-        log += *deviceID;
-        # endif // ifdef MODBUS_DEBUG
-        break;
-      }
-    }
-  }
-  else {
+  if (_modbus_links[linkId].port == ESPEasySerialPort::not_set) {
     # ifdef MODBUS_DEBUG
     log += F(" No link available at linkIndex= ");
     log += linkId;
@@ -179,14 +147,8 @@ bool ModbusMGR_struct::connect(int linkId, ModbusLINK_struct **link, uint8_t *de
     return false;
   }
 
-  if (*deviceID == -1) {
-    // No available device slot found, connection failed
-    # ifdef MODBUS_DEBUG
-    log += F(" Failed to assign device ID, no available device slots");
-    addLogMove(LOG_LEVEL_ERROR, log);
-    # endif // ifdef MODBUS_DEBUG
-    return false;
-  }
+  *deviceID = ++_deviceCounter;
+  *link     = _modbus_links[linkId].link;
 
   # ifdef MODBUS_DEBUG
   addLogMove(LOG_LEVEL_INFO, log);
@@ -207,13 +169,7 @@ bool ModbusMGR_struct::disconnect(uint8_t deviceID) {
   log += deviceID;
   # endif // ifdef MODBUS_DEBUG
 
-  for (int i = 0; i < MAX_MODBUS_DEVICES; i++) {
-    if ((_modbus_devices[i] != nullptr) && (_modbus_devices[i]->deviceID == deviceID)) {
-       // Remove the device entry
-      delete _modbus_devices[i];
-      _modbus_devices[i] = nullptr;
-    }
-  }
+
   # ifdef MODBUS_DEBUG
   addLogMove(LOG_LEVEL_INFO, log);
   # endif // ifdef MODBUS_DEBUG
@@ -227,8 +183,8 @@ void ModbusMGR_struct::processLinks()
 {
   if (isInitialized()) {
     for (int i = 0; i < MAX_MODBUS_LINKS; i++) {
-      if ((_modbus_links[i] != nullptr) && (_modbus_links[i]->link != nullptr)) {
-        _modbus_links[i]->link->processCommand(); // Trigger processing of the command queue on the link
+      if ((_modbus_links[i].link != nullptr)) {
+        _modbus_links[i].link->processCommand(); // Trigger processing of the command queue on the link
       }
     }
   }
@@ -244,38 +200,20 @@ void ModbusMGR_struct::dumpAdminInfo()
 
   // Iterate over the modbus links and dump their info
   for (int i = 0; i < MAX_MODBUS_LINKS; i++) {
-    if (_modbus_links[i] != nullptr)  {
-      addLogMove(LOG_LEVEL_INFO,
-                 strformat(F("Modbus_mgr: Link[%d] Port=%s, RX=%d, TX=%d, Baudrate=%d, DerePin=%d, RS485Mode=%s, CollisionDetect=%s"),
-                           i,
-                           ESPEasySerialPort_toString(_modbus_links[i]->port),
-                           _modbus_links[i]->serial_rx,
-                           _modbus_links[i]->serial_tx,
-                           _modbus_links[i]->baudrate,
-                           _modbus_links[i]->dere_pin,
-                           _modbus_links[i]->rs485_mode ? F("Yes") : F("No"),
-                           _modbus_links[i]->collision_detect ? F("Yes") : F("No")
-                           ));
-    }
-    else {
-      addLogMove(LOG_LEVEL_INFO, strformat(F("Modbus_mgr: Link[%d] <not used>"), i));
-    }
+
+    addLogMove(LOG_LEVEL_INFO,
+               strformat(F("Modbus_mgr: Link[%d] Port=%s, RX=%d, TX=%d, Baudrate=%d, DerePin=%d, RS485Mode=%s, CollisionDetect=%s"),
+                         i,
+                         ESPEasySerialPort_toString(_modbus_links[i].port),
+                         _modbus_links[i].serial_rx,
+                         _modbus_links[i].serial_tx,
+                         _modbus_links[i].baudrate,
+                         _modbus_links[i].dere_pin,
+                         _modbus_links[i].rs485_mode ? F("Yes") : F("No"),
+                         _modbus_links[i].collision_detect ? F("Yes") : F("No")
+                         ));
   }
 
-  // Iterate over the modbus devices and dump their info
-  for (int i = 0; i < MAX_MODBUS_DEVICES; i++) {
-    if (_modbus_devices[i] != nullptr)  {
-      addLogMove(LOG_LEVEL_INFO,
-                 strformat(F("Modbus_mgr: Device[%d] DeviceID=%d, LinkPort=%s"),
-                           i,
-                           _modbus_devices[i]->deviceID,
-                           ESPEasySerialPort_toString(_modbus_devices[i]->link->port)
-                           ));
-    }
-    else {
-      addLogMove(LOG_LEVEL_INFO, strformat(F("Modbus_mgr: Device[%d] <not used>"), i));
-    }
-  }
   # endif // ifdef MODBUS_DEBUG
 }
 
@@ -318,94 +256,67 @@ void ModbusMGR_struct::show_modbus_interfaces()
   // Iterate over the modbus links and show their configuration on the web page
   for (int link = 0; link < MAX_MODBUS_LINKS; ++link)
   {
-    if (_modbus_links[link] != nullptr) {
-      addFormSubHeader(strformat(F("Modbus %u"), link));
-      addFormDetailsStart(link == 0);
 
-      int idx = static_cast<int>(_modbus_links[link]->port);
-      portSelector.addFormSelector(F("Port"), strformat(F("MBport%u"), link), portMap[idx]);
+    addFormSubHeader(strformat(F("Modbus %u"), link));
+    addFormDetailsStart(link == 0);
 
-      String id = strformat(F("MBtx%u"), link);
-      addRowLabel_tr_id(formatGpioName_serialTX(false), id);
-      addPinSelect(PinSelectPurpose::Serial_input, id, _modbus_links[link]->serial_tx);
+    int idx = static_cast<int>(_modbus_links[link].port);
+    portSelector.addFormSelector(F("Port"), strformat(F("MBport%u"), link), portMap[idx]);
 
-      id = strformat(F("MBrx%u"), link);
-      addRowLabel_tr_id(formatGpioName_serialRX(false), id);
-      addPinSelect(PinSelectPurpose::Serial_output, id, _modbus_links[link]->serial_rx);
+    String id = strformat(F("MBtx%u"), link);
+    addRowLabel_tr_id(formatGpioName_serialTX(false), id);
+    addPinSelect(PinSelectPurpose::Serial_input, id, _modbus_links[link].serial_tx);
 
-      id = strformat(F("MBde%u"), link);
-      addRowLabel_tr_id(formatGpioName_output_optional(F("~RE/DE")), id);
-      addPinSelect(PinSelectPurpose::Generic_output, id, _modbus_links[link]->dere_pin);
+    id = strformat(F("MBrx%u"), link);
+    addRowLabel_tr_id(formatGpioName_serialRX(false), id);
+    addPinSelect(PinSelectPurpose::Serial_output, id, _modbus_links[link].serial_rx);
 
-      baudselector.addFormSelector(F("Baud Rate"),
-                                   strformat(F("MBbaud%u"), link),
-                                   modbus_baudrateToStorageValue(_modbus_links[link]->baudrate));
-      addUnit(F("baud"));
+    id = strformat(F("MBde%u"), link);
+    addRowLabel_tr_id(formatGpioName_output_optional(F("~RE/DE")), id);
+    addPinSelect(PinSelectPurpose::Generic_output, id, _modbus_links[link].dere_pin);
+
+    baudselector.addFormSelector(F("Baud Rate"),
+                                 strformat(F("MBbaud%u"), link),
+                                 modbus_baudrateToStorageValue(_modbus_links[link].baudrate));
+    addUnit(F("baud"));
 
       # ifdef ESP32
-      addFormCheckBox(F("Enable Collision Detection"), strformat(F("MBcoll%u"), link), _modbus_links[link]->collision_detect);
-      addFormNote(F("/RE connected to GND, only supported on hardware serial"));
+    addFormCheckBox(F("Enable Collision Detection"), strformat(F("MBcoll%u"), link), _modbus_links[link].collision_detect);
+    addFormNote(F("/RE connected to GND, only supported on hardware serial"));
       # endif // ifdef ESP32
 
-      addFormDetailsEnd();
-    }
+    addFormDetailsEnd();
+
   }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Convert stored baudrate setting (enumeration value) to actual baudrate value
 // Returns the actual baudrate value.
+// The first value is 1200 baud, and each subsequent value doubles the baudrate up to 115200 baud.
+// Values outside this range will be mapped to the closest valid value.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 int modbus_storageValueToBaudrate(uint8_t baudrate_setting) {
-  int baudrate = 9600;
-
-  switch (baudrate_setting)
-  {
-    case 0:
-      baudrate = 1200;
-      break;
-    case 1:
-      baudrate = 2400;
-      break;
-    case 2:
-      baudrate = 4800;
-      break;
-    case 3:
-      baudrate = 9600;
-      break;
-    case 4:
-      baudrate = 19200;
-      break;
-    case 5:
-      baudrate = 38400;
-      break;
-    case 6:
-      baudrate = 57600;
-      break;
-    case 7:
-      baudrate = 115200;
-      break;
-    default:
-      baudrate = 9600;
-      break; // Default value for fallback
-  }
-  return baudrate;
+  if ((baudrate_setting > 7) || (baudrate_setting < 0)) { return 9600; }
+  return 1200 << baudrate_setting;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Convert actual baudrate value to stored baudrate setting (enumeration value)
 // Returns the stored baudrate setting.
+// The first value is 1200 baud, and each subsequent value doubles the baudrate up to 115200 baud.
+// Values outside this range will be mapped to the closest valid value.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 uint8_t modbus_baudrateToStorageValue(int baudrate) {
-  if (baudrate <= 1200) { return 0; }
-  else if (baudrate <= 2400) { return 1; }
-  else if (baudrate <= 4800) { return 2; }
-  else if (baudrate <= 9600) { return 3; }
-  else if (baudrate <= 19200) { return 4; }
-  else if (baudrate <= 38400) { return 5; }
-  else if (baudrate <= 57600) { return 6; }
-  else if (baudrate <= 115200) { return 7; }
-  else { return 3; } // Default to 9600 baud for unsupported values
+  if ((baudrate < 1200) || (baudrate > 115200)) { return modbus_baudrateToStorageValue(9600); }
+  int bd        = 1200;
+  uint8_t index = 0;
+
+  while (bd < baudrate) {
+    bd *= 2;
+    ++index;
+  }
+  return index;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -436,45 +347,45 @@ bool ModbusMGR_struct::save_modbus_interfaces(String& error)
     bool collision_detect_setting = false;
     bool settingsChanged          = false;
 
-    if (_modbus_links[link] != nullptr) {
-      for (int i = 0; i < NR_ELEMENTS(portMap); i++) {
-        if (portMap[i] == static_cast<int>(_modbus_links[link]->port)) {
-          port_setting = i;
-          break;
-        }
-      }
 
-      if (update_whenset_FormItemInt(strformat(F("MBport%u"), link), port_setting)) {
-        settingsChanged |= (portMap[port_setting] != static_cast<int>(_modbus_links[link]->port));
-      }
-      baudrate_setting = modbus_baudrateToStorageValue(_modbus_links[link]->baudrate);
-
-      if (update_whenset_FormItemInt(strformat(F("MBbaud%u"), link), baudrate_setting)) {
-        settingsChanged |= (modbus_storageValueToBaudrate(baudrate_setting) != _modbus_links[link]->baudrate);
-      }
-      tx_setting = _modbus_links[link]->serial_tx;
-
-      if (update_whenset_FormItemInt(strformat(F("MBtx%u"), link), tx_setting)) {
-        settingsChanged |= (tx_setting != _modbus_links[link]->serial_tx);
-      }
-      rx_setting = _modbus_links[link]->serial_rx;
-
-      if (update_whenset_FormItemInt(strformat(F("MBrx%u"), link), rx_setting)) {
-        settingsChanged |= (rx_setting != _modbus_links[link]->serial_rx);
-      }
-      dere_setting = _modbus_links[link]->dere_pin;
-
-      if (update_whenset_FormItemInt(strformat(F("MBde%u"), link), dere_setting)) {
-        settingsChanged |= (dere_setting != _modbus_links[link]->dere_pin);
-        # ifdef ESP32
-
-        // Checkbox existence cannot be determined from the HTML response. Assume its there when dere_setting is detected.
-        // The Collision detection setting is only available on ESP32 and only when a DE/RE pin is configured.
-        collision_detect_setting = isFormItemChecked(strformat(F("MBcoll%u"), link));
-        settingsChanged         |= (collision_detect_setting != _modbus_links[link]->collision_detect);
-        # endif // ifdef ESP32
+    for (int i = 0; i < NR_ELEMENTS(portMap); i++) {
+      if (portMap[i] == static_cast<int>(_modbus_links[link].port)) {
+        port_setting = i;
+        break;
       }
     }
+
+    if (update_whenset_FormItemInt(strformat(F("MBport%u"), link), port_setting)) {
+      settingsChanged |= (portMap[port_setting] != static_cast<int>(_modbus_links[link].port));
+    }
+    baudrate_setting = modbus_baudrateToStorageValue(_modbus_links[link].baudrate);
+
+    if (update_whenset_FormItemInt(strformat(F("MBbaud%u"), link), baudrate_setting)) {
+      settingsChanged |= (modbus_storageValueToBaudrate(baudrate_setting) != _modbus_links[link].baudrate);
+    }
+    tx_setting = _modbus_links[link].serial_tx;
+
+    if (update_whenset_FormItemInt(strformat(F("MBtx%u"), link), tx_setting)) {
+      settingsChanged |= (tx_setting != _modbus_links[link].serial_tx);
+    }
+    rx_setting = _modbus_links[link].serial_rx;
+
+    if (update_whenset_FormItemInt(strformat(F("MBrx%u"), link), rx_setting)) {
+      settingsChanged |= (rx_setting != _modbus_links[link].serial_rx);
+    }
+    dere_setting = _modbus_links[link].dere_pin;
+
+    if (update_whenset_FormItemInt(strformat(F("MBde%u"), link), dere_setting)) {
+      settingsChanged |= (dere_setting != _modbus_links[link].dere_pin);
+        # ifdef ESP32
+
+      // Checkbox existence cannot be determined from the HTML response. Assume its there when dere_setting is detected.
+      // The Collision detection setting is only available on ESP32 and only when a DE/RE pin is configured.
+      collision_detect_setting = isFormItemChecked(strformat(F("MBcoll%u"), link));
+      settingsChanged         |= (collision_detect_setting != _modbus_links[link].collision_detect);
+        # endif // ifdef ESP32
+    }
+
 
     if (settingsChanged) {
       setLink(link,
@@ -496,13 +407,10 @@ bool ModbusMGR_struct::setLink(const int               linkIndex,
                                const ESPEasySerialPort port,
                                const int8_t            serial_rx,
                                const int8_t            serial_tx,
-                               uint16_t                 baudrate,
+                               uint16_t                baudrate,
                                int8_t                  dere_pin,
                                bool                    collision_detect)
 {
-  ModbusLinkInfo_struct *linkInfoPtr = nullptr;
-
-
   # ifdef MODBUS_DEBUG
   String log = F("Modbus_mgr: SetLink. ");
 
@@ -518,75 +426,41 @@ bool ModbusMGR_struct::setLink(const int               linkIndex,
                        ));
   # endif // ifdef MODBUS_DEBUG
 
-  if ((linkIndex >= 0) && (linkIndex < MAX_MODBUS_LINKS)) {
-    if (_modbus_links[linkIndex] == nullptr) {
-      linkInfoPtr              = new (std::nothrow) ModbusLinkInfo_struct();
-      _modbus_links[linkIndex] = linkInfoPtr;
-      # ifdef MODBUS_DEBUG
-      log += strformat(F("New link for linkIndex=%d"), linkIndex);
-      # endif // ifdef MODBUS_DEBUG
-    }
-    else {
-      linkInfoPtr = _modbus_links[linkIndex]; // Link admin already exists, will be reused for the new link configuration
-      # ifdef MODBUS_DEBUG
-      log += strformat(F("Existing link for linkIndex=%d"), linkIndex);
-      # endif // ifdef MODBUS_DEBUG
-    }
-  }
-  else {
+  if ((linkIndex < 0) || (linkIndex >= MAX_MODBUS_LINKS)) {
     # ifdef MODBUS_DEBUG
     log += strformat(F("Invalid link for linkIndex=%d"), linkIndex);
     addLogMove(LOG_LEVEL_INFO, log);
     # endif // ifdef MODBUS_DEBUG
-    return false;                       // Invalid link index
+    return false;                                 // Invalid link index
   }
 
-  if (linkInfoPtr != nullptr) {         // Sanity check for successful link admin creation
-    if (linkInfoPtr->link == nullptr) { // Check if link object already exists
-      // No existing link, create a new one
-      linkInfoPtr->link = new (std::nothrow) ModbusLINK_struct();
+  if (_modbus_links[linkIndex].link != nullptr) { // Sanity check for successful creation
+    // (re)initialize the new link
+    if (!_modbus_links[linkIndex].link->init(port, serial_rx, serial_tx, baudrate, dere_pin, collision_detect)) {
+      return false;                               // Initialization failed
     }
-
-    if (linkInfoPtr->link != nullptr) { // Sanity check for successful creation
-      // (re)initialize the new link
-      if (!linkInfoPtr->link->init(port, serial_rx, serial_tx, baudrate, dere_pin, collision_detect)) {
-        // Initialization failed, clean up
-        delete linkInfoPtr->link;
-        linkInfoPtr->link = nullptr;
-        delete linkInfoPtr;
-        linkInfoPtr = nullptr;
-        return false; // Initialization failed
-      }
-      else {
-        // Store the link parameters
-        linkInfoPtr->port             = port;
-        linkInfoPtr->serial_rx        = serial_rx;
-        linkInfoPtr->serial_tx        = serial_tx;
-        linkInfoPtr->baudrate         = baudrate;
-        linkInfoPtr->dere_pin         = dere_pin;
-        linkInfoPtr->rs485_mode       = (dere_pin != -1);
-        linkInfoPtr->collision_detect = collision_detect;
-      }
+    else {
+      // Store the link parameters
+      _modbus_links[linkIndex].port             = port;
+      _modbus_links[linkIndex].serial_rx        = serial_rx;
+      _modbus_links[linkIndex].serial_tx        = serial_tx;
+      _modbus_links[linkIndex].baudrate         = baudrate;
+      _modbus_links[linkIndex].dere_pin         = dere_pin;
+      _modbus_links[linkIndex].rs485_mode       = (dere_pin != -1);
+      _modbus_links[linkIndex].collision_detect = collision_detect;
     }
   }
-  else {
-    return false; // Failed to create link admin
-  }
 
-  if (_modbus_links[linkIndex]->kvs == nullptr) {
-    _modbus_links[linkIndex]->kvs = new (std::nothrow) ESPEasy_key_value_store;
-  }
-
-  if (_modbus_links[linkIndex]->kvs) {
+  if (_modbus_links[linkIndex].kvs) {
     // Store the link configuration parameters in the key-value store for persistence
-    linkInfoPtr->kvs->setValue(MODBUS_PORT_KEY_INDEX,             static_cast<int8_t>(port));
-    linkInfoPtr->kvs->setValue(MODBUS_RX_KEY_INDEX,               static_cast<int8_t>(serial_rx));
-    linkInfoPtr->kvs->setValue(MODBUS_TX_KEY_INDEX,               static_cast<int8_t>(serial_tx));
-    linkInfoPtr->kvs->setValue(MODBUS_BAUDRATE_KEY_INDEX,         static_cast<int16_t>(baudrate));
-    linkInfoPtr->kvs->setValue(MODBUS_DERE_PIN_KEY_INDEX,         static_cast<int8_t>(dere_pin));
-    linkInfoPtr->kvs->setValue(MODBUS_COLLISION_DETECT_KEY_INDEX, static_cast<bool>(collision_detect));
+    _modbus_links[linkIndex].kvs->setValue(MODBUS_PORT_KEY_INDEX,             static_cast<int8_t>(port));
+    _modbus_links[linkIndex].kvs->setValue(MODBUS_RX_KEY_INDEX,               static_cast<int8_t>(serial_rx));
+    _modbus_links[linkIndex].kvs->setValue(MODBUS_TX_KEY_INDEX,               static_cast<int8_t>(serial_tx));
+    _modbus_links[linkIndex].kvs->setValue(MODBUS_BAUDRATE_KEY_INDEX,         static_cast<int16_t>(baudrate));
+    _modbus_links[linkIndex].kvs->setValue(MODBUS_DERE_PIN_KEY_INDEX,         static_cast<int8_t>(dere_pin));
+    _modbus_links[linkIndex].kvs->setValue(MODBUS_COLLISION_DETECT_KEY_INDEX, static_cast<bool>(collision_detect));
 
-    linkInfoPtr->kvs->store(SettingsType::Enum::ModbusInterfaceSettings_Type, linkIndex, 0, 0);
+    _modbus_links[linkIndex].kvs->store(SettingsType::Enum::ModbusInterfaceSettings_Type, linkIndex, 0, 0);
   }
 
   # ifdef MODBUS_DEBUG

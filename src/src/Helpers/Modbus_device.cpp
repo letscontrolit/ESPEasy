@@ -60,6 +60,7 @@ bool ModbusDEVICE_struct::init(uint8_t slaveAddress, int linkId, taskIndex_t tas
 
   _modbus_address = slaveAddress;
   _taskIndex      = taskIndex;
+  _linkId         = linkId;
   # ifdef MODBUS_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -102,7 +103,7 @@ bool ModbusDEVICE_struct::readHoldingRegister(uint16_t          address,
   if (!isInitialized()) {
     return false;
   }
-  Modbus_RequestQueueElement *request = new (std::nothrow) Modbus_RequestQueueElement(this,
+  Modbus_Transaction *request = new (std::nothrow) Modbus_Transaction(this,
                                                                                       ModbusTransactionType::READ_HOLDING_REGISTERS,
                                                                                       0,
                                                                                       valuePtr,
@@ -138,7 +139,7 @@ bool ModbusDEVICE_struct::readModuleHoldingRegister(uint8_t  busAddress,
   if (!isInitialized()) {
     return false;
   }
-  Modbus_RequestQueueElement *request = new (std::nothrow) Modbus_RequestQueueElement(this,
+  Modbus_Transaction *request = new (std::nothrow) Modbus_Transaction(this,
                                                                                       ModbusTransactionType::READ_HOLDING_REGISTERS,
                                                                                       uid,
                                                                                       nullptr,
@@ -161,7 +162,7 @@ bool ModbusDEVICE_struct::readHoldingRegisters(uint16_t address, uint16_t size, 
   if (!isInitialized()) {
     return false;
   }
-  Modbus_RequestQueueElement *request = new (std::nothrow) Modbus_RequestQueueElement(this,
+  Modbus_Transaction *request = new (std::nothrow) Modbus_Transaction(this,
                                                                                       ModbusTransactionType::READ_HOLDING_REGISTERS,
                                                                                       uid,
                                                                                       nullptr,
@@ -178,7 +179,7 @@ bool ModbusDEVICE_struct::readHoldingRegisters(uint16_t address, uint16_t size, 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Construct a Modbus read holding registers message
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void ModbusDEVICE_struct::createReadFrame(Modbus_RequestQueueElement& request,
+void ModbusDEVICE_struct::createReadFrame(Modbus_Transaction& request,
                                           uint8_t                     busAddress,
                                           uint16_t                    registerAddress,
                                           uint16_t                    registerCount)
@@ -208,7 +209,7 @@ bool ModbusDEVICE_struct::writeSingleRegister(uint16_t           address,
   if (!isInitialized()) {
     return false;
   }
-  Modbus_RequestQueueElement *request = new (std::nothrow) Modbus_RequestQueueElement(this,
+  Modbus_Transaction *request = new (std::nothrow) Modbus_Transaction(this,
                                                                                       ModbusTransactionType::WRITE_SINGLE_REGISTER,
                                                                                       0,
                                                                                       nullptr,
@@ -247,7 +248,7 @@ void ModbusDEVICE_struct::processCommand(void)
 // Note that the response might be an invalid response or a timeout
 // The queueID identifies the request.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void ModbusDEVICE_struct::linkCallback(Modbus_RequestQueueElement *req)
+void ModbusDEVICE_struct::linkCallback(Modbus_Transaction *req)
 {
   ModbusResultState resultState = ModbusResultState::Error; // Default to error unless proven otherwise
 
@@ -257,8 +258,9 @@ void ModbusDEVICE_struct::linkCallback(Modbus_RequestQueueElement *req)
   }
 
   # ifdef MODBUS_DEBUG
-  String log = strformat(F("Modbus: Device callback, device= %d, Request= %d, Message= %d"),
+  String log = strformat(F("Modbus: Device callback, device= %d, link= %d, Request= %d, Message= %d"),
                          _deviceID,
+                         _linkId,
                          req->_id,
                          static_cast<uint8_t>(req->_messageType)
                          );
@@ -371,7 +373,7 @@ void ModbusDEVICE_struct::linkCallback(Modbus_RequestQueueElement *req)
 // This is used by the Modbus link to notify the device of responses received for queued requests.
 // This version of the function is used to pass data through parameters in the event.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void ModbusDEVICE_struct::sendEvent(Modbus_RequestQueueElement& req,
+void ModbusDEVICE_struct::sendEvent(Modbus_Transaction& req,
                                     ModbusResultMessageType     messageType,
                                     int                         par2,
                                     int                         par3,
@@ -404,7 +406,7 @@ void ModbusDEVICE_struct::sendEvent(Modbus_RequestQueueElement& req,
 // This is used by the Modbus link to notify the device of responses received for queued requests.
 // This version of the function is used to pass multiple register values in a ModbusRegisterSet_struct.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void ModbusDEVICE_struct::sendEvent(Modbus_RequestQueueElement& req,
+void ModbusDEVICE_struct::sendEvent(Modbus_Transaction& req,
                                     ModbusResultMessageType     messageType,
                                     ModbusRegisterSet_struct   *registerSet)
 {

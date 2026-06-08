@@ -39,9 +39,9 @@ typedef enum class ModbusTransactionType {
 
 // Modbus request queue element structure
 // This structure represents a single Modbus request and its associated response.
-struct Modbus_RequestQueueElement {
-  Modbus_RequestQueueElement() = default;
-  Modbus_RequestQueueElement(ModbusDEVICE_struct    *device,
+struct Modbus_Transaction {
+  Modbus_Transaction() = default;
+  Modbus_Transaction(ModbusDEVICE_struct    *device,
                              ModbusTransactionType_t messageType,
                              uint16_t                userId,
                              void                   *userData,
@@ -73,7 +73,7 @@ struct Modbus_RequestQueueElement {
 };
 
 // Queue of Modbus request elements
-typedef std::list<Modbus_RequestQueueElement *> Modbus_RequestQueue;
+typedef std::list<Modbus_Transaction *> Modbus_RequestQueue;
 
 
 // ModbusLINK structure representing a MODBUS LINK
@@ -98,7 +98,7 @@ struct ModbusLINK_struct  {
   bool     isInitialized() const { return (_easySerial != nullptr) && _initialized; }
 
   void     freeTransactions(struct ModbusDEVICE_struct *device);
-  uint16_t queueTransaction(Modbus_RequestQueueElement *transaction);
+  uint16_t queueTransaction(Modbus_Transaction *transaction);
   void     processCommand();
 
   int16_t  getBaudrate(void) const;
@@ -113,7 +113,7 @@ struct ModbusLINK_struct  {
 
 private:
 
-  static void dumpQueueElement(Modbus_RequestQueueElement *el);
+  static void dumpQueueElement(Modbus_Transaction *el);
   static void dumpState(ModbusQueueState_t state);
 
   ESPeasySerial      *_easySerial     = nullptr; // Pointer to the serial port object

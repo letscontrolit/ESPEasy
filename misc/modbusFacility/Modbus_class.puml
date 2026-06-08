@@ -33,7 +33,7 @@ plugin_struct *-right- Modbus_device
 Modbus_device "*" -down-> "1" Modbus_link
 Modbus_link "1" -right-> "1" Serial_port
 Modbus_mgr "1" *-- "*" Modbus_link
-Modbus_mgr "1" -- "*" Modbus_device
+Modbus_mgr "1" <-- "*" Modbus_device
 Modbus_link *-- "1" Queue
 Queue o-left- "*" Transaction
 Modbus_device "1" --> "*" Transaction

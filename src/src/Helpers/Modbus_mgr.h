@@ -33,14 +33,15 @@ typedef struct ModbusMGR_struct  {
 
   void show_modbus_interfaces();
   bool save_modbus_interfaces(String& error);
+
   bool isInitialized() const { return _initialized; }
 
 private:
 
   static const int MAX_MODBUS_LINKS   = 4;  // Maximum number of Modbus links supported
-  static const int MAX_MODBUS_DEVICES = 16; // Maximum number of Modbus devices supported
 
-  // Structure representing the information of a Modbus link, including its configuration and associated ModbusLINK object
+  // Structure representing the information of a Modbus link as managed by the Modbus_mgr
+  // Includes associated ModbusLINK object, link configuration and config storage
   struct ModbusLinkInfo_struct {
     ESPEasySerialPort         port             = ESPEasySerialPort::not_set;
     int8_t                    serial_rx        = -1;
@@ -54,23 +55,15 @@ private:
 
   };
 
-  // Structure representing the information of a Modbus device, including assocuited ModbusDEVICE object
-  struct ModbusDeviceInfo_struct {
-    uint8_t                       deviceID = 0;       // Unique ID assigned by the Modbus manager
-    struct ModbusLinkInfo_struct *link     = nullptr; // Pointer to the Modbus link info
-
-  };
-
-  ModbusLinkInfo_struct   *_modbus_links[MAX_MODBUS_LINKS]     = { nullptr }; // Pointer to the Modbus link object
-  ModbusDeviceInfo_struct *_modbus_devices[MAX_MODBUS_DEVICES] = { nullptr }; // Array of connected Modbus devices
-  bool                     _initialized                        = false;       // Flag indicating if the manager is initialized
-  bool                     _testing                            = false;
+  ModbusLinkInfo_struct _modbus_links[MAX_MODBUS_LINKS] = {};    // All links managed by the Modbus manager
+  bool                  _initialized                    = false; // Flag indicating if the manager is initialized
+  int                   _deviceCounter                  = 0;
 
   bool setLink(const int               linkIndex,
                const ESPEasySerialPort port,
                const int8_t            serial_rx,
                const int8_t            serial_tx,
-               uint16_t                 baudrate,
+               uint16_t                baudrate,
                int8_t                  dere_pin,
                bool                    collision_detect);
 

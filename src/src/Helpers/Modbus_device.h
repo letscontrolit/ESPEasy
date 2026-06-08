@@ -61,7 +61,7 @@ public:
 
   uint16_t getModbusTimeout() const;
 
-  void     linkCallback(Modbus_RequestQueueElement *transaction);
+  void     linkCallback(Modbus_Transaction *transaction);
 
   // Start reading a Modubus holding register. The result will be available later.
   // The function returns true if the request was queued.
@@ -84,7 +84,7 @@ public:
   // The function returns true if the request was queued.
   bool writeSingleRegister(uint16_t           address,
                            uint16_t           value,
-                           ModbusResultState * stateptr);
+                           ModbusResultState *stateptr);
 
   // Start reading a Modbus holding register from another module. The result will be available later.
   // The function returns true if the request was queued.
@@ -99,13 +99,14 @@ public:
 private:
 
   uint8_t                  _modbus_address = MODBUS_BROADCAST_ADDRESS;
+  uint8_t                  _linkId         = -1;      // Link index used to identify the Modbus link
   ModbusLINK_struct       *_modbus_link    = nullptr; // Pointer to the Modbus link object
   uint8_t                  _deviceID       = 0;       // Identifier used by the Modbus manager to identify this device
   uint16_t                 _timeout        = 200;     // Timeout value in milliseconds for Modbus requests
   taskIndex_t              _taskIndex      = 0;       // Task index for sending events to the task associated with this device
   ModbusRegisterSet_struct _registerSet    = {};      // Structure to hold multiple register values for multi-value responses
 
-  void sendEvent(Modbus_RequestQueueElement& req,
+  void sendEvent(Modbus_Transaction& req,
                  ModbusResultMessageType     messageType,
                  int                         par2 = 0,
                  int                         par3 = 0,
@@ -115,11 +116,11 @@ private:
                  int                         par7 = 0,
                  int                         par8 = 0);
 
-  void sendEvent(Modbus_RequestQueueElement& req,
+  void sendEvent(Modbus_Transaction& req,
                  ModbusResultMessageType     messageType,
                  ModbusRegisterSet_struct   *registerSet);
 
-  void createReadFrame(Modbus_RequestQueueElement& request,
+  void createReadFrame(Modbus_Transaction& request,
                        uint8_t                     busAddress,
                        uint16_t                    registerAddress,
                        uint16_t                    registerCount = 1);
