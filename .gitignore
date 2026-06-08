@@ -94,3 +94,5 @@ sdkconfig.*
 src/Custom_.h
 
 compile_commands.json
+
+*.Identifier
