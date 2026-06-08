@@ -86,7 +86,7 @@ void ESPEasyWiFi_t::loop()
 
         setState(_state == WiFiState_e::STA_Connected_Setup ? WiFiState_e::STA_Connected : WiFiState_e::IdleWaiting);
       } else {
-        setState(WiFiState_e::WiFiOFF);
+        setState(WiFiState_e::WiFiOFF, 100);
       }
     }
   }
@@ -252,7 +252,11 @@ void ESPEasyWiFi_t::loop()
 
           if (!WiFi_AP_Candidates.hasCandidateCredentials() &&
               !Settings.DoNotStartAPfallback_ConnectFail()) {
-            setState(WiFiState_e::AP_only, WIFI_STATE_MACHINE_AP_ONLY_TIMEOUT);
+            if (shouldStartAP_fallback()) {
+              setState(WiFiState_e::AP_Fallback, Settings.APfallback_minimal_on_time_sec() * 1000);
+            } else {
+              setState(WiFiState_e::AP_only, WIFI_STATE_MACHINE_AP_ONLY_TIMEOUT);
+            } 
           } else {
             setState(WiFiState_e::WiFiOFF, 100);
           }
@@ -285,7 +289,7 @@ void ESPEasyWiFi_t::loop()
           setState(WiFiState_e::STA_Reconnecting, WIFI_STATE_MACHINE_STA_CONNECTING_TIMEOUT);
         } else {
           wifi_STA_data->mark_connect_failed();
-          setState(WiFiState_e::WiFiOFF);
+          setState(WiFiState_e::WiFiOFF, 100);
         }
       }
 
@@ -347,30 +351,12 @@ void ESPEasyWiFi_t::setState(WiFiState_e newState, uint32_t timeout) {
   }
 //# endif // ifndef BUILD_NO_DEBUG
 
-  if ((_state == WiFiState_e::AP_only) ||
-      (_state == WiFiState_e::AP_Fallback)) {
-    Scheduler.setNetworkExitTimer(0, NETWORK_INDEX_WIFI_AP);
-//    setAP(false);
-  }
 
-  if (_state == WiFiState_e::STA_Connected)
-  {
-    auto wifi_STA_data = getWiFi_STA_NWPluginData_static_runtime();
+  const WiFiState_e oldState = _state;
 
-    if (wifi_STA_data) {
-      wifi_STA_data->mark_disconnected();
+  // Need to set the newState first as some of the functions below will call 
+  // setState, causing a loop, or calling to change state multiple times.
 
-      if (WiFi.status() == WL_CONNECTED) {
-        WiFi.disconnect(true);
-      }
-    }
-  }
-
-  if ((_state == WiFiState_e::STA_AP_Scanning) ||
-      (_state == WiFiState_e::STA_Scanning))
-  {
-    WiFi_AP_Candidates.process_WiFiscan();
-  }
 
   if (timeout == 0)
   {
@@ -384,6 +370,35 @@ void ESPEasyWiFi_t::setState(WiFiState_e newState, uint32_t timeout) {
   _state = newState;
 
 
+
+  if (oldState == WiFiState_e::STA_Connected)
+  {
+    auto wifi_STA_data = getWiFi_STA_NWPluginData_static_runtime();
+
+    if (wifi_STA_data) {
+      wifi_STA_data->mark_disconnected();
+
+      if (WiFi.status() == WL_CONNECTED) {
+        WiFi.disconnect(true);
+      }
+    }
+  }
+
+  if ((oldState == WiFiState_e::STA_AP_Scanning) ||
+      (oldState == WiFiState_e::STA_Scanning))
+  {
+    WiFi_AP_Candidates.process_WiFiscan();
+  }
+
+  if ((oldState == WiFiState_e::AP_only) ||
+      (oldState == WiFiState_e::AP_Fallback)) {
+    Scheduler.setNetworkExitTimer(0, NETWORK_INDEX_WIFI_AP);
+//    setAP(false);
+  }
+
+
+
+
   switch (newState)
   {
     case WiFiState_e::Disabled:
@@ -393,6 +408,13 @@ void ESPEasyWiFi_t::setState(WiFiState_e newState, uint32_t timeout) {
       break;
     case WiFiState_e::WiFiOFF:
       // TODO TD-er: Must cancel all and turn off WiFi.
+      
+      if (doWifiIsAP(WiFi.getMode()))
+        Scheduler.setNetworkExitTimer(0, NETWORK_INDEX_WIFI_AP);
+/*
+      if (doWifiIsSTA(WiFi.getMode()))
+        Scheduler.setNetworkExitTimer(0, NETWORK_INDEX_WIFI_STA);
+*/
       setSTA_AP(false, false);
       break;
     case WiFiState_e::AP_only:
@@ -450,7 +472,7 @@ void ESPEasyWiFi_t::setState(WiFiState_e newState, uint32_t timeout) {
       // WiFi.STA.setDefault();
 # endif // ifdef ESP32
 
-      if (_state == WiFiState_e::STA_Connected_Setup) {
+      if (oldState == WiFiState_e::STA_Connected_Setup) {
         Scheduler.setNetworkExitTimer(0, NETWORK_INDEX_WIFI_AP);
         setMode(ESPEasyWiFi_mode_e::STA_only);
       }
