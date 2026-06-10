@@ -1,0 +1,38 @@
+StateDiagram [frame=true framecolor=steelblue label="State Diagram ESPEasyWiFi_mode_e"] {
+  state Off
+  state CredentialsUpdated
+  state STA_only
+  state STA_AP
+  state AP_only
+  state Setup
+
+  choice AllowSetup
+  choice HasCredentials
+  choice HasCredentialsSetupAllowed
+  choice APalwaysOn
+  choice APalwaysOnNoCred
+  
+
+
+  initialState->Off
+  Off -> AllowSetup "Check\nAllowSetup"
+  AllowSetup -> HasCredentials "Setup not\nAllowed"
+  HasCredentials -> APalwaysOn "Has\nCredentials"
+  APalwaysOn -> STA_AP "AP"
+  APalwaysOn -> STA_only "No AP"
+  HasCredentials -> APalwaysOnNoCred "No\nCredentials"
+  APalwaysOnNoCred -> Off "No AP"
+  APalwaysOnNoCred -> AP_only "AP"
+  AllowSetup -> HasCredentialsSetupAllowed "Setup\nAllowed"
+  HasCredentialsSetupAllowed -> Setup "No\nCredentials"
+  HasCredentialsSetupAllowed -> APalwaysOn "Has\nCredentials"
+
+  CredentialsUpdated <- Setup "Setup\nDone"
+  CredentialsUpdated -> AllowSetup
+
+  STA_AP -> AP_only "No Known\nNetwork found"
+
+  STA_AP <- STA_AP "Retry/\nReconnect"
+  STA_only <- STA_only "Retry/\nReconnect"
+
+}

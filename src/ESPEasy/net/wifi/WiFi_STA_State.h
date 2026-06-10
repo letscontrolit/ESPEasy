@@ -52,23 +52,20 @@ namespace wifi {
  */
 
 
-enum class WiFiState_e
+enum class WiFi_STA_State_e
 {
   // WiFi radio is off and no new attempt should be made (e.g. low power mode or Ethernet active)
   Disabled,
 
-  // WiFi radio off, to continue, everything needs to be (re)initialized
-  WiFiOFF,
+  // Error state, some action failed
+  TimeOut,
 
-  // Only running in AP mode
-  // Typically this is only used when STA is off and AP Auto Start is checked
-  // TODO TD-er: Must implement this.
-  AP_only,
+  // State from where we decide to start scanning or connecting
+  Idle,
 
-  // Fallback mode which is started when connecting to AP was not possible
-  AP_Fallback,
-
-  // WiFi was in some kind of error state or needs waiting period
+  // Not allowed yet to continue (re)connecting.
+  // For example when the interface is a fallback interface and not yet allowed to start
+  // Or when in setup mode and no need to connect.
   IdleWaiting,
 
   // STA mode + scanning
@@ -86,13 +83,10 @@ enum class WiFiState_e
   STA_Reconnecting,
 
   // Connected to an AP
-  STA_Connected,
-
-  STA_Connected_Setup
-
+  STA_Connected
 };
 
-const __FlashStringHelper* toString(WiFiState_e state);
+const __FlashStringHelper* toString(WiFi_STA_State_e state);
 
 
 } // namespace wifi
