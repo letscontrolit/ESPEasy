@@ -1,13 +1,13 @@
 StateDiagram [frame=true framecolor=steelblue label="State Diagram ESPEasy WiFi_STA_State_e"] {
-  state Disabled
-  state TimeOut
+  state Disabled [fillcolor=lightblue]
+  state TimeOut as "TimeOut/\nError" [fillcolor=orangered]
   state Idle
   state IdleWaiting
-  state STA_Scanning
-  state STA_AP_Scanning
-  state STA_Connecting
-  state STA_Reconnecting
-  state STA_Connected
+  state STA_Scanning as "STA\nScanning"
+  state STA_AP_Scanning as "STA+AP\nScanning"
+  state STA_Connecting as "STA\nConnecting"
+  state STA_Reconnecting as "STA\nReconnecting"
+  state STA_Connected as "STA\nConnected" [fillcolor=palegreen]
 
   choice AlreadyConnected
   choice AP_on_no_nw_found

@@ -1,38 +1,55 @@
 StateDiagram [frame=true framecolor=steelblue label="State Diagram ESPEasyWiFi_mode_e"] {
-  state Off
-  state CredentialsUpdated
+  choice NeedSetup
+  choice HasCredentials
+  choice HasCredentialsSetupRequired
+  choice APalwaysOn
+  choice APalwaysOnNoCred
+
   state STA_only
   state STA_AP
   state AP_only
-  state Setup
 
-  choice AllowSetup
-  choice HasCredentials
-  choice HasCredentialsSetupAllowed
-  choice APalwaysOn
-  choice APalwaysOnNoCred
+  state Off [fillcolor=lightblue]
+  state Setup with behaviors "WiFi scan\nStart webUI\nEnter Credentials\nSave" [fillcolor=yellow] {
+    state Scan as "STA_only Scan"
+    state StartAP as "AP_only\nWebUI"
+    state ClientConnect as "User Connects\nCaptive Portal to /setup"
+    state EnterCredentials as "Enter WiFi Credentials"
+    state ClientDisconnect as "User\nDisconnects"
+    state CredentialsUpdated as "Credentials Updated"
+
+    initialState -> Scan
+    Scan -> StartAP
+    StartAP -> ClientConnect
+    ClientDisconnect <- ClientConnect
+    Scan <- ClientDisconnect
+    Scan <- StartAP "Time Out"
+    ClientConnect -> EnterCredentials
+    EnterCredentials -> CredentialsUpdated
+    CredentialsUpdated -> finalState
+  }
   
-
-
+  
   initialState->Off
-  Off -> AllowSetup "Check\nAllowSetup"
-  AllowSetup -> HasCredentials "Setup not\nAllowed"
+  NeedSetup <- Off  "Check\nNeed Setup?"
+  NeedSetup -> HasCredentials "Setup not\nAllowed/\nRequired"
   HasCredentials -> APalwaysOn "Has\nCredentials"
-  APalwaysOn -> STA_AP "AP"
+  APalwaysOn -> STA_AP "AP Always On\nor\nSetup 1st connect"
   APalwaysOn -> STA_only "No AP"
   HasCredentials -> APalwaysOnNoCred "No\nCredentials"
-  APalwaysOnNoCred -> Off "No AP"
+  Off <- APalwaysOnNoCred   "No AP"
   APalwaysOnNoCred -> AP_only "AP"
-  AllowSetup -> HasCredentialsSetupAllowed "Setup\nAllowed"
-  HasCredentialsSetupAllowed -> Setup "No\nCredentials"
-  HasCredentialsSetupAllowed -> APalwaysOn "Has\nCredentials"
+  NeedSetup -> HasCredentialsSetupRequired "Setup\nAllowed"
+  HasCredentialsSetupRequired -> APalwaysOn "Has Credentials,\nNo Setup"
 
-  CredentialsUpdated <- Setup "Setup\nDone"
-  CredentialsUpdated -> AllowSetup
+  Setup <- HasCredentialsSetupRequired "No Credentials,\nEnter Setup"
+  Setup -> NeedSetup "Setup\nDone"
 
+  STA_only <- STA_only "Retry/\nReconnect"
   STA_AP -> AP_only "No Known\nNetwork found"
 
   STA_AP <- STA_AP "Retry/\nReconnect"
-  STA_only <- STA_only "Retry/\nReconnect"
+  
+  Setup <- STA_AP "Setup\nFailed 1st\nConnect"
 
 }
