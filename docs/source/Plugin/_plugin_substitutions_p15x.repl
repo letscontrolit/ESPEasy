@@ -72,7 +72,7 @@
 .. |P157_type| replace:: :cyan:`Display`
 .. |P157_typename| replace:: :cyan:`Display - HT16K33 14-/7-segment`
 .. |P157_porttype| replace:: `.`
-.. |P157_status| replace:: :green:`DISPLAY` :yellow:`CLIMATE`
+.. |P157_status| replace:: :green:`DISPLAY` :yellow:`COLLECTION`
 .. |P157_status_lb| replace:: `.`
 .. |P157_github| replace:: P157_14DGT.ino
 .. _P157_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P157_14DGT.ino
