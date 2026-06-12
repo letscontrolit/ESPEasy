@@ -13,6 +13,7 @@
 # include "../../src/DataStructs/ESPEasy_EventStruct.h"
 # include "../../src/Globals/SecuritySettings.h"
 # include "../../src/Globals/Settings.h"
+# include "../../src/Helpers/Networking.h"
 # include "../../src/Helpers/StringConverter.h"
 # include "../../src/Helpers/StringGenerator_WiFi.h"
 # include "../../src/WebServer/ESPEasy_WebServer.h"
@@ -26,6 +27,7 @@
 # ifdef ESP8266
 #  include "../net/ESPEasyNetwork.h"
 # endif
+
 
 # if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 #  include "../../src/Helpers/ESPEasy_UnitOfMeasure.h"
@@ -295,18 +297,25 @@ bool NWPlugin_001(NWPlugin::Function function, EventStruct *event, String& strin
 
     case NWPlugin::Function::NWPLUGIN_CLIENT_IP_WEB_ACCESS_ALLOWED:
     {
-      IPAddress client_ip;
-      client_ip.fromString(string);
-
-      if ((SecuritySettings.IPblockLevel == LOCAL_SUBNET_ALLOWED) &&
-          !Settings.getNetworkInterfaceSubnetBlockClientIP(event->NetworkIndex)) {
-        success = NWPlugin::ipInRange(client_ip, NetworkID(), NetworkBroadcast());
-      } else if (SecuritySettings.IPblockLevel == ONLY_IP_RANGE_ALLOWED) {
-        const IPAddress low(SecuritySettings.AllowedIPrangeLow);
-        const IPAddress high(SecuritySettings.AllowedIPrangeHigh);
-        success = NWPlugin::ipInRange(client_ip, low, high);
-      } else {
+      if (!Settings.getNetworkInterfaceSubnetBlockClientIP(event->NetworkIndex)) {
+        IPAddress client_ip;
+        client_ip.fromString(string);
         success = true;
+        if (SecuritySettings.IPblockLevel != ALL_ALLOWED) {
+          IPAddress low, high;
+          if (SecuritySettings.IPblockLevel == LOCAL_SUBNET_ALLOWED) {
+            low  = NetworkID();
+            high = NetworkBroadcast();
+          } else if (SecuritySettings.IPblockLevel == ONLY_IP_RANGE_ALLOWED) {
+            low  = IPAddress(SecuritySettings.AllowedIPrangeLow);
+            high = IPAddress(SecuritySettings.AllowedIPrangeHigh);
+          }
+          if (IPAddressSet(low) || IPAddressSet(high)) {
+            success = NWPlugin::ipInRange(client_ip, low, high);
+            event->String1 = formatIP(low);
+            event->String2 = formatIP(high);
+          }
+        }
       }
       break;
     }
