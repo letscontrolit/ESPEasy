@@ -49,6 +49,29 @@ When multiple modules are combined to form a single display, the adjacent module
 
 .. image:: P157_ht16k33-address.png
 
+To make the A0/A1/A2 addressing of the modules explicit:
+
++---------+-------------------+
+| address | A0/A1/A2          |
++=========+===================+
+| 0x70    | all open          |
++---------+-------------------+
+| 0x71    | A0 closed         |
++---------+-------------------+
+| 0x72    | A1 closed         |
++---------+-------------------+
+| 0x73    | A0, A1 closed     |
++---------+-------------------+
+| 0x74    | A2 closed         |
++---------+-------------------+
+| 0x75    | A0, A2 closed     |
++---------+-------------------+
+| 0x76    | A1, A2 closed     |
++---------+-------------------+
+| 0x77    | A0, A1, A2 closed |
++---------+-------------------+
+
+
 Wiring
 ~~~~~~
 
