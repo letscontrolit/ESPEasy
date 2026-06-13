@@ -71,10 +71,13 @@ bool P157_data_struct::init(struct EventStruct *event)
   # if P157_SCROLL_TEXT
   txtScrolling = bitRead(P157_CFG_FLAGS, P157_OPTION_SCROLLTEXT);
   scrollFull   = bitRead(P157_CFG_FLAGS, P157_OPTION_SCROLLFULL);
+  scrollAll    = bitRead(P157_CFG_FLAGS, P157_OPTION_SCROLL_ALL);
+  scrollDelay  = P157_CFG_SCROLLDELAY;
   setScrollSpeed(P157_CFG_SCROLLSPEED);
   # endif // if P157_SCROLL_TEXT
   suppressLeading0 = bitRead(P157_CFG_FLAGS, P157_OPTION_SUPPRESS0);
   timesep          = true;
+  zeroSlash        = bitRead(P157_CFG_FLAGS, P157_OPTION_ZEROSLASH);
 
   # if P157_EXTRA_FONTS
   fontSet = P157_CFG_FONTSET;
@@ -92,6 +95,7 @@ bool P157_data_struct::init(struct EventStruct *event)
 
   if (!P157_is7SegmentDisplay(displayModel)) {
     ht16k33 = new (std::nothrow) Noiasca_ht16k33_hw_14(); // 14 segment
+    ht16k33->setZeroSlash(zeroSlash);
   } else {
     ht16k33 = new (std::nothrow) Noiasca_ht16k33_hw_7();  // 7 segment
   }
@@ -382,6 +386,10 @@ int P157_data_struct::getEffectiveTextLength(const String& text) {
 bool P157_data_struct::nextScroll() {
   bool result = false;
 
+  if (scrollWait && (--scrollWait > 0)) {
+    return result;
+  }
+
   if (isScrollEnabled() && (!_textToScroll.isEmpty()
                             #  if P157_7DBIN_COMMAND
                             || binData.size() > 0
@@ -399,7 +407,8 @@ bool P157_data_struct::nextScroll() {
         scrollPos++;
 
         if (scrollPos > (binData.size() - bufLen)) {
-          scrollPos = 0;            // Redisplay
+          scrollPos  = 0;           // Redisplay
+          scrollWait = scrollDelay; // Restart delay counter
         }
         scrollCount = _scrollSpeed; // Restart countdown
       } else
@@ -424,7 +433,8 @@ bool P157_data_struct::nextScroll() {
         scrollPos++;
 
         if (scrollPos > _textToScroll.length() - bufLen) {
-          scrollPos = 0;            // Restart when all text displayed
+          scrollPos  = 0;           // Restart when all text displayed
+          scrollWait = scrollDelay; // Restart delay counter
         }
         scrollCount = _scrollSpeed; // Restart countdown
         #  ifdef P157_DEBUG
@@ -465,22 +475,6 @@ void P157_data_struct::setScrollSpeed(uint8_t speed) {
 }
 
 # endif // if P157_SCROLL_TEXT
-
-// # if P157_7DBIN_COMMAND
-
-// void P157_data_struct::setBinaryData(const String& data) {
-//   binaryData = true;
-//   #  if P157_SCROLL_TEXT
-//   setTextToScroll(data);
-//   binaryData  = true; // is reset in setTextToScroll
-//   scrollCount = _scrollSpeed;
-//   scrollPos   = 0;
-//   #  else // if P157_SCROLL_TEXT
-//   _textToScroll = data;
-//   #  endif // if P157_SCROLL_TEXT
-// }
-
-// # endif // if P157_7DBIN_COMMAND
 
 # ifdef P157_DEBUG
 
@@ -887,7 +881,7 @@ bool P157_data_struct::plugin_write_7dt(const String& text) {
     return false;
   }
 
-  float P157_temptemp    = 0.0f;
+  float P157_temptemp = 0.0f;
 
   if (!text.isEmpty()) {
     validFloatFromString(text, P157_temptemp);
@@ -916,7 +910,7 @@ bool P157_data_struct::plugin_write_7dt(const String& text) {
     fillBufferWithDash();
   } else {
     if ((P157_temptemp < uLimitDec) && (P157_temptemp > lLimitDec)) {
-      P157_temptemp    = roundf(P157_temptemp * 10.0f);
+      P157_temptemp = roundf(P157_temptemp * 10.0f);
     }
     fillBufferWithTemp(P157_temptemp);
   }
@@ -936,8 +930,8 @@ bool P157_data_struct::plugin_write_7ddt(const String& text) {
     return false;
   }
 
-  float P157_lefttemp    = 0.0f;
-  float P157_righttemp   = 0.0f;
+  float P157_lefttemp  = 0.0f;
+  float P157_righttemp = 0.0f;
 
   if (!text.isEmpty()) {
     validFloatFromString(parseString(text, 1), P157_lefttemp);
@@ -1057,7 +1051,7 @@ bool P157_data_struct::plugin_write_7dtext(const String& text) {
   # if P157_SCROLL_TEXT
   setTextToScroll(EMPTY_STRING);
 
-  setScrollEnabled(getEffectiveTextLength(text) > bufLen);
+  setScrollEnabled(scrollAll || getEffectiveTextLength(text) > bufLen);
 
   if (isScrollEnabled()) {
     setTextToScroll(text);
@@ -1148,6 +1142,10 @@ bool P157_data_struct::plugin_write_7dbin(const String& text,
           #  endif // if P157_EXTRA_FONTS
           {
             bitmap = ht16k33->getCharacterBitmap(argValue.charAt(i));
+
+            if (zeroSlash && ('0' == argValue.charAt(i)) && !P157_is7SegmentDisplay(displayModel)) {
+              bitmap |= (SEG14_M | SEG14_N);
+            }
           }
 
           if ((i < argValue.length()) && isPeriodChar(argValue.charAt(i + 1))) {
@@ -1164,7 +1162,7 @@ bool P157_data_struct::plugin_write_7dbin(const String& text,
 
     if (binData.size() > 0) {
       #  if P157_SCROLL_TEXT
-      setScrollEnabled(binData.size() > bufLen);
+      setScrollEnabled(scrollAll || binData.size() > bufLen);
 
       if (isScrollEnabled()) {
         uint8_t i = 0;

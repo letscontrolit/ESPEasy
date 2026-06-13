@@ -14,6 +14,7 @@
 # define P157_CFG_I2C_ADDRESS    PCONFIG(4)
 # define P157_CFG_DISPLAYS       PCONFIG(5)
 # define P157_CFG_FONTSET        PCONFIG(6)
+# define P157_CFG_SCROLLDELAY    PCONFIG(7)
 # define P157_CFG_FLAGS          PCONFIG_ULONG(0)
 
 # define P157_DISP_MANUAL        0
@@ -31,9 +32,9 @@
 # define P157_CHAR_EURO          128
 # define P157_CHAR_DEGREE        129
 
-// # define P157_OPTION_PERIOD      0 // Period as dot
+# define P157_OPTION_ZEROSLASH   0 // Use zero with slash (14-segment only)
 # define P157_OPTION_HIDEDEGREE  1 // Hide degree symbol for temperatures
-// # define P157_OPTION_RIGHTALIGN  2 // Align 7dt output to the right
+# define P157_OPTION_SCROLL_ALL  2 // Scroll also when text not linger than display width
 # define P157_OPTION_SCROLLTEXT  3 // Scroll text > display width
 # define P157_OPTION_SCROLLFULL  4 // Scroll text from the right in, starting with a blank display
 # define P157_OPTION_SUPPRESS0   5 // Suppress leading zero on day/hour of Date/Time display
@@ -195,7 +196,11 @@ public:
   bool     scrollAllowed = false;
   uint16_t scrollCount   = 0;
   uint16_t scrollPos     = 0;
+  uint16_t scrollDelay   = 0;
+  uint16_t scrollWait    = 0;
   bool     scrollFull    = false;
+  bool     scrollAll     = false;
+  bool     zeroSlash     = false;
 
 private:
 

@@ -221,6 +221,11 @@ uint16_t Noiasca_ht16k33_hw_7::getCharacterBitmap(uint8_t value) {
 }
 
 
+void Noiasca_ht16k33_hw_7::setZeroSlash(bool state) {
+  return; // _zeroSlash = state; // Ignored for 7-segment
+}
+
+
 // general write method for 7 segment
 size_t Noiasca_ht16k33_hw_7::write(uint8_t value) {
   if (value == '.' || value == ',' || value == ':' || value == ';')  // dots need a special handling
@@ -301,6 +306,12 @@ uint16_t Noiasca_ht16k33_hw_14::getCharacterBitmap(uint8_t value) {
   return 0u;
 }
 
+
+void Noiasca_ht16k33_hw_14::setZeroSlash(bool state) {
+  _zeroSlash = state;
+}
+
+
 size_t Noiasca_ht16k33_hw_14::write(uint8_t value) {
   if (value == 35) value = 127;                  // MISSING: I don't remember why this is of any sence. This mapping costs 6 byte. DEPRECATED
   //if (value==167 || value == 248) value = 42;  // degree
@@ -317,6 +328,9 @@ size_t Noiasca_ht16k33_hw_14::write(uint8_t value) {
   else if (value > 31 && value < FONTFILE14_MAX_CHAR)                // write printable ASCII characters to display
   {
     _lastBitmap = pgm_read_word_near(charTable14 + value - 32);      // the table starts with the first printable character at 32
+    if (_zeroSlash && ('0' == value)) {
+      _lastBitmap |= (SEG14_M | SEG14_N);
+    }
 #ifdef HT16K33_BUFFERSIZE
     displaybuffer[_currentPosition] = _lastBitmap;
 #endif

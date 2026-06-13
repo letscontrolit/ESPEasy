@@ -30,6 +30,9 @@
 //
 
 /** History
+ * 2026-06-13 tonhuisman: Add Scroll Always option to also scroll content <= display width
+ *                        Add Zero with slash option
+ *                        Add Delay to next scroll-start option
  * 2026-05-25 tonhuisman: Add 7digit,<dgt>,<char/text> command for writing content from a specific digit 1..len
  *                        Remove right-align option, as this isn't implemented
  *                        Clean up source
@@ -67,9 +70,12 @@ boolean Plugin_157(uint8_t function, struct EventStruct *event, String& string) 
     case PLUGIN_SET_DEFAULTS:
     {
       # if P157_SCROLL_TEXT
-      P157_CFG_SCROLLSPEED = 10; // Default 10 * 0.1 sec scroll speed
+      P157_CFG_SCROLLSPEED = 10;                        // Default 10 * 0.1 sec scroll speed
       # endif // if P157_SCROLL_TEXT
-      P157_CFG_DISPLAYS = 1;     // Default number of displays
+      P157_CFG_DISPLAYS = 1;                            // Default number of displays
+      uint32_t lSettings{};
+      bitWrite(lSettings, P157_OPTION_ZEROSLASH, true); // Enable zero with slash by default
+      P157_CFG_FLAGS = lSettings;
       break;
     }
 
@@ -148,13 +154,20 @@ boolean Plugin_157(uint8_t function, struct EventStruct *event, String& string) 
       addFormCheckBox(F("Suppress leading 0 on day/hour"), F("supp0"), bitRead(P157_CFG_FLAGS, P157_OPTION_SUPPRESS0));
       # endif // if P157_SUPPRESS_ZERO
 
+      if (!P157_is7SegmentDisplay(P157_CFG_DISPLAYTYPE)) {
+        addFormCheckBox(F("Use 0 with slash"), F("zero_slash"), bitRead(P157_CFG_FLAGS, P157_OPTION_ZEROSLASH));
+      }
+
       # if P157_SCROLL_TEXT
-      addFormCheckBox(F("Scroll text &gt; display width"), F("scroll_text"), bitRead(P157_CFG_FLAGS, P157_OPTION_SCROLLTEXT));
-      addFormCheckBox(F("Scroll text in from right"),      F("scroll_full"), bitRead(P157_CFG_FLAGS, P157_OPTION_SCROLLFULL));
+      addFormCheckBox(F("Scroll text &gt; display width"),       F("scroll_text"),   bitRead(P157_CFG_FLAGS, P157_OPTION_SCROLLTEXT));
+      addFormCheckBox(F("Scroll text also &lt;= display width"), F("scroll_always"), bitRead(P157_CFG_FLAGS, P157_OPTION_SCROLL_ALL));
+      addFormCheckBox(F("Scroll text in from right"),            F("scroll_full"),   bitRead(P157_CFG_FLAGS, P157_OPTION_SCROLLFULL));
 
       if (P157_CFG_SCROLLSPEED == 0) { P157_CFG_SCROLLSPEED = 10; }
       addFormNumericBox(F("Scroll speed (0.1 sec/step)"), F("scrollspeed"), P157_CFG_SCROLLSPEED, 1, 600);
       addUnit(F("1..600 = 0.1..60 sec/step"));
+      addFormNumericBox(F("Delay to next scroll-start"), F("scrolldelay"), P157_CFG_SCROLLDELAY, 0, 6000);
+      addUnit(F("0.1 sec"));
       # endif // if P157_SCROLL_TEXT
 
       // addFormCheckBox(F("Right-align Temperature (7dt)"), F("temp_rightalign"), bitRead(P157_CFG_FLAGS, P157_OPTION_RIGHTALIGN));
@@ -182,14 +195,16 @@ boolean Plugin_157(uint8_t function, struct EventStruct *event, String& string) 
       }
       uint32_t lSettings = 0;
 
-      // bitWrite(lSettings, P157_OPTION_PERIOD,     isFormItemChecked(F("periods")));
+      bitWrite(lSettings, P157_OPTION_ZEROSLASH,  isFormItemChecked(F("zero_slash")));
       bitWrite(lSettings, P157_OPTION_HIDEDEGREE, isFormItemChecked(F("hide_degree")));
 
       // bitWrite(lSettings, P157_OPTION_RIGHTALIGN, isFormItemChecked(F("temp_rightalign")));
       # if P157_SCROLL_TEXT
       bitWrite(lSettings, P157_OPTION_SCROLLTEXT, isFormItemChecked(F("scroll_text")));
+      bitWrite(lSettings, P157_OPTION_SCROLL_ALL, isFormItemChecked(F("scroll_always")));
       bitWrite(lSettings, P157_OPTION_SCROLLFULL, isFormItemChecked(F("scroll_full")));
       P157_CFG_SCROLLSPEED = getFormItemInt(F("scrollspeed"));
+      P157_CFG_SCROLLDELAY = getFormItemInt(F("scrolldelay"));
       # endif // if P157_SCROLL_TEXT
       # if P157_SUPPRESS_ZERO
       bitWrite(lSettings, P157_OPTION_SUPPRESS0, isFormItemChecked(F("supp0")));

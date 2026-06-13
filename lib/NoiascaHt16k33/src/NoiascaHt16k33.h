@@ -222,6 +222,7 @@ const uint16_t SEG14_DP = (1<<14);
 
     virtual uint16_t getCharacterBitmap(uint8_t value);
 
+    virtual void setZeroSlash(bool state);
 
 	// not supported LCD API 1.0 functions
 	// ===================================
@@ -253,6 +254,7 @@ const uint16_t SEG14_DP = (1<<14);
 #endif
     uint8_t _currentPosition;                              // current position of cursor
     uint8_t _lastPosition;                                 // last position of cursor
+    bool    _zeroSlash = false;                            // Apply / to the 0 for readability
 };
 
 /** \brief class for  HT16K33 displays with 7 segment LEDs
@@ -271,6 +273,7 @@ class Noiasca_ht16k33_hw_7 : public Noiasca_ht16k33 {      // 7 segment display
     using Print::write;                                    
     uint16_t getCharacterBitmap(uint8_t value);
     // using Noiasca_ht16k33::getCharacterBitmap;
+    void setZeroSlash(bool state);
   protected:
     uint8_t _hasColonDigit;                                // is set to 1 if display has a separate colon digit at digit 2 (the third column). Is on this level to have one common .write() method
     uint8_t _lastBitmap;                                   // last written bitmap (if we have to reprint for the decimal point)
@@ -305,6 +308,7 @@ class Noiasca_ht16k33_hw_14 : public Noiasca_ht16k33 {     // 14 Segment Display
     using Print::write; 
     uint16_t getCharacterBitmap(uint8_t value);
     // using Noiasca_ht16k33::getCharacterBitmap;
+    void setZeroSlash(bool state);
   protected:
     uint16_t _lastBitmap;                                  // last written bitmap (if we have to reprint for the decimal point)
 };
