@@ -160,7 +160,7 @@ The four marked characters, Ä, Ö, Ü and ß, are *not* included, as they can n
 
 .. image:: P073_dSEG7Set.png
 
-The ``^`` character is again used to display the degree symbol, and the degree symbol is not recognized!
+The ``^`` character is used to display the degree symbol, and the degree symbol is not recognized!
 
 Options
 ^^^^^^^
@@ -169,11 +169,17 @@ Options
 
 * **Suppress leading 0 on day/hour**: When enabled, will show the hours of the time and days of the date without a leading 0 when < 10. (Not available in all builds for size reasons)
 
+* **Use 0 with slash**: The default font has an open ``0`` symbol, like the uppercase ``O``. To have a zero with a slash through it on the display, this setting can be enabled, or disable if the user preferes an open ``0``. Only available for 14-segment displays.
+
 * **Scroll text > display width**: Normally the ``7dtext,<text>`` and ``7dbin,...`` commands only show the left n characters the display can hold. This option enables the Scroll Text feature, that will scroll text sent using the ``7dtext`` command (or ``7dbin`` command when available) from right to left when the content is longer than the display can show at once.
+
+* **Scroll text also <= display width**: The default setting is to only use scrolling for text (``7dtext,...``) or binary (``7dbin,...``) content if that doesn't fit on the display. This option allows to scroll *any* content, also when it *does* fit on the display.
 
 * **Scroll text in from right**: Normally the Scroll Text feature starts with the display filled with the left part of the text to scroll, with this option enabled, the display starts empty and the text is scrolled in from the right side of the display to the left, until all text is scrolled off. Then the scrolling restarts.
 
 * **Scroll speed (0.1 sec/step)**: Determines the speed of scrolling the text. Default value is 10, so 1 character per second.
+
+* **Delay to next scroll-start**: Set a (non-blocking) delay after a scroll is completed (display is empty), before the next scroll is started. Range 0 to 10 minutes, in 0.1 second steps.
 
 (The Scroll options and feature are not included in some builds for size reasons)
 
@@ -193,7 +199,7 @@ The ``7dbin`` command allows to show any combination of segments on the display 
 
 .. image:: P157_14-segment-dp-map.png
 
-The mapping from bits to segments is ``0B(dp)ponmlkhgfedcba`` where the decimal point only takes 1 bit, of course
+The mapping from bits to segments is ``0B(dp)ponmlkhgfedcba`` where the decimal point only takes 1 bit, of course.
 
 7-segment
 ~~~~~~~~~
