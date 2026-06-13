@@ -1049,6 +1049,10 @@ bool P157_data_struct::plugin_write_7dtext(const String& text) {
   }
   # endif // ifndef BUILD_NO_DEBUG
   # if P157_SCROLL_TEXT
+
+  if (_textToScroll.equals(text)) {
+    return true; // Success, but no change
+  }
   setTextToScroll(EMPTY_STRING);
 
   setScrollEnabled(scrollAll || getEffectiveTextLength(text) > bufLen);
