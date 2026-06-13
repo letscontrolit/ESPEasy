@@ -209,6 +209,7 @@ private:
   # if defined(P157_SCROLL_TEXT) || defined(P157_7DBIN_COMMAND)
   String _textToScroll;
   # endif // if defined(P157_SCROLL_TEXT) || defined(P157_7DBIN_COMMAND)
+  String _lastArgument; // Keep last argument for 7dtext and 7dbin
 
 private:
 

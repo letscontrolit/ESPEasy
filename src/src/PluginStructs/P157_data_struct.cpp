@@ -1050,9 +1050,10 @@ bool P157_data_struct::plugin_write_7dtext(const String& text) {
   # endif // ifndef BUILD_NO_DEBUG
   # if P157_SCROLL_TEXT
 
-  if (_textToScroll.equals(text)) {
+  if (_lastArgument.equals(text)) {
     return true; // Success, but no change
   }
+  _lastArgument = text;
   setTextToScroll(EMPTY_STRING);
 
   setScrollEnabled(scrollAll || getEffectiveTextLength(text) > bufLen);
@@ -1102,6 +1103,11 @@ bool P157_data_struct::plugin_write_7dbin(const String& text,
   if (output != P157_DISP_MANUAL) {
     return false;
   }
+
+  if (_lastArgument.equals(text)) {
+    return true; // Success, but no change
+  }
+  _lastArgument = text;
 
   if (!text.isEmpty()) {
     binData.clear();
