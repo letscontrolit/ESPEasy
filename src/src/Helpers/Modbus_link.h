@@ -37,7 +37,7 @@ typedef enum class ModbusTransactionType {
 
 } ModbusTransactionType_t;
 
-// Modbus request queue element structure
+// Modbus transaction structure
 // This structure represents a single Modbus request and its associated response.
 struct Modbus_Transaction {
   Modbus_Transaction() = default;
@@ -46,20 +46,7 @@ struct Modbus_Transaction {
     _device = device;
   }
 
-  Modbus_Transaction(ModbusDEVICE_struct    *device,
-                     ModbusTransactionType_t messageType,
-                     uint16_t                userId,
-                     void                   *userData,
-                     void                   *userState)
-  {
-    _device      = device;
-    _messageType = messageType;
-    _userId      = userId;
-    _userData    = userData;
-    _userState   = userState;
-  }
-
-  void print();
+  void print();                                                                        // Print the transaction details for debugging
 
   ModbusTransactionType _messageType = ModbusTransactionType::NONE;                    // Type of Modbus message
   void                 *_userData    = nullptr;                                        // Pointer to user (device) data
@@ -113,13 +100,9 @@ struct ModbusLINK_struct  {
   void    processQueue();
 
   int16_t getBaudrate(void) const;
-
   int16_t getSerialRX(void) const;
-
   int16_t getSerialTX(void) const;
-
   int8_t  getDerePin(void) const;
-
   bool    getCollisionDetect(void) const;
 
 private:
@@ -127,7 +110,7 @@ private:
   static void dumpState(ModbusQueueState_t state);
 
   ESPeasySerial          *_easySerial       = nullptr; // Pointer to the serial port object
-  Modbus_TransactionQueue _transactionQueue = {};      // Queue of Modbus requests to process
+  Modbus_TransactionQueue _transactionQueue = {};      // Queue of Modbus transactions to process
   uint16_t                _queueID          = 0;       // ID for the last request queued
   uint16_t                _modbus_timeout   = 180;     // Default Modbus timeout in milliseconds
 
