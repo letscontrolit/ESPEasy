@@ -193,7 +193,7 @@ void write_SVG_image_header(int  width,
 void getWiFi_RSSI_icon(int rssi,
                        int width_pixels);
 
-#if FEATURE_CHART_STORAGE_LAYOUT
+#if FEATURE_CHART_STORAGE_LAYOUT && !defined(BUILD_NO_DEBUG)
 void getConfig_dat_file_layout();
 
 void getStorageTableSVG(SettingsType::Enum settingsType);

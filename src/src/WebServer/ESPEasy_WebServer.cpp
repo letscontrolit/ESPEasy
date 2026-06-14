@@ -1091,7 +1091,7 @@ void getWiFi_RSSI_icon(int rssi, int width_pixels)
   addHtml(F("</svg>\n"));
 }
 
-#if FEATURE_CHART_STORAGE_LAYOUT
+#if FEATURE_CHART_STORAGE_LAYOUT && !defined(BUILD_NO_DEBUG)
 void getConfig_dat_file_layout() {
   const int shiftY  = 2;
   float     yOffset = shiftY;

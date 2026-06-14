@@ -46,7 +46,7 @@ bool clientIPallowed()
 
   if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
     response += F(" Allowed: ");
-    response += ESPEasy::net::describeAllowedIPrange();
+    response += ESPEasy::net::describeAllowedIPrange(remoteIP);
     addLogMove(LOG_LEVEL_ERROR, response);
   }
   return false;

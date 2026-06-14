@@ -230,14 +230,7 @@ bool NWPlugin_002(NWPlugin::Function function, EventStruct *event, String& strin
 
         // FIXME TD-er: Do we allow to set the subnetmask for AP to anything else?
         const IPAddress subnet(255, 255, 255, 0);
-        const IPAddress localIP = WiFi.softAPIP();
-        bool success            = true;
-
-        for (uint8_t i = 0; success && i < 4; ++i) {
-          if ((localIP[i] & subnet[i]) != (client_ip[i] & subnet[i])) {
-            success = false;
-          }
-        }
+        success = NWPlugin::IP_in_subnet(WiFi.softAPIP(), client_ip, subnet);
       }
       break;
     }
