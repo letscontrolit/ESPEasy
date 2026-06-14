@@ -11,8 +11,9 @@
 
 # include <ESPeasySerial.h>
 # include "../Helpers/Modbus_mgr.h"
+# include "Modbus_mgr.h"
 
-////# define MODBUS_DEBUG
+# define MODBUS_DEBUG
 # ifdef BUILD_NO_DEBUG
 #  undef MODBUS_DEBUG // Debugging switched off
 # endif // ifdef BUILD_NO_DEBUG
@@ -118,37 +119,33 @@ bool ModbusMGR_struct::initialize()
 // Connect a Modbus device to a Modbus link. A unique device ID is assigned to the device.
 // Returns a pointer to the Modbus link object and the assigned device ID if connection is successful, otherwise returns false.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-bool ModbusMGR_struct::connect(int linkId, ModbusLINK_struct **link, uint8_t *deviceID)
+bool ModbusMGR_struct::connect(int linkId, ModbusDEVICE_struct *device)
 {
+  bool returnValue = false;
+
   # ifdef MODBUS_DEBUG
-  String log = F("Modbus: Manager, Connect linkId=");
-  log += linkId;
+  String log = strformat(F("Modbus Manager: Connect device= %p to linkId=%d"), device, linkId);
   # endif // ifdef MODBUS_DEBUG
 
-  initialize();   // TODO Initialization sequence to be refactored.
+  initialize(); // TODO Initialization sequence to be refactored.
 
-  *deviceID = -1; // Default to -1, currently not used anymore
-  *link     = nullptr;
-
-  if ((linkId < 0) || (linkId >= MAX_MODBUS_LINKS)) {
+  if ((linkId < 0) || (linkId >= MAX_MODBUS_LINKS) || (_modbus_links[linkId].link == nullptr)) {
     # ifdef MODBUS_DEBUG
-    log += F("Invalid linkId");
+    log += F(" Invalid linkId");
     addLogMove(LOG_LEVEL_ERROR, log);
     # endif // ifdef MODBUS_DEBUG
-    return false;
   }
-
-  if (_modbus_links[linkId].port == ESPEasySerialPort::not_set) {
-    # ifdef MODBUS_DEBUG
+  else if (_modbus_links[linkId].port == ESPEasySerialPort::not_set) {
+      # ifdef MODBUS_DEBUG
     log += F(" No link available at linkIndex= ");
     log += linkId;
     addLogMove(LOG_LEVEL_ERROR, log);
-    # endif // ifdef MODBUS_DEBUG
-    return false;
+      # endif // ifdef MODBUS_DEBUG
   }
-
-  *deviceID = ++_deviceCounter;
-  *link     = _modbus_links[linkId].link;
+  else {
+    // No administration to be done on manager or link side
+    returnValue = true;
+  }
 
   # ifdef MODBUS_DEBUG
   addLogMove(LOG_LEVEL_INFO, log);
@@ -162,18 +159,83 @@ bool ModbusMGR_struct::connect(int linkId, ModbusLINK_struct **link, uint8_t *de
 // Disconnect the Modbus device with the given device ID.
 // If no other devices are using the same link, the link is also deleted.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-bool ModbusMGR_struct::disconnect(uint8_t deviceID) {
-  dumpAdminInfo();
+bool ModbusMGR_struct::disconnect(int linkId, ModbusDEVICE_struct*device) {
+
+  bool returnValue = false;
+
   # ifdef MODBUS_DEBUG
-  String log = F("Modbus: Manager, Disconnect device=");
-  log += deviceID;
+  dumpAdminInfo();
+  String log = strformat(F("Modbus Manager: Disconnect device= %p from linkId= %d "), device, linkId);
   # endif // ifdef MODBUS_DEBUG
 
+  if ((linkId < 0) || (linkId >= MAX_MODBUS_LINKS) || (_modbus_links[linkId].link == nullptr)) {
+    # ifdef MODBUS_DEBUG
+    log += F("Invalid linkId");
+    addLogMove(LOG_LEVEL_ERROR, log);
+    # endif // ifdef MODBUS_DEBUG
+  }
+  else {
+    _modbus_links[linkId].link->freeTransactions(device);
+    returnValue = true;
+  }
 
   # ifdef MODBUS_DEBUG
   addLogMove(LOG_LEVEL_INFO, log);
   # endif // ifdef MODBUS_DEBUG
-  return true;
+  return returnValue;
+}
+
+bool ModbusMGR_struct::newTransaction(int linkId, ModbusDEVICE_struct *device, Modbus_transaction_ptr& transaction)
+{
+  bool returnValue = false;
+
+  # ifdef MODBUS_DEBUG
+  String log = strformat(F("Modbus Manager: New transaction for linkId= %d, device= %p"), linkId, device);
+  # endif // ifdef MODBUS_DEBUG
+
+  if ((linkId < 0) || (linkId >= MAX_MODBUS_LINKS) || (_modbus_links[linkId].link == nullptr)) {
+    # ifdef MODBUS_DEBUG
+    log += F("Invalid linkId");
+    # endif // ifdef MODBUS_DEBUG
+  }
+  else {
+    returnValue = _modbus_links[linkId].link->newTransaction(device, transaction);
+    # ifdef MODBUS_DEBUG
+    log += strformat(F(" Transaction pointer= %p"), transaction);
+    transaction->print(); // Print the transaction details for debugging
+    # endif // ifdef MODBUS_DEBUG
+  }
+
+  # ifdef MODBUS_DEBUG
+  addLogMove(LOG_LEVEL_INFO, log);
+  # endif // ifdef MODBUS_DEBUG
+  return returnValue;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+bool ModbusMGR_struct::queueTransaction(int linkId, Modbus_Transaction *transaction)
+{
+  bool returnValue = false;
+
+  # ifdef MODBUS_DEBUG
+  String log = strformat(F("Modbus Manager: Queue transaction for linkId= %d "), linkId);
+  # endif // ifdef MODBUS_DEBUG
+
+  if ((linkId < 0) || (linkId >= MAX_MODBUS_LINKS) || (_modbus_links[linkId].link == nullptr)) {
+    # ifdef MODBUS_DEBUG
+    log += F("Invalid linkId");
+    addLogMove(LOG_LEVEL_ERROR, log);
+    # endif // ifdef MODBUS_DEBUG
+  }
+  else {
+    returnValue = _modbus_links[linkId].link->queueTransaction(transaction);
+  }
+
+  # ifdef MODBUS_DEBUG
+  addLogMove(LOG_LEVEL_INFO, log);
+  # endif // ifdef MODBUS_DEBUG
+  return returnValue;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -184,7 +246,7 @@ void ModbusMGR_struct::processLinks()
   if (isInitialized()) {
     for (int i = 0; i < MAX_MODBUS_LINKS; i++) {
       if ((_modbus_links[i].link != nullptr)) {
-        _modbus_links[i].link->processCommand(); // Trigger processing of the command queue on the link
+        _modbus_links[i].link->processQueue(); // Trigger processing of the command queue on the link
       }
     }
   }
@@ -195,22 +257,22 @@ void ModbusMGR_struct::processLinks()
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void ModbusMGR_struct::dumpAdminInfo()
 {
-  addLogMove(LOG_LEVEL_INFO, F("Modbus: Manager, Dumping admin info"));
   # ifdef MODBUS_DEBUG
+  addLogMove(LOG_LEVEL_INFO, F("Modbus Manager: Dumping admin info"));
 
   // Iterate over the modbus links and dump their info
   for (int i = 0; i < MAX_MODBUS_LINKS; i++) {
 
     addLogMove(LOG_LEVEL_INFO,
-               strformat(F("Modbus_mgr: Link[%d] Port=%s, RX=%d, TX=%d, Baudrate=%d, DerePin=%d, RS485Mode=%s, CollisionDetect=%s"),
+               strformat(F("Modbus Admin: Link[%d] Port=%s, RX=%d, TX=%d, Baudrate=%d, DerePin=%d, RS485Mode=%s, CollisionDetect=%s"),
                          i,
                          ESPEasySerialPort_toString(_modbus_links[i].port),
                          _modbus_links[i].serial_rx,
                          _modbus_links[i].serial_tx,
                          _modbus_links[i].baudrate,
                          _modbus_links[i].dere_pin,
-                         _modbus_links[i].rs485_mode ? F("Yes") : F("No"),
-                         _modbus_links[i].collision_detect ? F("Yes") : F("No")
+                         FsP(_modbus_links[i].rs485_mode ? F("Yes") : F("No")),
+                         FsP(_modbus_links[i].collision_detect ? F("Yes") : F("No"))
                          ));
   }
 

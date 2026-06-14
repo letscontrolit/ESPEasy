@@ -99,31 +99,31 @@ public:
 private:
 
   uint8_t                  _modbus_address = MODBUS_BROADCAST_ADDRESS;
-  uint8_t                  _linkId         = -1;      // Link index used to identify the Modbus link
+  uint8_t                  _linkId         = 0xFF;    // Link index used to identify the Modbus link
   ModbusLINK_struct       *_modbus_link    = nullptr; // Pointer to the Modbus link object
   uint8_t                  _deviceID       = 0;       // Identifier used by the Modbus manager to identify this device
   uint16_t                 _timeout        = 200;     // Timeout value in milliseconds for Modbus requests
   taskIndex_t              _taskIndex      = 0;       // Task index for sending events to the task associated with this device
   ModbusRegisterSet_struct _registerSet    = {};      // Structure to hold multiple register values for multi-value responses
 
-  void sendEvent(Modbus_Transaction& req,
-                 ModbusResultMessageType     messageType,
-                 int                         par2 = 0,
-                 int                         par3 = 0,
-                 int                         par4 = 0,
-                 int                         par5 = 0,
-                 int                         par6 = 0,
-                 int                         par7 = 0,
-                 int                         par8 = 0);
+  void sendEvent(Modbus_Transaction    & req,
+                 ModbusResultMessageType messageType,
+                 int                     par2 = 0,
+                 int                     par3 = 0,
+                 int                     par4 = 0,
+                 int                     par5 = 0,
+                 int                     par6 = 0,
+                 int                     par7 = 0,
+                 int                     par8 = 0);
 
-  void sendEvent(Modbus_Transaction& req,
-                 ModbusResultMessageType     messageType,
-                 ModbusRegisterSet_struct   *registerSet);
+  void sendEvent(Modbus_Transaction      & req,
+                 ModbusResultMessageType   messageType,
+                 ModbusRegisterSet_struct *registerSet);
 
   void createReadFrame(Modbus_Transaction& request,
-                       uint8_t                     busAddress,
-                       uint16_t                    registerAddress,
-                       uint16_t                    registerCount = 1);
+                       uint8_t             busAddress,
+                       uint16_t            registerAddress,
+                       uint16_t            registerCount = 1);
 
   static uint16_t CalculateCRC(uint8_t *buf,
                                int      len);
@@ -134,4 +134,4 @@ private:
 };
 
 #endif // FEAURE_MODBUS_FAC
-#endif // HELPERS_MODBUS_LINK_H
+#endif // HELPERS_MODBUS_DEVICE_H

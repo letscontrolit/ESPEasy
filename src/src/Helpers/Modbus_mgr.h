@@ -9,6 +9,8 @@
 # include "../Helpers/Modbus_link.h"
 # include "../Helpers/_ESPEasy_key_value_store.h"
 
+// Forward declaration of ModbusDEVICE_struct to avoid circular dependency issues
+struct ModbusDEVICE_struct;
 
 // ModbusMGR structure representing the singleton Modbus Management entity
 // Thw manager has an overview of all Modbus links and the conneted devices.
@@ -20,14 +22,21 @@ typedef struct ModbusMGR_struct  {
   ~ModbusMGR_struct();
 
   bool initialize();
-
-  bool connect(int                 linkId,
-               ModbusLINK_struct **link,
-               uint8_t            *deviceID);
-
-  bool disconnect(uint8_t deviceID);
-
   void processLinks();
+
+  bool connect(int                  linkId,
+               ModbusDEVICE_struct *deviceID);
+
+  bool disconnect(int                 linkId,
+                  ModbusDEVICE_struct*deviceID);
+
+  bool newTransaction(int                   linkId,
+                      ModbusDEVICE_struct  *device,
+                      Modbus_transaction_ptr &transaction);
+
+  bool queueTransaction(int                 linkId,
+                        Modbus_Transaction *transaction);
+
 
   void dumpAdminInfo();
 
@@ -38,7 +47,7 @@ typedef struct ModbusMGR_struct  {
 
 private:
 
-  static const int MAX_MODBUS_LINKS   = 4;  // Maximum number of Modbus links supported
+  static const int MAX_MODBUS_LINKS = 4; // Maximum number of Modbus links supported
 
   // Structure representing the information of a Modbus link as managed by the Modbus_mgr
   // Includes associated ModbusLINK object, link configuration and config storage

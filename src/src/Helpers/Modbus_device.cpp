@@ -27,12 +27,8 @@ const uint8_t MODBUS_WRITE_MULTIPLE_REGISTERS = 0x10;
 // Destructor of the Modbus device class
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ModbusDEVICE_struct::~ModbusDEVICE_struct() {
-  if (_modbus_link != nullptr) {
-    _modbus_link->freeTransactions(this); // Make sure all queued transactions for this device are freed to prevent callbacks to a
-                                          // destructed object
-  }
-  ModbusMGR_singleton.disconnect(_deviceID);
-  _modbus_link    = nullptr;
+
+  ModbusMGR_singleton.disconnect(_linkId, this);
   _deviceID       = 0;
   _modbus_address = MODBUS_BROADCAST_ADDRESS;
 }
@@ -41,12 +37,8 @@ ModbusDEVICE_struct::~ModbusDEVICE_struct() {
 // Reset the Modbus device class to initial state
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void ModbusDEVICE_struct::reset() {
-  if (_modbus_link != nullptr) {
-    _modbus_link->freeTransactions(this); // Make sure all queued transactions for this device are freed to prevent callbacks to a
-                                          // destructed object
-  }
-  ModbusMGR_singleton.disconnect(_deviceID);
-  _modbus_link    = nullptr;
+
+  ModbusMGR_singleton.disconnect(_linkId, this);
   _deviceID       = 0;
   _modbus_address = MODBUS_BROADCAST_ADDRESS;
 }
@@ -56,11 +48,12 @@ void ModbusDEVICE_struct::reset() {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool ModbusDEVICE_struct::init(uint8_t slaveAddress, int linkId, taskIndex_t taskIndex)
 {
-  bool success = ModbusMGR_singleton.connect(linkId, &_modbus_link, &_deviceID);
+  bool success = ModbusMGR_singleton.connect(linkId, this);
 
   _modbus_address = slaveAddress;
   _taskIndex      = taskIndex;
   _linkId         = linkId;
+
   # ifdef MODBUS_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -76,7 +69,7 @@ bool ModbusDEVICE_struct::init(uint8_t slaveAddress, int linkId, taskIndex_t tas
 // Checker for device class initialization status
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool ModbusDEVICE_struct::isInitialized() const {
-  return (_modbus_link != nullptr) && (_modbus_link->isInitialized());
+  return (_linkId >= 0);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -103,17 +96,18 @@ bool ModbusDEVICE_struct::readHoldingRegister(uint16_t          address,
   if (!isInitialized()) {
     return false;
   }
-  Modbus_Transaction *request = new (std::nothrow) Modbus_Transaction(this,
-                                                                                      ModbusTransactionType::READ_HOLDING_REGISTERS,
-                                                                                      0,
-                                                                                      valuePtr,
-                                                                                      statePtr);
+  Modbus_Transaction *transaction = nullptr; // Declare the request pointer
+  ModbusMGR_singleton.newTransaction(_linkId, this, transaction);
 
-  if (request == nullptr) {
-    return false;                                // Failed to allocate a request structure
+  if (transaction == nullptr) {
+    return false;                                                // Failed to allocate a request structure
   }
-  createReadFrame(*request, _modbus_address, address);
-  (void)_modbus_link->queueTransaction(request); // Transaction is now owned by the Modbus link
+  transaction->_messageType  = ModbusTransactionType::READ_HOLDING_REGISTERS;
+  transaction->_userId      = 0; // Not used for this type of request
+  transaction->_userData    = valuePtr; 
+  transaction->_userState   = statePtr;
+  createReadFrame(*transaction, _modbus_address, address);
+  (void)ModbusMGR_singleton.queueTransaction(_linkId, transaction ); // Transaction is now owned by the Modbus link
   return true;
 }
 
@@ -139,17 +133,19 @@ bool ModbusDEVICE_struct::readModuleHoldingRegister(uint8_t  busAddress,
   if (!isInitialized()) {
     return false;
   }
-  Modbus_Transaction *request = new (std::nothrow) Modbus_Transaction(this,
-                                                                                      ModbusTransactionType::READ_HOLDING_REGISTERS,
-                                                                                      uid,
-                                                                                      nullptr,
-                                                                                      nullptr);
 
-  if (request == nullptr) {
-    return false;                                // Failed to allocate a request structure
+  Modbus_Transaction *transaction = nullptr; // Declare the request pointer
+  ModbusMGR_singleton.newTransaction(_linkId, this, transaction);
+
+  if (transaction == nullptr) {
+    return false;                                                // Failed to allocate a request structure
   }
-  createReadFrame(*request, busAddress, registerAddress);
-  (void)_modbus_link->queueTransaction(request); // Transaction is now owned by the Modbus link
+  transaction->_messageType  = ModbusTransactionType::READ_HOLDING_REGISTERS;
+  transaction->_userId      = uid; 
+  transaction->_userData    = nullptr; 
+  transaction->_userState   = nullptr;
+  createReadFrame(*transaction, busAddress, registerAddress);
+  (void)ModbusMGR_singleton.queueTransaction(_linkId, transaction ); // Transaction is now owned by the Modbus link
   return true;
 }
 
@@ -162,17 +158,19 @@ bool ModbusDEVICE_struct::readHoldingRegisters(uint16_t address, uint16_t size, 
   if (!isInitialized()) {
     return false;
   }
-  Modbus_Transaction *request = new (std::nothrow) Modbus_Transaction(this,
-                                                                                      ModbusTransactionType::READ_HOLDING_REGISTERS,
-                                                                                      uid,
-                                                                                      nullptr,
-                                                                                      nullptr);
 
-  if (request == nullptr) {
-    return false;                                // Failed to allocate a request structure
+  Modbus_Transaction *transaction = nullptr; // Declare the request pointer
+  ModbusMGR_singleton.newTransaction(_linkId, this, transaction);
+
+  if (transaction == nullptr) {
+    return false;                                                // Failed to allocate a request structure
   }
-  createReadFrame(*request, _modbus_address, address, size);
-  (void)_modbus_link->queueTransaction(request); // Transaction is now owned by the Modbus link
+  transaction->_messageType  = ModbusTransactionType::READ_HOLDING_REGISTERS;
+  transaction->_userId      = uid; 
+  transaction->_userData    = nullptr; 
+  transaction->_userState   = nullptr;
+  createReadFrame(*transaction, _modbus_address, address, size);
+  (void)ModbusMGR_singleton.queueTransaction(_linkId, transaction ); // Transaction is now owned by the Modbus link
   return true;
 }
 
@@ -180,9 +178,9 @@ bool ModbusDEVICE_struct::readHoldingRegisters(uint16_t address, uint16_t size, 
 // Construct a Modbus read holding registers message
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void ModbusDEVICE_struct::createReadFrame(Modbus_Transaction& request,
-                                          uint8_t                     busAddress,
-                                          uint16_t                    registerAddress,
-                                          uint16_t                    registerCount)
+                                          uint8_t             busAddress,
+                                          uint16_t            registerAddress,
+                                          uint16_t            registerCount)
 {
   request._messageType  = ModbusTransactionType::READ_HOLDING_REGISTERS;
   request._sendframe[0] = busAddress;
@@ -209,24 +207,31 @@ bool ModbusDEVICE_struct::writeSingleRegister(uint16_t           address,
   if (!isInitialized()) {
     return false;
   }
-  Modbus_Transaction *request = new (std::nothrow) Modbus_Transaction(this,
-                                                                                      ModbusTransactionType::WRITE_SINGLE_REGISTER,
-                                                                                      0,
-                                                                                      nullptr,
-                                                                                      statePtr);
+  
+  Modbus_Transaction *transaction = nullptr; // Declare the request pointer
+  ModbusMGR_singleton.newTransaction(_linkId, this, transaction);
 
-  request->_sendframe[0] = _modbus_address;
-  request->_sendframe[1] = MODBUS_WRITE_SINGLE_REGISTER;
-  request->_sendframe[2] = highByte(address);
-  request->_sendframe[3] = lowByte(address);
-  request->_sendframe[4] = highByte(value);
-  request->_sendframe[5] = lowByte(value);
-  uint16_t crc = CalculateCRC(request->_sendframe, 6);
-  request->_sendframe[6]     = lowByte(crc);  // CRC low byte
-  request->_sendframe[7]     = highByte(crc); // CRC high byte
-  request->_sendframe_length = 8;             // Size with CRC
-  request->_rcvframe_length  = 8;             // Expect 8 bytes in response
-  (void)_modbus_link->queueTransaction(request);
+  if (transaction == nullptr) {
+    return false;                                                // Failed to allocate a request structure
+  }
+  transaction->_messageType  = ModbusTransactionType::WRITE_SINGLE_REGISTER;
+  transaction->_userId      = 0; // Not used for this type of request
+  transaction->_userData    = nullptr; 
+  transaction->_userState   = statePtr;
+
+
+  transaction->_sendframe[0] = _modbus_address;
+  transaction->_sendframe[1] = MODBUS_WRITE_SINGLE_REGISTER;
+  transaction->_sendframe[2] = highByte(address);
+  transaction->_sendframe[3] = lowByte(address);
+  transaction->_sendframe[4] = highByte(value);
+  transaction->_sendframe[5] = lowByte(value);
+  uint16_t crc = CalculateCRC(transaction->_sendframe, 6);
+  transaction->_sendframe[6]     = lowByte(crc);  // CRC low byte
+  transaction->_sendframe[7]     = highByte(crc); // CRC high byte
+  transaction->_sendframe_length = 8;             // Size with CRC
+  transaction->_rcvframe_length  = 8;             // Expect 8 bytes in response
+  (void)ModbusMGR_singleton.queueTransaction(_linkId, transaction); // Transaction is now owned by the Modbus link
   *statePtr = ModbusResultState::Busy;
 
   return true;
@@ -239,7 +244,7 @@ bool ModbusDEVICE_struct::writeSingleRegister(uint16_t           address,
 void ModbusDEVICE_struct::processCommand(void)
 {
   if (isInitialized()) {
-    _modbus_link->processCommand();
+    ModbusMGR_singleton.processLinks();
   }
 }
 
@@ -373,15 +378,15 @@ void ModbusDEVICE_struct::linkCallback(Modbus_Transaction *req)
 // This is used by the Modbus link to notify the device of responses received for queued requests.
 // This version of the function is used to pass data through parameters in the event.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void ModbusDEVICE_struct::sendEvent(Modbus_Transaction& req,
-                                    ModbusResultMessageType     messageType,
-                                    int                         par2,
-                                    int                         par3,
-                                    int                         par4,
-                                    int                         par5,
-                                    int                         par6,
-                                    int                         par7,
-                                    int                         par8)
+void ModbusDEVICE_struct::sendEvent(Modbus_Transaction    & req,
+                                    ModbusResultMessageType messageType,
+                                    int                     par2,
+                                    int                     par3,
+                                    int                     par4,
+                                    int                     par5,
+                                    int                     par6,
+                                    int                     par7,
+                                    int                     par8)
 {
   struct EventStruct TempEvent;
 
@@ -406,9 +411,9 @@ void ModbusDEVICE_struct::sendEvent(Modbus_Transaction& req,
 // This is used by the Modbus link to notify the device of responses received for queued requests.
 // This version of the function is used to pass multiple register values in a ModbusRegisterSet_struct.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void ModbusDEVICE_struct::sendEvent(Modbus_Transaction& req,
-                                    ModbusResultMessageType     messageType,
-                                    ModbusRegisterSet_struct   *registerSet)
+void ModbusDEVICE_struct::sendEvent(Modbus_Transaction      & req,
+                                    ModbusResultMessageType   messageType,
+                                    ModbusRegisterSet_struct *registerSet)
 {
   struct EventStruct TempEvent;
 
