@@ -181,6 +181,19 @@ Options
 
 * **Delay to next scroll-start**: Set a (non-blocking) delay after a scroll is completed (display is empty), before the next scroll is started. Range 0 to 10 minutes, in 0.1 second steps.
 
+Circular scroll options
+~~~~~~~~~~~~~~~~~~~~~~~
+
+(Section is collapsed by default when Circular scroll is not enabled)
+
+* **Circular scroll**: If the **Scroll text > display width** option is enabled, and also this checkbox is checked, the content set with ``7dtext`` or ``7dbin`` commands will be scrolled continuously (circular), with an optional separator.
+
+* **Separator character**: Choose the desired separator character, space, ``-``, ``/``, ``|`` or ``\``. Default is a space.
+
+* **Nr. of separator characters**: Choose from 0 to 15 separator characters, default 1.
+
+* **Wrap separator with spaces**: When checked, the number of separator characters is wrapped with a space before and after. Example when enabled, content is 'some text' and the separator is a dash: ``some text - some text``
+
 (The Scroll options and feature are not included in some builds for size reasons)
 
 
