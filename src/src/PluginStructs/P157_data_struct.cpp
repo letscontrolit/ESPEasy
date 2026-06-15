@@ -74,6 +74,15 @@ bool P157_data_struct::init(struct EventStruct *event)
   scrollAll    = bitRead(P157_CFG_FLAGS, P157_OPTION_SCROLL_ALL);
   scrollDelay  = P157_CFG_SCROLLDELAY;
   setScrollSpeed(P157_CFG_SCROLLSPEED);
+
+  #  if P157_SCROLL_CIRCULAR
+  scrollCircular    = P157_GET_CIRCULAR_SCROLL;
+  circularSeparator = (char)P157_GET_CIRCULAR_SEPARATOR;
+  circularCharCount = P157_GET_SEPARATOR_COUNT;
+  circularWrapSpace = P157_GET_SEPARATOR_WRAP;
+
+  if (scrollCircular) { scrollDelay = 0; } // No delay when using Serpentine scroll
+  #  endif // if P157_SCROLL_CIRCULAR
   # endif // if P157_SCROLL_TEXT
   suppressLeading0 = bitRead(P157_CFG_FLAGS, P157_OPTION_SUPPRESS0);
   timesep          = true;
@@ -384,7 +393,8 @@ int P157_data_struct::getEffectiveTextLength(const String& text) {
 # if P157_SCROLL_TEXT
 
 bool P157_data_struct::nextScroll() {
-  bool result = false;
+  bool result      = false;
+  uint16_t maxPart = bufLen;
 
   if (scrollWait && (--scrollWait > 0)) {
     return result;
@@ -406,7 +416,13 @@ bool P157_data_struct::nextScroll() {
       if (binData.size() > 0) {
         scrollPos++;
 
-        if (scrollPos > (binData.size() - bufLen)) {
+        if (scrollPos > binData.size() -
+            (
+              #   if P157_SCROLL_CIRCULAR
+              scrollCircular ? 1 :
+              #   endif
+              bufLen)
+            ) {
           scrollPos  = 0;           // Redisplay
           scrollWait = scrollDelay; // Restart delay counter
         }
@@ -422,9 +438,27 @@ bool P157_data_struct::nextScroll() {
 
         String part = _textToScroll.substring(scrollPos, scrollPos + 1.5 * bufLen);
 
-        while (getEffectiveTextLength(part) > bufLen && !part.isEmpty()) {
+        #  if P157_SCROLL_CIRCULAR
+
+        if (scrollCircular) {
+          maxPart = _textToScroll.length();
+        }
+        #  endif // if P157_SCROLL_CIRCULAR
+
+        while (getEffectiveTextLength(part) > maxPart && !part.isEmpty()) {
           part = part.substring(0, part.length() - 1);
         }
+
+        #  if P157_SCROLL_CIRCULAR
+
+        if (scrollCircular) {
+          while (part.length() < bufLen) {
+            for (uint16_t i = 0; i < _textToScroll.length() && part.length() < bufLen; ++i) {
+              part += _textToScroll.charAt(i);
+            }
+          }
+        }
+        #  endif // if P157_SCROLL_CIRCULAR
 
         for (uint16_t i = 0; i < bufLen && i < part.length(); ++i) {
           showbuffer[i] = part.charAt(i);
@@ -432,7 +466,13 @@ bool P157_data_struct::nextScroll() {
 
         scrollPos++;
 
-        if (scrollPos > _textToScroll.length() - bufLen) {
+        if (scrollPos > _textToScroll.length() -
+            (
+              #  if P157_SCROLL_CIRCULAR
+              scrollCircular ? 1 :
+              #  endif
+              bufLen)
+            ) {
           scrollPos  = 0;           // Restart when all text displayed
           scrollWait = scrollDelay; // Restart delay counter
         }
@@ -450,15 +490,32 @@ void P157_data_struct::setTextToScroll(const String& text) {
   free_string(_textToScroll);
 
   if (!text.isEmpty()) {
-    _textToScroll.reserve(text.length() + bufLen + (scrollFull ? bufLen : 0));
+    #  if P157_SCROLL_CIRCULAR
 
-    for (int i = 0; scrollFull && i < bufLen; ++i) { // Scroll text in from the right, so start with all spaces
-      _textToScroll += ' ';
-    }
-    _textToScroll += text;
+    if (scrollCircular) {
+      _textToScroll.reserve(text.length() + circularCharCount + (circularWrapSpace ? 2 : 0));
+      _textToScroll = text;
 
-    for (int i = 0; i < bufLen; ++i) { // Scroll text off completely before restarting
-      _textToScroll += ' ';
+      if (circularWrapSpace) { _textToScroll += ' '; }
+
+      for (uint8_t i = 0; i < circularCharCount; ++i) {
+        _textToScroll += circularSeparator;
+      }
+
+      if (circularWrapSpace) { _textToScroll += ' '; }
+    } else
+    #  endif // if P157_SCROLL_CIRCULAR
+    {
+      _textToScroll.reserve(text.length() + bufLen + (scrollFull ? bufLen : 0));
+
+      for (int i = 0; scrollFull && i < bufLen; ++i) { // Scroll text in from the right, so start with all spaces
+        _textToScroll += ' ';
+      }
+      _textToScroll += text;
+
+      for (int i = 0; i < bufLen; ++i) { // Scroll text off completely before restarting
+        _textToScroll += ' ';
+      }
     }
   }
   scrollCount = _scrollSpeed;
@@ -491,6 +548,8 @@ void P157_data_struct::logBufferContent(String prefix) {
       log += ',';
       log += showperiods[i] ? F(".") : F("");
     }
+    log += 's';
+    log += scrollPos;
     addLogMove(LOG_LEVEL_INFO, log);
   }
 }
@@ -514,12 +573,28 @@ void P157_data_struct::printBuffer() {
       String log;
       #  endif // ifdef P157_DEBUG
 
-      for (uint16_t j = 0; j < bufLen && (scrollPos + j) < binData.size(); ++j) {
-        ht16k33->writeLowLevel(j, binData[scrollPos + j]);
-        #  ifdef P157_DEBUG
-        log += formatToHex(binData[scrollPos + j]);
-        log += ',';
-        #  endif // ifdef P157_DEBUG
+      uint16_t j = 0;
+      #  if P157_SCROLL_CIRCULAR
+      uint16_t k = 0;
+      #  endif
+
+      for (; j < bufLen; ++j) {
+        if ((scrollPos + j) < binData.size()) {
+          ht16k33->writeLowLevel(j, binData[scrollPos + j]);
+          #  ifdef P157_DEBUG
+          log += formatToHex(binData[scrollPos + j]);
+          log += ',';
+          #  endif // ifdef P157_DEBUG
+        }
+        #  if P157_SCROLL_CIRCULAR
+
+        else if (scrollCircular) {
+          ht16k33->writeLowLevel(j, binData[k]);
+          ++k;
+
+          if (k >= binData.size()) { k = 0; }
+        }
+        #  endif // if P157_SCROLL_CIRCULAR
       }
       #  ifdef P157_DEBUG
 
@@ -1056,7 +1131,11 @@ bool P157_data_struct::plugin_write_7dtext(const String& text) {
   _lastArgument = text;
   setTextToScroll(EMPTY_STRING);
 
-  setScrollEnabled(scrollAll || getEffectiveTextLength(text) > bufLen);
+  setScrollEnabled(
+    #  if P157_SCROLL_CIRCULAR
+    scrollCircular ||
+    #  endif
+    scrollAll || getEffectiveTextLength(text) > bufLen);
 
   if (isScrollEnabled()) {
     setTextToScroll(text);
@@ -1114,8 +1193,8 @@ bool P157_data_struct::plugin_write_7dbin(const String& text,
     scrollPos = 0;
 
     uint32_t wordValue{};
-    uint8_t  arg      = 1;
-    String   argValue = parseStringKeepCaseNoTrim(text, offset + arg);
+    uint8_t  arg      = offset + 1;
+    String   argValue = parseStringKeepCaseNoTrim(text, arg);
 
     while (!argValue.isEmpty()) {
       NumericalType numType;
@@ -1167,22 +1246,53 @@ bool P157_data_struct::plugin_write_7dbin(const String& text,
         }
       }
       arg++;
-      argValue = parseStringKeepCaseNoTrim(text, offset + arg);
+      argValue = parseStringKeepCaseNoTrim(text, arg);
     }
 
     if (binData.size() > 0) {
       #  if P157_SCROLL_TEXT
-      setScrollEnabled(scrollAll || binData.size() > bufLen);
+      setScrollEnabled(
+        #   if P157_SCROLL_CIRCULAR
+        scrollCircular ||
+        #   endif
+        scrollAll || binData.size() > bufLen);
 
       if (isScrollEnabled()) {
-        uint8_t i = 0;
+        #   if P157_SCROLL_CIRCULAR
 
-        for (; scrollFull && i < bufLen; ++i) { // prepend to start display empty
-          binData.insert(binData.begin(), 0);
-        }
+        if (scrollCircular) {
+          uint16_t bitmap;
 
-        for (i = 0; i < bufLen; ++i) { // append empty to scroll until empty
-          binData.push_back(0);
+          if (circularWrapSpace) { binData.push_back(0); }
+          #    if P157_EXTRA_FONTS
+
+          if (P157_is7SegmentDisplay(displayModel)) {
+            // Re-use the fonts from P073, but they use the MAX7219 layout, that has bits 0..6 reverted
+            bitmap = P073_revert7bits(P073_getFontChar(P073_mapCharToFontPosition(circularSeparator, fontSet), fontSet));
+
+          } else
+          #    endif // if P157_EXTRA_FONTS
+          {
+            bitmap = ht16k33->getCharacterBitmap(circularSeparator);
+          }
+
+          for (uint8_t i = 0; i < circularCharCount; ++i) {
+            binData.push_back(bitmap);
+          }
+
+          if (circularWrapSpace) { binData.push_back(0); }
+        } else
+        #   endif // if P157_SCROLL_CIRCULAR
+        {
+          uint8_t i = 0;
+
+          for (; scrollFull && i < bufLen; ++i) { // prepend to start display empty
+            binData.insert(binData.begin(), 0);
+          }
+
+          for (i = 0; i < bufLen; ++i) { // append empty to scroll until empty
+            binData.push_back(0);
+          }
         }
       } else
       #  endif // if P157_SCROLL_TEXT

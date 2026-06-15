@@ -30,6 +30,7 @@
 //
 
 /** History
+ * 2026-06-14 tonhuisman: Add Circular scroll option, guarded with define P157_SCROLL_CIRCULAR, settings collapsed by default
  * 2026-06-13 tonhuisman: Add Scroll Always option to also scroll content <= display width
  *                        Add Zero with slash option
  *                        Add Delay to next scroll-start option
@@ -76,6 +77,9 @@ boolean Plugin_157(uint8_t function, struct EventStruct *event, String& string) 
       uint32_t lSettings{};
       bitWrite(lSettings, P157_OPTION_ZEROSLASH, true); // Enable zero with slash by default
       P157_CFG_FLAGS = lSettings;
+      # if P157_SCROLL_TEXT && P157_SCROLL_CIRCULAR
+      P157_SET_SEPARATOR_COUNT(1);
+      # endif
       break;
     }
 
@@ -168,6 +172,36 @@ boolean Plugin_157(uint8_t function, struct EventStruct *event, String& string) 
       addUnit(F("1..600 = 0.1..60 sec/step"));
       addFormNumericBox(F("Delay to next scroll-start"), F("scrolldelay"), P157_CFG_SCROLLDELAY, 0, 6000);
       addUnit(F("0.1 sec"));
+
+      #  if P157_SCROLL_CIRCULAR
+      {
+        addFormDetailsStart(F("Circular scroll options"), P157_GET_CIRCULAR_SCROLL);
+        addFormCheckBox(F("Circular scroll"), F("sc_cir"), P157_GET_CIRCULAR_SCROLL);
+        const __FlashStringHelper *sepChars[] = {
+          F("(Space)"),
+          F("-"),
+          F("/"),
+          F("|"),
+          F("\\"),
+        };
+        const int sepCharOptions[] = {
+          ' ',
+          '-',
+          '/',
+          '|',
+          '\\',
+        };
+
+        if (0 == P157_GET_CIRCULAR_SEPARATOR) { P157_SET_CIRCULAR_SEPARATOR(sepCharOptions[0]); }
+
+        constexpr size_t optionCount = NR_ELEMENTS(sepCharOptions);
+        const FormSelectorOptions selector(optionCount, sepChars, sepCharOptions);
+        selector.addFormSelector(F("Separator character"), F("sep_char"), P157_GET_CIRCULAR_SEPARATOR);
+        addFormNumericBox(F("Nr. of separator characters"), F("sep_cnt"), P157_GET_SEPARATOR_COUNT, 0, 15);
+        addFormCheckBox(F("Wrap separator with spaces"), F("sc_wrap"), P157_GET_SEPARATOR_WRAP);
+        addFormDetailsEnd();
+      }
+      #  endif // if P157_SCROLL_CIRCULAR
       # endif // if P157_SCROLL_TEXT
 
       // addFormCheckBox(F("Right-align Temperature (7dt)"), F("temp_rightalign"), bitRead(P157_CFG_FLAGS, P157_OPTION_RIGHTALIGN));
@@ -210,6 +244,13 @@ boolean Plugin_157(uint8_t function, struct EventStruct *event, String& string) 
       bitWrite(lSettings, P157_OPTION_SUPPRESS0, isFormItemChecked(F("supp0")));
       # endif // if P157_SUPPRESS_ZERO
       P157_CFG_FLAGS = lSettings;
+
+      # if P157_SCROLL_CIRCULAR
+      P157_SET_CIRCULAR_SCROLL(isFormItemChecked(F("sc_cir")));
+      P157_SET_CIRCULAR_SEPARATOR(getFormItemInt(F("sep_char")));
+      P157_SET_SEPARATOR_COUNT(getFormItemInt(F("sep_cnt")));
+      P157_SET_SEPARATOR_WRAP(isFormItemChecked(F("sc_wrap")));
+      # endif // if P157_SCROLL_CIRCULAR
 
       success = true;
       break;

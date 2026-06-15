@@ -39,9 +39,22 @@
 # define P157_OPTION_SCROLLFULL  4 // Scroll text from the right in, starting with a blank display
 # define P157_OPTION_SUPPRESS0   5 // Suppress leading zero on day/hour of Date/Time display
 # define P157_OPTION_BLINK_DOT   6 // Use dot on second digit for flashing instead of colon
+# define P157_OPTION_CIRCULAR    7 // Enable circular scrolling (continuous)
+# define P157_OPTION_CIR_SEPAR   8 // 8 bit Separator character
+# define P157_OPTION_CIR_COUNT  16 // 4 bit Separator character count
+# define P157_OPTION_CIR_WRAP   20 // Separator wrap with spaces
+
+# define P157_GET_CIRCULAR_SCROLL    bitRead(P157_CFG_FLAGS, P157_OPTION_CIRCULAR)
+# define P157_SET_CIRCULAR_SCROLL(V) bitWrite(P157_CFG_FLAGS, P157_OPTION_CIRCULAR, V)
+# define P157_GET_CIRCULAR_SEPARATOR    get8BitFromUL(P157_CFG_FLAGS, P157_OPTION_CIR_SEPAR)
+# define P157_SET_CIRCULAR_SEPARATOR(V) set8BitToUL(P157_CFG_FLAGS, P157_OPTION_CIR_SEPAR, V)
+# define P157_GET_SEPARATOR_COUNT    get4BitFromUL(P157_CFG_FLAGS, P157_OPTION_CIR_COUNT)
+# define P157_SET_SEPARATOR_COUNT(V) set4BitToUL(P157_CFG_FLAGS, P157_OPTION_CIR_COUNT, V)
+# define P157_GET_SEPARATOR_WRAP    bitRead(P157_CFG_FLAGS, P157_OPTION_CIR_WRAP)
+# define P157_SET_SEPARATOR_WRAP(V) bitWrite(P157_CFG_FLAGS, P157_OPTION_CIR_WRAP, V)
 
 # ifdef USES_P073
-#  define P157_FEATURE_P073     1  // Use P073 shared functions and fonts when available
+#  define P157_FEATURE_P073     1 // Use P073 shared functions and fonts when available
 # else // ifdef USES_P073
 #  define P157_FEATURE_P073     0
 # endif // ifdef USES_P073
@@ -67,6 +80,9 @@
 # ifndef P157_SCROLL_TEXT
 #  define P157_SCROLL_TEXT      1 // Enable scrolling of 7dtext by default
 # endif // ifndef P157_SCROLL_TEXT
+# ifndef P157_SCROLL_CIRCULAR
+#  define P157_SCROLL_CIRCULAR  1 // Enable continuous scrolling by default
+# endif // ifndef P157_SCROLL_CIRCULAR
 # ifndef P157_7DBIN_COMMAND
 #  define P157_7DBIN_COMMAND    1 // Enable input of binary data via 7dbin,uint8_t,... command
 # endif // ifndef P157_7DBIN_COMMAND
@@ -87,6 +103,10 @@
 #   undef P157_SCROLL_TEXT // Optionally activate if .bin file space is problematic, remove the scrolling text feature
 #   define P157_SCROLL_TEXT     0
 #  endif // if P157_SCROLL_TEXT
+#  if P157_SCROLL_CIRCULAR
+#   undef P157_SCROLL_CIRCULAR // Optionally activate if .bin file space is problematic, remove the circular scrolling feature
+#   define P157_SCROLL_CIRCULAR   0
+#  endif // if P157_SCROLL_CIRCULAR
 #  if P157_7DBIN_COMMAND
 #   undef P157_7DBIN_COMMAND // Optionally activate if .bin file space is problematic, remove the 7dbin command
 #   define P157_7DBIN_COMMAND   0
@@ -119,6 +139,8 @@ public:
   # if P157_SCROLL_TEXT
   bool plugin_ten_per_second(struct EventStruct *event);
   # endif // if P157_SCROLL_TEXT
+
+private:
 
   void printBuffer();
   void fillBufferWithTime(bool    sevendgt_now,
@@ -202,7 +224,12 @@ public:
   bool     scrollAll     = false;
   bool     zeroSlash     = false;
 
-private:
+  #  if P157_SCROLL_CIRCULAR
+  bool    scrollCircular    = false;
+  bool    circularWrapSpace = false;
+  char    circularSeparator{};
+  uint8_t circularCharCount{};
+  #  endif // if P157_SCROLL_CIRCULAR
 
   uint16_t _scrollSpeed = 0;
   # endif // P157_SCROLL_TEXT
@@ -210,8 +237,6 @@ private:
   String _textToScroll;
   # endif // if defined(P157_SCROLL_TEXT) || defined(P157_7DBIN_COMMAND)
   String _lastArgument; // Keep last argument for 7dtext and 7dbin
-
-private:
 
   Noiasca_ht16k33*ht16k33 = nullptr;
   uint8_t         bufLen{};
