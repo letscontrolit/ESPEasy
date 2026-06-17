@@ -5,7 +5,7 @@
 # define PLUGIN_187
 # define PLUGIN_ID_187             187                             // plugin id
 # define PLUGIN_NAME_187           "Generic - Dummy Data Injector" // "Plugin Name" is what will be dislpayed in the selection list
-# define PLUGIN_187_DEBUG          true                            // set to true for extra log info in the debug
+# define PLUGIN_187_DEBUG          false                           // set to true for extra log info in the debug
 
 enum P187_output_options {
   // do not modify order of these, as they are used in the code to determine which output is selected
