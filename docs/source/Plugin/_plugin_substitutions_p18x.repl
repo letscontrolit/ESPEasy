@@ -16,7 +16,7 @@
 .. |P187_type| replace:: :cyan:`Generic`
 .. |P187_typename| replace:: :cyan:`Generic - Dummy Data Injector`
 .. |P187_porttype| replace:: `.`
-.. |P187_status| replace:: :green:`NORMAL`
+.. |P187_status| replace:: :yellow:`COLLECTION H` 
 .. |P187_status_lb| replace:: `.`
 .. |P187_github| replace:: P187_Dummy_Data_Injector.ino
 .. _P187_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P187_Dummy_Data_Injector.ino
