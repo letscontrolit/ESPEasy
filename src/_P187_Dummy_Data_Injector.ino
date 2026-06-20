@@ -7,8 +7,8 @@
 // #################################################################################################
 
 /** Changelog:
+ * 2026-06-19 SuksAe: added P187_data_struct to enable multiple instances of the plugin
  * 2026-06-18 SuksAe: Initial plugin development
- * 2026-06-19 SuksAe: implemented pull request review feedback
  */
 
 # include "src/PluginStructs/P187_data_struct.h"
@@ -17,17 +17,6 @@
 # define PLUGIN_ID_187             187                             // plugin id
 # define PLUGIN_NAME_187           "Generic - Dummy Data Injector" // "Plugin Name" is what will be dislpayed in the selection list
 # define PLUGIN_187_DEBUG          false                           // set to true for extra log info in the debug
-
-enum P187_output_options {
-  // do not modify order of these, as they are used in the code to determine which output is selected
-  P187_OUTPUT_SINUS = 0,
-  P187_OUTPUT_TRAPEZ,
-  P187_OUTPUT_RANDOM,
-
-  // keep as last:
-  P187_NR_OUTPUT_OPTIONS
-
-};
 
 const __FlashStringHelper* Plugin_187_optionname(uint8_t value_nr,
                                                  bool    displayString) {
@@ -45,18 +34,6 @@ const __FlashStringHelper* Plugin_187_optionname(uint8_t value_nr,
   }
   return F("");
 }
-
-// storage for type of output to generate, e.g. sinus or trapezoid
-# define P187_OUTPUT_OPTION_CONFIG_POS    0
-# define P187_OUTPUT_OPTION0_CONFIG       PCONFIG(P187_OUTPUT_OPTION_CONFIG_POS + 0)
-# define P187_OUTPUT_OPTION1_CONFIG       PCONFIG(P187_OUTPUT_OPTION_CONFIG_POS + 1)
-# define P187_OUTPUT_OPTION2_CONFIG       PCONFIG(P187_OUTPUT_OPTION_CONFIG_POS + 2)
-# define P187_OUTPUT_OPTION3_CONFIG       PCONFIG(P187_OUTPUT_OPTION_CONFIG_POS + 3)
-# define P187_OUTPUT_OPTIONx_CONFIG(x)    PCONFIG(P187_OUTPUT_OPTION_CONFIG_POS + x)
-
-// storage for the type of output to generate, e.g. SENSOR_TYPE_SINGLE, ...
-# define P187_OUTPUT_TYPE_INDEX           4
-# define P187_OUTPUT_TYPE                 PCONFIG(P187_OUTPUT_TYPE_INDEX)
 
 boolean Plugin_187(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -319,70 +296,21 @@ boolean Plugin_187(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_READ:
     {
       P187_data_struct *P187_data = static_cast<P187_data_struct *>(getPluginTaskData(event->TaskIndex));
-      if (P187_data == nullptr) {
-        break;
-      }
 
-      const int valueCount = getValueCountFromSensorType(static_cast<Sensor_VType>(P187_OUTPUT_TYPE));
-
-      for (int i = 0; i < valueCount; i++)
-      {
-        switch (P187_OUTPUT_OPTIONx_CONFIG(i))
-        {
-          case P187_OUTPUT_SINUS:
-            UserVar.setFloat(event->TaskIndex, i, P187_data->P187_param[i].param1 + (P187_data->P187_param[i].param0 * sinf((P187_data->P187_time[i] + P187_data->P187_param[i].param3) * PI / 180.0f)));
-            break;
-          case P187_OUTPUT_TRAPEZ:
-
-            if ((P187_data->P187_time[i] * P187_data->P187_param[i].param2 / 360.0f)  < P187_data->P187_param[i].param4) // rising edge
-            {
-              UserVar.setFloat(event->TaskIndex, i,
-                               P187_data->P187_param[i].param1 + ((P187_data->P187_param[i].param0- P187_data->P187_param[i].param1) * (P187_data->P187_time[i] * P187_data->P187_param[i].param2 / 360.0f) / P187_data->P187_param[i].param4));
-            }
-            else if ((P187_data->P187_time[i] * P187_data->P187_param[i].param2 / 360.0f)  < (P187_data->P187_param[i].param4 + P187_data->P187_param[i].param3)) // on level
-            {
-              UserVar.setFloat(event->TaskIndex, i, P187_data->P187_param[i].param0);
-            }
-            else if ((P187_data->P187_time[i] * P187_data->P187_param[i].param2 / 360.0f)  < (P187_data->P187_param[i].param4 + P187_data->P187_param[i].param3 + P187_data->P187_param[i].param5)) // falling edge
-            {
-              UserVar.setFloat(event->TaskIndex, i,
-                               P187_data->P187_param[i].param1 +
-                               ((P187_data->P187_param[i].param0 - P187_data->P187_param[i].param1) *
-                                (1.0f - (((P187_data->P187_time[i] * P187_data->P187_param[i].param2 / 360.0f) - P187_data->P187_param[i].param4 - P187_data->P187_param[i].param3) / P187_data->P187_param[i].param5))));
-            }
-            else // off level
-            {
-              UserVar.setFloat(event->TaskIndex, i, P187_data->P187_param[i].param1);
-            }
-            break;
-          case P187_OUTPUT_RANDOM:
-            UserVar.setFloat(event->TaskIndex, i, P187_data->P187_param[i].param1 + (random(0, 10000) / 10000.0f) * (P187_data->P187_param[i].param0 - P187_data->P187_param[i].param1));
-            break;
-        }
-      }
-
-      success = true;
+      success = (P187_data != nullptr) && P187_data->plugin_read(event);
       break;
     }
 
     case PLUGIN_TEN_PER_SECOND:
     {
       P187_data_struct *P187_data = static_cast<P187_data_struct *>(getPluginTaskData(event->TaskIndex));
-      if (P187_data == nullptr) {
-        break;
+      
+      if (nullptr != P187_data) {
+        if (P187_data->loop(event)) {
+          success = true;
+        }
       }
 
-      const int valueCount = getValueCountFromSensorType(static_cast<Sensor_VType>(P187_OUTPUT_TYPE));
-
-      for (int i = 0; i < valueCount; i++)
-      {
-        if (P187_data->P187_param[i].param2) // check for period value != 0
-          P187_data->P187_time[i] += 36.0f / P187_data->P187_param[i].param2; // advance time for each output channel
-
-        if (P187_data->P187_time[i] > 360.0f) // timer range is 0 - 360 (convenient for sinus output)
-          P187_data->P187_time[i] -= 360.0f;  // so wrap around after one period
-      }
-      success = true;
       break;
     }
 
@@ -391,14 +319,7 @@ boolean Plugin_187(uint8_t function, struct EventStruct *event, String& string)
       initPluginTaskData(event->TaskIndex, new (std::nothrow) P187_data_struct());
       P187_data_struct *P187_data = static_cast<P187_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      success = (nullptr != P187_data);
-      if (success)
-      {
-        LoadCustomTaskSettings(event->TaskIndex, (uint8_t *)&(P187_data->P187_param), sizeof(P187_data->P187_param));  // load configuration from flash
-
-        for (int i = 0; i < VARS_PER_TASK; i++)
-          P187_data->P187_time[i] = 0.0f;   // initialize time
-      }
+      success = (nullptr != P187_data) && P187_data->init(event);
       break;
     }
 
