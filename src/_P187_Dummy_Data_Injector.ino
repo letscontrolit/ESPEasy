@@ -7,6 +7,7 @@
 // #################################################################################################
 
 /** Changelog:
+ * 2026-06-21 SuksAe: moved time handling into P187_data_struct::plugin_read, replacing PLUGIN_TEN_PER_SECOND call
  * 2026-06-19 SuksAe: added P187_data_struct to enable multiple instances of the plugin
  * 2026-06-18 SuksAe: Initial plugin development
  */
@@ -45,21 +46,22 @@ boolean Plugin_187(uint8_t function, struct EventStruct *event, String& string)
     {
 
       auto& dev = Device[++deviceCount];
-      dev.Number         = PLUGIN_ID_187;                  // Plugin ID number.   (PLUGIN_ID_187)
-      dev.Type           = DEVICE_TYPE_DUMMY;              // How the device is connected. e.g. DEVICE_TYPE_SINGLE => connected through 1
-                                                           // datapin
-      dev.VType          = Sensor_VType::SENSOR_TYPE_QUAD; // Type of value the plugin will return. e.g. SENSOR_TYPE_STRING
-      dev.ValueCount     = 4;                              // The number of output values of a plugin. The value should match the number of
-                                                           // keys PLUGIN_VALUENAME1_187
-      dev.OutputDataType = Output_Data_type_t::All;        // Subset of selectable output data types  (Default = no selection)
-      dev.FormulaOption  = true;                           // Allow to enter a formula to convert values during read. (not possible with
-                                                           // Custom enabled)
-      dev.SendDataOption = true;                           // Allow to send data to a controller.
-      dev.TimerOption    = true;                           // Allow to set the "Interval" timer for the plugin.
-      dev.TimerOptional  = true;                           // When taskdevice timer is not set and not optional, use default "Interval"
-                                                           // delay (Settings.Delay)
-      dev.PluginStats    = true;                           // Support for PluginStats to record last N task values, show charts etc.
-      dev.CustomVTypeVar = true;                           // Enable to allow the user to configure the Sensor_VType per Value that's available for the plugin
+      dev.Number = PLUGIN_ID_187;                      // Plugin ID number.   (PLUGIN_ID_187)
+      dev.Type   = DEVICE_TYPE_DUMMY;                  // How the device is connected. e.g. DEVICE_TYPE_SINGLE => connected through 1
+                                                       // datapin
+      dev.VType      = Sensor_VType::SENSOR_TYPE_QUAD; // Type of value the plugin will return. e.g. SENSOR_TYPE_STRING
+      dev.ValueCount = 4;                              // The number of output values of a plugin. The value should match the number of
+                                                       // keys PLUGIN_VALUENAME1_187
+      dev.OutputDataType = Output_Data_type_t::All;    // Subset of selectable output data types  (Default = no selection)
+      dev.FormulaOption  = true;                       // Allow to enter a formula to convert values during read. (not possible with
+                                                       // Custom enabled)
+      dev.SendDataOption = true;                       // Allow to send data to a controller.
+      dev.TimerOption    = true;                       // Allow to set the "Interval" timer for the plugin.
+      dev.TimerOptional  = true;                       // When taskdevice timer is not set and not optional, use default "Interval"
+                                                       // delay (Settings.Delay)
+      dev.PluginStats    = true;                       // Support for PluginStats to record last N task values, show charts etc.
+      dev.CustomVTypeVar = true;                       // Enable to allow the user to configure the Sensor_VType per Value that's available
+                                                       // for the plugin
       dev.MqttStateClass = true;
 
       break;
@@ -107,31 +109,31 @@ boolean Plugin_187(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_SET_DEFAULTS:
     {
-      /* 
-      Configuration and working variables are implemented as is because:
+      /*
+         Configuration and working variables are implemented as is because:
 
-      -- excerpt from https://github.com/letscontrolit/ESPEasy/pull/5566#issuecomment-4739927575:
+         -- excerpt from https://github.com/letscontrolit/ESPEasy/pull/5566#issuecomment-4739927575:
 
-      PLUGIN_SET_DEFAULTS is called only once, right after the new plugin instance is added to the Devices list. 
-      And never again after that. This is the place to set initial defaults for your plugin.
+         PLUGIN_SET_DEFAULTS is called only once, right after the new plugin instance is added to the Devices list.
+         And never again after that. This is the place to set initial defaults for your plugin.
 
-      PLUGIN_INIT is called every time the plugin is enabled, and should return true if all is OK, 
-      or false if there is an error causing the plugin to stay disabled.
+         PLUGIN_INIT is called every time the plugin is enabled, and should return true if all is OK,
+         or false if there is an error causing the plugin to stay disabled.
 
-      -- excerpt end
+         -- excerpt end
 
-      So in PLUGIN_SET_DEFAULTS, the persistent configuration values in flash are initialized. 
-      This flash data is used in PLUGIN_WEBFORM_LOAD to provide data for the UI generation. The 
-      flash data is updated in PLUGIN_WEBFORM_SAVE when new configuration values are submitted by 
-      the user.
+         So in PLUGIN_SET_DEFAULTS, the persistent configuration values in flash are initialized.
+         This flash data is used in PLUGIN_WEBFORM_LOAD to provide data for the UI generation. The
+         flash data is updated in PLUGIN_WEBFORM_SAVE when new configuration values are submitted by
+         the user.
 
-      Afterwards, when the plugin task instance is enabled via the UI (and output data starts
-      to be generated), a working copy of the configuration values is created by loading them 
-      from flash to RAM. 
-      Stored together with the volatile variables, this data is used for fast processing of 
-      the signal generation code.
-      */
-    
+         Afterwards, when the plugin task instance is enabled via the UI (and output data starts
+         to be generated), a working copy of the configuration values is created by loading them
+         from flash to RAM.
+         Stored together with the volatile variables, this data is used for fast processing of
+         the signal generation code.
+       */
+
       P187_config_struct tmp_config[VARS_PER_TASK];
 
       P187_OUTPUT_TYPE = static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_QUAD);
@@ -141,11 +143,11 @@ boolean Plugin_187(uint8_t function, struct EventStruct *event, String& string)
       for (int i = 0; i < VARS_PER_TASK; i++)
       {
         P187_OUTPUT_OPTIONx_CONFIG(i) = P187_OUTPUT_SINUS;
-        tmp_config[i].param0 = 100;
-        tmp_config[i].param2 = 60;
+        tmp_config[i].param0          = 100;
+        tmp_config[i].param2          = 60;
       }
 
-      SaveCustomTaskSettings(event->TaskIndex, (uint8_t *)&(tmp_config), sizeof(tmp_config), 0);  // save configuration to flash
+      SaveCustomTaskSettings(event->TaskIndex, (uint8_t *)&(tmp_config), sizeof(tmp_config), 0); // save configuration to flash
 
       success = true;
       break;
@@ -192,13 +194,16 @@ boolean Plugin_187(uint8_t function, struct EventStruct *event, String& string)
     {
       P187_config_struct tmp_config[VARS_PER_TASK];
 
-      LoadCustomTaskSettings(event->TaskIndex, (uint8_t *)&(tmp_config), sizeof(tmp_config));  // load configuration from flash
+      LoadCustomTaskSettings(event->TaskIndex, (uint8_t *)&(tmp_config), sizeof(tmp_config)); // load configuration from flash
 
       const int valueCount = getValueCountFromSensorType(static_cast<Sensor_VType>(P187_OUTPUT_TYPE));
 
       for (int i = 0; i < valueCount; i++)
       {
-        addTableSeparator(strformat(F("Output %d - %s"), i + 1, FsP(Plugin_187_optionname(PCONFIG(i + P187_OUTPUT_OPTION_CONFIG_POS), false))), 2, 4);
+        addTableSeparator(strformat(F("Output %d - %s"), i + 1,
+                                    FsP(Plugin_187_optionname(PCONFIG(i + P187_OUTPUT_OPTION_CONFIG_POS), false))),
+                          2,
+                          4);
 
         switch (P187_OUTPUT_OPTIONx_CONFIG(i))
         {
@@ -207,7 +212,7 @@ boolean Plugin_187(uint8_t function, struct EventStruct *event, String& string)
             addFormNumericBox(F("Offset"),    getPluginCustomArgName(i * 8 + 1), tmp_config[i].param1, -65537, 65537);
             addFormNumericBox(F("Period"),    getPluginCustomArgName(i * 8 + 2), tmp_config[i].param2, 30,     3600);
             addUnit('s');
-            addFormNumericBox(F("Phase"),     getPluginCustomArgName(i * 8 + 3), tmp_config[i].param3, 0, 359);
+            addFormNumericBox(F("Phase"), getPluginCustomArgName(i * 8 + 3), tmp_config[i].param3, 0, 359);
             addUnit("°");
             break;
           case P187_OUTPUT_TRAPEZ:
@@ -215,7 +220,7 @@ boolean Plugin_187(uint8_t function, struct EventStruct *event, String& string)
             addFormNumericBox(F("Off-Level"), getPluginCustomArgName(i * 8 + 1), tmp_config[i].param1, -65537, 65537);
             addFormNumericBox(F("Period"),    getPluginCustomArgName(i * 8 + 2), tmp_config[i].param2, 30,     3600);
             addUnit('s');
-            addFormNumericBox(F("On-Time"),   getPluginCustomArgName(i * 8 + 3), tmp_config[i].param3, 0, 3600);
+            addFormNumericBox(F("On-Time"), getPluginCustomArgName(i * 8 + 3), tmp_config[i].param3, 0, 3600);
             addUnit('s');
             addFormNumericBox(F("Rise-Time"), getPluginCustomArgName(i * 8 + 4), tmp_config[i].param4, 0, 3600);
             addUnit('s');
@@ -242,7 +247,7 @@ boolean Plugin_187(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
     {
       P187_config_struct tmp_config[VARS_PER_TASK];
-      
+
       const int valueCount = getValueCountFromSensorType(static_cast<Sensor_VType>(P187_OUTPUT_TYPE));
       memset(&(tmp_config), 0, sizeof(tmp_config));
 
@@ -271,9 +276,11 @@ boolean Plugin_187(uint8_t function, struct EventStruct *event, String& string)
             }
             else
             {
-              if ((tmp_config[i].param3 + tmp_config[i].param4 > tmp_config[i].param2) || (tmp_config[i].param3 + tmp_config[i].param4 + tmp_config[i].param5 > tmp_config[i].param2))
+              if ((tmp_config[i].param3 + tmp_config[i].param4 > tmp_config[i].param2) ||
+                  (tmp_config[i].param3 + tmp_config[i].param4 + tmp_config[i].param5 > tmp_config[i].param2))
               {
-                tmp_config[i].param4 = (tmp_config[i].param2 - tmp_config[i].param3) * tmp_config[i].param4 / (tmp_config[i].param4 + tmp_config[i].param5);
+                tmp_config[i].param4 = (tmp_config[i].param2 - tmp_config[i].param3) * tmp_config[i].param4 /
+                                       (tmp_config[i].param4 + tmp_config[i].param5);
                 tmp_config[i].param5 =  tmp_config[i].param2 - tmp_config[i].param3 - tmp_config[i].param4;
               }
             }
@@ -282,14 +289,14 @@ boolean Plugin_187(uint8_t function, struct EventStruct *event, String& string)
             break;
           default:
             P187_OUTPUT_OPTIONx_CONFIG(i) = P187_OUTPUT_SINUS;
-            tmp_config[i].param0 = 100;
-            tmp_config[i].param2 = 60;
+            tmp_config[i].param0          = 100;
+            tmp_config[i].param2          = 60;
             addLog(LOG_LEVEL_ERROR, F("P187: Output type unknown -> reset to default Sinus output"));
             break;
         }
 
       }
-      success = SaveCustomTaskSettings(event->TaskIndex, (uint8_t *)&(tmp_config), sizeof(tmp_config), 0);  // save configuration to flash
+      success = SaveCustomTaskSettings(event->TaskIndex, (uint8_t *)&(tmp_config), sizeof(tmp_config), 0); // save configuration to flash
       break;
     }
 
@@ -298,19 +305,6 @@ boolean Plugin_187(uint8_t function, struct EventStruct *event, String& string)
       P187_data_struct *P187_data = static_cast<P187_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       success = (P187_data != nullptr) && P187_data->plugin_read(event);
-      break;
-    }
-
-    case PLUGIN_TEN_PER_SECOND:
-    {
-      P187_data_struct *P187_data = static_cast<P187_data_struct *>(getPluginTaskData(event->TaskIndex));
-      
-      if (nullptr != P187_data) {
-        if (P187_data->loop(event)) {
-          success = true;
-        }
-      }
-
       break;
     }
 
