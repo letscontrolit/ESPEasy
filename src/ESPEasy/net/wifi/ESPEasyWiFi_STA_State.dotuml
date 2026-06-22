@@ -10,6 +10,7 @@ StateDiagram [frame=true framecolor=steelblue label="State Diagram ESPEasy WiFi_
   
   
   choice AlreadyConnected
+  choice HasScanned_NoCredentials
   choice AP_on_no_nw_found
   choice KnownAPfound
 
@@ -23,7 +24,9 @@ StateDiagram [frame=true framecolor=steelblue label="State Diagram ESPEasy WiFi_
   Disabled -> STA_Init "Init\nSTA"
   STA_Init -> AlreadyConnected "Already\nConnected?"
   AlreadyConnected -> STA_Connected "Connected" [color=green]
-  AlreadyConnected -> KnownAPfound "Known\nNetwork\nfound?"
+  AlreadyConnected -> HasScanned_NoCredentials "Has Credentials?"
+  Disabled <- HasScanned_NoCredentials "Scanned &\nNo Credentials"
+  HasScanned_NoCredentials -> KnownAPfound "Known\nNetwork\nfound?"
   KnownAPfound -> AP_on_no_nw_found "Scan\nNeeded"
   KnownAPfound -> STA_Connecting "No Scan\nNeeded"
   AP_on_no_nw_found -> STA_AP_Scanning "AP"
@@ -32,9 +35,9 @@ StateDiagram [frame=true framecolor=steelblue label="State Diagram ESPEasy WiFi_
   TimeOut <- ScanDone "Scan\nFail" [color=red]
   Disabled <- ScanDone "Scan\nSuccess" [color=green]
 
+  STA_Reconnecting <- STA_Connected  "Disconnect" [color=red]
   STA_Reconnecting -> STA_Connected "Connected" [color=green]
   STA_Connecting -> STA_Connected "Connected" [color=green]
-  STA_Reconnecting <- STA_Connected  "Disconnect" [color=red]
   
   STA_Connected -> STA_Connected "After 5 min:\nMark Stable"
   

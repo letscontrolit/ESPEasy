@@ -48,11 +48,11 @@ void ESPEasyWiFi_t::setup() {
 
 void ESPEasyWiFi_t::enable()  {}
 
-void ESPEasyWiFi_t::disable() { setState(WiFi_STA_State_e::Disabled, 100); }
+void ESPEasyWiFi_t::disable() { setState(WiFi_STA_State_e::Disabled, 0); }
 
 void ESPEasyWiFi_t::begin()   {
   if (connected()) {
-    setState(WiFi_STA_State_e::STA_Connected, WIFI_STATE_MACHINE_STA_CONNECTED_STABLE);
+    setState(WiFi_STA_State_e::STA_Connected);
   } else {
     setState(WiFi_STA_State_e::STA_Init, 100);
   }
@@ -60,13 +60,13 @@ void ESPEasyWiFi_t::begin()   {
 
 void ESPEasyWiFi_t::loop()
 {
-  // TODO TD-er: Must inspect WiFiEventData to see if we need to update some state here.
-  auto wifi_STA_data = getWiFi_STA_NWPluginData_static_runtime();
-
-  if (!wifi_STA_data) {
-    // TODO TD-er: Must set to WiFi_STA_State_e::Disabled ???
-    return;
-  }
+  /*
+     if ((_state != WiFi_STA_State_e::Disabled) &&
+        (getWiFi_STA_NWPluginData_static_runtime() == nullptr)) {
+      setState(WiFi_STA_State_e::Disabled, 100);
+      return;
+     }
+   */
 
   const bool stateTimeoutReached = _state_timeout.isSet() && _state_timeout.timeReached();
 
@@ -77,13 +77,18 @@ void ESPEasyWiFi_t::loop()
       _callbackError = false;
 
       // TODO TD-er: Must perhaps check what action was pending and act on it?
-      if ((_state == WiFi_STA_State_e::Disabled) && stateTimeoutReached) {
-        setState(WiFi_STA_State_e::STA_Init, 100);
-      } else if ((_state == WiFi_STA_State_e::STA_Connected) && stateTimeoutReached) {
-        setState(WiFi_STA_State_e::STA_Connected_Stable);
-      } else {
-        setState(WiFi_STA_State_e::TimeOut, 100);
+      if (stateTimeoutReached) {
+        if (_state == WiFi_STA_State_e::Disabled) {
+          setState(WiFi_STA_State_e::STA_Init, 100);
+          return;
+        }
+
+        if (_state == WiFi_STA_State_e::STA_Connected) {
+          setState(WiFi_STA_State_e::STA_Connected_Stable);
+          return;
+        }
       }
+      setState(WiFi_STA_State_e::TimeOut, 100);
       return;
     }
   }
@@ -93,22 +98,33 @@ void ESPEasyWiFi_t::loop()
     case WiFi_STA_State_e::Disabled:
       // Do nothing here, as the device is disabled.
       break;
+
     case WiFi_STA_State_e::TimeOut:
       // We always go from TimeOut to Disabled.
       // Called this from the loop() to prevent recursive calls to setState
       setState(WiFi_STA_State_e::Disabled, 100);
       break;
+
     case WiFi_STA_State_e::STA_Init:
+      WiFi_AP_Candidates.purge_expired();
+
+      if (connected()) {
+        setState(WiFi_STA_State_e::STA_Connected);
+        break;
+      }
+
+      if (WiFi_AP_Candidates.hasScanned() && !WiFi_AP_Candidates.hasCandidateCredentials()) {
+        // We don't have any credentials and we do have some scanned, so we are prepared for setup.
+        // However we don't need to quickly switch between Disabled and STA_Init, thus set to 10 sec.
+        setState(WiFi_STA_State_e::Disabled, 10000);
+        break;
+      }
+
       if (getWiFi_STA_NWPluginData_static_runtime() == nullptr) {
         Scheduler.setNetworkInitTimer(0, NETWORK_INDEX_WIFI_STA);
       }
 
       if (getWiFi_STA_NWPluginData_static_runtime() != nullptr) {
-        if (connected()) {
-          setState(WiFi_STA_State_e::STA_Connected, WIFI_STATE_MACHINE_STA_CONNECTED_STABLE);
-          break;
-        }
-
         // This is where we decide what to do next:
         // - Reconnect
         // - Scan
@@ -129,6 +145,7 @@ void ESPEasyWiFi_t::loop()
         setState(WiFi_STA_State_e::STA_Scanning, WIFI_STATE_MACHINE_STA_SCANNING_TIMEOUT);
       }
       break;
+
     case WiFi_STA_State_e::STA_Scanning:
     case WiFi_STA_State_e::STA_AP_Scanning:
     {
@@ -179,12 +196,13 @@ void ESPEasyWiFi_t::loop()
       }
       break;
     }
+
     case WiFi_STA_State_e::STA_Connecting:
     case WiFi_STA_State_e::STA_Reconnecting:
 
       // Check if (re)connecting has finished
       if (getSTA_connected_state() == STA_connected_state::Connected) {
-        setState(WiFi_STA_State_e::STA_Connected, WIFI_STATE_MACHINE_STA_CONNECTED_STABLE);
+        setState(WiFi_STA_State_e::STA_Connected);
       }
 
       break;
@@ -269,17 +287,15 @@ void ESPEasyWiFi_t::setState(WiFi_STA_State_e newState, uint32_t timeout) {
 
   // # endif // ifndef BUILD_NO_DEBUG
 
-
-  if (oldState == WiFi_STA_State_e::STA_Connected)
-  {}
-
   if ((oldState == WiFi_STA_State_e::STA_AP_Scanning) ||
       (oldState == WiFi_STA_State_e::STA_Scanning))
   {
     WiFi_AP_Candidates.load_knownCredentials();
     WiFi_AP_Candidates.process_WiFiscan();
-
   }
+
+  // Make sure not to call setState from this function
+  // This may cause quite a lot of recursive calls.
 
   switch (newState)
   {
@@ -329,12 +345,12 @@ void ESPEasyWiFi_t::setState(WiFi_STA_State_e newState, uint32_t timeout) {
       break;
     }
     case WiFi_STA_State_e::STA_Init:
-/*
-      if (getWiFi_STA_NWPluginData_static_runtime() == nullptr) {
-        Scheduler.setNetworkInitTimer(0, NETWORK_INDEX_WIFI_STA);
-      }
-      _state_timeout.setMillisFromNow(Settings.getNetworkInterfaceStartupDelay(NETWORK_INDEX_WIFI_STA) + 100);
-*/
+      /*
+            if (getWiFi_STA_NWPluginData_static_runtime() == nullptr) {
+              Scheduler.setNetworkInitTimer(0, NETWORK_INDEX_WIFI_STA);
+            }
+            _state_timeout.setMillisFromNow(Settings.getNetworkInterfaceStartupDelay(NETWORK_INDEX_WIFI_STA) + 100);
+       */
       break;
     case WiFi_STA_State_e::STA_AP_Scanning:
 
