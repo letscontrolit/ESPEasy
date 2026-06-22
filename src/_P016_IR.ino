@@ -23,6 +23,10 @@
 // IRSENDAC,'{"protocol":"COOLIX","power":"on","mode":"dry","fanspeed":"auto","temp":22,"swingv":"max","swingh":"off"}'
 
 /** Changelog:
+ * 2026-06-22 tonhuisman: Add Event on buffer overflow option, guarded with P016_EVENT_ON_ERROR (enabled by default) Event includes the raw
+ *                        command length (for what it's worth)
+ *                        Deprecate History section in favor of Changelog
+ * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported for IR receive)
  * 2024-01-26 uwekaditz:  Decode type UNKNOWN was not added to the web settings
  *                        Decode types UNKNOWN and UNUSED were mixed up
  *                        Workaround for decode type UNKNOWN is not necessary
@@ -69,9 +73,7 @@
 #  define P016_SEND_IR_TO_CONTROLLER false
 # endif // ifndef P016_SEND_IR_TO_CONTROLLER
 
-// History
-// @tonhuisman: 2025-01-12 
-// ADD: support for MQTT AutoDiscovery (not supported for IR receive)
+// History (deprecated, use Changelog, above)
 // @uwekaditz: 2024-01-23
 // CHG: Use the new property addToQueue in ExecuteCommand_all() due to the lack of resources
 // NEW: Heap and memory can be reported (P016_CHECK_HEAP)
@@ -183,6 +185,7 @@ boolean displayRawToReadableB32Hex(String& outputStr, decode_results results);
 # endif // ifdef P016_P035_USE_RAW_RAW2
 
 # ifdef PLUGIN_016_DEBUG
+
 void P016_infoLogMemory(const __FlashStringHelper *text) {
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     addLogMove(LOG_LEVEL_INFO, strformat(
@@ -202,8 +205,8 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_DEVICE_ADD:
     {
       auto& dev = Device[++deviceCount];
-      dev.Number   = PLUGIN_ID_016;
-      dev.Type     = DEVICE_TYPE_SINGLE;
+      dev.Number = PLUGIN_ID_016;
+      dev.Type   = DEVICE_TYPE_SINGLE;
       # if P016_SEND_IR_TO_CONTROLLER
       dev.VType = Sensor_VType::SENSOR_TYPE_STRING;
       # else // if P016_SEND_IR_TO_CONTROLLER
@@ -357,6 +360,9 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
       addUnit(unit);
       addFormNote(F("Increase buffer size if IR commands are received incomplete."));
 
+      # if P016_EVENT_ON_ERROR
+      addFormCheckBox(F("Event on buffer overflow"), F("pErrEvt"), bitRead(PCONFIG_LONG(0), P016_EventOnError));
+      # endif
 
       addFormSubHeader(F("Content"));
 
@@ -441,7 +447,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
               FormSelectorOptions selector(protocolCount, &decodeTypes[0], &decodeTypeOptions[0]);
               selector.clearClassName();
               selector.addSelector(
-                getPluginCustomArgName(rowCnt + 0), 
+                getPluginCustomArgName(rowCnt + 0),
                 static_cast<int>(line.CodeDecodeType));
             }
             html_TD();
@@ -460,7 +466,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
               selector.clearClassName();
 
               selector.addSelector(
-                getPluginCustomArgName(rowCnt + 3), 
+                getPluginCustomArgName(rowCnt + 3),
                 static_cast<int>(line.AlternativeCodeDecodeType));
             }
             html_TD();
@@ -521,6 +527,9 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
       bitWrite(lSettings, P016_BitExecuteCmd,        isFormItemChecked(F("pExecuteCmd")));
       # endif // if P016_FEATURE_COMMAND_HANDLING
       bitWrite(lSettings, P016_BitAcceptUnknownType, isFormItemChecked(F("pAcceptUnknownType")));
+      # if P016_EVENT_ON_ERROR
+      bitWrite(lSettings, P016_EventOnError,         isFormItemChecked(F("pErrEvt")));
+      # endif
 
       bEnableIRcodeAdding = true;
       PCONFIG_LONG(0)     = lSettings;
@@ -646,6 +655,13 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
         {
           addLog(LOG_LEVEL_ERROR, F("IR: WARNING, IR code is too big for buffer. Try pressing the transmiter button only momenteraly"));
           success = false;
+
+          # if P016_EVENT_ON_ERROR
+
+          if (bitRead(PCONFIG_LONG(0), P016_EventOnError)) {
+            eventQueue.add(event->TaskIndex, F("Overflow"), results.rawlen);
+          }
+          # endif // if P016_EVENT_ON_ERROR
           break; // Do not continue and risk hanging the ESP
         }
 
