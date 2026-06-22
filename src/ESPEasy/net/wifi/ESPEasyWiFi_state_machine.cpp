@@ -24,6 +24,8 @@ namespace wifi {
     # define WIFI_STATE_MACHINE_STA_SCANNING_TIMEOUT     10000
     # define WIFI_STATE_MACHINE_AP_ONLY_TIMEOUT          60000
 
+    # define WIFI_STATE_MACHINE_STA_CONNECTED_STABLE     300000 // 5 minutes
+
 void ESPEasyWiFi_t::setup() {
   if (!Settings.getNetworkEnabled(NETWORK_INDEX_WIFI_STA)) { return; }
 
@@ -50,9 +52,9 @@ void ESPEasyWiFi_t::disable() { setState(WiFi_STA_State_e::Disabled, 100); }
 
 void ESPEasyWiFi_t::begin()   {
   if (connected()) {
-    setState(WiFi_STA_State_e::STA_Connected, 0);
+    setState(WiFi_STA_State_e::STA_Connected, WIFI_STATE_MACHINE_STA_CONNECTED_STABLE);
   } else {
-    setState(WiFi_STA_State_e::IdleWaiting, 100);
+    setState(WiFi_STA_State_e::STA_Init, 100);
   }
 }
 
@@ -61,18 +63,27 @@ void ESPEasyWiFi_t::loop()
   // TODO TD-er: Must inspect WiFiEventData to see if we need to update some state here.
   auto wifi_STA_data = getWiFi_STA_NWPluginData_static_runtime();
 
-  if (!wifi_STA_data) { return; }
+  if (!wifi_STA_data) {
+    // TODO TD-er: Must set to WiFi_STA_State_e::Disabled ???
+    return;
+  }
 
-  if ((_state != WiFi_STA_State_e::IdleWaiting) &&
-      (_state != WiFi_STA_State_e::TimeOut)) {
-    if (_callbackError ||
-        (_state_timeout.isSet() && _state_timeout.timeReached()))
+  const bool stateTimeoutReached = _state_timeout.isSet() && _state_timeout.timeReached();
+
+  if (_state != WiFi_STA_State_e::TimeOut) {
+    if (_callbackError || stateTimeoutReached)
     {
       // TODO TD-er: Must check what error was given???
       _callbackError = false;
 
       // TODO TD-er: Must perhaps check what action was pending and act on it?
-      setState(WiFi_STA_State_e::TimeOut, 100);
+      if ((_state == WiFi_STA_State_e::Disabled) && stateTimeoutReached) {
+        setState(WiFi_STA_State_e::STA_Init, 100);
+      } else if ((_state == WiFi_STA_State_e::STA_Connected) && stateTimeoutReached) {
+        setState(WiFi_STA_State_e::STA_Connected_Stable);
+      } else {
+        setState(WiFi_STA_State_e::TimeOut, 100);
+      }
       return;
     }
   }
@@ -83,18 +94,40 @@ void ESPEasyWiFi_t::loop()
       // Do nothing here, as the device is disabled.
       break;
     case WiFi_STA_State_e::TimeOut:
-      // TODO TD-er: Not sure yet what else to do here.
-      setState(WiFi_STA_State_e::IdleWaiting, 100);
+      // We always go from TimeOut to Disabled.
+      // Called this from the loop() to prevent recursive calls to setState
+      setState(WiFi_STA_State_e::Disabled, 100);
       break;
-    case WiFi_STA_State_e::IdleWaiting:
+    case WiFi_STA_State_e::STA_Init:
+      if (getWiFi_STA_NWPluginData_static_runtime() == nullptr) {
+        Scheduler.setNetworkInitTimer(0, NETWORK_INDEX_WIFI_STA);
+      }
 
-      // TODO TD-er: Must check whether we are allowed to continue
+      if (getWiFi_STA_NWPluginData_static_runtime() != nullptr) {
+        if (connected()) {
+          setState(WiFi_STA_State_e::STA_Connected, WIFI_STATE_MACHINE_STA_CONNECTED_STABLE);
+          break;
+        }
 
-      setState(WiFi_STA_State_e::Idle, 100);
-      break;
-    case WiFi_STA_State_e::Idle:
-      // All done when setState was called
-      // Just a placeholder in the loop()
+        // This is where we decide what to do next:
+        // - Reconnect
+        // - Scan
+        //
+        // Do we have candidate to connect to ?
+        if (WiFi_AP_Candidates.hasCandidates()) {
+          setState(WiFi_STA_State_e::STA_Connecting, WIFI_STATE_MACHINE_STA_CONNECTING_TIMEOUT);
+          break;
+        }
+
+        // No known candidates, so need to scan first.
+        if (WifiIsAP(WiFi.getMode())) {
+          // TODO TD-er: Must check if any client is connected.
+          // If not, then we can disable AP mode and switch to WiFi_STA_State_e::STA_Scanning
+          setState(WiFi_STA_State_e::STA_AP_Scanning, WIFI_STATE_MACHINE_STA_AP_SCANNING_TIMEOUT);
+          break;
+        }
+        setState(WiFi_STA_State_e::STA_Scanning, WIFI_STATE_MACHINE_STA_SCANNING_TIMEOUT);
+      }
       break;
     case WiFi_STA_State_e::STA_Scanning:
     case WiFi_STA_State_e::STA_AP_Scanning:
@@ -124,15 +157,19 @@ void ESPEasyWiFi_t::loop()
         if (_state == WiFi_STA_State_e::STA_AP_Scanning) {
           ++_scan_channel;
 
+          // TODO TD-er: What to do with 5 GHz WiFi?
           if (_scan_channel > 14) {
             _scan_channel = 0;
-            setState(WiFi_STA_State_e::IdleWaiting, 100);
+
+            // "Scan Success"
+            setState(WiFi_STA_State_e::Disabled, 100);
           }
           else {
             setState(WiFi_STA_State_e::STA_AP_Scanning, 500);
           }
         } else {
-          setState(WiFi_STA_State_e::IdleWaiting, 100);
+          // "Scan Success"
+          setState(WiFi_STA_State_e::Disabled, 100);
         }
       } else if (scanCompleteStatus == -2) { // WIFI_SCAN_FAILED
         addLog(LOG_LEVEL_ERROR, F("WiFi : Scan failed"));
@@ -146,38 +183,39 @@ void ESPEasyWiFi_t::loop()
     case WiFi_STA_State_e::STA_Reconnecting:
 
       // Check if (re)connecting has finished
-    {
-      const STA_connected_state sta_connected_state = getSTA_connected_state();
-
-      if (sta_connected_state == STA_connected_state::Connected) {
-        setState(WiFi_STA_State_e::STA_Connected, 0);
+      if (getSTA_connected_state() == STA_connected_state::Connected) {
+        setState(WiFi_STA_State_e::STA_Connected, WIFI_STATE_MACHINE_STA_CONNECTED_STABLE);
       }
 
       break;
-    }
+
     case WiFi_STA_State_e::STA_Connected:
+    case WiFi_STA_State_e::STA_Connected_Stable:
 
       // Check if still connected
       if (getSTA_connected_state() != STA_connected_state::Connected) {
+        // "Disconnect"
 
         auto wifi_STA_data = getWiFi_STA_NWPluginData_static_runtime();
 
-        if (wifi_STA_data) 
+        if (wifi_STA_data) {
           wifi_STA_data->mark_disconnected();
+        }
 
-          if (WiFi.status() == WL_CONNECTED) {
-            WiFi.disconnect(true);
-          }
-        
+        if (WiFi.status() == WL_CONNECTED) {
+          WiFi.disconnect(true);
+        }
+
 
         if (WiFi_AP_Candidates.hasCandidates()) {
           setState(WiFi_STA_State_e::STA_Reconnecting, WIFI_STATE_MACHINE_STA_CONNECTING_TIMEOUT);
         } else {
-          setState(WiFi_STA_State_e::IdleWaiting, 100);
+          setState(WiFi_STA_State_e::TimeOut, 100);
         }
       } else {
         // Else mark last timestamp seen as connected
         _last_seen_connected.setNow();
+
         # if FEATURE_SET_WIFI_TX_PWR
         SetWiFiTXpower();
         # endif
@@ -246,10 +284,8 @@ void ESPEasyWiFi_t::setState(WiFi_STA_State_e newState, uint32_t timeout) {
   switch (newState)
   {
     case WiFi_STA_State_e::Disabled:
-      // Do nothing here, as the device is disabled.
-
       // TODO TD-er: Maybe call scheduler?
-      //  if (doWifiIsSTA(WiFi.getMode()))
+      //  if (WifiIsSTA(WiFi.getMode()))
       //    Scheduler.setNetworkExitTimer(0, NETWORK_INDEX_WIFI_STA);
       WifiDisconnect();
       setSTA(false);
@@ -259,54 +295,53 @@ void ESPEasyWiFi_t::setState(WiFi_STA_State_e newState, uint32_t timeout) {
     {
       auto wifi_STA_data = getWiFi_STA_NWPluginData_static_runtime();
 
-      if (oldState == WiFi_STA_State_e::STA_Connecting) {
+      // From a failed state we always turn off at least WiFi STA.
+      // Only when we end up here from STA_Init, we also need to turn off AP.
+      if (oldState == WiFi_STA_State_e::STA_Init) {
+        // "Init STA Fail"
+
+        // TODO TD-er: Maybe call scheduler?
+        //  if (WifiIsAP(WiFi.getMode()))
+        //    Scheduler.setNetworkExitTimer(0, NETWORK_INDEX_WIFI_AP);
+        setAP(false);
+      } else if (oldState == WiFi_STA_State_e::STA_Connecting) {
+        // "Connect Fail"
         if (wifi_STA_data) {
           wifi_STA_data->mark_connect_failed();
         }
-        setState(WiFi_STA_State_e::STA_Reconnecting, WIFI_STATE_MACHINE_STA_CONNECTING_TIMEOUT);
+
+        //        setState(WiFi_STA_State_e::STA_Reconnecting, WIFI_STATE_MACHINE_STA_CONNECTING_TIMEOUT);
       } else if (oldState == WiFi_STA_State_e::STA_Reconnecting) {
+        // "Reconnect Fail"
         if (wifi_STA_data) {
           wifi_STA_data->mark_connect_failed();
         }
+      } else if (oldState == WiFi_STA_State_e::STA_Init) {
+        // "Init STA Fail"
+      } else if ((oldState == WiFi_STA_State_e::STA_Scanning) ||
+                 (oldState == WiFi_STA_State_e::STA_AP_Scanning)) {
+        // "Scan Fail"
       }
 
-
-      setState(WiFi_STA_State_e::IdleWaiting, 100);
+      // TODO TD-er: Handle "Scan Fail" and "Init STA Fail"
+      // For "Scan Fail" set state to Disabled, with some timeout?
+      // Do we also need to turn off WiFi STA after successful scan?
       break;
     }
-    case WiFi_STA_State_e::IdleWaiting:
-      if (connected()) {
-        setState(WiFi_STA_State_e::STA_Connected);
+    case WiFi_STA_State_e::STA_Init:
+/*
+      if (getWiFi_STA_NWPluginData_static_runtime() == nullptr) {
+        Scheduler.setNetworkInitTimer(0, NETWORK_INDEX_WIFI_STA);
       }
-      // Nothing else to do here as we're waiting till the timeout is over
-      break;
-    case WiFi_STA_State_e::Idle:
-      if (!doWifiIsSTA(WiFi.getMode()))
-            Scheduler.setNetworkInitTimer(0, NETWORK_INDEX_WIFI_STA);
-      
-      // This is where we decide what to do next:
-      // - Reconnect
-      // - Scan
-      //
-      // Do we have candidate to connect to ?
-      if (WiFi_AP_Candidates.hasCandidates()) {
-        setState(WiFi_STA_State_e::STA_Connecting, WIFI_STATE_MACHINE_STA_CONNECTING_TIMEOUT);
-      } else {
-        // No known candidates, so need to scan first.
-        if (WifiIsAP(WiFi.getMode())) {
-          // TODO TD-er: Must check if any client is connected.
-          // If not, then we can disable AP mode and switch to WiFi_STA_State_e::STA_Scanning
-          setState(WiFi_STA_State_e::STA_AP_Scanning, WIFI_STATE_MACHINE_STA_AP_SCANNING_TIMEOUT);
-        } else {
-          setState(WiFi_STA_State_e::STA_Scanning, WIFI_STATE_MACHINE_STA_SCANNING_TIMEOUT);
-        }
-      }
-
+      _state_timeout.setMillisFromNow(Settings.getNetworkInterfaceStartupDelay(NETWORK_INDEX_WIFI_STA) + 100);
+*/
       break;
     case WiFi_STA_State_e::STA_AP_Scanning:
+
       // Start scanning per channel
       if (_scan_channel == 0) { _scan_channel = 1; }
-      // fall through
+
+    // fall through
     case WiFi_STA_State_e::STA_Scanning:
       // Start scanning
       startScanning();
@@ -335,13 +370,12 @@ void ESPEasyWiFi_t::setState(WiFi_STA_State_e newState, uint32_t timeout) {
 
       _connect_attempt = 0;
       _last_seen_connected.setNow();
-      _state_timeout.clear();
+      _state_timeout.setMillisFromNow(WIFI_STATE_MACHINE_STA_CONNECTED_STABLE);
       auto wifi_STA_data = getWiFi_STA_NWPluginData_static_runtime();
 
       if (wifi_STA_data) {
         wifi_STA_data->mark_connected();
       }
-
 
       /*
          if (Settings.UseRules)
@@ -351,8 +385,12 @@ void ESPEasyWiFi_t::setState(WiFi_STA_State_e newState, uint32_t timeout) {
          statusLED(true);
        */
       break;
-
     }
+    case WiFi_STA_State_e::STA_Connected_Stable:
+      _state_timeout.clear();
+
+      // TODO TD-er: Must mark connection as stable
+      break;
   }
 
   auto wifi_STA_data = getWiFi_STA_NWPluginData_static_runtime();

@@ -54,19 +54,16 @@ namespace wifi {
 
 enum class WiFi_STA_State_e
 {
-  // WiFi radio is off and no new attempt should be made (e.g. low power mode or Ethernet active)
+  // WiFi STA radio is off.
+  // When timeout is set to 0, no new attempt should be made (e.g. low power mode or Ethernet active)
+  // Will only change to STA_Init when WiFi is allowed/required to start
   Disabled,
 
   // Error state, some action failed
   TimeOut,
 
   // State from where we decide to start scanning or connecting
-  Idle,
-
-  // Not allowed yet to continue (re)connecting.
-  // For example when the interface is a fallback interface and not yet allowed to start
-  // Or when in setup mode and no need to connect.
-  IdleWaiting,
+  STA_Init,
 
   // STA mode + scanning
   STA_Scanning,
@@ -83,7 +80,8 @@ enum class WiFi_STA_State_e
   STA_Reconnecting,
 
   // Connected to an AP
-  STA_Connected
+  STA_Connected,
+  STA_Connected_Stable
 };
 
 const __FlashStringHelper* toString(WiFi_STA_State_e state);

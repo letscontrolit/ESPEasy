@@ -1,54 +1,57 @@
 StateDiagram [frame=true framecolor=steelblue label="State Diagram ESPEasy WiFi_STA_State_e"] {
   state Disabled [fillcolor=lightblue]
   state TimeOut as "TimeOut/\nError" [fillcolor=orangered]
-  state Idle
-  state IdleWaiting
+  state STA_Init as "STA\nInitializing"
   state STA_Scanning as "STA\nScanning"
   state STA_AP_Scanning as "STA+AP\nScanning"
   state STA_Connecting as "STA\nConnecting"
   state STA_Reconnecting as "STA\nReconnecting"
   state STA_Connected as "STA\nConnected" [fillcolor=palegreen]
-
+  
+  
   choice AlreadyConnected
   choice AP_on_no_nw_found
   choice KnownAPfound
-  choice KnownAPonDisconnect
 
   choice ExitSTA
+
+  choice ScanDone
 
   initialState->Disabled
 
 
-  Disabled -> IdleWaiting "Init STA"
-  Disabled <- ExitSTA  "Exit STA"
-  IdleWaiting -> AlreadyConnected "Already\nConnected?"
-  AlreadyConnected -> STA_Connected "Connected"
-  AlreadyConnected -> Idle "Ready"
-  Idle -> KnownAPfound "Known\nNetwork\nfound?"
+  Disabled -> STA_Init "Init\nSTA"
+  STA_Init -> AlreadyConnected "Already\nConnected?"
+  AlreadyConnected -> STA_Connected "Connected" [color=green]
+  AlreadyConnected -> KnownAPfound "Known\nNetwork\nfound?"
   KnownAPfound -> AP_on_no_nw_found "Scan\nNeeded"
   KnownAPfound -> STA_Connecting "No Scan\nNeeded"
   AP_on_no_nw_found -> STA_AP_Scanning "AP"
   AP_on_no_nw_found -> STA_Scanning "No AP"
   
-  STA_Connecting -> STA_Connected
-  STA_Reconnecting -> STA_Connected 
-  KnownAPonDisconnect -> STA_Reconnecting  "No Scan\nNeeded"
-  KnownAPonDisconnect <- STA_Connected  "Disconnect"
-  IdleWaiting <- KnownAPonDisconnect "Scan\nNeeded"
+  TimeOut <- ScanDone "Scan\nFail" [color=red]
+  Disabled <- ScanDone "Scan\nSuccess" [color=green]
+
+  STA_Reconnecting -> STA_Connected "Connected" [color=green]
+  STA_Connecting -> STA_Connected "Connected" [color=green]
+  STA_Reconnecting <- STA_Connected  "Disconnect" [color=red]
+  
+  STA_Connected -> STA_Connected "After 5 min:\nMark Stable"
   
 
-  IdleWaiting <- STA_Scanning "Scan\nDone"
-  IdleWaiting <- STA_AP_Scanning "Scan\nDone"
+  ScanDone <- STA_Scanning "Scan\nDone" 
+  ScanDone <- STA_AP_Scanning "Scan\nDone" 
 
   STA_AP_Scanning <- STA_AP_Scanning "Next\nChannel"
+  
+  TimeOut <- STA_Connecting  "Connect\nFail" [color=red]
 
-  TimeOut <- STA_Scanning    "Scan\nFail"
-  TimeOut <- STA_AP_Scanning "Scan\nFail"
-  TimeOut <- STA_Connecting  "Connect\nFail"
+  TimeOut <- STA_Init "Init\nSTA\nFail"  [color=red]
+  
+  Disabled <- Disabled "Wait for\nStartup Delay/\nSetup"
+  Disabled <- TimeOut "Restart\nWiFi"
 
-  TimeOut -> IdleWaiting
+  Disabled <- ExitSTA   "Exit\nSTA"
 
-  IdleWaiting <- IdleWaiting "Wait for\nStartup Delay/\nSetup"
-
-  TimeOut <- STA_Reconnecting "Reconnect\nFail"
+  TimeOut <- STA_Reconnecting "Reconnect\nFail" [color=red]
 }
