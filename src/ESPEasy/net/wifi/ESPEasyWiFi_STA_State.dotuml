@@ -1,7 +1,7 @@
 StateDiagram [frame=true framecolor=steelblue label="State Diagram ESPEasy WiFi_STA_State_e"] {
   state Disabled [fillcolor=lightblue]
   state TimeOut as "TimeOut/\nError" [fillcolor=orangered]
-  state STA_Init as "STA\nInitializing"
+  state STA_Initializing as "STA\nInitializing"
   state STA_Scanning as "STA\nScanning"
   state STA_AP_Scanning as "STA+AP\nScanning"
   state STA_Connecting as "STA\nConnecting"
@@ -21,8 +21,8 @@ StateDiagram [frame=true framecolor=steelblue label="State Diagram ESPEasy WiFi_
   initialState->Disabled
 
 
-  Disabled -> STA_Init "Init\nSTA"
-  STA_Init -> AlreadyConnected "Already\nConnected?"
+  Disabled -> STA_Initializing "Init\nSTA"
+  STA_Initializing -> AlreadyConnected "Already\nConnected?"
   AlreadyConnected -> STA_Connected "Connected" [color=green]
   AlreadyConnected -> HasScanned_NoCredentials "Has Credentials?"
   Disabled <- HasScanned_NoCredentials "Scanned &\nNo Credentials"
@@ -49,7 +49,7 @@ StateDiagram [frame=true framecolor=steelblue label="State Diagram ESPEasy WiFi_
   
   TimeOut <- STA_Connecting  "Connect\nFail" [color=red]
 
-  TimeOut <- STA_Init "Init\nSTA\nFail"  [color=red]
+  TimeOut <- STA_Initializing "Init\nSTA\nFail"  [color=red]
   
   Disabled <- Disabled "Wait for\nStartup Delay/\nSetup"
   Disabled <- TimeOut "Restart\nWiFi"

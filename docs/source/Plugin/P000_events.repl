@@ -244,6 +244,8 @@
    "
    ``WiFi#Connected``
    Triggered when the ESP has connected to Wi-Fi.
+
+   N.B. Similar events are also given for other network interfaces like `eth` or `ppp`.
    ","
 
    .. code-block:: none
@@ -256,6 +258,8 @@
    "
    ``WiFi#Disconnected``
    Triggered when the ESP has disconnected from Wi-Fi.
+
+   N.B. Similar events are also given for other network interfaces like `eth` or `ppp`.
    ","
 
    .. code-block:: none
@@ -270,6 +274,30 @@
       GPIO,2,1 // Turn off WiFi led
       SendToHTTP,url.com,80,/report.php?hash=123abc456&t=[temp2#out]
     Endon
+
+   "
+   "
+   ``WiFi#APmodeConnected``
+   Triggered when some client connects to Wi-Fi AP.
+   ","
+
+   .. code-block:: none
+
+	   on WiFi#APmodeConnected do
+ 	     LongPulse,2,1,1,1,-1 // 0.5 Hz flashing of WiFi led
+	   endon
+
+   "
+   "
+   ``WiFi#APmodeDisconnected``
+   Triggered when some client disconnects from Wi-Fi AP.
+   ","
+
+   .. code-block:: none
+
+	  On WiFi#APmodeDisconnected Do
+	    GPIO,2,1 // Turn off WiFi led  
+	  Endon
 
    "
    "

@@ -56,14 +56,14 @@ enum class WiFi_STA_State_e
 {
   // WiFi STA radio is off.
   // When timeout is set to 0, no new attempt should be made (e.g. low power mode or Ethernet active)
-  // Will only change to STA_Init when WiFi is allowed/required to start
+  // Will only change to STA_Initializing when WiFi is allowed/required to start
   Disabled,
 
   // Error state, some action failed
   TimeOut,
 
   // State from where we decide to start scanning or connecting
-  STA_Init,
+  STA_Initializing,
 
   // STA mode + scanning
   STA_Scanning,

@@ -5,14 +5,14 @@ StateDiagram [frame=true framecolor=steelblue label="State Diagram ESPEasyWiFi_m
   choice APalwaysOn
   choice APalwaysOnNoCred
 
-  state STA_only
-  state STA_AP
-  state AP_only
+  state STA_only as "STA\nOnly" [fillcolor=cyan]
+  state STA_AP as "STA\n+\nAP" [fillcolor=olivedrab1] 
+  state AP_only as "AP\nOnly" [fillcolor=orange1]
 
   state Off [fillcolor=lightblue]
   state Setup with behaviors "WiFi scan\nStart webUI\nEnter Credentials\nSave" [fillcolor=yellow] {
-    state Scan as "STA_only Scan"
-    state StartAP as "AP_only\nWebUI"
+    state Scan as "STA Only\nScan"
+    state StartAP as "AP Only\nWebUI"
     state ClientConnect as "User Connects\nCaptive Portal to /setup"
     state EnterCredentials as "Enter WiFi Credentials"
     state ClientDisconnect as "User\nDisconnects"

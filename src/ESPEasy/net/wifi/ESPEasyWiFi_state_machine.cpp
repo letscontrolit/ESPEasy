@@ -54,7 +54,7 @@ void ESPEasyWiFi_t::begin()   {
   if (connected()) {
     setState(WiFi_STA_State_e::STA_Connected);
   } else {
-    setState(WiFi_STA_State_e::STA_Init, 100);
+    setState(WiFi_STA_State_e::STA_Initializing, 100);
   }
 }
 
@@ -79,7 +79,7 @@ void ESPEasyWiFi_t::loop()
       // TODO TD-er: Must perhaps check what action was pending and act on it?
       if (stateTimeoutReached) {
         if (_state == WiFi_STA_State_e::Disabled) {
-          setState(WiFi_STA_State_e::STA_Init, 100);
+          setState(WiFi_STA_State_e::STA_Initializing, 100);
           return;
         }
 
@@ -105,7 +105,7 @@ void ESPEasyWiFi_t::loop()
       setState(WiFi_STA_State_e::Disabled, 100);
       break;
 
-    case WiFi_STA_State_e::STA_Init:
+    case WiFi_STA_State_e::STA_Initializing:
       WiFi_AP_Candidates.purge_expired();
 
       if (connected()) {
@@ -115,7 +115,7 @@ void ESPEasyWiFi_t::loop()
 
       if (WiFi_AP_Candidates.hasScanned() && !WiFi_AP_Candidates.hasCandidateCredentials()) {
         // We don't have any credentials and we do have some scanned, so we are prepared for setup.
-        // However we don't need to quickly switch between Disabled and STA_Init, thus set to 10 sec.
+        // However we don't need to quickly switch between Disabled and STA_Initializing, thus set to 10 sec.
         setState(WiFi_STA_State_e::Disabled, 10000);
         break;
       }
@@ -312,8 +312,8 @@ void ESPEasyWiFi_t::setState(WiFi_STA_State_e newState, uint32_t timeout) {
       auto wifi_STA_data = getWiFi_STA_NWPluginData_static_runtime();
 
       // From a failed state we always turn off at least WiFi STA.
-      // Only when we end up here from STA_Init, we also need to turn off AP.
-      if (oldState == WiFi_STA_State_e::STA_Init) {
+      // Only when we end up here from STA_Initializing, we also need to turn off AP.
+      if (oldState == WiFi_STA_State_e::STA_Initializing) {
         // "Init STA Fail"
 
         // TODO TD-er: Maybe call scheduler?
@@ -332,7 +332,7 @@ void ESPEasyWiFi_t::setState(WiFi_STA_State_e newState, uint32_t timeout) {
         if (wifi_STA_data) {
           wifi_STA_data->mark_connect_failed();
         }
-      } else if (oldState == WiFi_STA_State_e::STA_Init) {
+      } else if (oldState == WiFi_STA_State_e::STA_Initializing) {
         // "Init STA Fail"
       } else if ((oldState == WiFi_STA_State_e::STA_Scanning) ||
                  (oldState == WiFi_STA_State_e::STA_AP_Scanning)) {
@@ -344,7 +344,7 @@ void ESPEasyWiFi_t::setState(WiFi_STA_State_e newState, uint32_t timeout) {
       // Do we also need to turn off WiFi STA after successful scan?
       break;
     }
-    case WiFi_STA_State_e::STA_Init:
+    case WiFi_STA_State_e::STA_Initializing:
       /*
             if (getWiFi_STA_NWPluginData_static_runtime() == nullptr) {
               Scheduler.setNetworkInitTimer(0, NETWORK_INDEX_WIFI_STA);
