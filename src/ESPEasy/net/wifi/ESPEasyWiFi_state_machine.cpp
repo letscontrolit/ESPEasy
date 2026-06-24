@@ -199,13 +199,21 @@ void ESPEasyWiFi_t::loop()
 
     case WiFi_STA_State_e::STA_Connecting:
     case WiFi_STA_State_e::STA_Reconnecting:
-
+    {
       // Check if (re)connecting has finished
+      auto wifi_STA_data = getWiFi_STA_NWPluginData_static_runtime();
+
+      if (wifi_STA_data) {
+        wifi_STA_data->processEvents();
+      }
+
+
       if (getSTA_connected_state() == STA_connected_state::Connected) {
         setState(WiFi_STA_State_e::STA_Connected);
       }
 
       break;
+    }
 
     case WiFi_STA_State_e::STA_Connected:
     case WiFi_STA_State_e::STA_Connected_Stable:
@@ -224,6 +232,9 @@ void ESPEasyWiFi_t::loop()
           WiFi.disconnect(true);
         }
 
+        if (wifi_STA_data) {
+          wifi_STA_data->processEvents();
+        }
 
         if (WiFi_AP_Candidates.hasCandidates()) {
           setState(WiFi_STA_State_e::STA_Reconnecting, WIFI_STATE_MACHINE_STA_CONNECTING_TIMEOUT);
@@ -263,6 +274,7 @@ void ESPEasyWiFi_t::setState(WiFi_STA_State_e newState, uint32_t timeout) {
   // Need to set the newState first as some of the functions below will call
   // setState, causing a loop, or calling to change state multiple times.
 
+  auto wifi_STA_data = getWiFi_STA_NWPluginData_static_runtime();
 
   if (timeout == 0)
   {
@@ -309,7 +321,6 @@ void ESPEasyWiFi_t::setState(WiFi_STA_State_e newState, uint32_t timeout) {
 
     case WiFi_STA_State_e::TimeOut:
     {
-      auto wifi_STA_data = getWiFi_STA_NWPluginData_static_runtime();
 
       // From a failed state we always turn off at least WiFi STA.
       // Only when we end up here from STA_Initializing, we also need to turn off AP.
@@ -387,7 +398,6 @@ void ESPEasyWiFi_t::setState(WiFi_STA_State_e newState, uint32_t timeout) {
       _connect_attempt = 0;
       _last_seen_connected.setNow();
       _state_timeout.setMillisFromNow(WIFI_STATE_MACHINE_STA_CONNECTED_STABLE);
-      auto wifi_STA_data = getWiFi_STA_NWPluginData_static_runtime();
 
       if (wifi_STA_data) {
         wifi_STA_data->mark_connected();
@@ -409,7 +419,6 @@ void ESPEasyWiFi_t::setState(WiFi_STA_State_e newState, uint32_t timeout) {
       break;
   }
 
-  auto wifi_STA_data = getWiFi_STA_NWPluginData_static_runtime();
 
   if (wifi_STA_data) {
     wifi_STA_data->processEvents();

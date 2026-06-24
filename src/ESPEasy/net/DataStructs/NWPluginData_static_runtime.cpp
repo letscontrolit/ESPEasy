@@ -284,19 +284,9 @@ void NWPluginData_static_runtime::processEvents()
     if (Settings.UseRules && _eventInterfaceName.length())
     {
       if (_operationalStats.isOn()) {
-        if (_isAP) {
-          eventQueue.addDeDup(F("WiFi#APmodeConnected"));
-        }
-        else {
-          eventQueue.addDeDup(concat(_eventInterfaceName, F("#Connected")));
-        }
+        eventQueue.addDeDup(concat(_eventInterfaceName, F("#Connected")));
       } else if (_operationalStats.isOff()) {
-        if (_isAP) {
-          eventQueue.addDeDup(F("WiFi#APmodeDisconnected"));
-        }
-        else {
-          eventQueue.addDeDup(concat(_eventInterfaceName, F("#Disconnected")));
-        }
+        eventQueue.addDeDup(concat(_eventInterfaceName, F("#Disconnected")));
       }
     }
     statusLED(true);
@@ -304,19 +294,9 @@ void NWPluginData_static_runtime::processEvents()
 
   if (_startStopStats.changedSinceLastCheck_and_clear() && Settings.UseRules) {
     if (_startStopStats.isOn()) {
-      if (_isAP) {
-        eventQueue.addDeDup(F("WiFi#APmodeEnabled"));
-      }
-      else {
-        eventQueue.addDeDup(concat(_eventInterfaceName, F("#Enabled")));
-      }
+      eventQueue.addDeDup(concat(_eventInterfaceName, F("#Enabled")));
     } else if (_startStopStats.isOff()) {
-      if (_isAP) {
-        eventQueue.addDeDup(F("WiFi#APmodeDisabled"));
-      }
-      else {
-        eventQueue.addDeDup(concat(_eventInterfaceName, F("#Disabled")));
-      }
+      eventQueue.addDeDup(concat(_eventInterfaceName, F("#Disabled")));
     }
   }
 }
