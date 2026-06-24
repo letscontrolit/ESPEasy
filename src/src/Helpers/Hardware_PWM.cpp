@@ -236,6 +236,9 @@ bool set_Gpio_PWM(int gpio, uint32_t dutyCycle, uint32_t fadeDuration_ms, uint32
 
 #if ESP_IDF_VERSION_MAJOR >= 5
 
+// FIXME TD-er: For now fade is disabled. See: https://github.com/espressif/arduino-esp32/issues/12709
+fadeDuration_ms = 0;
+
   if (fadeDuration_ms == 0)
   {
     analogWriteESP32(gpio, dutyCycle, frequency);
