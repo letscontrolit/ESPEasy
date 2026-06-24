@@ -1617,7 +1617,7 @@ int http_authenticate(const String& logIdentifier,
     http.setRedirectLimit(2);
   }
 #  if FEATURE_TLS
-  http.setTimeout(timeout);
+  http.setConnectTimeout(10000);
 #else
   # ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
 
@@ -1643,6 +1643,7 @@ int http_authenticate(const String& logIdentifier,
 # if defined(CORE_POST_2_6_0) || defined(ESP32)
 #  if FEATURE_TLS
   const String fullURL = joinURL(user, pass, host, port, uri, protocol);
+  addLog(LOG_LEVEL_INFO, concat(F("SendToHTTP full URL: "), fullURL));
   if (fullURL.startsWith(F("https")))
     http.begin(fullURL, nullptr); // HTTPS
   else 
@@ -1676,12 +1677,14 @@ int http_authenticate(const String& logIdentifier,
       //      }
     }
   }
+  String tmp = HttpMethod;
+  const char* httpMethod_cstr = &tmp[0];
 
   // start connection and send HTTP header (and body)
   if (equals(HttpMethod, F("HEAD")) || equals(HttpMethod, F("GET"))) {
-    httpCode = http.sendRequest(HttpMethod.c_str());
+    httpCode = http.sendRequest(httpMethod_cstr);
   } else {
-    httpCode = http.sendRequest(HttpMethod.c_str(), postStr);
+    httpCode = http.sendRequest(httpMethod_cstr, postStr);
   }
 
   // Check to see if we need to try digest auth
@@ -1723,9 +1726,9 @@ int http_authenticate(const String& logIdentifier,
 
       // start connection and send HTTP header (and body)
       if (equals(HttpMethod, F("HEAD")) || equals(HttpMethod, F("GET"))) {
-        httpCode = http.sendRequest(HttpMethod.c_str());
+        httpCode = http.sendRequest(httpMethod_cstr);
       } else {
-        httpCode = http.sendRequest(HttpMethod.c_str(), postStr);
+        httpCode = http.sendRequest(httpMethod_cstr, postStr);
       }
     }
   }
