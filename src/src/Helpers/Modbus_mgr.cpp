@@ -12,7 +12,7 @@
 # include <ESPeasySerial.h>
 # include "../Helpers/Modbus_mgr.h"
 
-# define MODBUS_DEBUG
+////# define MODBUS_DEBUG
 # ifdef BUILD_NO_DEBUG
 #  undef MODBUS_DEBUG // Debugging switched off
 # endif // ifdef BUILD_NO_DEBUG

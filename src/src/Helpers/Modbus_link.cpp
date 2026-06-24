@@ -214,11 +214,14 @@ void ModbusLINK_struct::processQueue()
 
     switch  ((*it)->_state)
     {
+      // Transaction is created but not yet queued. Skip it untill it is queued or discarded.
       case ModbusQueueState::NOT_QUEUED:
       {
         it++; // Not queued yet, move to the next transaction in the queue
       }
 
+      // First tranaction in queue ready to be transmitted. No other transaction is already being processed.
+      // Send the request and mark the transaction as sent, waiting for response.
       case ModbusQueueState::QUEUED:
       {
         // Send the request
@@ -237,6 +240,7 @@ void ModbusLINK_struct::processQueue()
         break;
       }
 
+      // Transaction is sent, waiting for response. Check if a response is received or if the timeout has expired.
       case ModbusQueueState::MESSAGE_SENT:
       {
         // Waiting for response
@@ -247,6 +251,9 @@ void ModbusLINK_struct::processQueue()
         else if (timePassedSince((*it)->_startTime) > (*it)->_timeout) {
           // Timeout expired
           (*it)->_state = ModbusQueueState::ERROR_OCCURRED; // Mark as error
+          addLogMove(LOG_LEVEL_INFO,
+                     strformat(F("Modbus link ERROR: link=%p, transaction ID= %u, available= %d, expected= %d"), this, (*it)->_id,
+                               _easySerial->available(), (*it)->_rcvframe_length));
         }
         else {
           // Still waiting
@@ -265,10 +272,10 @@ void ModbusLINK_struct::processQueue()
         break;
       }
 
+      // All remaining states indicate that the transaction can be removed from the queue and destroyed.
       default:
       {
         (*it)->_state = ModbusQueueState::READY_FOR_DESTROY;
-
         delete (*it);                     // destroy the queue element
         it = _transactionQueue.erase(it); // Remove it from the list
         break;
@@ -341,7 +348,7 @@ const __FlashStringHelper* toString(ModbusQueueState_t state) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Debugging function to dump the queue element contents to the log
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void Modbus_Transaction::print() 
+void Modbus_Transaction::print()
 {
     #ifdef MODBUS_DEBUG
 

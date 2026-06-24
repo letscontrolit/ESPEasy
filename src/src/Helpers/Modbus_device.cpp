@@ -58,7 +58,7 @@ bool ModbusDEVICE_struct::init(uint8_t slaveAddress, int linkId, taskIndex_t tas
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     addLogMove(LOG_LEVEL_INFO,
-               strformat(F("Modbus: Device Init, Slave address = %u, This = %p, deviceID = %u, linkId=%d, taskIndex=%d"),
+               strformat(F("Modbus Device: Init, Slave address = %u, This = %p, deviceID = %u, linkId=%d, taskIndex=%d"),
                          slaveAddress, this,  _deviceID, linkId, taskIndex));
   }
   # endif // MODBUS_DEBUG
@@ -258,12 +258,12 @@ void ModbusDEVICE_struct::linkCallback(Modbus_Transaction *req)
   ModbusResultState resultState = ModbusResultState::Error; // Default to error unless proven otherwise
 
   if (req == nullptr) {
-    addLogMove(LOG_LEVEL_INFO, F("Modbus: ERROR, Null pointer passed in callback"));
+    addLogMove(LOG_LEVEL_INFO, F("Modbus Device: ERROR, Null pointer passed in callback"));
     return;
   }
 
   # ifdef MODBUS_DEBUG
-  String log = strformat(F("Modbus: Device callback, device= %d, link= %d, Request= %d, Message= %d"),
+  String log = strformat(F("Modbus Device: Device callback, device= %d, link= %d, Request= %d, Message= %d"),
                          _deviceID,
                          _linkId,
                          req->_id,
@@ -458,7 +458,7 @@ void ModbusDEVICE_struct::dump_buffer(const uint8_t *buffer, size_t length) {
   # ifdef MODBUS_DEBUG
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log = F("Modbus: Device, Dumping buffer: ");
+    String log = F("Modbus Device Dumping buffer: ");
 
     for (size_t i = 0; i < length; ++i) {
       log += String(buffer[i], HEX);

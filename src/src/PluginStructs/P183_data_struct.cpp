@@ -165,6 +165,10 @@ bool P183_data_struct::plugin_once_per_second(EventStruct *event)
     return true; // Cache not used, nothing to do
   }
 
+  if (P183_CACHE_SIZE > P183_CACHE_SIZE_MAX) {
+    return false; // Cache size exceeds maximum allowed size
+  }
+
   // Queue a read request for the cache values. The result will be processed in the task timer event.
   _cacheStart = P183_CACHE_START;
   _cacheSize  = P183_CACHE_SIZE;
@@ -247,8 +251,9 @@ void P183_data_struct::scan_next_module()
   }
 }
 
+#ifdef P183_ALLOW_MODBUS_WAIT
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Read a Modbus register from the device. Wait untial the data is available
+// Read a Modbus register from the device. Block until the data is available
 // Warning: this may take time as we wait for the  Modbus message to be exchanged
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 uint16_t P183_data_struct::readRegisterWait(uint16_t address) {
@@ -273,6 +278,7 @@ uint16_t P183_data_struct::readRegisterWait(uint16_t address) {
 
   return value;
 }
+#endif // ifdef P183_ALLOW_MODBUS_WAIT
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 uint16_t P183_data_struct::readRegisterCache(uint16_t address)

@@ -206,7 +206,13 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
             value = P183_data->readRegisterCache(address);
           }
           else {
+            #ifdef P183_ALLOW_MODBUS_WAIT
             value = P183_data->readRegisterWait(address); // Warning: this may take time as we waith for the  Modbus message to be exchanged
+            #else
+            addLogMove(LOG_LEVEL_ERROR, F("P183 : Modbus read command with invalid address"));
+            value = 0;
+            #endif // ifdef P183_ALLOW_MODBUS_WAIT
+
           }
 
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -284,7 +290,12 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
           value = P183_data->readRegisterCache(address);
         }
         else {
+          #ifdef P183_ALLOW_MODBUS_WAIT
           value = P183_data->readRegisterWait(address); // Warning: this may take time as we waith for the  Modbus message to be exchanged
+          #else
+          addLogMove(LOG_LEVEL_ERROR, F("P183 : Modbus Get config command invalid address"));
+          value = 0;
+          #endif // ifdef P183_ALLOW_MODBUS_WAIT  
         }
         string  = String(value);
         success = true;
