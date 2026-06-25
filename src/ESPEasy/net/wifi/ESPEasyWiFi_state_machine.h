@@ -7,7 +7,7 @@
 # include "../../../src/Helpers/LongTermTimer.h"
 
 # include "../wifi/WiFi_STA_connected_state.h"
-# include "../wifi/WiFi_State.h"
+# include "../wifi/WiFi_STA_State.h"
 
 # include <IPAddress.h>
 
@@ -63,7 +63,7 @@ public:
   // Process the state machine for managing WiFi connection
   void        loop();
 
-  WiFiState_e getState() const
+  WiFi_STA_State_e getState() const
   {
     return _state;
   }
@@ -80,7 +80,7 @@ public:
 
 private:
 
-  void setState(WiFiState_e newState,
+  void setState(WiFi_STA_State_e newState,
                 uint32_t    timeout = 0);
 
   // Handle timeouts + start of AP mode
@@ -110,7 +110,7 @@ private:
   //  String _last_ssid;
   //  MAC_address _last_bssid;
   //  uint8_t _last_channel = 0;
-  WiFiState_e _state = WiFiState_e::Disabled;
+  WiFi_STA_State_e _state = WiFi_STA_State_e::Disabled;
 
   ESPEasyWiFi_mode_e _mode = ESPEasyWiFi_mode_e::Off;
 
