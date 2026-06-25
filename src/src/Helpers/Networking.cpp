@@ -1506,7 +1506,7 @@ String getDigestAuth(const String& authReq,
     md5.toString().c_str()); // response
 }
 
-# ifndef BUILD_NO_DEBUG
+# if !defined(BUILD_NO_DEBUG) || defined(ESP32)
 
 void log_http_result(const ESPEasy_HTTPClient& http,
                      const String    & logIdentifier,
@@ -1643,7 +1643,9 @@ int http_authenticate(const String& logIdentifier,
 # if defined(CORE_POST_2_6_0) || defined(ESP32)
 #  if FEATURE_TLS
   const String fullURL = joinURL(user, pass, host, port, uri, protocol);
+#ifndef LIMIT_BUILD_SIZE
   addLog(LOG_LEVEL_INFO, concat(F("SendToHTTP full URL: "), fullURL));
+#endif
   if (fullURL.startsWith(F("https")))
     http.begin(fullURL, nullptr); // HTTPS
   else 
@@ -1753,7 +1755,7 @@ int http_authenticate(const String& logIdentifier,
   }
 // -----------------------------------------------------------
 
-# ifndef BUILD_NO_DEBUG
+# if !defined(BUILD_NO_DEBUG) || defined(ESP32)
   log_http_result(http, logIdentifier, host + ':' + port, HttpMethod, httpCode, EMPTY_STRING);
 # endif
   return httpCode;
