@@ -69,7 +69,7 @@ struct Modbus_Transaction {
 typedef Modbus_Transaction *Modbus_transaction_ptr;
 
 // Queue of Modbus request elements
-typedef std::list<Modbus_Transaction *> Modbus_TransactionQueue;
+typedef std::list<Modbus_Transaction> Modbus_TransactionQueue;
 
 
 // ModbusLINK structure representing a MODBUS LINK

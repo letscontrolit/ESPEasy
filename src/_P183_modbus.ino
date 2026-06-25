@@ -305,7 +305,7 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_SHOW_CONFIG:
     {
-      string += strformat(F("Modbus %d"), P183_LINK_ID);
+      string += strformat(F("Modbus %d<br>Addr: %d"), P183_LINK_ID, P183_DEV_ID);
       success = true;
       break;
     }
