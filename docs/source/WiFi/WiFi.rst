@@ -162,7 +162,7 @@ Case 1, your PC does not know the MAC address of the ESP:
 
 * Your PC tries to find the MAC address belonging to an IP address using an ARP packet (question is like: "Who has 1.2.3.4?")
 * ARP packets gets broadcasted to the entire network
-* If the ESP misses such an ARP request, you cannot route the IP packet to your ESP.``  fail
+* If the ESP misses such an ARP request, you cannot route the IP packet to your ESP. ->  fail
 
 Case 2, your PR does know the MAC address of the ESP, but a switch or access point does not:
 
