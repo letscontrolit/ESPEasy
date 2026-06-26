@@ -251,7 +251,7 @@ void P183_data_struct::scan_next_module()
   }
 }
 
-#ifdef P183_ALLOW_MODBUS_WAIT
+#if P183_ALLOW_MODBUS_WAIT
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Read a Modbus register from the device. Block until the data is available
 // Warning: this may take time as we wait for the  Modbus message to be exchanged

@@ -87,23 +87,22 @@ struct ModbusLINK_struct  {
   bool init(const ESPEasySerialPort port,
             const int8_t            serial_rx,
             const int8_t            serial_tx,
-            uint16_t                baudrate,
+            uint32_t                baudrate,
             int8_t                  dere_pin,
             bool                    collision_detect = false);
 
-  bool    isInitialized() const { return (_easySerial != nullptr) && _initialized; }
+  bool                   isInitialized() const { return (_easySerial != nullptr) && _initialized; }
 
-  void    freeTransactions(struct ModbusDEVICE_struct *device);
-  bool    newTransaction(ModbusDEVICE_struct    *device,
-                         Modbus_transaction_ptr& transaction);
-  bool    queueTransaction(Modbus_Transaction *transaction);
-  void    processQueue();
+  void                   freeTransactions(const ModbusDEVICE_struct *device);
+  Modbus_transaction_ptr newTransaction(ModbusDEVICE_struct *device);
+  bool                   queueTransaction(Modbus_Transaction *transaction);
+  void                   processQueue();
 
-  int16_t getBaudrate(void) const;
-  int16_t getSerialRX(void) const;
-  int16_t getSerialTX(void) const;
-  int8_t  getDerePin(void) const;
-  bool    getCollisionDetect(void) const;
+  int16_t                getBaudrate() const;
+  int16_t                getSerialRX() const;
+  int16_t                getSerialTX() const;
+  int8_t                 getDerePin() const;
+  bool                   getCollisionDetect() const;
 
 private:
 

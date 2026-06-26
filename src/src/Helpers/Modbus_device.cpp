@@ -96,8 +96,7 @@ bool ModbusDEVICE_struct::readHoldingRegister(uint16_t          address,
   if (!isInitialized()) {
     return false;
   }
-  Modbus_Transaction *transaction = nullptr; // Declare the request pointer
-  ModbusMGR_singleton.newTransaction(_linkId, this, transaction);
+  Modbus_Transaction *transaction = ModbusMGR_singleton.newTransaction(_linkId, this);
 
   if (transaction == nullptr) {
     return false;                                                // Failed to allocate a request structure
@@ -134,8 +133,7 @@ bool ModbusDEVICE_struct::readModuleHoldingRegister(uint8_t  busAddress,
     return false;
   }
 
-  Modbus_Transaction *transaction = nullptr; // Declare the request pointer
-  ModbusMGR_singleton.newTransaction(_linkId, this, transaction);
+  Modbus_Transaction *transaction =   ModbusMGR_singleton.newTransaction(_linkId, this);
 
   if (transaction == nullptr) {
     return false;                                                // Failed to allocate a request structure
@@ -159,8 +157,7 @@ bool ModbusDEVICE_struct::readHoldingRegisters(uint16_t address, uint16_t size, 
     return false;
   }
 
-  Modbus_Transaction *transaction = nullptr; // Declare the request pointer
-  ModbusMGR_singleton.newTransaction(_linkId, this, transaction);
+  Modbus_Transaction *transaction =  ModbusMGR_singleton.newTransaction(_linkId, this);
 
   if (transaction == nullptr) {
     return false;                                                // Failed to allocate a request structure
@@ -208,8 +205,7 @@ bool ModbusDEVICE_struct::writeSingleRegister(uint16_t           address,
     return false;
   }
   
-  Modbus_Transaction *transaction = nullptr; // Declare the request pointer
-  ModbusMGR_singleton.newTransaction(_linkId, this, transaction);
+  Modbus_Transaction *transaction = ModbusMGR_singleton.newTransaction(_linkId, this);
 
   if (transaction == nullptr) {
     return false;                                                // Failed to allocate a request structure

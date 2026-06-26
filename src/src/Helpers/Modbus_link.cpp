@@ -13,7 +13,7 @@
 # include "../Helpers/Modbus_device.h"
 # include "../Helpers/Modbus_link.h"
 
-# define MODBUS_DEBUG
+////# define MODBUS_DEBUG
 # ifdef BUILD_NO_DEBUG
 #  undef MODBUS_DEBUG // Debugging switched off
 # endif // ifdef BUILD_NO_DEBUG
@@ -53,7 +53,7 @@ void ModbusLINK_struct::reset() {
 bool ModbusLINK_struct::init(const ESPEasySerialPort port,
                              const int8_t            serial_rx,
                              const int8_t            serial_tx,
-                             uint16_t                baudrate,
+                             uint32_t                baudrate,
                              int8_t                  dere_pin,
                              bool                    collision_detect) {
   int available = 0;
@@ -120,7 +120,7 @@ bool ModbusLINK_struct::init(const ESPEasySerialPort port,
 // Free all queued transactions for the given device
 // This shall be called when a device is removed to free the pending requests for the device preventing callback issues.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-void ModbusLINK_struct::freeTransactions(ModbusDEVICE_struct *device)
+void ModbusLINK_struct::freeTransactions(const ModbusDEVICE_struct *device)
 {
   if (!isInitialized()) {
     addLogMove(LOG_LEVEL_ERROR, F("Modbus Link: Attempt to free transactions on uninitialized link"));
@@ -138,26 +138,22 @@ void ModbusLINK_struct::freeTransactions(ModbusDEVICE_struct *device)
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-bool ModbusLINK_struct::newTransaction(ModbusDEVICE_struct *device, Modbus_transaction_ptr& transaction)
+Modbus_transaction_ptr ModbusLINK_struct::newTransaction(ModbusDEVICE_struct *device)
 {
-  bool success = false;
-
   if (!isInitialized()) {
     addLogMove(LOG_LEVEL_ERROR, F("Modbus Link: Attempt to create transaction for uninitialized link"));
+    return nullptr;
   }
   else {
-
     auto& tr = _transactionQueue.emplace_back(device); // Put a new transaction at the end of the queue
-    tr._id      = ++(_queueID);                  // Assign a unique ID to the transaction
-    tr._timeout = _modbus_timeout;               // Default timeout value
-    transaction = &tr;                           // Return the pointer to the new transaction
+    tr._id      = ++(_queueID);                        // Assign a unique ID to the transaction
+    tr._timeout = _modbus_timeout;                     // Default timeout value
     # ifdef MODBUS_DEBUG
     addLogMove(LOG_LEVEL_INFO, F("Modbus Link: new transaction"));
+    tr.print();                                        // Print the transaction details for debugging
     # endif // MODBUS_DEBUG
-    tr.print(); // Print the transaction details for debugging
-    success = true;
+    return &tr;
   }
-  return success;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -203,24 +199,25 @@ bool ModbusLINK_struct::queueTransaction(Modbus_Transaction *transaction) {
 void ModbusLINK_struct::processQueue()
 {
   if (_processing || !isInitialized() || (_transactionQueue.empty())) {
-    return;                              // Serial port not initialized or queue is empty, nothing to process
+    return;                                      // Serial port not initialized or queue is empty, nothing to process
   }
-  _processing = true;                    // Set processing flag to prevent reentrancy issues
+  _processing = true;                            // Set processing flag to prevent reentrancy issues
 
-  auto it   = _transactionQueue.begin(); // Iterator for the request queue
-  bool busy = false;                     // Only process one request at a time
+  auto it           = _transactionQueue.begin(); // Iterator for the request queue
+  bool linkOccupied = false;                     // Only process one request at a time
 
-  while ((it != _transactionQueue.end()) && !busy) {
+  while ((it != _transactionQueue.end()) && !linkOccupied) {
     # ifdef MODBUS_DEBUG
-    (*it).print();
+    it->print();
     # endif // MODBUS_DEBUG
 
-    switch  ((*it)._state)
+    switch  (it->_state)
     {
       // Transaction is created but not yet queued. Skip it untill it is queued or discarded.
       case ModbusQueueState::NOT_QUEUED:
       {
         it++; // Not queued yet, move to the next transaction in the queue
+        break;
       }
 
       // First tranaction in queue ready to be transmitted. No other transaction is already being processed.
@@ -236,10 +233,11 @@ void ModbusLINK_struct::processQueue()
             _easySerial->read();
           }
         }
-        _easySerial->write((*it)._sendframe, (*it)._sendframe_length);
-        (*it)._state     = ModbusQueueState::MESSAGE_SENT; // Mark as sent, waiting for response
-        (*it)._startTime = millis();                       // Record the time the transaction
-        busy             = true;                           // Only process one request at a time
+        _easySerial->write(it->_sendframe, it->_sendframe_length);
+        it->_state     = ModbusQueueState::MESSAGE_SENT; // Mark as sent, waiting for response
+        it->_startTime = millis();                       // Record the time the transaction
+        linkOccupied   = true;                           // Only process one request at a time
+        it++;                                            // Proforma move to the next transaction in the queue
         break;
       }
 
@@ -247,69 +245,71 @@ void ModbusLINK_struct::processQueue()
       case ModbusQueueState::MESSAGE_SENT:
       {
         // Waiting for response
-        if (_easySerial->available() >= (*it)._rcvframe_length) {
-          _easySerial->readBytes((*it)._rcvframe, (*it)._rcvframe_length);
-          (*it)._state = ModbusQueueState::RESPONSE_RECEIVED; // Mark as response received
+        if (_easySerial->available() >= (it->_rcvframe_length)) {
+          _easySerial->readBytes(it->_rcvframe, it->_rcvframe_length);
+          it->_state = ModbusQueueState::RESPONSE_RECEIVED; // Mark as response received
         }
-        else if (timePassedSince((*it)._startTime) > (*it)._timeout) {
+        else if (timePassedSince(it->_startTime) > it->_timeout) {
           // Timeout expired
-          (*it)._state = ModbusQueueState::ERROR_OCCURRED; // Mark as error
+          it->_state = ModbusQueueState::ERROR_OCCURRED; // Mark as error
+          # ifdef MODBUS_DEBUG
           addLogMove(LOG_LEVEL_INFO,
-                     strformat(F("Modbus link ERROR: link=%p, transaction ID= %u, available= %d, expected= %d"), this, (*it)._id,
-                               _easySerial->available(), (*it)._rcvframe_length));
+                     strformat(F("Modbus link ERROR: link=%p, transaction ID= %u, available= %d, expected= %d"), this, it->_id,
+                               _easySerial->available(), it->_rcvframe_length));
+          # endif // MODBUS_DEBUG
         }
         else {
           // Still waiting
-          busy = true;                           // Only process one request at a time
+          linkOccupied = true;                 // Only process one request at a time
         }
 
-        if (!busy) {                             // We received a response or an error occurred, process the result
-          if ((*it)._device != nullptr) {
-            (*it)._device->linkCallback(&(*it)); // Notify the device that a response was received
+        if (!linkOccupied) {                   // We received a response or an error occurred, process the result
+          if (it->_device != nullptr) {
+            it->_device->linkCallback(&(*it)); // Notify the device that a response was received
           }
-          (*it)._state = ModbusQueueState::READY_FOR_DESTROY;
+          it->_state = ModbusQueueState::READY_FOR_DESTROY;
         }
-        else {
-          it++; // Move to the next transaction in the queue
-        }
+        it++; // Move to the next transaction in the queue
         break;
       }
 
       // All remaining states indicate that the transaction can be removed from the queue and destroyed.
-      default:
+      case ModbusQueueState::READY_FOR_DESTROY:
+      case ModbusQueueState::ERROR_OCCURRED:
+      case ModbusQueueState::RESPONSE_RECEIVED:
       {
-        (*it)._state = ModbusQueueState::READY_FOR_DESTROY;
-        it           = _transactionQueue.erase(it); // Remove it from the list
+        it->_state = ModbusQueueState::READY_FOR_DESTROY;
+        it         = _transactionQueue.erase(it); // Remove it from the list
         break;
       }
-    }                                               // switch
-  }                                                 // next iterarion
+    }                                             // switch
+  }                                               // next iterarion
 
-  _processing = false;                              // Clear processing flag to allow new processing cycles
+  _processing = false;                            // Clear processing flag to allow new processing cycles
   return;
 }
 
-int16_t ModbusLINK_struct::getBaudrate(void) const
+int16_t ModbusLINK_struct::getBaudrate() const
 {
   return _easySerial != nullptr ? _easySerial->getBaudRate() : 0;
 }
 
-int16_t ModbusLINK_struct::getSerialRX(void) const
+int16_t ModbusLINK_struct::getSerialRX() const
 {
   return _easySerial != nullptr ? _easySerial->getRxPin() : -1;
 }
 
-int16_t ModbusLINK_struct::getSerialTX(void) const
+int16_t ModbusLINK_struct::getSerialTX() const
 {
   return _easySerial != nullptr ? _easySerial->getTxPin() : -1;
 }
 
-int8_t ModbusLINK_struct::getDerePin(void) const
+int8_t ModbusLINK_struct::getDerePin() const
 {
   return _dere_pin;
 }
 
-bool ModbusLINK_struct::getCollisionDetect(void) const
+bool ModbusLINK_struct::getCollisionDetect() const
 {
   return _collision_detect;
 }

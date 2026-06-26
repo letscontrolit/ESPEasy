@@ -21,21 +21,20 @@ typedef struct ModbusMGR_struct  {
   ModbusMGR_struct();
   ~ModbusMGR_struct();
 
-  bool initialize();
-  void processLinks();
+  bool                   initialize();
+  void                   processLinks();
 
-  bool connect(int                  linkId,
-               ModbusDEVICE_struct *deviceID);
+  bool                   connect(int                  linkId,
+                                 const ModbusDEVICE_struct *deviceID);
 
-  bool disconnect(int                 linkId,
-                  ModbusDEVICE_struct*deviceID);
+  bool                   disconnect(int                 linkId,
+                                    const ModbusDEVICE_struct*deviceID);
 
-  bool newTransaction(int                   linkId,
-                      ModbusDEVICE_struct  *device,
-                      Modbus_transaction_ptr &transaction);
+  Modbus_transaction_ptr newTransaction(int                  linkId,
+                                        ModbusDEVICE_struct *device);
 
-  bool queueTransaction(int                 linkId,
-                        Modbus_Transaction *transaction);
+  bool                   queueTransaction(int                 linkId,
+                                          Modbus_Transaction *transaction);
 
 
   void dumpAdminInfo();
@@ -63,6 +62,8 @@ private:
     ESPEasy_key_value_store  *kvs              = nullptr; // Key-value store for storing link-specific settings and parameters
 
   };
+
+  static bool validLinkId(int linkId) { return ((linkId >= 0) && (linkId < ModbusMGR_struct::MAX_MODBUS_LINKS)); }
 
   ModbusLinkInfo_struct _modbus_links[MAX_MODBUS_LINKS] = {};    // All links managed by the Modbus manager
   bool                  _initialized                    = false; // Flag indicating if the manager is initialized
