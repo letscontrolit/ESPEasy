@@ -38,7 +38,7 @@
 #include "../../ESPEasy/net/Globals/ESPEasyWiFiEvent.h"
 #include "../../ESPEasy/net/Globals/NetworkState.h"
 #include "../../ESPEasy/net/Globals/NWPlugins.h"
-#include "../../ESPEasy/net/wifi/WiFi_State.h"
+#include "../../ESPEasy/net/wifi/WiFi_STA_State.h"
 
 
 #ifdef USES_C015
