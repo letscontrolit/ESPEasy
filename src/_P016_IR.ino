@@ -653,7 +653,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
 
         if (results.overflow)
         {
-          addLog(LOG_LEVEL_ERROR, F("IR: WARNING, IR code is too big for buffer. Try pressing the transmiter button only momenteraly"));
+          addLog(LOG_LEVEL_ERROR, F("IR: WARNING, IR code is too big for buffer. Try pressing the transmitter button only momentarily"));
           success = false;
 
           # if P016_EVENT_ON_ERROR
