@@ -244,6 +244,8 @@
    "
    ``WiFi#Connected``
    Triggered when the ESP has connected to Wi-Fi.
+
+   N.B. Similar events are also given for other network interfaces like ``ap``, ``eth`` or ``ppp``.
    ","
 
    .. code-block:: none
@@ -256,6 +258,8 @@
    "
    ``WiFi#Disconnected``
    Triggered when the ESP has disconnected from Wi-Fi.
+
+   N.B. Similar events are also given for other network interfaces like ``ap``, ``eth`` or ``ppp``.
    ","
 
    .. code-block:: none
@@ -270,6 +274,34 @@
       GPIO,2,1 // Turn off WiFi led
       SendToHTTP,url.com,80,/report.php?hash=123abc456&t=[temp2#out]
     Endon
+
+   "
+   "
+   ``WiFi#Enabled``
+   Triggered when the network interface ``WiFi`` was enabled.
+
+   N.B. Similar events are also given for other network interfaces like ``ap``, ``eth`` or ``ppp``.
+   ","
+
+   .. code-block:: none
+
+	   on WiFi#Enabled do
+         GPIO,2,1 // Turn on WiFi led
+	   endon
+
+   "
+   "
+   ``WiFi#Disabled``
+   Triggered when the network interface ``WiFi`` was disabled.
+
+   N.B. Similar events are also given for other network interfaces like ``ap``, ``eth`` or ``ppp``.
+   ","
+
+   .. code-block:: none
+
+	  On WiFi#Disabled Do
+	    GPIO,2,0 // Turn off WiFi led
+	  Endon
 
    "
    "
@@ -298,7 +330,7 @@
 
    "
    "
-   ``WiFi#APmodeEnabled``
+   ``ap#Enabled``
    Triggered when the ESP has set the AP mode (access point) active.
    This may happen when no valid WiFi settings are found or the ESP cannot connect to the set AP, but it can also be enabled via some command.
    N.B. Sending a publish command may not be very useful on this event, since this will mainly happen when there is no WiFi connection.
@@ -306,20 +338,20 @@
 
    .. code-block:: none
 
-	   on WiFi#APmodeEnabled do
+	   on ap#Enabled do
 	    ... // Some command
 	   endon
 
    "
    "
-   ``WiFi#APmodeDisabled``
+   ``ap#Disabled``
    Triggered when the ESP has disabled the AP mode (access point).
    This can happen some time (default 60 seconds) after a WiFi connection has been made. Or disabled using some command.
    ","
 
    .. code-block:: none
 
-	   on WiFi#APmodeDisabled do
+	   on ap#Disabled do
 	    Publish,%sysname%/status,AP disabled
 	   endon
 

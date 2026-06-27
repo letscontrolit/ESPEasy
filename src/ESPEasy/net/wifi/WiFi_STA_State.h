@@ -52,24 +52,18 @@ namespace wifi {
  */
 
 
-enum class WiFiState_e
+enum class WiFi_STA_State_e
 {
-  // WiFi radio is off and no new attempt should be made (e.g. low power mode or Ethernet active)
+  // WiFi STA radio is off.
+  // When timeout is set to 0, no new attempt should be made (e.g. low power mode or Ethernet active)
+  // Will only change to STA_Initializing when WiFi is allowed/required to start
   Disabled,
 
-  // WiFi radio off, to continue, everything needs to be (re)initialized
-  WiFiOFF,
+  // Error state, some action failed
+  TimeOut,
 
-  // Only running in AP mode
-  // Typically this is only used when STA is off and AP Auto Start is checked
-  // TODO TD-er: Must implement this.
-  AP_only,
-
-  // Fallback mode which is started when connecting to AP was not possible
-  AP_Fallback,
-
-  // WiFi was in some kind of error state or needs waiting period
-  IdleWaiting,
+  // State from where we decide to start scanning or connecting
+  STA_Initializing,
 
   // STA mode + scanning
   STA_Scanning,
@@ -87,12 +81,10 @@ enum class WiFiState_e
 
   // Connected to an AP
   STA_Connected,
-
-  STA_Connected_Setup
-
+  STA_Connected_Stable
 };
 
-const __FlashStringHelper* toString(WiFiState_e state);
+const __FlashStringHelper* toString(WiFi_STA_State_e state);
 
 
 } // namespace wifi
