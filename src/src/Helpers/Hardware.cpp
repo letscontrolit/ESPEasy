@@ -952,9 +952,17 @@ void setTaskDevice_to_TaskIndex(pluginID_t taskdevicenumber, taskIndex_t taskInd
     PluginCall(PLUGIN_SET_DEFAULTS,         &TempEvent, dummy);
     PluginCall(PLUGIN_GET_DEVICEVALUENAMES, &TempEvent, dummy); // the plugin should populate ExtraTaskSettings with its default values.
 
+    const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
+
+    if (!Device[DeviceIndex].TimerOptional) { // Set default delay, unless it's optional...
+      Settings.TaskDeviceTimer[taskIndex] = Settings.Delay;
+    }
+    else {
+      Settings.TaskDeviceTimer[taskIndex] = 0;
+    }
+
     #if FEATURE_MQTT_DISCOVER && FEATURE_CUSTOM_TASKVAR_VTYPE && FEATURE_TASKVALUE_UNIT_OF_MEASURE
     // Fill in standard Unit of measurement and Value Type, if possible
-    const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);
     std::vector<DiscoveryItem> discoveryItems;
     MQTT_DiscoveryGetDeviceVType(taskIndex, discoveryItems, getValueCountForTask(taskIndex), dummy);
 
@@ -1002,13 +1010,6 @@ void setBasicTaskValues(taskIndex_t taskIndex, unsigned long taskdevicetimer,
 
   if (taskdevicetimer > 0) {
     Settings.TaskDeviceTimer[taskIndex] = taskdevicetimer;
-  } else {
-    if (!Device[DeviceIndex].TimerOptional) { // Set default delay, unless it's optional...
-      Settings.TaskDeviceTimer[taskIndex] = Settings.Delay;
-    }
-    else {
-      Settings.TaskDeviceTimer[taskIndex] = 0;
-    }
   }
   Settings.TaskDeviceEnabled[taskIndex] = enabled;
   //Settings.TaskDeviceEnabled[taskIndex].enabled = enabled;
