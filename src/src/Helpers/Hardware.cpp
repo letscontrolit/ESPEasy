@@ -1010,6 +1010,13 @@ void setBasicTaskValues(taskIndex_t taskIndex, unsigned long taskdevicetimer,
 
   if (taskdevicetimer > 0) {
     Settings.TaskDeviceTimer[taskIndex] = taskdevicetimer;
+  } else {
+    if (!Device[DeviceIndex].TimerOptional) { // Set default delay, unless it's optional...
+      Settings.TaskDeviceTimer[taskIndex] = Settings.Delay;
+    }
+    else {
+      Settings.TaskDeviceTimer[taskIndex] = 0;
+    }
   }
   Settings.TaskDeviceEnabled[taskIndex] = enabled;
   //Settings.TaskDeviceEnabled[taskIndex].enabled = enabled;
