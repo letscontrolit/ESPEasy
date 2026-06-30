@@ -187,6 +187,7 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
           F("Number of chips (Q7 &rarr; DS)"), F("chipcnt"), P129_CONFIG_CHIP_COUNT);
         addUnit(concat(F("Daisychained 1.."), P129_MAX_CHIP_COUNT));
         # ifndef LIMIT_BUILD_SIZE
+
         // addFormNote(F("Changing the number of chips will reload the page and update the Event configuration."));
         # endif // ifndef LIMIT_BUILD_SIZE
       }
@@ -389,8 +390,19 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
 
       if ((P129_CONFIG_FLAGS_GET_OUTPUT_SELECTION == P129_OUTPUT_BOTH) ||
           (P129_CONFIG_FLAGS_GET_OUTPUT_SELECTION == P129_OUTPUT_HEXBIN)) {
+        uint8_t dotInsert = string.length();
+        uint8_t dotOffset;
         string += '0';
-        string += (P129_CONFIG_FLAGS_GET_VALUES_DISPLAY ? 'b' : 'x');
+
+        if (P129_CONFIG_FLAGS_GET_VALUES_DISPLAY) {
+          string    += 'b';
+          dotInsert += 10;
+          dotOffset  = 9;
+        } else {
+          string    += 'x';
+          dotInsert += 4;
+          dotOffset  = 3;
+        }
         string += P129_ul2stringFixed(UserVar.getUint32(event->TaskIndex, event->idx),
                                       # ifdef P129_SHOW_VALUES
                                       (P129_CONFIG_FLAGS_GET_VALUES_DISPLAY ? BIN :
@@ -400,6 +412,12 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
                                       )
                                       # endif // ifdef P129_SHOW_VALUES
                                       );
+
+        if (1 == event->ParN[event->idx]) {                         // Get formatted value
+          for (uint8_t i = 0; i < 3; ++i, dotInsert += dotOffset) { // Insert readability separators
+            string = string.substring(0, dotInsert) + '.' + string.substring(dotInsert);
+          }
+        }
       }
       success = true;
       break;

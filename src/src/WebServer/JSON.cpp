@@ -526,7 +526,8 @@ void handle_json()
                     for (uint8_t x = 0; x < valueCount; x++)
                     {
                       String value;
-                      TempEvent.idx = x;
+                      TempEvent.idx     = x;
+                      TempEvent.ParN[x] = 1; // Get formatted version of the value
                       PluginCall(PLUGIN_FORMAT_USERVAR, &TempEvent, value);
 
                       if (!value.isEmpty()) {
