@@ -1,0 +1,211 @@
+#ifndef PLUGINSTRUCTS_P188_DATA_STRUCT_H
+#define PLUGINSTRUCTS_P188_DATA_STRUCT_H
+
+#include "../../_Plugin_Helper.h"
+#ifdef USES_P188
+
+/**********************************************/
+/********** TLA2528 specific defines **********/
+/**********************************************/
+
+#define TLA2528_CHANNEL_NUM           8
+
+#define TLA2528_OPC_SINGLE_READ       0x10
+#define TLA2528_OPC_SINGLE_WRITE      0x08
+#define TLA2528_OPC_SET_BIT           0x18
+#define TLA2528_OPC_CLR_BIT           0x20
+#define TLA2528_OPC_MULT_READ         0x30
+#define TLA2528_OPC_MULT_WRITE        0x28
+
+
+#define TLA2528_REG_SYSTEM_STATUS     0x00
+
+#define TLA2528_REG_GENERAL_CFG       0x01
+#define TLA2528_BIT_GC_CNVST          0x08
+#define TLA2528_BIT_GC_CH_RST         0x04
+#define TLA2528_BIT_GC_CAL            0x02
+#define TLA2528_BIT_GC_RST            0x01
+
+#define TLA2528_REG_DATA_CFG          0x02
+#define TLA2528_BIT_DC_FIX_PAT        0x80
+#define TLA2528_BIT_DC_APPEND_STATUS  0x10
+
+#define TLA2528_REG_OSR_CFG           0x03
+#define TLA2528_VAL_OSR_0             0x00
+#define TLA2528_VAL_OSR_2             0x01
+#define TLA2528_VAL_OSR_4             0x02
+#define TLA2528_VAL_OSR_8             0x03
+#define TLA2528_VAL_OSR_16            0x04
+#define TLA2528_VAL_OSR_32            0x05
+#define TLA2528_VAL_OSR_64            0x06
+#define TLA2528_VAL_OSR_128           0x07
+
+#define TLA2528_REG_OPMODE_CFG        0x04
+#define TLA2528_VAL_OC_HS_1us         0x00
+#define TLA2528_VAL_OC_HS_1_5us       0x01
+#define TLA2528_VAL_OC_HS_2us         0x02
+#define TLA2528_VAL_OC_HS_3us         0x03
+#define TLA2528_VAL_OC_HS_4us         0x04
+#define TLA2528_VAL_OC_HS_6us         0x05
+#define TLA2528_VAL_OC_HS_8us         0x06
+#define TLA2528_VAL_OC_HS_12us        0x07
+#define TLA2528_VAL_OC_HS_16us        0x08
+#define TLA2528_VAL_OC_HS_24us        0x09
+#define TLA2528_VAL_OC_HS_32us        0x0a
+#define TLA2528_VAL_OC_HS_48us        0x0b
+#define TLA2528_VAL_OC_HS_64us        0x0c
+#define TLA2528_VAL_OC_HS_96us        0x0d
+#define TLA2528_VAL_OC_HS_128us       0x0e
+#define TLA2528_VAL_OC_HS_192us       0x0f
+#define TLA2528_VAL_OC_LP_32us        0x10
+#define TLA2528_VAL_OC_LP_48us        0x11
+#define TLA2528_VAL_OC_LP_64us        0x12
+#define TLA2528_VAL_OC_LP_96us        0x13
+#define TLA2528_VAL_OC_LP_128us       0x14
+#define TLA2528_VAL_OC_LP_192us       0x15
+#define TLA2528_VAL_OC_LP_256us       0x16
+#define TLA2528_VAL_OC_LP_384us       0x17
+#define TLA2528_VAL_OC_LP_512us       0x18
+#define TLA2528_VAL_OC_LP_768us       0x19
+#define TLA2528_VAL_OC_LP_1024us      0x1a
+#define TLA2528_VAL_OC_LP_1536us      0x1b
+#define TLA2528_VAL_OC_LP_2048us      0x1c
+#define TLA2528_VAL_OC_LP_3072us      0x1d
+#define TLA2528_VAL_OC_LP_6096us      0x1e
+#define TLA2528_VAL_OC_LP_6144us      0x1f
+
+#define TLA2528_REG_SEQUENCE_CFG      0x10
+#define TLA2528_BIT_SC_SEQ_START      0x10
+#define TLA2528_BIT_SC_SEQ_MODE       0x01
+
+#define TLA2528_REG_CHANNEL_SEL       0x11
+#define TLA2528_MSK_CS_MANUAL_CHID    0x07
+
+#define TLA2528_REG_AUTO_SEQ_CH_SEL   0x12
+
+/**********************************************/
+
+// enum {
+//   P188_OUTPUT_MAPPING_NONE       = 0x0000,
+//   // single channel
+//   P188_OUTPUT_MAPPING_AIN0       = 0x0001,
+//   P188_OUTPUT_MAPPING_AIN1       = 0x1002,
+//   P188_OUTPUT_MAPPING_AIN2       = 0x2004,
+//   P188_OUTPUT_MAPPING_AIN3       = 0x3008,
+//   P188_OUTPUT_MAPPING_AIN4       = 0x4010,
+//   P188_OUTPUT_MAPPING_AIN5       = 0x5020,
+//   P188_OUTPUT_MAPPING_AIN6       = 0x6040,
+//   P188_OUTPUT_MAPPING_AIN7       = 0x7080,
+//   // abs(differential)
+//   P188_OUTPUT_MAPPING_ABS_AIN0_1 = 0x8103,
+//   P188_OUTPUT_MAPPING_ABS_AIN2_3 = 0x910c,
+//   P188_OUTPUT_MAPPING_ABS_AIN4_5 = 0xa130,
+//   P188_OUTPUT_MAPPING_ABS_AIN6_7 = 0xb1c0,
+//   // resistor measurement
+//   P188_OUTPUT_MAPPING_RES_AIN0_1 = 0xc203,
+//   P188_OUTPUT_MAPPING_RES_AIN2_3 = 0xd20c,
+//   P188_OUTPUT_MAPPING_RES_AIN4_5 = 0xe230,
+//   P188_OUTPUT_MAPPING_RES_AIN6_7 = 0xf2c0
+//   // 0xabcd
+//   // a  .. order number
+//   // b  .. output mode (0:single channel, 1:differential, 2:resistor measurement)
+//   // cd .. sample group indicator
+// };
+
+#ifdef P188_FEATURE_RESISTOR_MEASUREMENT
+  #define P188_OUTPUT_OPTION_CNT 16
+#else
+  #define P188_OUTPUT_OPTION_CNT 12
+#endif
+
+#define P188_OUTPUT_MAPPING_OFFSET 0
+
+#define P188_OUTPUT_MAPPING_0 PCONFIG(0)
+#define P188_OUTPUT_MAPPING_1 PCONFIG(1)
+#define P188_OUTPUT_MAPPING_2 PCONFIG(2)
+#define P188_OUTPUT_MAPPING_3 PCONFIG(3)
+
+#define P188_NR_OUTPUT_VALUES 4
+
+#define P188_I2C_ADDR         PCONFIG(4)
+#define P188_OUTPUT_TYPE_INDEX 5
+#define P188_OUTPUT_TYPE      PCONFIG(5)
+#define P188_CONFIG_BITS      PCONFIG(6)
+
+#define P188_CAL_INDEX        0
+#define P188_CAL_RAW0_P1      PCONFIG_LONG(0)
+#define P188_CAL_RAW0_P2      PCONFIG_LONG(1)
+#define P188_CAL_RAW1_P1      PCONFIG_LONG(2)
+#define P188_CAL_RAW1_P2      PCONFIG_LONG(3)
+#define P188_CAL_RAW2_P1      PCONFIG_LONG(4)
+#define P188_CAL_RAW2_P2      PCONFIG_LONG(5)
+#define P188_CAL_RAW3_P1      PCONFIG_LONG(6)
+#define P188_CAL_RAW3_P2      PCONFIG_LONG(7)
+
+#define P188_CAL_OUT0_P1      PCONFIG_FLOAT(0)
+#define P188_CAL_OUT0_P2      PCONFIG_FLOAT(1)
+#define P188_CAL_OUT1_P1      PCONFIG_FLOAT(2)
+#define P188_CAL_OUT1_P2      PCONFIG_FLOAT(3)
+#define P188_CAL_OUT2_P1      PCONFIG_FLOAT(4)
+#define P188_CAL_OUT2_P2      PCONFIG_FLOAT(5)
+#define P188_CAL_OUT3_P1      PCONFIG_FLOAT(6)
+#define P188_CAL_OUT3_P2      PCONFIG_FLOAT(7)
+
+
+struct P188_CONFIG_BITS_t {
+  union {
+    struct {
+      uint16_t en_cal     : 4;
+      uint16_t raw_val    : 4;
+      uint16_t unused     : 8;
+    };
+    uint16_t _regValue{};
+  };
+
+  P188_CONFIG_BITS_t(int16_t value);
+
+  int16_t pconfigvalue() const { return _regValue; }
+};
+
+const __FlashStringHelper* Plugin_188_output_mapping_name(uint8_t value_nr, bool displayString);
+
+struct P188_config_struct {
+    uint8_t  i2cAddress;
+    float ADC_Vref;
+#ifdef P188_FEATURE_RESISTOR_MEASUREMENT
+    uint32_t Rref[VARS_PER_TASK];
+    uint32_t Rpar[VARS_PER_TASK];
+#endif // P188_FEATURE_RESISTOR_MEASUREMENT
+};
+
+struct P188_data_struct : public PluginTaskData_base {
+public:
+
+  P188_data_struct(struct EventStruct *event);
+  P188_data_struct()          = delete;
+  virtual ~P188_data_struct() = default;
+
+  static uint8_t TLA2528_read_single_reg(uint8_t i2caddr, uint8_t reg);
+  static bool TLA2528_write_single_reg(uint8_t i2caddr, uint8_t reg, uint8_t data);
+
+  bool init(struct EventStruct *event);
+  bool read_raw(struct EventStruct *event, float& value, uint8_t ch_num) const;
+  bool sample(void);
+
+  P188_config_struct P188_config;
+
+  uint16_t raw_samples[TLA2528_CHANNEL_NUM]; 
+  // bits 16..4 ADC raw value
+  // bit 3..0   channel number 
+  
+  bool isInitialized() const {
+    return initialized;
+  }
+
+private:
+  uint8_t _sample_cnt;
+  bool  initialized = false;
+};
+
+#endif // ifdef USES_P188
+#endif // ifndef PLUGINSTRUCTS_P188_DATA_STRUCT_H
