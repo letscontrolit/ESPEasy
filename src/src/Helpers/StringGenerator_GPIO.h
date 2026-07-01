@@ -46,6 +46,9 @@ enum class PinSelectPurpose : uint8_t {
   #endif
   Status_led,
   Reset_pin,
+  #if FEATURE_CAN
+  CAN,
+  #endif
 };
 
 

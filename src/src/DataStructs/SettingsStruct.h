@@ -473,7 +473,7 @@ public:
   }
 
   bool getNetworkEnabled(ESPEasy::net::networkIndex_t index) const;
-
+  
   void setNetworkEnabled(ESPEasy::net::networkIndex_t index, bool enabled);
 
   bool getNetworkInterface_isFallback(ESPEasy::net::networkIndex_t index) const;
@@ -508,6 +508,12 @@ public:
   bool getNetworkCollectStats(ESPEasy::net::networkIndex_t index) const;
 
   void setNetworkCollectStats(ESPEasy::net::networkIndex_t index, bool enabled);
+#endif
+
+#if FEATURE_CAN
+  bool isCAN_valid() const;
+
+  bool isCAN_pin(int8_t pin) const;
 #endif
 
 
@@ -776,7 +782,7 @@ public:
   int8_t        console_serial_rxpin = DEFAULT_CONSOLE_PORT_RXPIN;
   int8_t        console_serial_txpin = DEFAULT_CONSOLE_PORT_TXPIN;
   uint8_t       console_serial0_fallback = DEFAULT_CONSOLE_SER0_FALLBACK;
-  
+
 
   // ********************************************************************************
   //   NWPlugin (Network) settings
@@ -793,6 +799,14 @@ public:
   // TODO TD-er: For ESP8266 we may likely ever use upto 2 or 3 network interfaces, so maybe re-use the rest later?
   uint16_t  NetworkInterfaceStartupDelay[NETWORK_MAX]{};
 
+  long    CAN_baudrate = DEFAULT_CAN_BAUDRATE;
+  int     CAN_node_id  = 0;
+  uint8_t CAN_Tx_pin   = -1;
+  uint8_t CAN_Rx_pin   = -1;
+
+  // Added extra bytes which can be used for something else to make sure we're not having gaps in the settings
+  uint8_t unused_afterCAN1 = 0;
+  uint8_t unused_afterCAN2 = 0;
 
   // Try to extend settings to make the checksum 4-uint8_t aligned.
 

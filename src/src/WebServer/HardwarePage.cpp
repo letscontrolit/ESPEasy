@@ -15,6 +15,7 @@
 #include "../Globals/Settings.h"
 
 #include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/Hardware.h"
 #include "../Helpers/Hardware_GPIO.h"
 #include "../Helpers/I2C_access.h"
 #include "../Helpers/SPI_Helper.h"
@@ -49,6 +50,16 @@ void handle_hardware() {
     Settings.setSPIBusForSDCard(getFormItemInt(F("sdspibus"), 0));
     #endif // if defined(ESP32) && FEATURE_SD
     Settings.Pin_sd_cs                = getFormItemInt(F("sd"));
+    #if FEATURE_CAN
+    // FIXME TD-er: Should this be in the global settings?
+    Settings.CAN_Rx_pin   = getFormItemInt(F("canrxpin"), -1);
+    Settings.CAN_Tx_pin   = getFormItemInt(F("cantxpin"), -1);
+    Settings.CAN_baudrate = getFormItemInt(F("canbaudrate"), DEFAULT_CAN_BAUDRATE);
+    Settings.CAN_node_id  = getFormItemInt(F("cannodeid"), 0);
+    if (!Settings.isCAN_valid()) {
+      error += F("User-defined CAN is not configured correctly!\n");
+    }
+    #endif
     int gpio = 0;
 
     while (gpio <= MAX_GPIO) {
@@ -65,6 +76,12 @@ void handle_hardware() {
     }
     error += SaveSettings();
     addHtmlError(error);
+    if (error.isEmpty()) {
+      // FIXME TD-er: Must move this to be handled the same as other interfaces.
+      #if FEATURE_CAN
+      initCAN();
+      #endif
+    }
   }
 
   addHtml(F("<form  method='post'>"));
@@ -98,6 +115,17 @@ void handle_hardware() {
   }
 # endif // if FEATURE_I2C_MULTIPLE
 
+
+  // FIXME TD-er: Must plce this into a form sub header for a separate interface tab
+  #if FEATURE_CAN
+  addFormSubHeader(F("CAN Interface"));
+  addFormPinSelect(PinSelectPurpose::CAN, F("TX"),F("cantxpin"), Settings.CAN_Tx_pin);
+  addFormPinSelect(PinSelectPurpose::CAN, F("RX"),F("canrxpin"), Settings.CAN_Rx_pin);
+  addFormNumericBox(F("Baudrate"), F("canbaudrate"), Settings.CAN_baudrate, 50E3, 1000E3);
+  addUnit(F("Hz"));
+  addFormNumericBox(F("Node ID"), F("cannodeid"), Settings.CAN_node_id, 0, 0x7FF);
+  #endif
+  
 #if FEATURE_SD
   addFormSubHeader(F("SD Card"));
   #ifdef ESP32

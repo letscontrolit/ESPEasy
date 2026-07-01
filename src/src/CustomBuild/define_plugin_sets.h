@@ -1305,6 +1305,15 @@ To create/register a plugin, you have to :
     // FIXME TD-er: Should this be enabled on non-Custom builds???
     #define FEATURE_CUSTOM_PROVISIONING 1
 
+    #ifndef FEATURE_CAN
+    #if CONFIG_SOC_TWAI_SUPPORTED && defined(ESP32_CLASSIC)
+      #define FEATURE_CAN 1
+    #else
+      #define FEATURE_CAN 0
+    #endif
+    #endif
+
+
 
     // See also PLUGIN_SET_MAX section at end, to include any disabled plugins from other definitions
     // See also PLUGIN_SET_COLLECTION_ESP32 section at end,
@@ -1640,7 +1649,6 @@ To create/register a plugin, you have to :
     #define USES_C010   // Generic UDP
     #define USES_C013   // ESPEasy P2P network
 #endif
-
 
 #ifdef NOTIFIER_SET_STABLE
     #define USES_N001   // Email
@@ -4189,6 +4197,28 @@ To create/register a plugin, you have to :
 #endif
 #endif
 
+#ifdef FEATURE_CAN
+ #if FEATURE_CAN
+  #if defined(ESP8266) || !(CONFIG_SOC_TWAI_SUPPORTED && defined(ESP32_CLASSIC))
+   #undef FEATURE_CAN  // No HW support or massive changes needed in library
+   // TODO TD-er: Maybe have a look at:
+   //  https://github.com/handmade0octopus/ESP32-TWAI-CAN/blob/master/src/ESP32-TWAI-CAN.cpp
+  #endif
+ #endif
+#endif
+
+#ifndef FEATURE_CAN
+  #define FEATURE_CAN 0
+#endif
+#if FEATURE_CAN
+  #ifndef USES_C022 // CAN Controller
+    #define USE_C022
+  #endif
+  #ifndef USES_P174
+    #define USES_P174 // CAN Import plugin
+  #endif
+#endif
+
 #if defined(DISABLE_NEOPIXEL_PLUGINS) && DISABLE_NEOPIXEL_PLUGINS
   // Disable NeoPixel plugins
   #ifdef USES_P038
@@ -4236,7 +4266,12 @@ To create/register a plugin, you have to :
   #undef FEATURE_STRING_VARIABLES
   #define FEATURE_STRING_VARIABLES  0
 #endif
-  
+
+#if FEATURE_CAN
+  #define USES_C022 //CAN
+  #define USES_P174
+#endif
+
   
 #if !defined(CUSTOM_BUILD_CDN_URL) && !defined(FEATURE_ALTERNATIVE_CDN_URL)
   #ifdef ESP32

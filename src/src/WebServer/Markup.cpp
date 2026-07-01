@@ -130,6 +130,9 @@ void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int
       #endif // if FEATURE_SD
       // bool includeStatusLed = true; // Added as place-holders, see below
       // bool includeResetPin = true;
+      #if FEATURE_CAN
+      bool includeCAN = true;
+      #endif
 
       switch (purpose) {
 #if FEATURE_SPI
@@ -224,6 +227,11 @@ void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int
           }  
           break;
   
+        #if FEATURE_CAN
+        case PinSelectPurpose::CAN:
+          includeCAN = false;
+          break;
+        #endif
       }
 #if FEATURE_I2C
       if (includeI2C && Settings.isI2C_pin(gpio)) {
@@ -248,6 +256,12 @@ void addPinSelector_Item(PinSelectPurpose purpose, const String& gpio_label, int
       //   disabled = true;
       // }
   
+  #if FEATURE_CAN
+      if (includeCAN && Settings.isCAN_pin(gpio)) {
+        disabled = true;
+      }
+  #endif
+
   #if FEATURE_ETHERNET
       if (includeEthernet) {
         if (Settings.isEthernetPin(gpio) || Settings.isEthernetPinOptional(gpio)) {

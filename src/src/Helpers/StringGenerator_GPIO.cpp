@@ -245,6 +245,10 @@ const __FlashStringHelper* getConflictingUse_flashstr(int gpio, PinSelectPurpose
   bool includeStatusLed = true;
   bool includeResetPin  = true;
 
+  #if FEATURE_CAN
+  bool includeCAN = true;
+  #endif
+
   switch (purpose)
   {
 #if FEATURE_I2C
@@ -288,6 +292,11 @@ const __FlashStringHelper* getConflictingUse_flashstr(int gpio, PinSelectPurpose
     case PinSelectPurpose::Reset_pin:
       includeResetPin = false;
       break;
+    #if FEATURE_CAN
+    case PinSelectPurpose::CAN:
+      includeCAN = false;
+    break;
+    #endif
   }
 #if FEATURE_I2C
   if (includeI2C && Settings.isI2C_pin(gpio)) {
@@ -397,6 +406,12 @@ const __FlashStringHelper* getConflictingUse_flashstr(int gpio, PinSelectPurpose
 # endif // ifdef BOARD_HAS_SDIO_ESP_HOSTED
 #endif // ifdef ESP32P4
 
+#if FEATURE_CAN
+  if (includeCAN && Settings.isCAN_pin(gpio))
+  {
+    return (Settings.CAN_Rx_pin == gpio) ? F("CAN RX") : F("CAN TX");
+  }
+#endif
 
   if (isBootModePin(gpio)) {
     return F("Boot Mode");
@@ -498,6 +513,7 @@ String getConflictingUse_fromPeriman(int gpio, PinSelectPurpose purpose, bool ig
         break;
     }
 
+  
     conflict = typeName;
 
     if (bus_number != -1) {
