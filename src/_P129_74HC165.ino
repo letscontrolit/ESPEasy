@@ -134,7 +134,7 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_GET_DEVICEVALUECOUNT:
     {
       event->Par1 = min(static_cast<uint8_t>(VARS_PER_TASK),
-                        static_cast<uint8_t>(ceil(P129_CONFIG_CHIP_COUNT / 4.0f)));
+                        static_cast<uint8_t>(ceilf(P129_CONFIG_CHIP_COUNT / 4.0f)));
       success = true;
       break;
     }
@@ -143,7 +143,7 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
     {
       event->sensorType = static_cast<Sensor_VType>(
         min(static_cast<uint8_t>(VARS_PER_TASK),
-            static_cast<uint8_t>(ceil(P129_CONFIG_CHIP_COUNT / 4.0f))));
+            static_cast<uint8_t>(ceilf(P129_CONFIG_CHIP_COUNT / 4.0f))));
       event->idx = 0;
       success    = true;
       break;
@@ -229,12 +229,12 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
           if (i % 4 == 0) {
             bits = PCONFIG_ULONG(i / 4) & 0x0ffffffff;
             off  = 0;
-            # ifndef P129_DEBUG_LOG
+            # ifdef P129_DEBUG_LOG
 
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-              addLog(LOG_LEVEL_INFO, strformat(F("74HC165 Reading from: %d, bits: %s"), i / 4, P129_ul2stringFixed(bits, BIN).c_str()));
+              addLog(LOG_LEVEL_INFO, strformat(F("74HC165 Reading from: %d, bits: %s"), i / 4, ul2stringFixed(bits, BIN, false).c_str()));
             }
-            # endif // ifndef P129_DEBUG_LOG
+            # endif // ifdef P129_DEBUG_LOG
           }
           html_TR();
           addHtml(F("<td align =\"center\">"));
@@ -299,15 +299,15 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
         }
         PCONFIG_ULONG(i / 4) = bits;
 
-        # ifndef P129_DEBUG_LOG
+        # ifdef P129_DEBUG_LOG
 
         if (loglevelActiveFor(LOG_LEVEL_INFO) && ((i % 4 == 3) || (i == P129_CONFIG_CHIP_COUNT))) {
           addLog(LOG_LEVEL_INFO, strformat(F("74HC165 Writing to: %d, offset: %d, bits: %s"),
                                            i / 4,
                                            off * 8,
-                                           P129_ul2stringFixed(bits, BIN).c_str()));
+                                           ul2stringFixed(bits, BIN, false).c_str()));
         }
-        # endif // ifndef P129_DEBUG_LOG
+        # endif // ifdef P129_DEBUG_LOG
         off++;
       }
       success = true;
@@ -402,7 +402,7 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
         state.reserve(40);
         const String   abcd     = F("ABCDEFGH");              // In case anyone dares to extend VARS_PER_TASK to 8...
         const uint16_t endCheck = P129_CONFIG_CHIP_COUNT + 4; // 4(.0) = nr of bytes in an uint32_t.
-        const uint16_t maxVar   = min(static_cast<uint8_t>(VARS_PER_TASK), static_cast<uint8_t>(ceil(P129_CONFIG_CHIP_COUNT / 4.0f)));
+        const uint16_t maxVar   = min(static_cast<uint8_t>(VARS_PER_TASK), static_cast<uint8_t>(ceilf(P129_CONFIG_CHIP_COUNT / 4.0f)));
 
         for (uint16_t varNr = 0; varNr < maxVar; ++varNr) {
           if (P129_CONFIG_FLAGS_GET_VALUES_DISPLAY) {

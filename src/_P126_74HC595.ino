@@ -297,7 +297,7 @@ boolean Plugin_126(uint8_t function, struct EventStruct *event, String& string)
         const String abcd = F("ABCDEFGH");                                                          // In case anyone dares to extend
                                                                                                     // VARS_PER_TASK to 8...
         const uint16_t endCheck = P126_CONFIG_CHIP_COUNT + (P126_CONFIG_CHIP_COUNT == 255 ? 3 : 4); // 4(.0) = nr of bytes in an uint32_t.
-        const uint16_t maxVar   = min(static_cast<uint8_t>(VARS_PER_TASK), static_cast<uint8_t>(ceil(P126_CONFIG_CHIP_COUNT / 4.0)));
+        const uint16_t maxVar   = min(static_cast<uint8_t>(VARS_PER_TASK), static_cast<uint8_t>(ceilf(P126_CONFIG_CHIP_COUNT / 4.0f)));
 
         for (uint16_t varNr = 0; varNr < maxVar; ++varNr) {
           if (P126_CONFIG_FLAGS_GET_VALUES_DISPLAY) {
