@@ -209,14 +209,14 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
             #if P183_ALLOW_MODBUS_WAIT
             value = P183_data->readRegisterWait(address); // Warning: this may take time as we waith for the  Modbus message to be exchanged
             #else
-            addLogMove(LOG_LEVEL_ERROR, F("P183 : Modbus read command with invalid address"));
+            addLogMove(LOG_LEVEL_ERROR, strformat(F("P183[%d]: Modbus read command with invalid address"), event->TaskIndex));
             value = 0;
             #endif // if P183_ALLOW_MODBUS_WAIT
 
           }
 
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-            addLogMove(LOG_LEVEL_INFO, strformat(F("P183 : Modbus read value %u from address 0x%04x"), value, address));
+            addLogMove(LOG_LEVEL_INFO, strformat(F("P183[%d]: Modbus read value %u from address 0x%04x"), event->TaskIndex, value, address));
           }
           success = true;
         }
@@ -246,7 +246,7 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
         }
         # ifndef LIMIT_BUILD_SIZE
         else {
-          addLogMove(LOG_LEVEL_ERROR, F("P183 : Modbus Unknown command"));
+          addLogMove(LOG_LEVEL_ERROR, strformat(F("P183[%d]: Modbus Unknown command"), event->TaskIndex));
         }
         # endif // LIMIT_BUILD_SIZE
       }
@@ -261,7 +261,7 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
 
       if (P183_data == nullptr) {
         # ifndef LIMIT_BUILD_SIZE
-        addLogMove(LOG_LEVEL_ERROR, F("P183 : Modbus task timer invalid data struct"));
+        addLogMove(LOG_LEVEL_ERROR, strformat(F("P183[%d]: Modbus task timer invalid data struct"), event->TaskIndex));
         # endif // LIMIT_BUILD_SIZE
         return false;
       }
@@ -275,7 +275,7 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
 
       if (P183_data == nullptr) {
         # ifndef LIMIT_BUILD_SIZE
-        addLogMove(LOG_LEVEL_ERROR, F("P183 : Modbus Get config invalid data struct"));
+        addLogMove(LOG_LEVEL_ERROR, strformat(F("P183[%d]: Modbus Get config invalid data struct"), event->TaskIndex));
         # endif // LIMIT_BUILD_SIZE
         return false;
       }
@@ -293,7 +293,7 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
           #if P183_ALLOW_MODBUS_WAIT
           value = P183_data->readRegisterWait(address); // Warning: this may take time as we waith for the  Modbus message to be exchanged
           #else
-          addLogMove(LOG_LEVEL_ERROR, F("P183 : Modbus Get config command invalid address"));
+          addLogMove(LOG_LEVEL_ERROR, strformat(F("P183[%d]: Modbus Get config command invalid address"), event->TaskIndex));
           value = 0;
           #endif // if P183_ALLOW_MODBUS_WAIT  
         }
@@ -316,7 +316,7 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
 
       if (P183_data == nullptr) {
         # ifndef LIMIT_BUILD_SIZE
-        addLogMove(LOG_LEVEL_ERROR, F("P183 : Modbus Get config invalid data struct"));
+        addLogMove(LOG_LEVEL_ERROR, strformat(F("P183[%d]: Modbus once per second invalid data struct"), event->TaskIndex));
         # endif // LIMIT_BUILD_SIZE
         return false;
       }

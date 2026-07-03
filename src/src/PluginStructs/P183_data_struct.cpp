@@ -44,7 +44,7 @@ bool P183_data_struct::plugin_init(uint8_t slaveAddress, int linkId)
 
   if (_modbusDevice == nullptr) {
     # ifndef LIMIT_BUILD_SIZE
-    addLogMove(LOG_LEVEL_ERROR, F("P183: Unable to allocate Modbus device object"));
+    addLogMove(LOG_LEVEL_ERROR, strformat(F("P183[%d]: Unable to allocate Modbus device object"), _taskIndex));
     # endif // LIMIT_BUILD_SIZE
     return false;
   }
@@ -93,7 +93,7 @@ bool P183_data_struct::plugin_task_timer(EventStruct *event)
 {
   # ifdef P183_DEBUG
   addLogMove(LOG_LEVEL_INFO,
-             strformat(F("P183: TaskTimer called IDX=%d, par1=%d, par2=%d, par3=%d, par4=%d"),
+             strformat(F("P183[%d]: TaskTimer called IDX=%d, par1=%d, par2=%d, par3=%d, par4=%d"),
                        event->idx, event->Par1, event->Par2, event->Par3, event->Par4));
   # endif // P183_DEBUG
 
@@ -119,7 +119,7 @@ bool P183_data_struct::plugin_task_timer(EventStruct *event)
     // This is the result of the regular cache read triggered in plugin_once_per_second. Update the user variables with the cache values.
 
     if (event->Data == nullptr) {
-      addLogMove(LOG_LEVEL_ERROR, F("P183: No data received for cache read"));
+      addLogMove(LOG_LEVEL_ERROR, strformat(F("P183[%d]: No data received for cache read"), _taskIndex));
       return false;
     }
     ModbusRegisterSet_struct *registerSet = reinterpret_cast<ModbusRegisterSet_struct *>(event->Data);
@@ -139,7 +139,7 @@ bool P183_data_struct::plugin_task_timer(EventStruct *event)
 
     if ((outputIndex < 0) || (outputIndex >= P183_NR_OUTPUTS)) {
       # ifndef LIMIT_BUILD_SIZE
-      addLogMove(LOG_LEVEL_ERROR, F("P183: Invalid output index in task timer event"));
+      addLogMove(LOG_LEVEL_ERROR, strformat(F("P183[%d]: Invalid output index in task timer event"), _taskIndex));
       # endif // LIMIT_BUILD_SIZE
       return false;
     }

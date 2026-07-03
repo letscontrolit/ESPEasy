@@ -61,7 +61,7 @@ public:
 
   uint16_t getModbusTimeout() const;
 
-  void     linkCallback(Modbus_Transaction *transaction);
+  bool     linkCallback(Modbus_Transaction *transaction);
 
   // Start reading a Modubus holding register. The result will be available later.
   // The function returns true if the request was queued.

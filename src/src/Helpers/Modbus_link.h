@@ -21,7 +21,8 @@ typedef enum class ModbusQueueState {
   MESSAGE_SENT      = 2, // Request message has been sent, waiting for response
   RESPONSE_RECEIVED = 3, // Response has been received and is being processed
   ERROR_OCCURRED    = 4, // An error occurred during processing (e.g., timeout, invalid response)
-  READY_FOR_DESTROY = 5  // Element is marked for deletion and can be freed
+  READY_FOR_DESTROY = 5, // Element is marked for deletion and can be freed
+  RECOVERING        = 6  // The transaction is being recovered from a link error
 
 } ModbusQueueState_t;
 
@@ -117,8 +118,9 @@ private:
   bool    _collision_detect = false;                   // Flag to indicate if collision detection is enabled
   bool    _initialized      = false;
   bool    _processing       = false;                   // Flag to indicate if the command queue is currently being processed, used to
-                                                       // prevent
-                                                       // reentrancy issues
+                                                       // prevent reentrancy issues
+  bool _prev_transact_failed = false;                  // Flag to indicate if the previous transaction failed, used to trigger recovery
+                                                       // actions
 
 };
 
