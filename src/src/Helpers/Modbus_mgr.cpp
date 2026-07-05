@@ -97,7 +97,7 @@ bool ModbusMGR_struct::initialize()
 
       // Create the Modbus link object if a port is configured for the link
       if (_modbus_links[i].port != ESPEasySerialPort::not_set) {
-        _modbus_links[i].link = new (std::nothrow) ModbusLINK_struct();
+        _modbus_links[i].link = new (std::nothrow) ModbusLINK_struct(i);
 
         if (_modbus_links[i].link != nullptr) {
           _modbus_links[i].link->init(_modbus_links[i].port,
@@ -503,7 +503,7 @@ bool ModbusMGR_struct::setLink(const int               linkIndex,
   // Check of the link is being disabled (port set to not_set) or enabled (port set to a valid port)
   if (_modbus_links[linkIndex].port == ESPEasySerialPort::not_set) {
     if ((port != ESPEasySerialPort::not_set) && (_modbus_links[linkIndex].link == nullptr)) {
-      _modbus_links[linkIndex].link = new (std::nothrow) ModbusLINK_struct();
+      _modbus_links[linkIndex].link = new (std::nothrow) ModbusLINK_struct(linkIndex);
     }
   }
   else if ((port == ESPEasySerialPort::not_set) && (_modbus_links[linkIndex].link != nullptr)) {

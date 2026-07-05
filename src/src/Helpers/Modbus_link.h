@@ -45,6 +45,7 @@ struct Modbus_Transaction {
   Modbus_Transaction(ModbusDEVICE_struct *device)
   {
     _device = device;
+    _id = identifier++; // Assign a unique ID to the transaction
   }
 
   void print();                                                                        // Print the transaction details for debugging
@@ -65,6 +66,7 @@ struct Modbus_Transaction {
   uint8_t               _sendframe[MODBUS_XMIT_BUFFER] = { 0 };                        // Reqest frame to send
   uint8_t               _rcvframe[MODBUS_RCV_BUFFER]   = { 0 };                        // Response frame received
 
+  static inline uint16_t identifier = 0; // Static variable to generate unique identifiers for each transaction
 };
 
 typedef Modbus_Transaction *Modbus_transaction_ptr;
@@ -80,6 +82,7 @@ typedef std::list<Modbus_Transaction> Modbus_TransactionQueue;
 // The ModbusLINK structure maintains a queue of Modbus requests and associated responses.
 struct ModbusLINK_struct  {
   ModbusLINK_struct() = default;
+  ModbusLINK_struct(int8_t linkId) : _linkId(linkId) {}
 
   ~ModbusLINK_struct();
 
@@ -109,18 +112,19 @@ private:
 
   static void dumpState(ModbusQueueState_t state);
 
-  ESPeasySerial          *_easySerial       = nullptr; // Pointer to the serial port object
-  Modbus_TransactionQueue _transactionQueue = {};      // Queue of Modbus transactions to process
-  uint16_t                _queueID          = 0;       // ID for the last request queued
-  uint16_t                _modbus_timeout   = 180;     // Default Modbus timeout in milliseconds
+  ESPeasySerial          *_easySerial        = nullptr; // Pointer to the serial port object
+  Modbus_TransactionQueue _transactionQueue  = {};      // Queue of Modbus transactions to process
+  Modbus_transaction_ptr  _activeTransaction = nullptr; // Pointer to the currently active transaction being processed
 
-  uint8_t _dere_pin         = 0;                       // Pin for RS485 direction control
-  bool    _collision_detect = false;                   // Flag to indicate if collision detection is enabled
-  bool    _initialized      = false;
-  bool    _processing       = false;                   // Flag to indicate if the command queue is currently being processed, used to
-                                                       // prevent reentrancy issues
-  bool _prev_transact_failed = false;                  // Flag to indicate if the previous transaction failed, used to trigger recovery
-                                                       // actions
+  uint16_t _modbus_timeout = 180;                       // Default Modbus timeout in milliseconds
+  int8_t   _linkId         = -1;                        // Link ID assigned by the Modbus manager
+  int8_t _dere_pin         = -1;                        // Pin for RS485 direction control
+  bool   _collision_detect = false;                     // Flag to indicate if collision detection is enabled
+  bool   _initialized      = false;
+  bool   _processing       = false;                     // Flag to indicate if the command queue is currently being processed, used to
+                                                        // prevent reentrancy issues
+  bool _prev_transact_failed = false;                   // Flag to indicate if the previous transaction failed, used to trigger recovery
+                                                        // actions
 
 };
 

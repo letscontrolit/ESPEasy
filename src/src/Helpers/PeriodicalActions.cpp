@@ -140,7 +140,9 @@ void run10TimesPerSecond() {
   }
   #endif
   #if FEATURE_MODBUS_FAC
-      ModbusMGR_singleton.processLinks();
+    START_TIMER;
+    ModbusMGR_singleton.processLinks();
+    STOP_TIMER(MODBUS_PROCESS_LINKS);
   #endif
   
   if (!UseRTOSMultitasking && 
