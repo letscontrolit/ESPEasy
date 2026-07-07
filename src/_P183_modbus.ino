@@ -23,7 +23,7 @@
  * 2025-08-24 flashmark: Initial version
  */
 
-//// # define P183_DEBUG
+ //// # define P183_DEBUG
 
 # define PLUGIN_183
 # define PLUGIN_ID_183         183
@@ -76,19 +76,34 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
+    case PLUGIN_GET_DEVICEVALUECOUNT:
+    {
+      event->Par1 = getValueCountFromSensorType(static_cast<Sensor_VType>(P183_NR_OUTPUTS));
+      success     = true;
+      break;
+    }
+
+    case PLUGIN_GET_DEVICEVTYPE:
+    {
+      event->sensorType = static_cast<Sensor_VType>(P183_NR_OUTPUTS);
+      event->idx        = P183_NR_OUTPUTS_INDEX;
+      success           = true;
+      break;
+    }
+
     case PLUGIN_SET_DEFAULTS:
     {
-      P183_DEV_ID = P183_DEV_ID_DFLT;
+      P183_DEV_ID = P183_NR_OUTPUT_VALUES; // Default to max outputs
       success     = true;
       break;
     }
 
     case PLUGIN_WEBFORM_LOAD_OUTPUT_SELECTOR:
     {
-      if ((P183_NR_OUTPUTS < 1) || (P183_NR_OUTPUTS > P183_NR_OUTPUT_VALUES)) {
-        P183_NR_OUTPUTS = P183_NR_OUTPUT_VALUES; // Default to max outputs
-      }
-      addFormNumericBox(F("Number of values to read"), P183_NR_OUTPUTS_LABEL, P183_NR_OUTPUTS);
+ //     if ((P183_NR_OUTPUTS < 1) || (P183_NR_OUTPUTS > P183_NR_OUTPUT_VALUES)) {
+ //       P183_NR_OUTPUTS = P183_NR_OUTPUT_VALUES; // Default to max outputs
+ //     }
+//      addFormNumericBox(F("Number of values to read"), P183_NR_OUTPUTS_LABEL, P183_NR_OUTPUTS);
 
       for (int outputIndex = 0; outputIndex < P183_NR_OUTPUT_VALUES; ++outputIndex)
       {
@@ -206,12 +221,12 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
             value = P183_data->readRegisterCache(address);
           }
           else {
-            #if P183_ALLOW_MODBUS_WAIT
+            # if P183_ALLOW_MODBUS_WAIT
             value = P183_data->readRegisterWait(address); // Warning: this may take time as we waith for the  Modbus message to be exchanged
-            #else
+            # else
             addLogMove(LOG_LEVEL_ERROR, strformat(F("P183[%d]: Modbus read command with invalid address"), event->TaskIndex));
             value = 0;
-            #endif // if P183_ALLOW_MODBUS_WAIT
+            # endif // if P183_ALLOW_MODBUS_WAIT
 
           }
 
@@ -290,12 +305,12 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
           value = P183_data->readRegisterCache(address);
         }
         else {
-          #if P183_ALLOW_MODBUS_WAIT
+          # if P183_ALLOW_MODBUS_WAIT
           value = P183_data->readRegisterWait(address); // Warning: this may take time as we waith for the  Modbus message to be exchanged
-          #else
+          # else
           addLogMove(LOG_LEVEL_ERROR, strformat(F("P183[%d]: Modbus Get config command invalid address"), event->TaskIndex));
           value = 0;
-          #endif // if P183_ALLOW_MODBUS_WAIT  
+          # endif // if P183_ALLOW_MODBUS_WAIT
         }
         string  = String(value);
         success = true;

@@ -324,7 +324,7 @@ void ModbusMGR_struct::show_modbus_interfaces()
   {
 
     addFormSubHeader(strformat(F("Modbus %u"), link));
-    addFormDetailsStart(link == 0);
+    addFormDetailsStart(link == 0 || _modbus_links[link].port != ESPEasySerialPort::not_set);
 
     int idx = static_cast<int>(_modbus_links[link].port);
     portSelector.addFormSelector(F("Port"), strformat(F("MBport%u"), link), portMap[idx]);

@@ -9,9 +9,9 @@
 #  undef P183_DEBUG // Debugging switched off
 # endif // ifdef BUILD_NO_DEBUG
 
-#ifndef P183_ALLOW_MODBUS_WAIT
-# define P183_ALLOW_MODBUS_WAIT 0 // Default to disabled
-#endif // ifndef P183_ALLOW_MODBUS_WAIT
+# ifndef P183_ALLOW_MODBUS_WAIT
+#  define P183_ALLOW_MODBUS_WAIT 0 // Default to disabled
+# endif // ifndef P183_ALLOW_MODBUS_WAIT
 
 # include "../Helpers/Modbus_device.h"
 
@@ -31,6 +31,7 @@
 # define P183_DEV_ID_LABEL     PCONFIG_LABEL(0)
 # define P183_LINK_ID          PCONFIG(1)
 # define P183_LINK_ID_LABEL    PCONFIG_LABEL(1)
+# define P183_NR_OUTPUTS_INDEX  3
 # define P183_NR_OUTPUTS       PCONFIG(3)
 # define P183_NR_OUTPUTS_LABEL PCONFIG_LABEL(3)
 # define P183_ADDRESS(x) PCONFIG(4 + x)
@@ -67,9 +68,9 @@ struct P183_data_struct : public PluginTaskData_base {
                        uint16_t start_reg,
                        uint16_t end_reg);
   void     scan_modbus();
-  #if P183_ALLOW_MODBUS_WAIT
+  # if P183_ALLOW_MODBUS_WAIT
   uint16_t readRegisterWait(uint16_t address);
-  #endif // ifdef P183_ALLOW_MODBUS_WAIT
+  # endif // ifdef P183_ALLOW_MODBUS_WAIT
   uint16_t readRegisterCache(uint16_t address);
 
   void     writeRegister(uint16_t address,
