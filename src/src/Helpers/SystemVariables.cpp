@@ -44,11 +44,24 @@
 
 #if defined(ESP8266)
   # include <ESP8266WiFi.h>
-  #define WIFI_CONNECTED   WiFi.isConnected()
+int WIFI_CONNECT_STATUS() {
+  if (WiFi.isConnected()) {
+    return 7;
+  }
+  return 0;
+}
 #endif // if defined(ESP8266)
 #if defined(ESP32)
   # include <WiFi.h>
-  #define WIFI_CONNECTED   WiFi.STA.connected()
+int WIFI_CONNECT_STATUS() {
+  if (WiFi.STA.connected()) {
+    if (WiFi.STA.hasIP())  {
+      return 7;
+    }
+    return 1;
+  }
+  return 0;
+}
 #endif // if defined(ESP32)
 
 
@@ -176,7 +189,7 @@ String SystemVariables::getSystemVariable(SystemVariables::Enum enumval) {
   switch (enumval)
   {
     case BOOT_CAUSE:        intvalue = lastBootCause; break;                         // Integer value to be used in rules
-    case BSSID:             return (!WIFI_CONNECTED) ? MAC_address().toString() : WiFi.BSSIDstr();
+    case BSSID:             return (!WIFI_CONNECT_STATUS()) ? MAC_address().toString() : WiFi.BSSIDstr();
     case CR:                return String('\r');
     case IP4:               intvalue = static_cast<int>(ESPEasy::net::NetworkLocalIP()[3]); break; // 4th IP octet
     case ISVAR_DOUBLE:      intvalue =
@@ -207,13 +220,11 @@ String SystemVariables::getSystemVariable(SystemVariables::Enum enumval) {
 
     case ISNTP:             intvalue = statusNTPInitialized ? 1 : 0; break;
     case ISWIFIAP:          intvalue = ESPEasy::net::wifi::WifiIsAP(WiFi.getMode()) ? 1 : 0; break;
-    case ISWIFI:            intvalue = WIFI_CONNECTED ? 1 : 0; break;
+    case ISWIFI:            intvalue = WIFI_CONNECT_STATUS(); break;
 #ifdef USES_NW005
     case ISPPP:             intvalue = PPP.connected() ? 1 : 0; break;
 #endif
 
-      // WiFiEventData.wifiStatus; break; // 0=disconnected, 1=connected, 2=got ip, 4=services
-    // initialized
     case LCLTIME_AM:        return node_time.getDateTimeString_ampm('-', ':', ' ');
     case LF:                return String('\n');
     case MAC_INT:           intvalue = getChipId(); break; // Last 24 bit of MAC address as integer, to be used in rules.
@@ -236,7 +247,7 @@ String SystemVariables::getSystemVariable(SystemVariables::Enum enumval) {
                             }
     #endif // ifndef LIMIT_BUILD_SIZE
     case SPACE:             return String(' ');
-    case SSID:              return (!WIFI_CONNECTED) ? String(F("--")) : WiFi.SSID();
+    case SSID:              return (!WIFI_CONNECT_STATUS()) ? String(F("--")) : WiFi.SSID();
 
 
     case SYSBUILD_DATE:     return get_build_date();
@@ -290,7 +301,7 @@ String SystemVariables::getSystemVariable(SystemVariables::Enum enumval) {
     #else // if FEATURE_ADC_VCC
     case VCC:               intvalue = -1; break;
     #endif // if FEATURE_ADC_VCC
-    case WI_CH:             intvalue = !WIFI_CONNECTED ? 0 : WiFi.channel(); break;
+    case WI_CH:             intvalue = !WIFI_CONNECT_STATUS() ? 0 : WiFi.channel(); break;
 
     default:
       // Already handled above.

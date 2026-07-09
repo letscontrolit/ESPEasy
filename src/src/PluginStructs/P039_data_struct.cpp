@@ -11,7 +11,7 @@ P039_data_struct::P039_data_struct(struct EventStruct*event) {
 }
 
 bool P039_data_struct::begin(struct EventStruct*event) {
-  bool   success   = false;
+  bool   success   = true;
   int8_t CS_pin_no = get_SPI_CS_Pin(event);
 
   // set the slaveSelectPin as an output:

@@ -40,10 +40,12 @@ bool NWPlugin_002(NWPlugin::Function function, EventStruct *event, String& strin
     case NWPlugin::Function::NWPLUGIN_DRIVER_ADD:
     {
       NetworkDriverStruct& nw = getNetworkDriverStruct(networkDriverIndex_t::toNetworkDriverIndex(event->idx));
-      nw.onlySingleInstance    = true;
-      nw.alwaysPresent         = true;
+      nw.onlySingleInstance = true;
+      nw.alwaysPresent      = true;
+      # if DEFAULT_ENABLED_NW002
       nw.enabledOnFactoryReset = true;
-      nw.fixedNetworkIndex     = NWPLUGIN_ID_002 - 1; // Start counting at 0
+      # endif
+      nw.fixedNetworkIndex = NWPLUGIN_ID_002 - 1; // Start counting at 0
       break;
     }
 
@@ -217,6 +219,7 @@ bool NWPlugin_002(NWPlugin::Function function, EventStruct *event, String& strin
       }
       break;
     }
+# endif // ifdef ESP8266
 
     case NWPlugin::Function::NWPLUGIN_CLIENT_IP_WEB_ACCESS_ALLOWED:
     {
@@ -227,18 +230,10 @@ bool NWPlugin_002(NWPlugin::Function function, EventStruct *event, String& strin
 
         // FIXME TD-er: Do we allow to set the subnetmask for AP to anything else?
         const IPAddress subnet(255, 255, 255, 0);
-        const IPAddress localIP = WiFi.softAPIP();
-        bool success            = true;
-
-        for (uint8_t i = 0; success && i < 4; ++i) {
-          if ((localIP[i] & subnet[i]) != (client_ip[i] & subnet[i])) {
-            success = false;
-          }
-        }
+        success = NWPlugin::IP_in_subnet(WiFi.softAPIP(), client_ip, subnet);
       }
       break;
     }
-# endif // ifdef ESP8266
 
     case NWPlugin::Function::NWPLUGIN_WEBFORM_SAVE:
     {
@@ -288,7 +283,7 @@ bool NWPlugin_002(NWPlugin::Function function, EventStruct *event, String& strin
           ,169                                                               // 5 GHz U-NII-3/4
           ,173,  177                                                         // 5 GHz U-NII-4
         };
-        // *INDENT-ON*
+ // *INDENT-ON*
         constexpr int nrwifiChannels = NR_ELEMENTS(wifiChannels);
         const FormSelectorOptions selector(
           nrwifiChannels,

@@ -26,18 +26,22 @@
 
 # include "src/NotifierStructs/N001_data_struct.h"
 
-
 // The message body is included in event->String1
 bool NPlugin_001(NPlugin::Function function, struct EventStruct *event, String& string)
 {
   bool success = false;
 
-  switch (function) {
+  switch (function)
+  {
     case NPlugin::Function::NPLUGIN_PROTOCOL_ADD:
     {
-      Notification[++notificationCount].Number      = NPLUGIN_ID_001;
-      Notification[notificationCount].usesMessaging = true;
-      Notification[notificationCount].usesGPIO      = 0;
+      auto& notif = Notification[++notificationCount];
+      notif.Number        = NPLUGIN_ID_001;
+      notif.usesMessaging = true;
+      notif.usesGPIO      = 0;
+      # if FEATURE_EMAIL_TLS
+      notif.usesTLS = true;
+      # endif // if FEATURE_EMAIL_TLS
       break;
     }
 
@@ -67,6 +71,7 @@ bool NPlugin_001(NPlugin::Function function, struct EventStruct *event, String& 
     case NPlugin::Function::NPLUGIN_NOTIFY:
     {
       MakeNotificationSettings(NotificationSettings);
+
       if (!AllocatedNotificationSettings()) {
         break;
       }

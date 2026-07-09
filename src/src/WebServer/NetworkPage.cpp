@@ -6,7 +6,6 @@
 # include "../DataStructs/ESPEasy_EventStruct.h"
 # include "../Globals/Settings.h"
 # include "../Helpers/ESPEasy_Storage.h"
-# include "../Helpers/ESPEasy_Storage.h"
 # include "../Helpers/StringConverter.h"
 # include "../WebServer/ESPEasy_WebServer.h"
 # include "../WebServer/HTML_wrappers.h"
@@ -434,6 +433,7 @@ void handle_networks_NetworkSettingsPage(ESPEasy::net::networkIndex_t networkind
 
       if (NW_data && NW_data->hasPluginStats()) {
         addFormSubHeader(F("Statistics"));
+        addFormDetailsStart(false);
 #  if FEATURE_CHART_JS
 
         if (NW_data->nrSamplesPresent() > 0) {
@@ -454,6 +454,7 @@ void handle_networks_NetworkSettingsPage(ESPEasy::net::networkIndex_t networkind
           //        } else {
           //          somethingAdded = true;
         }
+        addFormDetailsEnd();
       }
     }
 

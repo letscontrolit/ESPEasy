@@ -5,6 +5,18 @@
 
 #ifdef WEBSERVER_METRICS
 
+#include "../../ESPEasy/net/ESPEasyNetwork.h"
+
+# if FEATURE_NETWORK_STATS
+#  ifdef ESP8266
+#   define MAX_NR_NETWORKS_IN_TABLE  2
+#  endif
+#  ifdef ESP32
+#   define MAX_NR_NETWORKS_IN_TABLE  NETWORK_MAX
+#  endif
+
+# endif // if FEATURE_NETWORK_STATS
+
 # ifdef ESP32
 #  include <esp_partition.h>
 # endif // ifdef ESP32
@@ -76,6 +88,52 @@ void handle_metrics() {
   addHtml(F("espeasy_wifi_reconnects "));
   addHtml(getValue(LabelType::NUMBER_RECONNECTS));
   addHtml('\n');
+
+  # if FEATURE_NETWORK_STATS
+
+  for (ESPEasy::net::networkIndex_t x = 0; x < MAX_NR_NETWORKS_IN_TABLE; x++)
+  {
+    const ESPEasy::net::nwpluginID_t nwpluginID = Settings.getNWPluginID_for_network(x);
+    const bool nwplugin_set                     = nwpluginID.isValid();
+
+    if (nwplugin_set)
+    {
+      struct EventStruct TempEvent;
+
+      TempEvent.NetworkIndex = x;
+
+      const bool res = ESPEasy::net::NWPluginCall(NWPlugin::Function::NWPLUGIN_GET_TRAFFIC_COUNT, &TempEvent);
+
+      if (res) {
+        const String networkName = ESPEasy::net::makeRFCCompliantName(ESPEasy::net::getNWPluginNameFromNWPluginID(nwpluginID), '_', '_', 0);
+
+        // Network traffic
+        addHtml(prefixHELP);
+        addHtml(F("network_"));
+        addHtml(networkName);
+        addHtml(F(" Network Data TX and RX totals in bytes and frames\n"));
+        addHtml(prefixTYPE);
+        addHtml(F("network_"));
+        addHtml(networkName);
+        addHtml(F(" gauge\n"));
+
+        const __FlashStringHelper*names[] = { F("TX_bytes"), F("RX_bytes"), F("TX_frames"), F("RX_frames") };
+        const int64_t values[]            = { TempEvent.Par64_1, TempEvent.Par64_2, TempEvent.Par5, TempEvent.Par6 };
+        constexpr uint8_t vcount          = NR_ELEMENTS(values);
+
+        for (uint8_t n = 0; n < vcount; ++n) {
+          addHtml(F("espeasy_network_"));
+          addHtml(networkName);
+          addHtml(F("{valueName=\""));
+          addHtml(names[n]);
+          addHtml(F("_total\"} "));
+          addHtml(ll2String(values[n]));
+          addHtml('\n');
+        }
+      }
+    }
+  }
+  # endif // if FEATURE_NETWORK_STATS
 
   # if FEATURE_INTERNAL_TEMPERATURE
 
