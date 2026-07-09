@@ -14,6 +14,8 @@
 // Added to the main repository with some optimizations and some limitations.
 // As long as the device is not enabled, no RAM is wasted.
 //
+// @andbad: 2026-07-09
+// ADD: 72x40 OLED size added to the the existing sizes (128x64, 128x32, 64x48)
 // @tonhuisman: 2025-03-03
 // ADD: Setting for not showing the startup logo. Formatted source using Uncrustify with recent settings
 // @uwekaditz: 2024-08-06
