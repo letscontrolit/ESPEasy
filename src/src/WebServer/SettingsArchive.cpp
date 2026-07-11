@@ -24,10 +24,8 @@ void handle_settingsarchive() {
   checkRAM(F("handle_settingsarchive"));
   # endif // ifndef BUILD_NO_RAM_TRACKER
 
-  if (!isLoggedIn()) { return; }
-  navMenuIndex = MENU_INDEX_TOOLS;
-  TXBuffer.startStream();
-  sendHeadandTail_stdtemplate(_HEAD);
+  if (!startStream_send_stdTemplate(MENU_INDEX_TOOLS)) { return; }
+
   html_add_form();
   html_table_class_normal();
   html_TR();

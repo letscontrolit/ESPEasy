@@ -36,10 +36,7 @@ void handle_controllers() {
   checkRAM(F("handle_controllers"));
   # endif // ifndef BUILD_NO_RAM_TRACKER
 
-  if (!isLoggedIn()) { return; }
-  navMenuIndex = MENU_INDEX_CONTROLLERS;
-  TXBuffer.startStream();
-  sendHeadandTail_stdtemplate(_HEAD);
+  if (!startStream_send_stdTemplate(MENU_INDEX_CONTROLLERS)) { return; }
 
   // 'index' value in the URL
   uint8_t controllerindex       = getFormItemInt(F("index"), 0);

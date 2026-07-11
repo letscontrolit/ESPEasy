@@ -25,10 +25,7 @@
 uploadResult_e uploadResult = uploadResult_e::UploadStarted;
 
 void handle_upload() {
-  if (!isLoggedIn()) { return; }
-  navMenuIndex = MENU_INDEX_TOOLS;
-  TXBuffer.startStream();
-  sendHeadandTail_stdtemplate(_HEAD);
+  if (!startStream_send_stdTemplate(MENU_INDEX_TOOLS)) { return; }
 
   addHtml(F(
             "<form enctype='multipart/form-data' method='post'><p>Upload settings file:<br><input type='file' name='datafile' size='40'></p><div><input class='button link' type='submit' value='Upload'></div><input type='hidden' name='edit' value='1'></form>"));
@@ -46,11 +43,7 @@ void handle_upload_post() {
   checkRAM(F("handle_upload_post"));
   # endif // ifndef BUILD_NO_RAM_TRACKER
 
-  if (!isLoggedIn()) { return; }
-
-  navMenuIndex = MENU_INDEX_TOOLS;
-  TXBuffer.startStream();
-  sendHeadandTail_stdtemplate(_HEAD);
+  if (!startStream_send_stdTemplate(MENU_INDEX_TOOLS)) { return; }
 
   switch (uploadResult) {
     case uploadResult_e::Success:

@@ -37,10 +37,7 @@ void handle_advanced() {
   checkRAM(F("handle_advanced"));
   #endif
 
-  if (!isLoggedIn()) { return; }
-  navMenuIndex = MENU_INDEX_TOOLS;
-  TXBuffer.startStream();
-  sendHeadandTail_stdtemplate(_HEAD);
+  if (!startStream_send_stdTemplate(MENU_INDEX_TOOLS)) { return; }
 
   if (!webArg(F("edit")).isEmpty())
   {

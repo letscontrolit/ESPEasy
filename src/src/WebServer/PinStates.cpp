@@ -75,10 +75,7 @@ void handle_pinstates() {
   checkRAM(F("handle_pinstates"));
   # endif // ifndef BUILD_NO_RAM_TRACKER
 
-  if (!isLoggedIn()) { return; }
-  navMenuIndex = MENU_INDEX_TOOLS;
-  TXBuffer.startStream();
-  sendHeadandTail_stdtemplate(_HEAD);
+  if (!startStream_send_stdTemplate(MENU_INDEX_TOOLS)) { return; }
 
   # ifdef ESP32
   html_BR();

@@ -898,6 +898,17 @@ bool isLoggedIn(bool mustProvideLogin)
   return true;
 }
 
+bool startStream_send_stdTemplate(uint8_t newNavIndex)
+{
+  if (!isLoggedIn()) { return false; }
+  
+  navMenuIndex = newNavIndex;
+  TXBuffer.startStream();
+  sendHeadandTail_stdtemplate(_HEAD);
+  return true;
+}
+
+
 String getControllerSymbol(uint8_t index)
 {
   String ret = F("<span style='font-size:20px; background: #00000000;'>&#");

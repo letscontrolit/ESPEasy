@@ -48,11 +48,7 @@ void handle_devices() {
   checkRAM(F("handle_devices"));
   # endif // ifndef BUILD_NO_RAM_TRACKER
 
-  if (!isLoggedIn()) { return; }
-  navMenuIndex = MENU_INDEX_DEVICES;
-  TXBuffer.startStream();
-  sendHeadandTail_stdtemplate(_HEAD);
-
+  if (!startStream_send_stdTemplate(MENU_INDEX_DEVICES)) { return; }
 
   // char tmpString[41];
 

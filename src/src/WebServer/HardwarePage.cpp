@@ -30,10 +30,7 @@ void handle_hardware() {
   checkRAM(F("handle_hardware"));
   #endif
 
-  if (!isLoggedIn()) { return; }
-  navMenuIndex = MENU_INDEX_HARDWARE;
-  TXBuffer.startStream();
-  sendHeadandTail_stdtemplate(_HEAD);
+  if (!startStream_send_stdTemplate(MENU_INDEX_HARDWARE)) { return; }
 
   if (isFormItem(F("pled"))) {
     String error;

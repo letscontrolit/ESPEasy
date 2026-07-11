@@ -19,10 +19,7 @@
 // Web Interface Tools page
 // ********************************************************************************
 void handle_tools() {
-  if (!isLoggedIn()) { return; }
-  navMenuIndex = MENU_INDEX_TOOLS;
-  TXBuffer.startStream();
-  sendHeadandTail_stdtemplate(_HEAD);
+  if (!startStream_send_stdTemplate(MENU_INDEX_TOOLS)) { return; }
 
   String webrequest = webArg(F("cmd"));
 

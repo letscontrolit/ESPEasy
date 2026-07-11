@@ -21,11 +21,8 @@
 // Web Interface log page
 // ********************************************************************************
 void handle_log() {
-  if (!isLoggedIn()) { return; }
-  navMenuIndex = MENU_INDEX_TOOLS;
+  if (!startStream_send_stdTemplate(MENU_INDEX_TOOLS)) { return; }
 
-  TXBuffer.startStream();
-  sendHeadandTail_stdtemplate(_HEAD);
   html_table_class_normal();
 
   #ifdef WEBSERVER_LOG

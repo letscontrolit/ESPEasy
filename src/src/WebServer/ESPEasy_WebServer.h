@@ -128,6 +128,10 @@ void addTaskValueSelect(const String& name,
 // ********************************************************************************
 bool isLoggedIn(bool mustProvideLogin = true);
 
+// Check isLoggedIn, set new navIndex and start serving standard template
+// Thus not for non-HTML pages.
+bool startStream_send_stdTemplate(uint8_t newNavIndex);
+
 String  getControllerSymbol(uint8_t index);
 
 /*

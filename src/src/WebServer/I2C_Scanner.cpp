@@ -489,10 +489,7 @@ void handle_i2cscanner() {
   checkRAM(F("handle_i2cscanner"));
   #endif
 
-  if (!isLoggedIn()) { return; }
-  navMenuIndex = MENU_INDEX_TOOLS;
-  TXBuffer.startStream();
-  sendHeadandTail_stdtemplate(_HEAD);
+  if (!startStream_send_stdTemplate(MENU_INDEX_TOOLS)) { return; }
 
   int nDevices = 0;
   #if !FEATURE_I2C_MULTIPLE
