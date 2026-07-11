@@ -297,7 +297,8 @@ void P020_Task::handleSerialIn(struct EventStruct *event) {
   bool done      = false;
   char ch;
 
-  do {
+  do
+  {
     if (ser2netSerial->available()) {
       if ((serial_processing != P020_Events::P1WiFiGateway) // P1 handling without this check
           && (serial_buffer.length() > static_cast<size_t>(P020_RX_BUFFER))) {
@@ -357,7 +358,7 @@ void P020_Task::handleSerialIn(struct EventStruct *event) {
 
     blinkLED();
 
-    rulesEngine(serial_buffer);
+    rulesEngine(serial_buffer, event);
     ser2netClient.PR_9453_FLUSH_TO_CLEAR();
     clearBuffer();
     # ifndef BUILD_NO_DEBUG
@@ -375,14 +376,16 @@ void P020_Task::discardSerialIn() {
 }
 
 // We can also use the rules engine for local control!
-void P020_Task::rulesEngine(const String& message) {
+void P020_Task::rulesEngine(const String& message, struct EventStruct *event) {
   if (!Settings.UseRules || message.isEmpty() || (P020_Events::None == serial_processing)) { return; }
-  int NewLinePos    = 0;
-  uint16_t StartPos = 0;
+  int NewLinePos     = 0;
+  uint16_t StartPos  = 0;
+  bool     eventSent = false;
 
   NewLinePos = handleMultiLine ? message.indexOf('\n', StartPos) : message.length();
 
-  do {
+  do
+  {
     if (NewLinePos < 0) {
       NewLinePos = message.length();
     }
@@ -394,11 +397,15 @@ void P020_Task::rulesEngine(const String& message) {
       NewLinePos--;
     }
 
-    switch (serial_processing) {
-      case P020_Events::None: { break; }
-      case P020_Events::Generic: { // Generic
+    switch (serial_processing)
+    {
+      case P020_Events::None:
+      { break;
+      }
+      case P020_Events::Generic: // Generic
+      {
         if (NewLinePos > StartPos) {
-          eventString = '!';       // F("!Serial");
+          eventString = '!';     // F("!Serial");
 
           if (_serialId) {
             eventString += ESPEasySerialPort_toString(_port, true);
@@ -421,8 +428,9 @@ void P020_Task::rulesEngine(const String& message) {
         }
         break;
       }
-      case P020_Events::RFLink: { // RFLink
-        StartPos += 6;            // RFLink, strip 20;xx; from incoming message
+      case P020_Events::RFLink: // RFLink
+      {
+        StartPos += 6;          // RFLink, strip 20;xx; from incoming message
 
         if (((NewLinePos - StartPos) >= 8) &&
             message.substring(StartPos, StartPos + 8)
@@ -442,6 +450,7 @@ void P020_Task::rulesEngine(const String& message) {
           eventString += message.substring(StartPos, NewLinePos);
         }
         eventQueue.addMove(std::move(eventString));
+        eventSent = true;
         break;
       }
       case P020_Events::P1WiFiGateway: // P1 WiFi Gateway
@@ -466,6 +475,7 @@ void P020_Task::rulesEngine(const String& message) {
 
     if (!eventString.isEmpty()) {
       eventQueue.add(eventString);
+      eventSent = true;
     }
     NewLinePos = message.indexOf('\n', StartPos);
 
@@ -473,6 +483,12 @@ void P020_Task::rulesEngine(const String& message) {
       NewLinePos = message.length();
     }
   } while (handleMultiLine && NewLinePos > StartPos);
+
+  #if FEATURE_STRING_VARIABLES
+  if (eventSent) {
+    sendData(event); // Send derived values
+  }
+  #endif // if FEATURE_STRING_VARIABLES
 }
 
 bool P020_Task::isInit() const {
@@ -483,10 +499,7 @@ bool P020_Task::isInit() const {
           ) && nullptr != ser2netSerial;
 }
 
-void P020_Task::sendConnectedEvent(bool connected)
-{
-  eventQueue.add(_taskIndex, F("Client"), (connected ? 1 : 0));
-}
+void P020_Task::sendConnectedEvent(bool connected) { eventQueue.add(_taskIndex, F("Client"), (connected ? 1 : 0)); }
 
 void P020_Task::blinkLED() {
   if (_ledEnabled) {
@@ -605,7 +618,8 @@ bool P020_Task::handleP1Char(char ch) {
   bool done    = false;
   bool invalid = false;
 
-  switch (_state) {
+  switch (_state)
+  {
     case ParserState::WAITING:
 
       if (ch == P020_DATAGRAM_START_CHAR)  {
