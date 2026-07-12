@@ -122,8 +122,6 @@ void handle_controllers() {
     }
   }
 
-  html_add_form();
-
   if (controllerIndexSet)
   {
     handle_controllers_ControllerSettingsPage(controllerindex);
@@ -131,8 +129,7 @@ void handle_controllers() {
     handle_controllers_ShowAllControllersTable();
   }
 
-  sendHeadandTail_stdtemplate(_TAIL);
-  TXBuffer.endStream();
+  sendTail_stdtemplate();
 }
 
 // ********************************************************************************
@@ -214,6 +211,7 @@ void handle_controllers_CopySubmittedSettings_CPluginCall(uint8_t controllerinde
 // ********************************************************************************
 void handle_controllers_ShowAllControllersTable()
 {
+  html_add_form();
   html_table_class_multirow();
   html_TR();
   html_table_header(F(""),        70);
@@ -281,6 +279,8 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
   if (!validControllerIndex(controllerindex)) {
     return;
   }
+
+  html_add_form();
 
   // Show controller settings page
   html_table_class_normal();

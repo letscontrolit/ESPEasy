@@ -214,8 +214,7 @@ void handle_devices() {
     addLogMove(LOG_LEVEL_DEBUG_DEV, concat(F("DEBUG: String size:"), static_cast<int>(TXBuffer.sentBytes)));
   }
 # endif // ifndef BUILD_NO_DEBUG
-  sendHeadandTail_stdtemplate(_TAIL);
-  TXBuffer.endStream();
+  sendTail_stdtemplate();
 }
 
 // ********************************************************************************

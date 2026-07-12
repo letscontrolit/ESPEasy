@@ -182,8 +182,7 @@ void handle_config() {
   html_end_table();
   html_end_form();
 
-  sendHeadandTail_stdtemplate(_TAIL);
-  TXBuffer.endStream();
+  sendTail_stdtemplate();
 }
 
 #endif // ifdef WEBSERVER_CONFIG

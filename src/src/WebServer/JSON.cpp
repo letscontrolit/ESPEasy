@@ -734,8 +734,7 @@ void handle_timingstats_json() {
 # if FEATURE_ESPEASY_P2P
 
 void handle_nodes_list_json() {
-  if (!isLoggedIn()) { return; }
-  TXBuffer.startJsonStream();
+  if (!startJSON_Stream()) { return; }
   json_init();
   json_open(true);
 
@@ -767,8 +766,7 @@ void handle_nodes_list_json() {
 # endif // if FEATURE_ESPEASY_P2P
 
 void handle_buildinfo() {
-  if (!isLoggedIn()) { return; }
-  TXBuffer.startJsonStream();
+  if (!startJSON_Stream()) { return; }
   json_init();
   json_open();
   {

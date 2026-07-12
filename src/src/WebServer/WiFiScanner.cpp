@@ -71,7 +71,7 @@ void handle_wifiscanner() {
   ESPEasy::net::wifi::setWifiMode(cur_wifimode);
 
   if (!startStream_send_stdTemplate(MENU_INDEX_TOOLS)) { return; }
-  
+
   html_table_class_multirow();
   html_TR();
   html_table_header(getLabel(LabelType::SSID));
@@ -97,8 +97,7 @@ void handle_wifiscanner() {
   }
 
   html_end_table();
-  sendHeadandTail_stdtemplate(_TAIL);
-  TXBuffer.endStream();
+  sendTail_stdtemplate();
 }
 
 #endif // ifdef WEBSERVER_WIFI_SCANNER

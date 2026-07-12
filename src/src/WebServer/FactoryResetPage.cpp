@@ -107,8 +107,7 @@ void handle_factoryreset() {
 
   html_end_table();
   html_end_form();
-  sendHeadandTail_stdtemplate(_TAIL);
-  TXBuffer.endStream();
+  sendTail_stdtemplate();
 }
 
 // ********************************************************************************

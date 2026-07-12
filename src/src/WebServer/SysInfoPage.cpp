@@ -56,8 +56,7 @@ void handle_sysinfo_json() {
   checkRAM(F("handle_sysinfo"));
 #  endif // ifndef BUILD_NO_RAM_TRACKER
 
-  if (!isLoggedIn()) { return; }
-  TXBuffer.startJsonStream();
+  if (!startJSON_Stream()) { return; }
   {
     KeyValueWriter_JSON mainLevelWriter(true);
     {
@@ -292,8 +291,7 @@ void handle_sysinfo() {
 
   html_end_table();
   html_end_form();
-  sendHeadandTail_stdtemplate(_TAIL);
-  TXBuffer.endStream();
+  sendTail_stdtemplate();
 }
 
 void handle_sysinfo_basicInfo() {

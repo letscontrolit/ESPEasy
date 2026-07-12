@@ -543,8 +543,7 @@ void handle_sysvars() {
   }
   html_end_table();
   html_end_form();
-  sendHeadandTail_stdtemplate(_TAIL);
-  TXBuffer.endStream();
+  sendTail_stdtemplate();
 }
 
 void addSysVar_html(const __FlashStringHelper *input) {
