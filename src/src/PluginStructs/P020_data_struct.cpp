@@ -400,8 +400,7 @@ void P020_Task::rulesEngine(const String& message, struct EventStruct *event) {
     switch (serial_processing)
     {
       case P020_Events::None:
-      { break;
-      }
+        break;
       case P020_Events::Generic: // Generic
       {
         if (NewLinePos > StartPos) {
@@ -484,11 +483,12 @@ void P020_Task::rulesEngine(const String& message, struct EventStruct *event) {
     }
   } while (handleMultiLine && NewLinePos > StartPos);
 
-  #if FEATURE_STRING_VARIABLES
+  # if FEATURE_STRING_VARIABLES
+
   if (eventSent) {
     sendData(event); // Send derived values
   }
-  #endif // if FEATURE_STRING_VARIABLES
+  # endif // if FEATURE_STRING_VARIABLES
 }
 
 bool P020_Task::isInit() const {
