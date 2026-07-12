@@ -137,7 +137,7 @@ bool P028_data_struct::updateMeasurements(taskIndex_t task_index) {
         log += concat(F(" humidity: "), last_hum_val);
       }
       # endif // ifndef LIMIT_BUILD_SIZE
-      last_hum_val = compute_humidity_from_dewpoint(last_temp_val + temp_offset, last_dew_temp_val);
+      last_hum_val = min(compute_humidity_from_dewpoint(last_temp_val + temp_offset, last_dew_temp_val), 100.0f);
 
       # ifndef LIMIT_BUILD_SIZE
 
