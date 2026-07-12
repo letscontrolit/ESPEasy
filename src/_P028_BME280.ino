@@ -6,6 +6,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2026-07-03 tonhuisman: Cap humidity at 100% when applying temperature compensation value
  * 2023-07-27 tonhuisman: Revert most below changes and implement PLUGIN_GET_DEVICEVTYPE so the P2P controller validates against the correct
  *                        setting. Setting is only available if a remote data-feed is active, and offers BME280 and BMP280 options only.
  * 2023-07-26 tonhuisman: Ignore all humidity data (and log messages) if BMP280 Sensor model is selected
