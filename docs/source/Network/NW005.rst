@@ -25,9 +25,39 @@ Maintainer: |NW005_maintainer|
 Description
 -----------
 
+The PPP network interface allows to use one of many available GSM/GPRS/WCDMA/HSDPA/HSUPA/PSPA/LTE/4g modem modules to allow an ESPEasy node to be used literally "in the field".
+When connected, a module offers a direct connection to the internet. Keep in mind this connection is like any other device behind a NAT router, thus no connection possible from the internet to the device itself.
+
+N.B. There are exceptions to this, for example when using a custom service with your own SIM cards.  These kinds of configurations are not tested, but also not actively disabled in ESPEasy.
+
+All supported modules need to have an UART interface over which the ESP communicates using AT-commands.
+
+Currently supported PPP modules (others may also work):
+
+* SIMCOM A76xx
+* SIMCOM A7070/A7000
+* BG96
+* SIM800 (obsolete)
+* Generic
+
+The "Generic" option likely does work on most modules, however some specifics may not work.
+
 
 Configuration
 -------------
+
+PPP modems need to communicate via a serial port.
+It is strongly adviced to use flow control where possible and use hardware serial (not software serial).
+
+Most SIMCOM modules use 115200 as default baudrate, unless it is configured otherwise.
+
+Make sure to have at least the reset pin of the PPP modem connected, or at the very least have the option to power cycle the modem. But this should be used only as last resort as the modem may take minutes to find a network after a power cycle.
+
+LTE modules can draw a significant high current while connecting to the provider network.
+This can be upto 2 Ampere.  So make sure either the module has ample capacitors (e.g. 330 uF ... 470 uF) and preferrably also a soft-start circuit when enable power to the PPP modem.
+
+.. note:: Never run these PPP modem modules without an antenna connected!
+
 
 
 Device Settings
