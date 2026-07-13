@@ -19,10 +19,7 @@
 // Web Interface Tools page
 // ********************************************************************************
 void handle_tools() {
-  if (!isLoggedIn()) { return; }
-  navMenuIndex = MENU_INDEX_TOOLS;
-  TXBuffer.startStream();
-  sendHeadandTail_stdtemplate(_HEAD);
+  if (!startStream_send_stdTemplate(MENU_INDEX_TOOLS)) { return; }
 
   String webrequest = webArg(F("cmd"));
 
@@ -51,15 +48,7 @@ void handle_tools() {
   addRTDHelpButton(F("Reference/Command.html"));
   html_TR_TD();
 
-  if (printWebString.length() > 0)
-  {
-    addRowColspan(2);
-    addHtml(F("Command Output<BR><textarea readonly rows='10' wrap='on'>"));
-    addHtml(printWebString);
-    addHtml(F("</textarea>"));
-    free_string(printWebString);
-  }
-
+  handle_printWebString();
 
   addFormSubHeader(F("System"));
 
@@ -204,8 +193,9 @@ void handle_tools() {
 
   html_end_table();
   html_end_form();
-  sendHeadandTail_stdtemplate(_TAIL);
-  TXBuffer.endStream();
+  sendTail_stdtemplate();
+
+  // FIXME TD-er: Is this still needed?
   free_string(printWebString);
   printToWeb     = false;
 }

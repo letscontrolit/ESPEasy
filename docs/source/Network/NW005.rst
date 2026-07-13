@@ -25,18 +25,125 @@ Maintainer: |NW005_maintainer|
 Description
 -----------
 
+The PPP network interface allows to use one of many available GSM/GPRS/WCDMA/HSDPA/HSUPA/PSPA/LTE/4g modem modules to allow an ESPEasy node to be used literally "in the field".
+When connected, a module offers a direct connection to the internet. Keep in mind this connection is like any other device behind a NAT router, thus no connection possible from the internet to the device itself.
+
+N.B. There are exceptions to this, for example when using a custom service with your own SIM cards.  These kinds of configurations are not tested, but also not actively disabled in ESPEasy.
+
+All supported modules need to have an UART interface over which the ESP communicates using AT-commands.
+
+Currently supported PPP modules (others may also work):
+
+* SIMCOM A76xx
+* SIMCOM A7070/A7000
+* BG96
+* SIM800 (obsolete)
+* Generic
+
+The "Generic" option likely does work on most modules, however some specifics may not work.
+
 
 Configuration
 -------------
+
+PPP modems need to communicate via a serial port.
+It is strongly adviced to use flow control where possible and use hardware serial (not software serial).
+
+Most SIMCOM modules use 115200 as default baudrate, unless it is configured otherwise.
+
+Make sure to have at least the reset pin of the PPP modem connected, or at the very least have the option to power cycle the modem. But this should be used only as last resort as the modem may take minutes to find a network after a power cycle.
+
+LTE modules can draw a significant high current while connecting to the provider network.
+This can be upto 2 Ampere.  So make sure either the module has ample capacitors (e.g. 330 uF ... 470 uF) and preferrably also a soft-start circuit when enable power to the PPP modem.
+
+.. note:: Never run these PPP modem modules without an antenna connected!
+
 
 
 Device Settings
 ^^^^^^^^^^^^^^^
 
+.. image:: NW005_DeviceSettings.png
+
+DTR pin
+-------
+
+For SIMCOM A76xx modems, there is an emergency fallback option possible to regain access to the modem while the modem is in 'data' mode and not in 'console' mode.
+ESPEasy does send the required AT-command ``AT&D1`` right before starting the network connection to enable this fallback in the modem settings.
+
+These PPP modems do have a console/command mode and a data mode.
+When entering AT commands, the modem must be pulled out of the data mode. However when the connection between the ESP and the modem got interrupted while the modem is still in data mode, it is impossible to regain access to the modem unless it is reset or power cycled.
+This may occur when the ESP crashes or reboots without properly terminating the PPP network connection, or when the serial link between the ESP and the modem is not using flow control (which is strongly suggested to use!).
+
+Not all modem boards do have the DTR pin exposed. So make sure to either have the reset pin available, or as a last resort, have the option to power cycle the modem board.
+Power cycling should be considered as last resort to regain access to the modem, as it may take several minutes for a modem to get connected again after a power cycle.
+
 
 
 Connection Settings
 ^^^^^^^^^^^^^^^^^^^
+
+These settings are optional.
+
+.. note:: These specific settings are stored in the file ``devsecurity.dat`` as these are specific to this device.
+
+Access Point Name (APN)
+-----------------------
+
+The APN is like a default gateway for your device to connect to another network.
+
+Typically the default APN as stored in the SIM card, or sent by the provider when setting up the connection, is just fine.
+
+For some use cases, it may be required to set a specific APN, to override the pre-configured one stored in the SIM card.
+
+A provider may offer several APNs, for example to connect to a specific customer network or to handle the traffic differently.
+
+Whether or not this is even useful to change depends on the use case and the specific provider.
+
+
+SIM Card Pin
+------------
+
+A SIM card often has some 4-digit pin, which must be entered when powering up the device.
+If needed, the Pin number can be entered here.
+
+
+Modem State
+^^^^^^^^^^^
+
+.. image:: NW005_ModemState.png
+
+UE System Information
+^^^^^^^^^^^^^^^^^^^^^
+
+.. image:: NW005_UE_SystemInformation.png
+
+Useful AT commands
+^^^^^^^^^^^^^^^^^^
+
+The command ``ppp,write,<AT-command>`` can be used to interact directly with the modem.
+
+.. note:: The displayed output on the web interface often also includes the ``OK`` at the end.  This is not part of the reply, but was originally printed on a separate line. However the way how these outputs are shown on the "Command Output" window, the extra newlines have been stripped from the response.  The log on the serial port will output these on separate lines.
+
+* ``ppp,write,ATI`` Example output: ``+GCAP: +CGSM,+FCLASS,+DS``
+* ``ppp,write,AT+IPR=?`` Listing supported baud rates: ``+IPR: (300,600,1200,2400,4800,9600,19200,38400,57600,115200,230400,460800,921600,1842000,3686400)``
+* ``ppp,write,AT+CSPN?`` Show the SIM card carrier string: ``+CSPN: "Lebara",0``
+* ``ppp,write,AT+CCLK?`` Show local time as known by the modem: ``+CCLK: "70/01/01,00:53:53+00"``
+
+
+Example Devices
+^^^^^^^^^^^^^^^
+
+* `A7670E <https://nl.aliexpress.com/item/1005005220505235.html>`_ (DTR pin exposed, no RST pin)
+* `A7670G <https://nl.aliexpress.com/item/1005008748473438.html>`_ (DTR pin exposed, no RST pin)
+* `LilyGO T-PCIE V1.2 - AXP2101 - ESP32-WROVER - 16MB <https://www.tinytronics.nl/nl/development-boards/microcontroller-boards/met-wi-fi/lilygo-t-pcie-v1.2-axp2101-esp32-wrover-16mb>`_ with modem: `LilyGO TTGO T-PCIE A7670G  <https://www.tinytronics.nl/nl/communicatie-en-signalen/draadloos/telecom/modules/lilygo-ttgo-t-pcie-a7670g-uitbreidingsmodule>`_ 
+
+To use the last LilyGo T-PCIe v1.2 along with their A7670G modem combination as network interface #3, this config import can be used to get started:
+
+.. code-block::
+  
+  networkimportconfig,3,`{"nwpluginID":5,"enabled":"true","route_prio":200,"fallback":"false","sn_block":"true","start_delay":1000,"en_ipv6":"false","serPort":4,"RX":26,"TX":27,"RTS":-1,"CTS":-1,"rst":4,"rst_act_low":"false","rst_delay":500,"baudrate":115200,"flowctrl":0,"phytype":2,"DTR":-1}`
+
 
 
 Change log

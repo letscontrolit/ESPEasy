@@ -28,8 +28,7 @@ void handle_pluginlist() {
   const int colspan = 5;
   # endif // if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS
 
-  TXBuffer.startStream();
-  sendHeadandTail_stdtemplate(_HEAD);
+  startStream_send_stdTemplate_NoLoginCheck(MENU_INDEX_DEVICES);
 
   // the table header
   html_table_class_normal();
@@ -196,8 +195,7 @@ void handle_pluginlist() {
 
   html_end_table();
   html_end_form();
-  sendHeadandTail_stdtemplate(_TAIL);
-  TXBuffer.endStream();
+  sendTail_stdtemplate();
 }
 
 #endif // if FEATURE_PLUGIN_LIST
