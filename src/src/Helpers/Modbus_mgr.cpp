@@ -302,42 +302,16 @@ void ModbusMGR_struct::show_modbus_interfaces()
   }
   const FormSelectorOptions baudselector(optionBaudCount, options_baudrate);
 
-  int optionPortCount = 1;
-  options_port[0] = F("Not set");
-  portMap[0]      = 0; // Map the "Not set" option to index 0
-
-  for (int i = 1; i < NR_ELEMENTS(options_port); i++) {
-    if (validSerialPort(static_cast<ESPEasySerialPort>(i))) {
-      options_port[optionPortCount] = ESPEasySerialPort_toString(static_cast<ESPEasySerialPort>(i));
-      portMap[i]                    = optionPortCount; // Store the index of the valid port in the options_port array
-      optionPortCount++;
-    }
-    else {
-      options_port[i] = F("Invalid");
-      portMap[i]      = 0; // Map invalid/unused ports to the "Not set" option
-    }
-  }
-  const FormSelectorOptions portSelector(optionPortCount, options_port);
-
   // Iterate over the modbus links and show their configuration on the web page
   for (int link = 0; link < MAX_MODBUS_LINKS; ++link)
   {
-
     addFormSubHeader(strformat(F("Modbus %u"), link));
     addFormDetailsStart(link == 0 || _modbus_links[link].port != ESPEasySerialPort::not_set);
 
-    int idx = static_cast<int>(_modbus_links[link].port);
-    portSelector.addFormSelector(F("Port"), strformat(F("MBport%u"), link), portMap[idx]);
+    serialHelper_webformLoad(link, _modbus_links[link].port, static_cast<int>(_modbus_links[link].serial_rx),
+                             static_cast<int>(_modbus_links[link].serial_tx), true);
 
-    String id = strformat(F("MBtx%u"), link);
-    addRowLabel_tr_id(formatGpioName_serialTX(false), id);
-    addPinSelect(PinSelectPurpose::Serial_input, id, _modbus_links[link].serial_tx);
-
-    id = strformat(F("MBrx%u"), link);
-    addRowLabel_tr_id(formatGpioName_serialRX(false), id);
-    addPinSelect(PinSelectPurpose::Serial_output, id, _modbus_links[link].serial_rx);
-
-    id = strformat(F("MBde%u"), link);
+    String id = strformat(F("MBde%u"), link);
     addRowLabel_tr_id(formatGpioName_output_optional(F("~RE/DE")), id);
     addPinSelect(PinSelectPurpose::Generic_output, id, _modbus_links[link].dere_pin);
 
@@ -364,7 +338,9 @@ void ModbusMGR_struct::show_modbus_interfaces()
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 uint32_t modbus_storageValueToBaudrate(uint8_t baudrate_setting) {
   if ((baudrate_setting > 7) || (baudrate_setting < 0)) { return 9600; }
-  switch (baudrate_setting) {
+
+  switch (baudrate_setting)
+  {
     case 0: return 1200;
     case 1: return 2400;
     case 2: return 4800;
@@ -386,11 +362,17 @@ uint32_t modbus_storageValueToBaudrate(uint8_t baudrate_setting) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 uint8_t modbus_baudrateToStorageValue(uint32_t baudrate) {
   if (baudrate <= 1200) { return 0; }
+
   if (baudrate <= 2400) { return 1; }
+
   if (baudrate <= 4800) { return 2; }
+
   if (baudrate <= 9600) { return 3; }
+
   if (baudrate <= 19200) { return 4; }
+
   if (baudrate <= 38400) { return 5; }
+
   if (baudrate <= 57600) { return 6; }
   return 7; // 115200
 }
@@ -401,43 +383,36 @@ uint8_t modbus_baudrateToStorageValue(uint32_t baudrate) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 bool ModbusMGR_struct::save_modbus_interfaces(String& error)
 {
-  int portCount = 1;
-
-  // Create mapping table from dropdown enum index to actual port identifier, index 0 is reserved for "Not set"
-  int portMap[static_cast<size_t>(ESPEasySerialPort::MAX_SERIAL_TYPE)] {};
-
-  portMap[0] = 0; // Map the "Not set" option to index 0
-
-  for (int i = 1; i < NR_ELEMENTS(portMap); i++) {
-    if (validSerialPort(static_cast<ESPEasySerialPort>(i))) {
-      portMap[portCount++] = i;
-    }
-  }
-
   for (int link = 0; link < MAX_MODBUS_LINKS; ++link)  {
-    int  port_setting             = 0;
-    int  baudrate_setting         = _modbus_links[link].baudrate;
+    int  port_setting             = static_cast<int>(_modbus_links[link].port);
     int  tx_setting               = _modbus_links[link].serial_tx;
     int  rx_setting               = _modbus_links[link].serial_rx;
+    int  baudrate_setting         = modbus_baudrateToStorageValue(_modbus_links[link].baudrate);
     int  dere_setting             = _modbus_links[link].dere_pin;
     bool collision_detect_setting = _modbus_links[link].collision_detect;
     bool settingsChanged          = false;
 
-    for (int i = 0; i < NR_ELEMENTS(portMap); i++) {
-      if (portMap[i] == static_cast<int>(_modbus_links[link].port)) {
-        port_setting = i;
-        break;
-      }
+    int8_t  rxPin = rx_setting;
+    int8_t  txPin = tx_setting;
+    uint8_t port  = port_setting;
+    serialHelper_webformSave(link, port, rxPin, txPin);
+
+    if (port != port_setting) {
+      port_setting    = port;
+      settingsChanged = true;
     }
 
-    update_whenset_FormItemInt(strformat(F("MBport%u"), link), port_setting,     &settingsChanged);
-    baudrate_setting = modbus_baudrateToStorageValue(_modbus_links[link].baudrate);
+    if (rxPin != rx_setting) {
+      rx_setting      = rxPin;
+      settingsChanged = true;
+    }
+
+    if (txPin != tx_setting) {
+      tx_setting      = txPin;
+      settingsChanged = true;
+    }
+
     update_whenset_FormItemInt(strformat(F("MBbaud%u"), link), baudrate_setting, &settingsChanged);
-    tx_setting = _modbus_links[link].serial_tx;
-    update_whenset_FormItemInt(strformat(F("MBtx%u"), link),   tx_setting,       &settingsChanged);
-    rx_setting = _modbus_links[link].serial_rx;
-    update_whenset_FormItemInt(strformat(F("MBrx%u"), link),   rx_setting,       &settingsChanged);
-    dere_setting = _modbus_links[link].dere_pin;
 
     if (update_whenset_FormItemInt(strformat(F("MBde%u"), link), dere_setting, &settingsChanged))
     {
@@ -451,11 +426,8 @@ bool ModbusMGR_struct::save_modbus_interfaces(String& error)
     }
 
     if (settingsChanged) {
-      if ((port_setting < 0) || (port_setting > NR_ELEMENTS(portMap))) {
-        port_setting = 0; // Reset to "Not set" if the selected port is invalid
-      }
       setLink(link,
-              static_cast<ESPEasySerialPort>(portMap[port_setting]),
+              static_cast<ESPEasySerialPort>(port_setting),
               rx_setting,
               tx_setting,
               modbus_storageValueToBaudrate(baudrate_setting),
@@ -509,7 +481,7 @@ bool ModbusMGR_struct::setLink(const int               linkIndex,
   else if ((port == ESPEasySerialPort::not_set) && (_modbus_links[linkIndex].link != nullptr)) {
     delete _modbus_links[linkIndex].link;
     _modbus_links[linkIndex].link = nullptr;
-  }
+    }
 
   // If the link object is enabled (has a valid pointer), initialize it with the new parameters
   if (_modbus_links[linkIndex].link != nullptr) {

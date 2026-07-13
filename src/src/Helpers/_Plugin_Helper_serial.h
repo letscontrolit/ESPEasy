@@ -6,17 +6,17 @@
 
 #ifdef PLUGIN_USES_SERIAL
 
-#include <ESPeasySerial.h>
+# include <ESPeasySerial.h>
 
 
 struct ESPeasySerialType;
 
 const __FlashStringHelper* serialHelper_getSerialTypeLabel(ESPEasySerialPort serType,
-                                       bool              shortName = false);
+                                                           bool              shortName = false);
 
-void   serialHelper_log_GpioDescription(ESPEasySerialPort typeHint,
-                                        int               config_pin1,
-                                        int               config_pin2);
+void                       serialHelper_log_GpioDescription(ESPEasySerialPort typeHint,
+                                                            int               config_pin1,
+                                                            int               config_pin2);
 
 String serialHelper_getGpioDescription(ESPEasySerialPort typeHint,
                                        int               config_pin1,
@@ -28,9 +28,9 @@ void serialHelper_getGpioNames(struct EventStruct *event,
                                bool                txOptional = false);
 
 void serialHelper_modbus_getGpioNames(struct EventStruct *event,
-                               bool                rxOptional = false,
-                               bool                txOptional = false,
-                               bool                DE_RE_optional = true);
+                                      bool                rxOptional     = false,
+                                      bool                txOptional     = false,
+                                      bool                DE_RE_optional = true);
 
 int8_t            serialHelper_getRxPin(struct EventStruct *event);
 
@@ -40,10 +40,14 @@ ESPEasySerialPort serialHelper_getSerialType(struct EventStruct *event);
 
 String            serialHelper_getSerialTypeLabel(struct EventStruct *event);
 
-#ifndef DISABLE_SC16IS752_Serial
-void serialHelper_addI2CuartSelectors(int address,
-                                      int channel);
-#endif // ifndef DISABLE_SC16IS752_Serial
+# ifndef DISABLE_SC16IS752_Serial
+void              serialHelper_addI2CuartSelectors(int address,
+                                                   int channel);
+
+void              serialHelper_addI2CuartSelectors(int linkId,
+                                                   int address,
+                                                   int channel);
+# endif // ifndef DISABLE_SC16IS752_Serial
 
 void serialHelper_webformLoad(struct EventStruct *event);
 
@@ -58,11 +62,21 @@ void serialHelper_webformLoad(ESPEasySerialPort port,
                               int               txPinDef,
                               bool              allowSoftwareSerial);
 
+void serialHelper_webformLoad(int8_t            linkId,
+                              ESPEasySerialPort port,
+                              int               rxPinDef,
+                              int               txPinDef,
+                              bool              allowSoftwareSerial);
 void serialHelper_webformSave(uint8_t& port,
                               int8_t & rxPin,
                               int8_t & txPin);
 
-void    serialHelper_webformSave(struct EventStruct *event);
+void serialHelper_webformSave(struct EventStruct *event);
+
+void serialHelper_webformSave(int8_t   linkId,
+                              uint8_t& port,
+                              int8_t & rxPin,
+                              int8_t & txPin);
 
 bool    serialHelper_isValid_serialconfig(uint8_t serialconfig);
 

@@ -43,6 +43,7 @@
 # define P183_CACHE_START_LABEL F("P183st")
 
 # define P183_DEV_ID_DFLT      1
+# define P183_LINK_ID_DFLT     0
 # define P183_MODBUS_TIMEOUT   1000    // milliseconds
 # define P183_MAX_MODBUS_NODES 247
 # define P183_MODBUS_BROADCAST_ID 0    // Modbus broadcast address
