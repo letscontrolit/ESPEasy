@@ -27,6 +27,7 @@
  */
 
 /** History:
+ * 2026-07-03 tonhuisman: Cap humidity at 100% when applying temperature compensation value
  * 2024-12-21 chromoxdor: Add temperature offset + simple humidity compensation
  * 2024-12-03 tonhuisman: Add alternative initialization for AHT10 (clone), see https://github.com/letscontrolit/ESPEasy/issues/5172
  *                        Small code optimization.
@@ -155,6 +156,7 @@ boolean Plugin_105(uint8_t function, struct EventStruct *event, String& string)
         FormSelectorOptions selector(optionCount, options, indices);
         selector.reloadonchange = true;
         selector.addFormSelector(F("Sensor model"), F("ahttype"), P105_AHT_TYPE);
+
         // addFormNote(F("Changing Sensor model will reload the page."));
 
         if (static_cast<int>(AHTx_device_type::AHT10_DEVICE) == P105_AHT_TYPE) {
@@ -220,7 +222,7 @@ boolean Plugin_105(uint8_t function, struct EventStruct *event, String& string)
         P105_data->state = AHTx_state::AHTx_Values_read;
 
         UserVar.setFloat(event->TaskIndex, 0, P105_data->getTemperature() + (P105_TEMPERATURE_OFFSET / 10.0f));
-        UserVar.setFloat(event->TaskIndex, 1, P105_data->getHumidity() * (1 - 0.005f * P105_TEMPERATURE_OFFSET));
+        UserVar.setFloat(event->TaskIndex, 1, min(P105_data->getHumidity() * (1 - 0.005f * P105_TEMPERATURE_OFFSET), 100.0f));
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           addLogMove(LOG_LEVEL_INFO, strformat(F("%s : Addr: 0x%02x"), P105_data->getDeviceName().c_str(), P105_I2C_ADRESS));

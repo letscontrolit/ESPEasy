@@ -60,7 +60,7 @@ bool NWPlugin_005(NWPlugin::Function function, EventStruct *event, String& strin
       ESPEasy::net::ppp::NW005_data_struct_PPP_modem *NW_data =
         static_cast<ESPEasy::net::ppp::NW005_data_struct_PPP_modem *>(getNWPluginData(event->NetworkIndex));
 
-      if (NW_data && NW_data->attached()) {
+      if (NW_data /*&& NW_data->attached()*/) {
         event->networkInterface = &PPP;
         success                 = event->networkInterface != nullptr;
       }

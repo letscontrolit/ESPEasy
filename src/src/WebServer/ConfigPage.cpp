@@ -34,11 +34,7 @@ void handle_config() {
   checkRAM(F("handle_config"));
   #endif
 
-  if (!isLoggedIn()) { return; }
-
-  navMenuIndex = MENU_INDEX_CONFIG;
-  TXBuffer.startStream();
-  sendHeadandTail_stdtemplate(_HEAD);
+  if (!startStream_send_stdTemplate(MENU_INDEX_CONFIG)) { return; }
 
   if (web_server.args() != 0)
   {
@@ -186,8 +182,7 @@ void handle_config() {
   html_end_table();
   html_end_form();
 
-  sendHeadandTail_stdtemplate(_TAIL);
-  TXBuffer.endStream();
+  sendTail_stdtemplate();
 }
 
 #endif // ifdef WEBSERVER_CONFIG

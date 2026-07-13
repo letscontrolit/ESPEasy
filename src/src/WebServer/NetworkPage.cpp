@@ -35,11 +35,7 @@ void handle_networks()
   checkRAM(F("handle_networks"));
 # endif // ifndef BUILD_NO_RAM_TRACKER
 
-  if (!isLoggedIn()) { return; }
-  navMenuIndex = MENU_INDEX_NETWORK;
-  TXBuffer.startStream();
-  sendHeadandTail_stdtemplate(_HEAD);
-
+  if (!startStream_send_stdTemplate(MENU_INDEX_NETWORK)) { return; }
 
   // 'index' value in the URL
   uint8_t networkindex       = getFormItemInt(F("index"), 0);
@@ -115,8 +111,6 @@ void handle_networks()
 
   }
 
-  html_add_form();
-
   if (networkIndexSet)
   {
     handle_networks_NetworkSettingsPage(networkindex);
@@ -126,8 +120,7 @@ void handle_networks()
     handle_networks_ShowAllNetworksTable();
   }
 
-  sendHeadandTail_stdtemplate(_TAIL);
-  TXBuffer.endStream();
+  sendTail_stdtemplate();
 }
 
 void handle_networks_clearLoadDefaults(ESPEasy::net::networkIndex_t networkindex, NetworkSettingsStruct& NetworkSettings) {
@@ -184,6 +177,7 @@ void handle_networks_CopySubmittedSettings_NWPluginCall(ESPEasy::net::networkInd
 
 void handle_networks_ShowAllNetworksTable()
 {
+  html_add_form();
   html_table_class_multirow();
   html_TR();
   html_table_header(F(""),           70);
@@ -320,6 +314,8 @@ void handle_networks_ShowAllNetworksTable()
 void handle_networks_NetworkSettingsPage(ESPEasy::net::networkIndex_t networkindex)
 {
   if (!validNetworkIndex(networkindex)) { return; }
+
+  html_add_form();
 
   const networkDriverIndex_t networkDriverIndex =
     getNetworkDriverIndex_from_NWPluginID(
