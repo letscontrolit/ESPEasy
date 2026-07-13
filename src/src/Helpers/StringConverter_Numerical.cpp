@@ -95,6 +95,42 @@ String ll2String(int64_t value, uint8_t  base) {
   }
 }
 
+/**
+ * format an uint32_t with 0-prefixed in the provided base of 2, 16 and insert an optional dot as separator for each byte
+ * separator only applied for base 2 and 16
+ */
+String ul2stringFixed(uint32_t value, uint8_t base, bool dotSeparator) {
+  // Set bit just left of 32 bits so we will see the leading zeroes
+  const uint64_t val = static_cast<uint64_t>(value) | 0x100000000ull;
+
+  String valStr = ull2String(val, base).substring(1); // Delete leading 1 we added
+
+  if (base == HEX) {
+    valStr.toUpperCase();                             // uppercase hex for readability
+  }
+
+  if (dotSeparator) {
+    uint8_t dotInsert{};
+    uint8_t dotOffset{};
+
+    if (BIN == base) {
+      dotInsert = 10;
+      dotOffset = 9;
+    } else
+    if (HEX == base) {
+      dotInsert += 4;
+      dotOffset  = 3;
+    }
+
+    if (dotInsert) {
+      for (uint8_t i = 0; i < 3; ++i, dotInsert += dotOffset) { // Insert readability separators
+        valStr = valStr.substring(0, dotInsert) + '.' + valStr.substring(dotInsert);
+      }
+    }
+  }
+  return valStr;
+}
+
 String trimTrailingZeros(const String& value) {
   String res(value);
   int dot_pos = res.lastIndexOf('.');

@@ -1659,17 +1659,20 @@ void devicePage_show_controller_config(taskIndex_t taskIndex, deviceIndex_t Devi
                   F("Unchecked: Send event per value. Checked: Send single event (%s#All) containing all values"),
                   getTaskDeviceName(taskIndex).c_str()));
 
+    bool sendDerived{};
     # if FEATURE_STRING_VARIABLES
 
     if (!device.HideDerivedValues) {
+      sendDerived = Settings.EventAndLogDerivedTaskValues(taskIndex);
       addFormCheckBox(F("Show derived values"),            F("TSDV"), Settings.ShowDerivedTaskValues(taskIndex));
-      addFormCheckBox(F("Event &amp; Log derived values"), F("TELD"), Settings.EventAndLogDerivedTaskValues(taskIndex));
+      addFormCheckBox(F("Event &amp; Log derived values"), F("TELD"), sendDerived);
     }
     # endif // if FEATURE_STRING_VARIABLES
 
-    bool separatorAdded = false;
+    const uint8_t valueCount = getValueCountForTask(taskIndex);
+    bool separatorAdded      = false;
 
-    for (controllerIndex_t controllerNr = 0; controllerNr < CONTROLLER_MAX; controllerNr++)
+    for (controllerIndex_t controllerNr = 0; controllerNr < CONTROLLER_MAX && (valueCount > 0 || sendDerived); controllerNr++)
     {
       if (Settings.Protocol[controllerNr] != 0)
       {
