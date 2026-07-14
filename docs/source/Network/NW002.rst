@@ -22,6 +22,30 @@ GitHub: |NW002_github|_
 
 Maintainer: |NW002_maintainer|
 
+.. include:: Network_standard_parameters.repl
+
+.. include:: ESP_Hosted_MCU.repl
+
+
+Wifi AP Settings
+----------------
+
+* WPA AP Mode Key:
+* Wifi AP channel:
+* Enable NAPT:
+
+
+
+
+Wifi AP Fallback
+----------------
+
+* Force /setup in AP-Mode:	
+* Start AP on No Credentials:	
+* Start AP on Connect Fail:	
+* Max. Uptime to Start AP:	
+* AP Minimal 'on' Time:
+
 Change log
 ----------
 

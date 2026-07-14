@@ -58,6 +58,7 @@ This can be upto 2 Ampere.  So make sure either the module has ample capacitors 
 
 .. note:: Never run these PPP modem modules without an antenna connected!
 
+.. include:: Network_standard_parameters.repl
 
 
 Device Settings
