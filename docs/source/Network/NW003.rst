@@ -22,6 +22,8 @@ GitHub: |NW003_github|_
 
 Maintainer: |NW003_maintainer|
 
+.. include:: Network_standard_parameters.repl
+
 .. include:: Ethernet_generic.repl
 
 .. include:: Ethernet_rmii.repl

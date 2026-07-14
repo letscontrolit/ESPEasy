@@ -1,10 +1,10 @@
 RMII Ethernet 
-^^^^^^^^^^^^^
+-------------
 
 As mentioned above, the RMII interface is only present on ESP32-classic and ESP32-P4.
 
 RMII PHY SMI Wiring
-"""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^
 
 Most PHY boards have documented their *RMII PHY SMI Wiring* pins:
 
@@ -12,7 +12,7 @@ Most PHY boards have documented their *RMII PHY SMI Wiring* pins:
 * **MDIO** Bidirectional, usually pin 18
 
 Clock sync
-""""""""""
+^^^^^^^^^^
 
 The PHY and the ESP need to keep a clock in sync.
 This can either be done via an external crystal, which is connected to a GPIO pin.
@@ -26,7 +26,7 @@ Another option is to let the ESP provide the clock to the PHY.
 .. note:: When using an external crystal oscillator, this is connected to GPIO-0. Make sure this crystal is not active, or connected to GPIO-0, during boot or else the ESP32 may boot into flash mode.
 
 Power pin
-"""""""""
+^^^^^^^^^
 
 On almost all PHY boards, or ESP boards equiped with an ethernet PHY, it is possible to turn the PHY on or off.
 Either to save energy, or to make sure the external clock is not affecting the ESP boot mode when it restarts.
@@ -44,7 +44,7 @@ Some Ethernet modules, like the LAN8720, may sometimes get stuck and need to be 
 
 
 RMII PHY Wiring
-"""""""""""""""
+^^^^^^^^^^^^^^^
 
 Apart from these GPIO pins, there is a number of other pins reserved on the ESP32 for RMII PHY Wiring.
 
@@ -54,7 +54,7 @@ However, they also cannot be used when *RMII PHY* is used.
 .. include:: ../Reference/RMII_Ethernet_PHY_ESP32.rst
 
 RMII Ethernet ESP32 Boards
-""""""""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. include:: ../Reference/RMII_Ethernet_ESP32_boards.rst
 
