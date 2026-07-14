@@ -44,6 +44,11 @@ Wifi Settings
 Include Hidden SSID
 ^^^^^^^^^^^^^^^^^^^
 
+When checked, ESPEasy is allowed to connect to hidden SSID networks.
+
+.. note:: Do not use channels 12 .. 14 for Hidden SSID networks as those are often not found using "Active Scan", which is needed to find hidden SSID networks.
+
+
 Hidden SSID Slow Connect
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -59,6 +64,19 @@ This is enabled by default.
 Passive WiFi Scan
 ^^^^^^^^^^^^^^^^^
 
+There are 2 methods of scanning for access points:
+
+* Active Scan: Scan by sending a probe request. 
+* Passive Scan: No probe request is sent out. Just switch to the specific channel and wait for a beacon.
+
+The default scan is an active scan.
+
+When WiFi channels 12 - 14 have to be used, but cannot be found, try to switch to use "Passive Scan".
+
+.. note:: When using hidden SSID networks, Active scan is likely the only option that will work.
+
+
+
 WiFi IP Settings
 ----------------
 
@@ -73,6 +91,22 @@ Force the WiFi to use only 802.11-B or -G protocol (not -N)
 Since the 802.11 G mode of the ESP is more tolerant to noise, it may improve link
 stability on some nodes.
 
+WiFi Band Mode
+^^^^^^^^^^^^^^
+
+(ESP32-C5 Only)
+
+The ESP32-C5 does support both 2.4 GHz and 5 GHz Wi-Fi.
+
+The options are:
+
+* 2.4 GHz only
+* 5 GHz only
+* 2.4 GHz + 5 GHz
+
+This setting limits which bands will be allowed to connect to a configured access point.
+
+.. note:: Scanning both 2.4 GHz and 5 GHz bands takes longer to connect as it typically takes upto 6 seconds to scan all channels.
 
 WiFi Power
 ----------
@@ -221,6 +255,9 @@ WiFi Tweaks
 
 Connect Retry Attempts
 ^^^^^^^^^^^^^^^^^^^^^^
+
+Number of retry attempts to connect to a specific access point, before counting as 'failed'.
+
 
 Restart WiFi on lost conn.
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
