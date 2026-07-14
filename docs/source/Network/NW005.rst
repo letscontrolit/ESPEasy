@@ -62,12 +62,12 @@ This can be upto 2 Ampere.  So make sure either the module has ample capacitors 
 
 
 Device Settings
-^^^^^^^^^^^^^^^
+---------------
 
 .. image:: NW005_DeviceSettings.png
 
 DTR pin
--------
+^^^^^^^
 
 For SIMCOM A76xx modems, there is an emergency fallback option possible to regain access to the modem while the modem is in 'data' mode and not in 'console' mode.
 ESPEasy does send the required AT-command ``AT&D1`` right before starting the network connection to enable this fallback in the modem settings.
@@ -82,14 +82,14 @@ Power cycling should be considered as last resort to regain access to the modem,
 
 
 Connection Settings
-^^^^^^^^^^^^^^^^^^^
+-------------------
 
 These settings are optional.
 
 .. note:: These specific settings are stored in the file ``devsecurity.dat`` as these are specific to this device.
 
 Access Point Name (APN)
------------------------
+^^^^^^^^^^^^^^^^^^^^^^^
 
 The APN is like a default gateway for your device to connect to another network.
 
@@ -103,14 +103,14 @@ Whether or not this is even useful to change depends on the use case and the spe
 
 
 SIM Card Pin
-------------
+^^^^^^^^^^^^
 
 A SIM card often has some 4-digit pin, which must be entered when powering up the device.
 If needed, the Pin number can be entered here.
 
 
 Modem State
-^^^^^^^^^^^
+-----------
 
 .. image:: NW005_ModemState.png
 
@@ -120,7 +120,7 @@ UE System Information
 .. image:: NW005_UE_SystemInformation.png
 
 Useful AT commands
-^^^^^^^^^^^^^^^^^^
+------------------
 
 The command ``ppp,write,<AT-command>`` can be used to interact directly with the modem.
 
@@ -133,7 +133,7 @@ The command ``ppp,write,<AT-command>`` can be used to interact directly with the
 
 
 Example Devices
-^^^^^^^^^^^^^^^
+---------------
 
 * `A7670E <https://nl.aliexpress.com/item/1005005220505235.html>`_ (DTR pin exposed, no RST pin)
 * `A7670G <https://nl.aliexpress.com/item/1005008748473438.html>`_ (DTR pin exposed, no RST pin)
@@ -161,6 +161,3 @@ Change log
 
   |added|
   Initial release version.
-
-Description
------------
