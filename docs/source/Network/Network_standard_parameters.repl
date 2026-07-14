@@ -82,7 +82,7 @@ Checking this checkbox, will allow the network device to use IPv6.
 Collect Network Stats
 ^^^^^^^^^^^^^^^^^^^^^
 
-(ESP32 only, not enabled in all builds)
+(ESP32 only, not included in all builds)
 
 Checking this checkbox, will allow to collect network statistics like:
 
