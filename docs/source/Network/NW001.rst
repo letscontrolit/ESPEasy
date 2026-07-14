@@ -29,6 +29,8 @@ Maintainer: |NW001_maintainer|
 Wifi Credentials
 ----------------
 
+Main WiFi credentials, stored in ``security.dat`` file.
+
 * SSID:
 * WPA Key:	
 * Fallback SSID:	
@@ -36,6 +38,13 @@ Wifi Credentials
 
 Wifi Credentials Extra
 ----------------------
+
+(ESP32-only)
+
+The extra credentials stored in here are stored not in the ``security.dat`` file, but in ``devsecurity.dat``
+
+.. note:: Credentials entered via the setup page are stored here.
+
 
 
 Wifi Settings
@@ -79,6 +88,15 @@ When WiFi channels 12 - 14 have to be used, but cannot be found, try to switch t
 
 WiFi IP Settings
 ----------------
+
+Options to setup static IP for the ESP's WiFi STA network interface.
+
+Leave these empty to use DHCP.
+
+* ESP WiFi IP 
+* ESP WiFi Gateway 
+* ESP WiFi Subnetmask
+* ESP WiFi DNS
 
 
 WiFi Mode
@@ -259,10 +277,15 @@ Connect Retry Attempts
 Number of retry attempts to connect to a specific access point, before counting as 'failed'.
 
 
-Restart WiFi on lost conn.
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+Restart WiFi Lost Conn
+^^^^^^^^^^^^^^^^^^^^^^
 
 Force a complete WiFi radio shutdown & restart when connection with access point is lost.
+
+.. note:: This is also useful to use when there are access points in the neighborhood configured with different country code set. The actual configured country code can be seen on the WiFi scan page. (ESP32-only)
+
+
+
 
 Use Last Connected AP from RTC
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
