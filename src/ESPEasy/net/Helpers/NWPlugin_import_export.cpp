@@ -13,11 +13,13 @@
 
 
 # ifdef USES_NW001
-//#  include "../NWPluginStructs/NW001_data_struct_WiFi_STA.h"
-# endif
+
+// #  include "../NWPluginStructs/NW001_data_struct_WiFi_STA.h"
+# endif // ifdef USES_NW001
 # ifdef USES_NW002
-//#  include "../NWPluginStructs/NW002_data_struct_WiFi_AP.h"
-# endif
+
+// #  include "../NWPluginStructs/NW002_data_struct_WiFi_AP.h"
+# endif // ifdef USES_NW002
 # ifdef USES_NW003
 #  include "../NWPluginStructs/NW003_data_struct_ETH_RMII.h"
 # endif
@@ -39,11 +41,11 @@ ESPEasy_key_value_store_import_export::LabelStringFunction getLabelFnc(ESPEasy::
 # ifdef USES_NW003
     case 3:
       return ESPEasy::net::eth::NW003_data_struct_ETH_RMII::getLabelString;
-# endif
+# endif // ifdef USES_NW003
 # ifdef USES_NW004
     case 4:
-    return ESPEasy::net::eth::NW004_data_struct_ETH_SPI::getLabelString;
-# endif
+      return ESPEasy::net::eth::NW004_data_struct_ETH_SPI::getLabelString;
+# endif // ifdef USES_NW004
 
 # ifdef USES_NW005
     case 5:
@@ -72,12 +74,12 @@ ESPEasy_key_value_store_import_export::NextKeyFunction getNextKeyFnc(ESPEasy::ne
   {
 # ifdef USES_NW003
     case 3:
-    return ESPEasy::net::eth::NW003_data_struct_ETH_RMII::getNextKey;
-# endif
+      return ESPEasy::net::eth::NW003_data_struct_ETH_RMII::getNextKey;
+# endif // ifdef USES_NW003
 # ifdef USES_NW004
     case 4:
-    return ESPEasy::net::eth::NW004_data_struct_ETH_SPI::getNextKey;
-# endif
+      return ESPEasy::net::eth::NW004_data_struct_ETH_SPI::getNextKey;
+# endif // ifdef USES_NW004
 # ifdef USES_NW005
     case 5:
     {
@@ -164,7 +166,12 @@ String NWPlugin_import_export::importConfig(
 
   if (nwpluginID.isValid()) { return F("KVS : Network Index is already in use"); }
 
-  addLog(LOG_LEVEL_INFO, concat(F("KVS : JSON: "), json));
+# ifndef BUILD_NO_DEBUG
+
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    addLog(LOG_LEVEL_DEBUG, concat(F("KVS : JSON: "), json));
+  }
+# endif // ifndef BUILD_NO_DEBUG
 
   ESPEasy_key_value_store kvs;
   ESPEasy_key_value_store_import_export e(&kvs, json);
