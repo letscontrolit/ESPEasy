@@ -657,7 +657,7 @@ ESPEasy does support a number of variants of the processors manufactured by Espr
       - 85 µA / 25 µA light sleep, 7 µA deep sleep
       - 3.5 mA / 250 µA light sleep, 25 µA deep sleep
 
-
+.. note:: Whether a specific MCU supports a feature, does not mean it can easily be used in ESPEasy or added as a new feature.  For this we also need support in either Arduino-ESP32 or ESP-IDF.  See `Arduino ESP32 "Supported Features and Peripherals" <https://docs.espressif.com/projects/arduino-esp32/en/latest/libraries.html#supported-features-and-peripherals>`_
 
 Sources:
 
