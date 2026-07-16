@@ -1510,6 +1510,14 @@ template<uint32_t N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::setNWPluginID_for_network(ESPEasy::net::networkIndex_t index, ESPEasy::net::nwpluginID_t id)
 {
   if (validNetworkIndex(index)) {
+    if (index == 0 && id.value != 1) {
+      // STA index, only allow to set WiFi STA here
+      return;
+    }
+    if (index == 1 && id.value != 2) {
+      // AP index, only allow to set WiFi AP here
+      return;
+    }
     NWPluginID[index] = id.value;
     if (id.isValid()) {
       ESPEasy::net::networkDriverIndex_t NetworkDriverIndex = 

@@ -44,6 +44,26 @@ The fallback order can be tweaked using the Delay Startup and Route Priority.
 
 N.B. Network interfaces which should be started at boot, should not be marked as Fallback Interface.
 
+
+Delay Startup
+^^^^^^^^^^^^^
+
+For various reasons, it can be useful to not immediately start a network interface at boot.
+For example to reduce the power consumption as most network interfaces may draw significant more power for a short time when starting.
+
+Another use case can be to check some sensor value before deciding to either start the network interface or enter deep sleep again.
+
+The set value (in msec) is the delay from boot before starting the network interface.
+
+
+Delay Startup for Fallback Interface
+""""""""""""""""""""""""""""""""""""
+
+A Fallback Interface is not started at boot.
+The set Delay Startup is then used as delay to schedule starting the network interface.
+See "Fallback Interface" for more information.
+
+
 Append Name to Hostname
 ^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -58,23 +78,6 @@ For example on an ESPEasy node called "ESPEasy", the WiFi STA interface will the
 This will be used in for example DHCP requests and when using mDNS.
 
 Default setting is to have it disabled for WiFi STA and enabled for all other network interfaces.
-
-Delay Startup
-^^^^^^^^^^^^^
-
-For various reasons, it can be useful to not immediately start a network interface at boot.
-For example to reduce the power consumption as most network interfaces may draw significant more power for a short time when starting.
-
-Another use case can be to check some sensor value before deciding to either start the network interface or enter deep sleep again.
-
-The set value (in msec) is the delay from boot before starting the network interface.
-
-Delay Startup for Fallback Interface
-""""""""""""""""""""""""""""""""""""
-
-A Fallback Interface is not started at boot.
-The set Delay Startup is then used as delay to schedule starting the network interface.
-See "Fallback Interface" for more information.
 
 
 Block Web Access
