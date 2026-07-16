@@ -44,6 +44,21 @@ The fallback order can be tweaked using the Delay Startup and Route Priority.
 
 N.B. Network interfaces which should be started at boot, should not be marked as Fallback Interface.
 
+Append Name to Hostname
+^^^^^^^^^^^^^^^^^^^^^^^
+
+(ESP32 only)
+
+When multiple network interfaces may connect to the same network (e.g. WiFi STA and Ethernet), it can be useful to set different hostnames per network interface.
+
+With this option checked, the network interface name as listed on the "Network" tab overview page will be appended to the hostname as used for that network interface.
+
+For example on an ESPEasy node called "ESPEasy", the WiFi STA interface will then use "ESPEasy-WiFi" as hostname.
+
+This will be used in for example DHCP requests and when using mDNS.
+
+Default setting is to have it disabled for WiFi STA and enabled for all other network interfaces.
+
 Delay Startup
 ^^^^^^^^^^^^^
 

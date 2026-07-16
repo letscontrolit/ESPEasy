@@ -41,7 +41,6 @@ void handle_advanced() {
 
   if (!webArg(F("edit")).isEmpty())
   {
-//    Settings.MessageDelay_unused = getFormItemInt(F("messagedelay"));
     Settings.IP_Octet     = webArg(F("ip")).toInt();
     strncpy_webserver_arg(Settings.NTPHost, F("ntphost"));
     Settings.TimeZone = getFormItemInt(F("timezone"));

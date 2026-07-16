@@ -472,6 +472,21 @@ public:
     VariousBits_2._all_bits = value;
   }
 
+private: 
+
+  static bool getNetworkFlag(const uint8_t& bitfield, ESPEasy::net::networkIndex_t index);
+  static void setNetworkFlag(uint8_t& bitfield, ESPEasy::net::networkIndex_t index, bool enabled);
+
+public:
+
+
+#ifdef ESP32
+  // Append "-WiFi" or "-eth" to the hostname for that adapter, e.g. to be used in the DHCP request.
+  bool getAppendNetworkAdapterNameToHostname(ESPEasy::net::networkIndex_t index) const;
+
+  void setAppendNetworkAdapterNameToHostname(ESPEasy::net::networkIndex_t index, bool enabled);
+#endif
+
   bool getNetworkEnabled(ESPEasy::net::networkIndex_t index) const;
 
   void setNetworkEnabled(ESPEasy::net::networkIndex_t index, bool enabled);
@@ -536,7 +551,15 @@ public:
   uint8_t       WebLogLevel = 0;
   uint8_t       SDLogLevel = 0;
   uint32_t BaudRate = 115200;
-  uint32_t MessageDelay_unused = 0;  // MQTT settings now moved to the controller settings.
+  union {
+    struct {
+      uint32_t AppendNetworkAdapterNameToHostname  : 8; // Bit  0 .. 7
+      uint32_t unused_08_15                        : 8; // Bit  8 .. 15
+      uint32_t unused_16_23                        : 8; // Bit 16 .. 23
+      uint32_t unused_24_31                        : 8; // Bit 24 .. 31
+    };
+    uint32_t _all_bits{};
+  } NetworkFlags;  //-V730  // Was:   uint32_t MessageDelay_unused = 0;  // MQTT settings now moved to the controller settings.
   uint8_t       deepSleep_wakeTime = 0;   // 0 = Sleep Disabled, else time awake from sleep in seconds
   boolean       CustomCSS = false;
   boolean       DST = false;
