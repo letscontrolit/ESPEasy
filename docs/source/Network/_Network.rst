@@ -88,6 +88,7 @@ Allowed Parameters
    "fallback","bool","See “Fallback Interface”","✔","✔","✔","✔","✔"
    "sn_block","bool","See “Block Web Access”","✔","✔","✔","✔","✔"
    "start_delay","int","See “Delay Startup”","✔","✔","✔","✔","✔"
+   "append_hostname","bool","See “Append Name to Hostname”","✔","✔","✔","✔","✔"
    "en_ipv6","bool","See “Enable IPv6”","✔","✔","✔","✔","✔"
    "Index","int","Network ‘Nr’ on Network tab","1","2","✔","✔","✔"
    "phytype","int","Selected chip, see below","","","✔","✔","✔"

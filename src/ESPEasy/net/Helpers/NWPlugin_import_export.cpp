@@ -139,6 +139,10 @@ String NWPlugin_import_export::exportConfig(
     child->write({ F("fallback"), Settings.getNetworkInterface_isFallback(networkIndex) });
     child->write({ F("sn_block"), Settings.getNetworkInterfaceSubnetBlockClientIP(networkIndex) });
     child->write({ F("start_delay"), Settings.getNetworkInterfaceStartupDelay(networkIndex) });
+#ifdef ESP32
+    child->write({ F("append_hostname"), Settings.getAppendNetworkAdapterNameToHostname(networkIndex) });
+#endif
+
 
 # if FEATURE_USE_IPV6
     child->write({ F("en_ipv6"), Settings.getNetworkEnabled_IPv6(networkIndex) });
@@ -211,7 +215,8 @@ String NWPlugin_import_export::importConfig(
       F("route_prio"),
       F("fallback"),
       F("sn_block"),
-      F("start_delay")
+      F("start_delay"),
+      F("append_hostname")  // Need to have something here even though it is ESP32-only as the code would otherwise become quite complex
 # if FEATURE_USE_IPV6
       , F("en_ipv6")
 # endif
@@ -236,8 +241,13 @@ String NWPlugin_import_export::importConfig(
             break;
           case 4: Settings.setNetworkInterfaceStartupDelay(networkIndex, value.toInt());
             break;
+          case 5: 
+#ifdef ESP32
+            Settings.setAppendNetworkAdapterNameToHostname(networkIndex, bool_val);
+#endif
+            break;
 # if FEATURE_USE_IPV6
-          case 5: Settings.setNetworkEnabled_IPv6(networkIndex, bool_val);
+          case 6: Settings.setNetworkEnabled_IPv6(networkIndex, bool_val);
             break;
 # endif // if FEATURE_USE_IPV6
         }
