@@ -43,7 +43,7 @@ Wifi Credentials Extra
 
 The extra credentials stored in here are stored not in the ``security.dat`` file, but in ``devsecurity.dat``
 
-.. note:: Credentials entered via the setup page are stored here.
+.. note:: Credentials entered via the setup page are stored here (ESP32 only).
 
 
 
