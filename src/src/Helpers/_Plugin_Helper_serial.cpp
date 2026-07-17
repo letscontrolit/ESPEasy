@@ -178,28 +178,24 @@ void serialHelper_addI2CuartSelectors(int address, int channel, String id, Strin
 #endif // ifndef DISABLE_SC16IS752_Serial
 
 void serialHelper_webformLoad(struct EventStruct *event) {
-  serialHelper_webformLoad(event, true);
+  serialHelper_webformLoad(event, INCLUDE_SW_SERIAL | INCLUDE_HW_SERIAL | INCLUDE_I2C_SERIAL);
 }
 
 // These helper functions were made to create a generic interface to setup serial port config.
 // See issue #2343 and Pull request https://github.com/letscontrolit/ESPEasy/pull/2352
 // For now P020 and P044 have been reverted to make them work again.
-void serialHelper_webformLoad(struct EventStruct *event, bool allowSoftwareSerial, bool allowI2CSerial, bool allowCDCSerial) {
+void serialHelper_webformLoad(struct EventStruct *event, uint8_t allowedSerial) {
   serialHelper_webformLoad(static_cast<ESPEasySerialPort>(CONFIG_PORT),
                            serialHelper_getRxPin(event),
                            serialHelper_getTxPin(event),
-                           allowSoftwareSerial,
-                           allowI2CSerial,
-                           allowCDCSerial);
+                           allowedSerial);
 }
 
-void serialHelper_webformLoad(ESPEasySerialPort port, int rxPinDef, int txPinDef, bool allowSoftwareSerial, bool allowI2CSerial, bool allowCDCSerial) {
+void serialHelper_webformLoad(ESPEasySerialPort port, int rxPinDef, int txPinDef, uint8_t allowedSerial) {
   serialHelper_webformLoad(port,
                            rxPinDef,
                            txPinDef,
-                           allowSoftwareSerial,
-                           allowI2CSerial,
-                           allowCDCSerial,
+                           allowedSerial,
                            F("Serial Port"),
                            F("serPort"),
                            EMPTY_STRING,
@@ -210,9 +206,7 @@ void serialHelper_webformLoad(ESPEasySerialPort port, int rxPinDef, int txPinDef
 void serialHelper_webformLoad(ESPEasySerialPort port,
                               int rxPinDef,
                               int txPinDef,
-                              bool allowSoftwareSerial,
-                              bool allowI2CSerial,
-                              bool allowCDCSerial,
+                              uint8_t allowedSerial,
                               String label,
                               String id,
                               String pin1Var,
@@ -372,16 +366,17 @@ void serialHelper_webformLoad(ESPEasySerialPort port,
     }
 #endif
     options[i] = option;
-    if (!allowSoftwareSerial && (serType == ESPEasySerialPort::software)) {
+    // FIXME tonhuisman Check for INCLUDE_HW_SERIAL not implemented yet
+    if ((allowedSerial & INCLUDE_SW_SERIAL) && (serType == ESPEasySerialPort::software)) {
       attr[i] = F("disabled");
     }
     #if USES_I2C_SC16IS752
-    if (!allowI2CSerial && (serType == ESPEasySerialPort::sc16is752)) {
+    if ((allowedSerial & INCLUDE_I2C_SERIAL) && (serType == ESPEasySerialPort::sc16is752)) {
       attr[i] = F("disabled");
     }
     #endif // if USES_I2C_SC16IS752
     #if USES_HWCDC || USES_USBCDC
-    if (!allowCDCSerial
+    if ((allowedSerial & INCLUDE_CDC_SERIAL)
        #if USES_HWCDC
        && (serType == ESPEasySerialPort::usb_hw_cdc)
        #endif // if USES_HWCDC
@@ -407,7 +402,7 @@ void serialHelper_webformLoad(ESPEasySerialPort port,
     // static_cast<int>(ESPeasySerialType::getSerialType(port, rxPinDef, txPinDef)));
     static_cast<int>(port));
 #if USES_I2C_SC16IS752
-  if (allowI2CSerial) {
+  if (allowedSerial & INCLUDE_I2C_SERIAL) {
     serialHelper_addI2CuartSelectors(rxPinDef, txPinDef, i2c1Var, i2c2Var);
   }
 #endif // ifndef DISABLE_SC16IS752_Serial

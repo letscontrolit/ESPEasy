@@ -8,6 +8,10 @@
 
 #include <ESPeasySerial.h>
 
+#define INCLUDE_SW_SERIAL  (1 << 0)
+#define INCLUDE_HW_SERIAL  (1 << 1) // Ignored for now, always enabled
+#define INCLUDE_I2C_SERIAL (1 << 2)
+#define INCLUDE_CDC_SERIAL (1 << 3)
 
 struct ESPeasySerialType;
 
@@ -53,23 +57,17 @@ void serialHelper_webformLoad(struct EventStruct *event);
 // See issue #2343 and Pull request https://github.com/letscontrolit/ESPEasy/pull/2352
 // For now P020 and P044 have been reverted to make them work again.
 void serialHelper_webformLoad(struct EventStruct *event,
-                              bool                allowSoftwareSerial,
-                              bool                allowI2CSerial = true,
-                              bool                allowCDCSerial = true);
+                              uint8_t             allowedSerial);
 
 void serialHelper_webformLoad(ESPEasySerialPort port,
                               int               rxPinDef,
                               int               txPinDef,
-                              bool              allowSoftwareSerial,
-                              bool              allowI2CSerial = true,
-                              bool              allowCDCSerial = true);
+                              uint8_t           allowedSerial);
 
 void serialHelper_webformLoad(ESPEasySerialPort port,
                               int               rxPinDef,
                               int               txPinDef,
-                              bool              allowSoftwareSerial,
-                              bool              allowI2CSerial,
-                              bool              allowCDCSerial,
+                              uint8_t           allowedSerial,
                               String            label,
                               String            id,
                               String            pin1Var,

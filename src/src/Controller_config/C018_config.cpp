@@ -115,7 +115,7 @@ void C018_ConfigStruct::webform_load(C018_data_struct *C018_data) {
 
   addTableSeparator(F("Serial Port Configuration"), 2, 3);
 
-  serialHelper_webformLoad(port, rxpin, txpin, true);
+  serialHelper_webformLoad(port, rxpin, txpin, INCLUDE_SW_SERIAL | INCLUDE_HW_SERIAL | INCLUDE_I2C_SERIAL);
 
   // Show serial port selection
   addFormPinSelect(PinSelectPurpose::Generic_input,  formatGpioName_serialRX(false), F("taskdevicepin1"), rxpin);

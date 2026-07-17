@@ -254,7 +254,7 @@ void handle_advanced() {
     static_cast<ESPEasySerialPort>(Settings.console_serial_port), 
     Settings.console_serial_rxpin, 
     Settings.console_serial_txpin, 
-    true);
+    INCLUDE_SW_SERIAL | INCLUDE_HW_SERIAL | INCLUDE_I2C_SERIAL);
 
   // Show serial port selection
   addFormPinSelect(
