@@ -44,6 +44,15 @@ The fallback order can be tweaked using the Delay Startup and Route Priority.
 
 N.B. Network interfaces which should be started at boot, should not be marked as Fallback Interface.
 
+Example use cases
+"""""""""""""""""
+
+* Disable fallback on the WiFi AP and have it active continuously, allowing other nodes/devices to use the ESP node to act as a router/gateway using "NAPT".
+* Have WiFi STA set as fallback for Ethernet (or PPP for a LTE modem). When there is no connection via Ethernet (or PPP) you can try using WiFi STA as backup.
+* Have PPP (for connection via LTE) as fallback, so it will only be used if any of the other interfaces failed to get a connection.
+* Have Ethernet set to lowest startup delay, WiFi STA as fallback with longer startup delay and PPP as fallback with the longest startup delay. This way the preferred interface is Ethernet, WiFi the second and as last resort the LTE modem.
+
+
 
 Delay Startup
 ^^^^^^^^^^^^^
