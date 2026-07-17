@@ -38,6 +38,107 @@ Network Plugins
    ":ref:`NW005_page`","|NW005_status|","|NW005_status_lb|","NW005"
 
 
+Network Overview Tab
+====================
+
+.. image:: NetworkOverviewTab.png
+
+Overview of the Network tab on an ESP32-P4.
+
+As shown above, there are several networks.
+
+* Nr. 1 is always WiFi STA (station)
+* Nr. 2 is always WiFi AP (Access Point)
+
+There are 2 types of Ethernet plugins:
+
+* RMII, only available on ESP32-classic and ESP32-P4 (and ESP32-S31 when supported in the future)
+* SPI, Possible on all supported ESP32 variants except ESP32-C2.
+
+Active
+^^^^^^
+
+Indicates whether a network adapter has been 'started'.
+This is related to "Fallback" and "Delay Startup".
+
+This "Active" concept is needed to allow for another concept called the "Fallback Interface".
+
+For example, on a standard ESP board with only WiFi, the WiFi AP interface can be considered a fallback interface.
+Meaning the AP is "Enabled" but no need to set it "Active" as long as you can connect to your normal WiFi network.
+
+The conditions on when to start the WiFi AP interface can be configured as well.
+
+Only when one or more set conditions are met, then the AP will be activated.
+
+
+Name
+^^^^
+
+A single word describing the network interface.
+This can be appended to the hostname and is also referred to in network events to be used in rules.
+
+Route Prio
+^^^^^^^^^^
+ (ESP32 only)
+
+The active and connected interface with the highest 'route prio' value is the default interface for new outgoing connections.  
+The current default interface is marked with an asterisk.
+
+This means the ESP is still reachable via other interfaces when needed, but new connections will be made only via the default route.
+
+N.B. it is possible to block web access per interface via the checkbox for Block Web Access
+
+.. note:: Do not set two interfaces active to same route prio as this may lead to undefined behavior.
+
+Connected
+^^^^^^^^^
+
+Show basic information about the connection, or a red cross if not connected.
+
+The shown duration is the duration since the last connected/disconnected status change.
+
+
+Hostname/SSID
+^^^^^^^^^^^^^
+
+Shows the hostname as used for that specific network interface.
+
+This hostname is used in the DHCP request and when mDNS is being used.
+
+For the WiFi AP interface, the SSID is shown.
+
+
+HW Address
+^^^^^^^^^^
+
+Lists the MAC address and some basic description of the network interface when applicable.
+
+Description examples:
+
+* WiFi interface on an ESP32-P4 lists the ESP32-variant used as external wifi adapter and the ESP-Hosted-MCU firmware version running.
+* Ethernet will list the network adapter chip model.
+
+For the PPP interface, the IMEI number is listed instead of the MAC address.
+
+IP
+^^
+
+Shows the IPv4-address as it is currently in use on the network interface.
+
+More detailed info on IPv6-addresses is listed on the page where the network interface can be configured and on the sysinfo page.
+
+Port
+^^^^
+
+When applicable, the GPIO pins will be listed here.
+
+* External WiFi module on ESP32-P4: SDIO bus
+* Ethernet: GPIO pins
+* PPP: Serial port + GPIO pins 
+
+
+
+
 Export/Import Network Parameters
 ================================
 
@@ -88,6 +189,7 @@ Allowed Parameters
    "fallback","bool","See “Fallback Interface”","✔","✔","✔","✔","✔"
    "sn_block","bool","See “Block Web Access”","✔","✔","✔","✔","✔"
    "start_delay","int","See “Delay Startup”","✔","✔","✔","✔","✔"
+   "append_hostname","bool","See “Append Name to Hostname”","✔","✔","✔","✔","✔"
    "en_ipv6","bool","See “Enable IPv6”","✔","✔","✔","✔","✔"
    "Index","int","Network ‘Nr’ on Network tab","1","2","✔","✔","✔"
    "phytype","int","Selected chip, see below","","","✔","✔","✔"
@@ -111,10 +213,10 @@ Allowed Parameters
    "baudrate","int","Baudrate","","","","","✔ (115200 default)"
    "apn","string","Access Point Name (APN)","","","","","✔"
    "pin","string","PIN of SIM card","","","","","✔"
-   "IP","string","IP address","✔","✔","✔","✔","✔"
-   "gw","string","Gateway IP address","✔","✔","✔","✔","✔"
-   "sn","string","Subnet mask","✔","✔","✔","✔","✔"
-   "DNS","string","DNS server IP address","✔","✔","✔","✔","✔"
+   "IP","string","IP address","","","✔","✔","✔"
+   "gw","string","Gateway IP address","","","✔","✔","✔"
+   "sn","string","Subnet mask","","","✔","✔","✔"
+   "DNS","string","DNS server IP address","","","✔","✔","✔"
 
 Phy Types
 ---------

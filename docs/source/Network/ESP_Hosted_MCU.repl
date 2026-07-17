@@ -32,3 +32,30 @@ This does not require any extra parameters. It only needs a direct connection to
 Either via the WiFi module itself, or via Ethernet.
 
 This will then try to download the matching firmware version from GitHub.
+
+
+Update ESP-Hosted-MCU fw. version 0.0.6
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ESP32-C6 is running the ESP-Hosted-MCU firmware from Espressif.
+Typically new boards are running version 0.0.6 of that firmware, which doesn't yet support a lot of WiFi commands. 
+And even worse, when trying to call unsupported commands, the whole ESP32-P4 board may crash. 
+One of those commands not yet supported in this early version is to query the firmware version.
+
+As soon as ESPEasy is installed on a new ESP32-P4 board and a network connection is active (with access to the internet), it is strongly adviced to run the command wifiotahostedmcu via the console. This will then install the most recent ESP-Hosted-MCU firmware matching the installed build of ESPEasy.
+Typically this will be the Ethernet network interface which is present on most ESP32-P4 boards.
+
+Since the state the WiFi firmware of a freshly installed ESP32-P4 is unknown, 
+the wifi STA adapter is set to 'disabled' by default. 
+The Ethernet interface will be set active. (as long as there aren't any new boards with a different Ethernet chip)
+To set the WiFi STA interface to enabled, enter the following command via the serial console:
+
+.. code-block:: none
+  
+  networkenable,1
+
+Don't forget to save the settings using the ``save`` command, or else the network interface will be disabled again after a reboot.
+
+This is also why WiFi STA is always index 1 and WiFi AP is index 2.
+
+N.B. There is of course also the  ``networkdisable`` command.

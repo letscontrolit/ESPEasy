@@ -851,10 +851,26 @@ Via the :cyan:`Update Firmware` button, you can browse for an updated firmware, 
 File system
 ***********
 
+ESPEasy stores its settings and rules in files which are stored on the file system.
+On ESP8266 and older ESP32-builds the file system used is SPIFFS.
+
+On more recent ESP32 builds, we use LittleFS.
+
+
+
 File browser
 ============
 
 Via :cyan:`File browser` you can browse the files on the flash file system, download them separately, upload additional files, or delete any non-system files.
+
+ESPEasy files:
+
+* ``config.dat`` All not stored in the other files, like task configuration, controller setup, hardware config, etc.
+* ``security.dat`` All credentials, like username/password, WiFi credentials not stored in ``devsecurity.dat``
+* ``devsecurity.dat`` (ESP32 only, when ``FEATURE_STORE_CREDENTIALS_SEPARATE_FILE`` is defined as ``1``), stores node specific information like WiFi credentials entered via the setup page, SIM card pin number and APN.
+* ``notification.dat`` Stores settings for notifications like email.
+* ``provisioning.dat`` (ESP32 only When ``FEATURE_CUSTOM_PROVISIONING`` is defined as ``1``) stores settings used for remote provisioning settings or updated settings to an ESPEasy node.
+* ``rulesN.txt`` with ``N`` being 1 ... 4. Contains the ESPEasy rules as setup by the user.
 
 Factory Reset
 =============
@@ -996,6 +1012,8 @@ Such a file may also be fetched from a server.
 The ``provisioning.dat`` file can also be automatically generated when performing a factory reset.
 For this the (custom) build must be prepared via a number of defined defaults.
 See the ``Custom-sample.h`` file for some examples.
+
+.. note:: In general the node specific info stored in ``devsecurity.dat`` typically should be excluded from provisioning. This allows an end user to setup local WiFi credentials which will then not be erased when updating the ``security.dat`` remotely via the provisioning feature.
 
 
 Allow Fetch by Command
