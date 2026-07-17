@@ -5,11 +5,6 @@ Network
 
 A Network plugin is comparable with a 'driver' for a network adapter.
 
-The first 2 entries will be the same for every ESPEasy setup and these cannot be removed.
-
-- Wi-Fi Station: To connect the ESP board to an access point.
-- Wi-Fi AP: To let the ESP board act as an access point.
-
 
 .. note::
    The network code of ESPEasy has been rewritten in 2025/2026.
@@ -45,15 +40,17 @@ Network Overview Tab
 
 Overview of the Network tab on an ESP32-P4.
 
-As shown above, there are several networks.
+The first 2 entries will be the same for every ESPEasy setup and these cannot be removed.
 
-* Nr. 1 is always WiFi STA (station)
-* Nr. 2 is always WiFi AP (Access Point)
+* Nr. 1 is always WiFi STA (station) To connect the ESP board to an access point.
+* Nr. 2 is always WiFi AP (Access Point) To let the ESP board act as an access point.
 
 There are 2 types of Ethernet plugins:
 
 * RMII, only available on ESP32-classic and ESP32-P4 (and ESP32-S31 when supported in the future)
 * SPI, Possible on all supported ESP32 variants except ESP32-C2.
+
+The last option is a PPP modem, to connect via 4g/LTE to the internet.
 
 Active
 ^^^^^^
@@ -79,7 +76,7 @@ This can be appended to the hostname and is also referred to in network events t
 
 Route Prio
 ^^^^^^^^^^
- (ESP32 only)
+(ESP32 only)
 
 The active and connected interface with the highest 'route prio' value is the default interface for new outgoing connections.  
 The current default interface is marked with an asterisk.
