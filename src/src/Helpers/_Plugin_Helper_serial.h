@@ -41,8 +41,10 @@ ESPEasySerialPort serialHelper_getSerialType(struct EventStruct *event);
 String            serialHelper_getSerialTypeLabel(struct EventStruct *event);
 
 #ifndef DISABLE_SC16IS752_Serial
-void serialHelper_addI2CuartSelectors(int address,
-                                      int channel);
+void serialHelper_addI2CuartSelectors(int    address,
+                                      int    channel,
+                                      String id  = "",
+                                      String uid = "");
 #endif // ifndef DISABLE_SC16IS752_Serial
 
 void serialHelper_webformLoad(struct EventStruct *event);
@@ -51,12 +53,29 @@ void serialHelper_webformLoad(struct EventStruct *event);
 // See issue #2343 and Pull request https://github.com/letscontrolit/ESPEasy/pull/2352
 // For now P020 and P044 have been reverted to make them work again.
 void serialHelper_webformLoad(struct EventStruct *event,
-                              bool                allowSoftwareSerial);
+                              bool                allowSoftwareSerial,
+                              bool                allowI2CSerial = true,
+                              bool                allowCDCSerial = true);
 
 void serialHelper_webformLoad(ESPEasySerialPort port,
                               int               rxPinDef,
                               int               txPinDef,
-                              bool              allowSoftwareSerial);
+                              bool              allowSoftwareSerial,
+                              bool              allowI2CSerial = true,
+                              bool              allowCDCSerial = true);
+
+void serialHelper_webformLoad(ESPEasySerialPort port,
+                              int               rxPinDef,
+                              int               txPinDef,
+                              bool              allowSoftwareSerial,
+                              bool              allowI2CSerial,
+                              bool              allowCDCSerial,
+                              String            label,
+                              String            id,
+                              String            pin1Var,
+                              String            pin2Var,
+                              String            i2c1Var,
+                              String            i2c2Var);
 
 void serialHelper_webformSave(uint8_t& port,
                               int8_t & rxPin,
