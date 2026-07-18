@@ -8,10 +8,12 @@
 
 #include <ESPeasySerial.h>
 
-#define INCLUDE_SW_SERIAL  (1 << 0)
-#define INCLUDE_HW_SERIAL  (1 << 1) // Ignored for now, always enabled
-#define INCLUDE_I2C_SERIAL (1 << 2)
-#define INCLUDE_CDC_SERIAL (1 << 3)
+constexpr uint8_t INCLUDE_SW_SERIAL  = (1 << 0);
+constexpr uint8_t INCLUDE_HW_SERIAL  = (1 << 1); // Ignored for now, always enabled
+constexpr uint8_t INCLUDE_I2C_SERIAL = (1 << 2);
+constexpr uint8_t INCLUDE_CDC_SERIAL = (1 << 3);
+constexpr uint8_t INCLUDE_ALL_SERIAL = (INCLUDE_SW_SERIAL | INCLUDE_HW_SERIAL | INCLUDE_I2C_SERIAL | INCLUDE_CDC_SERIAL);
+constexpr uint8_t INCLUDE_DEFAULT_SERIAL = INCLUDE_ALL_SERIAL;
 
 struct ESPeasySerialType;
 
@@ -62,7 +64,7 @@ void serialHelper_webformLoad(struct EventStruct *event,
 void serialHelper_webformLoad(ESPEasySerialPort port,
                               int               rxPinDef,
                               int               txPinDef,
-                              uint8_t           allowedSerial);
+                              uint8_t           allowedSerial = INCLUDE_DEFAULT_SERIAL);
 
 void serialHelper_webformLoad(ESPEasySerialPort port,
                               int               rxPinDef,

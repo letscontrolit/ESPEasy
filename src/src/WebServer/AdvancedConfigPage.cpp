@@ -253,8 +253,7 @@ void handle_advanced() {
   serialHelper_webformLoad(
     static_cast<ESPEasySerialPort>(Settings.console_serial_port), 
     Settings.console_serial_rxpin, 
-    Settings.console_serial_txpin, 
-    INCLUDE_SW_SERIAL | INCLUDE_HW_SERIAL | INCLUDE_I2C_SERIAL);
+    Settings.console_serial_txpin);
 
   // Show serial port selection
   addFormPinSelect(
@@ -268,7 +267,7 @@ void handle_advanced() {
     F("taskdevicepin2"), 
     Settings.console_serial_txpin);
 
-  html_add_script(F("document.getElementById('serPort').onchange();"), false);
+  html_add_script(F("elId('serPort').onchange();"), false);
 #if USES_ESPEASY_CONSOLE_FALLBACK_PORT
   addFormCheckBox(LabelType::CONSOLE_FALLBACK_TO_SERIAL0);
 #endif

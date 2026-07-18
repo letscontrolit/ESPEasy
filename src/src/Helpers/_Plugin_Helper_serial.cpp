@@ -178,7 +178,7 @@ void serialHelper_addI2CuartSelectors(int address, int channel, String id, Strin
 #endif // ifndef DISABLE_SC16IS752_Serial
 
 void serialHelper_webformLoad(struct EventStruct *event) {
-  serialHelper_webformLoad(event, INCLUDE_SW_SERIAL | INCLUDE_HW_SERIAL | INCLUDE_I2C_SERIAL);
+  serialHelper_webformLoad(event, INCLUDE_DEFAULT_SERIAL);
 }
 
 // These helper functions were made to create a generic interface to setup serial port config.
@@ -366,17 +366,19 @@ void serialHelper_webformLoad(ESPEasySerialPort port,
     }
 #endif
     options[i] = option;
-    // FIXME tonhuisman Check for INCLUDE_HW_SERIAL not implemented yet
-    if ((allowedSerial & INCLUDE_SW_SERIAL) && (serType == ESPEasySerialPort::software)) {
+    if (!(allowedSerial & INCLUDE_HW_SERIAL) && isHWserial(serType)) {
+      attr[i] = F("disabled");
+    }
+    if (!(allowedSerial & INCLUDE_SW_SERIAL) && (serType == ESPEasySerialPort::software)) {
       attr[i] = F("disabled");
     }
     #if USES_I2C_SC16IS752
-    if ((allowedSerial & INCLUDE_I2C_SERIAL) && (serType == ESPEasySerialPort::sc16is752)) {
+    if (!(allowedSerial & INCLUDE_I2C_SERIAL) && (serType == ESPEasySerialPort::sc16is752)) {
       attr[i] = F("disabled");
     }
     #endif // if USES_I2C_SC16IS752
     #if USES_HWCDC || USES_USBCDC
-    if ((allowedSerial & INCLUDE_CDC_SERIAL)
+    if (!(allowedSerial & INCLUDE_CDC_SERIAL)
        #if USES_HWCDC
        && (serType == ESPEasySerialPort::usb_hw_cdc)
        #endif // if USES_HWCDC
