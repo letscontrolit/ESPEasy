@@ -161,6 +161,7 @@ void EspEasy_Console_Port::readInput()
   }
 }
 
+#if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
 ESPEasySerialPort EspEasy_Console_Port::getPortType() const
 {
   #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
@@ -173,6 +174,7 @@ ESPEasySerialPort EspEasy_Console_Port::getPortType() const
   return ESPEasySerialPort::serial0;
   #endif // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
 }
+#endif
 
 bool EspEasy_Console_Port::process_serialWriteBuffer()
 {

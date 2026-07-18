@@ -32,9 +32,9 @@ struct EspEasy_Console_Port {
   void endPort();
 
   void readInput();
-
+#if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
   ESPEasySerialPort getPortType() const;
-
+#endif
   bool process_serialWriteBuffer();
 
   bool process_consoleInput(uint8_t SerialInByte);
