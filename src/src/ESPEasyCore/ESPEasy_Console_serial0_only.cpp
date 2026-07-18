@@ -30,6 +30,9 @@ EspEasy_Console_t::EspEasy_Console_t() :
 void EspEasy_Console_t::reInit()
 {
   updateActiveTaskUseSerial0();
+
+  // TODO TD-er: Must check whether a task uses serial 0 and then stop serial console
+  //activeTaskUseSerial0()
   bool somethingChanged = false;
 
   if (somethingChanged) {
@@ -39,27 +42,7 @@ void EspEasy_Console_t::reInit()
 
 void EspEasy_Console_t::begin(uint32_t baudrate)
 {
-  updateActiveTaskUseSerial0();
-  _baudrate = baudrate;
-
-  if (_mainSerial._serial != nullptr) {
-# ifdef ESP8266
-    _mainSerial._serial->begin(baudrate);
-#  ifndef BUILD_NO_DEBUG
-    addLog(LOG_LEVEL_INFO, F("ESPEasy console using HW Serial"));
-#  endif
-# endif // ifdef ESP8266
-# ifdef ESP32
-
-    // Allow to flush data from the serial buffers
-    // When not opening the USB serial port, the ESP may hang at boot.
-    delay(10);
-    _mainSerial._serial->end();
-    delay(10);
-    _mainSerial._serial->begin(baudrate);
-    _mainSerial._serial->flush();
-# endif // ifdef ESP32
-  }
+  _mainSerial.begin(baudrate);
 }
 
 void EspEasy_Console_t::init() {
@@ -89,7 +72,7 @@ void EspEasy_Console_t::loop()
     return;
   }
 
-  readInput(_mainSerial);
+  _mainSerial.readInput();
 
   STOP_TIMER(CONSOLE_LOOP);
 }
@@ -128,25 +111,6 @@ bool EspEasy_Console_t::handledByPluginSerialIn()
   String dummy;
 
   return PluginCall(PLUGIN_SERIAL_IN, 0, dummy);
-}
-
-void EspEasy_Console_t::readInput(EspEasy_Console_Port& port)
-{
-  size_t bytesToRead = port.available();
-
-  while (bytesToRead > 0)
-  {
-    --bytesToRead;
-    delay(0);
-    const int SerialInByte = port.read();
-
-    if (SerialInByte >= 0) {
-      if (port.process_consoleInput(SerialInByte)) {
-        // Processed a full line
-        return;
-      }
-    }
-  }
 }
 
 HardwareSerial * EspEasy_Console_t::getPort()

@@ -27,13 +27,29 @@ struct EspEasy_Console_Port {
   int read();
   size_t available() const;
 
+  void begin(uint32_t baudrate);
+
   void endPort();
+
+  void readInput();
+
+  ESPEasySerialPort getPortType() const;
 
   bool process_serialWriteBuffer();
 
   bool process_consoleInput(uint8_t SerialInByte);
 
   String getPortDescription() const;
+
+#if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+  bool updateSerialPort(const ESPEasySerialConfig& config);
+
+private:
+  // Cache the used settings, so we can check whether to change the console serial
+  ESPEasySerialConfig _config;
+
+public:
+#endif
 
   int SerialInByteCounter{};
   char *InputBuffer_Serial{};

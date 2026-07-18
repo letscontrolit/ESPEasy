@@ -105,6 +105,35 @@ size_t EspEasy_Console_Port::available() const
   return res;
 }
 
+void EspEasy_Console_Port::begin(uint32_t baudrate)
+{
+  updateActiveTaskUseSerial0();
+
+  if (_serial != nullptr) {
+    # if FEATURE_IMPROV
+    _improv.init();
+    #endif
+
+#if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+    _config.baud = baudrate;
+#endif
+    _serial->begin(baudrate);
+    addLog(LOG_LEVEL_INFO, F("ESPEasy console using ESPEasySerial"));
+
+
+# ifdef ESP32
+    // Allow to flush data from the serial buffers
+    // When not opening the USB serial port, the ESP may hang at boot.
+    delay(10);
+    _serial->end();
+    delay(10);
+    _serial->begin(baudrate);
+    _serial->flush();
+# endif // ifdef ESP32
+
+  }
+}
+
 void EspEasy_Console_Port::endPort()
 {
   if (_serial != nullptr) {
@@ -112,38 +141,70 @@ void EspEasy_Console_Port::endPort()
   }
 }
 
-bool EspEasy_Console_Port::process_serialWriteBuffer()
+void EspEasy_Console_Port::readInput()
 {
-  if (_serial != nullptr) {
-#ifdef ESP32
+  if (_serial == nullptr) return;
+  size_t bytesToRead = available();
 
-    if (!xPortCanYield()) { return false; }
-#endif // ifdef ESP32
-    size_t availableForWrite = _serial->availableForWrite();
+  while (bytesToRead > 0)
+  {
+    --bytesToRead;
+    delay(0);
+    const int SerialInByte = read();
 
-    if (availableForWrite == 0) { return false; }
-
-    if (availableForWrite == 1) {
-      // For only a single byte, just write it directly
-      return _serialWriteBuffer.process(_serial, availableForWrite);
-    }
-
-    if (availableForWrite > 64) {
-      // Set to max. of 64 bytes as this is the optimum 'chunk size' for most
-      // serial ports, like the CDC ports and I2C to UART.
-      // Also it is relatively fast to allocate.
-      availableForWrite = 64;
-    }
-
-    PrintToString str;
-    str.reserve(availableForWrite);
-
-    if (_serialWriteBuffer.process(&str, availableForWrite)) {
-      _serial->write(str.get().c_str(), str.length());
-      return true;
+    if (SerialInByte >= 0) {
+      if (process_consoleInput(SerialInByte)) {
+        // Processed a full line
+        return;
+      }
     }
   }
-  return false;
+}
+
+ESPEasySerialPort EspEasy_Console_Port::getPortType() const
+{
+  #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+
+  if (_serial == nullptr) { return ESPEasySerialPort::not_set; }
+  return _config.port;
+  #else // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+
+  // TODO TD-er: Should I also try to see if we're using serial0_swapped?
+  return ESPEasySerialPort::serial0;
+  #endif // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+}
+
+bool EspEasy_Console_Port::process_serialWriteBuffer()
+{
+  if (_serial == nullptr) { return false; }
+#ifdef ESP32
+
+  if (!xPortCanYield()) { return false; }
+#endif // ifdef ESP32
+  size_t availableForWrite = _serial->availableForWrite();
+
+  if (availableForWrite == 0) { return false; }
+
+  if (availableForWrite == 1) {
+    // For only a single byte, just write it directly
+    return _serialWriteBuffer.process(_serial, availableForWrite);
+  }
+
+  if (availableForWrite > 64) {
+    // Set to max. of 64 bytes as this is the optimum 'chunk size' for most
+    // serial ports, like the CDC ports and I2C to UART.
+    // Also it is relatively fast to allocate.
+    availableForWrite = 64;
+  }
+
+  PrintToString str;
+  str.reserve(availableForWrite);
+
+  if (!_serialWriteBuffer.process(&str, availableForWrite)) {
+    return false;
+  }
+  _serial->write(str.get().c_str(), str.length());
+  return true;
 }
 
 bool EspEasy_Console_Port::process_consoleInput(uint8_t SerialInByte)
@@ -199,3 +260,61 @@ String EspEasy_Console_Port::getPortDescription() const
 
   return F("-");
 }
+
+#if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+
+bool EspEasy_Console_Port::updateSerialPort(
+  const ESPEasySerialConfig& config)
+{
+  updateActiveTaskUseSerial0();
+  bool somethingChanged = false;
+
+  const bool consoleUseSerial0 = (
+# ifdef ESP8266
+    (config.port == ESPEasySerialPort::serial0_swap) ||
+# endif // ifdef ESP8266
+    config.port == ESPEasySerialPort::serial0);
+
+  const bool canUseSerial0 = !activeTaskUseSerial0() && !log_to_serial_disabled;
+
+
+  bool mustHaveSerial = Settings.UseSerial && (!consoleUseSerial0 || canUseSerial0);
+
+  if (!(_config == config) ||
+      !mustHaveSerial) {
+    if (_serial != nullptr) {
+      delete _serial;
+      _serial          = nullptr;
+      somethingChanged = true;
+    }
+    _config = config;
+  }
+
+  if ((_serial == nullptr) && mustHaveSerial) {
+    # ifdef USE_SECOND_HEAP
+    HeapSelectDram ephemeral;
+    # endif // ifdef USE_SECOND_HEAP
+
+    {
+      # ifdef USE_SECOND_HEAP
+      HeapSelectDram ephemeral;
+    # endif // ifdef USE_SECOND_HEAP
+      _serial = new (std::nothrow) ESPeasySerial(_config);
+    }
+
+    somethingChanged = true;
+  }
+
+
+  if (_serial == nullptr) {
+    _serialWriteBuffer.clear();
+  }
+
+  if (somethingChanged) {
+    begin(_config.baud);
+  }
+
+  return somethingChanged;
+}
+
+#endif // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT

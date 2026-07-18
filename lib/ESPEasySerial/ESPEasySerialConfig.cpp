@@ -2,6 +2,24 @@
 
 #include "ESPEasySerialType.h"
 
+bool ESPEasySerialConfig::operator==(const ESPEasySerialConfig& other) const
+{
+  return port == other.port
+  && baud == other.baud 
+  && receivePin == other.receivePin 
+  && transmitPin == other.transmitPin 
+  && inverse_logic == other.inverse_logic 
+  && rxBuffSize == other.rxBuffSize 
+  && txBuffSize == other.txBuffSize 
+  && forceSWserial == other.forceSWserial 
+  && timeout_ms == other.timeout_ms 
+  && config == other.config 
+#ifdef ESP8266
+  && mode == other.mode
+#endif
+  ;
+}
+
 void ESPEasySerialConfig::validate()
 {
   port =  ESPeasySerialType::getSerialType(port, receivePin, transmitPin);

@@ -27,9 +27,7 @@
 EspEasy_Console_t::EspEasy_Console_t() :
   _mainSerial(LOG_TO_SERIAL)
 {
-  const ESPEasySerialPort port = static_cast<ESPEasySerialPort>(_console_serial_port);
-
-#   if USES_USBCDC
+#  if USES_USBCDC
 
   /*
      if (port == ESPEasySerialPort::usb_cdc_0 ||
@@ -39,12 +37,12 @@ EspEasy_Console_t::EspEasy_Console_t() :
       USB.productName()
      }
    */
-#   endif // if USES_USBCDC
+#  endif // if USES_USBCDC
 
-#   ifdef ESP8266
+#  ifdef ESP8266
   constexpr size_t buffSize = 256;
-#   endif // ifdef ESP8266
-#   ifdef ESP32
+#  endif // ifdef ESP8266
+#  ifdef ESP32
 
   // Ideal buffer size is a trade-off between bootspeed
   // and not missing data when the ESP is busy processing stuff.
@@ -52,104 +50,48 @@ EspEasy_Console_t::EspEasy_Console_t() :
   // it may just take less time in the background tasks to dump
   // any logs as larger chunks can be transferred at once.
   constexpr size_t buffSize = 512;
-#   endif // ifdef ESP32
+#  endif // ifdef ESP32
 
   ESPEasySerialConfig config;
-  config.port          = port;
+  config.port          = static_cast<ESPEasySerialPort>(DEFAULT_CONSOLE_PORT);
   config.baud          = DEFAULT_SERIAL_BAUD;
-  config.receivePin    = _console_serial_rxpin;
-  config.transmitPin   = _console_serial_txpin;
+  config.receivePin    = DEFAULT_CONSOLE_PORT_RXPIN;
+  config.transmitPin   = DEFAULT_CONSOLE_PORT_TXPIN;
   config.inverse_logic = false;
   config.rxBuffSize    = 256;
   config.txBuffSize    = buffSize;
 
-  {
-    #   ifdef USE_SECOND_HEAP
-    HeapSelectDram ephemeral;
-    #   endif // ifdef USE_SECOND_HEAP
-
-    _mainSerial._serial = new (std::nothrow) ESPeasySerial(config);
-  }
+  _mainSerial.updateSerialPort(config);
 }
 
 void EspEasy_Console_t::reInit()
 {
-  updateActiveTaskUseSerial0();
-  bool somethingChanged = false;
-  const ESPEasySerialPort port = static_cast<ESPEasySerialPort>(Settings.console_serial_port);
+#  ifdef ESP8266
+  constexpr size_t buffSize = 256;
+#  endif // ifdef ESP8266
+#  ifdef ESP32
 
-  const bool consoleUseSerial0 = (
-#   ifdef ESP8266
-    (port == ESPEasySerialPort::serial0_swap) ||
-#   endif // ifdef ESP8266
-    port == ESPEasySerialPort::serial0);
+  // Ideal buffer size is a trade-off between bootspeed
+  // and not missing data when the ESP is busy processing stuff.
+  // Since we do have a separate buffer in the console,
+  // it may just take less time in the background tasks to dump
+  // any logs as larger chunks can be transferred at once.
+  constexpr size_t buffSize = 512;
+#  endif // ifdef ESP32
 
-  const bool canUseSerial0 = !activeTaskUseSerial0() && !log_to_serial_disabled;
+  ESPEasySerialConfig config;
+  config.port          = static_cast<ESPEasySerialPort>(Settings.console_serial_port);
+  config.baud          = Settings.BaudRate;
+  config.receivePin    = Settings.console_serial_rxpin;
+  config.transmitPin   = Settings.console_serial_txpin;
+  config.inverse_logic = false;
+  config.rxBuffSize    = 256;
+  config.txBuffSize    = buffSize;
 
-
-  bool mustHaveSerial = Settings.UseSerial && (!consoleUseSerial0 || canUseSerial0);
-
-
-  if ((_console_serial_port != Settings.console_serial_port) ||
-      (_console_serial_rxpin != Settings.console_serial_rxpin) ||
-      (_console_serial_txpin != Settings.console_serial_txpin) ||
-      !mustHaveSerial) {
-    if (_mainSerial._serial != nullptr) {
-      delete _mainSerial._serial;
-      _mainSerial._serial = nullptr;
-      somethingChanged    = true;
-    }
-
-    _console_serial_port  = Settings.console_serial_port;
-    _console_serial_rxpin = Settings.console_serial_rxpin;
-    _console_serial_txpin = Settings.console_serial_txpin;
-  }
-
-  if ((_mainSerial._serial == nullptr) && mustHaveSerial) {
-    #   ifdef USE_SECOND_HEAP
-    HeapSelectDram ephemeral;
-    #   endif // ifdef USE_SECOND_HEAP
-
-    unsigned int buffsize = 128;
-
-    const ESPEasySerialPort mainSerialPort = static_cast<ESPEasySerialPort>(_console_serial_port);
-
-#   if USES_HWCDC
-
-    if (mainSerialPort == ESPEasySerialPort::usb_hw_cdc) {
-      buffsize = 2048;
-    }
-#   endif // if USES_HWCDC
-
-    _mainSerial._serial = new (std::nothrow) ESPeasySerial(
-      mainSerialPort,
-      _console_serial_rxpin,
-      _console_serial_txpin,
-      false,
-      buffsize);
-    somethingChanged = true;
-  }
-
-
-  if (_mainSerial._serial == nullptr) {
-    _mainSerial._serialWriteBuffer.clear();
-  }
-
-  if (somethingChanged) {
-    begin(Settings.BaudRate);
-  }
+  _mainSerial.updateSerialPort(config);
 }
 
-void EspEasy_Console_t::begin(uint32_t baudrate)
-{
-  updateActiveTaskUseSerial0();
-  _baudrate = baudrate;
-
-  if (_mainSerial._serial != nullptr) {
-    _mainSerial._serial->begin(baudrate);
-    addLog(LOG_LEVEL_INFO, F("ESPEasy console using ESPEasySerial"));
-  }
-}
+void EspEasy_Console_t::begin(uint32_t baudrate) { _mainSerial.begin(baudrate); }
 
 void EspEasy_Console_t::init() {
 #  if FEATURE_IMPROV
@@ -171,22 +113,22 @@ void EspEasy_Console_t::loop()
   START_TIMER;
 
   const bool consoleUsesSerial0 =
-    (static_cast<ESPEasySerialPort>(_console_serial_port) == ESPEasySerialPort::serial0
-#   ifdef ESP8266
-     || static_cast<ESPEasySerialPort>(_console_serial_port) == ESPEasySerialPort::serial0_swap
-#   endif // ifdef ESP8266
+    (_mainSerial.getPortType() == ESPEasySerialPort::serial0
+#  ifdef ESP8266
+     || _mainSerial.getPortType() == ESPEasySerialPort::serial0_swap
+#  endif // ifdef ESP8266
     );
 
   if (handledByPluginSerialIn())
   {
     // Any serial0 data is already dealt with
     if (!consoleUsesSerial0 && (_mainSerial._serial != nullptr)) {
-      readInput(_mainSerial);
+      _mainSerial.readInput();
     }
     return;
   }
 
-  readInput(_mainSerial);
+  _mainSerial.readInput();
 
   STOP_TIMER(CONSOLE_LOOP);
 }
@@ -220,14 +162,13 @@ String EspEasy_Console_t::getPortDescription() const
   return _mainSerial.getPortDescription();
 }
 
-
 bool EspEasy_Console_t::handledByPluginSerialIn()
 {
   if ((_mainSerial._serial != nullptr) && _mainSerial._serial->available() &&
-      (static_cast<ESPEasySerialPort>(_console_serial_port) == ESPEasySerialPort::serial0
-#   ifdef ESP8266
-       || static_cast<ESPEasySerialPort>(_console_serial_port) == ESPEasySerialPort::serial0_swap
-#   endif // ifdef ESP8266
+      (_mainSerial.getPortType() == ESPEasySerialPort::serial0
+#  ifdef ESP8266
+       || _mainSerial.getPortType() == ESPEasySerialPort::serial0_swap
+#  endif // ifdef ESP8266
       ))
   {
     String dummy;
@@ -236,26 +177,6 @@ bool EspEasy_Console_t::handledByPluginSerialIn()
   }
   return false;
 }
-
-void EspEasy_Console_t::readInput(EspEasy_Console_Port& port)
-{
-  size_t bytesToRead = port.available();
-
-  while (bytesToRead > 0)
-  {
-    --bytesToRead;
-    delay(0);
-    const int SerialInByte = port.read();
-
-    if (SerialInByte >= 0) {
-      if (port.process_consoleInput(SerialInByte)) {
-        // Processed a full line
-        return;
-      }
-    }
-  }
-}
-
 
 ESPeasySerial * EspEasy_Console_t::getPort()
 {
