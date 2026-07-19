@@ -13,7 +13,7 @@
 #endif // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
 
 #if FEATURE_IMPROV
-#include "../Helpers/Improv_Helper.h"
+# include "../Helpers/Improv_Helper.h"
 #endif
 
 
@@ -24,39 +24,41 @@ struct EspEasy_Console_Port {
 
   operator bool() const;
 
-  int read();
-  size_t available() const;
+  int               read();
+  size_t            available() const;
 
-  void begin(uint32_t baudrate);
+  void              begin(uint32_t baudrate);
 
-  void endPort();
+  void              endPort();
 
-  void readInput();
+  void              readInput();
 #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
   ESPEasySerialPort getPortType() const;
 #endif
-  bool process_serialWriteBuffer();
+  bool              process_serialWriteBuffer();
 
-  bool process_consoleInput(uint8_t SerialInByte);
+  bool              process_consoleInput(uint8_t SerialInByte);
 
-  String getPortDescription() const;
+  String            getPortDescription() const;
 
 #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
-  bool updateSerialPort(const ESPEasySerialConfig& config);
+  bool              updateSerialPort(ESPEasySerialConfig& config);
 
 private:
+
   // Cache the used settings, so we can check whether to change the console serial
   ESPEasySerialConfig _config;
 
 public:
-#endif
 
-  int SerialInByteCounter{};
-  char *InputBuffer_Serial{};
+#endif // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+
+  int                 SerialInByteCounter{};
+  char               *InputBuffer_Serial{};
   SerialWriteBuffer_t _serialWriteBuffer;
 
 #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
-  ESPeasySerial *_serial       = nullptr;
+  ESPeasySerial *_serial = nullptr;
 #else // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
 # if !defined(NO_GLOBAL_INSTANCES) && !defined(NO_GLOBAL_SERIAL) && ARDUINO_USB_CDC_ON_BOOT // Serial used for USB CDC
   HardwareSerial *_serial = &Serial0;
@@ -68,9 +70,9 @@ public:
 
   Improv_Helper_t _improv;
 
-#endif
+#endif // if FEATURE_IMPROV
 
 };
 
 
-#endif
+#endif // ifndef ESPEASYCORE_ESPEASY_CONSOLE_PORT_H

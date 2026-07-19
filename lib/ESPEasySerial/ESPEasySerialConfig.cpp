@@ -36,6 +36,11 @@ void ESPEasySerialConfig::validate()
 # endif // if USES_I2C_SC16IS752
   }
 #endif // if USES_SW_SERIAL
+#if USES_HWCDC
+  if (port == ESPEasySerialPort::usb_hw_cdc) {
+    txBuffSize = 2048;
+  }
+#endif
 }
 
 #ifdef ESP8266

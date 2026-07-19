@@ -22,10 +22,6 @@
 
 #   include <ESPEasySerialPort.h>
 
-#   ifdef ESP32
-#    include <esp32-hal-periman.h>
-#   endif
-
 
 EspEasy_Console_t::EspEasy_Console_t() :
   _mainSerial(LOG_TO_SERIAL)
@@ -50,16 +46,7 @@ EspEasy_Console_t::EspEasy_Console_t() :
   config.transmitPin   = DEFAULT_CONSOLE_PORT_TXPIN;
   config.inverse_logic = false;
   config.rxBuffSize    = 256;
-#   if USES_HWCDC
-
-  if (config.port == ESPEasySerialPort::usb_hw_cdc) {
-    config.txBuffSize = 2048;
-  } else {
-    config.txBuffSize = 512;
-  }
-#   else // if USES_HWCDC
-  config.txBuffSize = 512;
-#   endif // if USES_HWCDC
+  config.txBuffSize    = ESPEASY_CONSOLE_TX_BUFFSIZE;
 
   if (config.port != ESPEasySerialPort::serial0) {
     // We only use the _mainSerial for ports other than HW Serial0
@@ -72,7 +59,7 @@ EspEasy_Console_t::EspEasy_Console_t() :
     config.port        = ESPEasySerialPort::serial0;
     config.receivePin  = SOC_RX0;
     config.transmitPin = SOC_TX0;
-    config.txBuffSize  = 512;
+    config.txBuffSize  = ESPEASY_CONSOLE_TX_BUFFSIZE;
     _fallbackSerial.updateSerialPort(config);
   }
 }
@@ -87,17 +74,7 @@ void EspEasy_Console_t::reInit()
   config.transmitPin   = Settings.console_serial_txpin;
   config.inverse_logic = false;
   config.rxBuffSize    = 256;
-#   if USES_HWCDC
-
-  if (config.port == ESPEasySerialPort::usb_hw_cdc) {
-    config.txBuffSize = 2048;
-  } else {
-    config.txBuffSize = 512;
-  }
-#   else // if USES_HWCDC
-  config.txBuffSize = 512;
-#   endif // if USES_HWCDC
-
+  config.txBuffSize    = ESPEASY_CONSOLE_TX_BUFFSIZE;
 
   if (config.port != ESPEasySerialPort::serial0) {
     // We only use the _mainSerial for ports other than HW Serial0
@@ -110,7 +87,7 @@ void EspEasy_Console_t::reInit()
     config.port        = ESPEasySerialPort::serial0;
     config.receivePin  = SOC_RX0;
     config.transmitPin = SOC_TX0;
-    config.txBuffSize  = 512;
+    config.txBuffSize  = ESPEASY_CONSOLE_TX_BUFFSIZE;
     _fallbackSerial.updateSerialPort(config);
   }
 }
@@ -120,21 +97,22 @@ void EspEasy_Console_t::begin(uint32_t baudrate)
   _mainSerial.begin(baudrate);
   _fallbackSerial.begin(baudrate);
 
-  if (_fallbackSerial._serial != nullptr) {
+#   ifndef BUILD_NO_DEBUG
 
-    // Need to have this string as C-string, not F-string
-    perimanSetPinBusExtraType(SOC_RX0, "Console");
-    perimanSetPinBusExtraType(SOC_TX0, "Console");
-
-    addLog(LOG_LEVEL_INFO, F("ESPEasy console fallback enabled"));
+  if (_mainSerial._serial != nullptr) {
+    addLog(LOG_LEVEL_INFO, F("ESPEasy console enabled"));
   }
+
+  if (_fallbackSerial._serial != nullptr) {
+    addLog(LOG_LEVEL_INFO,
+           (_mainSerial._serial != nullptr)
+      ? F("ESPEasy console fallback enabled")
+      : F("ESPEasy console enabled"));
+  }
+#   endif // ifndef BUILD_NO_DEBUG
 }
 
 void EspEasy_Console_t::init() {
-#   if FEATURE_IMPROV
-  _mainSerial._improv.init();
-  _fallbackSerial._improv.init();
-#   endif // if FEATURE_IMPROV
   updateActiveTaskUseSerial0();
 
   if (!Settings.UseSerial) {
@@ -151,11 +129,7 @@ void EspEasy_Console_t::loop()
   START_TIMER;
 
   _mainSerial.readInput();
-
-  if (!handledByPluginSerialIn()) {
-    // Any serial0 data is already dealt with
-    _fallbackSerial.readInput();
-  }
+  _fallbackSerial.readInput();
 
   STOP_TIMER(CONSOLE_LOOP);
 }
@@ -197,19 +171,6 @@ String EspEasy_Console_t::getPortDescription() const
 String EspEasy_Console_t::getFallbackPortDescription() const
 {
   return _fallbackSerial.getPortDescription();
-}
-
-bool EspEasy_Console_t::handledByPluginSerialIn()
-{
-  if ((_fallbackSerial._serial != nullptr) &&
-      _fallbackSerial._serial->available())
-  {
-    String dummy;
-
-    return PluginCall(PLUGIN_SERIAL_IN, 0, dummy);
-  }
-
-  return false;
 }
 
 ESPeasySerial * EspEasy_Console_t::getPort()

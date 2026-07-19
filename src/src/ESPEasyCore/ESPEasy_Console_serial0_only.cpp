@@ -32,7 +32,7 @@ void EspEasy_Console_t::reInit()
   updateActiveTaskUseSerial0();
 
   // TODO TD-er: Must check whether a task uses serial 0 and then stop serial console
-  //activeTaskUseSerial0()
+  // activeTaskUseSerial0()
   bool somethingChanged = false;
 
   if (somethingChanged) {
@@ -43,12 +43,12 @@ void EspEasy_Console_t::reInit()
 void EspEasy_Console_t::begin(uint32_t baudrate)
 {
   _mainSerial.begin(baudrate);
+# ifndef BUILD_NO_DEBUG
+  addLog(LOG_LEVEL_INFO, F("ESPEasy console enabled"));
+# endif
 }
 
 void EspEasy_Console_t::init() {
-# if FEATURE_IMPROV
-  _mainSerial._improv.init();
-# endif // if FEATURE_IMPROV
   updateActiveTaskUseSerial0();
 
   if (!Settings.UseSerial) {
@@ -68,16 +68,14 @@ void EspEasy_Console_t::loop()
 
   START_TIMER;
 
-  if (handledByPluginSerialIn()) {
-    return;
-  }
-
   _mainSerial.readInput();
 
   STOP_TIMER(CONSOLE_LOOP);
 }
 
 bool EspEasy_Console_t::process_serialWriteBuffer() {
+
+# if FEATURE_TIMING_STATS
   START_TIMER;
   bool res = false;
 
@@ -85,11 +83,12 @@ bool EspEasy_Console_t::process_serialWriteBuffer() {
     res = true;
   }
 
-# if FEATURE_TIMING_STATS
-
   if (res) { STOP_TIMER(CONSOLE_WRITE_SERIAL); }
-# endif // if FEATURE_TIMING_STATS
   return res;
+
+# else // if FEATURE_TIMING_STATS
+  return _mainSerial.process_serialWriteBuffer();
+# endif // if FEATURE_TIMING_STATS
 }
 
 void EspEasy_Console_t::setDebugOutput(bool enable)
@@ -106,22 +105,9 @@ String EspEasy_Console_t::getPortDescription() const
   return _mainSerial.getPortDescription();
 }
 
-bool EspEasy_Console_t::handledByPluginSerialIn()
-{
-  String dummy;
+HardwareSerial * EspEasy_Console_t::getPort() { return _mainSerial._serial; }
 
-  return PluginCall(PLUGIN_SERIAL_IN, 0, dummy);
-}
-
-HardwareSerial * EspEasy_Console_t::getPort()
-{
-  if (_mainSerial._serial != nullptr) {
-    return _mainSerial._serial;
-  }
-  return nullptr;
-}
-
-void EspEasy_Console_t::endPort()
+void             EspEasy_Console_t::endPort()
 {
   _mainSerial.endPort();
   delay(10);

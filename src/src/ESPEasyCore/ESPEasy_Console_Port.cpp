@@ -13,9 +13,12 @@
 
 #include "../Helpers/Memory.h"
 #include "../Helpers/StringConverter.h"
-
-#include <ESPEasySerialPort.h>
-
+#if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+# include <ESPEasySerialPort.h>
+# ifdef ESP32
+#  include <esp32-hal-periman.h>
+# endif
+#endif // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
 
 #ifdef ESP32
 # define CONSOLE_INPUT_BUFFER_SIZE          1280
@@ -23,6 +26,10 @@
 # define CONSOLE_INPUT_BUFFER_SIZE          128
 #endif // ifdef ESP32
 
+// Set to max. of 64 bytes as this is the optimum 'chunk size' for most
+// serial ports, like the CDC ports and I2C to UART.
+// Also it is relatively fast to allocate.
+#define CONSOLE_MAX_WRITE_CHUNKSIZE    64
 
 /*
  #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
@@ -110,18 +117,17 @@ void EspEasy_Console_Port::begin(uint32_t baudrate)
   updateActiveTaskUseSerial0();
 
   if (_serial != nullptr) {
-    # if FEATURE_IMPROV
+    #if FEATURE_IMPROV
     _improv.init();
     #endif
 
+    _serial->begin(baudrate);
 #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
     _config.baud = baudrate;
 #endif
-    _serial->begin(baudrate);
-    addLog(LOG_LEVEL_INFO, F("ESPEasy console using ESPEasySerial"));
 
+#ifdef ESP32
 
-# ifdef ESP32
     // Allow to flush data from the serial buffers
     // When not opening the USB serial port, the ESP may hang at boot.
     delay(10);
@@ -129,8 +135,18 @@ void EspEasy_Console_Port::begin(uint32_t baudrate)
     delay(10);
     _serial->begin(baudrate);
     _serial->flush();
-# endif // ifdef ESP32
 
+
+# if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+
+    if (useGPIOpins(_config.port)) {
+      // Need to have this string as C-string, not F-string
+      perimanSetPinBusExtraType(_config.receivePin,  "Console");
+      perimanSetPinBusExtraType(_config.transmitPin, "Console");
+    }
+# endif // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+
+#endif // ifdef ESP32
   }
 }
 
@@ -143,8 +159,29 @@ void EspEasy_Console_Port::endPort()
 
 void EspEasy_Console_Port::readInput()
 {
-  if (_serial == nullptr) return;
+  if (_serial == nullptr) { return; }
+
   size_t bytesToRead = available();
+
+  if (bytesToRead == 0) { return; }
+
+
+#if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+
+  if (getPortType() == ESPEasySerialPort::serial0
+# ifdef ESP8266
+      || getPortType() == ESPEasySerialPort::serial0_swap
+# endif // ifdef ESP8266
+      )
+#endif // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+  {
+    String dummy;
+
+    if (PluginCall(PLUGIN_SERIAL_IN, 0, dummy)) {
+      // Any serial0 data is already dealt with
+      return;
+    }
+  }
 
   while (bytesToRead > 0)
   {
@@ -162,19 +199,21 @@ void EspEasy_Console_Port::readInput()
 }
 
 #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+
 ESPEasySerialPort EspEasy_Console_Port::getPortType() const
 {
-  #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+  # if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
 
   if (_serial == nullptr) { return ESPEasySerialPort::not_set; }
   return _config.port;
-  #else // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+  # else // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
 
   // TODO TD-er: Should I also try to see if we're using serial0_swapped?
   return ESPEasySerialPort::serial0;
-  #endif // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+  # endif // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
 }
-#endif
+
+#endif // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
 
 bool EspEasy_Console_Port::process_serialWriteBuffer()
 {
@@ -183,29 +222,46 @@ bool EspEasy_Console_Port::process_serialWriteBuffer()
 
   if (!xPortCanYield()) { return false; }
 #endif // ifdef ESP32
+
+  // Only check for nr. available bytes left once
+  // This can be a relatively "expensive" call
+  // and when using high baud rates this processing may take up
+  // too much time blocking everything else.
   size_t availableForWrite = _serial->availableForWrite();
 
-  if (availableForWrite == 0) { return false; }
-
-  if (availableForWrite == 1) {
-    // For only a single byte, just write it directly
-    return _serialWriteBuffer.process(_serial, availableForWrite);
-  }
-
-  if (availableForWrite > 64) {
-    // Set to max. of 64 bytes as this is the optimum 'chunk size' for most
-    // serial ports, like the CDC ports and I2C to UART.
-    // Also it is relatively fast to allocate.
-    availableForWrite = 64;
-  }
+  size_t nrLinesWritten = 0;
 
   PrintToString str;
-  str.reserve(availableForWrite);
+  str.reserve(CONSOLE_MAX_WRITE_CHUNKSIZE);
 
-  if (!_serialWriteBuffer.process(&str, availableForWrite)) {
-    return false;
-  }
-  _serial->write(str.get().c_str(), str.length());
+  do
+  {
+    if (availableForWrite == 0) { return false; }
+
+    if (availableForWrite == 1) {
+      // For only a single byte, just write it directly
+      return _serialWriteBuffer.process(_serial, availableForWrite);
+    }
+
+    size_t chunkSize = availableForWrite;
+
+    if (chunkSize > CONSOLE_MAX_WRITE_CHUNKSIZE) {
+      chunkSize = CONSOLE_MAX_WRITE_CHUNKSIZE;
+    }
+    availableForWrite -= chunkSize;
+
+    if (!_serialWriteBuffer.process(&str, chunkSize)) {
+      // Nothing left to write
+      return false;
+    }
+
+    if (_serial->write(str.get().c_str(), str.length()) < chunkSize) {
+      // Try to end on a full log line to lower the chance of SDK debug logs
+      // interfering with console output.
+      ++nrLinesWritten;
+    }
+    str.clear();
+  } while (availableForWrite > 0 && nrLinesWritten < 3);
   return true;
 }
 
@@ -266,10 +322,11 @@ String EspEasy_Console_Port::getPortDescription() const
 #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
 
 bool EspEasy_Console_Port::updateSerialPort(
-  const ESPEasySerialConfig& config)
+  ESPEasySerialConfig& config)
 {
   updateActiveTaskUseSerial0();
   bool somethingChanged = false;
+  config.validate();
 
   const bool consoleUseSerial0 = (
 # ifdef ESP8266
@@ -280,7 +337,7 @@ bool EspEasy_Console_Port::updateSerialPort(
   const bool canUseSerial0 = !activeTaskUseSerial0() && !log_to_serial_disabled;
 
 
-  bool mustHaveSerial = Settings.UseSerial && (!consoleUseSerial0 || canUseSerial0);
+  bool mustHaveSerial = Settings.UseSerial && (!consoleUseSerial0 || canUseSerial0) && config.port != ESPEasySerialPort::not_set;
 
   if (!(_config == config) ||
       !mustHaveSerial) {
@@ -290,6 +347,10 @@ bool EspEasy_Console_Port::updateSerialPort(
       somethingChanged = true;
     }
     _config = config;
+
+    if (!mustHaveSerial) {
+      _config.port = ESPEasySerialPort::not_set;
+    }
   }
 
   if ((_serial == nullptr) && mustHaveSerial) {
