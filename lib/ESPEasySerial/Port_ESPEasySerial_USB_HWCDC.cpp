@@ -48,6 +48,20 @@ static void hwcdcEventCallback(void *arg, esp_event_base_t event_base, int32_t e
   }
 }
 
+bool Port_ESPEasySerial_USB_HWCDC_t::isConnected() const
+{
+  static bool connected_cache{};
+  static uint32_t lastChecked{};
+  if (!connected_cache) {
+    const int32_t timePassedSince = (int32_t) (millis() - lastChecked);
+    if (timePassedSince < 1000) return false;
+    lastChecked = millis();
+  }
+  connected_cache = _hwcdc_serial != nullptr && _hwcdc_serial->isConnected();
+  return connected_cache;  
+}
+
+
 Port_ESPEasySerial_USB_HWCDC_t::Port_ESPEasySerial_USB_HWCDC_t(const ESPEasySerialConfig& config)
   
 # if ARDUINO_USB_CDC_ON_BOOT // Serial used for USB CDC
@@ -71,7 +85,7 @@ Port_ESPEasySerial_USB_HWCDC_t::Port_ESPEasySerial_USB_HWCDC_t(const ESPEasySeri
 
     //    _hwcdc_serial->begin();
 
-    //    _hwcdc_serial->onEvent(hwcdcEventCallback);
+    // _hwcdc_serial->onEvent(hwcdcEventCallback);
   }
 }
 
@@ -106,7 +120,7 @@ void Port_ESPEasySerial_USB_HWCDC_t::end() {
 
 int Port_ESPEasySerial_USB_HWCDC_t::available(void)
 {
-  if (_hwcdc_serial != nullptr && _hwcdc_serial->isConnected()) {
+  if (isConnected()) {
       return _hwcdc_serial->available();
   }
   return 0;
@@ -114,7 +128,7 @@ int Port_ESPEasySerial_USB_HWCDC_t::available(void)
 
 int Port_ESPEasySerial_USB_HWCDC_t::availableForWrite(void)
 {
-  if (_hwcdc_serial != nullptr && _hwcdc_serial->isConnected()) {
+  if (isConnected()) {
       return _hwcdc_serial->availableForWrite();
   }
   return 0;
@@ -122,7 +136,7 @@ int Port_ESPEasySerial_USB_HWCDC_t::availableForWrite(void)
 
 int Port_ESPEasySerial_USB_HWCDC_t::peek(void)
 {
-  if (_hwcdc_serial != nullptr && _hwcdc_serial->isConnected()) {
+  if (isConnected()) {
     return _hwcdc_serial->peek();
   }
   return 0;
@@ -130,7 +144,7 @@ int Port_ESPEasySerial_USB_HWCDC_t::peek(void)
 
 int Port_ESPEasySerial_USB_HWCDC_t::read(void)
 {
-  if (_hwcdc_serial != nullptr && _hwcdc_serial->isConnected()) {
+  if (isConnected()) {
     return _hwcdc_serial->read();
   }
   return 0;
@@ -139,7 +153,7 @@ int Port_ESPEasySerial_USB_HWCDC_t::read(void)
 size_t Port_ESPEasySerial_USB_HWCDC_t::read(uint8_t *buffer,
                                             size_t   size)
 {
-  if (_hwcdc_serial != nullptr && _hwcdc_serial->isConnected()) {
+  if (isConnected()) {
     return _hwcdc_serial->read(buffer, size);
   }
   return 0;
@@ -147,7 +161,7 @@ size_t Port_ESPEasySerial_USB_HWCDC_t::read(uint8_t *buffer,
 
 void Port_ESPEasySerial_USB_HWCDC_t::flush(void)
 {
-  if (_hwcdc_serial != nullptr && _hwcdc_serial->isConnected()) {
+  if (isConnected()) {
     return _hwcdc_serial->flush();
   }
 }
@@ -176,7 +190,7 @@ size_t Port_ESPEasySerial_USB_HWCDC_t::write(const uint8_t *buffer,
 
 Port_ESPEasySerial_USB_HWCDC_t::operator bool() const
 {
-  if (_hwcdc_serial != nullptr && _hwcdc_serial->isConnected()) {
+  if (isConnected()) {
     // return usbActive;
     return true;
   }
@@ -211,5 +225,6 @@ bool Port_ESPEasySerial_USB_HWCDC_t::setRS485Mode(int8_t rtsPin, bool enableColl
 {
   return false;
 }
+
 
 #endif // if USES_HWCDC

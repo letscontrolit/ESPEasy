@@ -217,6 +217,7 @@ ESPEasySerialPort EspEasy_Console_Port::getPortType() const
 
 bool EspEasy_Console_Port::process_serialWriteBuffer()
 {
+  if (_serialWriteBuffer.getNrMessages() == 0) { return false; }
   if (_serial == nullptr) { return false; }
 #ifdef ESP32
 
@@ -234,35 +235,44 @@ bool EspEasy_Console_Port::process_serialWriteBuffer()
   PrintToString str;
   str.reserve(CONSOLE_MAX_WRITE_CHUNKSIZE);
 
+  size_t totalWritten = 0;
+
   do
   {
-    if (availableForWrite == 0) { return false; }
+    if (availableForWrite == 0) { return totalWritten > 0; }
 
     if (availableForWrite == 1) {
       // For only a single byte, just write it directly
-      return _serialWriteBuffer.process(_serial, availableForWrite);
+      if (_serialWriteBuffer.process(_serial, availableForWrite)) {
+        ++totalWritten;
+      }
+
+      return totalWritten > 0;
     }
 
-    size_t chunkSize = availableForWrite;
+    const size_t chunkSize = availableForWrite > CONSOLE_MAX_WRITE_CHUNKSIZE
+      ? CONSOLE_MAX_WRITE_CHUNKSIZE
+      : availableForWrite;
 
-    if (chunkSize > CONSOLE_MAX_WRITE_CHUNKSIZE) {
-      chunkSize = CONSOLE_MAX_WRITE_CHUNKSIZE;
-    }
     availableForWrite -= chunkSize;
 
     if (!_serialWriteBuffer.process(&str, chunkSize)) {
       // Nothing left to write
-      return false;
+      return totalWritten > 0;
     }
 
-    if (_serial->write(str.get().c_str(), str.length()) < chunkSize) {
+    const size_t lastWritten = _serial->write(str.get().c_str(), str.length());
+
+    totalWritten += lastWritten;
+
+    if (lastWritten < chunkSize) {
       // Try to end on a full log line to lower the chance of SDK debug logs
       // interfering with console output.
       ++nrLinesWritten;
     }
     str.clear();
   } while (availableForWrite > 0 && nrLinesWritten < 3);
-  return true;
+  return totalWritten > 0;
 }
 
 bool EspEasy_Console_Port::process_consoleInput(uint8_t SerialInByte)

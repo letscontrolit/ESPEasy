@@ -74,21 +74,19 @@ void EspEasy_Console_t::loop()
 }
 
 bool EspEasy_Console_t::process_serialWriteBuffer() {
-
-# if FEATURE_TIMING_STATS
+#  if FEATURE_TIMING_STATS
   START_TIMER;
-  bool res = false;
 
   if (_mainSerial.process_serialWriteBuffer()) {
-    res = true;
+    STOP_TIMER(CONSOLE_WRITE_SERIAL);
+    return true;
   }
 
-  if (res) { STOP_TIMER(CONSOLE_WRITE_SERIAL); }
-  return res;
+  return false;
 
-# else // if FEATURE_TIMING_STATS
+#  else // if FEATURE_TIMING_STATS
   return _mainSerial.process_serialWriteBuffer();
-# endif // if FEATURE_TIMING_STATS
+#  endif // if FEATURE_TIMING_STATS
 }
 
 void EspEasy_Console_t::setDebugOutput(bool enable)
