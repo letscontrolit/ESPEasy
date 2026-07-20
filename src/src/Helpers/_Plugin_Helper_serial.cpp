@@ -294,9 +294,6 @@ void serialHelper_webformLoad(ESPEasySerialPort port,
                   true);
   #endif // ifdef ESP32
 
-  #if !USES_SW_SERIAL
-  allowSoftwareSerial = false;
-  #endif
 
   const int ids[] = {
      static_cast<int>(ESPEasySerialPort::not_set)
@@ -369,9 +366,11 @@ void serialHelper_webformLoad(ESPEasySerialPort port,
     if (!(allowedSerial & INCLUDE_HW_SERIAL) && isHWserial(serType)) {
       attr[i] = F("disabled");
     }
+#if USES_SW_SERIAL
     if (!(allowedSerial & INCLUDE_SW_SERIAL) && (serType == ESPEasySerialPort::software)) {
       attr[i] = F("disabled");
     }
+#endif
     #if USES_I2C_SC16IS752
     if (!(allowedSerial & INCLUDE_I2C_SERIAL) && (serType == ESPEasySerialPort::sc16is752)) {
       attr[i] = F("disabled");
