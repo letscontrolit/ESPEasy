@@ -17,9 +17,9 @@ void handle_timingstats() {
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_timingstats"));
   #endif
-  navMenuIndex = MENU_INDEX_TOOLS;
-  TXBuffer.startStream();
-  sendHeadandTail_stdtemplate(_HEAD);
+
+  startStream_send_stdTemplate_NoLoginCheck(MENU_INDEX_TOOLS);
+
   html_table_class_multirow();
   html_TR();
   {
@@ -55,8 +55,7 @@ void handle_timingstats() {
   addHtml(F("Duty cycle based on average < 1 msec is highly unreliable"));
   html_end_table();
 
-  sendHeadandTail_stdtemplate(_TAIL);
-  TXBuffer.endStream();
+  sendTail_stdtemplate();
 }
 
 // ********************************************************************************

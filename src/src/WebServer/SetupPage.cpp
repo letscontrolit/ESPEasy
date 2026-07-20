@@ -43,15 +43,15 @@ void handle_setup() {
   checkRAM(F("handle_setup"));
   # endif // ifndef BUILD_NO_RAM_TRACKER
 
-  // Do not check client IP range allowed.
-  TXBuffer.startStream();
 
   const bool connected = ESPEasy::net::NetworkConnected();
 
 
   //  if (connected) {
-  navMenuIndex = MENU_INDEX_SETUP;
-  sendHeadandTail_stdtemplate(_HEAD);
+
+  // TODO TD-er: Should also check for logged in state here?
+  // if (!startStream_send_stdTemplate(MENU_INDEX_SETUP)) { return; }
+  startStream_send_stdTemplate_NoLoginCheck(MENU_INDEX_SETUP);
 
   /*  } else {
       sendHeadandTail(F("TmplAP"));
@@ -260,13 +260,12 @@ void handle_setup() {
   }
 
   //  if (connected) {
-  sendHeadandTail_stdtemplate(_TAIL);
+  sendTail_stdtemplate();
 
   /*  } else {
       sendHeadandTail(F("TmplAP"), true);
      }
    */
-  TXBuffer.endStream();
   delay(10);
 
   if (clearWiFiCredentials) {
