@@ -71,6 +71,11 @@ void Improv_Helper_t::init()
   // FIXME TD-er: Implement callback to use ESPEasy functions to connect to WiFi
 //  _improv.setCustomTryConnectToWiFi(OnImprovESPEasyConnectWiFi);
 
+  update();
+}
+
+void Improv_Helper_t::update()
+{
   String firmwareName      = get_binary_filename();
   const String buildString = getSystemBuildString();
 
