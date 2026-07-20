@@ -117,25 +117,28 @@ void EspEasy_Console_Port::begin(uint32_t baudrate)
   updateActiveTaskUseSerial0();
 
   if (_serial != nullptr) {
-    #if FEATURE_IMPROV
+#if FEATURE_IMPROV
     _improv.init();
-    #endif
+#endif
 
     _serial->begin(baudrate);
 #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
     _config.baud = baudrate;
 #endif
+    _serial->flush();
 
 #ifdef ESP32
 
     // Allow to flush data from the serial buffers
     // When not opening the USB serial port, the ESP may hang at boot.
-    delay(10);
-    _serial->end();
-    delay(10);
-    _serial->begin(baudrate);
-    _serial->flush();
 
+    /*
+       delay(10);
+       _serial->end();
+       delay(10);
+       _serial->begin(baudrate);
+       _serial->flush();
+     */
 
 # if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
 
@@ -202,15 +205,15 @@ void EspEasy_Console_Port::readInput()
 
 ESPEasySerialPort EspEasy_Console_Port::getPortType() const
 {
-  # if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+# if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
 
   if (_serial == nullptr) { return ESPEasySerialPort::not_set; }
   return _config.port;
-  # else // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+# else // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
 
   // TODO TD-er: Should I also try to see if we're using serial0_swapped?
   return ESPEasySerialPort::serial0;
-  # endif // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+# endif // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
 }
 
 #endif // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
@@ -218,6 +221,7 @@ ESPEasySerialPort EspEasy_Console_Port::getPortType() const
 bool EspEasy_Console_Port::process_serialWriteBuffer()
 {
   if (_serialWriteBuffer.getNrMessages() == 0) { return false; }
+
   if (_serial == nullptr) { return false; }
 #ifdef ESP32
 
@@ -251,8 +255,8 @@ bool EspEasy_Console_Port::process_serialWriteBuffer()
     }
 
     const size_t chunkSize = availableForWrite > CONSOLE_MAX_WRITE_CHUNKSIZE
-      ? CONSOLE_MAX_WRITE_CHUNKSIZE
-      : availableForWrite;
+? CONSOLE_MAX_WRITE_CHUNKSIZE
+: availableForWrite;
 
     availableForWrite -= chunkSize;
 
@@ -317,13 +321,13 @@ bool EspEasy_Console_Port::process_consoleInput(uint8_t SerialInByte)
 String EspEasy_Console_Port::getPortDescription() const
 {
   if (_serial != nullptr) {
-  #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+#if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
     return _serial->getPortDescription();
-  #else // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+#else // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
     String res = F("HW Serial0 @ ");
     res += _serial->baudRate();
     return res;
-  #endif // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
+#endif // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
   }
 
   return F("-");
@@ -364,15 +368,32 @@ bool EspEasy_Console_Port::updateSerialPort(
   }
 
   if ((_serial == nullptr) && mustHaveSerial) {
-    # ifdef USE_SECOND_HEAP
-    HeapSelectDram ephemeral;
-    # endif // ifdef USE_SECOND_HEAP
-
     {
-      # ifdef USE_SECOND_HEAP
+# ifdef USE_SECOND_HEAP
       HeapSelectDram ephemeral;
-    # endif // ifdef USE_SECOND_HEAP
+# endif // ifdef USE_SECOND_HEAP
       _serial = new (std::nothrow) ESPeasySerial(_config);
+
+# if USES_HWCDC
+
+      // Check to see if the port is plugged.
+      // If not, we can remove it again and save resources.
+      if ((_config.port == ESPEasySerialPort::usb_hw_cdc) && (_serial != nullptr)) {
+        bool isPlugged{};
+
+        for (uint32_t i = 0; !isPlugged && i < 5; i++) {
+          isPlugged = _serial->operator bool();
+          delay(50);
+        }
+
+        if (!isPlugged) {
+          delete _serial;
+          _serial = nullptr;
+        }
+      }
+
+# endif // if USES_HWCDC
+
     }
 
     somethingChanged = true;

@@ -162,7 +162,7 @@ size_t Port_ESPEasySerial_USB_HWCDC_t::read(uint8_t *buffer,
 void Port_ESPEasySerial_USB_HWCDC_t::flush(void)
 {
   if (isConnected()) {
-    return _hwcdc_serial->flush();
+    _hwcdc_serial->flush();
   }
 }
 
@@ -190,16 +190,12 @@ size_t Port_ESPEasySerial_USB_HWCDC_t::write(const uint8_t *buffer,
 
 Port_ESPEasySerial_USB_HWCDC_t::operator bool() const
 {
-  if (isConnected()) {
-    // return usbActive;
-    return true;
-  }
-  return false;
+  return _hwcdc_serial != nullptr && _hwcdc_serial->isPlugged();
 }
 
 void Port_ESPEasySerial_USB_HWCDC_t::setDebugOutput(bool enabled) {
   if (_hwcdc_serial != nullptr) {
-    return _hwcdc_serial->setDebugOutput(enabled);
+    _hwcdc_serial->setDebugOutput(enabled);
   }
 }
 
