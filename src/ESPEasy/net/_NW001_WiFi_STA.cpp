@@ -13,6 +13,7 @@
 # include "../../src/DataStructs/ESPEasy_EventStruct.h"
 # include "../../src/Globals/SecuritySettings.h"
 # include "../../src/Globals/Settings.h"
+# include "../../src/Helpers/Networking.h"
 # include "../../src/Helpers/StringConverter.h"
 # include "../../src/Helpers/StringGenerator_WiFi.h"
 # include "../../src/WebServer/ESPEasy_WebServer.h"
@@ -23,13 +24,14 @@
 # include "../net/Helpers/_NWPlugin_init.h"
 # include "../net/NWPluginStructs/NW001_data_struct_WiFi_STA.h"
 # include "../net/wifi/ESPEasyWifi.h"
-#ifdef ESP8266
-# include "../net/ESPEasyNetwork.h"
-#endif
+# ifdef ESP8266
+#  include "../net/ESPEasyNetwork.h"
+# endif
 
-#if FEATURE_TASKVALUE_UNIT_OF_MEASURE
-# include "../../src/Helpers/ESPEasy_UnitOfMeasure.h"
-#endif
+
+# if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+#  include "../../src/Helpers/ESPEasy_UnitOfMeasure.h"
+# endif
 
 
 # if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE
@@ -57,17 +59,20 @@ bool NWPlugin_001(NWPlugin::Function function, EventStruct *event, String& strin
   {
     case NWPlugin::Function::NWPLUGIN_DRIVER_ADD:
     {
-      NetworkDriverStruct& nw  = getNetworkDriverStruct(networkDriverIndex_t::toNetworkDriverIndex(event->idx));
-      nw.onlySingleInstance    = true;
-      nw.alwaysPresent         = true;
+      NetworkDriverStruct& nw = getNetworkDriverStruct(networkDriverIndex_t::toNetworkDriverIndex(event->idx));
+      nw.onlySingleInstance = true;
+      nw.alwaysPresent      = true;
+      # if DEFAULT_ENABLED_NW001
       nw.enabledOnFactoryReset = true;
-      nw.fixedNetworkIndex     = NWPLUGIN_ID_001 - 1; // Start counting at 0
+      # endif
+      nw.fixedNetworkIndex = NWPLUGIN_ID_001 - 1; // Start counting at 0
       break;
     }
 
     case NWPlugin::Function::NWPLUGIN_LOAD_DEFAULTS:
     {
 # ifdef ESP32
+      Settings.setAppendNetworkAdapterNameToHostname(event->NetworkIndex, DEFAULT_STA_APPEND_NW_NAME_TO_HOSTNAME);
       Settings.setRoutePrio_for_network(event->NetworkIndex, DEFAULT_STA_ROUTE_PRIO);
 # endif // ifdef ESP32
       Settings.setNetworkInterfaceSubnetBlockClientIP(event->NetworkIndex, false);
@@ -94,7 +99,7 @@ bool NWPlugin_001(NWPlugin::Function function, EventStruct *event, String& strin
 
     case NWPlugin::Function::NWPLUGIN_CREDENTIALS_CHANGED:
     {
-//                  ESPEasy::net::wifi::WiFi_AP_Candidates.force_reload(); // Force reload of the credentials and found APs from the last scan
+      // ESPEasy::net::wifi::WiFi_AP_Candidates.force_reload(); // Force reload of the credentials and found APs from the last scan
 
       break;
     }
@@ -106,6 +111,7 @@ bool NWPlugin_001(NWPlugin::Function function, EventStruct *event, String& strin
 
       if (NW_data) {
         auto runtime_data = NW_data->getNWPluginData_static_runtime();
+
         if (runtime_data) {
           success = runtime_data->connected();
         }
@@ -292,18 +298,25 @@ bool NWPlugin_001(NWPlugin::Function function, EventStruct *event, String& strin
 
     case NWPlugin::Function::NWPLUGIN_CLIENT_IP_WEB_ACCESS_ALLOWED:
     {
-      IPAddress client_ip;
-      client_ip.fromString(string);
-
-      if ((SecuritySettings.IPblockLevel == LOCAL_SUBNET_ALLOWED) &&
-          !Settings.getNetworkInterfaceSubnetBlockClientIP(event->NetworkIndex)) {
-        success = NWPlugin::ipInRange(client_ip, NetworkID(), NetworkBroadcast());
-      } else if (SecuritySettings.IPblockLevel == ONLY_IP_RANGE_ALLOWED) {
-        const IPAddress low(SecuritySettings.AllowedIPrangeLow);
-        const IPAddress high(SecuritySettings.AllowedIPrangeHigh);
-        success = NWPlugin::ipInRange(client_ip, low, high);
-      } else {
+      if (!Settings.getNetworkInterfaceSubnetBlockClientIP(event->NetworkIndex)) {
+        IPAddress client_ip;
+        client_ip.fromString(string);
         success = true;
+        if (SecuritySettings.IPblockLevel != ALL_ALLOWED) {
+          IPAddress low, high;
+          if (SecuritySettings.IPblockLevel == LOCAL_SUBNET_ALLOWED) {
+            low  = NetworkID();
+            high = NetworkBroadcast();
+          } else if (SecuritySettings.IPblockLevel == ONLY_IP_RANGE_ALLOWED) {
+            low  = IPAddress(SecuritySettings.AllowedIPrangeLow);
+            high = IPAddress(SecuritySettings.AllowedIPrangeHigh);
+          }
+          if (IPAddressSet(low) || IPAddressSet(high)) {
+            success = NWPlugin::ipInRange(client_ip, low, high);
+            event->String1 = formatIP(low);
+            event->String2 = formatIP(high);
+          }
+        }
       }
       break;
     }
@@ -482,7 +495,7 @@ bool NWPlugin_001(NWPlugin::Function function, EventStruct *event, String& strin
 
       addFormNumericBox(LabelType::WIFI_NR_RECONNECT_ATTEMPTS, 0, 255);
       {
-        LabelType::Enum labels[]{ 
+        LabelType::Enum labels[]{
           LabelType::RESTART_WIFI_LOST_CONN
           , LabelType::WIFI_USE_LAST_CONN_FROM_RTC
 # ifndef ESP32

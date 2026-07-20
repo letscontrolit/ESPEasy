@@ -97,6 +97,23 @@
 #define DEFAULT_WIFI_INCLUDE_HIDDEN_SSID false  // Allow to connect to hidden SSID APs
 #endif
 
+#ifndef DEFAULT_STA_APPEND_NW_NAME_TO_HOSTNAME
+#define DEFAULT_STA_APPEND_NW_NAME_TO_HOSTNAME  false
+#endif
+
+#ifndef DEFAULT_AP_APPEND_NW_NAME_TO_HOSTNAME
+#define DEFAULT_AP_APPEND_NW_NAME_TO_HOSTNAME  true
+#endif
+
+#ifndef DEFAULT_ETH_APPEND_NW_NAME_TO_HOSTNAME
+#define DEFAULT_ETH_APPEND_NW_NAME_TO_HOSTNAME  true
+#endif
+
+#ifndef DEFAULT_PPP_APPEND_NW_NAME_TO_HOSTNAME
+#define DEFAULT_PPP_APPEND_NW_NAME_TO_HOSTNAME  true
+#endif
+
+
 #ifndef DEFAULT_STA_ROUTE_PRIO
 #define DEFAULT_STA_ROUTE_PRIO              100 // ESP32-only default route priority
 #endif
@@ -122,6 +139,21 @@
 #define DEFAULT_ETH_ROUTE_PRIO              150 // ESP32-only default route priority
 #endif
 
+#ifndef DEFAULT_ENABLED_NW001
+#define DEFAULT_ENABLED_NW001               1   // Wifi-STA enabled by default
+#endif
+#ifndef DEFAULT_ENABLED_NW002
+#define DEFAULT_ENABLED_NW002               1   // Wifi-AP enabled by default
+#endif
+#ifndef DEFAULT_ENABLED_NW003
+#define DEFAULT_ENABLED_NW003               0   // RMII Ethernet disabled by default, except for P4
+#endif
+#ifndef DEFAULT_ENABLED_NW004
+#define DEFAULT_ENABLED_NW004               0   // SPI Ethernet disabled by default
+#endif
+#ifndef DEFAULT_ENABLED_NW005
+#define DEFAULT_ENABLED_NW005               0   // PPP disabled by default
+#endif
 
 #ifndef DEFAULT_USE_STATIC_IP
 #define DEFAULT_USE_STATIC_IP   false           // (true|false) enabled or disabled static IP
@@ -394,7 +426,13 @@
 #define DEFAULT_ENABLE_TIMING_STATS false
 #endif
 
-
+#ifndef DEFAULT_NETWORK_COLLECT_STATS_BITS
+#ifdef PLUGIN_BUILD_MAX_ESP32
+#define DEFAULT_NETWORK_COLLECT_STATS_BITS   0xFF
+#else
+#define DEFAULT_NETWORK_COLLECT_STATS_BITS   0
+#endif
+#endif
 
 // --- Advanced Settings ---------------------------------------------------------------------------------
 #if defined(ESP32)

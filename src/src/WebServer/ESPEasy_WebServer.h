@@ -22,8 +22,7 @@ void sendHeadandTail(const __FlashStringHelper * tmplName,
                      bool       Tail      = false,
                      bool       rebooting = false);
 
-void   sendHeadandTail_stdtemplate(bool Tail,
-                                   bool rebooting = false);
+void   sendTail_stdtemplate(bool rebooting = false);
 
 
 void   WebServerInit();
@@ -128,7 +127,20 @@ void addTaskValueSelect(const String& name,
 // ********************************************************************************
 bool isLoggedIn(bool mustProvideLogin = true);
 
+// Check isLoggedIn, set new navIndex and start serving standard template
+// Thus not for non-HTML pages.
+bool startStream_send_stdTemplate(uint8_t newNavIndex);
+
+void startStream_send_stdTemplate_NoLoginCheck(uint8_t newNavIndex, bool rebooting = false);
+
+// Check isLoggedIn and start JSON stream
+// JSON can be called from anywhere, so no need to update the nav index
+bool startJSON_Stream();
+
 String  getControllerSymbol(uint8_t index);
+
+
+void    handle_printWebString();
 
 /*
    String getValueSymbol(uint8_t index);
@@ -193,7 +205,7 @@ void write_SVG_image_header(int  width,
 void getWiFi_RSSI_icon(int rssi,
                        int width_pixels);
 
-#if FEATURE_CHART_STORAGE_LAYOUT
+#if FEATURE_CHART_STORAGE_LAYOUT && !defined(BUILD_NO_DEBUG)
 void getConfig_dat_file_layout();
 
 void getStorageTableSVG(SettingsType::Enum settingsType);

@@ -1,13 +1,14 @@
 #include "../DataStructs/NWPluginData_base.h"
 
 #include "../../../src/DataStructs/ESPEasy_EventStruct.h"
+#include "../../../src/Globals/Settings.h"
 #include "../../../src/Helpers/StringConverter.h"
 #include "../../../src/Helpers/Misc.h"
 #include "../../../src/Helpers/Networking.h"
 #if FEATURE_STORE_NETWORK_INTERFACE_SETTINGS
 # include "../../../src/Helpers/_ESPEasy_key_value_store.h"
-#include "../_NWPlugin_Helper.h"
-#endif
+# include "../_NWPlugin_Helper.h"
+#endif // if FEATURE_STORE_NETWORK_INTERFACE_SETTINGS
 #ifdef ESP32
 # include <esp_netif.h>
 # include <esp_netif_types.h>
@@ -46,8 +47,11 @@ NWPluginData_base::NWPluginData_base(
 NWPluginData_base::~NWPluginData_base()
 {
 #if FEATURE_NETWORK_STATS
-  delete _plugin_stats_array;
-  _plugin_stats_array = nullptr;
+
+  if (_plugin_stats_array) {
+    delete _plugin_stats_array;
+    _plugin_stats_array = nullptr;
+  }
 #endif // if FEATURE_NETWORK_STATS
 
 #if FEATURE_STORE_NETWORK_INTERFACE_SETTINGS
@@ -58,6 +62,7 @@ NWPluginData_base::~NWPluginData_base()
 }
 
 #ifdef ESP32
+
 bool NWPluginData_base::isDefaultRoute() const {
   if (_netif) {
     return _netif->isDefault();
@@ -65,14 +70,14 @@ bool NWPluginData_base::isDefaultRoute() const {
   return false;
 }
 
-#endif
+#endif // ifdef ESP32
 
-bool NWPluginData_base::getStaticIPAddresses(IPAddress & ip, IPAddress & gateway, IPAddress & subnetmask, IPAddress & dns ) const
+bool NWPluginData_base::getStaticIPAddresses(IPAddress& ip, IPAddress& gateway, IPAddress& subnetmask, IPAddress& dns) const
 {
-  getStaticIPAddress(IPAddressType::IP, ip);
-  getStaticIPAddress(IPAddressType::Gateway, gateway);
+  getStaticIPAddress(IPAddressType::IP,         ip);
+  getStaticIPAddress(IPAddressType::Gateway,    gateway);
   getStaticIPAddress(IPAddressType::Subnetmask, subnetmask);
-  getStaticIPAddress(IPAddressType::DNS, dns);
+  getStaticIPAddress(IPAddressType::DNS,        dns);
 
   return IPAddressSet(ip) && IPAddressSet(gateway) && IPAddressSet(subnetmask);
 }
@@ -116,24 +121,27 @@ void NWPluginData_base::initPluginStats(
   float                       errorValue,
   const PluginStats_Config_t& displayConfig)
 {
-  if (networkStatsVarIndex < INVALID_NETWORK_STATS_VAR_INDEX) {
-    if (_plugin_stats_array == nullptr) {
-      constexpr unsigned size = sizeof(PluginStats_array);
-      void *ptr               = special_calloc(1, size);
+  if (!Settings.getNetworkCollectStats(_networkIndex) ||
+      (networkStatsVarIndex >= INVALID_NETWORK_STATS_VAR_INDEX)) {
+    return;
+  }
 
-      if (ptr != nullptr) {
-        _plugin_stats_array = new (ptr) PluginStats_array();
-      }
-    }
+  if (_plugin_stats_array == nullptr) {
+    constexpr unsigned size = sizeof(PluginStats_array);
+    void *ptr               = special_calloc(1, size);
 
-    if (_plugin_stats_array != nullptr) {
-      _plugin_stats_array->initPluginStats(
-        networkStatsVarIndex,
-        label,
-        nrDecimals,
-        errorValue,
-        displayConfig);
+    if (ptr != nullptr) {
+      _plugin_stats_array = new (ptr) PluginStats_array();
     }
+  }
+
+  if (_plugin_stats_array != nullptr) {
+    _plugin_stats_array->initPluginStats(
+      networkStatsVarIndex,
+      label,
+      nrDecimals,
+      errorValue,
+      displayConfig);
   }
 }
 
@@ -141,6 +149,7 @@ void NWPluginData_base::initPluginStats(
 
 void NWPluginData_base::initPluginStats_trafficCount(networkStatsVarIndex_t networkStatsVarIndex, bool isTX)
 {
+  if (!Settings.getNetworkCollectStats(_networkIndex)) { return; }
   PluginStats_Config_t displayConfig;
 
   displayConfig.setAxisPosition(PluginStats_Config_t::AxisPosition::Right);
@@ -160,13 +169,14 @@ bool NWPluginData_base::initPluginStats()
 {
 # if FEATURE_NETWORK_TRAFFIC_COUNT
 
-  // Virtual function has no override in derived class, so only init traffic count
-  initPluginStats_trafficCount(0, true);  // TX
-  initPluginStats_trafficCount(1, false); // RX
-  return true;
-# else // if FEATURE_NETWORK_TRAFFIC_COUNT
-  return false;
+  if (Settings.getNetworkCollectStats(_networkIndex)) {
+    // Virtual function has no override in derived class, so only init traffic count
+    initPluginStats_trafficCount(0, true);  // TX
+    initPluginStats_trafficCount(1, false); // RX
+    return true;
+  }
 # endif // if FEATURE_NETWORK_TRAFFIC_COUNT
+  return false;
 }
 
 void NWPluginData_base::clearPluginStats(networkStatsVarIndex_t networkStatsVarIndex)
@@ -334,9 +344,9 @@ bool NWPluginData_base::handle_priority_route_changed()
   if ((_netif != nullptr) && _netif->isDefault()) {
     auto cache = getNWPluginData_static_runtime();
 
-    if (!cache) { 
-      if (NWPlugin::forceDHCP_request(_netif)) { 
-        return true; 
+    if (!cache) {
+      if (NWPlugin::forceDHCP_request(_netif)) {
+        return true;
       }
     }
 
@@ -345,14 +355,16 @@ bool NWPluginData_base::handle_priority_route_changed()
       auto tmp = _netif->dnsIP(i);
 
       if (valid_DNS_address(cache->_dns_cache[i]) && (cache->_dns_cache[i] != tmp)) {
-        addLog(LOG_LEVEL_INFO, strformat(
+        #ifndef BUILD_NO_DEBUG
+if (loglevelActiveFor(LOG_LEVEL_DEBUG))
+    addLog(LOG_LEVEL_DEBUG, strformat(
                  F("%s: Restore cached DNS server %d from %s to %s"),
                  _netif->desc(),
                  i,
                  tmp.toString().c_str(),
                  cache->_dns_cache[i].toString().c_str()
                  ));
-
+#endif
         _netif->dnsIP(i, cache->_dns_cache[i]);
         res = true;
       }
@@ -404,12 +416,13 @@ PluginStats * NWPluginData_base::getPluginStats(networkStatsVarIndex_t networkSt
 #endif // if FEATURE_NETWORK_STATS
 
 #ifdef ESP32
-/*
-bool NWPluginData_base::_restore_DNS_cache()
-{
-  bool res{};
 
-  if ((_netif != nullptr) && _netif->isDefault()) {
+/*
+   bool NWPluginData_base::_restore_DNS_cache()
+   {
+   bool res{};
+
+   if ((_netif != nullptr) && _netif->isDefault()) {
     if (NWPlugin::forceDHCP_request(_netif)) { return true; }
 
     auto cache = getNWPluginData_static_runtime();
@@ -433,24 +446,18 @@ bool NWPluginData_base::_restore_DNS_cache()
         res = true;
       }
     }
-  }
-  return res;
-}
-  */
+   }
+   return res;
+   }
+ */
 
 #endif // ifdef ESP32
 
 #if FEATURE_STORE_NETWORK_INTERFACE_SETTINGS
 
-bool NWPluginData_base::_load()
-{
-  return load_nwpluginTaskData_KVS(_kvs, _networkIndex, _nw_data_pluginID);
-}
+bool NWPluginData_base::_load()  { return load_nwpluginTaskData_KVS(_kvs, _networkIndex, _nw_data_pluginID); }
 
-bool NWPluginData_base::_store()
-{
-  return store_nwpluginTaskData_KVS(_kvs, _networkIndex, _nw_data_pluginID);
-}
+bool NWPluginData_base::_store() { return store_nwpluginTaskData_KVS(_kvs, _networkIndex, _nw_data_pluginID); }
 
 #endif // if FEATURE_STORE_NETWORK_INTERFACE_SETTINGS
 

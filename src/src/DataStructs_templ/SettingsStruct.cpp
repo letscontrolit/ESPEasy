@@ -734,7 +734,7 @@ void SettingsStruct_tmpl<N_TASKS>::clearMisc() {
     # endif // ifdef ESP32
   }
   BaudRate                         = DEFAULT_SERIAL_BAUD;
-  MessageDelay_unused              = 0;
+  NetworkFlags._all_bits           = 0;
   deepSleep_wakeTime               = 0;
   CustomCSS                        = false;
   WDI2CAddress                     = 0;
@@ -747,7 +747,9 @@ void SettingsStruct_tmpl<N_TASKS>::clearMisc() {
   SyslogPort                       = 514;
   VariousBits_3._all_bits          = 0;
   ConnectionFailuresThreshold      = 0;
-  MQTTRetainFlag_unused            = false;
+  #if FEATURE_NETWORK_STATS
+  NetworkCollectStats_bits         = DEFAULT_NETWORK_COLLECT_STATS_BITS;
+  #endif
   InitSPI                          = DEFAULT_SPI;
   deepSleepOnFail                  = false;
   UseValueLogger                   = false;
@@ -1508,6 +1510,14 @@ template<uint32_t N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::setNWPluginID_for_network(ESPEasy::net::networkIndex_t index, ESPEasy::net::nwpluginID_t id)
 {
   if (validNetworkIndex(index)) {
+    if (index == 0 && id.value != 1) {
+      // STA index, only allow to set WiFi STA here
+      return;
+    }
+    if (index == 1 && id.value != 2) {
+      // AP index, only allow to set WiFi AP here
+      return;
+    }
     NWPluginID[index] = id.value;
     if (id.isValid()) {
       ESPEasy::net::networkDriverIndex_t NetworkDriverIndex = 
@@ -1525,61 +1535,84 @@ void SettingsStruct_tmpl<N_TASKS>::setNWPluginID_for_network(ESPEasy::net::netwo
 }
 
 template<uint32_t N_TASKS>
-bool SettingsStruct_tmpl<N_TASKS>::getNetworkEnabled(ESPEasy::net::networkIndex_t index) const {
-  //if (index == 1) return true;
-  if (validNetworkIndex(index)) return bitRead(NetworkEnabled_bits, index);
+bool SettingsStruct_tmpl<N_TASKS>::getNetworkFlag(const uint8_t& bitfield, ESPEasy::net::networkIndex_t index) 
+{
+  if (validNetworkIndex(index)) return bitRead(bitfield, index);
   return false;
 }
 
 template<uint32_t N_TASKS>
-void SettingsStruct_tmpl<N_TASKS>::setNetworkEnabled(ESPEasy::net::networkIndex_t index, bool enabled) {
+void SettingsStruct_tmpl<N_TASKS>::setNetworkFlag(uint8_t& bitfield, ESPEasy::net::networkIndex_t index, bool enabled)
+{
   if (validNetworkIndex(index)) {
-    bitWrite(NetworkEnabled_bits, index, enabled);
+    bitWrite(bitfield, index, enabled);
   }
+}
+
+#ifdef ESP32
+template<uint32_t N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::getAppendNetworkAdapterNameToHostname(ESPEasy::net::networkIndex_t index) const
+{
+  // Cannot use part of an union as direct 'const uint8_t&'
+  uint8_t tmp = NetworkFlags.AppendNetworkAdapterNameToHostname;
+  return getNetworkFlag(tmp, index);
+}
+
+template<uint32_t N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::setAppendNetworkAdapterNameToHostname(ESPEasy::net::networkIndex_t index, bool enabled)
+{
+  // Cannot use part of an union as direct 'uint8_t&'
+  uint8_t tmp = NetworkFlags.AppendNetworkAdapterNameToHostname;
+  setNetworkFlag(tmp, index, enabled);
+  NetworkFlags.AppendNetworkAdapterNameToHostname = tmp;
+}
+#endif
+
+
+template<uint32_t N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::getNetworkEnabled(ESPEasy::net::networkIndex_t index) const {
+  //if (index == 1) return true;
+  return getNetworkFlag(NetworkEnabled_bits, index);
+}
+
+template<uint32_t N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::setNetworkEnabled(ESPEasy::net::networkIndex_t index, bool enabled) {
+  setNetworkFlag(NetworkEnabled_bits, index, enabled);
 }
 
 template<uint32_t N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::getNetworkInterface_isFallback(ESPEasy::net::networkIndex_t index) const
 {
-  if (validNetworkIndex(index)) return bitRead(NetworkInterface_isFallback_bits, index);
-  return false;
+  return getNetworkFlag(NetworkInterface_isFallback_bits, index);
 }
 
 template<uint32_t N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::setNetworkInterface_isFallback(ESPEasy::net::networkIndex_t index, bool enabled)
 {
-  if (validNetworkIndex(index)) {
-    bitWrite(NetworkInterface_isFallback_bits, index, enabled);
-  }
+  setNetworkFlag(NetworkInterface_isFallback_bits, index, enabled);
 }
 
 
 template<uint32_t N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::getNetworkInterfaceSubnetBlockClientIP(ESPEasy::net::networkIndex_t index) const {
-  if (validNetworkIndex(index)) return bitRead(NetworkInterfaceSubnetBlockClientIP_bits, index);
-  return false;
+  return getNetworkFlag(NetworkInterfaceSubnetBlockClientIP_bits, index);
 }
 
 template<uint32_t N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::setNetworkInterfaceSubnetBlockClientIP(ESPEasy::net::networkIndex_t index, bool enabled) {
-  if (validNetworkIndex(index)) {
-    bitWrite(NetworkInterfaceSubnetBlockClientIP_bits, index, enabled);
-  }
+  setNetworkFlag(NetworkInterfaceSubnetBlockClientIP_bits, index, enabled);
 }
 
 #if FEATURE_USE_IPV6
 template<uint32_t N_TASKS>
 bool SettingsStruct_tmpl<N_TASKS>::getNetworkEnabled_IPv6(ESPEasy::net::networkIndex_t index) const {
   //if (index == 1) return true;
-  if (validNetworkIndex(index)) return bitRead(NetworkEnabled_ipv6_bits, index);
-  return false;
+  return getNetworkFlag(NetworkEnabled_ipv6_bits, index);
 }
 
 template<uint32_t N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::setNetworkEnabled_IPv6(ESPEasy::net::networkIndex_t index, bool enabled) {
-  if (validNetworkIndex(index)) {
-    bitWrite(NetworkEnabled_ipv6_bits, index, enabled);
-  }
+  setNetworkFlag(NetworkEnabled_ipv6_bits, index, enabled);
 }
 #endif
 
@@ -1619,6 +1652,23 @@ void SettingsStruct_tmpl<N_TASKS>::setNetworkInterfaceStartupDelay(ESPEasy::net:
     NetworkInterfaceStartupDelay[index] = delay_ms/10ul;
   }
 }
+
+
+# if FEATURE_NETWORK_STATS
+
+template<uint32_t N_TASKS>
+bool SettingsStruct_tmpl<N_TASKS>::getNetworkCollectStats(ESPEasy::net::networkIndex_t index) const
+{
+  return getNetworkFlag(NetworkCollectStats_bits, index);
+}
+
+template<uint32_t N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::setNetworkCollectStats(ESPEasy::net::networkIndex_t index, bool enabled)
+{
+  setNetworkFlag(NetworkCollectStats_bits, index, enabled);
+}
+
+# endif // if FEATURE_NETWORK_STATS
 
 
 #endif // ifndef DATASTRUCTS_SETTINGSSTRUCT_CPP
