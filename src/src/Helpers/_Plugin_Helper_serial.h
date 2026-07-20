@@ -8,6 +8,13 @@
 
 #include <ESPeasySerial.h>
 
+constexpr uint8_t INCLUDE_SW_SERIAL  = (1 << 0);
+constexpr uint8_t INCLUDE_HW_SERIAL  = (1 << 1); // Ignored for now, always enabled
+constexpr uint8_t INCLUDE_I2C_SERIAL = (1 << 2);
+constexpr uint8_t INCLUDE_CDC_SERIAL = (1 << 3);
+constexpr uint8_t INCLUDE_ALL_SERIAL = (INCLUDE_SW_SERIAL | INCLUDE_HW_SERIAL | INCLUDE_I2C_SERIAL | INCLUDE_CDC_SERIAL);
+constexpr uint8_t INCLUDE_DEFAULT_SERIAL = INCLUDE_ALL_SERIAL;
+constexpr uint8_t INCLUDE_NOT_CDC_SERIAL = (INCLUDE_SW_SERIAL | INCLUDE_HW_SERIAL | INCLUDE_I2C_SERIAL);
 
 struct ESPeasySerialType;
 
@@ -41,8 +48,10 @@ ESPEasySerialPort serialHelper_getSerialType(struct EventStruct *event);
 String            serialHelper_getSerialTypeLabel(struct EventStruct *event);
 
 #ifndef DISABLE_SC16IS752_Serial
-void serialHelper_addI2CuartSelectors(int address,
-                                      int channel);
+void serialHelper_addI2CuartSelectors(int    address,
+                                      int    channel,
+                                      String id  = "",
+                                      String uid = "");
 #endif // ifndef DISABLE_SC16IS752_Serial
 
 void serialHelper_webformLoad(struct EventStruct *event);
@@ -51,12 +60,23 @@ void serialHelper_webformLoad(struct EventStruct *event);
 // See issue #2343 and Pull request https://github.com/letscontrolit/ESPEasy/pull/2352
 // For now P020 and P044 have been reverted to make them work again.
 void serialHelper_webformLoad(struct EventStruct *event,
-                              bool                allowSoftwareSerial);
+                              uint8_t             allowedSerial);
 
 void serialHelper_webformLoad(ESPEasySerialPort port,
                               int               rxPinDef,
                               int               txPinDef,
-                              bool              allowSoftwareSerial);
+                              uint8_t           allowedSerial = INCLUDE_DEFAULT_SERIAL);
+
+void serialHelper_webformLoad(ESPEasySerialPort port,
+                              int               rxPinDef,
+                              int               txPinDef,
+                              uint8_t           allowedSerial,
+                              String            label,
+                              String            id,
+                              String            pin1Var,
+                              String            pin2Var,
+                              String            i2c1Var,
+                              String            i2c2Var);
 
 void serialHelper_webformSave(uint8_t& port,
                               int8_t & rxPin,
