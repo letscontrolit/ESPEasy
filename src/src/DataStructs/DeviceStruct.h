@@ -11,6 +11,7 @@
 #include "../DataTypes/SensorVType.h"
 
 #include "../Helpers/StringGenerator_GPIO.h"
+#include "../Helpers/_Plugin_Helper_serial.h"
 
 
 #define DEVICE_TYPE_SINGLE                  1 // connected through 1 datapin
@@ -154,7 +155,7 @@ struct DeviceStruct
       uint8_t PinDirection_unused : GPIO_DIRECTION_NR_BITS;
     };
   };
-  uint8_t            Unused{}; // Padding to 12 bytes struct size
+  uint8_t SerialPortsAllowed = INCLUDE_DEFAULT_SERIAL; // The bitmap for the allowed serial port types, uses global default
 };
 
 

@@ -1229,7 +1229,7 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
     ) {
       if (device.isSerial()) {
         # ifdef PLUGIN_USES_SERIAL
-        devicePage_show_serial_config(taskIndex);
+        devicePage_show_serial_config(taskIndex, DeviceIndex);
         # else // ifdef PLUGIN_USES_SERIAL
         addHtml(F("PLUGIN_USES_SERIAL not defined"));
         # endif // ifdef PLUGIN_USES_SERIAL
@@ -1424,7 +1424,7 @@ void devicePage_show_pin_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
 
 # ifdef PLUGIN_USES_SERIAL
 
-void devicePage_show_serial_config(taskIndex_t taskIndex)
+void devicePage_show_serial_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex)
 {
   struct EventStruct TempEvent(taskIndex);
 
@@ -1432,7 +1432,7 @@ void devicePage_show_serial_config(taskIndex_t taskIndex)
 
   PluginCall(PLUGIN_WEBFORM_PRE_SERIAL_PARAMS, &TempEvent, webformLoadString);
 
-  serialHelper_webformLoad(&TempEvent);
+  serialHelper_webformLoad(&TempEvent, Device[DeviceIndex].SerialPortsAllowed);
 
   PluginCall(PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS, &TempEvent, webformLoadString);
 }

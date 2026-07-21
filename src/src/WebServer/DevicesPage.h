@@ -58,7 +58,7 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page);
 void devicePage_show_pin_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex);
 
 #ifdef PLUGIN_USES_SERIAL
-void devicePage_show_serial_config(taskIndex_t taskIndex);
+void devicePage_show_serial_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex);
 #endif
 
 #if FEATURE_SPI
