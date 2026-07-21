@@ -413,16 +413,6 @@ void P073_data_struct::hc595_ToOutputBuffer() {
   }
 }
 
-void P073_data_struct::hc595_AdjustBuffer() {
-  if (digits < 8) {
-    const uint8_t delta = 8 - digits;
-
-    for (uint8_t i = 0; i < digits; ++i) {
-      showbuffer[i] = showbuffer[i + delta];
-    }
-  }
-}
-
 void P073_data_struct::hc595_InitDisplay() {
   pinMode(pin1, OUTPUT);
   pinMode(pin2, OUTPUT);
@@ -904,7 +894,6 @@ bool    P073_data_struct::plugin_once_a_second(struct EventStruct *event) {
       break;
     # if P073_USE_74HC595
     case P073_74HC595_2_8DGT:
-      hc595_AdjustBuffer();
       hc595_ToOutputBuffer();
 
       if (hc595_Sequential()) { // Sequential displays don't need continuous refreshing
@@ -1208,7 +1197,6 @@ bool P073_data_struct::plugin_write_7dn(struct EventStruct *event,
       break;
     # if P073_USE_74HC595
     case P073_74HC595_2_8DGT:
-      hc595_AdjustBuffer();
       hc595_ToOutputBuffer();
 
       if (hc595_Sequential()) { // Sequential displays don't need continuous refreshing
@@ -1289,7 +1277,6 @@ bool P073_data_struct::plugin_write_7dt(const String& text) {
       break;
     # if P073_USE_74HC595
     case P073_74HC595_2_8DGT:
-      hc595_AdjustBuffer();
       hc595_ToOutputBuffer();
 
       if (hc595_Sequential()) { // Sequential displays don't need continuous refreshing
@@ -1447,7 +1434,6 @@ bool P073_data_struct::plugin_write_7dst(struct EventStruct *event) {
       break;
     # if P073_USE_74HC595
     case P073_74HC595_2_8DGT:
-      hc595_AdjustBuffer();
       hc595_ToOutputBuffer();
 
       if (hc595_Sequential()) { // Sequential displays don't need continuous refreshing
@@ -1492,7 +1478,6 @@ bool P073_data_struct::plugin_write_7dsd(struct EventStruct *event) {
       break;
     # if P073_USE_74HC595
     case P073_74HC595_2_8DGT:
-      hc595_AdjustBuffer();
       hc595_ToOutputBuffer();
 
       if (hc595_Sequential()) { // Sequential displays don't need continuous refreshing

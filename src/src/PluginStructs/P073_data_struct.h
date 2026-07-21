@@ -403,7 +403,6 @@ private:
   void hc595_InitDisplay();
   void hc595_ShowBuffer();
   void hc595_ToOutputBuffer();
-  void hc595_AdjustBuffer();
 
   bool hc595_Sequential() { return P073_HC595_SEQUENTIAL; }
 

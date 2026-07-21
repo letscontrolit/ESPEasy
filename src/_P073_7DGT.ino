@@ -42,6 +42,7 @@
 //
 
 /** History
+ * 2026-07-21 tonhuisman: Fix wrong content displayed on 74HC595 displays (multiple fixes)
  * 2026-01-17 tonhuisman: Revert to using 'regular' Arduino GPIO functions for TM1637 displays on ESP8266
  * 2026-01-12 tonhuisman: Fix initialization of number of digits when upgrading to 20260108 build,
  *                        formatted source with new Uncrustify config
