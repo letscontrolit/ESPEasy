@@ -308,8 +308,8 @@ void ModbusMGR_struct::show_modbus_interfaces()
     addFormSubHeader(strformat(F("Modbus %u"), link));
     addFormDetailsStart(link == 0 || _modbus_links[link].port != ESPEasySerialPort::not_set);
 
-    serialHelper_webformLoad(link, _modbus_links[link].port, static_cast<int>(_modbus_links[link].serial_rx),
-                             static_cast<int>(_modbus_links[link].serial_tx), true);
+////    serialHelper_webformLoad(link, _modbus_links[link].port, static_cast<int>(_modbus_links[link].serial_rx),
+////                             static_cast<int>(_modbus_links[link].serial_tx), true);
 
     String id = strformat(F("MBde%u"), link);
     addRowLabel_tr_id(formatGpioName_output_optional(F("~RE/DE")), id);
@@ -395,7 +395,7 @@ bool ModbusMGR_struct::save_modbus_interfaces(String& error)
     int8_t  rxPin = rx_setting;
     int8_t  txPin = tx_setting;
     uint8_t port  = port_setting;
-    serialHelper_webformSave(link, port, rxPin, txPin);
+////    serialHelper_webformSave(link, port, rxPin, txPin);
 
     if (port != port_setting) {
       port_setting    = port;
