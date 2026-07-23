@@ -21,11 +21,8 @@
 // Web Interface log page
 // ********************************************************************************
 void handle_log() {
-  if (!isLoggedIn()) { return; }
-  navMenuIndex = MENU_INDEX_TOOLS;
+  if (!startStream_send_stdTemplate(MENU_INDEX_TOOLS)) { return; }
 
-  TXBuffer.startStream();
-  sendHeadandTail_stdtemplate(_HEAD);
   html_table_class_normal();
 
   #ifdef WEBSERVER_LOG
@@ -45,18 +42,16 @@ void handle_log() {
   #else // ifdef WEBSERVER_LOG
   addHtml(F("Not included in build"));
   #endif // ifdef WEBSERVER_LOG
-  sendHeadandTail_stdtemplate(_TAIL);
-  TXBuffer.endStream();
+  sendTail_stdtemplate();
 }
 
 // ********************************************************************************
 // Web Interface JSON log page
 // ********************************************************************************
 void handle_log_JSON() {
-  if (!isLoggedIn()) { return; }
   #ifdef WEBSERVER_LOG
   START_TIMER;
-  TXBuffer.startJsonStream();
+  if (!startJSON_Stream()) { return; }
   {
     KeyValueWriter_JSON top(true);
     {
@@ -148,6 +143,8 @@ void handle_log_JSON() {
   updateLogLevelCache();
 
   #else // ifdef WEBSERVER_LOG
+  if (!isLoggedIn()) { return; }
+
   handleNotFound();
   #endif // ifdef WEBSERVER_LOG
 }

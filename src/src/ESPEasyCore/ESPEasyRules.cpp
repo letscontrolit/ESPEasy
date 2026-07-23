@@ -1462,30 +1462,31 @@ void createRuleEvents(struct EventStruct *event) {
     for (uint8_t varNr = 0; varNr < valueCount; varNr++) {
       eventQueue.add(event->TaskIndex, Cache.getTaskDeviceValueName(event->TaskIndex, varNr), formatUserVarNoCheck(event, varNr));
     }
-    #if FEATURE_STRING_VARIABLES
-    if (Settings.EventAndLogDerivedTaskValues(event->TaskIndex)) {
-      taskName.toLowerCase();
-
-      auto it = customStringVar.begin();
-      while (it != customStringVar.end()) {
-        if (it->first.startsWith(search) && it->first.endsWith(postfix)) {
-          String valueName = it->first.substring(search.length(), it->first.indexOf('-'));
-          const String vname2 = getDerivedValueName(taskName, valueName);
-          if (!vname2.isEmpty()) {
-            valueName = vname2;
-          }
-          if (!it->second.isEmpty()) {
-            String value(it->second);
-            value = parseTemplateAndCalculate(value);
-            eventQueue.add(event->TaskIndex, valueName, value);
-          }
-        }
-        else if (it->first.substring(0, search.length()).compareTo(search) > 0) {
-          break;
-        }
-        ++it;
-      }
-    }
-    #endif // if FEATURE_STRING_VARIABLES
   }
+  #if FEATURE_STRING_VARIABLES
+  if (!Settings.CombineTaskValues_SingleEvent(event->TaskIndex) // Send events of derived values for all sensorTypes when enabled
+      && Settings.EventAndLogDerivedTaskValues(event->TaskIndex)) {
+    taskName.toLowerCase();
+
+    auto it = customStringVar.begin();
+    while (it != customStringVar.end()) {
+      if (it->first.startsWith(search) && it->first.endsWith(postfix)) {
+        String valueName = it->first.substring(search.length(), it->first.indexOf('-'));
+        const String vname2 = getDerivedValueName(taskName, valueName);
+        if (!vname2.isEmpty()) {
+          valueName = vname2;
+        }
+        if (!it->second.isEmpty()) {
+          String value(it->second);
+          value = parseTemplateAndCalculate(value);
+          eventQueue.add(event->TaskIndex, valueName, value);
+        }
+      }
+      else if (it->first.substring(0, search.length()).compareTo(search) > 0) {
+        break;
+      }
+      ++it;
+    }
+  }
+  #endif // if FEATURE_STRING_VARIABLES
 }

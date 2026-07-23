@@ -43,6 +43,7 @@ bool NWPlugin_005(NWPlugin::Function function, EventStruct *event, String& strin
 
     case NWPlugin::Function::NWPLUGIN_LOAD_DEFAULTS:
     {
+      Settings.setAppendNetworkAdapterNameToHostname(event->NetworkIndex, DEFAULT_PPP_APPEND_NW_NAME_TO_HOSTNAME);
       Settings.setRoutePrio_for_network(event->NetworkIndex, 20);
       Settings.setNetworkInterfaceSubnetBlockClientIP(event->NetworkIndex, true);
       Settings.setNetworkInterfaceStartupDelay(event->NetworkIndex, 500 * event->NetworkIndex);
@@ -60,7 +61,7 @@ bool NWPlugin_005(NWPlugin::Function function, EventStruct *event, String& strin
       ESPEasy::net::ppp::NW005_data_struct_PPP_modem *NW_data =
         static_cast<ESPEasy::net::ppp::NW005_data_struct_PPP_modem *>(getNWPluginData(event->NetworkIndex));
 
-      if (NW_data && NW_data->attached()) {
+      if (NW_data /*&& NW_data->attached()*/) {
         event->networkInterface = &PPP;
         success                 = event->networkInterface != nullptr;
       }

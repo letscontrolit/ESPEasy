@@ -42,7 +42,7 @@ String getNetworkParameterName(networkDriverIndex_t           NetworkDriverIndex
     EventStruct tmpEvent;
     tmpEvent.idx = parameterIdx;
 
-    // Only Network Driver specific call, so may call do_NWPluginCall directly 
+    // Only Network Driver specific call, so may call do_NWPluginCall directly
     if (do_NWPluginCall(NetworkDriverIndex, NWPlugin::Function::NWPLUGIN_GET_PARAMETER_DISPLAY_NAME, &tmpEvent, name)) {
       // Found an alternative name for it.
       isAlternative = true;
@@ -207,10 +207,13 @@ void saveNetworkParameterForm(NetworkSettingsStruct        & NetworkSettings,
     case NetworkSettingsStruct::NETWORK_ENABLED:
       Settings.setNetworkEnabled(networkindex, isFormItemChecked(internalName));
 #ifndef BUILD_NO_DEBUG
-      addLog(LOG_LEVEL_INFO,
-             concat(F("Save NW_Enabled: "),
-                    internalName) + ' ' + isFormItemChecked(internalName) + ' ' + Settings.getNetworkEnabled(networkindex));
-#endif
+
+      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+        addLog(LOG_LEVEL_DEBUG,
+               concat(F("Save NW_Enabled: "),
+                      internalName) + ' ' + isFormItemChecked(internalName) + ' ' + Settings.getNetworkEnabled(networkindex));
+      }
+#endif // ifndef BUILD_NO_DEBUG
       break;
   }
 }

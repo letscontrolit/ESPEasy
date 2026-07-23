@@ -56,8 +56,7 @@ void handle_sysinfo_json() {
   checkRAM(F("handle_sysinfo"));
 #  endif // ifndef BUILD_NO_RAM_TRACKER
 
-  if (!isLoggedIn()) { return; }
-  TXBuffer.startJsonStream();
+  if (!startJSON_Stream()) { return; }
   {
     KeyValueWriter_JSON mainLevelWriter(true);
     {
@@ -235,13 +234,10 @@ void handle_sysinfo() {
   checkRAM(F("handle_sysinfo"));
   #  endif // ifndef BUILD_NO_RAM_TRACKER
 
-  if (!isLoggedIn()) { return; }
-  navMenuIndex = MENU_INDEX_TOOLS;
+  if (!startStream_send_stdTemplate(MENU_INDEX_TOOLS)) { return; }
 #ifdef WEBSERVER_GITHUB_COPY
   html_reset_copyTextCounter();
 #endif
-  TXBuffer.startStream();
-  sendHeadandTail_stdtemplate(_HEAD);
 
   addHtml(printWebString);
   addHtml(F("<form>"));
@@ -295,8 +291,7 @@ void handle_sysinfo() {
 
   html_end_table();
   html_end_form();
-  sendHeadandTail_stdtemplate(_TAIL);
-  TXBuffer.endStream();
+  sendTail_stdtemplate();
 }
 
 void handle_sysinfo_basicInfo() {

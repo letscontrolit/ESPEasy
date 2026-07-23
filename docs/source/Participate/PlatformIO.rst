@@ -83,7 +83,7 @@ Optional, but highly recommended:
 * C/C++ DevTools (by Microsoft)
 * Bookmarks (by Alessandro Fragnani)
 * GitLens - Git supercharged (by Gitkraken)
-* TODO Highlight (by Wayou Liu)
+* TODO Highlight v2 (by Jonathan Clark)
 * All Autocomplete (by Atishay Jain)
 * Excel Viewer (by GrapeCity)
 * Esbonio - An extension for editing sphinx projects (by Swyddfa)

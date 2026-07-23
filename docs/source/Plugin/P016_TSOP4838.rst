@@ -39,6 +39,8 @@ Sensor
 
 * **Receiver buffer size**: For receiving and decoding the data from the sensor, a buffer is needed. For more complex protocols, like often used for Air Conditioner remote controls, a larger buffer may be needed. By default this buffer is dimensioned at 300 bytes (will be rounded up to the next even number when stored), and needs to be enlarged if a message of this intent is shown in the log at INFO level (Either Web or serial log).
 
+* **Event on boffer overflow**: When enabled, will generate an event ``<TaskName>#Overflow=<raw_buffer_length>`` when the buffer overflows, so this can be used as a way to handle this exception, f.e. by lighting up a LED or activating a buzzer. The received data won't be processed further, and discarded, when this error occurs.
+
 Content
 ^^^^^^^
 
@@ -71,10 +73,7 @@ Code - command map
 
 .. note:: Using compile-time options, the **Code - command map** and related options can be disabled.
 
-Data acquisition
-~~~~~~~~~~~~~~~~
-
-This group of settings, **Single event with all values** settings are standard available configuration items.
+.. include:: DataAcquisition.repl
 
 Values
 ~~~~~~
