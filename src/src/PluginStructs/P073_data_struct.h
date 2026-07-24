@@ -105,7 +105,7 @@
 
 # define TM1637_POWER_ON    0b10001000
 # define TM1637_POWER_OFF   0b10000000
-# define TM1637_CLOCKDELAY  10  // FIXME TD-er: Maybe lower this as we can get as low as 2 usec to remain below the max 250 kHz
+# define TM1637_CLOCKDELAY  10 // FIXME TD-er: Maybe lower this as we can get as low as 2 usec to remain below the max 250 kHz
 # define TM1637_4DIGIT      4
 # define TM1637_6DIGIT      2
 
@@ -238,7 +238,7 @@ public:
 
   # if P073_USE_74HC595
   bool plugin_fifty_per_second(struct EventStruct *event);
-  bool is74HC595Matrix();
+  bool is74HC595Multiplex();
   # endif // if P073_USE_74HC595
   void FillBufferWithTime(bool    sevendgt_now,
                           uint8_t sevendgt_hours,
@@ -290,10 +290,10 @@ public:
   uint8_t tm1637_getFontChar(uint8_t index,
                              uint8_t fontset);
 
-  int     dotpos                = -1;
-  uint8_t showbuffer[8]         = { 0 };
-  bool    showperiods[8]        = { 0 };
-  uint8_t spidata[2]            = { 0 };
+  int     dotpos = -1;
+  uint8_t showbuffer[8]{};
+  bool    showperiods[8]{};
+  uint8_t spidata[2]{};
   uint8_t pin1                  = 0xFF;
   uint8_t pin2                  = 0xFF;
   uint8_t pin3                  = 0xFF;
@@ -402,12 +402,17 @@ private:
   # if P073_USE_74HC595
   void hc595_InitDisplay();
   void hc595_ShowBuffer();
+  void hc595_ShiftinView();
   void hc595_ToOutputBuffer();
 
   bool hc595_Sequential() { return P073_HC595_SEQUENTIAL; }
 
   uint8_t outputbuffer[8]{};
   # endif // if P073_USE_74HC595
+  void DIRECT_shiftOut(uint8_t dataPin,
+                       uint8_t clockPin,
+                       uint8_t bitOrder,
+                       uint8_t val);
 
 };
 

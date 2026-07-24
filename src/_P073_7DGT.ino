@@ -42,6 +42,8 @@
 //
 
 /** History
+ * 2026-07-24 tonhuisman: Fix 7dn and 7dt commands for 74HC595 to show data correctly for display setups with less than 8 digits
+ *                        Improve update speed for 74HC595 by using DIRECT_GPIO library for all GPIO commands (also for TM1637 and MAX7219)
  * 2026-07-21 tonhuisman: Fix wrong content displayed on 74HC595 displays (multiple fixes)
  * 2026-01-17 tonhuisman: Revert to using 'regular' Arduino GPIO functions for TM1637 displays on ESP8266
  * 2026-01-12 tonhuisman: Fix initialization of number of digits when upgrading to 20260108 build,
@@ -318,7 +320,7 @@ boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) 
 
         # if P073_USE_74HC595
 
-        if (P073_data->is74HC595Matrix()) {
+        if (P073_data->is74HC595Multiplex()) {
           Scheduler.setPluginTaskTimer(10, event->TaskIndex, 0);
         }
         # endif // if P073_USE_74HC595
@@ -376,7 +378,7 @@ boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) 
         success = P073_data->plugin_fifty_per_second(event);
 
         if (success) {
-          Scheduler.setPluginTaskTimer(0, event->TaskIndex, 0);
+          Scheduler.setPluginTaskTimer(5, event->TaskIndex, 0);
         }
 
         // success = false; // Don't send out to (not configurable) Controllers or Rules

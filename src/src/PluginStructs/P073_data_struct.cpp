@@ -303,16 +303,14 @@ bool P073_data_struct::plugin_fifty_per_second(struct EventStruct *event) {
   counter50++;
   #  endif // ifdef P073_DEBUG
 
-  if (P073_74HC595_2_8DGT == displayModel) {
-    if (P073_HC595_MULTIPLEX) {
-      hc595_ShowBuffer();
-    }
+  if (is74HC595Multiplex()) {
+    hc595_ShowBuffer();
     return true;
   }
   return false;
 }
 
-bool P073_data_struct::is74HC595Matrix() { return P073_74HC595_2_8DGT == displayModel && P073_HC595_MULTIPLEX; }
+bool P073_data_struct::is74HC595Multiplex() { return P073_74HC595_2_8DGT == displayModel && P073_HC595_MULTIPLEX; }
 
 // ====================================
 // ---- 74HC595 specific functions ----
@@ -353,7 +351,7 @@ void P073_data_struct::hc595_ShowBuffer() {
   #  endif // if P073_USE_74HCMULTIPLEX
 
   for (; i != stop && i >= 0; i += incr) {
-    shiftOut(pin1, pin2, MSBFIRST, outputbuffer[i]); // Digit data out
+    DIRECT_shiftOut(pin1, pin2, MSBFIRST, outputbuffer[i]); // Digit data out
 
     // 2, 3 and some 4 digit modules use sequential digit values (in reversed order)
     // 4, 6 and 8 digit modules use multiplexing in LTR order
@@ -373,13 +371,13 @@ void P073_data_struct::hc595_ShowBuffer() {
     }
 
     if (digit != 0xFF) { // Select multiplexer digit, 0xFF is invalid
-      shiftOut(pin1, pin2, MSBFIRST, digit);
+      DIRECT_shiftOut(pin1, pin2, MSBFIRST, digit);
     }
     #  endif // if P073_USE_74HCMULTIPLEX
 
     if ((P073_HC595_SEQUENTIAL && (0 == i)) || P073_HC595_MULTIPLEX) {
-      digitalWrite(pin3, LOW); // Clock data
-      digitalWrite(pin3, HIGH);
+      DIRECT_pinWrite(pin3, LOW); // Clock data
+      DIRECT_pinWrite(pin3, HIGH);
     }
   }
 
@@ -413,11 +411,21 @@ void P073_data_struct::hc595_ToOutputBuffer() {
   }
 }
 
+void P073_data_struct::hc595_ShiftinView() {
+  if (digits < 8) {
+    uint8_t n = 0;
+
+    for (uint8_t i = 8 - digits; i < 8; ++i, ++n) {
+      showbuffer[n] = showbuffer[i];
+    }
+  }
+}
+
 void P073_data_struct::hc595_InitDisplay() {
-  pinMode(pin1, OUTPUT);
-  pinMode(pin2, OUTPUT);
-  pinMode(pin3, OUTPUT);
-  digitalWrite(pin3, HIGH);
+  DIRECT_PINMODE_OUTPUT(pin1);
+  DIRECT_PINMODE_OUTPUT(pin2);
+  DIRECT_PINMODE_OUTPUT(pin3);
+  DIRECT_pinWrite(pin3, HIGH);
 }
 
 # endif // if P073_USE_74HC595
@@ -1197,6 +1205,7 @@ bool P073_data_struct::plugin_write_7dn(struct EventStruct *event,
       break;
     # if P073_USE_74HC595
     case P073_74HC595_2_8DGT:
+      hc595_ShiftinView();
       hc595_ToOutputBuffer();
 
       if (hc595_Sequential()) { // Sequential displays don't need continuous refreshing
@@ -1277,6 +1286,7 @@ bool P073_data_struct::plugin_write_7dt(const String& text) {
       break;
     # if P073_USE_74HC595
     case P073_74HC595_2_8DGT:
+      hc595_ShiftinView();
       hc595_ToOutputBuffer();
 
       if (hc595_Sequential()) { // Sequential displays don't need continuous refreshing
@@ -1633,12 +1643,12 @@ bool P073_data_struct::plugin_write_7dbin(const String& text) {
 // ---- TM1637 specific functions ----
 // ===================================
 
-#  define CLK_HIGH() DIRECT_pinWrite(this->pin1, HIGH)
-#  define CLK_LOW() DIRECT_pinWrite(this->pin1, LOW)
-#  define DIO_HIGH() DIRECT_pinWrite(this->pin2, HIGH)
-#  define DIO_LOW() DIRECT_PINMODE_OUTPUT(this->pin2); DIRECT_pinWrite(this->pin2, LOW)
-#  define DIO_INPUT() DIRECT_PINMODE_INPUT(this->pin2)
-#  define DIO_OUTPUT() DIRECT_PINMODE_OUTPUT(this->pin2)
+# define CLK_HIGH() DIRECT_pinWrite(this->pin1, HIGH)
+# define CLK_LOW() DIRECT_pinWrite(this->pin1, LOW)
+# define DIO_HIGH() DIRECT_pinWrite(this->pin2, HIGH)
+# define DIO_LOW() DIRECT_PINMODE_OUTPUT(this->pin2); DIRECT_pinWrite(this->pin2, LOW)
+# define DIO_INPUT() DIRECT_PINMODE_INPUT(this->pin2)
+# define DIO_OUTPUT() DIRECT_PINMODE_OUTPUT(this->pin2)
 
 void P073_data_struct::tm1637_i2cStart() {
   # if defined(P073_DEBUG) && !defined(BUILD_NO_DEBUG)
@@ -1767,11 +1777,11 @@ void P073_data_struct::tm1637_SetPowerBrightness(uint8_t brightlvl,
 }
 
 void P073_data_struct::tm1637_InitDisplay() {
-  pinMode(this->pin1, OUTPUT);
-  pinMode(this->pin2, OUTPUT);
+  DIRECT_PINMODE_OUTPUT(this->pin1);
+  DIRECT_PINMODE_OUTPUT(this->pin2);
 
-  digitalWrite(this->pin1, HIGH);
-  digitalWrite(this->pin2, HIGH);
+  DIRECT_pinWrite(this->pin1, HIGH);
+  DIRECT_pinWrite(this->pin2, HIGH);
 
   delayMicroseconds(TM1637_CLOCKDELAY);
   uint8_t bytesToPrint[]{ 0x40 };
@@ -1897,10 +1907,10 @@ void P073_data_struct::max7219_spiTransfer(ESPEASY_VOLATILE(uint8_t) opcode,
                                            ESPEASY_VOLATILE(uint8_t) data) {
   spidata[1] = opcode;
   spidata[0] = data;
-  digitalWrite(pin3, LOW);
-  shiftOut(pin1, pin2, MSBFIRST, spidata[1]);
-  shiftOut(pin1, pin2, MSBFIRST, spidata[0]);
-  digitalWrite(pin3, HIGH);
+  DIRECT_pinWrite(pin3, LOW);
+  DIRECT_shiftOut(pin1, pin2, MSBFIRST, spidata[1]);
+  DIRECT_shiftOut(pin1, pin2, MSBFIRST, spidata[0]);
+  DIRECT_pinWrite(pin3, HIGH);
 }
 
 void P073_data_struct::max7219_ClearDisplay() {
@@ -1935,10 +1945,10 @@ void P073_data_struct::max7219_SetDigit(int     dgtpos,
 }
 
 void P073_data_struct::max7219_InitDisplay() {
-  pinMode(pin1, OUTPUT);
-  pinMode(pin2, OUTPUT);
-  pinMode(pin3, OUTPUT);
-  digitalWrite(pin3, HIGH);
+  DIRECT_PINMODE_OUTPUT(pin1);
+  DIRECT_PINMODE_OUTPUT(pin2);
+  DIRECT_PINMODE_OUTPUT(pin3);
+  DIRECT_pinWrite(pin3, HIGH);
   max7219_spiTransfer(OP_DISPLAYTEST, 0);
   max7219_spiTransfer(OP_SCANLIMIT,   7); // scanlimit setup to max at Init
   max7219_spiTransfer(OP_DECODEMODE,  0);
@@ -2003,6 +2013,23 @@ void P073_data_struct::max7219_ShowBuffer() {
                      , binaryData
                      # endif // if P073_7DBIN_COMMAND
                      );
+  }
+}
+
+// Borrowed from wiring_shift.c, using DIRECT_GPIO
+void P073_data_struct::DIRECT_shiftOut(uint8_t dataPin,
+                                       uint8_t clockPin,
+                                       uint8_t bitOrder,
+                                       uint8_t val) {
+  for (uint8_t i = 0; i < 8; i++) {
+    if (bitOrder == LSBFIRST) {
+      DIRECT_pinWrite(dataPin, !!(val & (1 << i)));
+    } else {
+      DIRECT_pinWrite(dataPin, !!(val & (1 << (7 - i))));
+    }
+
+    DIRECT_pinWrite(clockPin, HIGH);
+    DIRECT_pinWrite(clockPin, LOW);
   }
 }
 
