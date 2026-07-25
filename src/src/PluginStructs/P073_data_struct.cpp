@@ -422,9 +422,9 @@ void P073_data_struct::hc595_ShiftinView() {
 }
 
 void P073_data_struct::hc595_InitDisplay() {
-  DIRECT_PINMODE_OUTPUT(pin1);
-  DIRECT_PINMODE_OUTPUT(pin2);
-  DIRECT_PINMODE_OUTPUT(pin3);
+  pinMode(pin1, OUTPUT); // Use Arduino pin initialization as some ESPs don't properly set up their pins with DIRECT_GPIO_OUTPUT
+  pinMode(pin2, OUTPUT);
+  pinMode(pin3, OUTPUT);
   DIRECT_pinWrite(pin3, HIGH);
 }
 
@@ -539,9 +539,9 @@ void P073_data_struct::FillBufferWithTemp(int temperature) {
   String format;
 
   if (hideDegree) {
-    format = (between10and0 ? F("      %02d") : (between0andMinus10 ? F("     %03d") : F("%8d")));
+    format = (between10and0 ? F("     %03d") : (between0andMinus10 ? F("    %04d") : F("%8d")));
   } else {
-    format = (between10and0 ? F("     %02d") : (between0andMinus10 ? F("    %03d") : F("%7d")));
+    format = (between10and0 ? F("    %03d") : (between0andMinus10 ? F("   %04d") : F("%7d")));
   }
   sprintf_P(p073_digit, format.c_str(), temperature);
   const size_t p073_numlenght = strlen(p073_digit);
@@ -1777,8 +1777,8 @@ void P073_data_struct::tm1637_SetPowerBrightness(uint8_t brightlvl,
 }
 
 void P073_data_struct::tm1637_InitDisplay() {
-  DIRECT_PINMODE_OUTPUT(this->pin1);
-  DIRECT_PINMODE_OUTPUT(this->pin2);
+  pinMode(this->pin1, OUTPUT); // Use Arduino pin initialization as some ESPs don't properly set up their pins with DIRECT_GPIO_OUTPUT
+  pinMode(this->pin2, OUTPUT);
 
   DIRECT_pinWrite(this->pin1, HIGH);
   DIRECT_pinWrite(this->pin2, HIGH);
@@ -1827,7 +1827,7 @@ void P073_data_struct::tm1637_ShowTemp6(bool sep) {
   bytesToPrint[0] = 0xC0;
   bytesToPrint[1] = tm1637_separator(tm1637_getFontChar(showbuffer[5], fontset), sep);
   bytesToPrint[2] = tm1637_getFontChar(showbuffer[4], fontset);
-  bytesToPrint[3] = tm1637_getFontChar(10, fontset);
+  bytesToPrint[3] = tm1637_getFontChar(showbuffer[3], fontset); // Fill first digit of display too
   bytesToPrint[4] = tm1637_getFontChar(10, fontset);
   bytesToPrint[5] = tm1637_getFontChar(showbuffer[7], fontset);
   bytesToPrint[6] = tm1637_getFontChar(showbuffer[6], fontset);
@@ -1945,9 +1945,9 @@ void P073_data_struct::max7219_SetDigit(int     dgtpos,
 }
 
 void P073_data_struct::max7219_InitDisplay() {
-  DIRECT_PINMODE_OUTPUT(pin1);
-  DIRECT_PINMODE_OUTPUT(pin2);
-  DIRECT_PINMODE_OUTPUT(pin3);
+  pinMode(pin1, OUTPUT); // Use Arduino pin initialization as some ESPs don't properly set up their pins with DIRECT_GPIO_OUTPUT
+  pinMode(pin2, OUTPUT);
+  pinMode(pin3, OUTPUT);
   DIRECT_pinWrite(pin3, HIGH);
   max7219_spiTransfer(OP_DISPLAYTEST, 0);
   max7219_spiTransfer(OP_SCANLIMIT,   7); // scanlimit setup to max at Init

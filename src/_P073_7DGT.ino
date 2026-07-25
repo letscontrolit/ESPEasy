@@ -42,6 +42,7 @@
 //
 
 /** History
+ * 2026-07-25 tonhuisman: Use Arduino pin initialization as some ESPs don't properly set up their pins with DIRECT_GPIO_OUTPUT
  * 2026-07-24 tonhuisman: Fix 7dn and 7dt commands for 74HC595 to show data correctly for display setups with less than 8 digits
  *                        Improve update speed for 74HC595 by using DIRECT_GPIO library for all GPIO commands (also for TM1637 and MAX7219)
  * 2026-07-21 tonhuisman: Fix wrong content displayed on 74HC595 displays (multiple fixes)
