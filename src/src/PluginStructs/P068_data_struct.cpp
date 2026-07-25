@@ -47,7 +47,7 @@ void P068_SHT3X::readFromSensor()
       if (!essentiallyZero(tmpOff)) {
         const float last_dew_temp_val = compute_dew_point_temp(tmp + (tmpOff / 2.0f), hum);
         tmp += tmpOff;
-        hum  = compute_humidity_from_dewpoint(tmp, last_dew_temp_val);
+        hum  = min(compute_humidity_from_dewpoint(tmp, last_dew_temp_val), 100.0f);
       }
     }
   }

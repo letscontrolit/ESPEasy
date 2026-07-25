@@ -1362,7 +1362,7 @@ String getFormNote(LabelType::Enum label)
       break;
 # ifdef ESP32
     case LabelType::WIFI_PASSIVE_SCAN:
-      flash_str = F("Passive scan listens for WiFi beacons, Active scan probes for AP. Passive scan is typically faster.");
+      flash_str = F("Passive scan listens for WiFi beacons, Active scan probes for AP.");
       break;
 # endif // ifdef ESP32
     case LabelType::HIDDEN_SSID_SLOW_CONNECT:

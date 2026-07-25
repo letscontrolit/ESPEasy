@@ -47,6 +47,7 @@ bool NWPlugin_003(NWPlugin::Function function, EventStruct *event, String& strin
 
     case NWPlugin::Function::NWPLUGIN_LOAD_DEFAULTS:
     {
+      Settings.setAppendNetworkAdapterNameToHostname(event->NetworkIndex, DEFAULT_ETH_APPEND_NW_NAME_TO_HOSTNAME);
       // Make sure the first listed Eth device is default set to have the highest route prio
       Settings.setRoutePrio_for_network(
         event->NetworkIndex,

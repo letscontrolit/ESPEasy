@@ -123,45 +123,9 @@ void sendHeadandTail(const __FlashStringHelper *tmplName, bool Tail, bool reboot
   STOP_TIMER(HANDLE_SERVING_WEBPAGE);
 }
 
-void sendHeadandTail_stdtemplate(bool Tail, bool rebooting) {
-  sendHeadandTail(F("TmplStd"), Tail, rebooting);
-
-  if (!Tail) {
-    // TODO TD-er: Must check clientConnectedToAP()?
-    if (!clientIPinSubnetDefaultNetwork() &&  ESPEasy::net::wifi::wifiAPmodeActivelyUsed()) {
-      addHtmlError(F("Warning: Connected via AP"));
-    }
-
-    #ifndef BUILD_NO_DEBUG
-
-    /*
-        if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          const int nrArgs = web_server.args();
-
-          if (nrArgs > 0) {
-            String log = F(" Webserver ");
-            log += nrArgs;
-            log += F(" Arguments");
-
-            if (nrArgs > 20) {
-              log += F(" (First 20)");
-            }
-            log += ':';
-
-            for (int i = 0; i < nrArgs && i < 20; ++i) {
-              log += ' ';
-              log += i;
-              log += F(": '");
-              log += web_server.argName(i);
-              log += F("' length: ");
-              log += webArg(i).length();
-            }
-            addLogMove(LOG_LEVEL_INFO, log);
-          }
-        }
-     */
-    #endif // ifndef BUILD_NO_DEBUG
-  }
+void sendTail_stdtemplate(bool rebooting) {
+  sendHeadandTail(F("TmplStd"), _TAIL, rebooting);
+  TXBuffer.endStream();
 
   // We have sent a lot of data at once.
   // try to flush it to the connected client to free up some RAM
@@ -898,6 +862,69 @@ bool isLoggedIn(bool mustProvideLogin)
   return true;
 }
 
+bool startStream_send_stdTemplate(uint8_t newNavIndex)
+{
+  if (!isLoggedIn()) { return false; }
+
+  startStream_send_stdTemplate_NoLoginCheck(newNavIndex);
+  return true;
+}
+
+void startStream_send_stdTemplate_NoLoginCheck(uint8_t newNavIndex, bool rebooting)
+{
+  navMenuIndex = newNavIndex;
+  TXBuffer.startStream();
+
+  sendHeadandTail(F("TmplStd"), _HEAD, rebooting);
+  // TODO TD-er: This should be the only place where sendHeadandTail_stdtemplate(_HEAD) is called
+
+
+  // TODO TD-er: Must check clientConnectedToAP()?
+  if (!clientIPinSubnetDefaultNetwork() &&  ESPEasy::net::wifi::wifiAPmodeActivelyUsed()) {
+    addHtmlError(F("Warning: Connected via AP"));
+  }
+
+  #ifndef BUILD_NO_DEBUG
+
+  /*
+      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+        const int nrArgs = web_server.args();
+
+        if (nrArgs > 0) {
+          String log = F(" Webserver ");
+          log += nrArgs;
+          log += F(" Arguments");
+
+          if (nrArgs > 20) {
+            log += F(" (First 20)");
+          }
+          log += ':';
+
+          for (int i = 0; i < nrArgs && i < 20; ++i) {
+            log += ' ';
+            log += i;
+            log += F(": '");
+            log += web_server.argName(i);
+            log += F("' length: ");
+            log += webArg(i).length();
+          }
+          addLogMove(LOG_LEVEL_INFO, log);
+        }
+      }
+    */
+  #endif // ifndef BUILD_NO_DEBUG
+}
+
+
+bool startJSON_Stream()
+{
+  if (!isLoggedIn()) { return false; }
+
+  TXBuffer.startJsonStream();
+  return true;
+}
+
+
 String getControllerSymbol(uint8_t index)
 {
   String ret = F("<span style='font-size:20px; background: #00000000;'>&#");
@@ -905,6 +932,17 @@ String getControllerSymbol(uint8_t index)
   ret += 10102 + index;
   ret += F(";</span>");
   return ret;
+}
+
+void    handle_printWebString()
+{
+  if (printWebString.isEmpty()) return;
+  addRowColspan(2);
+  addHtml(F("Command Output<BR><textarea readonly rows='10' wrap='on'>"));
+  addHtml(printWebString);
+  addHtml(F("</textarea>"));
+  free_string(printWebString);
+  printToWeb     = false;
 }
 
 /*

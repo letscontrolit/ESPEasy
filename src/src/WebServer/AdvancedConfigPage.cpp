@@ -37,14 +37,10 @@ void handle_advanced() {
   checkRAM(F("handle_advanced"));
   #endif
 
-  if (!isLoggedIn()) { return; }
-  navMenuIndex = MENU_INDEX_TOOLS;
-  TXBuffer.startStream();
-  sendHeadandTail_stdtemplate(_HEAD);
+  if (!startStream_send_stdTemplate(MENU_INDEX_TOOLS)) { return; }
 
   if (!webArg(F("edit")).isEmpty())
   {
-//    Settings.MessageDelay_unused = getFormItemInt(F("messagedelay"));
     Settings.IP_Octet     = webArg(F("ip")).toInt();
     strncpy_webserver_arg(Settings.NTPHost, F("ntphost"));
     Settings.TimeZone = getFormItemInt(F("timezone"));
@@ -257,8 +253,7 @@ void handle_advanced() {
   serialHelper_webformLoad(
     static_cast<ESPEasySerialPort>(Settings.console_serial_port), 
     Settings.console_serial_rxpin, 
-    Settings.console_serial_txpin, 
-    true);
+    Settings.console_serial_txpin);
 
   // Show serial port selection
   addFormPinSelect(
@@ -272,7 +267,7 @@ void handle_advanced() {
     F("taskdevicepin2"), 
     Settings.console_serial_txpin);
 
-  html_add_script(F("document.getElementById('serPort').onchange();"), false);
+  html_add_script(F("elId('serPort').onchange();"), false);
 #if USES_ESPEASY_CONSOLE_FALLBACK_PORT
   addFormCheckBox(LabelType::CONSOLE_FALLBACK_TO_SERIAL0);
 #endif
@@ -405,8 +400,7 @@ void handle_advanced() {
   addHtml(F("<input type='hidden' name='edit' value='1'>"));
   html_end_table();
   html_end_form();
-  sendHeadandTail_stdtemplate(_TAIL);
-  TXBuffer.endStream();
+  sendTail_stdtemplate();
 }
 
 void addFormDstSelect(bool isStart, uint16_t choice) {
