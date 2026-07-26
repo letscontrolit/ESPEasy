@@ -24,10 +24,10 @@ typedef struct ModbusMGR_struct  {
   bool                   initialize();
   void                   processLinks();
 
-  bool                   connect(int                  linkId,
+  bool                   connect(int                        linkId,
                                  const ModbusDEVICE_struct *deviceID);
 
-  bool                   disconnect(int                 linkId,
+  bool                   disconnect(int                       linkId,
                                     const ModbusDEVICE_struct*deviceID);
 
   Modbus_transaction_ptr newTransaction(int                  linkId,
@@ -63,11 +63,11 @@ private:
 
   };
 
-  static bool validLinkId(int linkId) { return ((linkId >= 0) && (linkId < ModbusMGR_struct::MAX_MODBUS_LINKS)); }
+  static bool validLinkId(int linkId) { return (linkId >= 0) && (linkId < ModbusMGR_struct::MAX_MODBUS_LINKS); }
 
-  ModbusLinkInfo_struct _modbus_links[MAX_MODBUS_LINKS] = {};    // All links managed by the Modbus manager
-  bool                  _initialized                    = false; // Flag indicating if the manager is initialized
-  int                   _deviceCounter                  = 0;
+  ModbusLinkInfo_struct _modbus_links[MAX_MODBUS_LINKS]{}; // All links managed by the Modbus manager
+  bool                  _initialized   = false;            // Flag indicating if the manager is initialized
+  int                   _deviceCounter = 0;
 
   bool setLink(const int               linkIndex,
                const ESPEasySerialPort port,

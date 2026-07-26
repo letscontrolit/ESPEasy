@@ -223,12 +223,12 @@ bool ModbusMGR_struct::queueTransaction(int linkId, Modbus_Transaction *transact
   bool returnValue = false;
 
   # ifdef MODBUS_DEBUG
-  String log = strformat(F("Modbus Manager: Queue transaction for linkId= %d "), linkId);
+  String log = concat(F("Modbus Manager: Queue transaction for linkId= "), linkId);
   # endif // ifdef MODBUS_DEBUG
 
   if (!MODBUS_MGR_VALID_LINK_ID(linkId)) {
     # ifdef MODBUS_DEBUG
-    log += F("Invalid linkId");
+    log += F(" Invalid linkId");
     addLogMove(LOG_LEVEL_ERROR, log);
     # endif // ifdef MODBUS_DEBUG
   }
@@ -289,41 +289,64 @@ void ModbusMGR_struct::dumpAdminInfo()
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void ModbusMGR_struct::show_modbus_interfaces()
 {
-  String options_baudrate[MODBUS_MAX_BAUDRATE_SEL];                             // Array to hold the baudrate options for the selector
-  String options_port[static_cast<size_t>(ESPEasySerialPort::MAX_SERIAL_TYPE)]; // Port otions for the selector, only valid ports will be
-                                                                                // filled.
-  int portMap[static_cast<size_t>(ESPEasySerialPort::MAX_SERIAL_TYPE)];         // Map to keep track of valid ports and their indices in the
-                                                                                // options_port array
+  String options_baudrate[MODBUS_MAX_BAUDRATE_SEL]{}; // Array to hold the baudrate options for the selector
 
   constexpr int optionBaudCount = static_cast<int>(NR_ELEMENTS(options_baudrate));
 
   for (int i = 0; i < optionBaudCount; ++i) {
     options_baudrate[i] = modbus_storageValueToBaudrate(i); // Fill the baudrate options with actual baudrate values
   }
-  const FormSelectorOptions baudselector(optionBaudCount, options_baudrate);
+  const FormSelectorOptions baudselector(optionBaudCount,
+                                         options_baudrate);
 
   // Iterate over the modbus links and show their configuration on the web page
   for (int link = 0; link < MAX_MODBUS_LINKS; ++link)
   {
-    addFormSubHeader(strformat(F("Modbus %u"), link));
+
+    addFormSubHeader(concat(F("Modbus "), link));
     addFormDetailsStart(link == 0 || _modbus_links[link].port != ESPEasySerialPort::not_set);
 
-////    serialHelper_webformLoad(link, _modbus_links[link].port, static_cast<int>(_modbus_links[link].serial_rx),
-////                             static_cast<int>(_modbus_links[link].serial_tx), true);
+    const String slid = concat(F("MBport"), link);
+    const String txid = concat(F("MBtx"), link);
+    const String rxid = concat(F("MBrx"), link);
 
-    String id = strformat(F("MBde%u"), link);
-    addRowLabel_tr_id(formatGpioName_output_optional(F("~RE/DE")), id);
-    addPinSelect(PinSelectPurpose::Generic_output, id, _modbus_links[link].dere_pin);
+    serialHelper_webformLoad(_modbus_links[link].port,
+                             _modbus_links[link].serial_rx,
+                             _modbus_links[link].serial_tx,
+                             INCLUDE_HW_SERIAL + INCLUDE_SW_SERIAL + INCLUDE_I2C_SERIAL,
+                             F("Serial Port"),
+                             slid,
+                             txid,
+                             rxid,
+                             concat(F("i2cad"), link),
+                             concat(F("i2cch"), link));
+
+    addFormPinSelect(PinSelectPurpose::Serial_input,
+                     formatGpioName_serialTX(false),
+                     txid,
+                     _modbus_links[link].serial_tx);
+
+    addFormPinSelect(PinSelectPurpose::Serial_output,
+                     formatGpioName_serialRX(false),
+                     rxid,
+                     _modbus_links[link].serial_rx);
+
+    html_add_script(strformat(F("elId('%s').onchange();"), slid.c_str()), false);
+
+    addFormPinSelect(PinSelectPurpose::Generic_output,
+                     formatGpioName_output_optional(F("~RE/DE")),
+                     concat(F("MBde"), link),
+                     _modbus_links[link].dere_pin);
 
     baudselector.addFormSelector(F("Baud Rate"),
-                                 strformat(F("MBbaud%u"), link),
+                                 concat(F("MBbaud"), link),
                                  modbus_baudrateToStorageValue(_modbus_links[link].baudrate));
     addUnit(F("baud"));
 
-      # ifdef ESP32
-    addFormCheckBox(F("Enable Collision Detection"), strformat(F("MBcoll%u"), link), _modbus_links[link].collision_detect);
+    # ifdef ESP32
+    addFormCheckBox(F("Enable Collision Detection"), concat(F("MBcoll"), link), _modbus_links[link].collision_detect);
     addFormNote(F("/RE connected to GND, only supported on hardware serial"));
-      # endif // ifdef ESP32
+    # endif // ifdef ESP32
 
     addFormDetailsEnd();
 
@@ -337,7 +360,7 @@ void ModbusMGR_struct::show_modbus_interfaces()
 // Values outside this range will be mapped to the closest valid value.
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 uint32_t modbus_storageValueToBaudrate(uint8_t baudrate_setting) {
-  if ((baudrate_setting > 7) || (baudrate_setting < 0)) { return 9600; }
+  if (baudrate_setting > 7) { return 9600; }
 
   switch (baudrate_setting)
   {
@@ -384,43 +407,37 @@ uint8_t modbus_baudrateToStorageValue(uint32_t baudrate) {
 bool ModbusMGR_struct::save_modbus_interfaces(String& error)
 {
   for (int link = 0; link < MAX_MODBUS_LINKS; ++link)  {
+    int  baudrate_setting;
     int  port_setting             = static_cast<int>(_modbus_links[link].port);
     int  tx_setting               = _modbus_links[link].serial_tx;
     int  rx_setting               = _modbus_links[link].serial_rx;
-    int  baudrate_setting         = modbus_baudrateToStorageValue(_modbus_links[link].baudrate);
     int  dere_setting             = _modbus_links[link].dere_pin;
     bool collision_detect_setting = _modbus_links[link].collision_detect;
     bool settingsChanged          = false;
 
-    int8_t  rxPin = rx_setting;
-    int8_t  txPin = tx_setting;
-    uint8_t port  = port_setting;
-////    serialHelper_webformSave(link, port, rxPin, txPin);
+    update_whenset_FormItemInt(concat(F("MBport"), link), port_setting,     &settingsChanged);
+    baudrate_setting = modbus_baudrateToStorageValue(_modbus_links[link].baudrate);
+    update_whenset_FormItemInt(concat(F("MBbaud"), link), baudrate_setting, &settingsChanged);
+    tx_setting = _modbus_links[link].serial_tx;
+    rx_setting = _modbus_links[link].serial_rx;
 
-    if (port != port_setting) {
-      port_setting    = port;
-      settingsChanged = true;
+    if (port_setting == static_cast<int>(ESPEasySerialPort::sc16is752)) {
+      update_whenset_FormItemInt(concat(F("i2cad"), link), rx_setting, &settingsChanged);
+      update_whenset_FormItemInt(concat(F("i2cch"), link), tx_setting, &settingsChanged);
     }
-
-    if (rxPin != rx_setting) {
-      rx_setting      = rxPin;
-      settingsChanged = true;
+    else {
+      update_whenset_FormItemInt(concat(F("MBtx"), link), tx_setting, &settingsChanged);
+      update_whenset_FormItemInt(concat(F("MBrx"), link), rx_setting, &settingsChanged);
     }
+    dere_setting = _modbus_links[link].dere_pin;
 
-    if (txPin != tx_setting) {
-      tx_setting      = txPin;
-      settingsChanged = true;
-    }
-
-    update_whenset_FormItemInt(strformat(F("MBbaud%u"), link), baudrate_setting, &settingsChanged);
-
-    if (update_whenset_FormItemInt(strformat(F("MBde%u"), link), dere_setting, &settingsChanged))
+    if (update_whenset_FormItemInt(concat(F("MBde"), link), dere_setting, &settingsChanged))
     {
       # ifdef ESP32
 
       // Checkbox existence cannot be determined from the HTML response. Assume its there when dere_setting is detected.
       // The Collision detection setting is only available on ESP32 and only when a DE/RE pin is configured.
-      collision_detect_setting = isFormItemChecked(strformat(F("MBcoll%u"), link));
+      collision_detect_setting = isFormItemChecked(concat(F("MBcoll"), link));
       settingsChanged         |= (collision_detect_setting != _modbus_links[link].collision_detect);
       # endif // ifdef ESP32
     }
@@ -435,7 +452,7 @@ bool ModbusMGR_struct::save_modbus_interfaces(String& error)
               collision_detect_setting);
     }
   }
-  return false;
+  return true; // Success
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -453,14 +470,14 @@ bool ModbusMGR_struct::setLink(const int               linkIndex,
   String log = F("Modbus_mgr: SetLink. ");
 
   addLogMove(LOG_LEVEL_INFO,
-             strformat(F("*** setlink***: LinkID=%d, Port=%s, RX=%d, TX=%d, Baudrate=%d, DerePin=%d, CollisionDetect=%s"),
+             strformat(F("setlink: LinkID=%d, Port=%s, RX=%d, TX=%d, Baudrate=%d, DerePin=%d, CollisionDetect=%s"),
                        linkIndex,
                        ESPEasySerialPort_toString(port),
                        serial_rx,
                        serial_tx,
                        baudrate,
                        dere_pin,
-                       collision_detect ? F("Yes") : F("No")
+                       FsP(collision_detect ? F("Yes") : F("No"))
                        ));
   # endif // ifdef MODBUS_DEBUG
 
@@ -481,7 +498,7 @@ bool ModbusMGR_struct::setLink(const int               linkIndex,
   else if ((port == ESPEasySerialPort::not_set) && (_modbus_links[linkIndex].link != nullptr)) {
     delete _modbus_links[linkIndex].link;
     _modbus_links[linkIndex].link = nullptr;
-    }
+  }
 
   // If the link object is enabled (has a valid pointer), initialize it with the new parameters
   if (_modbus_links[linkIndex].link != nullptr) {
