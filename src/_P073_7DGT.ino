@@ -42,6 +42,8 @@
 //
 
 /** History
+ * 2026-07-27 tonhuisman: Restructure plugin_struct source into separate files per supported display model for maintainability
+ *                        Some minor code optimization for 74HC595 displays
  * 2026-07-25 tonhuisman: Use Arduino pin initialization as some ESPs don't properly set up their pins with DIRECT_GPIO_OUTPUT
  * 2026-07-24 tonhuisman: Fix 7dn and 7dt commands for 74HC595 to show data correctly for display setups with less than 8 digits
  *                        Improve update speed for 74HC595 by using DIRECT_GPIO library for all GPIO commands (also for TM1637 and MAX7219)

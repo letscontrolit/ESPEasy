@@ -286,149 +286,11 @@ void P073_data_struct::init(struct EventStruct *event)
       if (output == P073_DISP_MANUAL) {
         ClearBuffer();
         hc595_ToOutputBuffer();
-
-        if (hc595_Sequential()) { // Sequential displays don't need continuous refreshing
-          hc595_ShowBuffer();
-        }
       }
       break;
     # endif // if P073_USE_74HC595
   }
 }
-
-# if P073_USE_74HC595
-
-bool P073_data_struct::plugin_fifty_per_second(struct EventStruct *event) {
-  #  ifdef P073_DEBUG
-  counter50++;
-  #  endif // ifdef P073_DEBUG
-
-  if (is74HC595Multiplex()) {
-    hc595_ShowBuffer();
-    return true;
-  }
-  return false;
-}
-
-bool P073_data_struct::is74HC595Multiplex() { return P073_74HC595_2_8DGT == displayModel && P073_HC595_MULTIPLEX; }
-
-// ====================================
-// ---- 74HC595 specific functions ----
-// ====================================
-
-void P073_data_struct::hc595_ShowBuffer() {
-  #  if P073_USE_74HCMULTIPLEX
-  const uint8_t hc595digit4[] = {
-    0b00001000, // left segment
-    0b00000100,
-    0b00000010,
-    0b00000001, // right segment
-  };
-
-  const uint8_t hc595digit8[] = {
-    0b00010000, // left segment
-    0b00100000,
-    0b01000000,
-    0b10000000,
-    0b00000001,
-    0b00000010,
-    0b00000100,
-    0b00001000, // right segment
-  };
-  #  endif // if P073_USE_74HCMULTIPLEX
-
-  int8_t i    = digits - 1;
-  int8_t stop = -1;
-  int8_t incr = -1;
-
-  #  if P073_USE_74HCMULTIPLEX
-
-  if (P073_HC595_MULTIPLEX) {
-    i    =  dspDgt;
-    stop =  dspDgt + 1;
-    incr =  1;
-  }
-  #  endif // if P073_USE_74HCMULTIPLEX
-
-  for (; i != stop && i >= 0; i += incr) {
-    DIRECT_shiftOut(pin1, pin2, MSBFIRST, outputbuffer[i]); // Digit data out
-
-    // 2, 3 and some 4 digit modules use sequential digit values (in reversed order)
-    // 4, 6 and 8 digit modules use multiplexing in LTR order
-    #  if P073_USE_74HCMULTIPLEX
-    uint8_t digit = 0xFF;
-
-    if (P073_HC595_MULTIPLEX) {
-      if (4 == digits) {
-        digit = hc595digit4[i];
-      } else
-      if (6 == digits) {
-        digit = hc595digit8[i + (i > 2 ? 1 : 0)];
-      } else
-      if (8 == digits) {
-        digit = hc595digit8[i];
-      }
-    }
-
-    if (digit != 0xFF) { // Select multiplexer digit, 0xFF is invalid
-      DIRECT_shiftOut(pin1, pin2, MSBFIRST, digit);
-    }
-    #  endif // if P073_USE_74HCMULTIPLEX
-
-    if ((P073_HC595_SEQUENTIAL && (0 == i)) || P073_HC595_MULTIPLEX) {
-      DIRECT_pinWrite(pin3, LOW); // Clock data
-      DIRECT_pinWrite(pin3, HIGH);
-    }
-  }
-
-  if (i >= digits) {
-    dspDgt = 0;
-  } else {
-    dspDgt = i;
-  }
-
-  #  ifdef P073_DEBUG
-
-  // TODO disable log
-  // if ((counter50 % 200 == 0) || P073_HC595_SEQUENTIAL) {
-  //   addLog(LOG_LEVEL_INFO, strformat(F("P073: hc595_ShowBuffer (end) dgt:%d i:%d stop:%d incr:%d pin1: %d pin2: %d pin3: %d"),
-  //                                    digits, i, stop, incr, pin1, pin2, pin3));
-  // }
-  #  endif // ifdef P073_DEBUG
-}
-
-void P073_data_struct::hc595_ToOutputBuffer() {
-  for (uint8_t i = 0; i < 8; ++i) {
-    uint8_t value;
-
-    // 74HC595 uses inverted data, compared to MAX7219/TM1637
-    value = ~P073_getFontChar(showbuffer[i], fontset);
-
-    if (showperiods[i]) {
-      value &= 0x7F;
-    }
-    outputbuffer[i] = P073_revert7bits(value); // Rotate bits 6..0
-  }
-}
-
-void P073_data_struct::hc595_ShiftinView() {
-  if (digits < 8) {
-    uint8_t n = 0;
-
-    for (uint8_t i = 8 - digits; i < 8; ++i, ++n) {
-      showbuffer[n] = showbuffer[i];
-    }
-  }
-}
-
-void P073_data_struct::hc595_InitDisplay() {
-  pinMode(pin1, OUTPUT); // Use Arduino pin initialization as some ESPs don't properly set up their pins with DIRECT_GPIO_OUTPUT
-  pinMode(pin2, OUTPUT);
-  pinMode(pin3, OUTPUT);
-  DIRECT_pinWrite(pin3, HIGH);
-}
-
-# endif // if P073_USE_74HC595
 
 void P073_data_struct::FillBufferWithTime(bool    sevendgt_now,
                                           uint8_t sevendgt_hours,
@@ -903,10 +765,6 @@ bool    P073_data_struct::plugin_once_a_second(struct EventStruct *event) {
     # if P073_USE_74HC595
     case P073_74HC595_2_8DGT:
       hc595_ToOutputBuffer();
-
-      if (hc595_Sequential()) { // Sequential displays don't need continuous refreshing
-        hc595_ShowBuffer();
-      }
       break;
     # endif // if P073_USE_74HC595
   }
@@ -953,10 +811,6 @@ bool P073_data_struct::plugin_ten_per_second(struct EventStruct *event) {
       case P073_74HC595_2_8DGT:
       {
         hc595_ToOutputBuffer();
-
-        if (hc595_Sequential()) { // Sequential displays don't need continuous refreshing
-          hc595_ShowBuffer();
-        }
         break;
       }
       #  endif // if P073_USE_74HC595
@@ -966,6 +820,22 @@ bool P073_data_struct::plugin_ten_per_second(struct EventStruct *event) {
 }
 
 # endif // if P073_SCROLL_TEXT
+
+# if P073_USE_74HC595
+
+bool P073_data_struct::plugin_fifty_per_second(struct EventStruct *event) {
+  #  ifdef P073_DEBUG
+  counter50++;
+  #  endif // ifdef P073_DEBUG
+
+  if (is74HC595Multiplex()) {
+    hc595_ShowBuffer();
+    return true;
+  }
+  return false;
+}
+
+# endif // if P073_USE_74HC595
 
 const char p073_commands[] PROGMEM =
   "7dn|7dt|"
@@ -1207,10 +1077,6 @@ bool P073_data_struct::plugin_write_7dn(struct EventStruct *event,
     case P073_74HC595_2_8DGT:
       hc595_ShiftinView();
       hc595_ToOutputBuffer();
-
-      if (hc595_Sequential()) { // Sequential displays don't need continuous refreshing
-        hc595_ShowBuffer();
-      }
       break;
     # endif // if P073_USE_74HC595
   }
@@ -1288,10 +1154,6 @@ bool P073_data_struct::plugin_write_7dt(const String& text) {
     case P073_74HC595_2_8DGT:
       hc595_ShiftinView();
       hc595_ToOutputBuffer();
-
-      if (hc595_Sequential()) { // Sequential displays don't need continuous refreshing
-        hc595_ShowBuffer();
-      }
       break;
     # endif // if P073_USE_74HC595
   }
@@ -1386,16 +1248,11 @@ bool P073_data_struct::plugin_write_7ddt(const String& text) {
       #  if P073_USE_74HC595
       } else
 
-      // if (P073_74HC595_2_8DGT == P073_data->displayModel)
       {
         if (digits < 8) {
           FillBufferWithDash();
         }
         hc595_ToOutputBuffer();
-
-        if (hc595_Sequential()) { // Sequential displays don't need continuous refreshing
-          hc595_ShowBuffer();
-        }
       #  endif // if P073_USE_74HC595
       }
 
@@ -1445,10 +1302,6 @@ bool P073_data_struct::plugin_write_7dst(struct EventStruct *event) {
     # if P073_USE_74HC595
     case P073_74HC595_2_8DGT:
       hc595_ToOutputBuffer();
-
-      if (hc595_Sequential()) { // Sequential displays don't need continuous refreshing
-        hc595_ShowBuffer();
-      }
       break;
     # endif // if P073_USE_74HC595
   }
@@ -1489,10 +1342,6 @@ bool P073_data_struct::plugin_write_7dsd(struct EventStruct *event) {
     # if P073_USE_74HC595
     case P073_74HC595_2_8DGT:
       hc595_ToOutputBuffer();
-
-      if (hc595_Sequential()) { // Sequential displays don't need continuous refreshing
-        hc595_ShowBuffer();
-      }
       break;
     # endif // if P073_USE_74HC595
   }
@@ -1538,10 +1387,6 @@ bool P073_data_struct::plugin_write_7dtext(const String& text) {
       # if P073_USE_74HC595
       case P073_74HC595_2_8DGT:
         hc595_ToOutputBuffer();
-
-        if (hc595_Sequential()) { // Sequential displays don't need continuous refreshing
-          hc595_ShowBuffer();
-        }
         break;
       # endif // if P073_USE_74HC595
     }
@@ -1623,10 +1468,6 @@ bool P073_data_struct::plugin_write_7dbin(const String& text) {
           #  if P073_USE_74HC595
           case P073_74HC595_2_8DGT:
             hc595_ToOutputBuffer();
-
-            if (hc595_Sequential()) { // Sequential displays don't need continuous refreshing
-              hc595_ShowBuffer();
-            }
             break;
           #  endif // if P073_USE_74HC595
         }
@@ -1638,383 +1479,6 @@ bool P073_data_struct::plugin_write_7dbin(const String& text) {
 }
 
 # endif // if P073_7DBIN_COMMAND
-
-// ===================================
-// ---- TM1637 specific functions ----
-// ===================================
-
-# define CLK_HIGH() DIRECT_pinWrite(this->pin1, HIGH)
-# define CLK_LOW() DIRECT_pinWrite(this->pin1, LOW)
-# define DIO_HIGH() DIRECT_pinWrite(this->pin2, HIGH)
-# define DIO_LOW() DIRECT_PINMODE_OUTPUT(this->pin2); DIRECT_pinWrite(this->pin2, LOW)
-# define DIO_INPUT() DIRECT_PINMODE_INPUT(this->pin2)
-# define DIO_OUTPUT() DIRECT_PINMODE_OUTPUT(this->pin2)
-
-void P073_data_struct::tm1637_i2cStart() {
-  # if defined(P073_DEBUG) && !defined(BUILD_NO_DEBUG)
-  addLog(LOG_LEVEL_DEBUG, F("7DGT : Comm Start"));
-  # endif // if defined(P073_DEBUG) && !defined(BUILD_NO_DEBUG)
-  DIO_LOW();
-  delayMicroseconds(TM1637_CLOCKDELAY);
-}
-
-void P073_data_struct::tm1637_i2cStop() {
-  # if defined(P073_DEBUG) && !defined(BUILD_NO_DEBUG)
-  addLog(LOG_LEVEL_DEBUG, F("7DGT : Comm Stop"));
-  # endif // if defined(P073_DEBUG) && !defined(BUILD_NO_DEBUG)
-  DIO_LOW();
-  delayMicroseconds(TM1637_CLOCKDELAY);
-  CLK_HIGH();
-  delayMicroseconds(TM1637_CLOCKDELAY);
-  DIO_HIGH();
-  delayMicroseconds(TM1637_CLOCKDELAY);
-}
-
-bool P073_data_struct::tm1637_i2cAck() {
-  CLK_LOW();
-  DIO_INPUT();
-
-  delayMicroseconds(TM1637_CLOCKDELAY);
-  CLK_HIGH();
-  const uint32_t start_wait = micros();
-
-  const bool acknowledged = -1 !=
-                            DIRECT_measureWaitForPinState_ISR(this->pin2, start_wait, TM1637_CLOCKDELAY, 0);
-
-  const int32_t timePassed = usecPassedSince_fast(start_wait);
-
-  if (timePassed < TM1637_CLOCKDELAY) {
-    delayMicroseconds(TM1637_CLOCKDELAY - timePassed);
-  }
-
-  # if defined(P073_DEBUG) && !defined(BUILD_NO_DEBUG)
-
-  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    String log = F("7DGT : Comm ACK=");
-
-    if (acknowledged) {
-      log += F("TRUE");
-    } else {
-      log += F("FALSE");
-    }
-    addLogMove(LOG_LEVEL_DEBUG, log);
-  }
-  # endif // if defined(P073_DEBUG) && !defined(BUILD_NO_DEBUG)
-  CLK_HIGH();
-
-  delayMicroseconds(TM1637_CLOCKDELAY);
-  CLK_LOW();
-  delayMicroseconds(TM1637_CLOCKDELAY);
-  DIO_OUTPUT();
-
-  return acknowledged;
-}
-
-void P073_data_struct::tm1637_i2cWrite_ack(uint8_t bytesToPrint[],
-                                           uint8_t length) {
-  # ifdef P073_DEBUG
-
-  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    addLog(LOG_LEVEL_INFO, concat(F("7DGT : TM1637 databuffer: 0x"), formatToHex_array(bytesToPrint, length)));
-  }
-  # endif // ifdef P073_DEBUG
-  tm1637_i2cStart();
-
-  for (uint8_t i = 0; i < length; ++i) {
-    tm1637_i2cWriteByte_ack(bytesToPrint[i]);
-  }
-  tm1637_i2cStop();
-}
-
-void P073_data_struct::tm1637_i2cWriteByte_ack(uint8_t bytetoprint) {
-  tm1637_i2cWrite(bytetoprint);
-  tm1637_i2cAck();
-}
-
-void P073_data_struct::tm1637_i2cWrite(uint8_t bytetoprint) {
-  # if defined(P073_DEBUG) && !defined(BUILD_NO_DEBUG)
-  addLog(LOG_LEVEL_DEBUG, F("7DGT : WriteByte"));
-  # endif // if defined(P073_DEBUG) && !defined(BUILD_NO_DEBUG)
-
-  for (uint8_t i = 0; i < 8; ++i) {
-    CLK_LOW();
-    delayMicroseconds(TM1637_CLOCKDELAY >> 1);
-
-    if (bytetoprint & 0b00000001) {
-      DIO_HIGH();
-    } else {
-      DIO_LOW();
-    }
-    delayMicroseconds(TM1637_CLOCKDELAY >> 1);
-    bytetoprint = bytetoprint >> 1;
-    CLK_HIGH();
-    delayMicroseconds(TM1637_CLOCKDELAY);
-  }
-}
-
-void P073_data_struct::tm1637_ClearDisplay() {
-  uint8_t bytesToPrint[7]{};
-
-  bytesToPrint[0] = 0xC0;
-  tm1637_i2cWrite_ack(bytesToPrint, 7);
-}
-
-void P073_data_struct::tm1637_SetPowerBrightness(uint8_t brightlvl,
-                                                 bool    poweron) {
-  # ifdef P073_DEBUG
-  addLog(LOG_LEVEL_INFO, F("7DGT : Set BRIGHT"));
-  # endif // ifdef P073_DEBUG
-  brightlvl &= 0b111;
-
-  if (poweron) {
-    brightlvl |= TM1637_POWER_ON;
-  } else {
-    brightlvl |= TM1637_POWER_OFF;
-  }
-
-  uint8_t bytesToPrint[]{ brightlvl };
-  tm1637_i2cWrite_ack(bytesToPrint, NR_ELEMENTS(bytesToPrint));
-}
-
-void P073_data_struct::tm1637_InitDisplay() {
-  pinMode(this->pin1, OUTPUT); // Use Arduino pin initialization as some ESPs don't properly set up their pins with DIRECT_GPIO_OUTPUT
-  pinMode(this->pin2, OUTPUT);
-
-  DIRECT_pinWrite(this->pin1, HIGH);
-  DIRECT_pinWrite(this->pin2, HIGH);
-
-  delayMicroseconds(TM1637_CLOCKDELAY);
-  uint8_t bytesToPrint[]{ 0x40 };
-  tm1637_i2cWrite_ack(bytesToPrint, NR_ELEMENTS(bytesToPrint));
-  tm1637_ClearDisplay();
-}
-
-uint8_t P073_data_struct::tm1637_separator(uint8_t value,
-                                           bool    sep) {
-  if (sep) {
-    value |= 0b10000000;
-  }
-  return value;
-}
-
-void P073_data_struct::tm1637_ShowTime6() {
-  tm1637_ShowDate6(true); // deduplicated
-}
-
-void P073_data_struct::tm1637_ShowDate6(bool showTime) {
-  uint8_t bytesToPrint[7]{};
-
-  bytesToPrint[0] = 0xC0;
-  bytesToPrint[1] = tm1637_getFontChar(showbuffer[2], fontset);
-  bytesToPrint[2] = tm1637_separator(tm1637_getFontChar(showbuffer[1], fontset), timesep);
-  bytesToPrint[3] = tm1637_getFontChar(showbuffer[0], fontset);
-
-  if (showTime) {
-    bytesToPrint[4] = tm1637_getFontChar(showbuffer[5], fontset);
-    bytesToPrint[5] = tm1637_getFontChar(showbuffer[4], fontset);
-  } else {
-    bytesToPrint[4] = tm1637_getFontChar(showbuffer[7], fontset);
-    bytesToPrint[5] = tm1637_getFontChar(showbuffer[6], fontset);
-  }
-  bytesToPrint[6] = tm1637_separator(tm1637_getFontChar(showbuffer[3], fontset), timesep);
-
-  tm1637_i2cWrite_ack(bytesToPrint, 7);
-}
-
-void P073_data_struct::tm1637_ShowTemp6(bool sep) {
-  uint8_t bytesToPrint[7]{};
-
-  bytesToPrint[0] = 0xC0;
-  bytesToPrint[1] = tm1637_separator(tm1637_getFontChar(showbuffer[5], fontset), sep);
-  bytesToPrint[2] = tm1637_getFontChar(showbuffer[4], fontset);
-  bytesToPrint[3] = tm1637_getFontChar(showbuffer[3], fontset); // Fill first digit of display too
-  bytesToPrint[4] = tm1637_getFontChar(10, fontset);
-  bytesToPrint[5] = tm1637_getFontChar(showbuffer[7], fontset);
-  bytesToPrint[6] = tm1637_getFontChar(showbuffer[6], fontset);
-
-  tm1637_i2cWrite_ack(bytesToPrint, 7);
-}
-
-void P073_data_struct::tm1637_ShowTimeTemp4(bool    sep,
-                                            uint8_t bufoffset) {
-  uint8_t bytesToPrint[5]{};
-
-  bytesToPrint[0] = 0xC0;
-  bytesToPrint[1] = tm1637_getFontChar(showbuffer[0 + bufoffset], fontset);
-  bytesToPrint[2] = tm1637_separator(tm1637_getFontChar(showbuffer[1 + bufoffset], fontset), sep);
-  bytesToPrint[3] = tm1637_getFontChar(showbuffer[2 + bufoffset], fontset);
-  bytesToPrint[4] = tm1637_getFontChar(showbuffer[3 + bufoffset], fontset);
-
-  tm1637_i2cWrite_ack(bytesToPrint, 5);
-}
-
-void P073_data_struct::tm1637_SwapDigitInBuffer(uint8_t startPos) {
-  std::swap(showbuffer[2 + startPos],  showbuffer[0 + startPos]);
-  std::swap(showbuffer[3 + startPos],  showbuffer[5 + startPos]);
-
-  std::swap(showperiods[2 + startPos], showperiods[0 + startPos]);
-  std::swap(showperiods[3 + startPos], showperiods[5 + startPos]);
-
-  if (dotpos > -1) {
-    const uint8_t dotPositionSwap[] = { 0, 1, 4, 3, 2, 7, 6, 5, 8 };
-
-    dotpos = dotPositionSwap[dotpos];
-  }
-}
-
-void P073_data_struct::tm1637_ShowBuffer(uint8_t firstPos,
-                                         uint8_t lastPos,
-                                         bool    useBinaryData) {
-  uint8_t bytesToPrint[8]{};
-
-  bytesToPrint[0] = 0xC0;
-  uint8_t length = 1;
-
-  if (dotpos > -1) {
-    showperiods[dotpos] = true;
-  }
-
-  uint8_t p073_datashowpos1;
-
-  for (int i = firstPos; i < lastPos; ++i) {
-    if (useBinaryData) {
-      bytesToPrint[length] = showbuffer[i];
-    } else {
-      p073_datashowpos1 = tm1637_separator(
-        tm1637_getFontChar(showbuffer[i], fontset),
-        showperiods[i]);
-      bytesToPrint[length] = p073_datashowpos1;
-    }
-    length++;
-  }
-  # ifdef P073_DEBUG
-  addLog(LOG_LEVEL_INFO, strformat(F("TM1673: Write bytes: %d buffer %d to %d"), length, firstPos, lastPos));
-  # endif // ifdef P073_DEBUG
-  tm1637_i2cWrite_ack(bytesToPrint, length);
-}
-
-// ====================================
-// ---- MAX7219 specific functions ----
-// ====================================
-
-# define OP_DECODEMODE   9
-# define OP_INTENSITY   10
-# define OP_SCANLIMIT   11
-# define OP_SHUTDOWN    12
-# define OP_DISPLAYTEST 15
-
-void P073_data_struct::max7219_spiTransfer(ESPEASY_VOLATILE(uint8_t) opcode,
-                                           ESPEASY_VOLATILE(uint8_t) data) {
-  spidata[1] = opcode;
-  spidata[0] = data;
-  DIRECT_pinWrite(pin3, LOW);
-  DIRECT_shiftOut(pin1, pin2, MSBFIRST, spidata[1]);
-  DIRECT_shiftOut(pin1, pin2, MSBFIRST, spidata[0]);
-  DIRECT_pinWrite(pin3, HIGH);
-}
-
-void P073_data_struct::max7219_ClearDisplay() {
-  for (int i = 0; i < 8; i++) {
-    max7219_spiTransfer(i + 1, 0);
-  }
-}
-
-void P073_data_struct::max7219_SetPowerBrightness(uint8_t brightlvl,
-                                                  bool    poweron) {
-  max7219_spiTransfer(OP_INTENSITY, brightlvl);
-  max7219_spiTransfer(OP_SHUTDOWN,  poweron ? 1 : 0);
-}
-
-void P073_data_struct::max7219_SetDigit(int     dgtpos,
-                                        uint8_t dgtvalue,
-                                        bool    showdot,
-                                        bool    binaryData) {
-  uint8_t p073_tempvalue;
-
-  if (binaryData) {
-    p073_tempvalue = dgtvalue; // Overwrite if binary data
-  } else
-  {
-    p073_tempvalue = P073_getFontChar(dgtvalue, fontset);
-
-    if (showdot) {
-      p073_tempvalue |= 0b10000000;
-    }
-  }
-  max7219_spiTransfer(dgtpos + 1, p073_tempvalue);
-}
-
-void P073_data_struct::max7219_InitDisplay() {
-  pinMode(pin1, OUTPUT); // Use Arduino pin initialization as some ESPs don't properly set up their pins with DIRECT_GPIO_OUTPUT
-  pinMode(pin2, OUTPUT);
-  pinMode(pin3, OUTPUT);
-  DIRECT_pinWrite(pin3, HIGH);
-  max7219_spiTransfer(OP_DISPLAYTEST, 0);
-  max7219_spiTransfer(OP_SCANLIMIT,   7); // scanlimit setup to max at Init
-  max7219_spiTransfer(OP_DECODEMODE,  0);
-  max7219_ClearDisplay();
-  max7219_SetPowerBrightness(0, false);
-}
-
-void P073_data_struct::max7219_ShowTime(bool sep) {
-  const uint8_t idx_list[] = { 7, 6, 4, 3, 1, 0 }; // Digits in reversed order, as the loop is backward
-
-  for (int8_t i = 5; i >= 0; --i) {
-    max7219_SetDigit(idx_list[i], showbuffer[i], false);
-  }
-
-  const uint8_t sepChar = P073_mapCharToFontPosition(sep ? '-' : ' ', fontset);
-
-  max7219_SetDigit(2, sepChar, false);
-  max7219_SetDigit(5, sepChar, false);
-}
-
-void P073_data_struct::max7219_ShowTemp(int8_t firstDot,
-                                        int8_t secondDot) {
-  max7219_SetDigit(0, 10, false);
-
-  if (firstDot  > -1) { showperiods[firstDot] = true; }
-
-  if (secondDot > -1) { showperiods[secondDot] = true; }
-
-  const int alignRight = rightAlignTempMAX7219 ? 0 : 1;
-
-  for (int i = alignRight; i < 8; ++i) {
-    const int bufIndex = (7 + alignRight) - i;
-
-    if (bufIndex < 8) {
-      max7219_SetDigit(i,
-                       showbuffer[bufIndex],
-                       showperiods[bufIndex]);
-    }
-  }
-}
-
-void P073_data_struct::max7219_ShowDate() {
-  const uint8_t dotflags[8] = { false, true, false, true, false, false, false, false };
-
-  for (int i = 0; i < 8; ++i) {
-    max7219_SetDigit(i,
-                     showbuffer[7 - i],
-                     dotflags[7 - i]);
-  }
-}
-
-void P073_data_struct::max7219_ShowBuffer() {
-  if (dotpos > -1) {
-    showperiods[dotpos] = true;
-  }
-
-  for (int i = 0; i < 8; i++) {
-    max7219_SetDigit(i,
-                     showbuffer[7 - i],
-                     showperiods[7 - i]
-                     # if P073_7DBIN_COMMAND
-                     , binaryData
-                     # endif // if P073_7DBIN_COMMAND
-                     );
-  }
-}
 
 // Borrowed from wiring_shift.c, using DIRECT_GPIO
 void P073_data_struct::DIRECT_shiftOut(uint8_t dataPin,

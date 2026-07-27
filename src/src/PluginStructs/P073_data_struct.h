@@ -393,19 +393,19 @@ private:
                         uint8_t dgtvalue,
                         bool    showdot,
                         bool    binaryData = false);
-  void max7219_InitDisplay();
-  void max7219_ShowTime(bool sep);
-  void max7219_ShowTemp(int8_t firstDot,
-                        int8_t secondDot);
-  void max7219_ShowDate();
-  void max7219_ShowBuffer();
+  void        max7219_InitDisplay();
+  void        max7219_ShowTime(bool sep);
+  void        max7219_ShowTemp(int8_t firstDot,
+                               int8_t secondDot);
+  void        max7219_ShowDate();
+  void        max7219_ShowBuffer();
   # if P073_USE_74HC595
-  void hc595_InitDisplay();
-  void hc595_ShowBuffer();
-  void hc595_ShiftinView();
-  void hc595_ToOutputBuffer();
+  void        hc595_InitDisplay();
+  void        hc595_ShowBuffer();
+  void        hc595_ShiftinView();
+  void        hc595_ToOutputBuffer();
 
-  bool hc595_Sequential() { return P073_HC595_SEQUENTIAL; }
+  inline bool hc595_Sequential() { return P073_HC595_SEQUENTIAL; }
 
   uint8_t outputbuffer[8]{};
   # endif // if P073_USE_74HC595
