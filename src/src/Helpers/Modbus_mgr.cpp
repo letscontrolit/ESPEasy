@@ -313,7 +313,7 @@ void ModbusMGR_struct::show_modbus_interfaces()
     serialHelper_webformLoad(_modbus_links[link].port,
                              _modbus_links[link].serial_rx,
                              _modbus_links[link].serial_tx,
-                             INCLUDE_HW_SERIAL + INCLUDE_SW_SERIAL + INCLUDE_I2C_SERIAL,
+                             INCLUDE_HW_SERIAL, // I2C and SW serial are not supported for Modbus links (yet)
                              F("Serial Port"),
                              slid,
                              txid,
@@ -421,11 +421,14 @@ bool ModbusMGR_struct::save_modbus_interfaces(String& error)
     tx_setting = _modbus_links[link].serial_tx;
     rx_setting = _modbus_links[link].serial_rx;
 
-    if (port_setting == static_cast<int>(ESPEasySerialPort::sc16is752)) {
-      update_whenset_FormItemInt(concat(F("i2cad"), link), rx_setting, &settingsChanged);
-      update_whenset_FormItemInt(concat(F("i2cch"), link), tx_setting, &settingsChanged);
-    }
-    else {
+    // I2C is not supported for Modbus links (yet), but if it is selected, we will store the I2C address and channel in the same fields as
+    // the TX and RX pins, respectively.
+    // if (port_setting == static_cast<int>(ESPEasySerialPort::sc16is752)) {
+    //  update_whenset_FormItemInt(concat(F("i2cad"), link), rx_setting, &settingsChanged);
+    //  update_whenset_FormItemInt(concat(F("i2cch"), link), tx_setting, &settingsChanged);
+    // }
+    // else
+    {
       update_whenset_FormItemInt(concat(F("MBtx"), link), tx_setting, &settingsChanged);
       update_whenset_FormItemInt(concat(F("MBrx"), link), rx_setting, &settingsChanged);
     }

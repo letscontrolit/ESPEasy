@@ -211,14 +211,17 @@ Note that many plugins implement the Modbuis protocol for specific devices witho
 The Modbus interface uses a serial port on the ESP board to communicate with the Modbus RTU devices. The RS485 link is half-duplex, meaning that the ESP board can either send or receive data at a time. Most RS485 converters have a DE (Driver Enable) pin that can be controlled by the ESP board to switch between sending and receiving data. 
 The DE pin can be configured here. If the converter has an automatic DE function, this can be set to "-None-". Some serial ports on the ESP board have a collision detect feature, which can be enabled here. When supported and enabled, the ESP board will detect if another device is sending data at the same time, and will wait sending data. This can help to avoid collisions on the RS485 link. In case all Modbus devices are well-behaving and plugins are well-configured the collision detect function is not required for Modbus RTU operation.
 
+The number of Modbus links that can be configured depends on the software build. Standard builds with plugins depending on this Modbus RTU link allow 4 modbus links. The number can be extended using custom builds. No Modbus link can be configured when the build does not include any plugins that depend on this Modbus RTU link.
+
 .. image:: Modbus_Interface.png
 
-Main configuration item is the selection of the serial interface to use for Modbus. The available options depend on the ESP board used. For details about the available serial interfaces, see  serial helper page. The option "Not set" means that Modbus link is not used. When a serial interface is selected, it will be initialized and the Modbus RTU devices can be connected to it.
+Main configuration item is the selection of the serial interface to use for Modbus. The available options depend on the ESP board used. For details about the available serial interfaces, see  serial helper page. A blank option means that Modbus link is not used. When a serial interface is selected, it will be initialized and the Modbus RTU devices can be connected to it.
+The current implementation only supports hardware serial interfaces due to limitations in the software serial and I2C serial implementations. The hardware serial interfaces are more reliable and can operate at higher speeds. 
 
-Selection of the RX and TX  pins is required.
+If the RX and TX pins for the selecetd serial interface are not fixed by the ESP hardware then they shall be configured here. Without proper configuration the Modbus interface may not function. The RX and TX pins cannot be shared with other plugins or other Modbus RTU links.
 
 If the RS485 converter has a DE (Driver Enable) pin to be controlled by the ESP board it shall be configured here. If the converter has an automatic DE function, this can be set to "-None-".  
 
-The Baud rate for the Modbus RTU communication shall be set. The default value is 9600 baud, but it can be set to other values as required by the connected devices.
+The Baud rate for the Modbus RTU communication shall be set. The default value is 9600 baud, but it can be set to other values as required by the connected devices. All harware modules connected to the same link shall use the same baud rate.
 
 Collision Detection is a feature that can be used when the serial port hardware supports it, otherwise it is ignored.

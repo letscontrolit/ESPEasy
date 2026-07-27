@@ -12,7 +12,7 @@
         ``modbus,read,<address>``
 
         ","
-        Read the value from the holding register ``<address>``. Note that the value is read from the Modbus device but it will not be returned as part of the command. The value is printed in the logging.
+        Read the value from the holding register ``<address>``. The ``<address>`` shall be within the configured cache. Note that the value is read from the Modbus device but it will not be returned as part of the command. The value is printed in the logging.
         "
         "
         ``modbus,scan``
@@ -24,5 +24,5 @@
         ``modbus,dump,<start>,<end>``
 
         ","
-        Dumps the holding registers in the  address range ``<start>`` until ``<end>``.
+        Dumps the holding registers in the  address range ``<start>`` until ``<end>``. The output is un the logging.
         "

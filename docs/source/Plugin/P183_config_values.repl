@@ -5,6 +5,7 @@
     "
     | ``[<taskname>#register,<reg>]``
     ","
-    | Returns the value of holding register ``<reg>`` of the device. The value is directly read from the Modbus device. The holding register number ``<reg>`` can be any valid register in the device.
+    | Returns the value of holding register ``<reg>`` of the device. The value is read from the plugin cache. The holding register number ``<reg>`` shall be defined within the configured cache range. 
+    Note: some custom build versions may allow reading outside the cache range at the cost of serious hiccups in ESPEasy software as it blocks all software while waiting for a response from teh Modbus device.
     "
 
