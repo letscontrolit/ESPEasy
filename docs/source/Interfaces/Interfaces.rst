@@ -218,10 +218,10 @@ The number of Modbus links that can be configured depends on the software build.
 Main configuration item is the selection of the serial interface to use for Modbus. The available options depend on the ESP board used. For details about the available serial interfaces, see  serial helper page. A blank option means that Modbus link is not used. When a serial interface is selected, it will be initialized and the Modbus RTU devices can be connected to it.
 The current implementation only supports hardware serial interfaces due to limitations in the software serial and I2C serial implementations. The hardware serial interfaces are more reliable and can operate at higher speeds. 
 
-If the RX and TX pins for the selecetd serial interface are not fixed by the ESP hardware then they shall be configured here. Without proper configuration the Modbus interface may not function. The RX and TX pins cannot be shared with other plugins or other Modbus RTU links.
+If the RX and TX pins for the selecetd serial interface are not fixed by the ESP hardware then they must be configured here. Without proper configuration the Modbus interface may not function. The RX and TX pins cannot be shared with other plugins or other Modbus RTU links.
 
-If the RS485 converter has a DE (Driver Enable) pin to be controlled by the ESP board it shall be configured here. If the converter has an automatic DE function, this can be set to "-None-".  
+If the RS485 converter has a DE (Driver Enable) pin to be controlled by the ESP board it must be configured here. If the converter has an automatic DE function, this can be set to "-None-".  
 
-The Baud rate for the Modbus RTU communication shall be set. The default value is 9600 baud, but it can be set to other values as required by the connected devices. All harware modules connected to the same link shall use the same baud rate.
+The Baud rate for the Modbus RTU communication must be set. The default value is 9600 baud, but it can be set to other values as required by the connected devices. All harware modules connected to the same link must use the same baud rate.
 
 Collision Detection is a feature that can be used when the serial port hardware supports it, otherwise it is ignored.

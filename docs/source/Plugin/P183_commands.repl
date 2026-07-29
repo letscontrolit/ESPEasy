@@ -24,5 +24,5 @@
         ``modbus,dump,<start>,<end>``
 
         ","
-        Dumps the holding registers in the  address range ``<start>`` until ``<end>``. The output is un the logging.
+        Dumps the holding registers in the  address range ``<start>`` until ``<end>``. The output can be found in the logging.
         "

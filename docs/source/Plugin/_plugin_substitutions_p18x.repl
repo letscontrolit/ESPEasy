@@ -16,7 +16,8 @@
 .. |P183_type| replace:: :cyan:`Communication`
 .. |P183_typename| replace:: :cyan:`Communication - Modbus RTU`
 .. |P183_porttype| replace:: `Serial`
-.. |P183_status| replace:: :yellow:`TESTING` :yellow:`TESTING`
+.. |P183_status| replace:: :red:`DEVELOPMENT`
+.. |P183_status_lb| replace:: :red:`DEVELOPMENT`
 .. |P183_github| replace:: P183_modbus.ino
 .. _P183_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P183_modbus.ino
 .. |P183_usedby| replace:: `Modbus RTU over RS485 devices`
