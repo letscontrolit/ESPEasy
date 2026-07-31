@@ -1,6 +1,8 @@
 Supported ESP Chips
 *******************
 
+.. _esp8266-feature-complete:
+
 ESP8266 is Feature Complete!
 ============================
 
@@ -19,7 +21,7 @@ The consequences of this decision are that:
 * To enable some of the new features (many are still useable) for ESP8266, a Custom build can be configured and built by the user, as documented in :ref:`PlatformIO_page`.
 * A notable exception is support for TLS: That's *not* possible to enable on ESPEasy in ESP8266 builds as it doesn't fit in the limited available RAM memory.
 
-For new projects, it is strongly advised to select one of the many available ESP32 boards, or chips when designing a custom board. Some of the ESP32 variants are available with 16 MB Flash (ESP32 Classic, ESP32-C3, ESP32-C6 and ESP32-S3), and have 1 or more MAX builds available in ESPEasy, that include all plugins and features available, and also a larger selection of fonts for displays (TFT/LCD, OLed and 7-segment).
+For new projects, it is strongly advised to select one of the many available ESP32 boards, or chips when designing a custom board. Some of the ESP32 variants are available with 8MB, 16 MB, and 32MB, Flash (ESP32 Classic, ESP32-C3, ESP32-C5, ESP32-C6/C61, ESP32-S3 and ESP32-P4), and have 1 or more MAX builds available in ESPEasy, that include all plugins and features available, and also a larger selection of fonts for displays (TFT/LCD, OLed and 7-segment).
 
 Overview of supported chips
 ===========================
@@ -657,7 +659,7 @@ ESPEasy does support a number of variants of the processors manufactured by Espr
       - 85 µA / 25 µA light sleep, 7 µA deep sleep
       - 3.5 mA / 250 µA light sleep, 25 µA deep sleep
 
-
+.. note:: Whether a specific MCU supports a feature, does not mean it can easily be used in ESPEasy or added as a new feature.  For this we also need support in either Arduino-ESP32 or ESP-IDF.  See `Arduino ESP32 "Supported Features and Peripherals" <https://docs.espressif.com/projects/arduino-esp32/en/latest/libraries.html#supported-features-and-peripherals>`_
 
 Sources:
 
@@ -677,6 +679,7 @@ Datasheets
 * `DS:ESP32 <https://documentation.espressif.com/esp32_datasheet_en.pdf>`_ 
 * `DS:ESP32-S2 <https://documentation.espressif.com/esp32-s2_datasheet_en.pdf>`_
 * `DS:ESP32-S3 <https://documentation.espressif.com/esp32-s3_datasheet_en.pdf>`_
+* `DS:ESP32-S31 <https://documentation.espressif.com/esp32-s31_datasheet_en.pdf>`_
 * `DS:ESP32-C2 <https://documentation.espressif.com/esp8684_datasheet_en.pdf>`_ 
 * `DS:ESP32-C3 <https://documentation.espressif.com/esp32-c3_datasheet_en.pdf>`_ 
 * `DS:ESP32-C5 <https://documentation.espressif.com/esp32-c5_datasheet_en.pdf>`_

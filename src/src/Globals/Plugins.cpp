@@ -807,15 +807,19 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
         return false;
       }
 
-      if ((Function == PLUGIN_READ) || (Function == PLUGIN_INIT) || (Function == PLUGIN_PROCESS_CONTROLLER_DATA)) {
+      if ((Function == PLUGIN_READ) 
+       || (Function == PLUGIN_INIT) 
+       || (Function == PLUGIN_GET_PACKED_RAW_DATA)
+       || (Function == PLUGIN_TASKTIMER_IN) 
+       || (Function == PLUGIN_PROCESS_CONTROLLER_DATA)) {
         if (!Settings.TaskDeviceEnabled[event->TaskIndex]) {
           return false;
         }
+      }
 
-        if (Function == PLUGIN_INIT) {
-          clearTaskCache(event->TaskIndex);
-          UserVar.clear_computed(event->TaskIndex);
-        }
+      if (Function == PLUGIN_INIT) {
+        clearTaskCache(event->TaskIndex);
+        UserVar.clear_computed(event->TaskIndex);
       }
       const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
 
@@ -826,7 +830,9 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
             // Only exception is when ErrorStateValues is needed.
             // Therefore only need to call LoadTaskSettings for those tasks with ErrorStateValues
             LoadTaskSettings(event->TaskIndex);
-          } else if ((Function == PLUGIN_INIT) || (Function == PLUGIN_WEBFORM_LOAD) || (Function == PLUGIN_WEBFORM_LOAD_ALWAYS)) {
+          } else if ((Function == PLUGIN_INIT) 
+                  || (Function == PLUGIN_WEBFORM_LOAD) 
+                  || (Function == PLUGIN_WEBFORM_LOAD_ALWAYS)) {
             // LoadTaskSettings may call PLUGIN_GET_DEVICEVALUENAMES.
             LoadTaskSettings(event->TaskIndex);
           }
