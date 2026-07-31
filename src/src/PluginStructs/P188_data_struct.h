@@ -172,6 +172,7 @@ const __FlashStringHelper* Plugin_188_output_mapping_name(uint8_t value_nr, bool
 struct P188_config_struct {
     uint8_t  i2cAddress;
     float ADC_Vref;
+    float R_Clip;
 #ifdef P188_FEATURE_RESISTOR_MEASUREMENT
     uint32_t Rref[VARS_PER_TASK];
     uint32_t Rpar[VARS_PER_TASK];

@@ -122,12 +122,15 @@ boolean Plugin_188(uint8_t function, struct EventStruct *event, String& string)
       P188_OUTPUT_TYPE = static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_QUAD);
 
       tmp_config.ADC_Vref = 5.0f;
+#ifdef P188_FEATURE_RESISTOR_MEASUREMENT
+      tmp_config.R_Clip = 0.0f;
+#endif
       tmp_config.i2cAddress = P188_I2C_ADDR;
       for (int i = 0; i < VARS_PER_TASK; i++)
       {
         PCONFIG(i + P188_OUTPUT_MAPPING_OFFSET) = i;
 #ifdef P188_FEATURE_RESISTOR_MEASUREMENT
-        tmp_config.Rref[i] = 10000;
+        tmp_config.Rref[i] = 4700;
         tmp_config.Rpar[i] = 100000;
 #endif // P188_FEATURE_RESISTOR_MEASUREMENT
       }
@@ -148,6 +151,9 @@ boolean Plugin_188(uint8_t function, struct EventStruct *event, String& string)
       const int valueCount = getValueCountFromSensorType(static_cast<Sensor_VType>(P188_OUTPUT_TYPE));
 
       addFormFloatNumberBox(F("ADC reference voltage"),F("ADC_Vref"),tmp_config.ADC_Vref,2.35f,5.5f,2,0.01f);
+#ifdef P188_FEATURE_RESISTOR_MEASUREMENT
+      addFormFloatNumberBox(F("Resistor measurment clipping"),F("R_Clip"),tmp_config.R_Clip,0.0f,1000000000,2,0.01f);
+#endif
 
       for (int i = 0; i < valueCount; i++)
       {
@@ -207,6 +213,10 @@ boolean Plugin_188(uint8_t function, struct EventStruct *event, String& string)
       P188_I2C_ADDR = getFormItemInt(F("i2c_addr"));
       tmp_config.i2cAddress = P188_I2C_ADDR;
       tmp_config.ADC_Vref = getFormItemFloat(F("ADC_Vref"));
+
+#ifdef P188_FEATURE_RESISTOR_MEASUREMENT
+      tmp_config.R_Clip = getFormItemFloat(F("R_Clip"));
+#endif
 
       for (uint8_t i = 0; i < P188_NR_OUTPUT_VALUES; ++i) {
         const uint8_t pconfigIndex = P188_OUTPUT_MAPPING_OFFSET + i;
@@ -346,20 +356,26 @@ boolean Plugin_188(uint8_t function, struct EventStruct *event, String& string)
 #ifdef P188_FEATURE_RESISTOR_MEASUREMENT
               else
               { // resistor measurement
-                if (abs(ref_value - value) > 0) {
-
+                if (abs(ref_value - value) > 0) 
+                {
                   const float R_total = value * P188_data->P188_config.Rref[i] / abs(ref_value - value);
 
                   if (P188_data->P188_config.Rpar[i])
+                  {
                     if (((float)P188_data->P188_config.Rpar[i] - R_total) > 1)
                       value = (float)P188_data->P188_config.Rpar[i] * R_total / ((float)P188_data->P188_config.Rpar[i] - R_total);
                     else
-                      value = 9999999.9f; //std::numeric_limits<float>::max(); // clip to 10Mohm
+                      value = P188_data->P188_config.R_Clip; // clip
+                  }
                   else 
                     value = R_total;
+
+                  if (value > P188_data->P188_config.R_Clip)
+                    value = P188_data->P188_config.R_Clip; // clip
                 }
                 else
-                  value = 9999999.0f; //std::numeric_limits<float>::max(); // clip to 10Mohm
+                    value = P188_data->P188_config.R_Clip; // clip
+
               }
 #endif // P188_FEATURE_RESISTOR_MEASUREMENT
 
