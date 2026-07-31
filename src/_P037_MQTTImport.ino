@@ -632,8 +632,6 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                 }
                 UserVar.setFloat(event->TaskIndex, x, doublePayload);      // Save the new value
 
-
-
                 // Generate event for rules processing - proposed by TridentTD
 
                 if (Settings.UseRules && P037_SEND_EVENTS) {
@@ -661,11 +659,10 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                     }
                     P037_addEventToQueue(event, RuleEvent);
                   }
-                  else
-                  { // Generate event of all non-json topic/payloads
+                  else // Generate event of all non-json topic/payloads
+                  {
                     String tmp = unparsedPayload;
-                    tmp.replace('}', '>'); // Replace curly braces by angle brackets to avoid problems with string processing in rules
-                    tmp.replace('{', '<');
+                    addEscapeCharacters(tmp); // Add escape characters to avoid problems with rules processing if a JSON message is received
 
                     String RuleEvent = strformat(F("%s#%s=%s"),
                                                 getTaskDeviceName(event->TaskIndex).c_str(),
@@ -697,9 +694,8 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                     RuleEvent += toString(doublePayload, ExtraTaskSettings.TaskDeviceValueDecimals[x]);
                   } else {
                     String tmp = Payload;
-                    tmp.replace('}', '>');  // Replace curly braces by angle brackets to avoid problems with 
-                    tmp.replace('{', '<');  // string processing in rules if a JSON message is received
-
+                    addEscapeCharacters(tmp); // Add escape characters to avoid problems with rules processing if a JSON message is received
+					
                     RuleEvent += wrapWithQuotesIfContainsParameterSeparatorChar(tmp);
                   }
                   P037_addEventToQueue(event, RuleEvent);
