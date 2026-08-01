@@ -509,7 +509,7 @@ There are different released versions of ESP Easy:
    ":ref:`P177_page`","|P177_status|","|P177_status_lb|","P177"
    ":ref:`P178_page`","|P178_status|","|P178_status_lb|","P178"
    ":ref:`P180_page`","|P180_status|","|P180_status_lb|","P180"
-   ":ref:`P183_page`","[P183_status]","[P183_status_lb]","P183"
+   ":ref:`P183_page`","|P183_status|","|P183_status_lb|","P183"
 
 .. include:: <isonum.txt>
 .. include:: _plugin_sets_overview.repl

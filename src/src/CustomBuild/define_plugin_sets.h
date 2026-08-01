@@ -2082,9 +2082,6 @@ To create/register a plugin, you have to :
   #if !defined(USES_P180) && defined(ESP32)
     #define USES_P180   // Generic - I2C Generic
   #endif
-  #if !defined(USES_P183) && defined(ESP32)
-    #define USES_P183   // Communication - Modbus RTU
-  #endif
 
 #endif // ifdef PLUGIN_DISPLAY_A_COLLECTION
 
@@ -2199,10 +2196,6 @@ To create/register a plugin, you have to :
   // #endif
   #if !defined(USES_P180) && defined(ESP32)
     #define USES_P180   // Generic - I2C Generic
-  #endif
-  #if !defined(USES_P183) && defined(ESP32)
-//    #define USES_P183   // Communication - Modbus RTU
-     // TODO TD-er: Disabled due to build size
   #endif
 
 #endif // ifdef PLUGIN_DISPLAY_B_COLLECTION
@@ -2563,11 +2556,6 @@ To create/register a plugin, you have to :
   #if !defined(USES_P180) && defined(ESP32)
     #define USES_P180   // Generic - I2C Generic
   #endif
-  #if !defined(USES_P183) && defined(ESP32)
-// #define USES_P183   // Communication - Modbus RTU
-// Disabled for now due to build size
-  #endif
-
 
 #endif // ifdef PLUGIN_NEOPIXEL_COLLECTION
 

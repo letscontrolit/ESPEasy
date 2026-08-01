@@ -30,6 +30,7 @@ Modbus is a serial communication protocol commonly used for connecting industria
 It is a master/slave (or client/server) protocol, which means that one device (the master) initiates communication and the other devices (the slaves) respond. 
 Modbus RTU (Remote Terminal Unit) is a variant of the Modbus protocol that uses binary representation of data and is typically used over serial communication lines such as RS-485 or RS-232.
 This plugin supports Modbus RTU communication over a serial interface. To support RS-485 communication, an external RS-485 to TTL converter is required.
+For details on the Modbus protocol, please refer to https://www.modbustools.com/modbus.html or other official Modbus documentation.
 
 Modbus RTU uses a register-based addressing scheme, where each device has a unique address and data is stored in registers.
 Registers can be of different types, such as holding registers, input registers, coils, and discrete inputs.
@@ -38,7 +39,7 @@ This plugin supports reading holding registers (function code 03) and writing to
 The plugin can be configured to read up to 4 holding registers from a Modbus slave device and store the values in user variables.
 It can also write values to a specified holding register on the Modbus slave device. 
 
-The plugin can use a cache to store a limeted amount of consequitive register values. These registers are available through commands.
+The plugin can use a cache to store a limited amount of consequitive register values. The stored values of these registers are available through commands. The cache is read using a single Modbus request, which is more efficient than reading each register individually. Note that the maximum size of the cache may be limited by the actual Modbus device.
 
 The plugin does not support any hardware specific features. Instead it is a generic plugin that can be used with any Modbus RTU compatible device. You have to lookup the correct register addresses and data formats in the documentation of the Modbus device you want to communicate with. 
 For more complex devices dedicated plugins may be available that support the specific device and its features.
@@ -47,6 +48,11 @@ Supported hardware
 ------------------
 
 |P183_usedby|
+
+Modbus RTU requires a serial interface and a serial to RS485 converter like the board shown below. Due to memory constraints for ESP8266, the plugin is only available for ESP32 based devices.
+
+.. image:: P183_rs485_converter.jpeg
+  :width: 400
 
 Configuration
 -------------
