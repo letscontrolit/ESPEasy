@@ -1,6 +1,10 @@
 #include "../Helpers/JSON_helper.h"
 
 /** Changelog:
+ * 2026-08-04 tonhuisman: Parse JsonObject as name,value pairs,
+ *                        Add recursive processing to retrieve the value
+ *                        Add asJson parameter to get JSON-compliant values (quoted strings, bool as true/false,
+ *                        arrays with [] and objects with {})
  * 2026-08-01 tonhuisman: Extracted JSON value parser from HTTPResponseParser by @chromoxdor
  *                        Support bool type by returning 1/0 for true/false
  */
@@ -76,8 +80,10 @@ String getJsonValue(DynamicJsonDocument *root,
   // Append the value to the CSV string if it exists
   if (!value.isNull()) {
     result += getJsonValue(value, asJson);
-
+  } else {
+    result += F("null");
   }
+
   return result;
 }
 
@@ -96,7 +102,7 @@ String getJsonValue(JsonVariant value, bool asJson) {
     result += doubleToString(value.as<double>(), nr_decimals, true);
   } else if (value.is<const char *>()) {
     if (asJson) {
-      result += wrap_String(String(value.as<const char *>()), '\"'); // JSON quotes are always "
+      result += wrap_String(value.as<const char *>(), '\"'); // JSON quotes are always "
     } else {
       result += String(value.as<const char *>());
     }
@@ -120,7 +126,7 @@ String getJsonValue(JsonVariant value, bool asJson) {
       result += getJsonValue(element, asJson);
 
       // Add a comma unless it's the last element
-      currentIndex++;
+      ++currentIndex;
 
       if (currentIndex < arraySize) {
         result += ',';
@@ -132,9 +138,9 @@ String getJsonValue(JsonVariant value, bool asJson) {
     }
   } else if (value.is<JsonObject>()) {
     // if the value is a JSON Object, iterate over the attributes and return <name>,<value> pair(s), recursive
-    auto it           = value.as<JsonObject>().begin();
-    int  objectSize   = value.as<JsonObject>().size();
-    int  currentIndex = 0;
+    auto   it           = value.as<JsonObject>().begin();
+    size_t objectSize   = value.as<JsonObject>().size();
+    size_t currentIndex = 0;
 
     while (it != value.as<JsonObject>().end()) {
       if (asJson) {
@@ -149,7 +155,7 @@ String getJsonValue(JsonVariant value, bool asJson) {
       if (asJson) {
         result += '}';
       }
-      currentIndex++;
+      ++currentIndex;
 
       if (currentIndex < objectSize) {
         result += ',';
