@@ -10,12 +10,12 @@
 
 # if FEATURE_JSON_EVENT
 #  include "../Helpers/ESPEasy_Storage.h"
+#  include "../Helpers/JSON_helper.h"
 #  include "../WebServer/LoadFromFS.h"
 
 #  include <ArduinoJson.h>
 
 # endif // if FEATURE_JSON_EVENT
-
 
 void eventFromResponse(const String& host, const int& httpCode, const String& uri, ESPEasy_HTTPClient& http, const int& parseJson) {
   if ((httpCode == 200)) {
@@ -236,10 +236,13 @@ void eventFromResponse(const String& host, const int& httpCode, const String& ur
 
       // Allocate memory for root if needed
       if (root == nullptr) {
-  #  ifdef USE_SECOND_HEAP
-        HeapSelectIram ephemeral;
-  #  endif // ifdef USE_SECOND_HEAP
-        root = new (std::nothrow) DynamicJsonDocument(lastJsonMessageLength);
+        // Try to allocate in PSRAM or 2nd heap if possible
+        constexpr unsigned size = sizeof(DynamicJsonDocument);
+        void *ptr               = special_calloc(1, size);
+
+        if (ptr) {
+          root = new (ptr) DynamicJsonDocument(lastJsonMessageLength); // Dynamic allocation
+        }
       }
 
       if (root != nullptr) {
@@ -319,103 +322,13 @@ void readAndProcessJsonKeys(DynamicJsonDocument *root, int numJson) {
       }
     }
 
-    // Process the key and navigate the JSON
-    JsonVariant value = *root;
-    size_t start = 0, end;
+    const String val = getJsonValue(root, key, false); // Return arrays and objects as csv, _not_ JSON formatted
 
-    while ((end = key.indexOf('.', start)) != (unsigned int)-1) {
-      String part = key.substring(start, end);
-      start = end + 1;
-
-      // Look for an array e.g., "result[0]" → object "result", index 0
-      int bracketStart = part.indexOf('[');
-
-      if (bracketStart != -1) {
-        String objectName = part.substring(0, bracketStart);
-        String indexStr   = part.substring(bracketStart + 1, part.indexOf(']', bracketStart));
-
-        if (objectName.length() > 0) {
-          value = value[objectName]; // Access the object
-        }
-
-        if (value.is<JsonArray>()) {
-          int index = indexStr.toInt();
-          value = value[index];
-        } else {
-          value = value[indexStr]; // fallback if not actually array
-        }
-      } else {
-        // Normal object access without array
-        value = value[part];
-      }
-
-      if (value.isNull()) {
-        break; // Key path is invalid
-      }
-    }
-
-    if (!value.isNull()) {
+    if (!val.isEmpty()) {
       successfullyProcessedCount++;
-      String lastPart     = key.substring(start);
-      int    bracketStart = lastPart.indexOf('[');
-
-      if (bracketStart != -1) {
-        String objectName = lastPart.substring(0, bracketStart);
-        String indexStr   = lastPart.substring(bracketStart + 1, lastPart.indexOf(']', bracketStart));
-
-        if (objectName.length() > 0) {
-          value = value[objectName];
-        }
-
-        if (value.is<JsonArray>()) {
-          value = value[indexStr.toInt()];
-        } else {
-          value = value[indexStr];
-        }
-      } else {
-        value = value[lastPart];
-      }
+      csvOutput += val;
+      csvOutput += ',';
     }
-
-    // Append the value to the CSV string if it exists
-    if (!value.isNull()) {
-      if (value.is<int>()) {
-        csvOutput += String(value.as<int>());
-      } else if (value.is<float>()) {
-        csvOutput += doubleToString(value.as<double>(), nr_decimals, true);
-      } else if (value.is<const char *>()) {
-        csvOutput += String(value.as<const char *>());
-      } else if (value.is<JsonArray>()) {
-        // If the value is an array, iterate over its elements
-        JsonArray array        = value.as<JsonArray>();
-        size_t    arraySize    = array.size(); // Get the total number of elements in the array
-        size_t    currentIndex = 0;            // Track the current index
-
-        for (JsonVariant element : array) {
-          if (element.is<int>()) {
-            csvOutput += String(element.as<int>());
-          } else if (element.is<float>()) {
-            csvOutput += doubleToString(element.as<double>(), nr_decimals, true);
-          } else if (element.is<const char *>()) {
-            csvOutput += String(element.as<const char *>());
-          } else {
-            csvOutput += F("unknown");
-          }
-
-          // Add a comma unless it's the last element
-          currentIndex++;
-
-          if (currentIndex < arraySize) {
-            csvOutput += ',';
-          }
-        }
-      } else {
-        csvOutput += F("unknown");
-      }
-    } else {
-      csvOutput += F("null"); // Indicate missing value
-    }
-    csvOutput += ',';
   }
 
   keyFile.close();
@@ -429,11 +342,11 @@ void readAndProcessJsonKeys(DynamicJsonDocument *root, int numJson) {
     // Log the results
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       addLog(LOG_LEVEL_INFO, strformat(F("Successfully processed %d out of %d keys"), successfullyProcessedCount, keyCount));
-      eventQueue.addMove(strformat(F("JsonReply%s%s=%s"),
-                                   numJson != 0 ? "#" : "",
-                                   toStringNoZero(numJson).c_str(),
-                                   csvOutput.c_str()));
     }
+    eventQueue.addMove(strformat(F("JsonReply%s%s=%s"),
+                                 numJson != 0 ? "#" : "",
+                                 toStringNoZero(numJson).c_str(),
+                                 csvOutput.c_str()));
   }
 }
 

@@ -37,7 +37,7 @@ bool hasEscapedCharacter(String& str, const char EscapeChar)
 
 void stripEscapeCharacters(String& str)
 {
-  const char braces[]     = { '%', '[', ']', '{', '}', '(', ')' };
+  const char braces[]     = { '%', '[', ']', '{', '}', '(', ')', ':' };
   constexpr uint8_t nrbraces = NR_ELEMENTS(braces);
 
   for (uint8_t i = 0; i < nrbraces; ++i) {
@@ -48,7 +48,7 @@ void stripEscapeCharacters(String& str)
 
 void addEscapeCharacters(String& str)
 {
-  const char braces[]     = { '%', '[', ']', '{', '}', '(', ')' };
+  const char braces[]     = { '%', '[', ']', '{', '}', '(', ')', ':' };
   constexpr uint8_t nrbraces = NR_ELEMENTS(braces);
 
   for (uint8_t i = 0; i < nrbraces; ++i) {

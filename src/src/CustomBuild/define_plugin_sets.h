@@ -4394,6 +4394,14 @@ To create/register a plugin, you have to :
 #endif
 //-------------------End of HTTPResponseParser Section----------
 
+#ifndef FEATURE_JSON_PARSE
+  #if defined(USES_P037) || FEATURE_JSON_EVENT // and other JSON-parsing features
+    #define FEATURE_JSON_PARSE    1
+  #else
+    #define FEATURE_JSON_PARSE    0
+  #endif // if defined(USES_P037) || FEATURE_JSON_EVENT
+#endif // ifndef FEATURE_JSON_PARSE
+
   #if !(defined(SOC_DAC_SUPPORTED) && SOC_DAC_SUPPORTED)
     #ifdef USES_P152
       #undef USES_P152

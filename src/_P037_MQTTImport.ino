@@ -11,6 +11,7 @@
 // This task reads data from the MQTT Import input stream and saves the value
 
 /**
+ * 2026-08-02 tonhuisman: Add better support for JSON parsing, that handles multiple levels and arrays
  * 2025-08-20 tonhuisman: Generate events with numeric values using the configured decimals setting.
  * 2025-06-14 tonhuisman: Add support for Custom Value Type per task value
  * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported for MQTT Import)
@@ -58,10 +59,11 @@
 # define P037_MAX_QUEUEDEPTH      150
 
 
-bool   MQTT_unsubscribe_037(struct EventStruct *event);
-bool   MQTTSubscribe_037(struct EventStruct *event);
+bool MQTT_unsubscribe_037(struct EventStruct *event);
+bool MQTTSubscribe_037(struct EventStruct *event);
 
 # if P037_MAPPING_SUPPORT || P037_JSON_SUPPORT
+
 String P037_getMQTTLastTopicPart(const String& topic) {
   const int16_t lastSlash = topic.lastIndexOf('/');
 
@@ -470,7 +472,8 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
 
         // json filter check
         if (checkJson && P037_data->hasFilters()) { // See if we pass the filters for all json attributes
-          do {
+          do
+          {
             key     = P037_data->iter->key().c_str();
             Payload = P037_data->iter->value().as<String>();
             #    if P037_MAPPING_SUPPORT
@@ -521,7 +524,8 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
           if (checkJson && P037_data->hasFilters()) { // See if we pass the filters for all json attributes
             P037_data->iter = P037_data->doc.begin();
 
-            do {
+            do
+            {
               key     = P037_data->iter->key().c_str();
               Payload = P037_data->iter->value().as<String>();
               #   if P037_MAPPING_SUPPORT
@@ -541,7 +545,8 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
           #  endif // P037_FILTER_PER_TOPIC
           # endif // if P037_JSON_SUPPORT
           {
-            do {
+            do
+            {
               # if P037_JSON_SUPPORT
 
               if (checkJson && (P037_data->iter != P037_data->doc.end())) {
@@ -552,13 +557,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                 if (!jsonAttribute.isEmpty()) {
                   key = jsonAttribute;
 
-                  if (key.indexOf('.') > -1) {
-                    String part1 = parseStringKeepCase(key, 1, '.');
-                    String part2 = parseStringKeepCase(key, 2, '.');
-                    Payload = P037_data->doc[part1][part2].as<String>();
-                  } else {
-                    Payload = P037_data->doc[key].as<String>();
-                  }
+                  Payload         = getJsonValue(P037_data->root, key, false);
                   unparsedPayload = Payload;
                   int8_t jIndex = jsonIndex.toInt();
 

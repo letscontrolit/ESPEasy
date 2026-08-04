@@ -10,6 +10,7 @@
 # include "../Helpers/Misc.h"
 # include "../Helpers/StringParser.h"
 # include "../Globals/MQTT.h"
+# include "../Helpers/JSON_helper.h"
 
 # include <ArduinoJson.h>
 
@@ -197,9 +198,13 @@ private:
   String _filterListItem;
   # endif // if P037_FILTER_SUPPORT
   # if P037_JSON_SUPPORT
-  DynamicJsonDocument *root                  = nullptr;
-  uint16_t             lastJsonMessageLength = 512;
+  uint16_t lastJsonMessageLength = 512;
+
+public:
+
+  DynamicJsonDocument *root = nullptr;
   # endif // if P037_JSON_SUPPORT
+
 };
 
 #endif    // ifdef USED_P037
