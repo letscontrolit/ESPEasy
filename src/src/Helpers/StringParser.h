@@ -15,6 +15,8 @@ bool hasEscapedCharacter(String& str, const char EscapeChar);
 // So far \\% \\[ \\] \\{ \\} \\( and \\) are used (all with single backslash!)
 void   stripEscapeCharacters(String& str);
 
+void   addEscapeCharacters(String& str);
+
 #if FEATURE_STRING_VARIABLES
 String parseTemplateAndCalculate(String& tmpString);
 uint8_t getDerivedValueCountForTask(taskIndex_t taskIndex);
