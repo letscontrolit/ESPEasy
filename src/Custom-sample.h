@@ -30,6 +30,8 @@
 #define FEATURE_JSON_EVENT              0  // Generates an event with the values of a JSON repsonse of an HTTP call. Keys are stored in json.keys one key per line (e.g.: Body.Data.DAY_ENERGY.Values.1)
 // #define FEATURE_SD                   1  // Enable SD card support
 // #define FEATURE_DOWNLOAD             1  // Enable downloading a file from an url
+// #define FEATURE_JSON_PARSE           1  // Enable extended JSON parsing, disabled by default on ESP8266
+// #define FEATURE_EXTENDED_STRING_FUNCTIONS  1  // Enable extra Rules string functions. Also required to enable FEATURE_JSON_PARSE on ESP8266, as it's disabled by default for ESP8266
 
 #ifdef BUILD_GIT
 # undef BUILD_GIT
