@@ -557,7 +557,18 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                 if (!jsonAttribute.isEmpty()) {
                   key = jsonAttribute;
 
-                  Payload         = getJsonValue(P037_data->root, key, false);
+                  #  if FEATURE_JSON_PARSE
+                  Payload = getJsonValue(P037_data->root, key, false);
+                  #  else
+
+                  if (key.indexOf('.') > -1) {
+                    String part1 = parseStringKeepCase(key, 1, '.');
+                    String part2 = parseStringKeepCase(key, 2, '.');
+                    Payload = P037_data->doc[part1][part2].as<String>();
+                  } else {
+                    Payload = P037_data->doc[key].as<String>();
+                  }
+                  #  endif // if FEATURE_JSON_PARSE
                   unparsedPayload = Payload;
                   int8_t jIndex = jsonIndex.toInt();
 
@@ -626,10 +637,10 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                     success = false;
                     break;
                   }
-                  numericPayload = false;                                  // No, it isn't numeric
-                  doublePayload  = NAN;                                    // Invalid value
+                  numericPayload = false;                             // No, it isn't numeric
+                  doublePayload  = NAN;                               // Invalid value
                 }
-                UserVar.setFloat(event->TaskIndex, x, doublePayload);      // Save the new value
+                UserVar.setFloat(event->TaskIndex, x, doublePayload); // Save the new value
 
                 // Generate event for rules processing - proposed by TridentTD
 
@@ -664,9 +675,9 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                     addEscapeCharacters(tmp); // Add escape characters to avoid problems with rules processing if a JSON message is received
 
                     String RuleEvent = strformat(F("%s#%s=%s"),
-                                                getTaskDeviceName(event->TaskIndex).c_str(),
-                                                event->String1.c_str(),
-                                                wrapWithQuotesIfContainsParameterSeparatorChar(tmp).c_str());
+                                                 getTaskDeviceName(event->TaskIndex).c_str(),
+                                                 event->String1.c_str(),
+                                                 wrapWithQuotesIfContainsParameterSeparatorChar(tmp).c_str());
                     P037_addEventToQueue(event, RuleEvent);
                   }
 
@@ -675,9 +686,9 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
 
                   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                     addLog(LOG_LEVEL_INFO, strformat(F("IMPT : [%s#%s] : %s"),
-                                                    getTaskDeviceName(event->TaskIndex).c_str(),
-                                                    checkJson ? key.c_str() : getTaskValueName(event->TaskIndex, x).c_str(),
-                                                    toString(doublePayload, ExtraTaskSettings.TaskDeviceValueDecimals[x]).c_str()));
+                                                     getTaskDeviceName(event->TaskIndex).c_str(),
+                                                     checkJson ? key.c_str() : getTaskValueName(event->TaskIndex, x).c_str(),
+                                                     toString(doublePayload, ExtraTaskSettings.TaskDeviceValueDecimals[x]).c_str()));
                   }
                   # endif // if !defined(P037_LIMIT_BUILD_SIZE) || defined(P037_OVERRIDE)
 
@@ -694,7 +705,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                   } else {
                     String tmp = Payload;
                     addEscapeCharacters(tmp); // Add escape characters to avoid problems with rules processing if a JSON message is received
-					
+
                     RuleEvent += wrapWithQuotesIfContainsParameterSeparatorChar(tmp);
                   }
                   P037_addEventToQueue(event, RuleEvent);

@@ -29,10 +29,10 @@
 #include <math.h>
 #include <vector>
 
-#if FEATURE_JSON_PARSE
+#if FEATURE_JSON_PARSE && FEATURE_EXTENDED_STRING_FUNCTIONS
 #include <ArduinoJson.h>
 #include "../Helpers/JSON_helper.h"
-#endif // if FEATURE_JSON_PARSE
+#endif // if FEATURE_JSON_PARSE && FEATURE_EXTENDED_STRING_FUNCTIONS
 
 #ifdef WEBSERVER_NEW_RULES
 String EventToFileName(const String& eventName) {
@@ -471,12 +471,14 @@ bool parse_math_functions(const String& cmd_s_lower, const String& arg1, const S
 const char string_commands[] PROGMEM = "substring|indexof|indexof_ci|equals|equals_ci|timetomin|timetosec|strtol|tobin|tohex|ord|urlencode"
   #if FEATURE_STRING_VARIABLES
   "|lookup"
+  #if FEATURE_EXTENDED_STRING_FUNCTIONS
   "|unescape|escape"
   "|parse"
+  #endif // if FEATURE_EXTENDED_STRING_FUNCTIONS
   #endif // if FEATURE_STRING_VARIABLES
-  #if FEATURE_JSON_PARSE
+  #if FEATURE_JSON_PARSE && FEATURE_EXTENDED_STRING_FUNCTIONS
   "|json"
-  #endif // if FEATURE_JSON_PARSE
+  #endif // if FEATURE_JSON_PARSE && FEATURE_EXTENDED_STRING_FUNCTIONS
   ;
 enum class string_commands_e {
   substring,
@@ -493,16 +495,19 @@ enum class string_commands_e {
   urlencode,
   #if FEATURE_STRING_VARIABLES
   lookup,
+  #if FEATURE_EXTENDED_STRING_FUNCTIONS
   unescape,
   escape,
   parse,
+  #endif // if FEATURE_EXTENDED_STRING_FUNCTIONS
   #endif // if FEATURE_STRING_VARIABLES
-  #if FEATURE_JSON_PARSE
+  #if FEATURE_JSON_PARSE && FEATURE_EXTENDED_STRING_FUNCTIONS
   json,
-  #endif // if FEATURE_JSON_PARSE
+  #endif // if FEATURE_JSON_PARSE && FEATURE_EXTENDED_STRING_FUNCTIONS
 };
 
 
+  #if FEATURE_EXTENDED_STRING_FUNCTIONS
 void hideEscaped(String &line, bool &mustReplaceEscapedBracket, bool &mustReplaceEscapedCurlyBracket, bool &mustReplaceEscapedColon) {
   String MaskEscapedBracket;
 
@@ -577,12 +582,13 @@ void restoreMaskedAndEscaped(String &line, bool mustReplaceMaskedChars, bool mus
     line.replace(MaskEscapedBracket, F("\\:"));
   }
 }
+#endif // if FEATURE_EXTENDED_STRING_FUNCTIONS
 
 void parse_string_commands(String& line) {
   unsigned int startIndex = 0;
   int closingIndex;
 
-  #if FEATURE_JSON_PARSE
+  #if FEATURE_JSON_PARSE && FEATURE_EXTENDED_STRING_FUNCTIONS
   DynamicJsonDocument*root       = nullptr;
   uint16_t lastJsonMessageLength = 512;
 
@@ -594,14 +600,37 @@ void parse_string_commands(String& line) {
                           root = nullptr;
                         }
                       };
-  #endif // if FEATURE_JSON_PARSE
+  #endif // if FEATURE_JSON_PARSE && FEATURE_EXTENDED_STRING_FUNCTIONS
   bool mustReplaceMaskedChars = false;
   bool mustReplaceEscapedBracket = false;
   bool mustReplaceEscapedCurlyBracket = false;
-  bool mustReplaceEscapedColon = false;
   String MaskEscapedBracket;
+  
+  #if FEATURE_EXTENDED_STRING_FUNCTIONS
+  bool mustReplaceEscapedColon = false;
 
   hideEscaped(line, mustReplaceEscapedBracket, mustReplaceEscapedCurlyBracket, mustReplaceEscapedColon);
+  #else // if FEATURE_EXTENDED_STRING_FUNCTIONS
+  if (hasEscapedCharacter(line,'(') || hasEscapedCharacter(line,')')) {
+    // replace the \( and \) with other characters to mask the escaped brackets so we can continue parsing.
+    // We have to unmask then after we're finished.
+    MaskEscapedBracket = static_cast<char>(0x11); // ASCII 0x11 = Device control 1
+    line.replace(F("\\("), MaskEscapedBracket);
+    MaskEscapedBracket = static_cast<char>(0x12); // ASCII 0x12 = Device control 2
+    line.replace(F("\\)"), MaskEscapedBracket);
+    mustReplaceEscapedBracket = true;
+  }
+
+  if (hasEscapedCharacter(line,'{') || hasEscapedCharacter(line,'}')) {
+    // replace the \{ and \} with other characters to mask the escaped curly brackets so we can continue parsing.
+    // We have to unmask then after we're finished.
+    MaskEscapedBracket = static_cast<char>(0x13); // ASCII 0x13 = Device control 3
+    line.replace(F("\\{"), MaskEscapedBracket);
+    MaskEscapedBracket = static_cast<char>(0x14); // ASCII 0x14 = Device control 4
+    line.replace(F("\\}"), MaskEscapedBracket);
+    mustReplaceEscapedCurlyBracket = true;
+  }
+  #endif // if FEATURE_EXTENDED_STRING_FUNCTIONS
 
   while (get_next_inner_bracket(line, startIndex, closingIndex, '}')) {
     // Command without opening and closing brackets.
@@ -657,6 +686,7 @@ void parse_string_commands(String& line) {
                 replacement = arg3.substring(startpos * endpos, (startpos + 1) * endpos);
               }
               break;
+            #if FEATURE_EXTENDED_STRING_FUNCTIONS
             case string_commands_e::unescape:
             case string_commands_e::escape:
               replacement = parseStringToEndKeepCaseNoTrim(fullCommand, 2, ':');
@@ -673,6 +703,7 @@ void parse_string_commands(String& line) {
               hideMasked(replacement, mustReplaceMaskedChars);
 
               break;
+            #endif // if FEATURE_EXTENDED_STRING_FUNCTIONS
             #endif // if FEATURE_STRING_VARIABLES
             case string_commands_e::indexof:
             case string_commands_e::indexof_ci:
@@ -770,7 +801,7 @@ void parse_string_commands(String& line) {
                 replacement = URLEncode(arg1);
               }
               break;
-            #if FEATURE_STRING_VARIABLES
+            #if FEATURE_STRING_VARIABLES && FEATURE_EXTENDED_STRING_FUNCTIONS
             case string_commands_e::parse:
               // parse: a function to retrieve nth param (1-based), with optional separator, default: comma
               // {parse:<param>:[<separator>]:<string-to-parse>}
@@ -786,8 +817,8 @@ void parse_string_commands(String& line) {
                 hideMasked(replacement, mustReplaceMaskedChars); // re-apply
               }
               break;
-            #endif // if FEATURE_STRING_VARIABLES
-            #if FEATURE_JSON_PARSE
+            #endif // if FEATURE_STRING_VARIABLES && FEATURE_EXTENDED_STRING_FUNCTIONS
+            #if FEATURE_JSON_PARSE && FEATURE_EXTENDED_STRING_FUNCTIONS
             case string_commands_e::json:
               // json: get a value from a (valid) JSON string
               // {json:<attribute-to-retrieve>:[<asJson>]:<json-string>}
@@ -838,7 +869,7 @@ void parse_string_commands(String& line) {
                 }
                 break;
               }
-            #endif // if FEATURE_JSON_PARSE
+            #endif // if FEATURE_JSON_PARSE && FEATURE_EXTENDED_STRING_FUNCTIONS
           }
         }
       }
@@ -850,7 +881,12 @@ void parse_string_commands(String& line) {
         // See: https://github.com/letscontrolit/ESPEasy/issues/2932#issuecomment-596139096
         replacement = line.substring(startIndex, closingIndex + 1);
         mustReplaceMaskedChars = true;
+        #if FEATURE_EXTENDED_STRING_FUNCTIONS
         hideMasked(replacement, mustReplaceMaskedChars); // apply
+        #else // if FEATURE_EXTENDED_STRING_FUNCTIONS
+        line.replace('{', static_cast<char>(0x02));
+        line.replace('}', static_cast<char>(0x03));
+        #endif // if FEATURE_EXTENDED_STRING_FUNCTIONS
       }
 
       // Replace the full command including opening and closing brackets.
@@ -864,14 +900,41 @@ void parse_string_commands(String& line) {
     }
   }
 
-  #if FEATURE_JSON_PARSE
+  #if FEATURE_JSON_PARSE && FEATURE_EXTENDED_STRING_FUNCTIONS
 
   if (nullptr != root) {
     cleanupJSON();
   }
-  #endif // if FEATURE_JSON_PARSE
+  #endif // if FEATURE_JSON_PARSE && FEATURE_EXTENDED_STRING_FUNCTIONS
 
+  #if FEATURE_EXTENDED_STRING_FUNCTIONS
   restoreMaskedAndEscaped(line, mustReplaceMaskedChars, mustReplaceEscapedBracket, mustReplaceEscapedCurlyBracket, mustReplaceEscapedColon);
+  #else // if FEATURE_EXTENDED_STRING_FUNCTIONS
+  if (mustReplaceMaskedChars) {
+    // We now have to check if we did mask some parts and unmask them.
+    // Let's hope we don't mess up any Unicode here.
+    line.replace(static_cast<char>(0x02), '{');
+    line.replace(static_cast<char>(0x03), '}');
+  }
+
+  if (mustReplaceEscapedBracket) {
+    // We now have to check if we did mask some escaped bracket and unmask them.
+    // Let's hope we don't mess up any Unicode here.
+    MaskEscapedBracket = static_cast<char>(0x11); // ASCII 0x11 = Device control 1
+    line.replace(MaskEscapedBracket, F("\\("));
+    MaskEscapedBracket = static_cast<char>(0x12); // ASCII 0x12 = Device control 2
+    line.replace(MaskEscapedBracket, F("\\)"));
+  }
+
+  if (mustReplaceEscapedCurlyBracket) {
+    // We now have to check if we did mask some escaped curly bracket and unmask them.
+    // Let's hope we don't mess up any Unicode here.
+    MaskEscapedBracket = static_cast<char>(0x13); // ASCII 0x13 = Device control 3
+    line.replace(MaskEscapedBracket, F("\\{"));
+    MaskEscapedBracket = static_cast<char>(0x14); // ASCII 0x14 = Device control 4
+    line.replace(MaskEscapedBracket, F("\\}"));
+  }
+  #endif // if FEATURE_EXTENDED_STRING_FUNCTIONS
 }
 
 void substitute_eventvalue(String& line, const String& event) {

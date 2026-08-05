@@ -10,9 +10,6 @@
 # include "../Helpers/Misc.h"
 # include "../Helpers/StringParser.h"
 # include "../Globals/MQTT.h"
-# include "../Helpers/JSON_helper.h"
-
-# include <ArduinoJson.h>
 
 // # define PLUGIN_037_DEBUG     // Additional debugging information
 
@@ -84,6 +81,12 @@
 #   define P037_FILTER_PER_TOPIC
 #  endif // ifndef P037_FILTER_PER_TOPIC
 # endif  // if P037_FILTER_SUPPORT && P037_MAX_FILTERS == VARS_PER_TASK
+
+#if P037_JSON_SUPPORT
+# include "../Helpers/JSON_helper.h"
+
+# include <ArduinoJson.h>
+#endif // if P037_JSON_SUPPORT
 
 # define P037_ARRAY_SIZE      (P037_MAX_MAPPINGS + P037_MAX_FILTERS) // Storage layout definitions
 # define P037_START_MAPPINGS  0

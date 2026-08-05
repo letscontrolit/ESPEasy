@@ -4395,12 +4395,25 @@ To create/register a plugin, you have to :
 //-------------------End of HTTPResponseParser Section----------
 
 #ifndef FEATURE_JSON_PARSE
-  #if defined(USES_P037) || FEATURE_JSON_EVENT // and other JSON-parsing features
-    #define FEATURE_JSON_PARSE    1
+  #if defined(ESP32) && (defined(USES_P037) || FEATURE_JSON_EVENT) // and other JSON-parsing features
+    #define FEATURE_JSON_PARSE    1 // By default only on ESP32
   #else
     #define FEATURE_JSON_PARSE    0
   #endif // if defined(USES_P037) || FEATURE_JSON_EVENT
 #endif // ifndef FEATURE_JSON_PARSE
+
+#ifndef FEATURE_EXTENDED_STRING_FUNCTIONS
+  #ifdef ESP32
+    #define FEATURE_EXTENDED_STRING_FUNCTIONS   1
+  #endif // ifdef ESP32
+  #ifdef ESP8266
+    #define FEATURE_EXTENDED_STRING_FUNCTIONS   0
+  #endif // ifdef ESP8266
+#endif // ifndef FEATURE_EXTENDED_STRING_FUNCTIONS
+#if defined(ESP8266) && FEATURE_JSON_PARSE && !FEATURE_EXTENDED_STRING_FUNCTIONS
+  #undef FEATURE_JSON_PARSE
+  #define FEATURE_JSON_PARSE  0
+#endif // if FEATURE_JSON_PARSE && !FEATURE_EXTENDED_STRING_FUNCTIONS
 
   #if !(defined(SOC_DAC_SUPPORTED) && SOC_DAC_SUPPORTED)
     #ifdef USES_P152
@@ -4422,7 +4435,7 @@ To create/register a plugin, you have to :
 #if FEATURE_WIFI
   #ifndef USES_NW001
     #define USES_NW001
-  #endif
+  #endif 
   #ifndef USES_NW002
     #define USES_NW002
   #endif

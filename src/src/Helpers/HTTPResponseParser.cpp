@@ -322,6 +322,7 @@ void readAndProcessJsonKeys(DynamicJsonDocument *root, int numJson) {
       }
     }
 
+    #  if FEATURE_JSON_PARSE
     const String val = getJsonValue(root, key, false); // Return arrays and objects as csv, _not_ JSON formatted
 
     if (!val.isEmpty()) {
@@ -329,6 +330,107 @@ void readAndProcessJsonKeys(DynamicJsonDocument *root, int numJson) {
       csvOutput += val;
       csvOutput += ',';
     }
+    #  else // if FEATURE_JSON_PARSE
+    // Process the key and navigate the JSON
+    JsonVariant value = *root;
+    size_t start = 0, end;
+
+    while ((end = key.indexOf('.', start)) != (unsigned int)-1) {
+      String part = key.substring(start, end);
+      start = end + 1;
+
+      // Look for an array e.g., "result[0]" → object "result", index 0
+      int bracketStart = part.indexOf('[');
+
+      if (bracketStart != -1) {
+        String objectName = part.substring(0, bracketStart);
+        String indexStr   = part.substring(bracketStart + 1, part.indexOf(']', bracketStart));
+
+        if (objectName.length() > 0) {
+          value = value[objectName]; // Access the object
+        }
+
+        if (value.is<JsonArray>()) {
+          int index = indexStr.toInt();
+          value = value[index];
+        } else {
+          value = value[indexStr]; // fallback if not actually array
+        }
+      } else {
+        // Normal object access without array
+        value = value[part];
+      }
+
+      if (value.isNull()) {
+        break; // Key path is invalid
+      }
+    }
+
+    if (!value.isNull()) {
+      successfullyProcessedCount++;
+      String lastPart     = key.substring(start);
+      int    bracketStart = lastPart.indexOf('[');
+
+      if (bracketStart != -1) {
+        String objectName = lastPart.substring(0, bracketStart);
+        String indexStr   = lastPart.substring(bracketStart + 1, lastPart.indexOf(']', bracketStart));
+
+        if (objectName.length() > 0) {
+          value = value[objectName];
+        }
+
+        if (value.is<JsonArray>()) {
+          value = value[indexStr.toInt()];
+        } else {
+          value = value[indexStr];
+        }
+      } else {
+        value = value[lastPart];
+      }
+    }
+
+    // Append the value to the CSV string if it exists
+    if (!value.isNull()) {
+      if (value.is<int>()) {
+        csvOutput += String(value.as<int>());
+      } else if (value.is<float>()) {
+        csvOutput += doubleToString(value.as<double>(), nr_decimals, true);
+      } else if (value.is<const char *>()) {
+        csvOutput += String(value.as<const char *>());
+      } else if (value.is<JsonArray>()) {
+        // If the value is an array, iterate over its elements
+        JsonArray array        = value.as<JsonArray>();
+        size_t    arraySize    = array.size(); // Get the total number of elements in the array
+        size_t    currentIndex = 0;            // Track the current index
+
+        for (JsonVariant element : array) {
+          if (element.is<int>()) {
+            csvOutput += String(element.as<int>());
+          } else if (element.is<float>()) {
+            csvOutput += doubleToString(element.as<double>(), nr_decimals, true);
+          } else if (element.is<const char *>()) {
+            csvOutput += String(element.as<const char *>());
+          } else {
+            csvOutput += F("unknown");
+          }
+
+          // Add a comma unless it's the last element
+          currentIndex++;
+
+          if (currentIndex < arraySize) {
+            csvOutput += ',';
+          }
+        }
+      } else {
+        csvOutput += F("unknown");
+      }
+    } else {
+      csvOutput += F("null"); // Indicate missing value
+      csvOutput += val;
+      csvOutput += ',';
+    }
+    csvOutput += ',';
+    #  endif // if FEATURE_JSON_PARSE
   }
 
   keyFile.close();

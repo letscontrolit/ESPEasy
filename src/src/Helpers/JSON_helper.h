@@ -1,6 +1,6 @@
 #pragma once
 
-/** See */
+/** See JSON_helper.cpp for changelog */
 #if FEATURE_JSON_PARSE
 # include <ArduinoJson.h>
 # include "../Helpers/StringConverter_Numerical.h"
