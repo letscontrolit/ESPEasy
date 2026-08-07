@@ -42,6 +42,7 @@
 //
 
 /** History
+ * 2026-08-06 tonhuisman: Move display specific code in separate derived structs from P073_data_struct, and deduplicate code where possible
  * 2026-07-27 tonhuisman: Restructure plugin_struct source into separate files per supported display model for maintainability
  *                        Some minor code optimization for 74HC595 displays
  * 2026-07-25 tonhuisman: Use Arduino pin initialization as some ESPs don't properly set up their pins with DIRECT_GPIO_OUTPUT
@@ -314,21 +315,28 @@ boolean Plugin_073(uint8_t function, struct EventStruct *event, String& string) 
 
     case PLUGIN_INIT:
     {
-      initPluginTaskData(event->TaskIndex, new (std::nothrow) P073_data_struct());
-      P073_data_struct *P073_data =
-        static_cast<P073_data_struct *>(getPluginTaskData(event->TaskIndex));
+      P073_data_struct *P073_data = nullptr;
+
+      switch (P073_CFG_DISPLAYTYPE)
+      {
+        case P073_TM1637_4DGTCOLON:
+        case P073_TM1637_4DGTDOTS:
+        case P073_TM1637_6DGT:
+          P073_data = new (std::nothrow) P073_TM1637(event);
+          break;
+        case P073_MAX7219_8DGT:
+          P073_data = new (std::nothrow) P073_MAX7219(event);
+          break;
+        # if P073_USE_74HC595
+        case P073_74HC595_2_8DGT:
+          P073_data = new (std::nothrow) P073_74HC595(event);
+          break;
+        # endif // if P073_USE_74HC595
+      }
 
       if (nullptr != P073_data) {
-        P073_data->init(event);
-
-        # if P073_USE_74HC595
-
-        if (P073_data->is74HC595Multiplex()) {
-          Scheduler.setPluginTaskTimer(10, event->TaskIndex, 0);
-        }
-        # endif // if P073_USE_74HC595
-
-        success = true;
+        initPluginTaskData(event->TaskIndex, P073_data);
+        success = P073_data->init(event);
       }
       break;
     }

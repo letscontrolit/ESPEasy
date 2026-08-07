@@ -197,7 +197,7 @@ uint8_t P073_revert7bits(uint8_t character) {
   return b | dpBit; // Restore dot-bit
 }
 
-void P073_data_struct::init(struct EventStruct *event)
+P073_data_struct::P073_data_struct(struct EventStruct *event)
 {
   ClearBuffer();
   pin1         = CONFIG_PIN1;
@@ -223,29 +223,10 @@ void P073_data_struct::init(struct EventStruct *event)
   fontset = P073_CFG_FONTSET;
   # endif // if P073_EXTRA_FONTS
   digits = P073_CFG_DIGITS;
-  # if P073_USE_74HC595
 
-  if ((digits > 0) && ((digits < 4) || (5 == digits) || (7 == digits) || (9 == digits) || (10 == digits) || (11 == digits))) {
-    isSequential = true;
+}
 
-    if (1 == digits) {  // 2+2
-      digits = 4;
-    } else
-    if (9 == digits) {  // 4 sequential
-      digits = 4;
-    } else
-    if (10 == digits) { // 4+4 sequential
-      digits = 8;
-    } else
-    if (7 == digits) {  // 3+3
-      digits = 6;
-    } else
-    if (11 == digits) { // 3+4/4+3 sequential
-      digits = 7;
-    }
-  }
-  # endif // if P073_USE_74HC595
-
+bool P073_data_struct::init(struct EventStruct *event) {
   if (0 == digits) {
     digits = P073_getDefaultDigits(P073_CFG_DISPLAYTYPE);
   }
@@ -255,41 +236,10 @@ void P073_data_struct::init(struct EventStruct *event)
   }
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    addLog(LOG_LEVEL_INFO, strformat(F("P073 : Digits: %d, model: %d, pins: %d, %d, %d"), digits, displayModel, pin1, pin2, pin3));
+    addLog(LOG_LEVEL_INFO, strformat(F("P073 : Digits: %d, model: %d, output: %d, pins: %d, %d, %d"),
+                                     digits, displayModel, output, pin1, pin2, pin3));
   }
-
-  switch (displayModel)
-  {
-    case P073_TM1637_4DGTCOLON:
-    case P073_TM1637_4DGTDOTS:
-    case P073_TM1637_6DGT:
-      tm1637_InitDisplay();
-      tm1637_SetPowerBrightness(brightness / 2, true);
-
-      if (output == P073_DISP_MANUAL) {
-        tm1637_ClearDisplay();
-      }
-      break;
-    case P073_MAX7219_8DGT:
-      max7219_InitDisplay();
-      delay(10); // small poweroff/poweron delay
-      max7219_SetPowerBrightness(brightness, true);
-
-      if (output == P073_DISP_MANUAL) {
-        max7219_ClearDisplay();
-      }
-      break;
-    # if P073_USE_74HC595
-    case P073_74HC595_2_8DGT:
-      hc595_InitDisplay();
-
-      if (output == P073_DISP_MANUAL) {
-        ClearBuffer();
-        hc595_ToOutputBuffer();
-      }
-      break;
-    # endif // if P073_USE_74HC595
-  }
+  return true;
 }
 
 void P073_data_struct::FillBufferWithTime(bool    sevendgt_now,
@@ -378,13 +328,11 @@ void P073_data_struct::FillBufferWithNumber(const String& number) {
   }
   int8_t p073_index = 7;
 
-  dotpos = -1; // -1 means no dot to display
-
   for (int i = number.length() - 1; i >= 0 && p073_index >= 0; --i) {
     const char p073_tmpchar = number.charAt(i);
 
     if (p073_tmpchar == '.') { // dot
-      dotpos = p073_index;
+      showperiods[p073_index] = true;
     } else {
       showbuffer[p073_index] = P073_mapCharToFontPosition(p073_tmpchar, fontset);
       p073_index--;
@@ -421,7 +369,7 @@ void P073_data_struct::FillBufferWithTemp(int temperature) {
 
 /**
  * FillBufferWithDualTemp()
- * leftTemperature or rightTempareature < -100.0 then shows dashes
+ * leftTemperature or rightTemperature < -100.0 then shows dashes
  */
 void P073_data_struct::FillBufferWithDualTemp(int  leftTemperature,
                                               bool leftWithDecimal,
@@ -497,7 +445,6 @@ void P073_data_struct::FillBufferWithString(const String& textToShow,
         showperiods[p] = true;
         p++;
       } else {
-        // if (p > 0) {
         showperiods[p - 1] = true;                        // The period displays as a dot on the previous digit!
       }
 
@@ -697,10 +644,7 @@ void P073_data_struct::ClearBuffer() {
   }
 }
 
-uint8_t P073_data_struct::tm1637_getFontChar(uint8_t index,
-                                             uint8_t fontset) { return P073_revert7bits(P073_getFontChar(index, fontset)); }
-
-bool    P073_data_struct::plugin_once_a_second(struct EventStruct *event) {
+bool P073_data_struct::plugin_once_a_second(struct EventStruct *event) {
   if (output == P073_DISP_MANUAL) {
     return false;
   }
@@ -740,33 +684,13 @@ bool    P073_data_struct::plugin_once_a_second(struct EventStruct *event) {
   }
   # endif // if P073_BLINK_DOT
 
-  switch (displayModel)
-  {
-    case P073_TM1637_4DGTCOLON:
-    case P073_TM1637_4DGTDOTS:
-      tm1637_ShowTimeTemp4(timesep, 0);
-      break;
-    case P073_TM1637_6DGT:
+  if (P073_CFG_OUTPUTTYPE == P073_DISP_DATE) {
+    showDate();
+  } else {
+    showperiods[1] = timesep;
 
-      if (P073_CFG_OUTPUTTYPE == P073_DISP_DATE) {
-        tm1637_ShowDate6();
-      } else {
-        tm1637_ShowTime6();
-      }
-      break;
-    case P073_MAX7219_8DGT:
-
-      if (P073_CFG_OUTPUTTYPE == P073_DISP_DATE) {
-        max7219_ShowDate();
-      } else {
-        max7219_ShowTime(timesep);
-      }
-      break;
-    # if P073_USE_74HC595
-    case P073_74HC595_2_8DGT:
-      hc595_ToOutputBuffer();
-      break;
-    # endif // if P073_USE_74HC595
+    if (digits > 4) { showperiods[3] = timesep; }
+    showTime(timesep);
   }
   return true;
 }
@@ -779,42 +703,7 @@ bool P073_data_struct::plugin_ten_per_second(struct EventStruct *event) {
   }
 
   if (NextScroll()) {
-    switch (displayModel)
-    {
-      case P073_TM1637_4DGTCOLON:
-      case P073_TM1637_4DGTDOTS:
-      {
-        tm1637_ShowBuffer(0, 4
-                          #  if P073_7DBIN_COMMAND
-                          , binaryData
-                          #  endif // if P073_7DBIN_COMMAND
-                          );
-        break;
-      }
-      case P073_TM1637_6DGT:
-      {
-        tm1637_SwapDigitInBuffer(0); // only needed for 6-digits displays
-        tm1637_ShowBuffer(0, 6
-                          #  if P073_7DBIN_COMMAND
-                          , binaryData
-                          #  endif // if P073_7DBIN_COMMAND
-                          );
-        break;
-      }
-      case P073_MAX7219_8DGT:
-      {
-        dotpos = -1; // avoid to display the dot
-        max7219_ShowBuffer();
-        break;
-      }
-      #  if P073_USE_74HC595
-      case P073_74HC595_2_8DGT:
-      {
-        hc595_ToOutputBuffer();
-        break;
-      }
-      #  endif // if P073_USE_74HC595
-    }
+    toOutputBuffer();
   }
   return true;
 }
@@ -829,7 +718,7 @@ bool P073_data_struct::plugin_fifty_per_second(struct EventStruct *event) {
   #  endif // ifdef P073_DEBUG
 
   if (is74HC595Multiplex()) {
-    hc595_ShowBuffer();
+    showBuffer(); // Redisplay current buffer content
     return true;
   }
   return false;
@@ -996,22 +885,7 @@ bool P073_data_struct::plugin_write(struct EventStruct *event,
     setScrollEnabled(newScroll);
     # endif // if P073_SCROLL_TEXT
 
-    switch (displayModel)
-    {
-      case P073_TM1637_4DGTCOLON:
-      case P073_TM1637_4DGTDOTS:
-      case P073_TM1637_6DGT:
-        tm1637_SetPowerBrightness(brightness / 2, displayon);
-        break;
-      case P073_MAX7219_8DGT:
-        max7219_SetPowerBrightness(brightness, displayon);
-        break;
-      # if P073_USE_74HC595
-      case P073_74HC595_2_8DGT:
-        // 74HC595 don't have a brightness setting
-        break;
-      # endif // if P073_USE_74HC595
-    }
+    setPowerBrightness(brightness, displayon);
   }
   return success;
 }
@@ -1054,32 +928,13 @@ bool P073_data_struct::plugin_write_7dn(struct EventStruct *event,
 
   if (!text.isEmpty()) {
     if ((event->Par1 > lLimit) && (event->Par1 < uLimit)) {
-      FillBufferWithNumber(text.c_str());
+      FillBufferWithNumber(text);
     } else {
       FillBufferWithDash();
     }
   }
 
-  switch (displayModel)
-  {
-    case P073_TM1637_4DGTCOLON:
-    case P073_TM1637_4DGTDOTS:
-      tm1637_ShowBuffer(TM1637_4DIGIT, 8);
-      break;
-    case P073_TM1637_6DGT:
-      tm1637_SwapDigitInBuffer(2); // only needed for 6-digits displays
-      tm1637_ShowBuffer(TM1637_6DIGIT, 8);
-      break;
-    case P073_MAX7219_8DGT:
-      max7219_ShowBuffer();
-      break;
-    # if P073_USE_74HC595
-    case P073_74HC595_2_8DGT:
-      hc595_ShiftinView();
-      hc595_ToOutputBuffer();
-      break;
-    # endif // if P073_USE_74HC595
-  }
+  showNumber();
   return true;
 }
 
@@ -1088,8 +943,8 @@ bool P073_data_struct::plugin_write_7dt(const String& text) {
     return false;
   }
 
-  float p073_temptemp    = 0;
-  bool  p073_tempflagdot = false;
+  float  p073_temptemp{};
+  int8_t p073_tempflagdot = -1;
 
   if (!text.isEmpty()) {
     validFloatFromString(text, p073_temptemp);
@@ -1119,10 +974,17 @@ bool P073_data_struct::plugin_write_7dt(const String& text) {
   } else {
     if ((p073_temptemp < uLimitDec) && (p073_temptemp > lLimitDec)) {
       p073_temptemp    = roundf(p073_temptemp * 10.0f);
-      p073_tempflagdot = true;
+      p073_tempflagdot = digits - (hideDegree ? 2 : 3);
     }
     FillBufferWithTemp(p073_temptemp);
   }
+
+  # ifdef P073_DEBUG
+
+  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+    addLogMove(LOG_LEVEL_INFO, strformat(F("7DGT : 7dt preprocessed = %.1f dec: %d"), p073_temptemp, p073_tempflagdot));
+  }
+  # endif // ifdef P073_DEBUG
 
   switch (displayModel)
   {
@@ -1130,30 +992,19 @@ bool P073_data_struct::plugin_write_7dt(const String& text) {
     case P073_TM1637_4DGTDOTS:
     case P073_TM1637_6DGT:
 
-      if ((p073_temptemp == 0) && p073_tempflagdot) {
+      if (essentiallyZero(p073_temptemp) && (p073_tempflagdot > -1)) { // FIXME
         showbuffer[5] = 0;
       }
 
-      if (P073_TM1637_6DGT == displayModel) {
-        tm1637_ShowTemp6(p073_tempflagdot);
-      } else {
-        tm1637_ShowTimeTemp4(p073_tempflagdot, 4);
-      }
+      showTemperature(p073_tempflagdot, -1);
+
       break;
     case P073_MAX7219_8DGT:
-      # ifdef P073_DEBUG
-
-      if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        addLogMove(LOG_LEVEL_INFO, concat(F("7DGT : 7dt preprocessed ="), p073_temptemp));
-      }
-      # endif // ifdef P073_DEBUG
-
-      max7219_ShowTemp(hideDegree ? 6 : 5, -1);
+      showTemperature(hideDegree ? 6 : 5, -1);
       break;
     # if P073_USE_74HC595
     case P073_74HC595_2_8DGT:
-      hc595_ShiftinView();
-      hc595_ToOutputBuffer();
+      showTemperature(p073_tempflagdot, -1);
       break;
     # endif // if P073_USE_74HC595
   }
@@ -1170,9 +1021,8 @@ bool P073_data_struct::plugin_write_7ddt(const String& text) {
     return false;
   }
 
-  float p073_lefttemp    = 0.0f;
-  float p073_righttemp   = 0.0f;
-  bool  p073_tempflagdot = false;
+  float p073_lefttemp  = 0.0f;
+  float p073_righttemp = 0.0f;
 
   if (!text.isEmpty()) {
     validFloatFromString(parseString(text, 1), p073_lefttemp);
@@ -1197,11 +1047,7 @@ bool P073_data_struct::plugin_write_7ddt(const String& text) {
     {
       FillBufferWithDash();
 
-      if (displayModel == P073_TM1637_6DGT) {
-        tm1637_ShowTemp6(p073_tempflagdot);
-      } else {
-        tm1637_ShowTimeTemp4(p073_tempflagdot, 4);
-      }
+      showTemperature(-1, -1);
       break;
     }
     case P073_MAX7219_8DGT:
@@ -1242,7 +1088,7 @@ bool P073_data_struct::plugin_write_7ddt(const String& text) {
         bool alignSave = rightAlignTempMAX7219; // Save setting
         rightAlignTempMAX7219 = true;
 
-        max7219_ShowTemp(firstDot, secondDot);
+        showTemperature(firstDot, secondDot);
 
         rightAlignTempMAX7219 = alignSave; // Restore
       #  if P073_USE_74HC595
@@ -1252,7 +1098,8 @@ bool P073_data_struct::plugin_write_7ddt(const String& text) {
         if (digits < 8) {
           FillBufferWithDash();
         }
-        hc595_ToOutputBuffer();
+
+        toOutputBuffer();
       #  endif // if P073_USE_74HC595
       }
 
@@ -1287,24 +1134,7 @@ bool P073_data_struct::plugin_write_7dst(struct EventStruct *event) {
                      # endif // if P073_SUPPRESS_ZERO
                      );
 
-  switch (displayModel)
-  {
-    case P073_TM1637_4DGTCOLON:
-    case P073_TM1637_4DGTDOTS:
-      tm1637_ShowTimeTemp4(timesep, 0);
-      break;
-    case P073_TM1637_6DGT:
-      tm1637_ShowTime6();
-      break;
-    case P073_MAX7219_8DGT:
-      max7219_ShowTime(timesep);
-      break;
-    # if P073_USE_74HC595
-    case P073_74HC595_2_8DGT:
-      hc595_ToOutputBuffer();
-      break;
-    # endif // if P073_USE_74HC595
-  }
+  showTime(timesep);
   return true;
 }
 
@@ -1327,24 +1157,7 @@ bool P073_data_struct::plugin_write_7dsd(struct EventStruct *event) {
                      # endif // if P073_SUPPRESS_ZERO
                      );
 
-  switch (displayModel)
-  {
-    case P073_TM1637_4DGTCOLON:
-    case P073_TM1637_4DGTDOTS:
-      tm1637_ShowTimeTemp4(timesep, 0);
-      break;
-    case P073_TM1637_6DGT:
-      tm1637_ShowDate6();
-      break;
-    case P073_MAX7219_8DGT:
-      max7219_ShowDate();
-      break;
-    # if P073_USE_74HC595
-    case P073_74HC595_2_8DGT:
-      hc595_ToOutputBuffer();
-      break;
-    # endif // if P073_USE_74HC595
-  }
+  showDate();
   return true;
 }
 
@@ -1370,26 +1183,7 @@ bool P073_data_struct::plugin_write_7dtext(const String& text) {
   {
     FillBufferWithString(text);
 
-    switch (displayModel)
-    {
-      case P073_TM1637_4DGTCOLON:
-      case P073_TM1637_4DGTDOTS:
-        tm1637_ShowBuffer(0, 4);
-        break;
-      case P073_TM1637_6DGT:
-        tm1637_SwapDigitInBuffer(0); // only needed for 6-digits displays
-        tm1637_ShowBuffer(0, 6);
-        break;
-      case P073_MAX7219_8DGT:
-        dotpos = -1; // avoid to display the dot
-        max7219_ShowBuffer();
-        break;
-      # if P073_USE_74HC595
-      case P073_74HC595_2_8DGT:
-        hc595_ToOutputBuffer();
-        break;
-      # endif // if P073_USE_74HC595
-    }
+    toOutputBuffer();
   }
   return true;
 }
@@ -1451,26 +1245,7 @@ bool P073_data_struct::plugin_write_7dbin(const String& text) {
       {
         FillBufferWithString(data, true);
 
-        switch (displayModel)
-        {
-          case P073_TM1637_4DGTCOLON:
-          case P073_TM1637_4DGTDOTS:
-            tm1637_ShowBuffer(0, 4);
-            break;
-          case P073_TM1637_6DGT:
-            tm1637_SwapDigitInBuffer(0); // only needed for 6-digits displays
-            tm1637_ShowBuffer(0, 6, true);
-            break;
-          case P073_MAX7219_8DGT:
-            dotpos = -1; // avoid to display the dot
-            max7219_ShowBuffer();
-            break;
-          #  if P073_USE_74HC595
-          case P073_74HC595_2_8DGT:
-            hc595_ToOutputBuffer();
-            break;
-          #  endif // if P073_USE_74HC595
-        }
+        toOutputBuffer();
       }
       return true;
     }
@@ -1494,6 +1269,17 @@ void P073_data_struct::DIRECT_shiftOut(uint8_t dataPin,
 
     DIRECT_pinWrite(clockPin, HIGH);
     DIRECT_pinWrite(clockPin, LOW);
+  }
+}
+
+void P073_data_struct::shiftinView() {
+  if (digits < 8) {
+    uint8_t n = 0;
+
+    for (uint8_t i = 8 - digits; i < 8; ++i, ++n) {
+      showbuffer[n]  = showbuffer[i];
+      showperiods[n] = showperiods[i];
+    }
   }
 }
 

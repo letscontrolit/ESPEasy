@@ -4,13 +4,73 @@
 # if P073_USE_74HC595
 #  include <GPIO_Direct_Access.h>
 
+P073_74HC595::P073_74HC595(struct EventStruct *event) : P073_data_struct(event) {
+
+  if ((digits > 0) && ((digits < 4) || (5 == digits) || (7 == digits) || (9 == digits) || (10 == digits) || (11 == digits))) {
+    isSequential = true;
+
+    if (1 == digits) {  // 2+2
+      digits = 4;
+    } else
+    if (9 == digits) {  // 4 sequential
+      digits = 4;
+    } else
+    if (10 == digits) { // 4+4 sequential
+      digits = 8;
+    } else
+    if (7 == digits) {  // 3+3
+      digits = 6;
+    } else
+    if (11 == digits) { // 3+4/4+3 sequential
+      digits = 7;
+    }
+  }
+}
+
+bool P073_74HC595::init(struct EventStruct *event) {
+  if (P073_data_struct::init(event)) {
+    initDisplay();
+
+    if (output == P073_DISP_MANUAL) {
+      ClearBuffer();
+      toOutputBuffer();
+    }
+
+    if (is74HC595Multiplex()) {
+      Scheduler.setPluginTaskTimer(10, event->TaskIndex, 0);
+    }
+    return true;
+  }
+  return false;
+}
+
+void P073_74HC595::showTime(bool sep) { toOutputBuffer(); }
+
+void P073_74HC595::showDate()         { toOutputBuffer(); }
+
+void P073_74HC595::showNumber() {
+  shiftinView();
+  toOutputBuffer();
+}
+
+void P073_74HC595::showTemperature(int8_t firstDot,
+                                   int8_t secondDot) {
+  shiftinView();
+
+  if (firstDot  > -1) { showperiods[firstDot] = true; }
+
+  if (secondDot > -1) { showperiods[secondDot] = true; }
+
+  toOutputBuffer();
+}
+
 bool P073_data_struct::is74HC595Multiplex() { return P073_74HC595_2_8DGT == displayModel && P073_HC595_MULTIPLEX; }
 
 // ====================================
 // ---- 74HC595 specific functions ----
 // ====================================
 
-void P073_data_struct::hc595_ShowBuffer() {
+void P073_74HC595::showBuffer() {
   #  if P073_USE_74HCMULTIPLEX
   const uint8_t hc595digit4[] = {
     0b00001000, // left segment
@@ -85,13 +145,13 @@ void P073_data_struct::hc595_ShowBuffer() {
 
   // TODO disable log
   // if ((counter50 % 200 == 0) || P073_HC595_SEQUENTIAL) {
-  //   addLog(LOG_LEVEL_INFO, strformat(F("P073: hc595_ShowBuffer (end) dgt:%d i:%d stop:%d incr:%d pin1: %d pin2: %d pin3: %d"),
+  //   addLog(LOG_LEVEL_INFO, strformat(F("P073: showBuffer (end) dgt:%d i:%d stop:%d incr:%d pin1: %d pin2: %d pin3: %d"),
   //                                    digits, i, stop, incr, pin1, pin2, pin3));
   // }
   #  endif // ifdef P073_DEBUG
 }
 
-void P073_data_struct::hc595_ToOutputBuffer() {
+void P073_74HC595::toOutputBuffer() {
   for (uint8_t i = 0; i < 8; ++i) {
     uint8_t value;
 
@@ -104,22 +164,12 @@ void P073_data_struct::hc595_ToOutputBuffer() {
     outputbuffer[i] = P073_revert7bits(value); // Rotate bits 6..0
   }
 
-  if (hc595_Sequential()) {                    // Sequential displays don't need continuous refreshing
-    hc595_ShowBuffer();
+  if (isSequential) {                          // Sequential displays don't need continuous refreshing
+    showBuffer();
   }
 }
 
-void P073_data_struct::hc595_ShiftinView() {
-  if (digits < 8) {
-    uint8_t n = 0;
-
-    for (uint8_t i = 8 - digits; i < 8; ++i, ++n) {
-      showbuffer[n] = showbuffer[i];
-    }
-  }
-}
-
-void P073_data_struct::hc595_InitDisplay() {
+void P073_74HC595::initDisplay() {
   pinMode(pin1, OUTPUT); // Use Arduino pin initialization as some ESPs don't properly set up their pins with DIRECT_GPIO_OUTPUT
   pinMode(pin2, OUTPUT);
   pinMode(pin3, OUTPUT);
