@@ -115,13 +115,13 @@ void C018_ConfigStruct::webform_load(C018_data_struct *C018_data) {
 
   addTableSeparator(F("Serial Port Configuration"), 2, 3);
 
-  serialHelper_webformLoad(port, rxpin, txpin, true);
+  serialHelper_webformLoad(port, rxpin, txpin);
 
   // Show serial port selection
   addFormPinSelect(PinSelectPurpose::Generic_input,  formatGpioName_serialRX(false), F("taskdevicepin1"), rxpin);
   addFormPinSelect(PinSelectPurpose::Generic_output, formatGpioName_serialTX(false), F("taskdevicepin2"), txpin);
 
-  html_add_script(F("document.getElementById('serPort').onchange();"), false);
+  html_add_script(F("elId('serPort').onchange();"), false);
 
   addFormNumericBox(F("Baudrate"), F(C018_BAUDRATE_LABEL), baudrate, 2400, 115200);
   addUnit(F("baud"));

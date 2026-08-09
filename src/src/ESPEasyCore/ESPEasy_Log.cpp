@@ -219,6 +219,7 @@ void addLog(uint8_t logLevel, const __FlashStringHelper *str)
   }
   #endif // ifdef ESP32
   Logging.addLogEntry(LogEntry_t(logLevel, str));
+  processLogs();
 }
 
 void addLog(uint8_t logLevel, const char *line) {
@@ -233,6 +234,7 @@ void addLog(uint8_t logLevel, const char *line) {
   }
   #endif // ifdef ESP32
   Logging.addLogEntry(LogEntry_t(logLevel, line));
+  processLogs();
 }
 
 void addLog(uint8_t logLevel, String&& str) { addToLogMove(logLevel, std::move(str)); }
@@ -250,6 +252,7 @@ void addLog(uint8_t logLevel, const String& str)
   }
   #endif // ifdef ESP32
   Logging.addLogEntry(LogEntry_t(logLevel, str));
+  processLogs();
 }
 
 void addToLogMove(uint8_t logLevel, String&& str)
@@ -265,4 +268,26 @@ void addToLogMove(uint8_t logLevel, String&& str)
   }
   #endif // ifdef ESP32
   Logging.addLogEntry(LogEntry_t(logLevel, std::move(str)));
+  processLogs();
+}
+
+void processLogs(bool serialOnly)
+{
+  #ifdef ESP32
+
+  if (xPortInIsrContext()) {
+    // When called from an ISR, you should not send out logs.
+    // Allocating memory from within an ISR is a big no-no.
+    // Also long-time blocking like sending logs (especially to a syslog server)
+    // is also really not a good idea from an ISR call.
+    return;
+  }
+  #endif // ifdef ESP32
+  process_serialWriteBuffer();
+  Logging.loop(serialOnly);
+#if FEATURE_SYSLOG
+  if (!serialOnly) {
+    syslogWriter.process();
+  }
+#endif
 }

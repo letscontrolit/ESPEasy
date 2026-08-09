@@ -11,12 +11,14 @@
 #include <PubSubClient.h>
 #include <SPI.h>
 
+#define _UNUSED_ __attribute__((unused))
+
 // Update these with values suitable for your hardware/network.
 byte mac[] = {0xDE, 0xED, 0xBA, 0xFE, 0xFE, 0xED};
 IPAddress ip(172, 16, 0, 100);
 IPAddress server(172, 16, 0, 2);
 
-void callback(char* topic, uint8_t* payload, size_t plength) {
+void callback(_UNUSED_ char* topic, _UNUSED_ uint8_t* payload, _UNUSED_ size_t plength) {
     // handle message arrived
 }
 

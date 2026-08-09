@@ -37,14 +37,10 @@ void handle_advanced() {
   checkRAM(F("handle_advanced"));
   #endif
 
-  if (!isLoggedIn()) { return; }
-  navMenuIndex = MENU_INDEX_TOOLS;
-  TXBuffer.startStream();
-  sendHeadandTail_stdtemplate(_HEAD);
+  if (!startStream_send_stdTemplate(MENU_INDEX_TOOLS)) { return; }
 
   if (!webArg(F("edit")).isEmpty())
   {
-//    Settings.MessageDelay_unused = getFormItemInt(F("messagedelay"));
     Settings.IP_Octet     = webArg(F("ip")).toInt();
     strncpy_webserver_arg(Settings.NTPHost, F("ntphost"));
     Settings.TimeZone = getFormItemInt(F("timezone"));
@@ -107,10 +103,6 @@ void handle_advanced() {
     Settings.ArduinoOTAEnable            = isFormItemChecked(F("arduinootaenable"));
     Settings.UseRTOSMultitasking         = isFormItemChecked(F("usertosmultitasking"));
 
-    // MQTT settings now moved to the controller settings.
-//    Settings.MQTTRetainFlag_unused              = isFormItemChecked(F("mqttretainflag"));
-//    Settings.MQTTUseUnitNameAsClientId   = isFormItemChecked(F("mqttuseunitnameasclientid"));
-//    Settings.uniqueMQTTclientIdReconnect(isFormItemChecked(F("uniquemqttclientidreconnect")));
     Settings.Latitude  = getFormItemFloat(F("latitude"));
     Settings.Longitude = getFormItemFloat(F("longitude"));
     #ifdef WEBSERVER_NEW_RULES
@@ -199,18 +191,6 @@ void handle_advanced() {
   addFormCheckBox(F("SendToHTTP wait for ack"), F("sendtohttp_ack"), Settings.SendToHttp_ack());
   addFormCheckBox(F("SendToHTTP Follow Redirects"), F("sendtohttp_redir"), Settings.SendToHTTP_follow_redirects());
 
-  /*
-  // MQTT settings now moved to the controller settings.
-  addFormSubHeader(F("Controller Settings"));
-
-  addFormNumericBox(F("Message Interval"), F("messagedelay"), Settings.MessageDelay_unused, 0, INT_MAX);
-  addUnit(F("ms"));
-
-  addFormCheckBox(F("MQTT Retain Msg"), F("mqttretainflag"), Settings.MQTTRetainFlag_unused);
-  addFormCheckBox(F("MQTT use unit name as ClientId"),    F("mqttuseunitnameasclientid"),   Settings.MQTTUseUnitNameAsClientId);
-  addFormCheckBox(F("MQTT change ClientId at reconnect"), F("uniquemqttclientidreconnect"), Settings.uniqueMQTTclientIdReconnect_unused());
-*/
-
   addFormSubHeader(F("Time Source"));
 
   addFormCheckBox(F("Use NTP"), F("usentp"), Settings.UseNTP());
@@ -273,8 +253,7 @@ void handle_advanced() {
   serialHelper_webformLoad(
     static_cast<ESPEasySerialPort>(Settings.console_serial_port), 
     Settings.console_serial_rxpin, 
-    Settings.console_serial_txpin, 
-    true);
+    Settings.console_serial_txpin);
 
   // Show serial port selection
   addFormPinSelect(
@@ -288,7 +267,7 @@ void handle_advanced() {
     F("taskdevicepin2"), 
     Settings.console_serial_txpin);
 
-  html_add_script(F("document.getElementById('serPort').onchange();"), false);
+  html_add_script(F("elId('serPort').onchange();"), false);
 #if USES_ESPEASY_CONSOLE_FALLBACK_PORT
   addFormCheckBox(LabelType::CONSOLE_FALLBACK_TO_SERIAL0);
 #endif
@@ -319,10 +298,6 @@ void handle_advanced() {
                         false);
   }
   #endif // if FEATURE_I2C_MULTIPLE
-
-  // TODO: Remove this code
-  addRowLabel(F("I2C ClockStretchLimit"));
-  addUnit(F("Moved to Hardware page"));
 
   #if FEATURE_ARDUINO_OTA
   addFormCheckBox(F("Enable Arduino OTA"), F("arduinootaenable"), Settings.ArduinoOTAEnable);
@@ -425,8 +400,7 @@ void handle_advanced() {
   addHtml(F("<input type='hidden' name='edit' value='1'>"));
   html_end_table();
   html_end_form();
-  sendHeadandTail_stdtemplate(_TAIL);
-  TXBuffer.endStream();
+  sendTail_stdtemplate();
 }
 
 void addFormDstSelect(bool isStart, uint16_t choice) {

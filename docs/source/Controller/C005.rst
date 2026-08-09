@@ -122,6 +122,8 @@ MQTT - Auto Discovery
 
 (AutoDiscovery related settings added 2025/06/28)
 
+.. note:: The **MQTT Auto Discovery** feature is not included in ESP8266 builds by default, see: :ref:`esp8266-feature-complete`
+
 * **Enable Auto Discovery**: When checked, the controller will send discovery data for all connected and enabled tasks to the MQTT server on first startup, and when receiving an ``online`` message in the Discovery Trigger Topic, when configured.
 
 * **Discovery Trigger topic**: Default for Home assistant: ``homeassistant/status``

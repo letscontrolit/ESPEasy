@@ -35,10 +35,7 @@ void handle_hardware() {
   checkRAM(F("handle_hardware"));
   #endif
 
-  if (!isLoggedIn()) { return; }
-  navMenuIndex = MENU_INDEX_HARDWARE;
-  TXBuffer.startStream();
-  sendHeadandTail_stdtemplate(_HEAD);
+  if (!startStream_send_stdTemplate(MENU_INDEX_HARDWARE)) { return; }
 
   html_add_form();
 
@@ -255,8 +252,7 @@ void handle_hardware() {
   html_end_table();
   html_end_form();
 
-  sendHeadandTail_stdtemplate(_TAIL);
-  TXBuffer.endStream();
+  sendTail_stdtemplate();
 }
 
 #endif // ifdef WEBSERVER_HARDWARE

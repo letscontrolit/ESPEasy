@@ -13,11 +13,13 @@
 
 
 # ifdef USES_NW001
-//#  include "../NWPluginStructs/NW001_data_struct_WiFi_STA.h"
-# endif
+
+// #  include "../NWPluginStructs/NW001_data_struct_WiFi_STA.h"
+# endif // ifdef USES_NW001
 # ifdef USES_NW002
-//#  include "../NWPluginStructs/NW002_data_struct_WiFi_AP.h"
-# endif
+
+// #  include "../NWPluginStructs/NW002_data_struct_WiFi_AP.h"
+# endif // ifdef USES_NW002
 # ifdef USES_NW003
 #  include "../NWPluginStructs/NW003_data_struct_ETH_RMII.h"
 # endif
@@ -39,11 +41,11 @@ ESPEasy_key_value_store_import_export::LabelStringFunction getLabelFnc(ESPEasy::
 # ifdef USES_NW003
     case 3:
       return ESPEasy::net::eth::NW003_data_struct_ETH_RMII::getLabelString;
-# endif
+# endif // ifdef USES_NW003
 # ifdef USES_NW004
     case 4:
-    return ESPEasy::net::eth::NW004_data_struct_ETH_SPI::getLabelString;
-# endif
+      return ESPEasy::net::eth::NW004_data_struct_ETH_SPI::getLabelString;
+# endif // ifdef USES_NW004
 
 # ifdef USES_NW005
     case 5:
@@ -72,12 +74,12 @@ ESPEasy_key_value_store_import_export::NextKeyFunction getNextKeyFnc(ESPEasy::ne
   {
 # ifdef USES_NW003
     case 3:
-    return ESPEasy::net::eth::NW003_data_struct_ETH_RMII::getNextKey;
-# endif
+      return ESPEasy::net::eth::NW003_data_struct_ETH_RMII::getNextKey;
+# endif // ifdef USES_NW003
 # ifdef USES_NW004
     case 4:
-    return ESPEasy::net::eth::NW004_data_struct_ETH_SPI::getNextKey;
-# endif
+      return ESPEasy::net::eth::NW004_data_struct_ETH_SPI::getNextKey;
+# endif // ifdef USES_NW004
 # ifdef USES_NW005
     case 5:
     {
@@ -114,40 +116,45 @@ String NWPlugin_import_export::exportConfig(
 
   if (!nwpluginID.isValid()) { return F("KVS : Invalid NW-Plugin ID"); }
 
-  ESPEasy_key_value_store kvs;
-
-  if (!kvs.load(
-        SettingsType::Enum::NetworkInterfaceSettings_Type,
-        networkIndex,
-        0,
-        nwpluginID.value)) { return F("KVS : Failed loading"); }
-  auto labelFnc   = getLabelFnc(nwpluginID);
-  auto nextKeyFnc = getNextKeyFnc(nwpluginID, includeCredentials);
-
-  if ((labelFnc == nullptr) || (nextKeyFnc == nullptr)) {
-    return F("KVS : NWPlugin ID does not support import/export");
-  }
-
   auto child = writer->createChild();
 
   if (child) {
     child->write({ F("nwpluginID"), nwpluginID.value });
     child->write({ F("enabled"), Settings.getNetworkEnabled(networkIndex) });
     child->write({ F("route_prio"), Settings.getRoutePrio_for_network(networkIndex) });
+    child->write({ F("fallback"), Settings.getNetworkInterface_isFallback(networkIndex) });
     child->write({ F("sn_block"), Settings.getNetworkInterfaceSubnetBlockClientIP(networkIndex) });
     child->write({ F("start_delay"), Settings.getNetworkInterfaceStartupDelay(networkIndex) });
+# ifdef ESP32
+    child->write({ F("append_hostname"), Settings.getAppendNetworkAdapterNameToHostname(networkIndex) });
+# endif
+
 
 # if FEATURE_USE_IPV6
     child->write({ F("en_ipv6"), Settings.getNetworkEnabled_IPv6(networkIndex) });
 # endif
 
-    ESPEasy_key_value_store_import_export e(&kvs);
+    ESPEasy_key_value_store kvs;
 
-    int32_t key = nextKeyFnc(-1);
+    if (kvs.load(
+          SettingsType::Enum::NetworkInterfaceSettings_Type,
+          networkIndex,
+          0,
+          nwpluginID.value)) {
 
-    while (key >= 0) {
-      e.do_export(key, child.get(), labelFnc);
-      key = nextKeyFnc(key);
+      auto labelFnc   = getLabelFnc(nwpluginID);
+      auto nextKeyFnc = getNextKeyFnc(nwpluginID, includeCredentials);
+
+      if ((labelFnc != nullptr) && (nextKeyFnc != nullptr)) {
+        ESPEasy_key_value_store_import_export e(&kvs);
+
+        int32_t key = nextKeyFnc(-1);
+
+        while (key >= 0) {
+          e.do_export(key, child.get(), labelFnc);
+          key = nextKeyFnc(key);
+        }
+      }
     }
   }
   return EMPTY_STRING;
@@ -161,9 +168,12 @@ String NWPlugin_import_export::importConfig(
 
   ESPEasy::net::nwpluginID_t nwpluginID(Settings.NWPluginID[networkIndex]);
 
-  if (nwpluginID.isValid()) { return F("KVS : Network Index is already in use"); }
+# ifndef BUILD_NO_DEBUG
 
-  addLog(LOG_LEVEL_INFO, concat(F("KVS : JSON: "), json));
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    addLog(LOG_LEVEL_DEBUG, concat(F("KVS : JSON: "), json));
+  }
+# endif // ifndef BUILD_NO_DEBUG
 
   ESPEasy_key_value_store kvs;
   ESPEasy_key_value_store_import_export e(&kvs, json);
@@ -172,69 +182,89 @@ String NWPlugin_import_export::importConfig(
 
     if (!e.getParsedJSON(F("nwpluginID"), value)) { return F("KVS : No NWPlugin ID"); }
     nwpluginID.value = value.toInt();
-  }
 
-  if (!nwpluginID.isValid()) { return F("KVS : No valid NWPlugin ID"); }
+    if (!nwpluginID.isValid()) { return F("KVS : No valid NWPlugin ID"); }
+
+    const ESPEasy::net::nwpluginID_t cur_nwpluginID(Settings.NWPluginID[networkIndex]);
+
+    if (cur_nwpluginID.isValid() && (nwpluginID != cur_nwpluginID)) {
+      return F("KVS : Network Index is already in use");
+    }
+  }
 
   auto labelFnc   = getLabelFnc(nwpluginID);
   auto nextKeyFnc = getNextKeyFnc(nwpluginID, true);
 
-  if ((labelFnc == nullptr) || (nextKeyFnc == nullptr)) {
-    return F("KVS : NWPlugin ID does not support import/export");
+  if ((labelFnc != nullptr) && (nextKeyFnc != nullptr)) {
+    const String res = e.do_import(labelFnc, nextKeyFnc);
+
+    if (!res.isEmpty()) {
+      return res;
+    }
+  }
+  # ifndef BUILD_NO_DEBUG
+  else {
+    addLog(LOG_LEVEL_DEBUG, F("KVS : NWPlugin ID does not support import/export"));
+  }
+  # endif // ifndef BUILD_NO_DEBUG
+
+  // Add entry, calls NWPLUGIN_LOAD_DEFAULTS
+  Settings.setNWPluginID_for_network(networkIndex, nwpluginID);
+
+  if (!kvs.store(
+        SettingsType::Enum::NetworkInterfaceSettings_Type,
+        networkIndex,
+        0,
+        nwpluginID.value))
+  {
+    return F("KVS : Error saving, see log for more details");
   }
 
-  String res = e.do_import(labelFnc, nextKeyFnc);
-
-  if (res.isEmpty()) {
-    // Add entry, calls NWPLUGIN_LOAD_DEFAULTS
-    Settings.setNWPluginID_for_network(networkIndex, nwpluginID);
-
-    if (!kvs.store(
-          SettingsType::Enum::NetworkInterfaceSettings_Type,
-          networkIndex,
-          0,
-          nwpluginID.value))
-    {
-      return F("KVS : Error saving, see log for more details");
-    }
-
-    const String non_kvs_keys[] = {
-      F("enabled"),
-      F("route_prio"),
-      F("sn_block"),
-      F("start_delay")
+  const String non_kvs_keys[] = {
+    F("enabled"),
+    F("route_prio"),
+    F("fallback"),
+    F("sn_block"),
+    F("start_delay"),
+    F("append_hostname") // Need to have something here even though it is ESP32-only as the code would otherwise become quite complex
 # if FEATURE_USE_IPV6
-      , F("en_ipv6")
+    , F("en_ipv6")
 # endif
-    };
+  };
 
-    for (size_t i = 0; i < NR_ELEMENTS(non_kvs_keys); ++i) {
-      String value;
+  for (size_t i = 0; i < NR_ELEMENTS(non_kvs_keys); ++i) {
+    String value;
 
-      if (e.getParsedJSON(non_kvs_keys[i], value))
+    if (e.getParsedJSON(non_kvs_keys[i], value))
+    {
+      const bool bool_val = !(value.equalsIgnoreCase(F("false")) || value.equals(F("0")));
+
+      switch (i)
       {
-        const bool bool_val = !(value.equalsIgnoreCase(F("false")) || value.equals(F("0")));
-
-        switch (i)
-        {
-          case 0: Settings.setNetworkEnabled(networkIndex, bool_val);
-            break;
-          case 1: Settings.setRoutePrio_for_network(networkIndex, value.toInt());
-            break;
-          case 2: Settings.setNetworkInterfaceSubnetBlockClientIP(networkIndex, bool_val);
-            break;
-          case 3: Settings.setNetworkInterfaceStartupDelay(networkIndex, value.toInt());
-            break;
+        case 0: Settings.setNetworkEnabled(networkIndex, bool_val);
+          break;
+        case 1: Settings.setRoutePrio_for_network(networkIndex, value.toInt());
+          break;
+        case 2: Settings.setNetworkInterface_isFallback(networkIndex, bool_val);
+          break;
+        case 3: Settings.setNetworkInterfaceSubnetBlockClientIP(networkIndex, bool_val);
+          break;
+        case 4: Settings.setNetworkInterfaceStartupDelay(networkIndex, value.toInt());
+          break;
+        case 5:
+# ifdef ESP32
+          Settings.setAppendNetworkAdapterNameToHostname(networkIndex, bool_val);
+# endif
+          break;
 # if FEATURE_USE_IPV6
-          case 4: Settings.setNetworkEnabled_IPv6(networkIndex, bool_val);
-            break;
+        case 6: Settings.setNetworkEnabled_IPv6(networkIndex, bool_val);
+          break;
 # endif // if FEATURE_USE_IPV6
-        }
       }
     }
   }
 
-  return res;
+  return EMPTY_STRING;
 }
 
 } // namespace net

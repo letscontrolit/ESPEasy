@@ -48,6 +48,17 @@ void stripEscapeCharacters(String& str)
   }
 }
 
+void addEscapeCharacters(String& str)
+{
+  const char braces[]     = { '%', '[', ']', '{', '}', '(', ')' };
+  constexpr uint8_t nrbraces = NR_ELEMENTS(braces);
+
+  for (uint8_t i = 0; i < nrbraces; ++i) {
+    const String s(concat(F("\\"), braces[i]));
+    str.replace(s.substring(1), s);
+  }
+}
+
 #if FEATURE_STRING_VARIABLES
 String parseTemplateAndCalculate(String& tmpString) {
   stripEscapeCharacters(tmpString);

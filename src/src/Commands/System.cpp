@@ -6,6 +6,7 @@
 #include "../Globals/Settings.h"
 
 #include "../Helpers/DeepSleep.h"
+#include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/Misc.h"
 
 const __FlashStringHelper * Command_System_NoSleep(struct EventStruct *event, const char* Line)

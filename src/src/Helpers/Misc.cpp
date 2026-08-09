@@ -88,7 +88,7 @@ bool setNetworkEnableStatus(ESPEasy::net::networkIndex_t networkIndex, bool enab
 
     if (!enabled) {
       // Use the scheduler as this also removes any pending init calls.
-      Scheduler.setNetworkExitTimer(10, networkIndex);
+      Scheduler.setNetworkExitTimer(0, networkIndex);
     }
     Settings.setNetworkEnabled(networkIndex, enabled);
 
@@ -145,6 +145,17 @@ bool setControllerEnableStatus(controllerIndex_t controllerIndex, bool enabled)
 /********************************************************************************************\
    Toggle task enabled state
  \*********************************************************************************************/
+bool setTaskEnableStatus(taskIndex_t taskIndex,
+                         bool        enabled)
+{
+  if (Settings.TaskDeviceEnabled[taskIndex] != enabled) {
+    struct EventStruct TempEvent(taskIndex);
+    return setTaskEnableStatus(&TempEvent, enabled);
+  }
+  return true;
+}
+
+
 bool setTaskEnableStatus(struct EventStruct *event, bool enabled)
 {
   if (!validTaskIndex(event->TaskIndex)) { return false; }
@@ -192,11 +203,8 @@ void taskClear(taskIndex_t taskIndex, bool save)
   checkRAM(F("taskClear"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
 
-  if (Settings.TaskDeviceEnabled[taskIndex]) {
-    struct EventStruct TempEvent(taskIndex);
-    String dummy;
-    PluginCall(PLUGIN_EXIT, &TempEvent, dummy);
-  }
+  setTaskEnableStatus(taskIndex, false);
+
   Settings.clearTask(taskIndex);
   clearTaskCache(taskIndex); // Invalidate any cached values.
   ExtraTaskSettings.clear();
@@ -615,7 +623,7 @@ void logMemUsageAfter(const __FlashStringHelper *function, int value) {
   // The recorded used memory is not an exact value, as background (or interrupt) tasks may also allocate or free heap memory.
   static int last_freemem = ESP.getFreeHeap();
   const int  freemem_end  = ESP.getFreeHeap();
-
+#ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log;
 
@@ -639,6 +647,7 @@ void logMemUsageAfter(const __FlashStringHelper *function, int value) {
       addLogMove(LOG_LEVEL_DEBUG, log);
     }
   }
+#endif
 
   last_freemem = freemem_end;
 }

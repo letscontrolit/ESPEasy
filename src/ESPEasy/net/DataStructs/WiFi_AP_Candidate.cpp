@@ -7,6 +7,8 @@
 #include "../../../src/Helpers/StringConverter.h"
 #include "../../../src/Helpers/StringGenerator_WiFi.h"
 
+#include "../wifi/ESPEasyWifi.h"
+
 #if defined(ESP8266)
   # include <ESP8266WiFi.h>
 #endif // if defined(ESP8266)
@@ -73,15 +75,9 @@ WiFi_AP_Candidate::WiFi_AP_Candidate(uint8_t index_c, const String& ssid_c) :
 {
   _allBits = 0u;
 
-  const size_t ssid_length = ssid_c.length();
-
-  if ((ssid_length == 0) || equals(ssid_c, F("ssid"))) {
-    return;
+  if (validWiFiSSID(ssid_c)) {
+    ssid = ssid_c;
   }
-
-  if (ssid_length > 32) { return; }
-
-  ssid = ssid_c;
 }
 
 WiFi_AP_Candidate::WiFi_AP_Candidate(uint8_t networkItem) : index(0) {

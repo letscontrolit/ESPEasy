@@ -20,8 +20,7 @@
 void handle_eepromvars() {
   if (!isLoggedIn()) { return; }
 
-  TXBuffer.startStream();
-  sendHeadandTail_stdtemplate(_HEAD);
+  if (!startStream_send_stdTemplate(MENU_INDEX_TOOLS)) { return; }
 
   if (ESPEasy::eeprom::checkEEPROMEnabled() > 0) {
     // the table header
@@ -90,8 +89,7 @@ void handle_eepromvars() {
     addHtml(F("External EEPROM not enabled."));
   }
   html_end_form();
-  sendHeadandTail_stdtemplate(_TAIL);
-  TXBuffer.endStream();
+  sendTail_stdtemplate();
 }
 
 #endif // if FEATURE_EEPROM_EXTERNAL

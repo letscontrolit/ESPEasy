@@ -51,6 +51,8 @@ struct WiFi_AP_CandidatesList {
 
   bool                     hasCandidates() const;
 
+  bool                     hasScanned() const { return scanned.size() != 0; }
+
   // Make sure the current connection (from RTC) is set as first next candidate.
   // This will force a reconnect to the current AP if connection is lost.
   void                             markCurrentConnectionStable();
@@ -103,12 +105,25 @@ public:
 
 private:
 
-  WiFi_AP_Candidate_List_t candidates;
-
+  // Known credentials supplying the following:
+  // - Credentials index
+  // - Priority
+  // - SSID
+  // - Key
   WiFi_AP_Candidate_List_t known;
 
-  WiFi_AP_Candidate_List_t scanned;
+  // Unprocessed found from latest scan
   WiFi_AP_Candidate_List_t scanned_new;
+
+  // Processed found via one or more scans
+  // When processing scanned_new, matching elements from a previous scan (in 'scanned')
+  // will be updated with new information, like channel, RSSI, supported protocols, etc.
+  WiFi_AP_Candidate_List_t scanned;
+
+  // Sorted list of possible APs to connect to. Matching known and scanned.
+  // First element in the candidates list is the best candidate to try first.
+  // Failed connect attempts will be removed from the candidates list.
+  WiFi_AP_Candidate_List_t candidates;
 
   WiFi_AP_Candidate_const_iterator known_it;
 

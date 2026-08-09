@@ -42,6 +42,7 @@ Example device configurations
 * :ref:`sensirion-sdp-810-differential-pressure-sensor`
 * :ref:`tf-luna-lidar-distance-sensor`
 * :ref:`qmc6310-3-axis-magnetic-sensor`
+* :ref:`tca9554-io-extender`
 
 Configuration
 -------------
@@ -57,7 +58,7 @@ I2C options
 
 * **I2C Address (Hex)**: Because of the flexible nature of the plugin, setting the I2C address requires typing the hexadecimal I2C address of the device. This should be in the range 0x01 .. 0x7F.
 
-The available I2C settings here depend on the build used. At least the **Force Slow I2C speed** option is available. This plugin can also be used with an I2C Multiplexer, or use a separate I2C Bus when configured, to allow for multiple sensors on a single ESP. For details see the :ref:`Hardware_page`.
+The available I2C settings here depend on the build used. At least the **Force Slow I2C speed** option is available. This plugin can also be used with an I2C Multiplexer, or use a separate I2C Bus when configured, to allow for multiple sensors on a single ESP. For details see the :ref:`i2c-bus` page.
 
 Device Settings
 ^^^^^^^^^^^^^^^
@@ -71,7 +72,7 @@ Output Configuration
 
 * **Output Data Type**: This setting determines the number of available Values, and is also used by f.e. the Domoticz controllers for sending data in the correct format. F.e. when configuring a Temperature & Humidity sensor, it makes sense to choose Temp / Hum here.
 
-* **I2C Init Commands**: A sequence of commands, documented in detail below, that will be used to manipulate the sensor when the plugin is enabled. This can f.e. be used to initialize the sensor, set the **'Enable' GPIO** in the Enabled state, or pulse the **'Reset' GPIO** to reset the device.
+* **I2C Init Commands**: A sequence of commands, documented in detail below, that will be used to manipulate the sensor when the plugin is enabled. This can f.e. be used to initialize the sensor, set the **'Enable' GPIO** in the Enabled state, or pulse the **'Reset' GPIO** to reset the device. The last value is used as the initialization result value, where 0 is ``false`` and <> 0 is ``true``. Often this sequence needs ``;calc.1`` appended, to return a ``true`` result.
 
 * **I2C Exit Commands**: A sequence of commands that will be sent to the device when the plugin is disabled. This can f.e. be used to set the **'Enable' GPIO** in Disabled state, or set the device in a power-down state.
 
@@ -150,9 +151,9 @@ For ``dataformat`` there are a limited set of options available:
 The commands available can either be used with the full command, or the 1 character shortcut to save some space in the limited available storage:
 
 * ``get.<format>[.<len>]``: ``(g)``: Read the number of bytes matching the format from the device. ``<len>`` can be a calculation, f.e. to use ``%value%`` from a previous command.
-* ``put.<format>.<data>[.<data>...]``: ``(p)``: Write data to the device, in the format specified. For ``b`` or ``w`` the provided data determines the length of the data to send.
-* ``read.<format>[.<len>].<reg>``: ``(r)``: Read data in the requested format from a register in the device. ``<len>`` can be a calculation, f.e. to use ``%value%`` from a previous command.
-* ``write.<format>.<reg>.<data>[.<data>...]``: ``(w)``: Write data to a register in the device in the specified format.
+* ``put.<format>.<data>[.<data>...]``: ``(p)``: Write data to the device, in the format specified. For ``b`` or ``w`` the provided data and format determines the length of the data to send. ``data`` can be from a global variable, expanded just before execution.
+* ``read.<format>[.<len>].<reg>``: ``(r)``: Read data in the requested format from a register in the device. ``<len>`` can be a calculation, f.e. to use ``%value%`` from a previous command. ``reg`` can be from a global variable, expanded just before execution.
+* ``write.<format>.<reg>.<data>[.<data>...]``: ``(w)``: Write data to a register in the device in the specified format. ``reg`` and/or ``data`` can be from a global variable, expanded just before execution. (not applicable for ``b`` and ``w`` format!)
 * ``eval``: ``(e)``: Evaluate the previous command, and set as selected data for ``calc`` or ``if`` commands.
 * ``value.<valueIndex>``: ``(v)``: (1..4 or a value name) Store the last calculated result, or last read value, in the specified Value field.
 * ``calc.<calculation>``: ``(c)``: Calculate a result, like Rules, extra available vars: ``%value%``, ``%pvalue%``, ``%h%``, ``%b0%..%b<n>%``, ``%bx0%..%bx<n>%``, ``%w0%..%w<n>%``, ``%wx0%..%wx<n>%``
@@ -169,12 +170,14 @@ During processing, the data has to be made available to some of the following st
 
 The next variables are only available after an ``eval`` I2C Command is executed:
 
-* ``%value%``: The value retrieved in decimal presentation, or the read String for format ``str``. So if a ``read`` or ``get`` command was used. Not applicable for ``b.<length>`` and ``w.<length>`` dataformats, ``%h%``, ``%b..%`` or ``%w..%`` variables should be used.
+* ``%value%``: The value retrieved in decimal presentation, or the read String for format ``str``. So if a ``read`` or ``get`` command was used. Not applicable for ``b.<length>`` and ``w.<length>`` dataformats, then ``%h%``, ``%b..%`` or ``%w..%`` variables should be used.
 * ``%h%``: The result of a ``read`` or ``get`` formatted as hex bytes with a single '0x' prefix, using the minimal number of digits needed. For ``b.<length>`` or ``w.<length>`` dataformat all bytes/words are concatenated. If 7 bytes are retrieved using ``get.b.7`` command, ``%h`` will be replaced by ``0x00010203040506``, or 3 words using ``get.w.3`` with ``0x000000010002``, showing the retrieved data of course.
 * ``%b<N>%``: The value of byte N (0-based!), retrieved using the ``b.<length>`` dataformat. This will be a decimal presentation of the data.
 * ``%bx<N>%``: The value of byte N (0-based!), retrieved using the ``b.<length>`` dataformat. This will be a 2 digit hexadecimal presentation, without '0x' prefix, of the data.
 * ``%w<N>%``: The value of word N (0-based!), retrieved using the ``w.<length>`` dataformat. This will be a decimal presentation of the data.
 * ``%wx<N>%``: The value of word N (0-based!), retrieved using the ``w.<length>`` dataformat. This will be a 4 digit hexadecimal presentation, without '0x' prefix, of the data.
+
+For the ``put`` and ``write`` commands, the ``data`` can be from a global variable, in the usual notations, like ``%10%``, ``%v_bits%``, ``[var#5]`` etc. When sending an I2C command sequence from rules, the variable shuld be escaped, f.e. ``\%v_bits\%`` or ``\[int#bits\]``, etc.
 
 Processing commands for 1/sec, 10/sec and 50/sec plugin events
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -608,11 +611,68 @@ To reduce the logging content, **Single event with all values** can be enabled, 
 
 |
 
+.. _tca9554-io-extender:
+
+TCA9554 8-port I/O extender
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This I/O extender provides 8 input/output pins, as documented in the Texas Instruments `TCA9554 Datasheet <https://www.ti.com/lit/ds/symlink/tca9554.pdf>`_
+
+Configuration below is intended to be used for a `Waveshare ESP32-S3-ETH-8DI-8RO <https://www.waveshare.com/wiki/ESP32-S3-ETH-8DI-8RO>`_ unit to control the relays.
+
+The plugin should be configured with these settings:
+
+* **I2C Address (Hex)**: ``0x20``
+
+* **Output Data Type**: ``Double`` To activate this setting, the page must be submitted to show the extra input fields.
+
+* **Values**: The names can be changed whatever is appropriate, they are not really used, though we need 2 cached command sequences.
+
+* **I2C Init Commands**: ``write.u8.0x03.0x00;calc.1``: Initializes the extender for all pins as output (and return a non-zero value for successful initialization).
+
+* **Cache-Name 1**: Use ``readout``, to match the rules, below, and the I2C Command sequence is cached for much improved execution-performance.
+
+* **I2C Commands 1**: ``read.u8.0x01;eval;let.bits.%value%`` Read the current relay state, and store in rules variable ``bits`` (referenced as ``%v_bits%``).
+
+* **Cache-Name 2**: Use ``writeout``, to match with the rules, below.
+
+* **I2C Commands 2**: ``write.u8.0x01.%v_bits%`` Set then outputs as updated in ``%v_bits%``.
+
+To reduce the logging content, **Single event with all values** can be enabled, to generate a single event ``<task-name>#All`` with all values as argument, and thus reduce the logging to a single line.
+
+Rules to add
+~~~~~~~~~~~~
+
+As this is an output-only configuration, there must be some command(s) to control these outputs. These commands are handled by a single rule (event handler):
+
+.. code-block:: none
+  
+  On relay Do // Usage: event,"relay=1..8,0/1"
+    If %eventvalue1% > 0 And %eventvalue1% < 9 And (%eventvalue2|-1% = 0 Or %eventvalue2% = 1)
+      geni2c,exec,readout // Read all output bits into v_bits
+      Let,bits,{bitWrite:%eventvalue1%-1:%v_bits%:%eventvalue2%} // Update requested bit = relay
+      geni2c,exec,writeout // Write new state in v_bits to the outputs
+      // LogEntry,'Setting relay %eventvalue1% to state %eventvalue2%, bits: %v_bits%'
+    Endif
+  Endon
+
+(The line with LogEntry can be uncommented to get some logging for test purposes)
+
+To switch a relay on or off, this command syntax can be used:
+
+``event,"relay=<1..8>,<1|0>"``
+
+There are 8 relays on the device, so the matching number should be used, and the second argument ``1`` to set the relay to On, and ``0`` for Off.
+
+|
+
 Change log
 ----------
 
 .. versionchanged:: 2.0
   ...
+
+  |added| 2026-04-18 Add support for global variables in ``put``, ``write`` and ``read`` commands.
 
   |added| 2025-12-08 Add index to example configurations.
 

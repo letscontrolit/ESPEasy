@@ -53,63 +53,29 @@ public:
 
   // Move all set WiFi credentials to free up first entry
   // Typically used for setup page.
-//  void freeUpFirstWiFiCredentials(uint8_t index = 0);
+  //  void freeUpFirstWiFiCredentials(uint8_t index = 0);
 
   bool getWiFiCredentials(uint8_t index,
                           String& ssid,
-                          String& passwd) const
-  {
-    return
-      index < MAX_EXTRA_WIFI_CREDENTIALS_SEPARATE_FILE &&
-      getCredentials(KeyType::WiFi_SSID, KeyType::WiFi_Password, index, ssid, passwd);
-  }
+                          String& passwd) const;
 
   void setWiFiCredentials(
     uint8_t       index,
     const String& ssid,
-    const String& passwd)
-  {
-    if (index < MAX_EXTRA_WIFI_CREDENTIALS_SEPARATE_FILE)
-    {
-      setCredentials(
-        KeyType::WiFi_SSID,
-        KeyType::WiFi_Password,
-        index,
-        ssid,
-        passwd);
-    }
-  }
+    const String& passwd);
 
   bool getControllerCredentials(uint8_t index,
                                 String& user,
-                                String& passwd) const
-  {
-    return
-      (index < CONTROLLER_MAX) && getCredentials(
-      KeyType::Controller_User,
-      KeyType::Controller_Password,
-      index,
-      user,
-      passwd);
-  }
+                                String& passwd) const;
 
   void setControllerCredentials(uint8_t       index,
                                 const String& user,
-                                const String& passwd)
-  {
-    if (index < CONTROLLER_MAX) {
-      setCredentials(
-        KeyType::Controller_User,
-        KeyType::Controller_Password,
-        index,
-        user,
-        passwd);
-    }
-  }
+                                const String& passwd);
 
   bool getValue(KeyType keytype,
                 uint8_t index,
                 String& value) const;
+
   void setValue(KeyType       keytype,
                 uint8_t       index,
                 const String& value);

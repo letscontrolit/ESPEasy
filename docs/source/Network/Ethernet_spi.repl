@@ -1,6 +1,6 @@
 
 SPI Ethernet
-^^^^^^^^^^^^
+------------
 
 (Added: 2024/02)
 
@@ -15,7 +15,7 @@ Some boards like the ETH01-EVO (ESP32-C3 based) do not even have the SPI bus pin
 
 
 GPIO Configuration
-""""""""""""""""""
+^^^^^^^^^^^^^^^^^^
 
 * CS pin: Just as any SPI device, it needs a CS pin to tell the device it is being addressed.
 * IRQ/INT pin: Allows the Ethernet chip to signal the ESP about new data. (Optional for W5500)
@@ -23,7 +23,7 @@ GPIO Configuration
 
 
 SPI Ethernet ESP32 Boards
-"""""""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. include:: ../Reference/SPI_Ethernet_ESP32_boards.rst
 

@@ -255,6 +255,14 @@ public:
                         const IPAddress& low,
                         const IPAddress& high);
 
+  static bool IP_in_subnet(const IPAddress& localIP,
+                           const IPAddress& client_ip,
+                           const IPAddress& subnet);
+
+  static IPAddress getNetworkID(const IPAddress& localIP, const IPAddress& subnet);
+
+  static IPAddress getNetworkBroadcast(const IPAddress& localIP, const IPAddress& subnet);
+
 #ifdef ESP32
   static bool              IP_in_subnet(const IPAddress & ip,
                                         NetworkInterface *networkInterface);

@@ -48,6 +48,10 @@
 #include <lwip/dns.h>
 
 
+#if FEATURE_DOWNLOAD && defined(ESP32)
+#include <Update.h>
+#endif
+
 // Generic Networking routines
 
 // Syslog
@@ -82,16 +86,6 @@ void etharp_gratuitous_r(struct netif *netif)     { tcpip_callback_with_block((t
 # endif // ifdef ESP32
 
 #endif  // ifdef SUPPORT_ARP
-
-#if FEATURE_DOWNLOAD
-# ifdef ESP8266
-#  include <ESP8266HTTPClient.h>
-# endif // ifdef ESP8266
-# ifdef ESP32
-#  include <HTTPClient.h>
-#  include <Update.h>
-# endif // ifdef ESP32
-#endif  // if FEATURE_DOWNLOAD
 
 #include <vector>
 
@@ -160,9 +154,19 @@ void sendUDP(uint8_t unit, const uint8_t *data, uint8_t size)
 /*********************************************************************************************\
    Update UDP port (ESPEasy propiertary protocol)
 \*********************************************************************************************/
+uint16_t lastUsedUDPPort = 0;
+
+void stopUDPport()
+{
+  if (lastUsedUDPPort == 0) return;
+  if (ESPEasy::net::NetworkConnected(true)) {
+    portUDP.stop();
+  }
+  lastUsedUDPPort = 0;
+}
+
 void updateUDPport(bool force)
 {
-  static uint16_t lastUsedUDPPort = 0;
 
   if (!force && (Settings.UDPPort == lastUsedUDPPort)) {
     return;
@@ -173,9 +177,10 @@ void updateUDPport(bool force)
   // Or we may need to look into AsyncUDP as that allows to send to specific interfaces.
   const bool connected = ESPEasy::net::NWPluginCall(NWPlugin::Function::NWPLUGIN_WEBSERVER_SHOULD_RUN);
   //const bool connected = ESPEasy::net::NetworkConnected();
-  if (!connected || lastUsedUDPPort != 0) {
+  if (!connected || (Settings.UDPPort != lastUsedUDPPort)) {
     if (lastUsedUDPPort != 0) {
-      portUDP.stop();
+      if (connected)
+        portUDP.stop();
       lastUsedUDPPort = 0;
 #ifndef BUILD_NO_DEBUG
       addLogMove(LOG_LEVEL_INFO, concat(F("UDP : Stop listening on port "), Settings.UDPPort));
@@ -186,7 +191,7 @@ void updateUDPport(bool force)
     }
   }
 
-  if (Settings.UDPPort != 0) {
+  if ((Settings.UDPPort != lastUsedUDPPort) && Settings.UDPPort != 0) {
     if (portUDP.begin(Settings.UDPPort) == 0) {
 #ifndef BUILD_NO_DEBUG
       if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
@@ -1130,6 +1135,24 @@ void scrubDNS() {
   */
 }
 
+#ifdef ESP32
+bool IPAddressSet(const IPAddress& ip)
+{
+  return !(ip == INADDR_NONE
+    # if CONFIG_LWIP_IPV6
+      || ip == IN6ADDR_ANY
+    # endif
+    );
+}
+#endif
+#ifdef ESP8266
+bool IPAddressSet(const IPAddress& ip)
+{
+  return !(ip[0] == 0 && ip[1] == 0 && ip[2] == 0 && ip[3] == 0);
+}
+#endif
+
+
 bool valid_DNS_address(const IPAddress& dns) {
   return /*dns.v4() != (uint32_t)0x00000000 && */
          dns != IPAddress((uint32_t)0xFD000000) &&
@@ -1139,7 +1162,7 @@ bool valid_DNS_address(const IPAddress& dns) {
          // Global IPv6 prefixes currently start with 2xxx::
          (dns[0] & 0xF0) != 0x20 &&
 #endif // ifdef ESP32
-         dns != INADDR_NONE;
+         IPAddressSet(dns);
 }
 
 bool setDNS(int index, const IPAddress& dns) {
@@ -1310,7 +1333,7 @@ bool splitUserPass_HostPortString(const String& hostPortString, String& user, St
 
 // Split a full URL like "http://hostname:port/path/file.htm"
 // Return value is everything after the hostname:port section (including /)
-String splitURL(const String& fullURL, String& user, String& pass, String& host, uint16_t& port, String& file) {
+String splitURL(const String& fullURL, String& user, String& pass, String& host, uint16_t& port, String& file, String& protocol) {
   int starthost = fullURL.indexOf(F("://"));
 
   if (starthost == -1) {
@@ -1325,16 +1348,16 @@ String splitURL(const String& fullURL, String& user, String& pass, String& host,
     return EMPTY_STRING;
   }
 
-  #if FEATURE_HTTP_TLS
-  if ((starthost > 3) && (port == 80)) { // 'Upgrade' from port 80 to port 443 for HTTPS url
-    String proto = fullURL.substring(0, starthost - 3);
-    proto.toLowerCase();
+  if (starthost > 3) {
+    protocol = fullURL.substring(0, starthost - 3);
+    protocol.toLowerCase(); // Shouldn't be problematic
 
-    if (equals(proto, F("https"))) {
+    #if FEATURE_HTTP_TLS
+    if ((port == 80) && equals(protocol, F("https"))) { // 'Upgrade' from port 80 to port 443 for HTTPS url
       port = 443;
     }
+    #endif // if FEATURE_HTTP_TLS
   }
-  #endif // if FEATURE_HTTP_TLS
 
   int startfile = fullURL.lastIndexOf('/');
 
@@ -1342,6 +1365,34 @@ String splitURL(const String& fullURL, String& user, String& pass, String& host,
     file = fullURL.substring(startfile);
   }
   return fullURL.substring(endhost);
+}
+
+String joinURL(const String& user, const String& pass, const String& host, uint16_t& port, const String& uri, const String& protocol)
+{
+  String fullURL;
+  if (protocol.isEmpty()) {
+    if (port == 443) { fullURL = F("https://"); }
+    else { fullURL = F("http://"); }
+  } else {
+    fullURL += protocol;
+    if (!fullURL.endsWith(F("://"))) { fullURL += F("://"); }
+  }
+  if (!user.isEmpty() && !pass.isEmpty()) {
+    fullURL += user;
+    fullURL += ':';
+    fullURL += pass;
+    fullURL += '@';
+  }
+  if (host.isEmpty()) { return EMPTY_STRING; }
+  fullURL += host;
+  if ((port != 80) && (port != 443)) {
+    fullURL += ':';
+    fullURL += port;
+  }
+  if (!uri.startsWith("/")) fullURL += '/';
+  fullURL += uri;
+
+  return fullURL;
 }
 
 String get_user_agent_string() {
@@ -1455,9 +1506,9 @@ String getDigestAuth(const String& authReq,
     md5.toString().c_str()); // response
 }
 
-# ifndef BUILD_NO_DEBUG
+# if !defined(BUILD_NO_DEBUG) || defined(ESP32)
 
-void log_http_result(const HTTPClient& http,
+void log_http_result(const ESPEasy_HTTPClient& http,
                      const String    & logIdentifier,
                      const String    & host,
                      const String    & HttpMethod,
@@ -1500,13 +1551,18 @@ void log_http_result(const HTTPClient& http,
 
 int http_authenticate(const String& logIdentifier,
                       WiFiClient  & client,
-                      HTTPClient  & http,
+                      ESPEasy_HTTPClient  & http,
                       uint16_t      timeout,
                       const String& user,
                       const String& pass,
                       const String& host,
                       uint16_t      port,
+                      const String& protocol,
+                      # if FEATURE_JSON_EVENT
+                      String        uri,
+                     # else // if FEATURE_JSON_EVENT
                       const String& uri,
+                     # endif // if FEATURE_JSON_EVENT
                       const String& HttpMethod,
                       const String& header,
                       const String& postStr,
@@ -1522,13 +1578,24 @@ int http_authenticate(const String& logIdentifier,
       pass,
       host,
       port,
+      protocol,
       concat(F("/"), uri),
       HttpMethod,
       header,
       postStr,
       must_check_reply);
   }
-  int httpCode              = 0;
+
+# if RESPONSE_PARSER_SUPPORT
+  int parseJson = -1;
+#  if FEATURE_JSON_EVENT
+  UriParseResult uriResult = parseUriPath(uri);
+  parseJson = uriResult.parseJson;
+  uri       = uriResult.cleanedPath;
+#  endif // if FEATURE_JSON_EVENT
+# endif // if RESPONSE_PARSER_SUPPORT
+
+  int httpCode = 0;
   const bool hasCredentials = !user.isEmpty() && !pass.isEmpty();
 
   if (hasCredentials) {
@@ -1537,7 +1604,9 @@ int http_authenticate(const String& logIdentifier,
   } else {
     http.setAuthorization("");     // Clear Basic authorization
 # ifdef ESP32
+# if !FEATURE_TLS
     http.setAuthorizationType(""); // Default type is "Basic"
+#endif
 # endif
   }
   http.setTimeout(timeout);
@@ -1547,7 +1616,9 @@ int http_authenticate(const String& logIdentifier,
     http.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
     http.setRedirectLimit(2);
   }
-
+#  if FEATURE_TLS
+  http.setConnectTimeout(10000);
+#else
   # ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
 
   // See: https://github.com/espressif/arduino-esp32/pull/6676
@@ -1557,6 +1628,7 @@ int http_authenticate(const String& logIdentifier,
   # else // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
   client.setTimeout(timeout); // in msec as it should be!
   # endif // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
+#endif
 
   // Add request header as fall back.
   // When adding another "accept" header, it may be interpreted as:
@@ -1569,7 +1641,18 @@ int http_authenticate(const String& logIdentifier,
   delay(0);
   scrubDNS();
 # if defined(CORE_POST_2_6_0) || defined(ESP32)
+#  if FEATURE_TLS
+  const String fullURL = joinURL(user, pass, host, port, uri, protocol);
+#ifndef LIMIT_BUILD_SIZE
+  addLog(LOG_LEVEL_INFO, concat(F("SendToHTTP full URL: "), fullURL));
+#endif
+  if (fullURL.startsWith(F("https")))
+    http.begin(fullURL, nullptr); // HTTPS
+  else 
+    http.begin(fullURL); // HTTP
+#else
   http.begin(client, host, port, uri, false); // HTTP
+#endif
 # else // if defined(CORE_POST_2_6_0) || defined(ESP32)
   http.begin(client, host, port, uri);
 # endif // if defined(CORE_POST_2_6_0) || defined(ESP32)
@@ -1596,12 +1679,14 @@ int http_authenticate(const String& logIdentifier,
       //      }
     }
   }
+  String tmp = HttpMethod;
+  const char* httpMethod_cstr = &tmp[0];
 
   // start connection and send HTTP header (and body)
   if (equals(HttpMethod, F("HEAD")) || equals(HttpMethod, F("GET"))) {
-    httpCode = http.sendRequest(HttpMethod.c_str());
+    httpCode = http.sendRequest(httpMethod_cstr);
   } else {
-    httpCode = http.sendRequest(HttpMethod.c_str(), postStr);
+    httpCode = http.sendRequest(httpMethod_cstr, postStr);
   }
 
   // Check to see if we need to try digest auth
@@ -1618,13 +1703,23 @@ int http_authenticate(const String& logIdentifier,
 
       http.setAuthorization("");     // Clear Basic authorization
 # ifdef ESP32
+# if !FEATURE_TLS
       http.setAuthorizationType(""); // Default type is "Basic" and "Digest" is already part of the string generated by getDigestAuth()
+# endif
 # endif
       const String authorization = getDigestAuth(authReq, user, pass, F("GET"), uri, 1);
 
       http.end();
 # if defined(CORE_POST_2_6_0) || defined(ESP32)
+#  if FEATURE_TLS
+      const String fullURL = joinURL(user, pass, host, port, uri);
+      if (fullURL.startsWith(F("https")))
+        http.begin(fullURL, nullptr); // HTTPS
+      else 
+        http.begin(fullURL); // HTTP
+#  else
       http.begin(client, host, port, uri, false); // HTTP, not HTTPS
+#  endif
 # else // if defined(CORE_POST_2_6_0) || defined(ESP32)
       http.begin(client, host, port, uri);
 # endif // if defined(CORE_POST_2_6_0) || defined(ESP32)
@@ -1633,9 +1728,9 @@ int http_authenticate(const String& logIdentifier,
 
       // start connection and send HTTP header (and body)
       if (equals(HttpMethod, F("HEAD")) || equals(HttpMethod, F("GET"))) {
-        httpCode = http.sendRequest(HttpMethod.c_str());
+        httpCode = http.sendRequest(httpMethod_cstr);
       } else {
-        httpCode = http.sendRequest(HttpMethod.c_str(), postStr);
+        httpCode = http.sendRequest(httpMethod_cstr, postStr);
       }
     }
   }
@@ -1655,12 +1750,12 @@ int http_authenticate(const String& logIdentifier,
 
 // ----This way to the custom response parser----------------
 #if RESPONSE_PARSER_SUPPORT
-    eventFromResponse(host, httpCode, uri, http);
+    eventFromResponse(host, httpCode, uri, http, parseJson);
 #endif
   }
 // -----------------------------------------------------------
 
-# ifndef BUILD_NO_DEBUG
+# if !defined(BUILD_NO_DEBUG) || defined(ESP32)
   log_http_result(http, logIdentifier, host + ':' + port, HttpMethod, httpCode, EMPTY_STRING);
 # endif
   return httpCode;
@@ -1682,13 +1777,15 @@ String send_via_http(const String& logIdentifier,
                      const String& header,
                      const String& postStr,
                      int         & httpCode,
-                     bool          must_check_reply
+                     bool          must_check_reply,
+                     const String& protocol
                      #if FEATURE_HTTP_TLS
                      , TLS_types   tlsType
                      #endif // if FEATURE_HTTP_TLS
                     ) {
   WiFiClient client;
   #if FEATURE_HTTP_TLS
+  /*
   BearSSL::WiFiClientSecure_light *client_secure = nullptr;
   if (tlsType != TLS_types::NoTLS) {
     client_secure = new (std::nothrow) BearSSL::WiFiClientSecure_light(2048, 2048);
@@ -1727,16 +1824,19 @@ String send_via_http(const String& logIdentifier,
     client_secure->setTimeout(timeout); // in msec as it should be!
     # endif // ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
   }
+    */
   #endif // if FEATURE_HTTP_TLS
-  HTTPClient http;
+  ESPEasy_HTTPClient http;
 
   http.setReuse(false);
 
   httpCode = http_authenticate(
     logIdentifier,
+/*
     #if FEATURE_HTTP_TLS
     tlsType != TLS_types::NoTLS ? *client_secure :
     #endif // if FEATURE_HTTP_TLS
+*/
     client,
     http,
     timeout,
@@ -1744,6 +1844,7 @@ String send_via_http(const String& logIdentifier,
     pass,
     host,
     port,
+    protocol,
     uri,
     HttpMethod,
     header,
@@ -1768,13 +1869,13 @@ String send_via_http(const String& logIdentifier,
   // However the client may still keep its internal state which may prevent
   // future connections to the same host until there has been a connection to another host inbetween.
   client.stop();
-
+/*
   #if FEATURE_HTTP_TLS
   if (nullptr != client_secure) {
     client_secure->stop();    
   }
   #endif // if FEATURE_HTTP_TLS
-
+*/
   return response;
 }
 
@@ -1800,15 +1901,15 @@ bool downloadFile(const String& url, String file_save) {
 // User and Pass may be updated if they occur in the hostname part.
 // Thus have to be copied instead of const reference.
 bool start_downloadFile(WiFiClient  & client,
-                        HTTPClient  & http,
+                        ESPEasy_HTTPClient  & http,
                         const String& url,
                         String      & file_save,
                         String        user,
                         String        pass,
                         String      & error) {
-  String   host, file;
+  String   host, file, protocol;
   uint16_t port;
-  String   uri = splitURL(url, user, pass, host, port, file);
+  String   uri = splitURL(url, user, pass, host, port, file, protocol);
 
   if (file_save.isEmpty()) {
     file_save = file;
@@ -1839,6 +1940,7 @@ bool start_downloadFile(WiFiClient  & client,
     pass,
     host,
     port,
+    protocol,
     uri,
     F("GET"),
     EMPTY_STRING, // header
@@ -1859,7 +1961,7 @@ bool start_downloadFile(WiFiClient  & client,
 
 bool downloadFile(const String& url, String file_save, const String& user, const String& pass, String& error) {
   WiFiClient client;
-  HTTPClient http;
+  ESPEasy_HTTPClient http;
 
   http.setReuse(false);
 
@@ -1967,7 +2069,7 @@ bool downloadFirmware(String filename, String& error)
 bool downloadFirmware(const String& url, String& file_save, String& user, String& pass, String& error)
 {
   WiFiClient client;
-  HTTPClient http;
+  ESPEasy_HTTPClient http;
 
   error.clear();
 

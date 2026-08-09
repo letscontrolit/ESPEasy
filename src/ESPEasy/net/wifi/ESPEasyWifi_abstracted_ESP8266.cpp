@@ -42,13 +42,16 @@ bool WiFi_pre_STA_setup() {
 void doWiFiDisconnect() {
   // Only call disconnect when STA is active
   if (doWifiIsSTA(WiFi.getMode())) {
-    wifi_station_disconnect();
+    WiFi.disconnect(true);
+//    wifi_station_disconnect();
   }
+  /*
   station_config conf{};
   memset(&conf, 0, sizeof(conf));
   ETS_UART_INTR_DISABLE();
   wifi_station_set_config_current(&conf);
   ETS_UART_INTR_ENABLE();
+  */
 }
 
 bool doWifiIsAP(WiFiMode_t wifimode)  { return (wifimode == WIFI_AP) || (wifimode == WIFI_AP_STA); }
@@ -137,14 +140,6 @@ bool doSetWifiMode(WiFiMode_t new_mode)
     delay(1);
   }
 
-
-#  if FEATURE_MDNS
-  #   ifdef ESP8266
-
-  // notifyAPChange() is not present in the ESP32 MDNSResponder
-  MDNS.notifyAPChange();
-  #   endif // ifdef ESP8266
-  #  endif // if FEATURE_MDNS
   return true;
 }
 

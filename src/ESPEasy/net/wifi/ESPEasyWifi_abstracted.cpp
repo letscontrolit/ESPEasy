@@ -82,6 +82,13 @@ bool doSetAPinternal(bool enable)
     String softAPSSID = NetworkCreateRFCCompliantHostname();
     String pwd        = SecuritySettings.WifiAPKey;
     IPAddress subnet(DEFAULT_AP_SUBNET);
+
+    // AP mode (and AP netif on ESP32) must be enabled before softAPConfig,
+    // otherwise DHCP server setup fails when STA is active but not connected.
+    if (!doSetAP(true)) {
+      return false;
+    }
+
     # ifdef ESP32
     IPAddress dhcp_lease_start = (uint32_t)0;
 
@@ -138,13 +145,11 @@ bool doSetAPinternal(bool enable)
       channel = WiFi.channel();
     }
 
-    doSetAP(true);
-
     if (WiFi.softAP(softAPSSID.c_str(), pwd.c_str(), channel)) {
       auto data = getWiFi_AP_NWPluginData_static_runtime();
 
       if (data) { data->mark_start(); }
-#ifndef BUILD_NO_DEBUG
+//#ifndef BUILD_NO_DEBUG
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         addLogMove(LOG_LEVEL_INFO, strformat(
                      F("WIFI : AP Mode enabled. SSID: %s IP: %s ch: %d"),
@@ -152,18 +157,28 @@ bool doSetAPinternal(bool enable)
                      formatIP(WiFi.softAPIP()).c_str(),
                      channel));
       }
+//#endif
     } else {
+//#ifndef BUILD_NO_DEBUG
       if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
         addLogMove(LOG_LEVEL_ERROR, strformat(
                      F("WIFI : Error while starting AP Mode with SSID: %s IP: %s"),
                      softAPSSID.c_str(),
                      formatIP(apIP).c_str()));
       }
-#endif
+//#endif
       return false;
     }
 
-    if (Settings.ApCaptivePortal()) {
+    if (ESPEasy::net::wifi::shouldRedirectTo_setup()) {
+    # if FEATURE_DNS_SERVER
+
+    if (dnsServerActive) {
+      dnsServerActive = false;
+      dnsServer.stop();
+    }
+    # endif // if FEATURE_DNS_SERVER
+
 # ifdef ESP32
 #  if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 4, 2)
 
@@ -186,12 +201,13 @@ bool doSetAPinternal(bool enable)
 #  if FEATURE_DNS_SERVER
 
       if (!dnsServerActive) {
-        dnsServerActive = true;
-        dnsServer.start(DNS_PORT, "*", WiFi.softAPIP());
+        dnsServerActive = 
+          dnsServer.start(DNS_PORT, "*", WiFi.softAPIP());
       }
 #  endif // if FEATURE_DNS_SERVER
 # endif // ifdef ESP32
     }
+    return true;
   } else {
     # if FEATURE_DNS_SERVER
 
@@ -206,7 +222,7 @@ bool doSetAPinternal(bool enable)
 
     doSetAP(false);
   }
-  return false;
+  return true;
 }
 
 void doSetConnectionSpeed() {

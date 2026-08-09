@@ -67,16 +67,23 @@ Install
 For development of ESPEasy, a number of extensions has to be installed in VS-Code:
 
 * pioarduino IDE (by pioarduino)
-* C/C++ (by Microsoft)
+* Select a C++ code completion plugin, either Microsoft C/C++ Intellisense or LLVM ``clangd``
+* Microsoft
+
+  * C/C++ (by Microsoft)
+* LLVM
+
+  * clangd (by LLVM)
 * C/C++ Extension Pack (by Microsoft)
 * C/C++ Themes (by Microsoft)
 * Uncrustify (by Zachary Flower, originally by Laurent Tréguier)
 
 Optional, but highly recommended:
 
+* C/C++ DevTools (by Microsoft)
 * Bookmarks (by Alessandro Fragnani)
 * GitLens - Git supercharged (by Gitkraken)
-* Todo Tree (by Gruntfuggly)
+* TODO Highlight v2 (by Jonathan Clark)
 * All Autocomplete (by Atishay Jain)
 * Excel Viewer (by GrapeCity)
 * Esbonio - An extension for editing sphinx projects (by Swyddfa)
@@ -84,8 +91,10 @@ Optional, but highly recommended:
 * reStructuredText Syntax highlighting (by Trond Snekvik)
 * Extension pack for reStructuredText (by LeXtudio Inc.)
 * Markdown All in One (by Yu Zhang)
+* ESP Crash Decoder (by Jason2866)
 * WSL (by Microsoft) (when using WSL2 as documented below)
 
+In VSCode 1.113 the default code color scheme has changed from ``Light Modern`` or ``Dark Modern`` to ``VS Code Light`` or ``VS Code Dark``. For many users this change was quite unexpected as the used colors are quite different from the previous color scheme, so to revert to the previous default setting press ``Ctrl-K,Ctrl-T`` (``Cmd-K,Cmd-T`` on MacOs) and choose the previous default light or dark theme, or choose a different setting from the available options.
 
 Uncrustify
 ----------
@@ -144,28 +153,135 @@ For example:
 
 * ..._ESP8266_4Mnn -> ESP8266 has external flash, which can vary in size from 512 kB to 16 MB, with nn configured as filesystem.
 * ..._ESP8266_1M -> ESP8285 has the flash internal, which is almost always 1 MB. ESP8266 does have an external flash chip, which allows for exchanging it for a larger flash chip (recommended).
-* ..._ESP32_4M316k -> ESP32 with 4 MB flash and a 1.8 MB partition for the sketch. (316k SPIFFS)
-* ..._ESP32s2_4M316k -> ESP32s2 with 4 MB flash and a 1.8 MB partition for the sketch. (316k SPIFFS)
-* ..._ESP32_16M8M_LittleFS -> ESP32 with 16 MB flash and a 4 MB partition for the sketch. (8MB LittleFS)
-* ..._ESP32_16M1M_ETH -> ESP32 with 16 MB flash and a 4 MB partition for the sketch. (1MB SPIFFS, Wired ethernet support)
+* ..._ESP32_4M316k -> ESP32 with 4 MB flash and a 1.8 MB partition for the sketch. (316k LittleFS)
+* ..._ESP32s2_4M316k -> ESP32s2 with 4 MB flash and a 1.8 MB partition for the sketch. (316k LittleFS)
+* ..._ESP32_16M8M -> ESP32 with 16 MB flash and a 4 MB partition for the sketch. (8MB LittleFS)
 
-Make a custom build using PIO
+Make a Custom build using PIO
 -----------------------------
+
+To create a build from the sources, first thing is to get the sources onto your computer. This can be done in several ways:
+
+1. Clone the repository using git tools to your computer
+2. Fork the repository to your own Github account, and clone this to your computer (advantage: You can make changes and create a pull-request to have that included in the ESPEasy code base)
+3. Download a .zip file with the code from the Gihub page of ESPEasy https://github.com/letscontrolit/ESPEasy and unpack that
+
+(NB: Using ``/`` as the path separator here, in Linux style, on Windows use ``\`` in the ``cd`` commands instead)
+
+**Option 1**.
+
+*Advantage*: Quick to get started, easy update to the latest source.
+
+*Disadvantage*: You can't create a pull-request from this environment to add improvements to ESPEasy.
+
+Initial setup:
+
+Open a command prompt or terminal, and change the current directory to a folder where you have enough space to hold the code, libraries and tooling (ca. 2 GB)
+
+.. highlight::sh
+
+.. code-block::
+
+  cd /develop
+  git clone https://github.com/letscontrolit/ESPEasy.git
+
+This will create a folder /develop/ESPEasy.
+
+If you did the initial setup some time ago and want to update to latest source:
+
+.. highlight::sh
+
+.. code-block::
+
+  cd /develop/ESPEasy
+  git pull
+
+Continue at **General steps**, below.
+
+**Option 2**.
+
+*Advantage*: Quick to get started, can update to the latest source, can contribute to ESPEasy.
+
+*Disadvantage*: A *little* bit more complex to setup and update.
+
+Initial setup:
+
+Go to https://github.com/letscontrolit/ESPEasy, be sure to log into your Github account, and create a fork of the ESPEasy repository to your account (a more elaborate description can be found below)
+
+Open a command prompt or terminal, and change the current directory to a folder where you have enough space to hold the code, libraries and tooling (ca. 2 GB)
+
+.. highlight::sh
+
+.. code-block::
+
+  cd /develop
+  git clone https://github.com/[your_github_handle]/ESPEasy.git
+  cd ESPEasy
+  git remote add upstream https://github.com/letscontrolit/ESPEasy
+
+This will create a folder /develop/ESPEasy, and tell git where to synchronize to, 'upstream'.
+
+If you did the initial setup some time ago and want to update to latest source:
+
+.. highlight::sh
+
+.. code-block::
+
+  cd /develop/ESPEasy
+  git pull upstream mega
+
+Continue at **General steps**, below.
+
+**Option 3**.
+
+*Advantage*: ? You don't need to install the git tools.
+
+*Disadvantage*: Source can not be easily updated with the latest code changes.
+
+Initial setup:
+
+Go to https://github.com/letscontrolit/ESPEasy and from the green :green:`Code` button, select the ``Download ZIP`` option.
+
+Create a folder ``/develop/ESPEasy``
+
+Expand the content of the downloaded .zip file into this folder, preserving the folder structure.
+
+Update to latest source code:
+
+Save your ``Custom.h`` and/or ``pre_custom*.py`` file(s), if you created or changed any of them for a Custom build.
+
+Delete the content of the ``/develop/ESPEasy`` folder.
+
+Re-do the Initial setup.
+
+Copy back your ``Custom.h`` and/or ``pre_custom*.py`` file(s), if you saved them before.
+
+Continue with the **General steps**.
+
+**General steps**:
+
+Then open this folder from VSCode. You can save this setup as a Workspace file, so you can switch between multiple Workspaces, or quickly return to the state of work since you last closed VSCode.
+
+On the left side of the VSCode UI, there are a set of large buttons, and one of them is pioarduino (or PlatformIO if you installed that, though that's no longer recommended), that when clicked shows the available Project Tasks (environments) that can be expanded.
 
 The easiest is to go for the environment ``custom_ESP8266_4M1M`` and unfold that one.
 Then select ``Build`` to see if it will start building.
 
-If that's working, you can open the file ``pre_custom_esp8266.py`` and add or remove the plugins and controllers you need.
-That Python file is used in the ``env:custom_ESP8266_4M1M`` (or any ``custom`` build environment) to define what should be embedded and what not.
+If that's working, you can open the file ``pre_custom_esp82xx.py`` and add or remove the plugins and controllers you need.
+That Python file is used in the ``env:custom_ESP8266_4M1M`` (or any ``custom`` ESP8266 build environments) to define what should be included and what not.
 
 For example to have only the controller ``C014``, you can remove ``CONTROLLER_SET_ALL``, and just add ``USES_C014``, 
 The same for the plugins you need.
 
 The file is built in the ``.pio/build/....`` directory right under the main repository directory (the one with the platformio.ini in it)
 
-Instead of modifying ``pre_custom_esp8266.py`` (or ``pre_custom_esp32.py`` for that matter), one can also copy ``src/Custom-sample.h`` to ``src/Custom.h`` and make the desired changed in this file. This file is excluded from Github, so can be adjusted to your own requirements. When the Custom.h file is there (mind the uppercase C!), it will be used by the build scripts instead of the defaults set by ``pre_custom_esp8266.py`` (or ``pre_custom_esp32.py``).
+Instead of modifying ``pre_custom_esp82xx.py`` (or any of the ``pre_custom_esp32*.py`` files for that matter), one can also copy ``src/Custom-sample.h`` to ``src/Custom.h`` and make the desired changed in this file. This file is excluded from git, so can be adjusted to your own requirements. When the ``Custom.h`` file is available (mind the uppercase C!), it will be used by the ``custom`` build scripts instead of the defaults set by ``pre_custom_esp82xx.py`` (or ``pre_custom_esp32*.py``).
 
-.. note:: Custom IR builds have their own ``pre_custom_esp8266_IR.py`` or ``pre_custom_esp32_IR.py`` file.
+In the freshly copied ``Custom.h`` you will find all available plugins and features available in ESPEasy, and also you can enable or disable some settings to be used on a clean (empty flash) install.
+
+Enabling a plugin or feature can be done by removing the comment marker (``//``) at the start of the line.
+
+.. note:: Custom IR builds have their own ``pre_custom_esp82xx_IR.py`` or ``pre_custom_esp32_IR.py`` file.
 
 All builds will be made in a directory with the same name as the environment used.
 
@@ -681,7 +797,7 @@ For those that want to test the code from a pull request, created by someone els
 
     git pull upstream pull/<prnumber>/head
 
-5. Build the desired PIO environment, or add the (new?) plugin to your Custom.h file to create your local Custom build. Like described above, you can also add a plugin to the ``pre_custom_esp8266.py`` or ``pre_custom_esp32.py`` Python scripts (when *not* having a Custom.h file, as that will be used for any Custom build first).
+5. Build the desired PIO environment, or add the (new?) plugin to your Custom.h file to create your local Custom build. Like described above, you can also add a plugin to the ``pre_custom_esp82xx.py`` or ``pre_custom_esp32*.py`` Python scripts (when *not* having a Custom.h file, as that will be used for any Custom build first).
 
 6. To update your local code after the PR has been updated on github, repeat step **3.** and **4.** within the branch created in step **2.** active (``git checkout pulls/<prnumber>``).
 

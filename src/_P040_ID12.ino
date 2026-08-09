@@ -88,6 +88,7 @@ boolean Plugin_040(uint8_t function, struct EventStruct *event, String& string)
     {
       if (Plugin_040_init)
       {
+        success = true;
         uint8_t val = 0;
         uint8_t code[6];
         uint8_t checksum  = 0;
@@ -187,7 +188,6 @@ boolean Plugin_040(uint8_t function, struct EventStruct *event, String& string)
             Scheduler.setPluginTaskTimer(500, event->TaskIndex, event->Par1);
           }
         }
-        success = true;
       }
       break;
     }

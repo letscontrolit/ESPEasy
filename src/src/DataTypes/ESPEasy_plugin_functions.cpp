@@ -3,6 +3,7 @@
 #ifdef ESP32
 
 # include "../Helpers/StringConverter.h"
+# include "../Helpers/Networking.h"
 
 # include <esp_netif.h>
 
@@ -154,7 +155,7 @@ bool NWPlugin::get_subnet(NWPlugin::IP_type ip_type, NetworkInterface*networkInt
   if (!networkInterface) { return false; }
   IPAddress ip = get_IP_address(ip_type, networkInterface);
 
-  if (ip == INADDR_NONE) { return false; }
+  if (!IPAddressSet(ip)) { return false; }
 
 # if CONFIG_LWIP_IPV6
 
@@ -184,21 +185,22 @@ bool NWPlugin::get_subnet(NWPlugin::IP_type ip_type, NetworkInterface*networkInt
   broadcast = networkInterface->broadcastIP();
   return true;
 }
-#endif
+
+#endif // ifdef ESP32
 
 bool NWPlugin::ipLessEqual(const IPAddress& ip, const IPAddress& high)
 {
   // FIXME TD-er: Must check whether both are of same type and check full range IPv6
   int nrOctets = 4;
 
-  # if FEATURE_USE_IPV6
+  #if FEATURE_USE_IPV6
 
   if (ip.type() != high.type()) { return false; }
 
   if (ip.type() == IPv6) {
     nrOctets = 16;
   }
-  # endif // if FEATURE_USE_IPV6
+  #endif // if FEATURE_USE_IPV6
 
   for (int i = 0; i < nrOctets; ++i) {
     if (ip[i] != high[i]) {
@@ -210,11 +212,69 @@ bool NWPlugin::ipLessEqual(const IPAddress& ip, const IPAddress& high)
   return true;
 }
 
-bool NWPlugin::ipInRange(const IPAddress& ip, const IPAddress& low, const IPAddress& high) { 
-  return ipLessEqual(low, ip) && ipLessEqual(ip, high); 
+bool NWPlugin::ipInRange(const IPAddress& ip, const IPAddress& low, const IPAddress& high) {
+  return ipLessEqual(low, ip) && ipLessEqual(ip, high);
+}
+
+bool NWPlugin::IP_in_subnet(const IPAddress& localIP,
+                            const IPAddress& client_ip,
+                            const IPAddress& subnet)
+{
+  #if FEATURE_USE_IPV6
+  if ((localIP.type() != client_ip.type()) || 
+      (localIP.type() != subnet.type())) { return false; }
+  #endif // if FEATURE_USE_IPV6
+
+  return ipInRange(
+    client_ip,
+    getNetworkID(localIP, subnet),
+    getNetworkBroadcast(localIP, subnet));
+}
+
+IPAddress NWPlugin::getNetworkID(const IPAddress& localIP, const IPAddress& subnet)
+{
+  IPAddress networkID = localIP;
+
+  int nrOctets = 4;
+
+  #if FEATURE_USE_IPV6
+
+  if (localIP.type() != subnet.type()) { return IPAddress(); }
+
+  if (localIP.type() == IPv6) {
+    nrOctets = 16;
+  }
+  #endif // if FEATURE_USE_IPV6
+
+  for (uint8_t i = 0; i < nrOctets; ++i) {
+    networkID[i] &= subnet[i];
+  }
+  return networkID;
+}
+
+IPAddress NWPlugin::getNetworkBroadcast(const IPAddress& localIP, const IPAddress& subnet)
+{
+  IPAddress broadcast = localIP;
+
+  int nrOctets = 4;
+
+  #if FEATURE_USE_IPV6
+
+  if (localIP.type() != subnet.type()) { return IPAddress(); }
+
+  if (localIP.type() == IPv6) {
+    nrOctets = 16;
+  }
+  #endif // if FEATURE_USE_IPV6
+
+  for (uint8_t i = 0; i < nrOctets; ++i) {
+    broadcast[i] |= ~subnet[i];
+  }
+  return broadcast;
 }
 
 #ifdef ESP32
+
 bool NWPlugin::IP_in_subnet(const IPAddress & ip,
                             NetworkInterface *networkInterface)
 {
@@ -222,17 +282,18 @@ bool NWPlugin::IP_in_subnet(const IPAddress & ip,
   IPAddress networkID;
   IPAddress broadcast;
 
-  if (!get_subnet(ip_type, networkInterface, networkID, broadcast)) { 
-    return false; 
+  if (!get_subnet(ip_type, networkInterface, networkID, broadcast)) {
+    return false;
   }
-#if FEATURE_USE_IPV6
+# if FEATURE_USE_IPV6
+
   if (ip_type == NWPlugin::IP_type::ipv6_link_local) {
     // Must match zone, or else it will always match.
-    return  (ip.zone() == networkID.zone());
+    if (ip.zone() != networkID.zone()) return false;
   }
-#endif
+# endif // if FEATURE_USE_IPV6
 
-  return ipLessEqual(networkID, ip) && ipLessEqual(ip, broadcast);
+  return ipInRange(ip, networkID, broadcast);
 }
 
 NWPlugin::IP_type NWPlugin::get_IP_type(const IPAddress& ip)

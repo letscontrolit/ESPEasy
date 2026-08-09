@@ -436,7 +436,7 @@ For example, there is a task named "bme280" which has a value named "temperature
 
 Its value can be referenced like this: ``[bme280#temperature]``.
 This can be used in some plugins like the "OLED Framed" plugin to populate some lines on the display.
-It can also be used in rules. Every occurance of this text will then be replaced by its value.
+It can also be used in rules. Every occurrence of this text will then be replaced by its value.
 
 When having a rule to handle the value of a task, like this:
 

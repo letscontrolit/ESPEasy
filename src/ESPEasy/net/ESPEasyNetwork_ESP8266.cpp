@@ -56,6 +56,12 @@ void setNetworkMedium(NetworkMedium_t new_medium) {
 //  ESPEasy::net::wifi::WiFiConnectRelaxed();
 // }
 
+ESPEasy::net::networkIndex_t getNetworkIndex_defaultNetwork()
+{
+  if (NetworkConnected()) return NETWORK_INDEX_WIFI_STA;
+  return ESPEasy::net::INVALID_NETWORK_INDEX;
+}
+
 bool      NetworkConnected(bool force) { 
   static bool last_result = false;
   static uint32_t last_check_millis = 0;
@@ -71,24 +77,16 @@ IPAddress NetworkLocalIP()   { return WiFi.localIP(); }
 
 IPAddress NetworkID()
 {
-  const IPAddress subnet = NetworkSubnetMask();
-  IPAddress networkID    = ESPEasy::net::NetworkLocalIP();
-
-  for (uint8_t i = 0; i < 4; ++i) {
-    networkID[i] &= subnet[i];
-  }
-  return networkID;
+  return NWPlugin::getNetworkID(
+    ESPEasy::net::NetworkLocalIP(),
+    NetworkSubnetMask());
 }
 
 IPAddress NetworkBroadcast()
 {
-  const IPAddress subnet = NetworkSubnetMask();
-  IPAddress broadcast    = ESPEasy::net::NetworkLocalIP();
-
-  for (uint8_t i = 0; i < 4; ++i) {
-    broadcast[i] |= ~subnet[i];
-  }
-  return broadcast;
+  return NWPlugin::getNetworkBroadcast(
+    ESPEasy::net::NetworkLocalIP(),
+    NetworkSubnetMask());
 }
 
 IPAddress   NetworkSubnetMask()          { return WiFi.subnetMask(); }

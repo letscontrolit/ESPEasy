@@ -477,14 +477,27 @@ public:
   }
 
   uint32_t getVariousBits2() const {
-    uint32_t res;
-    memcpy(&res, &VariousBits_2, sizeof(VariousBits_2));
-    return res;    
+    return VariousBits_2._all_bits;    
   }
 
   void setVariousBits2(uint32_t value) {
-    memcpy(&VariousBits_2, &value, sizeof(VariousBits_2));
+    VariousBits_2._all_bits = value;
   }
+
+private: 
+
+  static bool getNetworkFlag(const uint8_t& bitfield, ESPEasy::net::networkIndex_t index);
+  static void setNetworkFlag(uint8_t& bitfield, ESPEasy::net::networkIndex_t index, bool enabled);
+
+public:
+
+
+#ifdef ESP32
+  // Append "-WiFi" or "-eth" to the hostname for that adapter, e.g. to be used in the DHCP request.
+  bool getAppendNetworkAdapterNameToHostname(ESPEasy::net::networkIndex_t index) const;
+
+  void setAppendNetworkAdapterNameToHostname(ESPEasy::net::networkIndex_t index, bool enabled);
+#endif
 
   bool getNetworkEnabled(ESPEasy::net::networkIndex_t index) const;
 
@@ -518,6 +531,13 @@ public:
 
   void setNetworkInterfaceStartupDelay(ESPEasy::net::networkIndex_t index, uint32_t delay_ms);
 
+# if FEATURE_NETWORK_STATS
+  bool getNetworkCollectStats(ESPEasy::net::networkIndex_t index) const;
+
+  void setNetworkCollectStats(ESPEasy::net::networkIndex_t index, bool enabled);
+#endif
+
+
   uint32_t PID = 0;
   int           Version = 0;
   int16_t       Build = 0;
@@ -543,7 +563,15 @@ public:
   uint8_t       WebLogLevel = 0;
   uint8_t       SDLogLevel = 0;
   uint32_t BaudRate = 115200;
-  uint32_t EEPROMExternalFlags = 0;
+  union {
+    struct {
+      uint32_t AppendNetworkAdapterNameToHostname  : 8; // Bit  0 .. 7
+      uint32_t unused_08_15                        : 8; // Bit  8 .. 15
+      uint32_t unused_16_23                        : 8; // Bit 16 .. 23
+      uint32_t unused_24_31                        : 8; // Bit 24 .. 31
+    };
+    uint32_t _all_bits{};
+  } NetworkFlags;  //-V730  // Was:   uint32_t MessageDelay_unused = 0;  // MQTT settings now moved to the controller settings.
   uint8_t       deepSleep_wakeTime = 0;   // 0 = Sleep Disabled, else time awake from sleep in seconds
   boolean       CustomCSS = false;
   boolean       DST = false;
@@ -593,7 +621,7 @@ public:
 
   uint32_t ConnectionFailuresThreshold = 0;
   int16_t       TimeZone = 0;
-  boolean       MQTTRetainFlag_unused = false;
+  uint8_t       NetworkCollectStats_bits = DEFAULT_NETWORK_COLLECT_STATS_BITS;
   uint8_t       InitSPI = 0; //0 = disabled, 1= enabled but for ESP32 there is option 2= SPI2 9 = User defined, see src/src/WebServer/HardwarePage.h enum SPI_Options_e
   // FIXME TD-er: Must change to cpluginID_t, but then also another check must be added since changing the pluginID_t will also render settings incompatible
   uint8_t       Protocol[CONTROLLER_MAX] = {0};
@@ -800,6 +828,8 @@ public:
 #endif
   // TODO TD-er: For ESP8266 we may likely ever use upto 2 or 3 network interfaces, so maybe re-use the rest later?
   uint16_t  NetworkInterfaceStartupDelay[NETWORK_MAX]{};
+
+  uint32_t  EEPROMExternalFlags{};
 
 
   // Try to extend settings to make the checksum 4-uint8_t aligned.

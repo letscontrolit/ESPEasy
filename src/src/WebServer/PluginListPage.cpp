@@ -28,8 +28,7 @@ void handle_pluginlist() {
   const int colspan = 5;
   # endif // if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS
 
-  TXBuffer.startStream();
-  sendHeadandTail_stdtemplate(_HEAD);
+  startStream_send_stdTemplate_NoLoginCheck(MENU_INDEX_DEVICES);
 
   // the table header
   html_table_class_normal();
@@ -41,9 +40,9 @@ void handle_pluginlist() {
     html_table_header(F(""),            25);
     html_table_header(F("Description"), 800);
     html_table_header(F(""),            50);
-    # if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS
+    # if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS || FEATURE_EMAIL_TLS
     html_table_header(F(""),            50);
-    # endif // if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS
+    # endif // if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS || FEATURE_EMAIL_TLS
     html_table_header(F(""));
 
     deviceIndex_t x;
@@ -130,9 +129,13 @@ void handle_pluginlist() {
     html_table_header(F(""),            25);
     html_table_header(F("Description"), 800);
     html_table_header(F(""),            50);
-    #  if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS
+    #  if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS || FEATURE_EMAIL_TLS
+    #   if FEATURE_EMAIL_TLS
+    html_table_header(F("TLS"),         50);
+    #   else
     html_table_header(F(""),            50);
-    #  endif // if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS
+    #   endif // if FEATURE_EMAIL_TLS
+    #  endif // if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS || FEATURE_EMAIL_TLS
     html_table_header(F(""));
 
     for (uint8_t x = 0; x <= notificationCount; x++)
@@ -147,6 +150,13 @@ void handle_pluginlist() {
       NPlugin_ptr[x](NPlugin::Function::NPLUGIN_GET_DEVICENAME, 0, NotificationName);
       addHtml(NotificationName);
       html_TD();
+      #  if FEATURE_EMAIL_TLS
+      html_TD();
+
+      if (Notification[x].usesTLS) {
+        addEnabled(true);
+      }
+      #  endif // if FEATURE_EMAIL_TLS
     }
   }
   # endif // if FEATURE_NOTIFIER
@@ -159,9 +169,9 @@ void handle_pluginlist() {
     html_table_header(F(""),            25);
     html_table_header(F("Description"), 800);
     html_table_header(F(""),            50);
-    #  if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS
+    #  if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS || FEATURE_EMAIL_TLS
     html_table_header(F(""),            50);
-    #  endif // if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS
+    #  endif // if FEATURE_MQTT_TLS || FEATURE_HTTP_TLS || FEATURE_EMAIL_TLS
     html_table_header(F(""));
 
     ESPEasy::net::networkDriverIndex_t tmpNetworkDriverIndex{};
@@ -185,8 +195,7 @@ void handle_pluginlist() {
 
   html_end_table();
   html_end_form();
-  sendHeadandTail_stdtemplate(_TAIL);
-  TXBuffer.endStream();
+  sendTail_stdtemplate();
 }
 
 #endif // if FEATURE_PLUGIN_LIST

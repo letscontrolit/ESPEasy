@@ -18,7 +18,7 @@
 # include "../../src/WebServer/Markup_Forms.h"
 # include "../net/Helpers/_NWPlugin_init.h"
 # include "../net/NWPluginStructs/NW002_data_struct_WiFi_AP.h"
-
+# include "../net/ESPEasyNetwork.h"
 
 // TODO TD-er: This code should be moved to this NW002 plugin
 # include "../net/wifi/ESPEasyWifi.h"
@@ -40,24 +40,27 @@ bool NWPlugin_002(NWPlugin::Function function, EventStruct *event, String& strin
     case NWPlugin::Function::NWPLUGIN_DRIVER_ADD:
     {
       NetworkDriverStruct& nw = getNetworkDriverStruct(networkDriverIndex_t::toNetworkDriverIndex(event->idx));
-      nw.onlySingleInstance    = true;
-      nw.alwaysPresent         = true;
+      nw.onlySingleInstance = true;
+      nw.alwaysPresent      = true;
+      # if DEFAULT_ENABLED_NW002
       nw.enabledOnFactoryReset = true;
-      nw.fixedNetworkIndex     = NWPLUGIN_ID_002 - 1; // Start counting at 0
+      # endif
+      nw.fixedNetworkIndex = NWPLUGIN_ID_002 - 1; // Start counting at 0
       break;
     }
 
     case NWPlugin::Function::NWPLUGIN_LOAD_DEFAULTS:
     {
 # ifdef ESP32
-      Settings.setRoutePrio_for_network(event->NetworkIndex, 10);
+      Settings.setAppendNetworkAdapterNameToHostname(event->NetworkIndex, DEFAULT_AP_APPEND_NW_NAME_TO_HOSTNAME);
+      Settings.setRoutePrio_for_network(event->NetworkIndex, DEFAULT_AP_ROUTE_PRIO);
 # endif
       Settings.setNetworkInterfaceSubnetBlockClientIP(event->NetworkIndex, false);
-      Settings.setNetworkInterfaceStartupDelay(event->NetworkIndex, 10000);
-      Settings.setNetworkInterface_isFallback(event->NetworkIndex, true);
-      Settings.StartAPfallback_NoCredentials(true);
-      Settings.DoNotStartAPfallback_ConnectFail(false);
-      Settings.APfallback_autostart_max_uptime_m(0);
+      Settings.setNetworkInterfaceStartupDelay(event->NetworkIndex, DEFAULT_AP_STARTUP_DELAY);
+      Settings.setNetworkInterface_isFallback(event->NetworkIndex, DEFAULT_AP_IS_FALLBACK);
+      Settings.StartAPfallback_NoCredentials(DEFAULT_AP_START_FALLBACK_NO_CRED);
+      Settings.DoNotStartAPfallback_ConnectFail(DEFAULT_AP_DO_NOT_START_CONN_FAIL);
+      Settings.APfallback_autostart_max_uptime_m(DEFAULT_AP_AUTOSTART_MAX_UPTIME_M);
       Settings.APfallback_minimal_on_time_sec(DEFAULT_AP_FALLBACK_MINIMAL_ON_TIME_SEC);
       break;
     }
@@ -80,14 +83,15 @@ bool NWPlugin_002(NWPlugin::Function function, EventStruct *event, String& strin
     case NWPlugin::Function::NWPLUGIN_WEBSERVER_SHOULD_RUN:
     {
       success = ESPEasy::net::wifi::WifiIsAP(WiFi.getMode());
-//      success = ESPEasy::net::wifi::wifiAPmodeActivelyUsed();
+
+      //      success = ESPEasy::net::wifi::wifiAPmodeActivelyUsed();
 
       break;
     }
 
     case NWPlugin::Function::NWPLUGIN_FALLBACK_INTERFACE_SHOULD_START:
     {
-      if (Settings.getNetworkInterface_isFallback(event->NetworkIndex)){
+      if (Settings.getNetworkInterface_isFallback(event->NetworkIndex)) {
         success = ESPEasy::net::wifi::shouldStartAP_fallback();
       } else {
         success = true;
@@ -181,13 +185,18 @@ bool NWPlugin_002(NWPlugin::Function function, EventStruct *event, String& strin
     case NWPlugin::Function::NWPLUGIN_WEBFORM_SHOW_HOSTNAME:
     {
       if (event->kvWriter) {
-        event->kvWriter->write({ F("Hostname"),
+        String hostname;
+
+        if (ESPEasy::net::wifi::WifiIsAP(WiFi.getMode())) {
 # ifdef ESP32
-                                 WiFi.AP.SSID()
+          hostname = WiFi.AP.SSID();
 # else
-                                 WiFi.softAPSSID()
+          hostname = // ESPEasy::net::NetworkCreateRFCCompliantHostname();
+                     WiFi.softAPSSID();
 # endif // ifdef ESP32
-                               });
+        }
+
+        event->kvWriter->write({ F("Hostname"), hostname });
         success = true;
       }
       break;
@@ -211,6 +220,7 @@ bool NWPlugin_002(NWPlugin::Function function, EventStruct *event, String& strin
       }
       break;
     }
+# endif // ifdef ESP8266
 
     case NWPlugin::Function::NWPLUGIN_CLIENT_IP_WEB_ACCESS_ALLOWED:
     {
@@ -221,18 +231,10 @@ bool NWPlugin_002(NWPlugin::Function function, EventStruct *event, String& strin
 
         // FIXME TD-er: Do we allow to set the subnetmask for AP to anything else?
         const IPAddress subnet(255, 255, 255, 0);
-        const IPAddress localIP = WiFi.softAPIP();
-        bool success            = true;
-
-        for (uint8_t i = 0; success && i < 4; ++i) {
-          if ((localIP[i] & subnet[i]) != (client_ip[i] & subnet[i])) {
-            success = false;
-          }
-        }
+        success = NWPlugin::IP_in_subnet(WiFi.softAPIP(), client_ip, subnet);
       }
       break;
     }
-# endif // ifdef ESP8266
 
     case NWPlugin::Function::NWPLUGIN_WEBFORM_SAVE:
     {
@@ -270,6 +272,7 @@ bool NWPlugin_002(NWPlugin::Function function, EventStruct *event, String& strin
 # if CONFIG_SOC_WIFI_SUPPORT_5G
 
         // See wifi_5g_channel_bit_t for all supported channels
+        // *INDENT-OFF*
         const int wifiChannels[] =
         { 1,   2,  3,   4,   5,   6,   7,   8,   9,   10,   11,  12,  13, 14 // 2.4 GHz
           ,36,   40,  44,  48                                                // 5 GHz U-NII-1
@@ -281,6 +284,7 @@ bool NWPlugin_002(NWPlugin::Function function, EventStruct *event, String& strin
           ,169                                                               // 5 GHz U-NII-3/4
           ,173,  177                                                         // 5 GHz U-NII-4
         };
+ // *INDENT-ON*
         constexpr int nrwifiChannels = NR_ELEMENTS(wifiChannels);
         const FormSelectorOptions selector(
           nrwifiChannels,

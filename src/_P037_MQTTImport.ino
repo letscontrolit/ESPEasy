@@ -632,25 +632,6 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                 }
                 UserVar.setFloat(event->TaskIndex, x, doublePayload);      // Save the new value
 
-                if (!checkJson && P037_SEND_EVENTS && Settings.UseRules) { // Generate event of all non-json topic/payloads
-                  String RuleEvent = strformat(F("%s#%s=%s"),
-                                               getTaskDeviceName(event->TaskIndex).c_str(),
-                                               event->String1.c_str(),
-                                               wrapWithQuotesIfContainsParameterSeparatorChar(unparsedPayload).c_str());
-                  P037_addEventToQueue(event, RuleEvent);
-                }
-
-                // Log the event
-                # if !defined(P037_LIMIT_BUILD_SIZE) || defined(P037_OVERRIDE)
-
-                if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-                  addLog(LOG_LEVEL_INFO, strformat(F("IMPT : [%s#%s] : %s"),
-                                                   getTaskDeviceName(event->TaskIndex).c_str(),
-                                                   checkJson ? key.c_str() : getTaskValueName(event->TaskIndex, x).c_str(),
-                                                   toString(doublePayload, ExtraTaskSettings.TaskDeviceValueDecimals[x]).c_str()));
-                }
-                # endif // if !defined(P037_LIMIT_BUILD_SIZE) || defined(P037_OVERRIDE)
-
                 // Generate event for rules processing - proposed by TridentTD
 
                 if (Settings.UseRules && P037_SEND_EVENTS) {
@@ -678,6 +659,28 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                     }
                     P037_addEventToQueue(event, RuleEvent);
                   }
+                  else // Generate event of all non-json topic/payloads
+                  {
+                    String tmp = unparsedPayload;
+                    addEscapeCharacters(tmp); // Add escape characters to avoid problems with rules processing if a JSON message is received
+
+                    String RuleEvent = strformat(F("%s#%s=%s"),
+                                                getTaskDeviceName(event->TaskIndex).c_str(),
+                                                event->String1.c_str(),
+                                                wrapWithQuotesIfContainsParameterSeparatorChar(tmp).c_str());
+                    P037_addEventToQueue(event, RuleEvent);
+                  }
+
+                  // Log the event
+                  # if !defined(P037_LIMIT_BUILD_SIZE) || defined(P037_OVERRIDE)
+
+                  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                    addLog(LOG_LEVEL_INFO, strformat(F("IMPT : [%s#%s] : %s"),
+                                                    getTaskDeviceName(event->TaskIndex).c_str(),
+                                                    checkJson ? key.c_str() : getTaskValueName(event->TaskIndex, x).c_str(),
+                                                    toString(doublePayload, ExtraTaskSettings.TaskDeviceValueDecimals[x]).c_str()));
+                  }
+                  # endif // if !defined(P037_LIMIT_BUILD_SIZE) || defined(P037_OVERRIDE)
 
                   // (Always) Generate <Taskname>#<Valuename>=<Payload> event
                   String RuleEvent;
@@ -690,7 +693,10 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                   if (numericPayload) {
                     RuleEvent += toString(doublePayload, ExtraTaskSettings.TaskDeviceValueDecimals[x]);
                   } else {
-                    RuleEvent += wrapWithQuotesIfContainsParameterSeparatorChar(Payload);
+                    String tmp = Payload;
+                    addEscapeCharacters(tmp); // Add escape characters to avoid problems with rules processing if a JSON message is received
+					
+                    RuleEvent += wrapWithQuotesIfContainsParameterSeparatorChar(tmp);
                   }
                   P037_addEventToQueue(event, RuleEvent);
                 }

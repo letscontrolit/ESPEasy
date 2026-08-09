@@ -6,6 +6,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2026-04-18 tonhuisman: Process I2C commands synchronously when triggered from an internal source, like rules.
  * 2026-02-14 tonhuisman: Set default Cache-name when empty, for improved plugin runtime performance.
  * 2025-12-06 tonhuisman: Enable CustomVTypeVar and MQTTStateClass device options, as any type of sensor can be connected
  * 2025-06-04 tonhuisman: Add [<taskname>#log] to Get Config to fetch the current Parsing and execution log setting
@@ -52,9 +53,9 @@
  * <cmd>[.<fmt>[.<len>]][.<register>][.<data>];...[|(1ps|10ps|50ps)|<cmd_sequences>]
  *
  * get.<fmt>[.<len>]
- * put.<fmt>.<data>[.<data>...]
- * read.<fmt>[.<len>].<reg>
- * write.<fmt>.<reg>.<data>[.<data>...]
+ * put.<fmt>.<data>[.<data>...] Data can be from global <var>, except for b and w format
+ * read.<fmt>[.<len>].<reg> Register can be from global <var>
+ * write.<fmt>.<reg>.<data>[.<data>...] Data can be from global <var>, except for b and w format
  * eval
  * value.<valueIndex> (1..4)
  * calc.<calculation> Like Rules, extra available vars: %value%, %pvalue%, %h%, %b0%..%b<n>%, %bx0%..%bx<n>%, %w0%..%w<n>%, %wx0%..%wx<n>%
