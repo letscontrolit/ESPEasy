@@ -28,9 +28,11 @@
 # define P157_MODEL_8DGT         1
 # define P157_MODEL_4DGT_7SEG    2
 # define P157_MODEL_8DGT_7SEG    3
+# define P157_MODEL_4COL_7SEG    4
 
 # define P157_CHAR_EURO          128
 # define P157_CHAR_DEGREE        129
+# define P157_CHAR_DEGREE_7DGT   12
 
 # define P157_OPTION_ZEROSLASH   0 // Use zero with slash (14-segment only)
 # define P157_OPTION_HIDEDEGREE  1 // Hide degree symbol for temperatures
@@ -124,7 +126,7 @@ uint8_t                    P157_getDefaultDigits(uint8_t displayModel,
 void                       P157_display_output_selector(const __FlashStringHelper *id,
                                                         int16_t                    value);
 bool                       P157_is7SegmentDisplay(uint8_t model);
-bool                       P157_is4DigitDisplay(uint8_t model);
+bool                       P157_is7SegColonDisplay(uint8_t model);
 
 struct P157_data_struct : public PluginTaskData_base {
 public:
@@ -175,8 +177,8 @@ private:
   # endif // if P157_7DDT_COMMAND
   void fillBufferWithString(const String& textToShow,
                             bool          useBinaryData = false);
-  # if P157_SCROLL_TEXT || P157_7DBIN_COMMAND
   bool isPeriodChar(const char thisChar);
+  # if P157_SCROLL_TEXT || P157_7DBIN_COMMAND
   int  getEffectiveTextLength(const String& text);
   # endif // if P157_SCROLL_TEXT || P157_7DBIN_COMMAND
   # if P157_SCROLL_TEXT
@@ -205,7 +207,7 @@ private:
   uint8_t displays         = 4;
   uint8_t fontSet          = 0;
   bool    timesep          = false;
-  bool    periods          = false;
+  bool    periods          = true;
   bool    hideDegree       = false;
   bool    suppressLeading0 = false;
   uint8_t fontset          = 0;

@@ -4,7 +4,7 @@
 
 uint8_t P157_getDefaultDigits(uint8_t displayModel,
                               uint8_t displays) {
-  const uint8_t digitsSet[] = { 4, 8, 4, 8 }; // Fixed
+  const uint8_t digitsSet[] = { 4, 8, 4, 8, 5 }; // Fixed
   uint8_t bufLen{};
 
   if (displayModel < NR_ELEMENTS(digitsSet)) {
@@ -21,6 +21,7 @@ const __FlashStringHelper* P157_DisplayModel(uint8_t model) {
     case P157_MODEL_8DGT: return F("HT16K33 - 8 digit");
     case P157_MODEL_4DGT_7SEG: return F("HT16K33 - 4 digit (7-segment)");
     case P157_MODEL_8DGT_7SEG: return F("HT16K33 - 8 digit (7-segment)");
+    case P157_MODEL_4COL_7SEG: return F("HT16K33 - 4 digit, colon (7-segment)");
   }
   return F("");
 }
@@ -47,9 +48,11 @@ void P157_display_output_selector(const __FlashStringHelper *id, int16_t value) 
   selector.addFormSelector(F("Display Output"), id, value);
 }
 
-bool P157_is7SegmentDisplay(uint8_t model) { return (P157_MODEL_4DGT_7SEG == model) || (P157_MODEL_8DGT_7SEG == model); }
+bool P157_is7SegmentDisplay(uint8_t model) {
+  return (P157_MODEL_4DGT_7SEG == model) || (P157_MODEL_8DGT_7SEG == model) || (P157_MODEL_4COL_7SEG == model);
+}
 
-bool P157_is4DigitDisplay(uint8_t model)   { return (P157_MODEL_4DGT == model) || (P157_MODEL_4DGT_7SEG == model); }
+bool P157_is7SegColonDisplay(uint8_t model) { return P157_MODEL_4COL_7SEG == model; }
 
 P157_data_struct::~P157_data_struct() {
   if (nullptr != ht16k33) {
@@ -66,8 +69,9 @@ bool P157_data_struct::init(struct EventStruct *event)
   displayModel = P157_CFG_DISPLAYTYPE;
   output       = P157_CFG_OUTPUTTYPE;
   brightness   = P157_CFG_BRIGHTNESS;
-  periods      = true; // bitRead(P157_CFG_FLAGS, P157_OPTION_PERIOD);
-  hideDegree   = bitRead(P157_CFG_FLAGS, P157_OPTION_HIDEDEGREE);
+
+  // periods      = true; // bitRead(P157_CFG_FLAGS, P157_OPTION_PERIOD);
+  hideDegree = bitRead(P157_CFG_FLAGS, P157_OPTION_HIDEDEGREE);
   # if P157_SCROLL_TEXT
   txtScrolling = bitRead(P157_CFG_FLAGS, P157_OPTION_SCROLLTEXT);
   scrollFull   = bitRead(P157_CFG_FLAGS, P157_OPTION_SCROLLFULL);
@@ -92,11 +96,9 @@ bool P157_data_struct::init(struct EventStruct *event)
   fontSet = P157_CFG_FONTSET;
   # endif // if P157_EXTRA_FONTS
   displays = P157_CFG_DISPLAYS;
-  bufLen   = P157_getDefaultDigits(displayModel, displays);
 
-  if (0 == displays) {
-    displays = 1;
-  }
+  if (0 == displays) { displays = 1; }
+  bufLen = P157_getDefaultDigits(displayModel, displays);
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     addLog(LOG_LEVEL_INFO, strformat(F("P157 : Model: %s, displays: %d"), FsP(P157_DisplayModel(displayModel)), displays));
@@ -104,9 +106,16 @@ bool P157_data_struct::init(struct EventStruct *event)
 
   if (!P157_is7SegmentDisplay(displayModel)) {
     ht16k33 = new (std::nothrow) Noiasca_ht16k33_hw_14(); // 14 segment
-    ht16k33->setZeroSlash(zeroSlash);
+
+    if (nullptr != ht16k33) {
+      ht16k33->setZeroSlash(zeroSlash);
+    }
   } else {
-    ht16k33 = new (std::nothrow) Noiasca_ht16k33_hw_7();  // 7 segment
+    if (P157_is7SegColonDisplay(displayModel)) {
+      ht16k33 = new (std::nothrow) Noiasca_ht16k33_hw_7_4_c(); // 7 segment with colon
+    } else {
+      ht16k33 = new (std::nothrow) Noiasca_ht16k33_hw_7();     // 7 segment
+    }
   }
 
   if (nullptr == ht16k33) {
@@ -116,7 +125,7 @@ bool P157_data_struct::init(struct EventStruct *event)
   if (0 == ht16k33->begin(i2cAddress, displays)) {
     if (ht16k33->isConnected()) // Happy flow
     {
-      ht16k33->setDigits(P157_is4DigitDisplay(displayModel) ? 4 : 8);
+      ht16k33->setDigits(P157_getDefaultDigits(displayModel, 1));
       ht16k33->setBrightness(brightness);
       ht16k33->on();
       return true;
@@ -198,15 +207,15 @@ void P157_data_struct::put4NumbersInBuffer(const uint8_t nr1,
   if (suppressLeading0 && (showbuffer[idx - 1] == '0')) { showbuffer[idx - 1] = ' '; } // set to space
   # endif // if P157_SUPPRESS_ZERO
 
-  showbuffer[idx++] = 48 + (nr1 % 10);
+  if (sep) { showperiods[idx] = true; }
 
-  if (sep) { showbuffer[idx++] = ':'; }
+  showbuffer[idx++] = 48 + (nr1 % 10);
 
   showbuffer[idx++] = 48 + static_cast<uint8_t>(nr2 / 10);
   showbuffer[idx++] = 48 + (nr2 % 10);
 
   if (nr3 > -1) {
-    if (sep) { showbuffer[idx++] = ':'; }
+    if (sep) { showperiods[idx - 1] = true; }
 
     showbuffer[idx++] = 48 + static_cast<uint8_t>(nr3 / 10);
     showbuffer[idx++] = 48 + (nr3 % 10);
@@ -270,7 +279,7 @@ void P157_data_struct::fillBufferWithTemp(int temperature) {
   }
 
   if (!hideDegree) {
-    showbuffer[7] = P157_CHAR_DEGREE; // degree "°"
+    showbuffer[7] = P157_is7SegmentDisplay(displayModel) ? P157_CHAR_DEGREE_7DGT : P157_CHAR_DEGREE; // degree "°"
   }
 }
 
@@ -327,12 +336,12 @@ void P157_data_struct::fillBufferWithDualTemp(int  leftTemperature,
   }
 
   if (!hideDegree) {
-    if (leftTemperature  > -100.0) {
-      showbuffer[3] = P157_CHAR_DEGREE; // degree "°"
+    if (leftTemperature  > -100) {
+      showbuffer[3] = P157_is7SegmentDisplay(displayModel) ? P157_CHAR_DEGREE_7DGT : P157_CHAR_DEGREE; // degree "°"
     }
 
-    if (rightTemperature > -100.0) {
-      showbuffer[7] = P157_CHAR_DEGREE; // degree "°"
+    if (rightTemperature > -100) {
+      showbuffer[7] = P157_is7SegmentDisplay(displayModel) ? P157_CHAR_DEGREE_7DGT : P157_CHAR_DEGREE; // degree "°"
     }
   }
 
@@ -361,11 +370,11 @@ void P157_data_struct::fillBufferWithString(const String& textToShow,
   # endif // ifdef P157_DEBUG
 }
 
-# if P157_SCROLL_TEXT || P157_7DBIN_COMMAND
-
 bool P157_data_struct::isPeriodChar(const char thisChar) {
   return std::find(std::begin(periodchars), std::end(periodchars), thisChar) != std::end(periodchars);
 }
+
+# if P157_SCROLL_TEXT || P157_7DBIN_COMMAND
 
 int P157_data_struct::getEffectiveTextLength(const String& text) {
   const int textLength = text.length();
@@ -506,14 +515,15 @@ void P157_data_struct::setTextToScroll(const String& text) {
     } else
     #  endif // if P157_SCROLL_CIRCULAR
     {
+      const int8_t colonCompensation = P157_is7SegColonDisplay(displayModel) ? (displays - 1) : 0;
       _textToScroll.reserve(text.length() + bufLen + (scrollFull ? bufLen : 0));
 
-      for (int i = 0; scrollFull && i < bufLen; ++i) { // Scroll text in from the right, so start with all spaces
+      for (uint8_t i = 0; scrollFull && i < (bufLen - colonCompensation); ++i) { // Scroll text in from the right, so start with all spaces
         _textToScroll += ' ';
       }
       _textToScroll += text;
 
-      for (int i = 0; i < bufLen; ++i) { // Scroll text off completely before restarting
+      for (uint8_t i = 0; i < (bufLen - colonCompensation); ++i) { // Scroll text off completely before restarting
         _textToScroll += ' ';
       }
     }
@@ -632,15 +642,16 @@ void P157_data_struct::printBuffer() {
 
       uint8_t i = 0;
       # if P157_EXTRA_FONTS
-      uint8_t pos = ht16k33->getCursor();
-      # endif
+      uint8_t pos         = ht16k33->getCursor();
+      const uint8_t dSize = P157_getDefaultDigits(displayModel, 1); // Single display size
+      # endif // if P157_EXTRA_FONTS
 
       while (i < buf.length()) {
         # if P157_EXTRA_FONTS
 
         if (P157_is7SegmentDisplay(displayModel)) {
           // Re-use the fonts from P073, but they use the MAX7219 layout, that has bits 0..6 reverted
-          char toPrint = P073_revert7bits(P073_getFontChar(P073_mapCharToFontPosition(buf[i], fontSet), fontSet));
+          uint16_t toPrint = P073_revert7bits(P073_getFontChar(P073_mapCharToFontPosition(buf[i], fontSet), fontSet));
 
           if (showperiods[i + dotOff] || (dotpos == (i + dotOff))) {
             toPrint |= SEG_DP;
@@ -649,6 +660,18 @@ void P157_data_struct::printBuffer() {
           if (((i + 1) < buf.length()) && isPeriodChar(buf[i + 1])) {
             toPrint |= SEG_DP;
             ++i;
+          }
+
+          if (P157_is7SegColonDisplay(displayModel)) {
+            uint8_t tpos = pos;
+
+            while (tpos > dSize) { // Find if we're on the colon
+              tpos -= dSize;
+            }
+
+            if (tpos == 2) {
+              ++pos;
+            }
           }
           ht16k33->writeLowLevel(pos, toPrint);
           ++pos;

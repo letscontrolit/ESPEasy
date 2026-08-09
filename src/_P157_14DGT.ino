@@ -30,6 +30,7 @@
 //
 
 /** History
+ * 2026-08-09 tonhuisman: Add 7 segment with colon displays. Make 7 segment displays work correctly. Some fine-tuning and other improvements
  * 2026-06-14 tonhuisman: Add Circular scroll option, guarded with define P157_SCROLL_CIRCULAR, settings collapsed by default
  * 2026-06-13 tonhuisman: Add Scroll Always option to also scroll content <= display width
  *                        Add Zero with slash option
@@ -113,12 +114,14 @@ boolean Plugin_157(uint8_t function, struct EventStruct *event, String& string) 
           P157_DisplayModel(P157_MODEL_8DGT),
           P157_DisplayModel(P157_MODEL_4DGT_7SEG),
           P157_DisplayModel(P157_MODEL_8DGT_7SEG),
+          P157_DisplayModel(P157_MODEL_4COL_7SEG),
         };
         const int displOption[] = {
           P157_MODEL_4DGT,
           P157_MODEL_8DGT,
           P157_MODEL_4DGT_7SEG,
           P157_MODEL_8DGT_7SEG,
+          P157_MODEL_4COL_7SEG,
         };
         constexpr size_t optionCount = NR_ELEMENTS(displtype);
         FormSelectorOptions selector(optionCount, displtype, displOption);
