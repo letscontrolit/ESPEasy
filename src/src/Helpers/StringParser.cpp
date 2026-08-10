@@ -27,6 +27,9 @@
 #if FEATURE_EEPROM_EXTERNAL
 #include "../../ESPEasy/eeprom/Helpers/EEPROMExternal.h"
 #endif // if FEATURE_EEPROM_EXTERNAL
+#if FEATURE_RTC_SRAM_STORAGE
+#include "../../ESPEasy/eeprom/Helpers/RTCSRAMStorage.h"
+#endif // if FEATURE_RTC_SRAM_STORAGE
 
 /********************************************************************************************\
    Parse string template
@@ -183,6 +186,9 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
       #if FEATURE_EEPROM_EXTERNAL
       const bool devNameEqReadEE = equals(deviceName, F("readee"));
       #endif // if FEATURE_EEPROM_EXTERNAL
+      #if FEATURE_RTC_SRAM_STORAGE
+      const bool devNameEqReadRTC = equals(deviceName, F("readrtc"));
+      #endif // if FEATURE_RTC_SRAM_STORAGE
       if (devNameEqInt || equals(deviceName, F("var"))
          #if FEATURE_STRING_VARIABLES
          || devNameEqStr || devNameEqLength
@@ -190,6 +196,9 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
          #if FEATURE_EEPROM_EXTERNAL
          || devNameEqReadEE
          #endif // if FEATURE_EEPROM_EXTERNAL
+         #if FEATURE_RTC_SRAM_STORAGE
+         || devNameEqReadRTC
+         #endif // if FEATURE_RTC_SRAM_STORAGE
          )
       {
         // Address an internal variable either as float or as int
@@ -242,6 +251,29 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
            }
          } else
          #endif // if FEATURE_EEPROM_EXTERNAL
+         #if FEATURE_RTC_SRAM_STORAGE
+         if (devNameEqReadRTC) {
+           uint32_t slot{};
+           String value;
+           if (validUIntFromString(valueName, slot)) {
+             #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+             value = doubleToString(ESPEasy::eeprom::readRTCSRAMSlot(slot));
+             #else // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+             value = toString(ESPEasy::eeprom::readRTCSRAMSlot(slot));
+             #endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+           } else if (valueName.equalsIgnoreCase(F("max"))) {
+             value = ESPEasy::eeprom::getRTCSRAMMaxSlots();
+           }
+           if (!value.isEmpty()) {
+             transformValue(
+                 newString, 
+                 minimal_lineSize, 
+                 std::move(value), 
+                 format, 
+                 tmpString);
+           }
+         } else
+         #endif // if FEATURE_RTC_SRAM_STORAGE
          {
           const ESPEASY_RULES_FLOAT_TYPE floatvalue = getCustomFloatVar(valueName);
           unsigned char nr_decimals = maxNrDecimals_fpType(floatvalue);

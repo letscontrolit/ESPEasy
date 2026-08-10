@@ -261,6 +261,9 @@ enum class ESPEasy_cmd_e : uint8_t {
 #if FEATURE_EEPROM_EXTERNAL
   writeee,
 #endif // if FEATURE_EEPROM_EXTERNAL
+#if FEATURE_RTC_SRAM_STORAGE
+  writertc,
+#endif // if FEATURE_RTC_SRAM_STORAGE
 
 
   NotMatched  // Keep as last one

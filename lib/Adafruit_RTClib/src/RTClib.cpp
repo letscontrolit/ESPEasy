@@ -1864,3 +1864,43 @@ bool RTC_DS3231::isEnabled32K(void) {
       read_i2c_register(DS3231_ADDRESS, DS3231_STATUSREG, RTCWireBus);
   return (status >> 0x03) & 0x1;
 }
+
+/**************************************************************************/
+/*!
+    @brief  Read data from the DS3232's NVRAM
+    @param buf Pointer to a buffer to store the data - make sure it's large
+   enough to hold size bytes
+    @param size Number of bytes to read
+    @param address Starting NVRAM address, from 0 to 235
+*/
+/**************************************************************************/
+void RTC_DS3231::readnvram(uint8_t *buf, uint8_t size, uint8_t address) {
+  int addrByte = DS3232_NVRAM + address;
+  RTCWireBus->beginTransmission(DS3231_ADDRESS);
+  RTCWireBus->_I2C_WRITE(addrByte);
+  RTCWireBus->endTransmission();
+
+  RTCWireBus->requestFrom((uint8_t)DS3231_ADDRESS, size);
+  for (uint8_t pos = 0; pos < size; ++pos) {
+    buf[pos] = RTCWireBus->_I2C_READ();
+  }
+}
+
+/**************************************************************************/
+/*!
+    @brief  Write data to the DS3232 NVRAM
+    @param address Starting NVRAM address, from 0 to 235
+    @param buf Pointer to buffer containing the data to write
+    @param size Number of bytes in buf to write to NVRAM
+*/
+/**************************************************************************/
+void RTC_DS3231::writenvram(uint8_t address, uint8_t *buf, uint8_t size) {
+  int addrByte = DS3232_NVRAM + address;
+  RTCWireBus->beginTransmission(DS3231_ADDRESS);
+  RTCWireBus->_I2C_WRITE(addrByte);
+  for (uint8_t pos = 0; pos < size; ++pos) {
+    RTCWireBus->_I2C_WRITE(buf[pos]);
+  }
+  RTCWireBus->endTransmission();
+}
+

@@ -356,24 +356,13 @@ uint32_t getEEPROMMaxSlots() {
 /**
  * EEPROM write value to slot if the slot is valid
  */
-# if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
-
-bool writeEEPROMSlot(uint32_t slot,
-                     double   data)
-# else // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
-
-bool writeEEPROMSlot(uint32_t slot,
-                     float    data)
-# endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+bool writeEEPROMSlot(uint32_t                 slot,
+                     ESPEASY_RULES_FLOAT_TYPE data)
 {
   const uint32_t addr = getEEPROMAddressForSlot(slot);
 
   if ((addr != std::numeric_limits<uint32_t>::max()) && !isEEPROMExternalWriteProtected()) {
-    # if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
-    const double oldData = EEPROMExternal->readDouble(addr);
-    # else // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
-    const float oldData = EEPROMExternal->readDouble(addr);
-    # endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+    const ESPEASY_RULES_FLOAT_TYPE oldData = EEPROMExternal->readDouble(addr);
 
     if (!essentiallyEqual(oldData, data)) {
       EEPROMExternal->writeDouble(addr, data); // Always write double size!
@@ -386,29 +375,18 @@ bool writeEEPROMSlot(uint32_t slot,
 /**
  * EEPROM read value from slot or 0 when invalid
  */
-# if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
-
-double readEEPROMSlot(uint32_t slot) {
+ESPEASY_RULES_FLOAT_TYPE readEEPROMSlot(uint32_t slot) {
   const uint32_t addr = getEEPROMAddressForSlot(slot);
 
   if (addr != std::numeric_limits<uint32_t>::max()) {
     return EEPROMExternal->readDouble(addr);
   }
+  # if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
   return 0.0;
-}
-
-# else // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
-
-float readEEPROMSlot(uint32_t slot) {
-  const uint32_t addr = getEEPROMAddressForSlot(slot);
-
-  if (addr != std::numeric_limits<uint32_t>::max()) {
-    return EEPROMExternal->readDouble(addr); // Always read double size!
-  }
+  # else // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
   return 0.0f;
+  # endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
 }
-
-# endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
 
 } // namespace eeprom
 } // namespace ESPEasy

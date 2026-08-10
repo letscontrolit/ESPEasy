@@ -1,20 +1,20 @@
 #include "../Commands/EEPROMExternal.h"
-#include "../../ESPEasy/eeprom/Helpers/EEPROMExternal.h"
-
-#include "../../ESPEasy_common.h"
-
-#include "../Commands/Common.h"
-
-#include "../DataStructs/ESPEasy_EventStruct.h"
-
-#include "../Helpers/Misc.h"
-#include "../Helpers/Numerical.h"
-#include "../Helpers/StringConverter.h"
-
 #if FEATURE_EEPROM_EXTERNAL
+# include "../../ESPEasy/eeprom/Helpers/EEPROMExternal.h"
+
+# include "../../ESPEasy_common.h"
+
+# include "../Commands/Common.h"
+
+# include "../DataStructs/ESPEasy_EventStruct.h"
+
+# include "../Helpers/Misc.h"
+# include "../Helpers/Numerical.h"
+# include "../Helpers/StringConverter.h"
 
 // Command: WriteEE,<slot>,<value>  : set a slot value. 0 is 'erased'
 // Command: WriteEE,erase,erase     : reset all slots to 0
+// Command: WriteEE,check,wp        : check if external EEPROM is write-protected
 const __FlashStringHelper* Command_writeEE(struct EventStruct *event, const char *Line)
 {
   uint32_t slot{};

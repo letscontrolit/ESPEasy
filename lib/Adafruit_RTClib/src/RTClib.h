@@ -57,6 +57,7 @@ class TimeSpan;
 #define DS3231_TEMPERATUREREG                                                  \
   0x11 ///< Temperature register (high byte - low byte is at 0x12), 10-bit
        ///< temperature value
+#define DS3232_NVRAM 0x14     ///< Start of RAM registers - 236 bytes, 0x14 to 0xFF
 
 /** Constants */
 #define SECONDS_PER_DAY 86400L ///< 60 * 60 * 24
@@ -347,6 +348,8 @@ public:
   void disable32K(void);
   bool isEnabled32K(void);
   float getTemperature(); // in Celsius degree
+  void readnvram(uint8_t *buf, uint8_t size, uint8_t address);
+  void writenvram(uint8_t address, uint8_t *buf, uint8_t size);
 
 protected:
   TwoWire *RTCWireBus;

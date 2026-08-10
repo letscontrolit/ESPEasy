@@ -86,15 +86,10 @@ const __FlashStringHelper*    getEEPROMName(EEPROMExternal_Type_e type);
 uint32_t                      getEEPROMAddressForSlot(uint32_t slot);
 
 uint32_t                      getEEPROMMaxSlots();
-# if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
-bool                          writeEEPROMSlot(uint32_t slot,
-                                              double   data);
-double                        readEEPROMSlot(uint32_t slot);
-# else // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
-bool                          writeEEPROMSlot(uint32_t slot,
-                                              float    data);
-float                         readEEPROMSlot(uint32_t slot);
-# endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+
+bool                          writeEEPROMSlot(uint32_t                 slot,
+                                              ESPEASY_RULES_FLOAT_TYPE data);
+ESPEASY_RULES_FLOAT_TYPE      readEEPROMSlot(uint32_t slot);
 
 } // namespace eeprom
 } // namespace ESPEasy

@@ -14,6 +14,9 @@
 #if FEATURE_EEPROM_EXTERNAL
 #include "../Commands/EEPROMExternal.h"
 #endif // if FEATURE_EEPROM_EXTERNAL
+#if FEATURE_RTC_SRAM_STORAGE
+#include "../Commands/RTCSRAMStorage.h"
+#endif // if FEATURE_RTC_SRAM_STORAGE
 #include "../Commands/GPIO.h"
 #include "../Commands/HTTP.h"
 #include "../Commands/InternalCommands_decoder.h"
@@ -518,6 +521,9 @@ bool InternalCommands::executeInternalCommand()
 #if FEATURE_EEPROM_EXTERNAL
     case ESPEasy_cmd_e::writeee:                    COMMAND_CASE_R(Command_writeEE,         2);      // EEPROMExternal.h
 #endif // if FEATURE_EEPROM_EXTERNAL
+#if FEATURE_RTC_SRAM_STORAGE
+    case ESPEasy_cmd_e::writertc:                   COMMAND_CASE_R(Command_writeRTC,        2);      // RTCSRAMStorage.h
+#endif // if FEATURE_RTC_SRAM_STORAGE
 
 
     case ESPEasy_cmd_e::NotMatched:

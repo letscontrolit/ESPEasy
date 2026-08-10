@@ -456,11 +456,12 @@ void addFormExtTimeSourceSelect(const __FlashStringHelper * label, const __Flash
 {
   addRowLabel(label);
   const __FlashStringHelper * options[] =
-    { F("None"), F("DS1307"), F("DS3231"), F("PCF8523"), F("PCF8563")};
+    { F("None"), F("DS1307"), F("DS3231"), F("DS3232"), F("PCF8523"), F("PCF8563")};
   constexpr int optionValues[] = { 
     static_cast<int>(ExtTimeSource_e::None),
     static_cast<int>(ExtTimeSource_e::DS1307),
     static_cast<int>(ExtTimeSource_e::DS3231),
+    static_cast<int>(ExtTimeSource_e::DS3232),
     static_cast<int>(ExtTimeSource_e::PCF8523),
     static_cast<int>(ExtTimeSource_e::PCF8563)
     };

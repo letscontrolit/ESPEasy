@@ -364,9 +364,9 @@ void WebServerInit()
 #ifdef WEBSERVER_SYSVARS
   web_server.on(F("/sysvars"),     handle_sysvars);
 #endif // WEBSERVER_SYSVARS
-#if FEATURE_EEPROM_EXTERNAL
+#if FEATURE_EEPROM_EXTERNAL || FEATURE_RTC_SRAM_STORAGE
   web_server.on(F("/eepromvars"),  handle_eepromvars);
-#endif // if FEATURE_EEPROM_EXTERNAL
+#endif // if FEATURE_EEPROM_EXTERNAL || FEATURE_RTC_SRAM_STORAGE
 #if FEATURE_PLUGIN_LIST
   web_server.on(F("/pluginlist"),  handle_pluginlist);
 #endif // if FEATURE_PLUGIN_LIST

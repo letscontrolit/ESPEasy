@@ -81,11 +81,6 @@
 //   - RTCStruct to keep information on reboot reason, last used WiFi, etc.
 //   - UserVar   to keep task values persistent just like on ESP8266
 
-/**
- * With EEPROMExternal (AT24cxxx) enabled and configured:
- * - UserVar will be stored in external EEPROM
- * -
- */
 
 
 
@@ -93,7 +88,6 @@
 //#define RTC_STRUCT_DEBUG
 
 
-constexpr uint32_t sizeof_uint32_t = sizeof(uint32_t);
 
 #ifdef ESP32
 constexpr size_t UserVar_nrelements = VARS_PER_TASK * TASKS_MAX;
@@ -140,7 +134,7 @@ void initRTC()
   saveToRTC();
 
   UserVar.clear();
-  saveUserVarToRTC(true);
+  saveUserVarToRTC();
 }
 
 /********************************************************************************************\
@@ -164,11 +158,7 @@ bool readFromRTC()
 /********************************************************************************************\
    Save values to RTC memory
  \*********************************************************************************************/
-bool saveUserVarToRTC() {
-  return saveUserVarToRTC(false);
-}
-
-bool saveUserVarToRTC(bool initial)
+bool saveUserVarToRTC()
 {
   // ESP8266 has the RTC struct stored in memory which we must actively fetch
   // ESP32   Uses a temp structure which is mapped to the RTC address range.

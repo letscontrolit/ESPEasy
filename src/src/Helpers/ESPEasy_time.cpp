@@ -978,6 +978,7 @@ bool ESPEasy_time::ExtRTC_get(uint32_t& unixtime)
       break;
     }
     case ExtTimeSource_e::DS3231:
+    case ExtTimeSource_e::DS3232:
     {
       I2CSelectHighClockSpeed(i2cBus);
       RTC_DS3231 rtc;
@@ -1073,6 +1074,7 @@ bool ESPEasy_time::ExtRTC_set(uint32_t unixtime)
       break;
     }
     case ExtTimeSource_e::DS3231:
+    case ExtTimeSource_e::DS3232:
     {
       I2CSelectHighClockSpeed(i2cBus);
       RTC_DS3231 rtc;

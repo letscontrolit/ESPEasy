@@ -4344,6 +4344,28 @@ To create/register a plugin, you have to :
   #endif
 #endif // ifndef FEATURE_EEPROM_EXTERNAL
 
+#if FEATURE_EXT_RTC
+#ifndef FEATURE_RTC_SRAM_STORAGE
+  #ifdef ESP32
+    #define FEATURE_RTC_SRAM_STORAGE      1
+  #endif
+  #ifdef ESP8266
+    #ifdef LIMIT_BUILD_SIZE
+      #define FEATURE_RTC_SRAM_STORAGE    0 // Disabled for limited builds on ESP8266
+    #else
+      #define FEATURE_RTC_SRAM_STORAGE    0 // Disabled by default on ESP8266
+    #endif
+  #endif
+#endif // ifndef FEATURE_RTC_SRAM_STORAGE
+#else // if FEATURE_EXT_RTC
+  #define FEATURE_RTC_SRAM_STORAGE      0  // Not available
+#endif // if FEATURE_EXT_RTC
+#if FEATURE_RTC_SRAM_STORAGE
+  #define FEATURE_SRAM_STORAGE_DOUBLE   1 // 1 = double-size SRAM storage = 8 bytes per slot
+#else // if FEATURE_RTC_SRAM_STORAGE
+  #define FEATURE_SRAM_STORAGE_DOUBLE   0 // 0 = float-size SRAM storage = 4 bytes per slot
+#endif // if FEATURE_RTC_SRAM_STORAGE
+
 #ifndef FEATURE_PLUGIN_LIST
   #ifdef ESP32
     #define FEATURE_PLUGIN_LIST           1
