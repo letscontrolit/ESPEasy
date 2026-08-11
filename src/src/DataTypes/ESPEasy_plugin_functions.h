@@ -38,6 +38,9 @@ enum PluginFunctions_e {
   PLUGIN_GET_DEVICEGPIONAMES,          // Allow for specific formatting of the label for standard pin configuration (e.g. "GPIO <- TX")
   PLUGIN_EXIT,                         // Called when a task no longer is enabled (or deleted)
   PLUGIN_GET_CONFIG_VALUE,             // Similar to PLUGIN_WRITE, but meant to fetch some information. Must return success = true when it
+  #if FEATURE_ADDITIONAL_JSON_FROM_PLUGIN
+  PLUGIN_TASK_JSON,                    // Called when generating the JSON for a task, allowing the plugin to add some custom values to the JSON output for that task.
+  #endif //FEATURE_ADDITIONAL_JSON_FROM_PLUGIN
                                        // can handle the command.  Can also be used to access extra unused task values.
   //   PLUGIN_UNCONDITIONAL_POLL          , // Used to be called 10x per sec, but no longer used as GPIO related plugins now use a different
   // technique.

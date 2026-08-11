@@ -366,6 +366,41 @@ boolean Plugin_043(uint8_t function, struct EventStruct *event, String& string)
       # undef P043_GETVALUE_LENGTH
       break;
     }
+
+  #if FEATURE_P043_CLK_TIMES_JSON
+    case PLUGIN_TASK_JSON:
+    {
+      addLog(LOG_LEVEL_INFO, F("P043 JSON CALLED"));
+
+      if (!event->kvWriter) break;
+      event->kvWriter->write({ F("OnOff"), PCONFIG(6) });
+
+      auto timesWriter = event->kvWriter->createChildArray(F("Times"));
+      if (!timesWriter) break;
+
+      if (ExtraTaskSettings.TaskIndex != event->TaskIndex) {
+        LoadTaskSettings(event->TaskIndex);
+      }
+
+      const int offset =
+        (validGpio(CONFIG_PIN1) || (PCONFIG(7) == 1)) ? 1 : 0;
+
+      for (int x = 0; x < PCONFIG(7); x++) {
+
+        auto timeWriter = timesWriter->createChild();
+        if (!timeWriter) continue;
+
+        long value = Cache.getTaskDevicePluginConfigLong(event->TaskIndex, x);
+        int val    = ExtraTaskSettings.TaskDevicePluginConfig[x] - offset;
+
+        timeWriter->write({ F("Time"),  timeLong2String(value) });
+        timeWriter->write({ F("Value"), val });
+      }
+
+      success = true;
+      break;
+    }
+  #endif // FEATURE_P043_CLK_TIMES_JSON
   }
   return success;
 }

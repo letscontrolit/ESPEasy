@@ -1305,6 +1305,9 @@ To create/register a plugin, you have to :
     // FIXME TD-er: Should this be enabled on non-Custom builds???
     #define FEATURE_CUSTOM_PROVISIONING 1
 
+    #ifdef USES_P043
+      #define FEATURE_P043_CLK_TIMES_JSON 1
+    #endif
 
     // See also PLUGIN_SET_MAX section at end, to include any disabled plugins from other definitions
     // See also PLUGIN_SET_COLLECTION_ESP32 section at end,
@@ -4563,5 +4566,21 @@ To create/register a plugin, you have to :
 #undef WEBSERVER_INTERFACES
 #endif
 #endif // if !FEATURE_SPI && !FEATURE_I2C && !FEATURE_MODBUS && !FEATURE_CAN && !FEATURE_WRMBUS && !FEATURE_WIMBUS
+
+//-------------------Additional JSON per Plugin Section----------------
+#ifndef FEATURE_P043_CLK_TIMES_JSON
+  #define FEATURE_P043_CLK_TIMES_JSON 0
+#endif
+#if FEATURE_P043_CLK_TIMES_JSON && !defined(USES_P043)
+  #undef FEATURE_P043_CLK_TIMES_JSON
+  #define FEATURE_P043_CLK_TIMES_JSON 0
+#endif
+#if FEATURE_P043_CLK_TIMES_JSON
+  #define FEATURE_ADDITIONAL_JSON_FROM_PLUGIN 1
+#endif
+#ifndef FEATURE_ADDITIONAL_JSON_FROM_PLUGIN
+  #define FEATURE_ADDITIONAL_JSON_FROM_PLUGIN 0
+#endif
+//---------------End of Additional JSON per Plugin Section-------------
 
 #endif // CUSTOMBUILD_DEFINE_PLUGIN_SETS_H

@@ -598,6 +598,15 @@ void handle_json()
                 }
               }
 
+# if FEATURE_ADDITIONAL_JSON_FROM_PLUGIN
+
+              EventStruct TempEvent(TaskIndex);
+              TempEvent.kvWriter = taskWriter.get();
+              
+              String dummy;
+              PluginCall(PLUGIN_TASK_JSON, &TempEvent, dummy);
+# endif // FEATURE_ADDITIONAL_JSON_FROM_PLUGIN
+
 #if FEATURE_PLUGIN_STATS && FEATURE_CHART_JS
 
               if (showPluginStats && Device[DeviceIndex].PluginStats) {
