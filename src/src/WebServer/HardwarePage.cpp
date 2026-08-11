@@ -37,8 +37,6 @@ void handle_hardware() {
 
   if (!startStream_send_stdTemplate(MENU_INDEX_HARDWARE)) { return; }
 
-  html_add_form();
-
   if (isFormItem(F("pled"))) {
     String error;
     Settings.Pin_status_led           = getFormItemInt(F("pled"));
@@ -99,9 +97,10 @@ void handle_hardware() {
     addHtmlError(error);
   }
 
-  addHtml(F("<form  method='post'>"));
+  html_add_form();
+
   html_table_class_normal();
-  addFormHeader(F("Hardware Settings"), F(""), F("Hardware/Hardware.html"));
+  addFormHeader(F("Hardware Settings"), F("RTDHardware/Hardware.html"));
 
   addFormSubHeader(F("Wifi Status LED"));
   addFormPinSelect(PinSelectPurpose::Status_led, formatGpioName_output(F("LED")), F("pled"), Settings.Pin_status_led);

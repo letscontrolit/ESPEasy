@@ -587,11 +587,12 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
   for (taskIndex_t x = (page - 1) * TASKS_PER_PAGE; x < ((page) * TASKS_PER_PAGE) && validTaskIndex(x); x++)
   {
     const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(x);
-    const bool pluginID_set         = INVALID_PLUGIN_ID != Settings.getPluginID_for_task(x);
+    const pluginID_t pid            = Settings.getPluginID_for_task(x);
+    const bool pluginID_set         = INVALID_PLUGIN_ID != pid;
 
     html_TR_TD();
 
-    if (pluginID_set && !supportedPluginID(Settings.getPluginID_for_task(x))) {
+    if (pluginID_set && !supportedPluginID(pid)) {
       html_add_button_prefix(F("red"), true);
     } else {
       html_add_button_prefix();
@@ -621,7 +622,7 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
       addEnabled(Settings.TaskDeviceEnabled[x]  && validDeviceIndex(DeviceIndex));
 
       html_TD();
-      addHtml(getPluginNameFromPluginID(Settings.getPluginID_for_task(x)));
+      addHtml(getPluginNameFromPluginID(pid));
       html_TD();
       addHtml(getTaskDeviceName(x));
       html_TD();
@@ -857,7 +858,7 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
 
           for (uint8_t varNr = 0; varNr < valueCount; varNr++)
           {
-            if (validPluginID_fullcheck(Settings.getPluginID_for_task(x)))
+            if (validPluginID_fullcheck(pid))
             {
               # if FEATURE_TASKVALUE_UNIT_OF_MEASURE
               const uint8_t uomIndex = Cache.getTaskVarUnitOfMeasure(x, varNr);
@@ -1102,11 +1103,13 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
 
   addHtml(F("<TR><TD style='width:150px;' align='left'>Device:<TD>"));
 
+  const pluginID_t pid = Settings.getPluginID_for_task(taskIndex);
+
   // no (supported) device selected, this effectively checks for validDeviceIndex
-  if (!supportedPluginID(Settings.getPluginID_for_task(taskIndex)))
+  if (!supportedPluginID(pid))
   {
     // takes lots of memory/time so call this only when needed.
-    addDeviceSelect(F("TDNUM"), Settings.getPluginID_for_task(taskIndex)); // ="taskdevicenumber"
+    addDeviceSelect(F("TDNUM"), pid); // ="taskdevicenumber"
     addFormSeparator(4);
   }
 
@@ -1119,18 +1122,16 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
     addHtml(F("<input "));
     addHtmlAttribute(F("type"),  F("hidden"));
     addHtmlAttribute(F("name"),  F("TDNUM"));
-    addHtmlAttribute(F("value"), Settings.getPluginID_for_task(taskIndex).value);
+    addHtmlAttribute(F("value"), pid.value);
     addHtml('>');
 
     // show selected device name and delete button
     addHtml(getPluginNameFromDeviceIndex(DeviceIndex));
 
-    const uint8_t pid = Settings.getPluginID_for_task(taskIndex).value;
-
-    if (pid <= 79) { // Up to P079 seem to be listed in the old Wiki (and a few incomplete pages), so lets keep pointing there too
-      addHelpButton(concat(F("Plugin"), Settings.getPluginID_for_task(taskIndex).value));
+    if (pid.value <= 79) { // Up to P079 seem to be listed in the old Wiki (and a few incomplete pages), so lets keep pointing there too
+      addHelpButton(concat(F("Plugin"), pid.value));
     }
-    addRTDPluginButton(Settings.getPluginID_for_task(taskIndex));
+    addRTDPluginButton(pid);
 
     addFormTextBox(F("Name"), F("TDN"), getTaskDeviceName(taskIndex), NAME_FORMULA_LENGTH_MAX); // ="taskdevicename"
 
@@ -1555,7 +1556,6 @@ void ShowI2CMultiplexerUI(uint8_t i2cBus, bool muxPortsOption, int taskDeviceI2C
     }
   }
 }
-#endif
 
 void GetI2CMultiplexerFromPage(uint8_t i2cBus, bool &muxPortsOption, int &selectedPorts) {
   if (isI2CMultiplexerEnabled(i2cBus)) {
@@ -1573,6 +1573,7 @@ void GetI2CMultiplexerFromPage(uint8_t i2cBus, bool &muxPortsOption, int &select
   }
 }
 # endif // if FEATURE_I2CMULTIPLEXER
+#endif // if FEATURE_I2C
 
 void devicePage_show_output_data_type(taskIndex_t taskIndex, deviceIndex_t DeviceIndex)
 {
