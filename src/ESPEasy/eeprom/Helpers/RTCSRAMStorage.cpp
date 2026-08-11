@@ -1,25 +1,21 @@
 #include "../Helpers/RTCSRAMStorage.h"
-#include "../../../src/Globals/Settings.h"
-#include "../../../src/Helpers/I2C_access.h"
-#include "../../../ESPEasy_common.h"
-#include "../../../src/Helpers/StringConverter.h"
-#include "../../../src/DataTypes/TimeSource.h"
-#include <RTClib.h>
-
 #if FEATURE_RTC_SRAM_STORAGE
+# include "../../../src/Globals/Settings.h"
+# include "../../../src/Helpers/I2C_access.h"
+# include "../../../ESPEasy_common.h"
+# include "../../../src/Helpers/StringConverter.h"
+# include "../../../src/DataTypes/TimeSource.h"
+# include <RTClib.h>
+
 
 namespace ESPEasy {
 namespace eeprom {
 
-# if FEATURE_SRAM_STORAGE_DOUBLE
-constexpr uint32_t sizeof_rtcsram_slot = sizeof(double);
-# else // if FEATURE_SRAM_STORAGE_DOUBLE
-constexpr uint32_t sizeof_rtcsram_slot = sizeof(float);
-# endif // if FEATURE_SRAM_STORAGE_DOUBLE
+constexpr uint32_t sizeof_rtcsram_slot = sizeof(SRAM_STORAGE_FLOAT_TYPE);
 
 /**
  * Check if the RTC is properly initialized and enabled.
- * Returns the external rtc type if all is OK
+ * Returns the external rtc type if SRAM is available
  */
 uint8_t checkRTCSRAMEnabled() {
   const ExtTimeSource_e extRtcType = static_cast<ExtTimeSource_e>(Settings.ExternalTimeSource);
@@ -28,7 +24,7 @@ uint8_t checkRTCSRAMEnabled() {
       (ExtTimeSource_e::DS3232 == extRtcType)) { // RTC with SRAM Configured?
     return Settings.ExternalTimeSource;
   }
-  return 0;
+  return (uint8_t)0;
 }
 
 /**
@@ -47,9 +43,9 @@ uint8_t getRTCI2CAddress() {
     case ExtTimeSource_e::PCF8523:
     case ExtTimeSource_e::PCF8563:
     case ExtTimeSource_e::None:
-      return 0;
+      break;
   }
-  return 0;
+  return (uint8_t)0;
 
 }
 
@@ -59,7 +55,7 @@ uint8_t getRTCI2CAddress() {
 uint8_t selectRTCSRAMI2CBus() {
   const ExtTimeSource_e type = static_cast<ExtTimeSource_e>(Settings.ExternalTimeSource);
 
-  if (checkRTCSRAMEnabled() > 0) { // RTC Module Configured?
+  if (checkRTCSRAMEnabled()) { // RTC Module Configured?
     # if FEATURE_I2C_MULTIPLE
     const uint8_t i2cBus = Settings.getI2CInterfaceRTC();
     # else // if FEATURE_I2C_MULTIPLE
@@ -85,7 +81,7 @@ uint8_t selectRTCSRAMI2CBus() {
       return Settings.ExternalTimeSource;
     }
   }
-  return 0;
+  return (uint8_t)0;
 }
 
 /**
@@ -104,19 +100,19 @@ uint32_t getRTCSRAMSize() {
     case ExtTimeSource_e::PCF8523:
     case ExtTimeSource_e::PCF8563:
     case ExtTimeSource_e::None:
-      return 0;
+      break;
   }
-  return 0;
+  return 0ul;
 }
 
 /**
  * RTC SRAM _relative_ address for slot or 0xFFFF when error
  */
 uint32_t getRTCSRAMAddressForSlot(uint32_t slot) {
-  if (checkRTCSRAMEnabled() > 0) {
+  if (checkRTCSRAMEnabled()) {
     const uint32_t rtcSramSize = getRTCSRAMSize();
 
-    if ((rtcSramSize > 0) && (slot < getRTCSRAMMaxSlots())) {
+    if (rtcSramSize && (slot < getRTCSRAMMaxSlots())) {
       const uint32_t slotAddr = slot * sizeof_rtcsram_slot;
 
       if (slotAddr < rtcSramSize) {
@@ -131,16 +127,16 @@ uint32_t getRTCSRAMAddressForSlot(uint32_t slot) {
  * EEPROM available number of slots, max use all available space minus some administrative bytes
  */
 uint32_t getRTCSRAMMaxSlots() {
-  if (checkRTCSRAMEnabled() > 0) {
+  if (checkRTCSRAMEnabled()) {
     const uint32_t rtcSramSize = getRTCSRAMSize();
 
-    if (rtcSramSize > 0) {
+    if (rtcSramSize) {
       const uint32_t slotMax = (uint32_t)(rtcSramSize / sizeof_rtcsram_slot);
 
       return slotMax;
     }
   }
-  return 0;
+  return 0ul;
 }
 
 /**
@@ -183,7 +179,7 @@ bool writeRTCSRAMSlot(uint32_t                slot,
       case ExtTimeSource_e::PCF8523:
       case ExtTimeSource_e::PCF8563:
       case ExtTimeSource_e::None:
-        return false;
+        break;
     }
 
   }

@@ -1,10 +1,11 @@
 #include "../Helpers/EEPROMExternal.h"
-#include "../../../src/Globals/Settings.h"
-#include "../../../src/Helpers/I2C_access.h"
-#include "../../../ESPEasy_common.h"
-#include "../../../src/Helpers/StringConverter.h"
-
 #if FEATURE_EEPROM_EXTERNAL
+
+# include "../../../src/Globals/Settings.h"
+# include "../../../src/Helpers/I2C_access.h"
+# include "../../../ESPEasy_common.h"
+# include "../../../src/Helpers/StringConverter.h"
+
 
 namespace ESPEasy {
 namespace eeprom {
@@ -31,7 +32,7 @@ void initializeEEPROMExternal() {
     const ESPEasy::eeprom::EEPROMExternal_Type_e eepromType =
       static_cast<ESPEasy::eeprom::EEPROMExternal_Type_e>(Settings.EEPROMExternalType());
 
-    if (0 != ESPEasy::eeprom::selectEEPROMI2CBusAndMultiplexer()) { // Switch to I2C Bus and multiplexer channel of External EEPROM
+    if (ESPEasy::eeprom::selectEEPROMI2CBusAndMultiplexer()) { // Switch to I2C Bus and multiplexer channel of External EEPROM
       // We have an I2C device at this address, let's assume it's an EEPROM...
       uint8_t pageSize          = 0;
       const uint32_t eepromSize = ESPEasy::eeprom::getEEPROMSize(eepromType, pageSize);
@@ -120,10 +121,10 @@ void updateEEPROMExternalParameters() {
 uint8_t checkEEPROMEnabled() {
   const uint8_t eepromAddress = Settings.EEPROMExternalI2CAddress();
 
-  if ((nullptr != EEPROMExternal) && (eepromAddress > 0)) { // EEPROM Configured?
+  if ((nullptr != EEPROMExternal) && eepromAddress) { // EEPROM Configured?
     return eepromAddress;
   }
-  return 0;
+  return (uint8_t)0;
 }
 
 /**
@@ -177,7 +178,7 @@ bool    isEEPROMExternalWriteProtected() { return EEPROMExternal_WriteProtect_e:
 uint8_t selectEEPROMI2CBusAndMultiplexer() {
   const uint8_t eepromAddress = Settings.EEPROMExternalI2CAddress();
 
-  if (eepromAddress > 0) { // EEPROM Configured?
+  if (eepromAddress) { // EEPROM Configured?
     # if FEATURE_I2C_MULTIPLE
     const uint8_t i2cBus = Settings.getI2CInterfaceEEPROM();
     # else // if FEATURE_I2C_MULTIPLE
@@ -197,7 +198,7 @@ uint8_t selectEEPROMI2CBusAndMultiplexer() {
       return eepromAddress;
     }
   }
-  return 0;
+  return (uint8_t)0;
 }
 
 /**
@@ -232,7 +233,7 @@ uint32_t getEEPROMSize(EEPROMExternal_Type_e type) {
     case EEPROMExternal_Type_e::MB85RC128:
       return 16384ul;
   }
-  return 0;
+  return 0ul;
 }
 
 /**
@@ -240,35 +241,34 @@ uint32_t getEEPROMSize(EEPROMExternal_Type_e type) {
  */
 uint32_t getEEPROMSize(EEPROMExternal_Type_e type,
                        uint8_t             & pageSize) {
-  pageSize = 0;
+  pageSize = (uint8_t)0;
 
   switch (type)
   {
     case EEPROMExternal_Type_e::AT24C256:
     case EEPROMExternal_Type_e::MB85RC256:
-      pageSize = 64u;
-    case EEPROMExternal_Type_e::AT24C512:
-    case EEPROMExternal_Type_e::MB85RC512:
-      pageSize = 128u;
+    case EEPROMExternal_Type_e::AT24C128:
+    case EEPROMExternal_Type_e::MB85RC128:
+      pageSize = (uint8_t)64;
+      break;
     # if EEPROM_SUPPORT_AT24C1024
     case EEPROMExternal_Type_e::AT24C1024:
     case EEPROMExternal_Type_e::MB85RC1M:
-      pageSize = 128u;
     # endif // if EEPROM_SUPPORT_AT24C1024
     # if EEPROM_SUPPORT_AT24C2048
     case EEPROMExternal_Type_e::AT24C2048:
     case EEPROMExternal_Type_e::MB85RC2M:
-      pageSize = 128u;
     # endif // if EEPROM_SUPPORT_AT24C2048
+    case EEPROMExternal_Type_e::AT24C512:
+    case EEPROMExternal_Type_e::MB85RC512:
+      pageSize = (uint8_t)128;
+      break;
     case EEPROMExternal_Type_e::AT24C32:
     case EEPROMExternal_Type_e::MB85RC32:
-      pageSize = 32u;
     case EEPROMExternal_Type_e::AT24C64:
     case EEPROMExternal_Type_e::MB85RC64:
-      pageSize = 32u;
-    case EEPROMExternal_Type_e::AT24C128:
-    case EEPROMExternal_Type_e::MB85RC128:
-      pageSize = 64u;
+      pageSize = (uint8_t)32;
+      break;
   }
   return getEEPROMSize(type);
 }
@@ -323,10 +323,10 @@ const __FlashStringHelper* getEEPROMName(EEPROMExternal_Type_e type) {
  * EEPROM address for slot or 0xFFFF when error
  */
 uint32_t getEEPROMAddressForSlot(uint32_t slot) {
-  if (checkEEPROMEnabled() > 0) {
+  if (checkEEPROMEnabled()) {
     const uint32_t eepromSize = getEEPROMSize(static_cast<EEPROMExternal_Type_e>(Settings.EEPROMExternalType()));
 
-    if ((eepromSize > 0) && (slot < getEEPROMMaxSlots())) {
+    if (eepromSize && (slot < getEEPROMMaxSlots())) {
       const uint32_t slotAddr = EEPROM_CUSTOM_START_OFFSET + (slot * sizeof_eeprom_slot);
 
       if (slotAddr < eepromSize) {
@@ -341,16 +341,16 @@ uint32_t getEEPROMAddressForSlot(uint32_t slot) {
  * EEPROM available number of slots, max use all available space minus some administrative bytes
  */
 uint32_t getEEPROMMaxSlots() {
-  if (checkEEPROMEnabled() > 0) {
+  if (checkEEPROMEnabled()) {
     const uint32_t eepromSize = getEEPROMSize(static_cast<EEPROMExternal_Type_e>(Settings.EEPROMExternalType()));
 
-    if (eepromSize > 0) {
+    if (eepromSize) {
       const uint32_t slotMax = (unsigned long)(((eepromSize - EEPROM_CUSTOM_START_OFFSET) / EEPROM_CUSTOM_DIVISOR) / sizeof_eeprom_slot);
 
       return slotMax;
     }
   }
-  return 0;
+  return 0ul;
 }
 
 /**
