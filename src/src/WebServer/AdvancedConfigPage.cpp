@@ -10,6 +10,9 @@
 
 #include "../../ESPEasy/net/wifi/ESPEasyWifi.h"
 
+#if FEATURE_RTC_SRAM_STORAGE
+#include "../../ESPEasy/eeprom/Helpers/RTCSRAMStorage.h"
+#endif // if FEATURE_RTC_SRAM_STORAGE
 
 #include "../Globals/ESPEasy_time.h"
 #include "../Globals/Settings.h"
@@ -172,7 +175,8 @@ void handle_advanced() {
     }
   }
 
-  addHtml(F("<form  method='post'>"));
+  html_add_form();
+
   html_table_class_normal();
 
   addFormHeader(F("Advanced Settings"), F("RTDTools/Tools.html#advanced"));
@@ -200,6 +204,12 @@ void handle_advanced() {
   if (Settings.ExtTimeSource() != ExtTimeSource_e::None) {
     addFormNote(concat(getLabel(LabelType::EXT_RTC_UTC_TIME), F(": ")) + getValue(LabelType::EXT_RTC_UTC_TIME));
   }
+  #if FEATURE_RTC_SRAM_STORAGE
+  if (ESPEasy::eeprom::checkRTCSRAMEnabled()) {
+    addRowLabel(F("'WriteRTC' slots available"));
+    addHtmlInt(ESPEasy::eeprom::getRTCSRAMMaxSlots());
+  }
+  #endif // if FEATURE_RTC_SRAM_STORAGE
   #if FEATURE_I2C_MULTIPLE
   {
     const uint8_t i2cBus = Settings.getI2CInterfaceRTC();
