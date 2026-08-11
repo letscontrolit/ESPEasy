@@ -120,9 +120,11 @@ boolean Plugin_011(uint8_t function, struct EventStruct *event, String& string)
       if (P011_TYPE_SWITCH != P011_PORT_TYPE) { // Not for Switch type
         UserVar.setFloat(event->TaskIndex, 0, Plugin_011_Read(P011_PORT_TYPE, CONFIG_PORT));
 
+        #ifndef BUILD_NO_DEBUG
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           addLogMove(LOG_LEVEL_INFO, concat(F("PME  : PortValue: "), formatUserVarNoCheck(event, 0)));
         }
+        #endif // ifndef BUILD_NO_DEBUG
         success = true;
       }
       break;
@@ -138,9 +140,11 @@ boolean Plugin_011(uint8_t function, struct EventStruct *event, String& string)
           UserVar.setFloat(event->TaskIndex, 0, newValue);
           sendData(event);
 
+          #ifndef BUILD_NO_DEBUG
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             addLogMove(LOG_LEVEL_INFO, strformat(F("PME  : Switch state: %d"), newValue));
           }
+          #endif // ifndef BUILD_NO_DEBUG
           success = true;
         }
       }
