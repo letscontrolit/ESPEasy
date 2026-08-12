@@ -75,7 +75,7 @@ void P020_Task::startServer(uint16_t portnumber) {
       ser2netServer->begin();
 
       if (serverActive(ser2netServer)) {
-        addLog(LOG_LEVEL_INFO, strformat(F("Ser2Net: WiFi server started at port %d"), portnumber));
+        addLog(LOG_LEVEL_INFO, concat(F("Ser2Net: WiFi server started at port "), portnumber));
       } else {
         addLog(LOG_LEVEL_ERROR, strformat(F("Ser2Net: WiFi server start FAILED at port %d, retrying..."), portnumber));
       }
@@ -105,11 +105,11 @@ void P020_Task::checkServer() {
 
     if (ser2netUdp->begin(_udpport) == 0) {
       if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-        addLog(LOG_LEVEL_ERROR, strformat(F("Ser2Net: Cannot bind UDP at port %d"), _udpport));
+        addLog(LOG_LEVEL_ERROR, concat(F("Ser2Net: Cannot bind UDP at port "), _udpport));
       }
     } else {
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        addLog(LOG_LEVEL_INFO, strformat(F("Ser2Net: UDP receiver started at port %d"), _udpport));
+        addLog(LOG_LEVEL_INFO, concat(F("Ser2Net: UDP receiver started at port "), _udpport));
       }
     }
   }
