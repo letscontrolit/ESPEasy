@@ -18,11 +18,11 @@ constexpr uint32_t sizeof_rtcsram_slot = sizeof(SRAM_STORAGE_FLOAT_TYPE);
  * Returns the external rtc type if SRAM is available
  */
 uint8_t checkRTCSRAMEnabled() {
-  const ExtTimeSource_e extRtcType = static_cast<ExtTimeSource_e>(Settings.ExternalTimeSource);
+  const ExtTimeSource_e extRtcType = Settings.ExtTimeSource();
 
   if ((ExtTimeSource_e::DS1307 == extRtcType) ||
       (ExtTimeSource_e::DS3232 == extRtcType)) { // RTC with SRAM Configured?
-    return Settings.ExternalTimeSource;
+    return static_cast<uint8_t>(Settings.ExtTimeSource());
   }
   return (uint8_t)0;
 }
@@ -31,7 +31,7 @@ uint8_t checkRTCSRAMEnabled() {
  * Get the RTC I2C Address
  */
 uint8_t getRTCI2CAddress() {
-  const ExtTimeSource_e type = static_cast<ExtTimeSource_e>(Settings.ExternalTimeSource);
+  const ExtTimeSource_e type = Settings.ExtTimeSource();
 
   switch (type)
   {
@@ -50,10 +50,10 @@ uint8_t getRTCI2CAddress() {
 }
 
 /**
- * Switch to I2C Bus and multiplexer channel of External EEPROM
+ * Switch to I2C Bus and multiplexer channel of RTC SRAM
  */
 uint8_t selectRTCSRAMI2CBus() {
-  const ExtTimeSource_e type = static_cast<ExtTimeSource_e>(Settings.ExternalTimeSource);
+  const ExtTimeSource_e type = Settings.ExtTimeSource();
 
   if (checkRTCSRAMEnabled()) { // RTC Module Configured?
     # if FEATURE_I2C_MULTIPLE
@@ -78,7 +78,7 @@ uint8_t selectRTCSRAMI2CBus() {
     }
 
     if (0 == I2C_wakeup(getRTCI2CAddress())) {
-      return Settings.ExternalTimeSource;
+      return static_cast<uint8_t>(Settings.ExtTimeSource());
     }
   }
   return (uint8_t)0;
@@ -88,7 +88,7 @@ uint8_t selectRTCSRAMI2CBus() {
  * RTC SRAM size in bytes
  */
 uint32_t getRTCSRAMSize() {
-  const ExtTimeSource_e type = static_cast<ExtTimeSource_e>(Settings.ExternalTimeSource);
+  const ExtTimeSource_e type = Settings.ExtTimeSource();
 
   switch (type)
   {
@@ -124,7 +124,7 @@ uint32_t getRTCSRAMAddressForSlot(uint32_t slot) {
 }
 
 /**
- * EEPROM available number of slots, max use all available space minus some administrative bytes
+ * RTC SRAM available number of slots, max use all available space
  */
 uint32_t getRTCSRAMMaxSlots() {
   if (checkRTCSRAMEnabled()) {
@@ -140,7 +140,7 @@ uint32_t getRTCSRAMMaxSlots() {
 }
 
 /**
- * EEPROM write value to slot if the slot is valid
+ * RTC SRAM write value to slot if the slot is valid
  */
 bool writeRTCSRAMSlot(uint32_t                slot,
                       SRAM_STORAGE_FLOAT_TYPE data)
@@ -148,7 +148,7 @@ bool writeRTCSRAMSlot(uint32_t                slot,
   const uint32_t addr = getRTCSRAMAddressForSlot(slot);
 
   if ((addr != std::numeric_limits<uint32_t>::max()) && (selectRTCSRAMI2CBus() > 0)) {
-    const ExtTimeSource_e type = static_cast<ExtTimeSource_e>(Settings.ExternalTimeSource);
+    const ExtTimeSource_e type = Settings.ExtTimeSource();
     uint8_t _b[sizeof_rtcsram_slot]{};
 
     switch (type)
@@ -193,7 +193,7 @@ SRAM_STORAGE_FLOAT_TYPE readRTCSRAMSlot(uint32_t slot) {
   const uint32_t addr = getRTCSRAMAddressForSlot(slot);
 
   if ((addr != std::numeric_limits<uint32_t>::max()) && (selectRTCSRAMI2CBus() > 0)) {
-    const ExtTimeSource_e type = static_cast<ExtTimeSource_e>(Settings.ExternalTimeSource);
+    const ExtTimeSource_e type = Settings.ExtTimeSource();
     uint8_t _b[sizeof_rtcsram_slot]{};
 
     switch (type)
