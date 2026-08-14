@@ -492,6 +492,16 @@ Depending on the internet connection, f.e. when connecting via a low-end mobile 
 On ESP32, tasks like starting the MQTT connection can be delegated to an independent background task, to avoid blocking the normal working of ESPEasy, that will report the result when completed. This feature is enabled by default, as it is the preferred setting, but when this way of connecting is causing issues, it can be disabled.
 
 
+MQTT Discover, Group incl. Taskname
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Added: 2026-08-14
+
+To make the unique-id for Auto Discovery more unique when a Group is used, the Taskname can be inserted by enabling this option. Not enabled by default for backward compatibility with existing groups Auto-discovered by Home Assistant.
+
+Only enabled if MQTT Auto Discovery is included in the build.
+
+
 Allow OTA without size-check
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
