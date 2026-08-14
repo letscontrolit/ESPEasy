@@ -1114,6 +1114,8 @@ bool MQTT_DiscoveryPublishWithStatusAndSet(taskIndex_t               taskIndex,
     const String valName  = makeHomeAssistantCompliantName(valueName);
 
     const String uniqueId = elementName.isEmpty() ? MQTT_TaskValueUniqueName(taskName, valName)
+                                                  : Settings.MQTTDiscoverGroupInclTaskname()
+                                                  ? strformat(F("%s_%s_%s"), elementId.c_str(), taskName.c_str(), valName.c_str())
                                                   : strformat(F("%s_%s"), elementId.c_str(), valName.c_str());
     String message;
     {

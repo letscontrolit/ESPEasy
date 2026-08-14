@@ -161,6 +161,9 @@ void handle_advanced() {
     #if FEATURE_MQTT_CONNECT_BACKGROUND
     Settings.MQTTConnectInBackground(isFormItemChecked(LabelType::MQTT_CONNECT_IN_BACKGROUND));
     #endif // if FEATURE_MQTT_CONNECT_BACKGROUND
+    #if FEATURE_MQTT_DISCOVER
+    Settings.MQTTDiscoverGroupInclTaskname(isFormItemChecked(LabelType::MQTT_DISCOVER_GROUP_INCL_TASKNAME));
+    #endif // if FEATURE_MQTT_DISCOVER
     #if FEATURE_COLORIZE_CONSOLE_LOGS
     Settings.ColorizeSerialLog(isFormItemChecked(LabelType::COLORIZE_CONSOLE_LOGS));
     #endif
@@ -331,6 +334,9 @@ void handle_advanced() {
       #if FEATURE_MQTT_CONNECT_BACKGROUND
       ,LabelType::MQTT_CONNECT_IN_BACKGROUND
       #endif // if FEATURE_MQTT_CONNECT_BACKGROUND
+      #if FEATURE_MQTT_DISCOVER
+      ,LabelType::MQTT_DISCOVER_GROUP_INCL_TASKNAME
+      #endif // if FEATURE_MQTT_DISCOVER
       #if FEATURE_COLORIZE_CONSOLE_LOGS
       ,LabelType::COLORIZE_CONSOLE_LOGS
       #endif
