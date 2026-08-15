@@ -52,7 +52,7 @@ void handle_eepromvars() {
     uint32_t count{};
 
     for (uint32_t slot = 0; slot < maxSlots; ++slot) {
-      const float value = ESPEasy::eeprom::readEEPROMSlot(slot);
+      const ESPEASY_RULES_FLOAT_TYPE value = ESPEasy::eeprom::readEEPROMSlot(slot);
 
       if (slot % 50 == 0) { delay(0); }
 
@@ -62,9 +62,9 @@ void handle_eepromvars() {
         addHtmlInt(slot);
         html_TD();
         #  if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
-        addHtml(doubleToString(value));
+        addHtml(doubleToString(value, ESPEASY_DOUBLE_NR_DECIMALS, true));
         #  else // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
-        addHtml(toString(value));
+        addHtml(toString(value, ESPEASY_FLOAT_NR_DECIMALS, true));
         #  endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
         html_TD(2);
       }
@@ -121,7 +121,7 @@ void handle_eepromvars() {
     uint32_t count{};
 
     for (uint32_t slot = 0; slot < maxSlots; ++slot) {
-      const float value = ESPEasy::eeprom::readRTCSRAMSlot(slot);
+      const ESPEASY_RULES_FLOAT_TYPE value = ESPEasy::eeprom::readRTCSRAMSlot(slot);
 
       if (slot % 50 == 0) { delay(0); }
 
@@ -131,9 +131,9 @@ void handle_eepromvars() {
         addHtmlInt(slot);
         html_TD();
         #  if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
-        addHtml(doubleToString(value));
+        addHtml(doubleToString(value, ESPEASY_DOUBLE_NR_DECIMALS, true));
         #  else // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
-        addHtml(toString(value));
+        addHtml(toString(value, ESPEASY_FLOAT_NR_DECIMALS, true));
         #  endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
         html_TD(2);
       }
