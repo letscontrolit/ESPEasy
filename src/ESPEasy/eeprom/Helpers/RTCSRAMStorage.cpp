@@ -45,8 +45,9 @@ uint8_t getRTCI2CAddress() {
       return DS3231_ADDRESS;
     # if FEATURE_EXT_RTC_PCF8583
     case ExtTimeSource_e::PCF8583:
-    case ExtTimeSource_e::PCF8583a:
       return PCF8583_ADDRESS;
+    case ExtTimeSource_e::PCF8583a:
+      return PCF8583_ADDRESS_1;
     # endif // if FEATURE_EXT_RTC_PCF8583
     case ExtTimeSource_e::DS3231:
     case ExtTimeSource_e::PCF8523:
@@ -198,6 +199,11 @@ bool writeRTCSRAMSlot(uint32_t                slot,
       case ExtTimeSource_e::PCF8583a:
       {
         RTC_PCF8583 rtc;
+
+        if (ExtTimeSource_e::PCF8583a == Settings.ExtTimeSource()) {
+          rtc.altAddress(); // Set alternative address (0x51)
+        }
+
         rtc.readnvram(_b, sizeof_rtcsram_slot, addr);
         const SRAM_STORAGE_FLOAT_TYPE oldData = *(SRAM_STORAGE_FLOAT_TYPE *)&_b[0];
 
@@ -247,6 +253,11 @@ SRAM_STORAGE_FLOAT_TYPE readRTCSRAMSlot(uint32_t slot) {
       case ExtTimeSource_e::PCF8583a:
       {
         RTC_PCF8583 rtc;
+
+        if (ExtTimeSource_e::PCF8583a == Settings.ExtTimeSource()) {
+          rtc.altAddress(); // Set alternative address (0x51)
+        }
+
         rtc.readnvram(_b, sizeof_rtcsram_slot, addr);
         return *(SRAM_STORAGE_FLOAT_TYPE *)&_b[0];
       }
