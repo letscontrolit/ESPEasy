@@ -109,7 +109,7 @@ uint32_t getRTCSRAMSize() {
     case ExtTimeSource_e::DS1307:
       return 56ul;
     case ExtTimeSource_e::DS3232:
-      return 240ul;
+      return 236ul;
     # if FEATURE_EXT_RTC_PCF8583
     case ExtTimeSource_e::PCF8583:
     case ExtTimeSource_e::PCF8583a:
