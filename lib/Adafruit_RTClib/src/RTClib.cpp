@@ -1546,6 +1546,187 @@ void RTC_PCF8563::writeSqwPinMode(Pcf8563SqwPinMode mode) {
 }
 // END RTC_PCF8563 implementation
 
+// START RTC_PCF8583 implementation
+
+// Code inspired by https://github.com/xoseperez/pcf8583
+
+/**************************************************************************/
+/*!
+    @brief  Start I2C for the PCF8583 and test succesful connection
+    @details Use altAddress() before calling begin() to use the alternate address (0x51)
+    @return True if Wire can find PCF8583 or false otherwise.
+*/
+/**************************************************************************/
+
+boolean RTC_PCF8583::begin(TwoWire *wireInstance) {
+  RTCWireBus = wireInstance;
+  RTCWireBus->beginTransmission(_addr);
+  if (RTCWireBus->endTransmission() == 0) {
+    return true;
+  }
+  return false;
+}
+
+void RTC_PCF8583::altAddress() {
+  _addr = PCF8583_ADDRESS_1;
+}
+
+/**************************************************************************/
+/*!
+    @brief  Check the status of the VL bit in the VL_SECONDS register.
+    @details The PCF8583 does not support voltage-low detector.
+    @return False
+*/
+/**************************************************************************/
+
+boolean RTC_PCF8583::lostPower(void) {
+  return false; // Not supported
+}
+
+/**************************************************************************/
+/*!
+    @brief  Set the date and time
+    @param dt DateTime to set
+*/
+/**************************************************************************/
+void RTC_PCF8583::adjust(const DateTime &dt) {
+
+  uint16_t year = dt.year() - PCF8583_BASE_YEAR;
+  const uint8_t offset = year & 0xFC;
+  year -= offset;
+  RTCWireBus->beginTransmission(_addr);
+  RTCWireBus->_I2C_WRITE(PCF8583_VL_SECONDS); // start at location 2, VL_SECONDS
+  RTCWireBus->_I2C_WRITE(bin2bcd(dt.second()));
+  RTCWireBus->_I2C_WRITE(bin2bcd(dt.minute()));
+  RTCWireBus->_I2C_WRITE(bin2bcd(dt.hour()));
+  RTCWireBus->_I2C_WRITE(bin2bcd(dt.day()) | (year < 6));
+  RTCWireBus->_I2C_WRITE(bin2bcd(0)); // skip weekdays
+  RTCWireBus->_I2C_WRITE(bin2bcd(dt.month()));
+  RTCWireBus->_I2C_WRITE(bin2bcd(dt.year() - 2000));
+  RTCWireBus->endTransmission();
+  
+  RTCWireBus->beginTransmission(_addr);
+  RTCWireBus->_I2C_WRITE(PCF8583_OFFSET_YEAR); // Update offset and year
+  RTCWireBus->_I2C_WRITE(offset);
+  RTCWireBus->_I2C_WRITE(year);
+  RTCWireBus->endTransmission();
+}
+
+/**************************************************************************/
+/*!
+    @brief  Get the current date/time
+    @return DateTime object containing the current date/time
+*/
+/**************************************************************************/
+
+DateTime RTC_PCF8583::now() {
+  RTCWireBus->beginTransmission(_addr);
+  RTCWireBus->_I2C_WRITE((byte)PCF8583_VL_SECONDS);
+  RTCWireBus->endTransmission();
+
+  RTCWireBus->requestFrom(_addr, (size_t)6);
+  const uint8_t ss = bcd2bin(RTCWireBus->_I2C_READ() & 0x7F);
+  const uint8_t mm = bcd2bin(RTCWireBus->_I2C_READ() & 0x7F);
+  const uint8_t hh = bcd2bin(RTCWireBus->_I2C_READ() & 0x3F);
+  const uint8_t d_r = RTCWireBus->_I2C_READ();
+  const uint8_t d = bcd2bin(d_r & 0x3F);
+  const uint16_t year = d_r >> 6;
+  RTCWireBus->_I2C_READ(); // skip 'weekdays'
+  const uint8_t m = bcd2bin(RTCWireBus->_I2C_READ() & 0x1F);
+
+  const uint8_t last = read_i2c_register(_addr, PCF8583_LAST_YEAR, RTCWireBus);
+  uint8_t offset = read_i2c_register(_addr, PCF8583_OFFSET_YEAR, RTCWireBus);
+
+  // we have changed the year: happy new year!!!
+  if (last != year) {
+
+    // we have overflowed the year value: update the offset
+    if (last > year) {
+      offset += 4;
+      write_i2c_register(_addr, PCF8583_OFFSET_YEAR, offset, RTCWireBus);
+    }
+
+    write_i2c_register(_addr, PCF8583_LAST_YEAR, year, RTCWireBus);
+  }
+  const uint16_t y = PCF8583_BASE_YEAR + offset + year;
+
+  return DateTime(y, m, d, hh, mm, ss);
+}
+
+/**************************************************************************/
+/*!
+    @brief  Resets the STOP bit in register Control_1
+*/
+/**************************************************************************/
+void RTC_PCF8583::start(void) {
+  const uint8_t ctlreg = read_i2c_register(_addr, PCF8583_CONTROL_1, RTCWireBus);
+  write_i2c_register(_addr, PCF8583_CONTROL_1, ctlreg & 0x7F,
+                     RTCWireBus);
+}
+
+/**************************************************************************/
+/*!
+    @brief  Sets the STOP bit in register Control_1
+*/
+/**************************************************************************/
+void RTC_PCF8583::stop(void) {
+  const uint8_t ctlreg = read_i2c_register(_addr, PCF8583_CONTROL_1, RTCWireBus);
+  write_i2c_register(PCF8523_ADDRESS, PCF8583_CONTROL_1, ctlreg | 0x80,
+                      RTCWireBus);
+}
+
+/**************************************************************************/
+/*!
+    @brief  Is the PCF8583 running? Check the STOP bit in register Control_1
+    @return 1 if the RTC is running, 0 if not
+*/
+/**************************************************************************/
+uint8_t RTC_PCF8583::isrunning() {
+  const uint8_t ctlreg = read_i2c_register(_addr, PCF8583_CONTROL_1, RTCWireBus);
+  return !(ctlreg >> 7); // bit 7 = 0 => running
+}
+
+/**************************************************************************/
+/*!
+    @brief  Read data from the PCF8583's NVRAM
+    @param buf Pointer to a buffer to store the data - make sure it's large
+   enough to hold size bytes
+    @param size Number of bytes to read
+    @param address Starting NVRAM address, from 0 to 235
+*/
+/**************************************************************************/
+void RTC_PCF8583::readnvram(uint8_t *buf, uint8_t size, uint8_t address) {
+  const int addrByte = PCF8583_NVRAM + address;
+  RTCWireBus->beginTransmission(_addr);
+  RTCWireBus->_I2C_WRITE(addrByte);
+  RTCWireBus->endTransmission();
+
+  RTCWireBus->requestFrom(_addr, size);
+  for (uint8_t pos = 0; pos < size; ++pos) {
+    buf[pos] = RTCWireBus->_I2C_READ();
+  }
+}
+
+/**************************************************************************/
+/*!
+    @brief  Write data to the PCF8583 NVRAM
+    @param address Starting NVRAM address, from 0 to 248
+    @param buf Pointer to buffer containing the data to write
+    @param size Number of bytes in buf to write to NVRAM
+*/
+/**************************************************************************/
+void RTC_PCF8583::writenvram(uint8_t address, uint8_t *buf, uint8_t size) {
+  const int addrByte = PCF8583_NVRAM + address;
+  RTCWireBus->beginTransmission(_addr);
+  RTCWireBus->_I2C_WRITE(addrByte);
+  for (uint8_t pos = 0; pos < size; ++pos) {
+    RTCWireBus->_I2C_WRITE(buf[pos]);
+  }
+  RTCWireBus->endTransmission();
+}
+
+// END RTC_PCF8583 implementation
+
 /**************************************************************************/
 /*!
     @brief  Convert the day of the week to a representation suitable for

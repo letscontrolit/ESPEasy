@@ -103,7 +103,7 @@ void handle_eepromvars() {
     html_TR();
     html_table_header(F("External RTC SRAM"),
                       300);
-    html_table_header(F(""),
+    html_table_header(toString(Settings.ExtTimeSource()),
                       500);
     html_table_header(F(""),
                       400);

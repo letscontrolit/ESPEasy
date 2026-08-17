@@ -1030,6 +1030,30 @@ bool ESPEasy_time::ExtRTC_get(uint32_t& unixtime)
       unixtime = rtc.now().unixtime();
       break;
     }
+    #if FEATURE_EXT_RTC_PCF8583
+    case ExtTimeSource_e::PCF8583:
+    case ExtTimeSource_e::PCF8583a:
+    {
+      I2CSelect_Max100kHz_ClockSpeed(i2cBus);
+      RTC_PCF8583 rtc;
+
+      if (ExtTimeSource_e::PCF8583a == Settings.ExtTimeSource()) {
+        rtc.altAddress(); // Set alternative address (0x51)
+      }
+
+      if (!rtc.begin()) {
+        // Not found
+        break;
+      }
+
+      if (rtc.lostPower() || !rtc.isrunning()) {
+        // Cannot get the time from the module
+        break;
+      }
+      unixtime = rtc.now().unixtime();
+      break;
+    }
+    #endif // if FEATURE_EXT_RTC_PCF8583
   }
 
   if (unixtime != 0) {
@@ -1110,6 +1134,25 @@ bool ESPEasy_time::ExtRTC_set(uint32_t unixtime)
       }
       break;
     }
+    #if FEATURE_EXT_RTC_PCF8583
+    case ExtTimeSource_e::PCF8583:
+    case ExtTimeSource_e::PCF8583a:
+    {
+      I2CSelect_Max100kHz_ClockSpeed(i2cBus);
+      RTC_PCF8583 rtc;
+
+      if (ExtTimeSource_e::PCF8583a == Settings.ExtTimeSource()) {
+        rtc.altAddress(); // Set alternative address (0x51)
+      }
+
+      if (rtc.begin()) {
+        rtc.adjust(DateTime(unixtime));
+        rtc.start();
+        timeAdjusted = true;
+      }
+      break;
+    }
+    #endif // if FEATURE_EXT_RTC_PCF8583
   }
 
   if (timeAdjusted) {

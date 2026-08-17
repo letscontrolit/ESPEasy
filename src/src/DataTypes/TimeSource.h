@@ -11,6 +11,11 @@ enum class ExtTimeSource_e {
   PCF8523,
   PCF8563,
   DS3232,
+  #if FEATURE_EXT_RTC_PCF8583
+  PCF8583,
+  PCF8583a,
+  #endif // if FEATURE_EXT_RTC_PCF8583
+
 };
 
 

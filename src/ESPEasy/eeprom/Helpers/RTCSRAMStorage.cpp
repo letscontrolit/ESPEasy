@@ -21,6 +21,10 @@ uint8_t checkRTCSRAMEnabled() {
   const ExtTimeSource_e extRtcType = Settings.ExtTimeSource();
 
   if ((ExtTimeSource_e::DS1307 == extRtcType) ||
+      # if FEATURE_EXT_RTC_PCF8583
+      (ExtTimeSource_e::PCF8583 == extRtcType) ||
+      (ExtTimeSource_e::PCF8583a == extRtcType) ||
+      # endif // if FEATURE_EXT_RTC_PCF8583
       (ExtTimeSource_e::DS3232 == extRtcType)) { // RTC with SRAM Configured?
     return static_cast<uint8_t>(Settings.ExtTimeSource());
   }
@@ -39,6 +43,11 @@ uint8_t getRTCI2CAddress() {
       return DS1307_ADDRESS;
     case ExtTimeSource_e::DS3232:
       return DS3231_ADDRESS;
+    # if FEATURE_EXT_RTC_PCF8583
+    case ExtTimeSource_e::PCF8583:
+    case ExtTimeSource_e::PCF8583a:
+      return PCF8583_ADDRESS;
+    # endif // if FEATURE_EXT_RTC_PCF8583
     case ExtTimeSource_e::DS3231:
     case ExtTimeSource_e::PCF8523:
     case ExtTimeSource_e::PCF8563:
@@ -65,6 +74,10 @@ uint8_t selectRTCSRAMI2CBus() {
     switch (type)
     {
       case ExtTimeSource_e::DS1307:
+      # if FEATURE_EXT_RTC_PCF8583
+      case ExtTimeSource_e::PCF8583:
+      case ExtTimeSource_e::PCF8583a:
+      # endif // if FEATURE_EXT_RTC_PCF8583
         I2CSelect_Max100kHz_ClockSpeed(i2cBus);
         break;
       case ExtTimeSource_e::DS3232:
@@ -96,6 +109,11 @@ uint32_t getRTCSRAMSize() {
       return 56ul;
     case ExtTimeSource_e::DS3232:
       return 240ul;
+    # if FEATURE_EXT_RTC_PCF8583
+    case ExtTimeSource_e::PCF8583:
+    case ExtTimeSource_e::PCF8583a:
+      return 240ul;
+    # endif // if FEATURE_EXT_RTC_PCF8583
     case ExtTimeSource_e::DS3231:
     case ExtTimeSource_e::PCF8523:
     case ExtTimeSource_e::PCF8563:
@@ -175,6 +193,20 @@ bool writeRTCSRAMSlot(uint32_t                slot,
         }
         return true;
       }
+      # if FEATURE_EXT_RTC_PCF8583
+      case ExtTimeSource_e::PCF8583:
+      case ExtTimeSource_e::PCF8583a:
+      {
+        RTC_PCF8583 rtc;
+        rtc.readnvram(_b, sizeof_rtcsram_slot, addr);
+        const SRAM_STORAGE_FLOAT_TYPE oldData = *(SRAM_STORAGE_FLOAT_TYPE *)&_b[0];
+
+        if (!essentiallyEqual(oldData, data)) {
+          rtc.writenvram(addr, (uint8_t *)&data, sizeof_rtcsram_slot);
+        }
+        return true;
+      }
+      # endif // if FEATURE_EXT_RTC_PCF8583
       case ExtTimeSource_e::DS3231:
       case ExtTimeSource_e::PCF8523:
       case ExtTimeSource_e::PCF8563:
@@ -210,6 +242,15 @@ SRAM_STORAGE_FLOAT_TYPE readRTCSRAMSlot(uint32_t slot) {
         rtc.readnvram(_b, sizeof_rtcsram_slot, addr);
         return *(SRAM_STORAGE_FLOAT_TYPE *)&_b[0];
       }
+      # if FEATURE_EXT_RTC_PCF8583
+      case ExtTimeSource_e::PCF8583:
+      case ExtTimeSource_e::PCF8583a:
+      {
+        RTC_PCF8583 rtc;
+        rtc.readnvram(_b, sizeof_rtcsram_slot, addr);
+        return *(SRAM_STORAGE_FLOAT_TYPE *)&_b[0];
+      }
+      # endif // if FEATURE_EXT_RTC_PCF8583
       case ExtTimeSource_e::DS3231:
       case ExtTimeSource_e::PCF8523:
       case ExtTimeSource_e::PCF8563:

@@ -711,6 +711,10 @@ To create/register a plugin, you have to :
         #undef FEATURE_EXT_RTC
     #endif
     #define FEATURE_EXT_RTC 0
+    #ifdef FEATURE_EXT_RTC_PCF8583
+        #undef FEATURE_EXT_RTC_PCF8583
+    #endif
+    #define FEATURE_EXT_RTC_PCF8583 0
     #ifdef FEATURE_SYSLOG
     #undef FEATURE_SYSLOG
     #endif
@@ -3209,6 +3213,10 @@ To create/register a plugin, you have to :
     #undef FEATURE_EXT_RTC
   #endif
   #define FEATURE_EXT_RTC 0
+  #ifdef FEATURE_EXT_RTC_PCF8583
+    #undef FEATURE_EXT_RTC_PCF8583
+  #endif
+  #define FEATURE_EXT_RTC_PCF8583 0
   #ifndef BUILD_NO_DEBUG
     #define BUILD_NO_DEBUG
   #endif
@@ -4357,6 +4365,13 @@ To create/register a plugin, you have to :
     #endif
   #endif
 #endif // ifndef FEATURE_RTC_SRAM_STORAGE
+#ifndef FEATURE_EXT_RTC_PCF8583
+  #if defined(PLUGIN_BUILD_MAX_ESP32)
+    #define FEATURE_EXT_RTC_PCF8583       1 // Also include PCF8583, that has 240 bytes of SRAM
+  #else // if defined(PLUGIN_BUILD_MAX_ESP32)
+    #define FEATURE_EXT_RTC_PCF8583       0 // Also include PCF8583, that has 240 bytes of SRAM
+  #endif // if defined(PLUGIN_BUILD_MAX_ESP32)
+#endif
 #else // if FEATURE_EXT_RTC
   #define FEATURE_RTC_SRAM_STORAGE      0  // Not available
 #endif // if FEATURE_EXT_RTC

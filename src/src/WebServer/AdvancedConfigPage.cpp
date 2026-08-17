@@ -465,15 +465,29 @@ void addFormDstSelect(bool isStart, uint16_t choice) {
 void addFormExtTimeSourceSelect(const __FlashStringHelper * label, const __FlashStringHelper * id, ExtTimeSource_e choice)
 {
   addRowLabel(label);
-  const __FlashStringHelper * options[] =
-    { F("None"), F("DS1307"), F("DS3231"), F("DS3232"), F("PCF8523"), F("PCF8563")};
+  const __FlashStringHelper * options[] = {
+    F("None"),
+    toString(ExtTimeSource_e::DS1307),
+    toString(ExtTimeSource_e::DS3231),
+    toString(ExtTimeSource_e::DS3232),
+    toString(ExtTimeSource_e::PCF8523),
+    toString(ExtTimeSource_e::PCF8563),
+    #if FEATURE_EXT_RTC_PCF8583
+    toString(ExtTimeSource_e::PCF8583),
+    toString(ExtTimeSource_e::PCF8583a),
+    #endif // if FEATURE_EXT_RTC_PCF8583
+  };
   constexpr int optionValues[] = { 
     static_cast<int>(ExtTimeSource_e::None),
     static_cast<int>(ExtTimeSource_e::DS1307),
     static_cast<int>(ExtTimeSource_e::DS3231),
     static_cast<int>(ExtTimeSource_e::DS3232),
     static_cast<int>(ExtTimeSource_e::PCF8523),
-    static_cast<int>(ExtTimeSource_e::PCF8563)
+    static_cast<int>(ExtTimeSource_e::PCF8563),
+    #if FEATURE_EXT_RTC_PCF8583
+    static_cast<int>(ExtTimeSource_e::PCF8583),
+    static_cast<int>(ExtTimeSource_e::PCF8583a),
+    #endif // if FEATURE_EXT_RTC_PCF8583
     };
 
   const FormSelectorOptions selector(NR_ELEMENTS(optionValues), options, optionValues);
