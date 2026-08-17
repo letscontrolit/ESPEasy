@@ -48,9 +48,21 @@
 #define I2C_PERIPHERAL_BUS_CLOCK  0 // bit-offset for I2C bus used for the RTC clock device
 #define I2C_PERIPHERAL_BUS_WDT    3 // bit-offset for I2C bus used for the watchdog timer
 #define I2C_PERIPHERAL_BUS_PCFMCP 6 // bit-offset for I2C bus used for PCF & MCP direct access
-// #define I2C_PERIPHERAL_BUS_???    9 // bit-offset for I2C bus used for the ???
+#if FEATURE_EEPROM_EXTERNAL
+#define I2C_PERIPHERAL_BUS_EEPROM 9 // bit-offset for I2C bus used for an external EEPROM
+#endif // if FEATURE_EEPROM_EXTERNAL
+// #define I2C_PERIPHERAL_BUS_???    12 // bit-offset for I2C bus used for the ???
 #endif // if FEATURE_I2C_MULTIPLE
 
+#if FEATURE_EEPROM_EXTERNAL
+#define EEPROM_EXTERNAL_FLAGS_ADDRESS   0 // bit-offset for the I2C Address (8 bits)
+#define EEPROM_EXTERNAL_FLAGS_SIZE      8 // bit-offset for the size-id of the EEPROM (4 bits)
+#define EEPROM_EXTERNAL_FLAGS_MUX      16 // bit-offset for the multiplexer flags of the EEPROM (16 bits)
+
+#define EEPROM_MUX_FLAGS_PORT           0 // bit-offset within multiplexerflags for the portnr/bits (8 bits)
+#define EEPROM_MUX_FLAGS_MULTI          8 // bit-offset within multiplexerflags for bits or port (1 bit)
+
+#endif // if FEATURE_EEPROM_EXTERNAL
 // Stored in Settings.I2C_SPI_bus_Flags !!!
 #define SPI_FLAGS_TASK_BUS_NUMBER           0 // 2 bit, stores the configured bus for a task
 // Stored in Settings.I2C_SPI_bus_Flags for Task 1 settings

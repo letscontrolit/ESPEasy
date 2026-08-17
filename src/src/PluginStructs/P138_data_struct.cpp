@@ -43,7 +43,9 @@ int Plugin_138_QueryVType(uint8_t value_nr) {
 // Constructor
 // **************************************************************************/
 P138_data_struct::P138_data_struct(struct EventStruct *event) {
+  #ifndef BUILD_NO_DEBUG
   addLog(LOG_LEVEL_INFO, F("IP5306: Init."));
+  #endif // ifndef BUILD_NO_DEBUG
 
   _ip5306 = new (std::nothrow) arduino::ip5306(); // Default address and I2C Wire object
 }

@@ -711,6 +711,10 @@ To create/register a plugin, you have to :
         #undef FEATURE_EXT_RTC
     #endif
     #define FEATURE_EXT_RTC 0
+    #ifdef FEATURE_EXT_RTC_PCF8583
+        #undef FEATURE_EXT_RTC_PCF8583
+    #endif
+    #define FEATURE_EXT_RTC_PCF8583 0
     #ifdef FEATURE_SYSLOG
     #undef FEATURE_SYSLOG
     #endif
@@ -3209,6 +3213,10 @@ To create/register a plugin, you have to :
     #undef FEATURE_EXT_RTC
   #endif
   #define FEATURE_EXT_RTC 0
+  #ifdef FEATURE_EXT_RTC_PCF8583
+    #undef FEATURE_EXT_RTC_PCF8583
+  #endif
+  #define FEATURE_EXT_RTC_PCF8583 0
   #ifndef BUILD_NO_DEBUG
     #define BUILD_NO_DEBUG
   #endif
@@ -4330,6 +4338,48 @@ To create/register a plugin, you have to :
     #define FEATURE_TASKVALUE_ATTRIBUTES  0 // Disabled by default on ESP8266
   #endif
 #endif // if FEATURE_TASKVALUE_ATTRIBUTES
+
+#ifndef FEATURE_EEPROM_EXTERNAL
+  #ifdef ESP32
+    #define FEATURE_EEPROM_EXTERNAL  1
+  #endif
+  #ifdef ESP8266
+    #ifdef LIMIT_BUILD_SIZE
+      #define FEATURE_EEPROM_EXTERNAL  0 // Disabled for limited builds on ESP8266
+    #else
+      #define FEATURE_EEPROM_EXTERNAL  0 // Disabled by default on ESP8266
+    #endif
+  #endif
+#endif // ifndef FEATURE_EEPROM_EXTERNAL
+
+#if FEATURE_EXT_RTC
+#ifndef FEATURE_RTC_SRAM_STORAGE
+  #ifdef ESP32
+    #define FEATURE_RTC_SRAM_STORAGE      1
+  #endif
+  #ifdef ESP8266
+    #ifdef LIMIT_BUILD_SIZE
+      #define FEATURE_RTC_SRAM_STORAGE    0 // Disabled for limited builds on ESP8266
+    #else
+      #define FEATURE_RTC_SRAM_STORAGE    0 // Disabled by default on ESP8266
+    #endif
+  #endif
+#endif // ifndef FEATURE_RTC_SRAM_STORAGE
+#ifndef FEATURE_EXT_RTC_PCF8583
+  #if defined(PLUGIN_BUILD_MAX_ESP32)
+    #define FEATURE_EXT_RTC_PCF8583       1 // Also include PCF8583, that has 240 bytes of SRAM
+  #else // if defined(PLUGIN_BUILD_MAX_ESP32)
+    #define FEATURE_EXT_RTC_PCF8583       0 // Also include PCF8583, that has 240 bytes of SRAM
+  #endif // if defined(PLUGIN_BUILD_MAX_ESP32)
+#endif
+#else // if FEATURE_EXT_RTC
+  #define FEATURE_RTC_SRAM_STORAGE      0  // Not available
+#endif // if FEATURE_EXT_RTC
+#if FEATURE_RTC_SRAM_STORAGE
+  #define FEATURE_SRAM_STORAGE_DOUBLE   1 // 1 = double-size SRAM storage = 8 bytes per slot
+#else // if FEATURE_RTC_SRAM_STORAGE
+  #define FEATURE_SRAM_STORAGE_DOUBLE   0 // 0 = float-size SRAM storage = 4 bytes per slot
+#endif // if FEATURE_RTC_SRAM_STORAGE
 
 #ifndef FEATURE_PLUGIN_LIST
   #ifdef ESP32
