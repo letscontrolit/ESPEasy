@@ -2525,11 +2525,11 @@ To create/register a plugin, you have to :
   #ifdef ESP8266
     #define FEATURE_PLUGIN_STATS  0
   #endif
-  #if FEATURE_CHART_JS && defined(ESP8266)
+  #if FEATURE_CHART_JS // && defined(ESP8266)
     // Does not fit in build
     #undef FEATURE_CHART_JS
   #endif
-  #ifdef ESP8266
+  #ifndef FEATURE_CHART_JS
     #define FEATURE_CHART_JS  0
   #endif
   #if !defined(USES_P138) && defined(ESP32)
