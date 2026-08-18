@@ -363,11 +363,7 @@ function addFindButtons() {
       title: 'Help',
       symbol: '?',
       action: () => {
-        alert(`Available shortcuts:
-• Ctrl+F / Cmd+F: Open search
-• Enter: Find next
-• Shift+Enter: Find previous
-• Use /re/ syntax for regex search`);
+        alert('Available shortcuts:\n• Ctrl+F / Cmd+F: Open search\n• Enter: Find next\n• Shift+Enter: Find previous\n• Use /re/ syntax for regex search');
       }
     }
   ];
@@ -377,10 +373,7 @@ function addFindButtons() {
     btn.title = title;
     btn.className = title.toLowerCase() === 'help' ? 'button help' : 'button';
     btn.innerHTML = symbol;
-    btn.style.cssText = `
-      cursor: pointer;
-      user-select: none;
-    `;
+    btn.style.cssText = 'cursor: pointer; user-select: none;';
     btn.addEventListener('click', (e) => {
       e.preventDefault();
       action();
