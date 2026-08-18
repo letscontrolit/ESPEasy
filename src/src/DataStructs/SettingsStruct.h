@@ -428,7 +428,19 @@ public:
   uint8_t getI2CInterfaceRTC() const;
   uint8_t getI2CInterfaceWDT() const;
   uint8_t getI2CInterfacePCFMCP() const;
+  #if FEATURE_EEPROM_EXTERNAL
+  uint8_t getI2CInterfaceEEPROM() const;
+  #endif // if FEATURE_EEPROM_EXTERNAL
   #endif // if FEATURE_I2C_MULTIPLE
+
+  #if FEATURE_EEPROM_EXTERNAL
+  uint8_t  EEPROMExternalI2CAddress() const;
+  void     EEPROMExternalI2CAddress(uint8_t address);
+  uint16_t EEPROMExternalI2CMultiplexerFlags() const;
+  void     EEPROMExternalI2CMultiplexerFlags(uint16_t muxFlags);
+  uint8_t  EEPROMExternalType() const;
+  void     EEPROMExternalType(uint8_t type);
+  #endif // if FEATURE_EEPROM_EXTERNAL
 
   #if FEATURE_I2CMULTIPLEXER
   int8_t getI2CMultiplexerType(uint8_t i2cBus) const;
@@ -635,7 +647,8 @@ public:
   int8_t        SPI1_SCLK_pin = -1;
   int8_t        SPI1_MISO_pin = -1;
   int8_t        SPI1_MOSI_pin = -1;
-  unsigned int  OLD_TaskDeviceID[N_TASKS - 8] = {0};  // UNUSED: this can be reused
+  uint32_t      EEPROMSaveOptions = 0;
+  uint32_t      OLD_TaskDeviceID[N_TASKS - 9] = {0};  // UNUSED: this can be reused
 
   // FIXME TD-er: When used on ESP8266, this conversion union may not work
   // It might work as it is 32-bit in size.
@@ -783,8 +796,8 @@ public:
       uint32_t ShowUnitOfMeasureOnDevicesPage      : 1; // Bit 07  // inverted
       uint32_t WiFi_band_mode                      : 2; // Bit 08 & 09
       uint32_t WiFi_AP_enable_NAPT                 : 1; // Bit 10  // inverted
-      uint32_t RestoreUserVarsFromEEPROMOnColdBoot : 1; // Bit 11
-      uint32_t RestoreUserVarsFromEEPROMOnWarmBoot : 1; // Bit 12
+      uint32_t unused_11                           : 1; // Bit 11
+      uint32_t unused_12                           : 1; // Bit 12
       uint32_t MQTTConnectInBackground             : 1; // Bit 13  // inverted
 
       uint32_t StartAPfallback_NoCredentials       : 1; // Bit 14  // inverted
@@ -815,6 +828,8 @@ public:
 #endif
   // TODO TD-er: For ESP8266 we may likely ever use upto 2 or 3 network interfaces, so maybe re-use the rest later?
   uint16_t  NetworkInterfaceStartupDelay[NETWORK_MAX]{};
+
+  uint32_t  EEPROMExternalFlags{};
 
 
   // Try to extend settings to make the checksum 4-uint8_t aligned.
