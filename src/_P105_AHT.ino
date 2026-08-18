@@ -224,6 +224,7 @@ boolean Plugin_105(uint8_t function, struct EventStruct *event, String& string)
         UserVar.setFloat(event->TaskIndex, 0, P105_data->getTemperature() + (P105_TEMPERATURE_OFFSET / 10.0f));
         UserVar.setFloat(event->TaskIndex, 1, min(P105_data->getHumidity() * (1 - 0.005f * P105_TEMPERATURE_OFFSET), 100.0f));
 
+        #ifndef BUILD_NO_DEBUG
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           addLogMove(LOG_LEVEL_INFO, strformat(F("%s : Addr: 0x%02x"), P105_data->getDeviceName().c_str(), P105_I2C_ADRESS));
           addLogMove(LOG_LEVEL_INFO,
@@ -232,6 +233,7 @@ boolean Plugin_105(uint8_t function, struct EventStruct *event, String& string)
                                formatUserVarNoCheck(event, 0).c_str(),
                                formatUserVarNoCheck(event, 1).c_str()));
         }
+        #endif // ifndef BUILD_NO_DEBUG
         success = true;
       }
       break;

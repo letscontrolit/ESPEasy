@@ -11,6 +11,12 @@
 #include "../Commands/Common.h"
 #include "../Commands/Controller.h"
 #include "../Commands/Diagnostic.h"
+#if FEATURE_EEPROM_EXTERNAL
+#include "../Commands/EEPROMExternal.h"
+#endif // if FEATURE_EEPROM_EXTERNAL
+#if FEATURE_RTC_SRAM_STORAGE
+#include "../Commands/RTCSRAMStorage.h"
+#endif // if FEATURE_RTC_SRAM_STORAGE
 #include "../Commands/GPIO.h"
 #include "../Commands/HTTP.h"
 #include "../Commands/InternalCommands_decoder.h"
@@ -511,7 +517,14 @@ bool InternalCommands::executeInternalCommand()
     case ESPEasy_cmd_e::wifissid:                   COMMAND_CASE_R(Command_Wifi_SSID,       1);      // WiFi.h
     case ESPEasy_cmd_e::wifissid2:                  COMMAND_CASE_R(Command_Wifi_SSID2,      1);      // WiFi.h
     case ESPEasy_cmd_e::wifistamode:                COMMAND_CASE_R(Command_Wifi_STAMode,    0);      // WiFi.h
-#endif
+#endif // if FEATURE_WIFI
+#if FEATURE_EEPROM_EXTERNAL
+    case ESPEasy_cmd_e::writeee:                    COMMAND_CASE_R(Command_writeEE,         2);      // EEPROMExternal.h
+#endif // if FEATURE_EEPROM_EXTERNAL
+#if FEATURE_RTC_SRAM_STORAGE
+    case ESPEasy_cmd_e::writertc:                   COMMAND_CASE_R(Command_writeRTC,        2);      // RTCSRAMStorage.h
+#endif // if FEATURE_RTC_SRAM_STORAGE
+
 
     case ESPEasy_cmd_e::NotMatched:
       return false;

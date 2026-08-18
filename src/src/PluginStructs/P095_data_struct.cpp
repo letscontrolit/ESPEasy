@@ -210,7 +210,7 @@ bool P095_data_struct::plugin_init(struct EventStruct *event) {
     }
     # endif // ifndef BUILD_NO_DEBUG
   } else {
-    addLog(LOG_LEVEL_INFO, F("ILI9341: No init?"));
+    addLog(LOG_LEVEL_ERROR, F("ILI9341: No init?"));
   }
 
   if (isInitialized()) {

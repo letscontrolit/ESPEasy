@@ -75,7 +75,7 @@ void P020_Task::startServer(uint16_t portnumber) {
       ser2netServer->begin();
 
       if (serverActive(ser2netServer)) {
-        addLog(LOG_LEVEL_INFO, strformat(F("Ser2Net: WiFi server started at port %d"), portnumber));
+        addLog(LOG_LEVEL_INFO, concat(F("Ser2Net: WiFi server started at port "), portnumber));
       } else {
         addLog(LOG_LEVEL_ERROR, strformat(F("Ser2Net: WiFi server start FAILED at port %d, retrying..."), portnumber));
       }
@@ -105,11 +105,11 @@ void P020_Task::checkServer() {
 
     if (ser2netUdp->begin(_udpport) == 0) {
       if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-        addLog(LOG_LEVEL_ERROR, strformat(F("Ser2Net: Cannot bind UDP at port %d"), _udpport));
+        addLog(LOG_LEVEL_ERROR, concat(F("Ser2Net: Cannot bind UDP at port "), _udpport));
       }
     } else {
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        addLog(LOG_LEVEL_INFO, strformat(F("Ser2Net: UDP receiver started at port %d"), _udpport));
+        addLog(LOG_LEVEL_INFO, concat(F("Ser2Net: UDP receiver started at port "), _udpport));
       }
     }
   }
@@ -378,9 +378,11 @@ void P020_Task::discardSerialIn() {
 // We can also use the rules engine for local control!
 void P020_Task::rulesEngine(const String& message, struct EventStruct *event) {
   if (!Settings.UseRules || message.isEmpty() || (P020_Events::None == serial_processing)) { return; }
-  int NewLinePos     = 0;
-  uint16_t StartPos  = 0;
-  bool     eventSent = false;
+  int NewLinePos    = 0;
+  uint16_t StartPos = 0;
+  # if FEATURE_STRING_VARIABLES
+  bool eventSent = false;
+  # endif // if FEATURE_STRING_VARIABLES
 
   NewLinePos = handleMultiLine ? message.indexOf('\n', StartPos) : message.length();
 
@@ -449,7 +451,9 @@ void P020_Task::rulesEngine(const String& message, struct EventStruct *event) {
           eventString += message.substring(StartPos, NewLinePos);
         }
         eventQueue.addMove(std::move(eventString));
+        # if FEATURE_STRING_VARIABLES
         eventSent = true;
+        # endif // if FEATURE_STRING_VARIABLES
         break;
       }
       case P020_Events::P1WiFiGateway: // P1 WiFi Gateway
@@ -474,7 +478,9 @@ void P020_Task::rulesEngine(const String& message, struct EventStruct *event) {
 
     if (!eventString.isEmpty()) {
       eventQueue.add(eventString);
+      # if FEATURE_STRING_VARIABLES
       eventSent = true;
+      # endif // if FEATURE_STRING_VARIABLES
     }
     NewLinePos = message.indexOf('\n', StartPos);
 
