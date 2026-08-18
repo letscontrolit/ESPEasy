@@ -50,10 +50,7 @@ bool P014_data_struct::finalizeInit(uint8_t i2caddr, uint8_t resolution)
     addLogMove(LOG_LEVEL_INFO, strformat(F("P014: chip_id=%d"), chip_id));
   }
   if (chip_id == CHIP_ID_SI7013){
-    if (!I2C_write8_reg(i2caddr,SI7013_WRITE_REG2, SI7013_REG2_DEFAULT )){
-      return false;
-    }
-    if (!enablePowerForADC(i2caddr)){
+    if (!I2C_write8_reg(i2caddr,SI7013_WRITE_REG2, SI7013_REG2_DEFAULT ) || !enablePowerForADC(i2caddr)){
       return false;
     }
   }

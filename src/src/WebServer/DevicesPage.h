@@ -69,6 +69,15 @@ void devicePage_show_SPI_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
 void devicePage_show_I2C_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex);
 #endif
 
+# if FEATURE_I2CMULTIPLEXER
+void ShowI2CMultiplexerUI(uint8_t i2cBus,
+                          bool    muxPortsOption,
+                          int     taskDeviceI2CMuxPort);
+void GetI2CMultiplexerFromPage(uint8_t i2cBus,
+                               bool   &muxPortsOption,
+                               int    &selectedPorts);
+#endif // if FEATURE_I2CMULTIPLEXER
+  
 void devicePage_show_output_data_type(taskIndex_t taskIndex, deviceIndex_t DeviceIndex);
 
 #if FEATURE_PLUGIN_STATS

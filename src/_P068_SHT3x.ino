@@ -132,10 +132,12 @@ boolean Plugin_068(uint8_t function, struct EventStruct *event, String& string)
       UserVar.setFloat(event->TaskIndex, 0, sht3x->tmp);
       UserVar.setFloat(event->TaskIndex, 1, sht3x->hum);
 
+      #ifndef BUILD_NO_DEBUG
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         addLogMove(LOG_LEVEL_INFO, concat(F("SHT3x: Temperature: "), formatUserVarNoCheck(event, 0)));
         addLogMove(LOG_LEVEL_INFO, concat(F("SHT3x: Humidity: "), formatUserVarNoCheck(event, 1)));
       }
+      #endif // ifndef BUILD_NO_DEBUG
       success = true;
       break;
     }

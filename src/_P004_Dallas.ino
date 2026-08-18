@@ -360,6 +360,7 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
                 }
               }
 
+              #ifndef BUILD_NO_DEBUG
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                 String log = F("DS   : Temperature: ");
 
@@ -371,6 +372,7 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
                 log += strformat(F(" (%s)"), P004_data->get_formatted_address(i).c_str());
                 addLogMove(LOG_LEVEL_INFO, log);
               }
+              #endif // ifndef BUILD_NO_DEBUG
             }
             P004_data->set_measurement_inactive();
           }

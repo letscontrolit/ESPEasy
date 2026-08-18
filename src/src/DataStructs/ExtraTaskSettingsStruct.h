@@ -108,6 +108,11 @@ struct ExtraTaskSettingsStruct
   float       TaskDeviceMaxValue[VARS_PER_TASK];
   float       TaskDeviceErrorValue[VARS_PER_TASK];
   uint32_t    VariousBits[VARS_PER_TASK];
+  /** Mapping of VariousBits:
+   * - 0..7   : PluginStats config (8 bits)
+   * - 8..15  : UnitOfMeasure index (8 bits)
+   * - 16..23 : CustomValueType index (8 bits)
+   */
 };
 
 

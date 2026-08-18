@@ -38,12 +38,16 @@ const __FlashStringHelper* P005_logString(P005_logNr logNr) {
 \*********************************************************************************************/
 void P005_log(struct EventStruct *event, P005_logNr logNr)
 {
+  #ifndef BUILD_NO_DEBUG
   bool isError = true;
+  #endif // ifndef BUILD_NO_DEBUG
 
   switch (logNr) {
     case P005_logNr::P005_info_temperature:
     case P005_logNr::P005_info_humidity:
+      #ifndef BUILD_NO_DEBUG
       isError = false;
+      #endif // ifndef BUILD_NO_DEBUG
       break;
 
     default:
@@ -52,6 +56,7 @@ void P005_log(struct EventStruct *event, P005_logNr logNr)
       break;
   }
 
+  #ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(isError ? LOG_LEVEL_ERROR : LOG_LEVEL_INFO)) {
     String text = concat(F("DHT  : "),
                          P005_logString(logNr));
@@ -64,6 +69,7 @@ void P005_log(struct EventStruct *event, P005_logNr logNr)
     }
     addLogMove(isError ? LOG_LEVEL_ERROR : LOG_LEVEL_INFO, text);
   }
+  #endif // ifndef BUILD_NO_DEBUG
 }
 
 P005_data_struct::P005_data_struct(struct EventStruct *event) {

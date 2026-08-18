@@ -221,6 +221,7 @@ boolean Plugin_065(uint8_t function, struct EventStruct *event, String& string)
         success = true;
       }
 
+      #ifndef BUILD_NO_DEBUG
       if (success && loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log;
         log.reserve(20);
@@ -232,6 +233,7 @@ boolean Plugin_065(uint8_t function, struct EventStruct *event, String& string)
         }
         addLogMove(LOG_LEVEL_INFO, log);
       }
+      #endif // ifndef BUILD_NO_DEBUG
       break;
     }
   }

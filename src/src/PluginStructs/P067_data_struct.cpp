@@ -203,14 +203,18 @@ bool P067_data_struct::plugin_write(struct EventStruct *event,
     P067_int2float(P067_OFFSET_CHANNEL_A_1, P067_OFFSET_CHANNEL_A_2, &_offsetChanA);
     OversamplingChanA.reset();
 
+    #ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_INFO, F("HX711: tare channel A"));
+    #endif // ifndef BUILD_NO_DEBUG
     success = true;
   } else if (equals(command, F("tarechanb"))) {
     P067_float2int(-UserVar[event->BaseVarIndex + 3], &P067_OFFSET_CHANNEL_B_1, &P067_OFFSET_CHANNEL_B_2);
     P067_int2float(P067_OFFSET_CHANNEL_B_1, P067_OFFSET_CHANNEL_B_2, &_offsetChanB);
     OversamplingChanB.reset();
 
+    #ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_INFO, F("HX711: tare channel B"));
+    #endif // ifndef BUILD_NO_DEBUG
     success = true;
   }
 
