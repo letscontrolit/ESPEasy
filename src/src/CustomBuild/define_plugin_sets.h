@@ -2530,7 +2530,11 @@ To create/register a plugin, you have to :
     #undef FEATURE_CHART_JS
   #endif
   #ifndef FEATURE_CHART_JS
+    #if PLUGIN_BUILD_MAX_ESP32
+    #define FEATURE_CHART_JS  1
+    #else
     #define FEATURE_CHART_JS  0
+    #endif
   #endif
   #if !defined(USES_P138) && defined(ESP32)
     #define USES_P138   // IP5306
