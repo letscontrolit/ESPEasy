@@ -817,8 +817,7 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
         }
       }
 
-      if ((Function == PLUGIN_INIT) 
-        || (Function == PLUGIN_EXIT)) {
+      if (Function == PLUGIN_INIT) {
         clearTaskCache(event->TaskIndex);
         UserVar.clear_computed(event->TaskIndex);
       }

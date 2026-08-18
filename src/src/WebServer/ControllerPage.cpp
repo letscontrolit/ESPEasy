@@ -100,7 +100,11 @@ void handle_controllers() {
           mqttDiscoveryTimeout = random(10, MQTT_DISCOVERY_MAX_DELAY_0_1_SECONDS);
 
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            #ifndef BUILD_NO_DEBUG
             addLog(LOG_LEVEL_INFO, strformat(F("MQTT : Start AutoDiscovery on Save. Starting in %.1f sec."), mqttDiscoveryTimeout / 10));
+            #else // ifndef BUILD_NO_DEBUG
+            addLog(LOG_LEVEL_INFO, strformat(F("MQTT : Discovery starting in %.1f sec."), mqttDiscoveryTimeout / 10));
+            #endif // ifndef BUILD_NO_DEBUG
           }
         }
         # endif // if FEATURE_MQTT_DISCOVER

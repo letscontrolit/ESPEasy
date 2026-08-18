@@ -245,7 +245,7 @@ bool P096_data_struct::plugin_init(struct EventStruct *event) {
 
     success = true;
   } else {
-    addLog(LOG_LEVEL_INFO, F("EPD  : No init?"));
+    addLog(LOG_LEVEL_ERROR, F("EPD  : No init?"));
   }
 
   return success;
@@ -269,7 +269,9 @@ void P096_data_struct::updateFontMetrics() {
  * plugin_exit: De-initialize before destruction
  ***************************************************************************/
 bool P096_data_struct::plugin_exit(struct EventStruct *event) {
+  #ifndef BUILD_NO_DEBUG
   addLog(LOG_LEVEL_INFO, F("EPD  : Exit."));
+  #endif // ifndef BUILD_NO_DEBUG
 
   # if P096_USE_EXTENDED_SETTINGS
 

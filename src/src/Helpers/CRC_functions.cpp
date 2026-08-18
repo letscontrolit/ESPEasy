@@ -57,6 +57,32 @@ uint32_t calc_CRC32(const uint8_t *data, size_t length) {
   return crc;
 }
 
+uint32_t calc_CRC32(tDataReader dataReader, size_t length) {
+  uint32_t crc = 0xffffffff;
+  size_t index{};
+
+  if (dataReader) {
+    while (length--) {
+      uint8_t c = dataReader(index);
+      ++index;
+
+      for (uint32_t i = 0x80; i > 0; i >>= 1) {
+        bool bit = crc & 0x80000000;
+
+        if (c & i) {
+          bit = !bit;
+        }
+        crc <<= 1;
+
+        if (bit) {
+          crc ^= 0x04c11db7;
+        }
+      }
+    }
+  }
+  return crc;
+}
+
 uint8_t calc_CRC8(const uint8_t *data, size_t length)
 {
   /*

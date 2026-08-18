@@ -11,10 +11,12 @@ var commonCommands = ["AccessInfo", "Background", "Build", "ClearAccessBlock", "
   "TaskDisable", "TaskEnable", "TaskRun", "TaskValueSet", "TaskValueSetAndRun", "TaskValueSetDerived", "TaskValueSetPresentation", "TimerPause", "TimerResume", "TimerSet", "TimerSet_ms", "TimeZone",
   "UdpPort", "UdpTest", "Unit", "UseNTP", "WdConfig", "WdRead", "WiFi", "WiFiAllowAP", "WiFiAPMode", "WiFiConnect", "WiFiDisconnect", "WiFiKey",
   "WiFiKey2", "WiFiMode", "WiFiScan", "WiFiSSID", "WiFiSSID2", "WiFiSTAMode",
+  "WriteEE", "WriteRTC",
   "Event", "AsyncEvent",
   "GPIO", "GPIOToggle", "LongPulse", "LongPulse_mS", "Monitor", "Pulse", "PWM", "Servo", "Status", "Tone", "RTTTL", "UnMonitor",
   "Provision", "Provision,Config", "Provision,Security", "Provision,Notification", "Provision,Provision", "Provision,Rules", "Provision,CustomCdnUrl", "Provision,Firmware"];
 var commonEvents = ["Clock#Time", "JsonReply", "JsonReply#", "Login#Failed", "MQTT#Connected", "MQTT#Disconnected", "MQTTimport#Connected", "MQTTimport#Disconnected","OpenMeteo#current","OpenMeteo#daily", "OpenMeteo#hourly", "Rules#Timer", "System#Boot",
+  "ReadEE#", "ReadRTC#",
   "System#BootMode", "System#Sleep", "System#Wake", "TaskExit#", "TaskInit#", "ThingspeakReply", "Time#Initialized", "Time#Set", "WiFi#APmodeDisabled", "WiFi#APmodeEnabled",
   "WiFi#ChangedAccesspoint", "WiFi#ChangedWiFichannel", "WiFi#Connected", "WiFi#Disconnected"];
 var commonPlugins = [
