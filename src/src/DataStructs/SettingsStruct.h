@@ -247,6 +247,11 @@ class SettingsStruct_tmpl
   inline void MQTTConnectInBackground(bool value) { VariousBits_2.MQTTConnectInBackground = !value; }
   #endif // if FEATURE_MQTT_CONNECT_BACKGROUND
 
+  #if FEATURE_MQTT_DISCOVER
+  inline bool MQTTDiscoverGroupInclTaskname() const { return VariousBits_1.MQTTDiscoverGroupInclTaskname; }
+  inline void MQTTDiscoverGroupInclTaskname(bool value) { VariousBits_1.MQTTDiscoverGroupInclTaskname = value; }
+  #endif // if FEATURE_MQTT_DISCOVER
+
   // Flag indicating whether all task values should be sent in a single event or one event per task value (default behavior)
   bool CombineTaskValues_SingleEvent(taskIndex_t taskIndex) const;
   void CombineTaskValues_SingleEvent(taskIndex_t taskIndex, bool value);
@@ -701,7 +706,7 @@ public:
 
   // VariousBits_1 defaults to 0, keep in mind when adding bit lookups.
   struct {
-      uint32_t unused_00                    : 1;  // Bit 00
+      uint32_t MQTTDiscoverGroupInclTaskname  : 1;  // Bit 00
       uint32_t appendUnitToHostname         : 1;  // Bit 01  Inverted
       uint32_t unused_02                    : 1;  // Bit 02 uniqueMQTTclientIdReconnect_unused
       uint32_t OldRulesEngine               : 1;  // Bit 03  Inverted
