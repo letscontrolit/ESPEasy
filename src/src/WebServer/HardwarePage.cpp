@@ -47,21 +47,23 @@ void handle_hardware() {
       set3BitToUL(Settings.I2C_peripheral_bus, I2C_PERIPHERAL_BUS_PCFMCP, getFormItemInt(F("pi2cbuspcf")));
     }
     #endif // if FEATURE_I2C_MULTIPLE
+    
     // EEPROM settings
-
-    #if FEATURE_I2CMULTIPLEXER && !FEATURE_I2C_MULTIPLE && FEATURE_EEPROM_EXTERNAL
-    constexpr uint8_t i2cBus = 0;
-    #else // if FEATURE_I2CMULTIPLEXER && !FEATURE_I2C_MULTIPLE && FEATURE_EEPROM_EXTERNAL
-    const uint8_t i2cBus = getFormItemInt(F("pi2cbuseeprom"), 0);
-    set3BitToUL(Settings.I2C_peripheral_bus, I2C_PERIPHERAL_BUS_EEPROM, i2cBus);
-    #endif // if FEATURE_I2CMULTIPLEXER && !FEATURE_I2C_MULTIPLE && FEATURE_EEPROM_EXTERNAL
-
     #if FEATURE_EEPROM_EXTERNAL
+
     Settings.EEPROMExternalType(getFormItemInt(F("eepromtype"),
                                 static_cast<int>(ESPEasy::eeprom::EEPROMExternal_Type_e::AT24C256)));
     Settings.EEPROMExternalI2CAddress(getFormItemInt(F("i2c_eeprom"), 0));
+    
+    #  if FEATURE_I2C_MULTIPLE
+    const uint8_t i2cBus = getFormItemInt(F("pi2cbuseeprom"), 0);
+    set3BitToUL(Settings.I2C_peripheral_bus, I2C_PERIPHERAL_BUS_EEPROM, i2cBus);
+    #endif // if FEATURE_I2C_MULTIPLE
 
     # if FEATURE_I2CMULTIPLEXER
+    #  if !FEATURE_I2C_MULTIPLE
+    constexpr uint8_t i2cBus = 0;
+    #  endif // if FEATURE_I2C_MULTIPLE
 
     bool muxPortsOption{};
     int selectedPorts{};
@@ -198,12 +200,11 @@ void handle_hardware() {
 
     }
     #endif // if FEATURE_I2C_MULTIPLE
-
-    #if FEATURE_I2CMULTIPLEXER && !FEATURE_I2C_MULTIPLE && FEATURE_EEPROM_EXTERNAL
-    constexpr uint8_t i2cBus = 0;
-    #endif // if FEATURE_I2CMULTIPLEXER && !FEATURE_I2C_MULTIPLE && FEATURE_EEPROM_EXTERNAL
-
+    
     #if FEATURE_I2CMULTIPLEXER
+    # if !FEATURE_I2C_MULTIPLE
+    constexpr uint8_t i2cBus = 0;
+    # endif // if FEATURE_I2C_MULTIPLE
     const uint16_t eepromMux = Settings.EEPROMExternalI2CMultiplexerFlags();
     ShowI2CMultiplexerUI(i2cBus,
                          bitRead(eepromMux, EEPROM_MUX_FLAGS_MULTI),
