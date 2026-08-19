@@ -32,6 +32,8 @@
 // #define FEATURE_DOWNLOAD             1  // Enable downloading a file from an url
 // #define FEATURE_EEPROM_EXTERNAL      1  // Enable support for AT24Cxxx EEPROM chips AT24C32(4kB)..AT24C1024(128kB), optional: AT24C2048(256kB) and FRAM MB85RC32(4kB)..MB85RC1M(128kB), optional: MB85RC2M(256kB)
 // #define FEATURE_RTC_SRAM_STORAGE     1  // Enable storing values in supported RTC Clock chip SRAM (DS1307, DS3232, PCF8583)
+// #define FEATURE_JSON_PARSE           1  // Enable extended JSON parsing, disabled by default on ESP8266
+// #define FEATURE_EXTENDED_STRING_FUNCTIONS  1  // Enable extra Rules string functions. Also required to enable FEATURE_JSON_PARSE on ESP8266, as it's disabled by default for ESP8266
 
 #ifdef BUILD_GIT
 # undef BUILD_GIT

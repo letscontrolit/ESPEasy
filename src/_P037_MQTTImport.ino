@@ -11,6 +11,7 @@
 // This task reads data from the MQTT Import input stream and saves the value
 
 /**
+ * 2026-08-02 tonhuisman: Add better support for JSON parsing, that handles multiple levels and arrays
  * 2025-08-20 tonhuisman: Generate events with numeric values using the configured decimals setting.
  * 2025-06-14 tonhuisman: Add support for Custom Value Type per task value
  * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported for MQTT Import)
@@ -58,10 +59,11 @@
 # define P037_MAX_QUEUEDEPTH      150
 
 
-bool   MQTT_unsubscribe_037(struct EventStruct *event);
-bool   MQTTSubscribe_037(struct EventStruct *event);
+bool MQTT_unsubscribe_037(struct EventStruct *event);
+bool MQTTSubscribe_037(struct EventStruct *event);
 
 # if P037_MAPPING_SUPPORT || P037_JSON_SUPPORT
+
 String P037_getMQTTLastTopicPart(const String& topic) {
   const int16_t lastSlash = topic.lastIndexOf('/');
 
@@ -470,7 +472,8 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
 
         // json filter check
         if (checkJson && P037_data->hasFilters()) { // See if we pass the filters for all json attributes
-          do {
+          do
+          {
             key     = P037_data->iter->key().c_str();
             Payload = P037_data->iter->value().as<String>();
             #    if P037_MAPPING_SUPPORT
@@ -521,7 +524,8 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
           if (checkJson && P037_data->hasFilters()) { // See if we pass the filters for all json attributes
             P037_data->iter = P037_data->doc.begin();
 
-            do {
+            do
+            {
               key     = P037_data->iter->key().c_str();
               Payload = P037_data->iter->value().as<String>();
               #   if P037_MAPPING_SUPPORT
@@ -541,7 +545,8 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
           #  endif // P037_FILTER_PER_TOPIC
           # endif // if P037_JSON_SUPPORT
           {
-            do {
+            do
+            {
               # if P037_JSON_SUPPORT
 
               if (checkJson && (P037_data->iter != P037_data->doc.end())) {
@@ -552,6 +557,10 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                 if (!jsonAttribute.isEmpty()) {
                   key = jsonAttribute;
 
+                  #  if FEATURE_JSON_PARSE
+                  Payload = getJsonValue(P037_data->root, key, false);
+                  #  else
+
                   if (key.indexOf('.') > -1) {
                     String part1 = parseStringKeepCase(key, 1, '.');
                     String part2 = parseStringKeepCase(key, 2, '.');
@@ -559,6 +568,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                   } else {
                     Payload = P037_data->doc[key].as<String>();
                   }
+                  #  endif // if FEATURE_JSON_PARSE
                   unparsedPayload = Payload;
                   int8_t jIndex = jsonIndex.toInt();
 
@@ -627,10 +637,10 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                     success = false;
                     break;
                   }
-                  numericPayload = false;                                  // No, it isn't numeric
-                  doublePayload  = NAN;                                    // Invalid value
+                  numericPayload = false;                             // No, it isn't numeric
+                  doublePayload  = NAN;                               // Invalid value
                 }
-                UserVar.setFloat(event->TaskIndex, x, doublePayload);      // Save the new value
+                UserVar.setFloat(event->TaskIndex, x, doublePayload); // Save the new value
 
                 // Generate event for rules processing - proposed by TridentTD
 
@@ -665,9 +675,9 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                     addEscapeCharacters(tmp); // Add escape characters to avoid problems with rules processing if a JSON message is received
 
                     String RuleEvent = strformat(F("%s#%s=%s"),
-                                                getTaskDeviceName(event->TaskIndex).c_str(),
-                                                event->String1.c_str(),
-                                                wrapWithQuotesIfContainsParameterSeparatorChar(tmp).c_str());
+                                                 getTaskDeviceName(event->TaskIndex).c_str(),
+                                                 event->String1.c_str(),
+                                                 wrapWithQuotesIfContainsParameterSeparatorChar(tmp).c_str());
                     P037_addEventToQueue(event, RuleEvent);
                   }
 
@@ -676,9 +686,9 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
 
                   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                     addLog(LOG_LEVEL_INFO, strformat(F("IMPT : [%s#%s] : %s"),
-                                                    getTaskDeviceName(event->TaskIndex).c_str(),
-                                                    checkJson ? key.c_str() : getTaskValueName(event->TaskIndex, x).c_str(),
-                                                    toString(doublePayload, ExtraTaskSettings.TaskDeviceValueDecimals[x]).c_str()));
+                                                     getTaskDeviceName(event->TaskIndex).c_str(),
+                                                     checkJson ? key.c_str() : getTaskValueName(event->TaskIndex, x).c_str(),
+                                                     toString(doublePayload, ExtraTaskSettings.TaskDeviceValueDecimals[x]).c_str()));
                   }
                   # endif // if !defined(P037_LIMIT_BUILD_SIZE) || defined(P037_OVERRIDE)
 
@@ -695,7 +705,7 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                   } else {
                     String tmp = Payload;
                     addEscapeCharacters(tmp); // Add escape characters to avoid problems with rules processing if a JSON message is received
-					
+
                     RuleEvent += wrapWithQuotesIfContainsParameterSeparatorChar(tmp);
                   }
                   P037_addEventToQueue(event, RuleEvent);
