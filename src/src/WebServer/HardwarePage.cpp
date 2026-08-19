@@ -22,6 +22,11 @@
 #include "../Helpers/StringGenerator_GPIO.h"
 
 
+#if FEATURE_EEPROM_EXTERNAL
+#include "../../ESPEasy/eeprom/Helpers/EEPROMExternal.h"
+#include "../WebServer/DevicesPage.h" // For using ShowI2CMultiplexerUI() and GetI2CMultiplexerFromPage()
+#endif // if FEATURE_EEPROM_EXTERNAL
+
 // ********************************************************************************
 // Web Interface hardware page
 // ********************************************************************************
@@ -42,6 +47,33 @@ void handle_hardware() {
       set3BitToUL(Settings.I2C_peripheral_bus, I2C_PERIPHERAL_BUS_PCFMCP, getFormItemInt(F("pi2cbuspcf")));
     }
     #endif // if FEATURE_I2C_MULTIPLE
+    // EEPROM settings
+
+    #if FEATURE_I2CMULTIPLEXER && !FEATURE_I2C_MULTIPLE && FEATURE_EEPROM_EXTERNAL
+    constexpr uint8_t i2cBus = 0;
+    #else // if FEATURE_I2CMULTIPLEXER && !FEATURE_I2C_MULTIPLE && FEATURE_EEPROM_EXTERNAL
+    const uint8_t i2cBus = getFormItemInt(F("pi2cbuseeprom"), 0);
+    set3BitToUL(Settings.I2C_peripheral_bus, I2C_PERIPHERAL_BUS_EEPROM, i2cBus);
+    #endif // if FEATURE_I2CMULTIPLEXER && !FEATURE_I2C_MULTIPLE && FEATURE_EEPROM_EXTERNAL
+
+    #if FEATURE_EEPROM_EXTERNAL
+    Settings.EEPROMExternalType(getFormItemInt(F("eepromtype"),
+                                static_cast<int>(ESPEasy::eeprom::EEPROMExternal_Type_e::AT24C256)));
+    Settings.EEPROMExternalI2CAddress(getFormItemInt(F("i2c_eeprom"), 0));
+
+    # if FEATURE_I2CMULTIPLEXER
+
+    bool muxPortsOption{};
+    int selectedPorts{};
+    GetI2CMultiplexerFromPage(i2cBus, muxPortsOption, selectedPorts);
+    uint16_t muxFlags{};
+    bitWrite(muxFlags, EEPROM_MUX_FLAGS_MULTI, muxPortsOption);
+    set8BitToUL(muxFlags, EEPROM_MUX_FLAGS_PORT, selectedPorts);
+    Settings.EEPROMExternalI2CMultiplexerFlags(muxFlags);
+    # endif // if FEATURE_I2CMULTIPLEXER
+
+    #endif // if FEATURE_EEPROM_EXTERNAL
+
     #if defined(ESP32) && FEATURE_SD
     Settings.setSPIBusForSDCard(getFormItemInt(F("sdspibus"), 0));
     #endif // if defined(ESP32) && FEATURE_SD
@@ -64,9 +96,10 @@ void handle_hardware() {
     addHtmlError(error);
   }
 
-  addHtml(F("<form  method='post'>"));
+  html_add_form();
+
   html_table_class_normal();
-  addFormHeader(F("Hardware Settings"), F(""), F("Hardware/Hardware.html"));
+  addFormHeader(F("Hardware Settings"), F("RTDHardware/Hardware.html"));
 
   addFormSubHeader(F("Wifi Status LED"));
   addFormPinSelect(PinSelectPurpose::Status_led, formatGpioName_output(F("LED")), F("pled"), Settings.Pin_status_led);
@@ -94,6 +127,101 @@ void handle_hardware() {
 
   }
 # endif // if FEATURE_I2C_MULTIPLE
+
+  #if FEATURE_EEPROM_EXTERNAL
+  {
+    addFormSubHeader(F("External I2C EEPROM"));
+    const __FlashStringHelper*eepromOptions[] = {
+      getEEPROMName(ESPEasy::eeprom::EEPROMExternal_Type_e::AT24C256),
+      getEEPROMName(ESPEasy::eeprom::EEPROMExternal_Type_e::AT24C512),
+      #if EEPROM_SUPPORT_AT24C1024
+      getEEPROMName(ESPEasy::eeprom::EEPROMExternal_Type_e::AT24C1024),
+      #endif // if EEPROM_SUPPORT_AT24C1024
+      #if EEPROM_SUPPORT_AT24C2048
+      getEEPROMName(ESPEasy::eeprom::EEPROMExternal_Type_e::AT24C2048),
+      #endif // if EEPROM_SUPPORT_AT24C2048
+      getEEPROMName(ESPEasy::eeprom::EEPROMExternal_Type_e::AT24C32),
+      getEEPROMName(ESPEasy::eeprom::EEPROMExternal_Type_e::AT24C64),
+      getEEPROMName(ESPEasy::eeprom::EEPROMExternal_Type_e::AT24C128),
+      getEEPROMName(ESPEasy::eeprom::EEPROMExternal_Type_e::MB85RC256),
+      getEEPROMName(ESPEasy::eeprom::EEPROMExternal_Type_e::MB85RC512),
+      #if EEPROM_SUPPORT_AT24C1024
+      getEEPROMName(ESPEasy::eeprom::EEPROMExternal_Type_e::MB85RC1M),
+      #endif // if EEPROM_SUPPORT_AT24C1024
+      #if EEPROM_SUPPORT_AT24C2048
+      getEEPROMName(ESPEasy::eeprom::EEPROMExternal_Type_e::MB85RC2M),
+      #endif // if EEPROM_SUPPORT_AT24C2048
+      getEEPROMName(ESPEasy::eeprom::EEPROMExternal_Type_e::MB85RC32),
+      getEEPROMName(ESPEasy::eeprom::EEPROMExternal_Type_e::MB85RC64),
+      getEEPROMName(ESPEasy::eeprom::EEPROMExternal_Type_e::MB85RC128),
+    };
+    const int eepromTypes[] = {
+      static_cast<int>(ESPEasy::eeprom::EEPROMExternal_Type_e::AT24C256),
+      static_cast<int>(ESPEasy::eeprom::EEPROMExternal_Type_e::AT24C512),
+      #if EEPROM_SUPPORT_AT24C1024
+      static_cast<int>(ESPEasy::eeprom::EEPROMExternal_Type_e::AT24C1024),
+      #endif // if EEPROM_SUPPORT_AT24C1024
+      #if EEPROM_SUPPORT_AT24C2048
+      static_cast<int>(ESPEasy::eeprom::EEPROMExternal_Type_e::AT24C2048),
+      #endif // if EEPROM_SUPPORT_AT24C2048
+      static_cast<int>(ESPEasy::eeprom::EEPROMExternal_Type_e::AT24C32),
+      static_cast<int>(ESPEasy::eeprom::EEPROMExternal_Type_e::AT24C64),
+      static_cast<int>(ESPEasy::eeprom::EEPROMExternal_Type_e::AT24C128),
+      static_cast<int>(ESPEasy::eeprom::EEPROMExternal_Type_e::MB85RC256),
+      static_cast<int>(ESPEasy::eeprom::EEPROMExternal_Type_e::MB85RC512),
+      #if EEPROM_SUPPORT_AT24C1024
+      static_cast<int>(ESPEasy::eeprom::EEPROMExternal_Type_e::MB85RC1M),
+      #endif // if EEPROM_SUPPORT_AT24C1024
+      #if EEPROM_SUPPORT_AT24C2048
+      static_cast<int>(ESPEasy::eeprom::EEPROMExternal_Type_e::MB85RC2M),
+      #endif // if EEPROM_SUPPORT_AT24C2048
+      static_cast<int>(ESPEasy::eeprom::EEPROMExternal_Type_e::MB85RC32),
+      static_cast<int>(ESPEasy::eeprom::EEPROMExternal_Type_e::MB85RC64),
+      static_cast<int>(ESPEasy::eeprom::EEPROMExternal_Type_e::MB85RC128),
+    };
+    constexpr uint8_t eepromSizeCount = NR_ELEMENTS(eepromTypes);
+    FormSelectorOptions eepromSizeSelector(eepromSizeCount, eepromOptions, eepromTypes);
+    eepromSizeSelector.addFormSelector(F("EEPROM Model/size"), F("eepromtype"), Settings.EEPROMExternalType());
+
+    const uint8_t i2cAddressValues[] = { 0, 0x50, 0x51, 0x52, 0x53, 0x54, 0x55, 0x56, 0x57 };
+    constexpr int nrAddressOptions   = NR_ELEMENTS(i2cAddressValues);
+
+    addFormSelectorI2C(F("i2c_eeprom"), nrAddressOptions, i2cAddressValues, Settings.EEPROMExternalI2CAddress());
+
+    #if FEATURE_I2C_MULTIPLE
+    const uint8_t i2cBus = Settings.getI2CInterfaceEEPROM();
+    if (i2cMaxBusCount > 1) {
+      I2CInterfaceSelector(F("I2C Bus"),
+                          F("pi2cbuseeprom"),
+                          i2cBus,
+                          false);
+
+    }
+    #endif // if FEATURE_I2C_MULTIPLE
+
+    #if FEATURE_I2CMULTIPLEXER && !FEATURE_I2C_MULTIPLE && FEATURE_EEPROM_EXTERNAL
+    constexpr uint8_t i2cBus = 0;
+    #endif // if FEATURE_I2CMULTIPLEXER && !FEATURE_I2C_MULTIPLE && FEATURE_EEPROM_EXTERNAL
+
+    #if FEATURE_I2CMULTIPLEXER
+    const uint16_t eepromMux = Settings.EEPROMExternalI2CMultiplexerFlags();
+    ShowI2CMultiplexerUI(i2cBus,
+                         bitRead(eepromMux, EEPROM_MUX_FLAGS_MULTI),
+                         get8BitFromUL(eepromMux, EEPROM_MUX_FLAGS_PORT)); // Re-used from DevicesPage
+    #endif // if FEATURE_I2CMULTIPLEXER
+
+    const bool eepromChecked = ESPEasy::eeprom::checkEEPROMEnabled() > 0;
+    addRowLabel(F("EEPROM Enabled"));
+    addEnabled(eepromChecked);
+    if (eepromChecked && ESPEasy::eeprom::isEEPROMExternalWriteProtected()) {
+      addHtml(F(" Write-protected!"));
+    } 
+    if (eepromChecked) {
+      addRowLabel(F("'WriteEE' slots available"));
+      addHtmlInt(ESPEasy::eeprom::getEEPROMMaxSlots());
+    }
+  }
+  #endif // if FEATURE_EEPROM_EXTERNAL
 
 #if FEATURE_SD
   addFormSubHeader(F("SD Card"));

@@ -1087,6 +1087,46 @@
     Force the unit into STA mode.
 
     ``WifiSTAMode``"
+    "
+    WriteEE","
+    :green:`Rules`","
+    Store a value in a 'slot' in an external EEPROM (AT24Cxx) or FRAM (MB85RCxx) I2C module. Numeric values only, using the resolution as used by Rules (``double`` or ``float``). Stored as a ``double`` value.
+
+    The external EEPROM/FRAM module can be configured on the :ref:`Hardware_page`
+
+    Stored values can be read back using the special variable ``[ReadEE#<slot>]``, using the same slot number. The number of slots available is shown once the module is enabled and found working. Some modules support a Write Protect pin. During initialization this feature is checked, and shown on the Hardware page when active.
+
+    Retrieving the max. number of slots available is available in ``[ReadEE#max]``, and the write-protect status via ``[ReadEE#wp]`` (1 = write protected).
+
+    NB: ``<slot>`` is in the range 0 .. (Max.slots - 1) !
+
+    Syntax:
+
+    ``WriteEE,<slot>,<value>`` for writing a value to a slot.
+    
+    ``WriteRTC,erase,erase`` for erasing all data from the module.
+
+    ``WriteRTC,check,wp`` for re-checking the write-protect status of the module.
+    "
+    "
+    WriteRTC","
+    :green:`Rules`","
+    Store a value in a 'slot' in an external RTC (Realtime Clock) I2C module that has SRAM available, DS1307, DS3232 and PCF8583. Numeric values only, using the resolution as used by Rules (``double`` or ``float``). Stored as a ``double`` value.
+
+    The RTC module can be configured on the Tools/:ref:`tools-advanced` page in the **Time Source** section.
+
+    Stored values can be read back using the special variable ``[ReadRTC#<slot>]``, using the same slot number. The number of slots available is shown if the module is enabled and SRAM is available.
+
+    Retrieving the max. number of slots available is available in ``[ReadRTC#max]``.
+
+    NB: ``<slot>`` is in the range 0 .. (Max.slots - 1) !
+
+    Syntax:
+
+    ``WriteRTC,<slot>,<value>`` for writing a value to a slot.
+    
+    ``WriteRTC,erase,erase`` for erasing all data from the module.
+    "
 
 
 

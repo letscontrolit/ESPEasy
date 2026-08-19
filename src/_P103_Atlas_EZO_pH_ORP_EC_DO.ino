@@ -605,7 +605,9 @@ boolean Plugin_103(uint8_t function, struct EventStruct *event, String& string)
 
       if (P103_send_I2C_command(P103_I2C_ADDRESS, readCommand, boarddata)) {
         const String sensorString(boarddata);
+        #ifndef BUILD_NO_DEBUG
         addLog(LOG_LEVEL_INFO, concat(F("P103: READ result: "), sensorString));
+        #endif // ifndef BUILD_NO_DEBUG
 
         float sensor_f{};
 
