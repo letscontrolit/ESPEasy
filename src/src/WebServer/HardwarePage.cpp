@@ -46,14 +46,14 @@ void handle_hardware() {
     if (isFormItem(F("pi2cbuspcf"))) {
       set3BitToUL(Settings.I2C_peripheral_bus, I2C_PERIPHERAL_BUS_PCFMCP, getFormItemInt(F("pi2cbuspcf")));
     }
+    #endif // if FEATURE_I2C_MULTIPLE
     // EEPROM settings
-    # if FEATURE_EEPROM_EXTERNAL
-    const uint8_t i2cBus = getFormItemInt(F("pi2cbuseeprom"), 0);
-    set3BitToUL(Settings.I2C_peripheral_bus, I2C_PERIPHERAL_BUS_EEPROM, i2cBus);
-    # endif // if FEATURE_EEPROM_EXTERNAL
 
     #if FEATURE_I2CMULTIPLEXER && !FEATURE_I2C_MULTIPLE && FEATURE_EEPROM_EXTERNAL
     constexpr uint8_t i2cBus = 0;
+    #else // if FEATURE_I2CMULTIPLEXER && !FEATURE_I2C_MULTIPLE && FEATURE_EEPROM_EXTERNAL
+    const uint8_t i2cBus = getFormItemInt(F("pi2cbuseeprom"), 0);
+    set3BitToUL(Settings.I2C_peripheral_bus, I2C_PERIPHERAL_BUS_EEPROM, i2cBus);
     #endif // if FEATURE_I2CMULTIPLEXER && !FEATURE_I2C_MULTIPLE && FEATURE_EEPROM_EXTERNAL
 
     #if FEATURE_EEPROM_EXTERNAL
@@ -74,7 +74,6 @@ void handle_hardware() {
 
     #endif // if FEATURE_EEPROM_EXTERNAL
 
-    #endif // if FEATURE_I2C_MULTIPLE
     #if defined(ESP32) && FEATURE_SD
     Settings.setSPIBusForSDCard(getFormItemInt(F("sdspibus"), 0));
     #endif // if defined(ESP32) && FEATURE_SD
@@ -217,7 +216,7 @@ void handle_hardware() {
     if (eepromChecked && ESPEasy::eeprom::isEEPROMExternalWriteProtected()) {
       addHtml(F(" Write-protected!"));
     } 
-    if (eepromChecked && !ESPEasy::eeprom::isEEPROMExternalWriteProtected()) {
+    if (eepromChecked) {
       addRowLabel(F("'WriteEE' slots available"));
       addHtmlInt(ESPEasy::eeprom::getEEPROMMaxSlots());
     }
