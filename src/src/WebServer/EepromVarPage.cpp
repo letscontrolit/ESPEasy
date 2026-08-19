@@ -50,11 +50,15 @@ void handle_eepromvars() {
 
     const uint32_t maxSlots = ESPEasy::eeprom::getEEPROMMaxSlots();
     uint32_t count{};
+    uint32_t start = millis();
 
     for (uint32_t slot = 0; slot < maxSlots; ++slot) {
       const ESPEASY_RULES_FLOAT_TYPE value = ESPEasy::eeprom::readEEPROMSlot(slot);
 
-      if (slot % 50 == 0) { delay(0); }
+      if ((slot % 50 == 0) || (timePassedSince(start) > 50)) {
+        delay(0);
+        start = millis();
+      }
 
       if (!isnan(value) && !essentiallyZero(value)) {
         ++count;
@@ -119,11 +123,15 @@ void handle_eepromvars() {
 
     const uint32_t maxSlots = ESPEasy::eeprom::getRTCSRAMMaxSlots();
     uint32_t count{};
+    uint32_t start = millis();
 
     for (uint32_t slot = 0; slot < maxSlots; ++slot) {
       const ESPEASY_RULES_FLOAT_TYPE value = ESPEasy::eeprom::readRTCSRAMSlot(slot);
 
-      if (slot % 50 == 0) { delay(0); }
+      if ((slot % 50 == 0) || (timePassedSince(start) > 50)) {
+        delay(0);
+        start = millis();
+      }
 
       if (!isnan(value) && !essentiallyZero(value)) {
         ++count;
