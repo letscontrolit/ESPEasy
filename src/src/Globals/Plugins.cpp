@@ -207,15 +207,22 @@ uint8_t getTaskI2CAddress(taskIndex_t taskIndex) {
 // ********************************************************************************
 #if FEATURE_I2C
 bool prepare_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex) {
-  if (!validTaskIndex(taskIndex) || !validDeviceIndex(DeviceIndex)) {
+if (!Settings.TaskDeviceEnabled[taskIndex] || 
+    !validTaskIndex(taskIndex) || 
+    !validDeviceIndex(DeviceIndex)) {
     return false;
   }
 
   if (Device[DeviceIndex].Type != DEVICE_TYPE_I2C) {
     return true; // No I2C task, so consider all-OK
   }
+  #if FEATURE_I2C_MULTIPLE
+  const uint8_t i2cBus = Settings.getI2CInterface(taskIndex);
+  #else // if FEATURE_I2C_MULTIPLE
+  const uint8_t i2cBus = 0;
+  #endif // if FEATURE_I2C_MULTIPLE
 
-  if (!Settings.isI2CEnabled(Settings.getI2CInterface(taskIndex))) {
+  if (!Settings.isI2CEnabled(i2cBus)) {
     return false; // Plugin-selected I2C bus is not configured, fail
   }
 #if FEATURE_CLEAR_I2C_STUCK
@@ -223,11 +230,6 @@ bool prepare_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex) 
     return false; // Bus state is not OK, so do not consider task runnable
   }
 #endif
-  #if FEATURE_I2C_MULTIPLE
-  const uint8_t i2cBus = Settings.getI2CInterface(taskIndex);
-  #else // if FEATURE_I2C_MULTIPLE
-  const uint8_t i2cBus = 0;
-  #endif // if FEATURE_I2C_MULTIPLE
 
   if (bitRead(Settings.I2C_SPI_bus_Flags[taskIndex], I2C_FLAGS_SLOW_SPEED)) {
     I2CSelectLowClockSpeed(i2cBus);  // Set to slow, also switch the bus
@@ -246,7 +248,9 @@ bool prepare_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex) 
 }
 
 void post_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex) {
-  if (!validTaskIndex(taskIndex) || !validDeviceIndex(DeviceIndex)) {
+if (!Settings.TaskDeviceEnabled[taskIndex] || 
+    !validTaskIndex(taskIndex) || 
+    !validDeviceIndex(DeviceIndex)) {
     return;
   }
 
@@ -258,6 +262,11 @@ void post_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex) {
   #else // if FEATURE_I2C_MULTIPLE
   const uint8_t i2cBus = 0;
   #endif // ifdef ESP32
+
+  if (!Settings.isI2CEnabled(i2cBus)) {
+    return; // Plugin-selected I2C bus is not configured, fail
+  }
+
   #if FEATURE_I2CMULTIPLEXER
   I2CMultiplexerOff(i2cBus);
   #endif // if FEATURE_I2CMULTIPLEXER
