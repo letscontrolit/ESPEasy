@@ -3,6 +3,10 @@
 
 #include "../../ESPEasy_common.h"
 
+#include <functional>
+
+typedef std::function<uint8_t (size_t)> tDataReader;
+
 int           calc_CRC16(const String& text);
 
 int IRAM_ATTR calc_CRC16(const char *ptr,
@@ -10,6 +14,9 @@ int IRAM_ATTR calc_CRC16(const char *ptr,
 
 uint32_t      calc_CRC32(const uint8_t *data,
                          size_t         length);
+
+uint32_t      calc_CRC32(tDataReader dataReader,
+                         size_t      length);
 
 uint8_t       calc_CRC8(const uint8_t *data,
                         size_t         length);

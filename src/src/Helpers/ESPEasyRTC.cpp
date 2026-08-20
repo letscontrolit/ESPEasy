@@ -168,7 +168,6 @@ bool saveUserVarToRTC()
     if (taskValues != nullptr) {
       for (uint8_t varNr = 0; varNr < VARS_PER_TASK; ++varNr) {
         const size_t index = (task * VARS_PER_TASK) + varNr;
-        constexpr bool raw = true;
         UserVar_RTC[index] = taskValues->getUint32(varNr);
       }
     }

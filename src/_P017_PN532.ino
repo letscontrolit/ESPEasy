@@ -245,7 +245,9 @@ bool P017_handle_timer_in(struct EventStruct *event)
       // Reset card id on timeout
       if (P017_AUTO_TAG_REMOVAL == 0) {
         UserVar.setSensorTypeLong(event->TaskIndex, P017_NO_TAG_DETECTED_VALUE);
+        #ifndef BUILD_NO_DEBUG
         addLog(LOG_LEVEL_INFO, F("RFID : Removed Tag"));
+        #endif // ifndef BUILD_NO_DEBUG
 
         if (P017_EVENT_ON_TAG_REMOVAL == 1) {
           sendData(event);
@@ -396,10 +398,12 @@ boolean Plugin_017_Init(int8_t resetPin)
 
   if (validGpio(resetPin))
   {
+    #ifndef BUILD_NO_DEBUG
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       addLogMove(LOG_LEVEL_INFO,
                  concat(F("PN532: Reset on pin: "), resetPin));
     }
+    #endif // ifndef BUILD_NO_DEBUG
     pinMode(resetPin, OUTPUT);
     digitalWrite(resetPin, LOW);
     delay(100);

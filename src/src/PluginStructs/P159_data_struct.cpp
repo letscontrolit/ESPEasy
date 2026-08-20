@@ -158,9 +158,11 @@ bool P159_data_struct::processSensor(struct EventStruct *event) {
         break;
     }
 
-    if (P159_state_e::Running != sState) { // FIXME Remove log
+    if (P159_state_e::Running != sState) {
+      #ifndef BUILD_NO_DEBUG
       addLog(LOG_LEVEL_INFO, strformat(F("LD2410: Starting state: %d duration: %d msec."),
                                        static_cast<uint8_t>(sState), timePassedSince(iStart)));
+      #endif // ifndef BUILD_NO_DEBUG
     }
   } // isValid()
 
@@ -322,7 +324,9 @@ bool P159_data_struct::plugin_webform_save(struct EventStruct *event) {
     const uint16_t idle  = getFormItemIntCustomArgName(idx++);
     const uint8_t  gMove = getFormItemIntCustomArgName(idx++);
     const uint8_t  gStat = getFormItemIntCustomArgName(idx++);
+    #ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_INFO, F("LD2410: Save sensitivity settings to sensor, start..."));
+    #endif // ifndef BUILD_NO_DEBUG
     radar->requestConfigurationModeBegin();
     radar->setMaxValues(gMove, gStat, idle);
     const uint16_t maxGate = radar->cfgMaxGate();

@@ -461,7 +461,7 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
 
         if (f)
         {
-          addLog(LOG_LEVEL_INFO, String(F(" Write to file: ")) + fileName);
+          addLog(LOG_LEVEL_INFO, concat(F(" Write to file: "), fileName));
           f.print(rules);
           f.close();
         }

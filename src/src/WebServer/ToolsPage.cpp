@@ -86,6 +86,10 @@ void handle_tools() {
   addWideButtonPlusDescription(F("sysvars"), F("System Variables"), F("Show all system variables and conversions"));
   # endif // ifdef WEBSERVER_SYSVARS
 
+  #if FEATURE_EEPROM_EXTERNAL || FEATURE_RTC_SRAM_STORAGE
+  addWideButtonPlusDescription(F("eepromvars"), F("External EEPROM/RTC values"), F("Show all values stored in the external EEPROM or RTC SRAM"));
+  #endif // if FEATURE_EEPROM_EXTERNAL || FEATURE_RTC_SRAM_STORAGE
+
   #if FEATURE_PLUGIN_LIST
   addWideButtonPlusDescription(F("pluginlist"), F("Included Plugins"), F("Show all plugins that are included in this build"));
   #endif // if FEATURE_PLUGIN_LIST

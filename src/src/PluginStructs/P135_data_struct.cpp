@@ -95,7 +95,9 @@ bool P135_data_struct::plugin_read(struct EventStruct *event)           {
       getMeasure        = false;
       singleShotStarted = true;
 
+      # ifndef BUILD_NO_DEBUG
       addLog(LOG_LEVEL_INFO, F("SCD4x: SingleShot measurement started."));
+      # endif // ifndef BUILD_NO_DEBUG
     }
 
     if (getMeasure && scd4x->readMeasurement()) {
@@ -140,63 +142,69 @@ bool P135_data_struct::plugin_read(struct EventStruct *event)           {
     # if P135_FEATURE_RESET_COMMANDS
 
     if (operation != SCD4x_Operations_e::None) {
-      switch (operation) {
+      switch (operation)
+      {
         #  if P135_FEATURE_FACTORYRESET
-        case SCD4x_Operations_e::RunFactoryReset: { // May take up to 1200 mSec
+        case SCD4x_Operations_e::RunFactoryReset: // May take up to 1200 mSec
+        {
           success = scd4x->performFactoryReset();
 
-          String  log = F("SCD4x: Factory reset ");
           uint8_t lvl = LOG_LEVEL_INFO;
 
           if (success) {
             initialized = startPeriodicMeasurements(); // Select the correct periodic measurement, and start a READ
             Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + P135_STOP_MEASUREMENT_DELAY);
-            log += F("success.");
           } else {
-            lvl  = LOG_LEVEL_ERROR;
-            log += F("failed!");
+            lvl = LOG_LEVEL_ERROR;
           }
-          addLog(lvl, log);
+
+          if (loglevelActiveFor(lvl)) {
+            addLog(lvl, concat(F("SCD4x: Factory reset "), success ? F("success.") : F("failed!")));
+          }
           break;
         }
         #  endif // if P135_FEATURE_FACTORYRESET
-        case SCD4x_Operations_e::RunSelfTest: { // May take up to 10 seconds!
+        case SCD4x_Operations_e::RunSelfTest: // May take up to 10 seconds!
+        {
           success = scd4x->performSelfTest();
 
-          String  log = F("SCD4x: Sensor self-test ");
           uint8_t lvl = LOG_LEVEL_INFO;
 
           if (success) {
             initialized = startPeriodicMeasurements(); // Select the correct periodic measurement, and start a READ
             Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + P135_STOP_MEASUREMENT_DELAY);
-            log += F("success.");
           } else {
-            lvl  = LOG_LEVEL_ERROR;
-            log += F("failed!");
+            lvl = LOG_LEVEL_ERROR;
           }
-          addLog(lvl, log);
+
+          if (loglevelActiveFor(lvl)) {
+            addLog(lvl, concat(F("SCD4x: Sensor self-test "), success ? F("success.") : F("failed!")));
+          }
           break;
         }
-        case SCD4x_Operations_e::RunForcedRecalibration: { // May take up to 400 mSec
+        case SCD4x_Operations_e::RunForcedRecalibration: // May take up to 400 mSec
+        {
           float frcCorrection = 0.0f;
           success  = scd4x->performForcedRecalibration(frcValue, &frcCorrection);
           frcValue = 0;
 
-          String  log = F("SCD4x: Forced Recalibration ");
           uint8_t lvl = LOG_LEVEL_INFO;
 
           if (success) {
             initialized = startPeriodicMeasurements(); // Select the correct periodic measurement, and start a READ
             Scheduler.schedule_task_device_timer(event->TaskIndex, millis() + P135_STOP_MEASUREMENT_DELAY);
-            log += strformat(F("success. New setting: %d, correction: %.2f"), frcValue, frcCorrection);
           } else {
-            lvl  = LOG_LEVEL_ERROR;
-            log += F("failed!");
+            lvl = LOG_LEVEL_ERROR;
           }
-          addLog(lvl, log);
+
+          if (loglevelActiveFor(lvl)) {
+            addLog(lvl, concat(F("SCD4x: Forced Recalibration "),
+                               success ? strformat(F("success. New setting: %d, correction: %.2f"), frcValue, frcCorrection) : F("failed!")));
+          }
           break;
         }
-        case SCD4x_Operations_e::None: { // To keep the compiler and developer happy :-)
+        case SCD4x_Operations_e::None: // To keep the compiler and developer happy :-)
+        {
           break;
         }
       }
