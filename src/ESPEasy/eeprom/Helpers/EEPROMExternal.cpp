@@ -1,9 +1,10 @@
 #include "../Helpers/EEPROMExternal.h"
 #if FEATURE_EEPROM_EXTERNAL
 
+# include "../../../ESPEasy_common.h"
+# include "../../../src/DataStructs/TimingStats.h"
 # include "../../../src/Globals/Settings.h"
 # include "../../../src/Helpers/I2C_access.h"
-# include "../../../ESPEasy_common.h"
 # include "../../../src/Helpers/StringConverter.h"
 
 
@@ -362,10 +363,17 @@ bool writeEEPROMSlot(uint32_t                 slot,
   const uint32_t addr = getEEPROMAddressForSlot(slot);
 
   if ((addr != std::numeric_limits<uint32_t>::max()) && !isEEPROMExternalWriteProtected()) {
-    const ESPEASY_RULES_FLOAT_TYPE oldData = EEPROMExternal->readDouble(addr);
+    ESPEASY_RULES_FLOAT_TYPE oldData{};
+    {
+      START_TIMER;
+      oldData = EEPROMExternal->readDouble(addr);
+      STOP_TIMER(READ_EEPROM_SLOT);
+    }
 
     if (!essentiallyEqual(oldData, data)) {
+      START_TIMER;
       EEPROMExternal->writeDouble(addr, data); // Always write double size!
+      STOP_TIMER(WRITE_EEPROM_SLOT);
     }
     return true;
   }
@@ -377,15 +385,14 @@ bool writeEEPROMSlot(uint32_t                 slot,
  */
 ESPEASY_RULES_FLOAT_TYPE readEEPROMSlot(uint32_t slot) {
   const uint32_t addr = getEEPROMAddressForSlot(slot);
+  ESPEASY_RULES_FLOAT_TYPE res{};
 
   if (addr != std::numeric_limits<uint32_t>::max()) {
-    return EEPROMExternal->readDouble(addr);
+    START_TIMER;
+    res = EEPROMExternal->readDouble(addr);
+    STOP_TIMER(READ_EEPROM_SLOT);
   }
-  # if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
-  return 0.0;
-  # else // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
-  return 0.0f;
-  # endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+  return res;
 }
 
 } // namespace eeprom
