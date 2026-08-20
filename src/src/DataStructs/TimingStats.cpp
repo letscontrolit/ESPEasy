@@ -282,6 +282,16 @@ const __FlashStringHelper* getMiscStatsName_F(TimingStatsElements stat) {
     case TimingStatsElements::HANDLE_SERVING_WEBPAGE_JSON: return F("handle webpage JSON");
     case TimingStatsElements::WIFI_SCAN_ASYNC:            return F("WiFi Scan Async");
     case TimingStatsElements::WIFI_SCAN_SYNC:             return F("WiFi Scan Sync (blocking)");
+  // EEPROM/RTC related
+#if FEATURE_EEPROM_EXTERNAL
+    case TimingStatsElements::READ_EEPROM_SLOT:           return F("readEEPROMSlot()");
+    case TimingStatsElements::WRITE_EEPROM_SLOT:          return F("writeEEPROMSlot()");
+#endif
+#if FEATURE_RTC_SRAM_STORAGE
+    case TimingStatsElements::READ_RTC_SLOT:              return F("readRTCSlot()");
+    case TimingStatsElements::WRITE_RTC_SLOT:             return F("writeRTCSlot()");
+#endif
+
     case TimingStatsElements::NTP_SUCCESS:                return F("NTP Success");
     case TimingStatsElements::NTP_FAIL:                   return F("NTP Fail");
     case TimingStatsElements::SYSTIME_UPDATED:            return F("Systime Set");
