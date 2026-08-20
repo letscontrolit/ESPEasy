@@ -2190,6 +2190,18 @@ To create/register a plugin, you have to :
   #if !defined(USES_P180) && defined(ESP32)
     #define USES_P180   // Generic - I2C Generic
   #endif
+
+  #if FEATURE_CHART_JS // && defined(ESP8266)
+    // Does not fit in build
+    #undef FEATURE_CHART_JS
+  #endif
+  #ifndef FEATURE_CHART_JS
+    #if PLUGIN_BUILD_MAX_ESP32
+    #define FEATURE_CHART_JS  1
+    #else
+    #define FEATURE_CHART_JS  0
+    #endif
+  #endif
 #endif // ifdef PLUGIN_DISPLAY_B_COLLECTION
 
 // Collection of climate A plugins.
