@@ -1,15 +1,16 @@
 #include "../Helpers/EEPROMExternal.h"
 #if FEATURE_EEPROM_EXTERNAL
 
+# include "../../../ESPEasy_common.h"
+# include "../../../src/DataStructs/TimingStats.h"
 # include "../../../src/Globals/Settings.h"
 # include "../../../src/Helpers/I2C_access.h"
-# include "../../../ESPEasy_common.h"
 # include "../../../src/Helpers/StringConverter.h"
 
 
 namespace ESPEasy {
 namespace eeprom {
-AT24CX *EEPROMExternal                                   = nullptr;
+AT24Cxxx *EEPROMExternal                                 = nullptr;
 EEPROMExternal_WriteProtect_e EEPROMExternalWriteProtect = EEPROMExternal_WriteProtect_e::Undefined;
 bool EEPROMParamsOkState{};
 LongTermTimer EEPROMParamsOkTimer;
@@ -34,9 +35,10 @@ void initializeEEPROMExternal() {
 
     if (ESPEasy::eeprom::selectEEPROMI2CBusAndMultiplexer()) { // Switch to I2C Bus and multiplexer channel of External EEPROM
       // We have an I2C device at this address, let's assume it's an EEPROM...
-      uint8_t pageSize          = 0;
-      const uint32_t eepromSize = ESPEasy::eeprom::getEEPROMSize(eepromType, pageSize);
-      ESPEasy::eeprom::EEPROMExternal = new (std::nothrow) AT24CX(eepromAddress, pageSize, eepromSize);
+      uint8_t pageSize        = 0;
+      uint8_t delay           = 0;
+      const size_t eepromSize = ESPEasy::eeprom::getEEPROMSize(eepromType, pageSize, delay);
+      ESPEasy::eeprom::EEPROMExternal = new (std::nothrow) AT24Cxxx(eepromAddress, Wire, delay, eepromSize, pageSize);
 
       if (nullptr != ESPEasy::eeprom::EEPROMExternal) {
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -90,7 +92,8 @@ bool validateEEPROMExternalParameters(bool force) {
                                                                                              // result
     return EEPROMParamsOkState;
   }
-  const uint16_t eepromVersionParam = EEPROMExternal->readInt(EEPROM_PARAMS_VERSION_ADDRESS);
+  const uint16_t eepromVersionParam{};
+  EEPROMExternal->get(EEPROM_PARAMS_VERSION_ADDRESS, eepromVersionParam);
 
   EEPROMParamsOkTimer.setNow();
   EEPROMParamsOkState = false;
@@ -107,10 +110,12 @@ bool validateEEPROMExternalParameters(bool force) {
  * - Version
  */
 void updateEEPROMExternalParameters() {
-  const uint16_t eepromVersionParam = EEPROMExternal->readInt(EEPROM_PARAMS_VERSION_ADDRESS);
+  const uint16_t eepromVersionParam{};
+
+  EEPROMExternal->get(EEPROM_PARAMS_VERSION_ADDRESS, eepromVersionParam);
 
   if (EEPROM_PARAMS_CURRENT_VERSION != eepromVersionParam) {
-    EEPROMExternal->writeInt(EEPROM_PARAMS_VERSION_ADDRESS, EEPROM_PARAMS_CURRENT_VERSION);
+    EEPROMExternal->put(EEPROM_PARAMS_VERSION_ADDRESS, (uint16_t)EEPROM_PARAMS_CURRENT_VERSION);
   }
 }
 
@@ -204,7 +209,7 @@ uint8_t selectEEPROMI2CBusAndMultiplexer() {
 /**
  * EEPROM size in bytes
  */
-uint32_t getEEPROMSize(EEPROMExternal_Type_e type) {
+size_t getEEPROMSize(EEPROMExternal_Type_e type) {
   switch (type)
   {
     case EEPROMExternal_Type_e::AT24C256:
@@ -239,33 +244,40 @@ uint32_t getEEPROMSize(EEPROMExternal_Type_e type) {
 /**
  * EEPROM pagesize in bytes
  */
-uint32_t getEEPROMSize(EEPROMExternal_Type_e type,
-                       uint8_t             & pageSize) {
+size_t getEEPROMSize(EEPROMExternal_Type_e type,
+                     uint8_t             & pageSize,
+                     uint8_t             & delay) {
   pageSize = (uint8_t)0;
+  delay    = (uint8_t)0; // ms
 
   switch (type)
   {
     case EEPROMExternal_Type_e::AT24C256:
-    case EEPROMExternal_Type_e::MB85RC256:
     case EEPROMExternal_Type_e::AT24C128:
+      delay = (uint8_t)6; // fall through
+    case EEPROMExternal_Type_e::MB85RC256:
     case EEPROMExternal_Type_e::MB85RC128:
       pageSize = (uint8_t)64;
       break;
     # if EEPROM_SUPPORT_AT24C1024
     case EEPROMExternal_Type_e::AT24C1024:
+      delay = (uint8_t)6; // fall through
     case EEPROMExternal_Type_e::MB85RC1M:
     # endif // if EEPROM_SUPPORT_AT24C1024
     # if EEPROM_SUPPORT_AT24C2048
     case EEPROMExternal_Type_e::AT24C2048:
+      delay = (uint8_t)6; // fall through
     case EEPROMExternal_Type_e::MB85RC2M:
     # endif // if EEPROM_SUPPORT_AT24C2048
     case EEPROMExternal_Type_e::AT24C512:
+      delay = (uint8_t)6; // fall through
     case EEPROMExternal_Type_e::MB85RC512:
       pageSize = (uint8_t)128;
       break;
     case EEPROMExternal_Type_e::AT24C32:
-    case EEPROMExternal_Type_e::MB85RC32:
     case EEPROMExternal_Type_e::AT24C64:
+      delay = (uint8_t)10; // fall through
+    case EEPROMExternal_Type_e::MB85RC32:
     case EEPROMExternal_Type_e::MB85RC64:
       pageSize = (uint8_t)32;
       break;
@@ -362,10 +374,18 @@ bool writeEEPROMSlot(uint32_t                 slot,
   const uint32_t addr = getEEPROMAddressForSlot(slot);
 
   if ((addr != std::numeric_limits<uint32_t>::max()) && !isEEPROMExternalWriteProtected()) {
-    const ESPEASY_RULES_FLOAT_TYPE oldData = EEPROMExternal->readDouble(addr);
+    double oldData{};
+    {
+      START_TIMER;
+      EEPROMExternal->get(addr, oldData);
+      STOP_TIMER(READ_EEPROM_SLOT);
+    }
 
     if (!essentiallyEqual(oldData, data)) {
-      EEPROMExternal->writeDouble(addr, data); // Always write double size!
+      START_TIMER;
+      const double _wrdata = data;
+      EEPROMExternal->put(addr, _wrdata); // Always write double size!
+      STOP_TIMER(WRITE_EEPROM_SLOT);
     }
     return true;
   }
@@ -377,15 +397,14 @@ bool writeEEPROMSlot(uint32_t                 slot,
  */
 ESPEASY_RULES_FLOAT_TYPE readEEPROMSlot(uint32_t slot) {
   const uint32_t addr = getEEPROMAddressForSlot(slot);
+  double res{};
 
   if (addr != std::numeric_limits<uint32_t>::max()) {
-    return EEPROMExternal->readDouble(addr);
+    START_TIMER;
+    EEPROMExternal->get(addr, res);
+    STOP_TIMER(READ_EEPROM_SLOT);
   }
-  # if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
-  return 0.0;
-  # else // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
-  return 0.0f;
-  # endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+  return res;
 }
 
 } // namespace eeprom
