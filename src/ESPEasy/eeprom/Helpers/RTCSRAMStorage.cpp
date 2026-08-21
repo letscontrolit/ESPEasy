@@ -179,11 +179,13 @@ bool writeRTCSRAMSlot(uint32_t                slot,
       case ExtTimeSource_e::DS1307:
       {
         RTC_DS1307 rtc;
+
+        if (!rtc.begin()) { return false; }
         rtc.readnvram(_b, sizeof_rtcsram_slot, addr);
         STOP_TIMER(READ_RTC_SLOT);
         const SRAM_STORAGE_FLOAT_TYPE oldData = *(SRAM_STORAGE_FLOAT_TYPE *)&_b[0];
 
-        if (!essentiallyEqual(oldData, data)) {
+        if (isnan(oldData) || !essentiallyEqual(oldData, data)) {
           rtc.writenvram(addr, (uint8_t *)&data, sizeof_rtcsram_slot);
           STOP_TIMER(WRITE_RTC_SLOT);
         }
@@ -192,11 +194,13 @@ bool writeRTCSRAMSlot(uint32_t                slot,
       case ExtTimeSource_e::DS3232:
       {
         RTC_DS3231 rtc;
+
+        if (!rtc.begin()) { return false; }
         rtc.readnvram(_b, sizeof_rtcsram_slot, addr);
         STOP_TIMER(READ_RTC_SLOT);
         const SRAM_STORAGE_FLOAT_TYPE oldData = *(SRAM_STORAGE_FLOAT_TYPE *)&_b[0];
 
-        if (!essentiallyEqual(oldData, data)) {
+        if (isnan(oldData) || !essentiallyEqual(oldData, data)) {
           rtc.writenvram(addr, (uint8_t *)&data, sizeof_rtcsram_slot);
           STOP_TIMER(WRITE_RTC_SLOT);
         }
@@ -212,11 +216,12 @@ bool writeRTCSRAMSlot(uint32_t                slot,
           rtc.altAddress(); // Set alternative address (0x51)
         }
 
+        if (!rtc.begin()) { return false; }
         rtc.readnvram(_b, sizeof_rtcsram_slot, addr);
         STOP_TIMER(READ_RTC_SLOT);
         const SRAM_STORAGE_FLOAT_TYPE oldData = *(SRAM_STORAGE_FLOAT_TYPE *)&_b[0];
 
-        if (!essentiallyEqual(oldData, data)) {
+        if (isnan(oldData) || !essentiallyEqual(oldData, data)) {
           rtc.writenvram(addr, (uint8_t *)&data, sizeof_rtcsram_slot);
           STOP_TIMER(WRITE_RTC_SLOT);
         }
@@ -250,14 +255,20 @@ SRAM_STORAGE_FLOAT_TYPE readRTCSRAMSlot(uint32_t slot) {
       case ExtTimeSource_e::DS1307:
       {
         RTC_DS1307 rtc;
-        rtc.readnvram(_b, sizeof_rtcsram_slot, addr);
+
+        if (rtc.begin()) {
+          rtc.readnvram(_b, sizeof_rtcsram_slot, addr);
+        }
         STOP_TIMER(READ_RTC_SLOT);
         return *(SRAM_STORAGE_FLOAT_TYPE *)&_b[0];
       }
       case ExtTimeSource_e::DS3232:
       {
         RTC_DS3231 rtc;
-        rtc.readnvram(_b, sizeof_rtcsram_slot, addr);
+
+        if (rtc.begin()) {
+          rtc.readnvram(_b, sizeof_rtcsram_slot, addr);
+        }
         STOP_TIMER(READ_RTC_SLOT);
         return *(SRAM_STORAGE_FLOAT_TYPE *)&_b[0];
       }
@@ -271,7 +282,9 @@ SRAM_STORAGE_FLOAT_TYPE readRTCSRAMSlot(uint32_t slot) {
           rtc.altAddress(); // Set alternative address (0x51)
         }
 
-        rtc.readnvram(_b, sizeof_rtcsram_slot, addr);
+        if (rtc.begin()) {
+          rtc.readnvram(_b, sizeof_rtcsram_slot, addr);
+        }
         STOP_TIMER(READ_RTC_SLOT);
         return *(SRAM_STORAGE_FLOAT_TYPE *)&_b[0];
       }
