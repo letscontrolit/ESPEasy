@@ -99,7 +99,7 @@ bool P131_data_struct::plugin_init(struct EventStruct *event) {
       addLogMove(LOG_LEVEL_INFO, log);
     }
   } else {
-    addLog(LOG_LEVEL_INFO, F("NEOMATRIX: Init failed."));
+    addLog(LOG_LEVEL_ERROR, F("NEOMATRIX: Init failed."));
     # endif // ifndef BUILD_NO_DEBUG
   }
 
@@ -453,11 +453,7 @@ bool P131_data_struct::plugin_write(struct EventStruct *event, const String& str
         # ifndef BUILD_NO_DEBUG
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-          String log = F("NEOMATRIX: set line ");
-          log += event->Par2;
-          log += F(": ");
-          log += strings[x];
-          addLogMove(LOG_LEVEL_INFO, log);
+          addLogMove(LOG_LEVEL_INFO, strformat(F("NEOMATRIX: set line %d: %s"), event->Par2, strings[x].c_str()));
         }
         # endif // ifndef BUILD_NO_DEBUG
       }

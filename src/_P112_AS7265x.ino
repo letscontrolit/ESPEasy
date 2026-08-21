@@ -304,7 +304,9 @@ boolean Plugin_112(uint8_t function, struct EventStruct *event, String& string)
         P112_data->initialized = false; // Force re-init just in case the address changed.
 
         if (P112_data->begin()) {
+          #ifndef BUILD_NO_DEBUG
           addLog(LOG_LEVEL_INFO, F("AS7265X: Found sensor"));
+          #endif // ifndef BUILD_NO_DEBUG
 
           success = P112_data->initialized;
           P112_data->sensor.setGain(PCONFIG_LONG(0));
@@ -337,7 +339,7 @@ boolean Plugin_112(uint8_t function, struct EventStruct *event, String& string)
 
           success = true;
         } else {
-          addLog(LOG_LEVEL_INFO, F("AS7265X: No sensor found"));
+          addLog(LOG_LEVEL_ERROR, F("AS7265X: No sensor found"));
           success = false;
         }
       }

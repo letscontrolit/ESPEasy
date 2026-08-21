@@ -1,5 +1,7 @@
 .. include:: ../Plugin/_plugin_substitutions.repl
 
+.. _command-reference:
+
 Command Reference
 *****************
 

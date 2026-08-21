@@ -12,8 +12,12 @@
 bool hasEscapedCharacter(String& str, const char EscapeChar);
 
 // Cleans str from escaped characters
-// So far \\% \\[ \\] \\{ \\} \\( and \\) are used (all with single backslash!)
+// So far \\% \\[ \\] \\{ \\} \\( \\) and \\: are used (all with single backslash!)
 void   stripEscapeCharacters(String& str);
+
+// Applies str with escaped characters
+// So far % [ ] { } ( ) and : are escaped (all with single backslash!)
+void   addEscapeCharacters(String& str);
 
 #if FEATURE_STRING_VARIABLES
 String parseTemplateAndCalculate(String& tmpString);

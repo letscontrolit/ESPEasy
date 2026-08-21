@@ -486,6 +486,12 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
       return KeyValueStruct(F("MQTT Connect in background"), Settings.MQTTConnectInBackground());
     }
 #endif // if FEATURE_MQTT_CONNECT_BACKGROUND
+    #if FEATURE_MQTT_DISCOVER
+    case LabelType::MQTT_DISCOVER_GROUP_INCL_TASKNAME:
+    {
+      return KeyValueStruct(F("MQTT Discover, Group incl. Taskname"), Settings.MQTTDiscoverGroupInclTaskname());
+    }
+    #endif // if FEATURE_MQTT_DISCOVER
 #if FEATURE_COLORIZE_CONSOLE_LOGS
     case LabelType::COLORIZE_CONSOLE_LOGS:
     {

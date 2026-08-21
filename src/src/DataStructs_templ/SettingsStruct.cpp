@@ -734,6 +734,7 @@ void SettingsStruct_tmpl<N_TASKS>::clearMisc() {
     # endif // ifdef ESP32
   }
   BaudRate                         = DEFAULT_SERIAL_BAUD;
+  EEPROMExternalFlags              = 0;
   NetworkFlags._all_bits           = 0;
   deepSleep_wakeTime               = 0;
   CustomCSS                        = false;
@@ -1352,7 +1353,41 @@ template<uint32_t N_TASKS>
 uint8_t SettingsStruct_tmpl<N_TASKS>::getI2CInterfacePCFMCP() const {
   return get3BitFromUL(I2C_peripheral_bus, I2C_PERIPHERAL_BUS_PCFMCP);
 }
+
+#if FEATURE_EEPROM_EXTERNAL
+template<uint32_t N_TASKS>
+uint8_t SettingsStruct_tmpl<N_TASKS>::getI2CInterfaceEEPROM() const {
+  return get3BitFromUL(I2C_peripheral_bus, I2C_PERIPHERAL_BUS_EEPROM);
+}
+#endif // if FEATURE_EEPROM_EXTERNAL
 #endif // if FEATURE_I2C_MULTIPLE
+
+#if FEATURE_EEPROM_EXTERNAL
+template<uint32_t N_TASKS>
+uint8_t SettingsStruct_tmpl<N_TASKS>::EEPROMExternalI2CAddress() const {
+  return get8BitFromUL(EEPROMExternalFlags, EEPROM_EXTERNAL_FLAGS_ADDRESS);
+}
+template<uint32_t N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::EEPROMExternalI2CAddress(uint8_t address) {
+  set8BitToUL(EEPROMExternalFlags, EEPROM_EXTERNAL_FLAGS_ADDRESS, address);
+}
+template<uint32_t N_TASKS>
+uint16_t SettingsStruct_tmpl<N_TASKS>::EEPROMExternalI2CMultiplexerFlags() const {
+  return get16BitFromUL(EEPROMExternalFlags, EEPROM_EXTERNAL_FLAGS_MUX);
+}
+template<uint32_t N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::EEPROMExternalI2CMultiplexerFlags(uint16_t muxFlags) {
+  set16BitToUL(EEPROMExternalFlags, EEPROM_EXTERNAL_FLAGS_MUX, muxFlags);
+}
+template<uint32_t N_TASKS>
+uint8_t SettingsStruct_tmpl<N_TASKS>::EEPROMExternalType() const {
+  return static_cast<uint8_t>(get4BitFromUL(EEPROMExternalFlags, EEPROM_EXTERNAL_FLAGS_SIZE));
+}
+template<uint32_t N_TASKS>
+void SettingsStruct_tmpl<N_TASKS>::EEPROMExternalType(uint8_t type) {
+  set4BitToUL(EEPROMExternalFlags, EEPROM_EXTERNAL_FLAGS_SIZE, type);
+}
+#endif // if FEATURE_EEPROM_EXTERNAL
 
 #if FEATURE_I2CMULTIPLEXER
 template<uint32_t N_TASKS>

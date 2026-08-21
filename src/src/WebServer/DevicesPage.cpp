@@ -309,22 +309,11 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
 # endif // if FEATURE_I2C_MULTIPLE
 
 # if FEATURE_I2CMULTIPLEXER
-
-    if (isI2CMultiplexerEnabled(i2cBus)) {
-      int multipleMuxPortsOption = getFormItemInt(F("taskdeviceflags1"), 0);
-      bitWrite(flags, I2C_FLAGS_MUX_MULTICHANNEL, multipleMuxPortsOption == 1);
-
-      if (multipleMuxPortsOption == 1) {
-        uint8_t selectedPorts = 0;
-
-        for (int x = 0; x < I2CMultiplexerMaxChannels(i2cBus); ++x) {
-          bitWrite(selectedPorts, x, isFormItemChecked(concat(F("taskdeviceflag1ch"), x)));
-        }
-        Settings.I2C_Multiplexer_Channel[taskIndex] = selectedPorts;
-      } else {
-        Settings.I2C_Multiplexer_Channel[taskIndex] = getFormItemInt(F("taskdevicei2cmuxport"), 0);
-      }
-    }
+    bool muxPortsOption{};
+    int selectedPorts{};
+    GetI2CMultiplexerFromPage(i2cBus, muxPortsOption, selectedPorts);
+    bitWrite(flags, I2C_FLAGS_MUX_MULTICHANNEL, muxPortsOption);
+    Settings.I2C_Multiplexer_Channel[taskIndex] = selectedPorts;
 
 # endif // if FEATURE_I2CMULTIPLEXER
 
@@ -459,6 +448,7 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
 # if FEATURE_PLUGIN_FILTER
     ExtraTaskSettings.enablePluginFilter(varNr, isFormItemChecked(getPluginCustomArgName(F("TDFIL"), varNr)));
 # endif // if FEATURE_PLUGIN_FILTER
+
 # if FEATURE_PLUGIN_STATS
     PluginStats_Config_t pluginStats_Config;
     pluginStats_Config.setEnabled(isFormItemChecked(getPluginCustomArgName(F("TDS"), varNr)));
@@ -597,11 +587,12 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
   for (taskIndex_t x = (page - 1) * TASKS_PER_PAGE; x < ((page) * TASKS_PER_PAGE) && validTaskIndex(x); x++)
   {
     const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(x);
-    const bool pluginID_set         = INVALID_PLUGIN_ID != Settings.getPluginID_for_task(x);
+    const pluginID_t pid            = Settings.getPluginID_for_task(x);
+    const bool pluginID_set         = INVALID_PLUGIN_ID != pid;
 
     html_TR_TD();
 
-    if (pluginID_set && !supportedPluginID(Settings.getPluginID_for_task(x))) {
+    if (pluginID_set && !supportedPluginID(pid)) {
       html_add_button_prefix(F("red"), true);
     } else {
       html_add_button_prefix();
@@ -631,7 +622,7 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
       addEnabled(Settings.TaskDeviceEnabled[x]  && validDeviceIndex(DeviceIndex));
 
       html_TD();
-      addHtml(getPluginNameFromPluginID(Settings.getPluginID_for_task(x)));
+      addHtml(getPluginNameFromPluginID(pid));
       html_TD();
       addHtml(getTaskDeviceName(x));
       html_TD();
@@ -867,7 +858,7 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
 
           for (uint8_t varNr = 0; varNr < valueCount; varNr++)
           {
-            if (validPluginID_fullcheck(Settings.getPluginID_for_task(x)))
+            if (validPluginID_fullcheck(pid))
             {
               # if FEATURE_TASKVALUE_UNIT_OF_MEASURE
               const uint8_t uomIndex = Cache.getTaskVarUnitOfMeasure(x, varNr);
@@ -1112,11 +1103,13 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
 
   addHtml(F("<TR><TD style='width:150px;' align='left'>Device:<TD>"));
 
+  const pluginID_t pid = Settings.getPluginID_for_task(taskIndex);
+
   // no (supported) device selected, this effectively checks for validDeviceIndex
-  if (!supportedPluginID(Settings.getPluginID_for_task(taskIndex)))
+  if (!supportedPluginID(pid))
   {
     // takes lots of memory/time so call this only when needed.
-    addDeviceSelect(F("TDNUM"), Settings.getPluginID_for_task(taskIndex)); // ="taskdevicenumber"
+    addDeviceSelect(F("TDNUM"), pid); // ="taskdevicenumber"
     addFormSeparator(4);
   }
 
@@ -1129,18 +1122,16 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
     addHtml(F("<input "));
     addHtmlAttribute(F("type"),  F("hidden"));
     addHtmlAttribute(F("name"),  F("TDNUM"));
-    addHtmlAttribute(F("value"), Settings.getPluginID_for_task(taskIndex).value);
+    addHtmlAttribute(F("value"), pid.value);
     addHtml('>');
 
     // show selected device name and delete button
     addHtml(getPluginNameFromDeviceIndex(DeviceIndex));
 
-    const uint8_t pid = Settings.getPluginID_for_task(taskIndex).value;
-
-    if (pid <= 79) { // Up to P079 seem to be listed in the old Wiki (and a few incomplete pages), so lets keep pointing there too
-      addHelpButton(concat(F("Plugin"), Settings.getPluginID_for_task(taskIndex).value));
+    if (pid.value <= 79) { // Up to P079 seem to be listed in the old Wiki (and a few incomplete pages), so lets keep pointing there too
+      addHelpButton(concat(F("Plugin"), pid.value));
     }
-    addRTDPluginButton(Settings.getPluginID_for_task(taskIndex));
+    addRTDPluginButton(pid);
 
     addFormTextBox(F("Name"), F("TDN"), getTaskDeviceName(taskIndex), NAME_FORMULA_LENGTH_MAX); // ="taskdevicename"
 
@@ -1229,7 +1220,7 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
     ) {
       if (device.isSerial()) {
         # ifdef PLUGIN_USES_SERIAL
-        devicePage_show_serial_config(taskIndex);
+        devicePage_show_serial_config(taskIndex, DeviceIndex);
         # else // ifdef PLUGIN_USES_SERIAL
         addHtml(F("PLUGIN_USES_SERIAL not defined"));
         # endif // ifdef PLUGIN_USES_SERIAL
@@ -1424,7 +1415,7 @@ void devicePage_show_pin_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
 
 # ifdef PLUGIN_USES_SERIAL
 
-void devicePage_show_serial_config(taskIndex_t taskIndex)
+void devicePage_show_serial_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex)
 {
   struct EventStruct TempEvent(taskIndex);
 
@@ -1432,7 +1423,7 @@ void devicePage_show_serial_config(taskIndex_t taskIndex)
 
   PluginCall(PLUGIN_WEBFORM_PRE_SERIAL_PARAMS, &TempEvent, webformLoadString);
 
-  serialHelper_webformLoad(&TempEvent);
+  serialHelper_webformLoad(&TempEvent, Device[DeviceIndex].SerialPortsAllowed);
 
   PluginCall(PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS, &TempEvent, webformLoadString);
 }
@@ -1491,10 +1482,16 @@ void devicePage_show_I2C_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
   }
   # endif // if FEATURE_I2C_MULTIPLE
   # if FEATURE_I2CMULTIPLEXER
+  ShowI2CMultiplexerUI(i2cBus,
+                       bitRead(Settings.I2C_SPI_bus_Flags[taskIndex], I2C_FLAGS_MUX_MULTICHANNEL),
+                       Settings.I2C_Multiplexer_Channel[taskIndex]);
+  # endif // if FEATURE_I2CMULTIPLEXER
+}
 
+# if FEATURE_I2CMULTIPLEXER
+void ShowI2CMultiplexerUI(uint8_t i2cBus, bool muxPortsOption, int taskDeviceI2CMuxPort) {
   // Show selector for an I2C multiplexer port if a multiplexer is configured
   if (isI2CMultiplexerEnabled(i2cBus)) {
-    bool multipleMuxPorts = bitRead(Settings.I2C_SPI_bus_Flags[taskIndex], I2C_FLAGS_MUX_MULTICHANNEL);
     {
       const __FlashStringHelper *i2c_mux_channels[] = {
         F("Single channel"),
@@ -1502,8 +1499,8 @@ void devicePage_show_I2C_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
       constexpr int i2c_mux_channelOptions[] = { 0, 1 };
       int i2c_mux_channelCount               = 1;
 
-      if (Settings.I2C_Multiplexer_Type == I2C_MULTIPLEXER_PCA9540) {
-        multipleMuxPorts = false; // force off
+      if (Settings.getI2CMultiplexerType(i2cBus) == I2C_MULTIPLEXER_PCA9540) {
+        muxPortsOption = false; // force off
       } else {
         i2c_mux_channelCount++;
       }
@@ -1515,10 +1512,10 @@ void devicePage_show_I2C_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
       selector.addFormSelector(
         F("Multiplexer channels"),
         F("taskdeviceflags1"),
-        multipleMuxPorts ? 1 : 0);
+        muxPortsOption ? 1 : 0);
     }
 
-    if (multipleMuxPorts) {
+    if (muxPortsOption) {
       addRowLabel(F("Select connections"), EMPTY_STRING);
       html_table(EMPTY_STRING, false); // Sub-table
       html_table_header(F("Channel"), 100);
@@ -1531,11 +1528,10 @@ void devicePage_show_I2C_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
         html_TD();
         addHtml(concat(F("Channel "), x));
         html_TD();
-        addCheckBox(concat(F("taskdeviceflag1ch"), x), bitRead(Settings.I2C_Multiplexer_Channel[taskIndex], x), false);
+        addCheckBox(concat(F("taskdeviceflag1ch"), x), bitRead(taskDeviceI2CMuxPort, x), false);
       }
       html_end_table();
     } else {
-      int taskDeviceI2CMuxPort = Settings.I2C_Multiplexer_Channel[taskIndex];
       const uint32_t mux_max   = I2CMultiplexerMaxChannels(i2cBus);
       String i2c_mux_portoptions[mux_max + 1];
       int    i2c_mux_portchoices[mux_max + 1];
@@ -1559,9 +1555,25 @@ void devicePage_show_I2C_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
         taskDeviceI2CMuxPort);
     }
   }
-  # endif // if FEATURE_I2CMULTIPLEXER
 }
-#endif
+
+void GetI2CMultiplexerFromPage(uint8_t i2cBus, bool &muxPortsOption, int &selectedPorts) {
+  if (isI2CMultiplexerEnabled(i2cBus)) {
+    muxPortsOption = getFormItemInt(F("taskdeviceflags1"), 0) == 1;
+
+    if (muxPortsOption) {
+      selectedPorts = 0;
+
+      for (int x = 0; x < I2CMultiplexerMaxChannels(i2cBus); ++x) {
+        bitWrite(selectedPorts, x, isFormItemChecked(concat(F("taskdeviceflag1ch"), x)));
+      }
+    } else {
+      selectedPorts = getFormItemInt(F("taskdevicei2cmuxport"), -1);
+    }
+  }
+}
+# endif // if FEATURE_I2CMULTIPLEXER
+#endif // if FEATURE_I2C
 
 void devicePage_show_output_data_type(taskIndex_t taskIndex, deviceIndex_t DeviceIndex)
 {

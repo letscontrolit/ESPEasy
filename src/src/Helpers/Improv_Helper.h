@@ -17,6 +17,8 @@ public:
 
   void init();
 
+  void update();
+
   bool handle(uint8_t b, Stream *serialForWrite);
 
   bool getFromBuffer(uint8_t& b);
