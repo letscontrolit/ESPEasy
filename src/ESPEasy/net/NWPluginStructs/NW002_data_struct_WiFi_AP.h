@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../_NWPlugin_Helper.h"
-#ifdef USES_NW001
+#ifdef USES_NW002
 
 
 namespace ESPEasy {
@@ -54,4 +54,4 @@ private:
 } // namespace ESPEasy
 
 
-#endif // ifdef USES_NW001
+#endif // ifdef USES_NW002

@@ -148,9 +148,11 @@ boolean Plugin_084(uint8_t function, struct EventStruct *event, String& string)
         UserVar.setFloat(event->TaskIndex, 1, uv_risk);
         UserVar.setFloat(event->TaskIndex, 2, uv_power);
 
+        #ifndef BUILD_NO_DEBUG
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           addLogMove(LOG_LEVEL_INFO, concat(F("VEML6070: UV: "), formatUserVarNoCheck(event, 0)));
         }
+        #endif // ifndef BUILD_NO_DEBUG
 
         success = true;
       }

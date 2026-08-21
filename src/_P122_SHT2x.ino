@@ -221,6 +221,7 @@ boolean Plugin_122(uint8_t function, struct EventStruct *event, String& string)
         }
       }
 
+      #ifndef BUILD_NO_DEBUG
       if (loglevelActiveFor(LOG_LEVEL_INFO))
       {
         addLog(LOG_LEVEL_INFO,
@@ -229,6 +230,7 @@ boolean Plugin_122(uint8_t function, struct EventStruct *event, String& string)
                          formatUserVarNoCheck(event, 1).c_str()
                          ));
       }
+      #endif // ifndef BUILD_NO_DEBUG
       success = true;
       break;
     }

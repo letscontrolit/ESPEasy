@@ -679,6 +679,7 @@ Datasheets
 * `DS:ESP32 <https://documentation.espressif.com/esp32_datasheet_en.pdf>`_ 
 * `DS:ESP32-S2 <https://documentation.espressif.com/esp32-s2_datasheet_en.pdf>`_
 * `DS:ESP32-S3 <https://documentation.espressif.com/esp32-s3_datasheet_en.pdf>`_
+* `DS:ESP32-S31 <https://documentation.espressif.com/esp32-s31_datasheet_en.pdf>`_
 * `DS:ESP32-C2 <https://documentation.espressif.com/esp8684_datasheet_en.pdf>`_ 
 * `DS:ESP32-C3 <https://documentation.espressif.com/esp32-c3_datasheet_en.pdf>`_ 
 * `DS:ESP32-C5 <https://documentation.espressif.com/esp32-c5_datasheet_en.pdf>`_

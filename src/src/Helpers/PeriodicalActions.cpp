@@ -49,7 +49,6 @@
 #include "../Helpers/MDNS_Helper.h"
 #endif
 
-
 #define PLUGIN_ID_MQTT_IMPORT         37
 
 

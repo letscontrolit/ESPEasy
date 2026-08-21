@@ -64,6 +64,7 @@ bool P150_data_struct::plugin_read(struct EventStruct *event) {
     UserVar.setFloat(event->TaskIndex, 0, _finalTempC);
     UserVar.setFloat(event->TaskIndex, 1, _digitalTempC);
 
+    #ifndef BUILD_NO_DEBUG
     if (_logEnabled && loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = strformat(F("TMP117: Temperature: %sC"), formatUserVarNoCheck(event, 0).c_str());
 
@@ -72,6 +73,7 @@ bool P150_data_struct::plugin_read(struct EventStruct *event) {
       }
       addLogMove(LOG_LEVEL_INFO, log);
     }
+    #endif // ifndef BUILD_NO_DEBUG
 
     if (P150_GET_CONF_CONVERSION_MODE == P150_CONVERSION_ONE_SHOT) {
       setConfig(); // Start the next one-shot measurement

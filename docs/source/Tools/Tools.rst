@@ -240,6 +240,8 @@ Showing detailed information about the flash chip and used file system.
 * **Maximum open files**:	Configured maximum number of simultaneous open files. Example: ``5``
 * **Maximum path length**:	Maximum length of file name + path. Example: ``32``
 
+.. _tools-advanced:
+
 Advanced
 ========
 
@@ -265,8 +267,10 @@ Supported RTC chips:
 
 * `DS1307 <https://datasheets.maximintegrated.com/en/ds/DS1307.pdf>`_
 * `DS3231  <https://datasheets.maximintegrated.com/en/ds/DS3231.pdf>`_
+* `DS3232  <https://datasheets.maximintegrated.com/en/ds/DS3232.pdf>`_ (added: 2026-08-19)
 * `PCF8523  <https://www.nxp.com/docs/en/data-sheet/PCF8523.pdf>`_
 * `PCF8563  <https://www.nxp.com/docs/en/data-sheet/PCF8563.pdf>`_
+* `PCF8583  <https://www.nxp.com/docs/en/data-sheet/PCF8583.pdf>`_ (added: 2026-08-19 Not available in ``LIMIT_BUILD_SIZE`` builds)
 
 Most modules sold with one of these RTC chips also have a battery socket to keep track of time while the rest is not powered.
 This allows ESPEasy to know the correct date and time after been powered off for a while, or deep sleep, without the need for working network to query a NTP server.
@@ -280,6 +284,19 @@ When multiple I2C Buses are configured (ESP32 only), we need to configure on whi
 .. image:: images/Tools_RTC_I2CSelector.png
 
 NB: If only 1 I2C Bus is configured, this configuration option isn't shown.
+
+Added: 2026-08-19
+
+With some RTC chips, there is a battery-backed SRAM option available. This SRAM can be used for persistent storage of numeric values.
+
+This storage is available in DS1307 (56 bytes = 7 slots), DS3232 (236 bytes = 29 slots) and PCF8583 (240 bytes = 30 slots).
+
+If one of the supported Time Sources is connected, the number of available SRAM slots is shown.
+
+Slots can be written using the ``WriteRTC,<slot>,<value>`` command, and read using the special variable ``[ReadRTC#<slot>]``, and the number of slots via ``[ReadRTC#max]``. See also :ref:`Command-Reference`
+
+NB: ``<slot>`` is in the range 0 .. (Max.slots - 1) !
+
 
 
 Procedure to configure a real time clock (RTC) chip:
@@ -490,6 +507,16 @@ Added: 2025-08-23
 Depending on the internet connection, f.e. when connecting via a low-end mobile network or other slow connection type, starting a connection to a MQTT Broker can take quite some time.
 
 On ESP32, tasks like starting the MQTT connection can be delegated to an independent background task, to avoid blocking the normal working of ESPEasy, that will report the result when completed. This feature is enabled by default, as it is the preferred setting, but when this way of connecting is causing issues, it can be disabled.
+
+
+MQTT Discover, Group incl. Taskname
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Added: 2026-08-14
+
+To make the unique-id for Auto Discovery more unique when a Group is used, the Taskname can be inserted by enabling this option. Not enabled by default for backward compatibility with existing groups Auto-discovered by Home Assistant.
+
+Only enabled if MQTT Auto Discovery is included in the build.
 
 
 Allow OTA without size-check

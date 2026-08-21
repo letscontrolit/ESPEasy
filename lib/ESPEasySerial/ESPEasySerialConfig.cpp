@@ -2,6 +2,24 @@
 
 #include "ESPEasySerialType.h"
 
+bool ESPEasySerialConfig::operator==(const ESPEasySerialConfig& other) const
+{
+  return port == other.port
+  && baud == other.baud 
+  && receivePin == other.receivePin 
+  && transmitPin == other.transmitPin 
+  && inverse_logic == other.inverse_logic 
+  && rxBuffSize == other.rxBuffSize 
+  && txBuffSize == other.txBuffSize 
+  && forceSWserial == other.forceSWserial 
+  && timeout_ms == other.timeout_ms 
+  && config == other.config 
+#ifdef ESP8266
+  && mode == other.mode
+#endif
+  ;
+}
+
 void ESPEasySerialConfig::validate()
 {
   port =  ESPeasySerialType::getSerialType(port, receivePin, transmitPin);
@@ -18,6 +36,11 @@ void ESPEasySerialConfig::validate()
 # endif // if USES_I2C_SC16IS752
   }
 #endif // if USES_SW_SERIAL
+#if USES_HWCDC
+  if (port == ESPEasySerialPort::usb_hw_cdc) {
+    txBuffSize = 2048;
+  }
+#endif
 }
 
 #ifdef ESP8266
