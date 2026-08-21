@@ -28,7 +28,7 @@ bool P129_data_struct::plugin_init(struct EventStruct *event) {
 
     if (validGpio(_enablePin)) { DIRECT_pinWrite(_enablePin, HIGH); }
 
-    plugin_read(event); // Prime data
+    plugin_readData(event); // Initial read, next PLUGIN_READ takes care of filling the UserVars
     return true;
   }
   return false;
