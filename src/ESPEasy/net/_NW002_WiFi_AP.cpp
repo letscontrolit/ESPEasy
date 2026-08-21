@@ -52,6 +52,7 @@ bool NWPlugin_002(NWPlugin::Function function, EventStruct *event, String& strin
     case NWPlugin::Function::NWPLUGIN_LOAD_DEFAULTS:
     {
 # ifdef ESP32
+      Settings.setAppendNetworkAdapterNameToHostname(event->NetworkIndex, DEFAULT_AP_APPEND_NW_NAME_TO_HOSTNAME);
       Settings.setRoutePrio_for_network(event->NetworkIndex, DEFAULT_AP_ROUTE_PRIO);
 # endif
       Settings.setNetworkInterfaceSubnetBlockClientIP(event->NetworkIndex, false);

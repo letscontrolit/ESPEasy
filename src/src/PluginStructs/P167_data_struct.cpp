@@ -150,9 +150,11 @@ P167_data_struct::~P167_data_struct() {
 bool P167_data_struct::setupDevice(uint8_t i2caddr) {
   _i2caddr = i2caddr;
 
+  #ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     addLog(LOG_LEVEL_INFO, strformat(F("SEN5x: Setup with address= 0x%02x"), _i2caddr));
   }
+  #endif // ifndef BUILD_NO_DEBUG
   return true;
 }
 

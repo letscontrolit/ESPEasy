@@ -75,31 +75,32 @@ void handle_interfaces() {
   checkRAM(F("handle_interfaces"));
 # endif
 
-  if (!isLoggedIn()) { return; }
-  if ((navMenuIndex != MENU_INDEX_INTERFACES) && (navMenuIndex <= MENU_MAX_INDEX_SHOWN)) {
+  uint8_t newNavIndex = navMenuIndex;
+  if ((newNavIndex != MENU_INDEX_INTERFACES) && (newNavIndex <= MENU_MAX_INDEX_SHOWN)) {
 #if FEATURE_I2C
-    navMenuIndex = MENU_INDEX_INTERFACES_I2C;
+    newNavIndex = MENU_INDEX_INTERFACES_I2C;
 #elif FEATURE_SPI
-    navMenuIndex = MENU_INDEX_INTERFACES_SPI;
+    newNavIndex = MENU_INDEX_INTERFACES_SPI;
 #elif FEATURE_MODBUS && FEATURE_MODBUS_INTERFACES_TAB
-    navMenuIndex = MENU_INDEX_INTERFACES_MODBUS;
+    newNavIndex = MENU_INDEX_INTERFACES_MODBUS;
 #elif FEATURE_CAN
-    navMenuIndex = MENU_INDEX_INTERFACES_CAN;
+    newNavIndex = MENU_INDEX_INTERFACES_CAN;
 #elif FEATURE_WRMBUS
-    navMenuIndex = MENU_INDEX_INTERFACES_WRMBUS;
+    newNavIndex = MENU_INDEX_INTERFACES_WRMBUS;
 #elif FEATURE_WIMBUS
-    navMenuIndex = MENU_INDEX_INTERFACES_WIMBUS;
+    newNavIndex = MENU_INDEX_INTERFACES_WIMBUS;
 #else
-    navMenuIndex = MENU_INDEX_INTERFACES;
+    // FIXME TD-er: Should we still continue here? Why not simply return;
+    newNavIndex = MENU_INDEX_INTERFACES;
 #endif
   }
-  TXBuffer.startStream();
-  sendHeadandTail_stdtemplate(_HEAD);
+  if (!startStream_send_stdTemplate(newNavIndex)) return;
 
   save_interfaces();
 
 
-  addHtml(F("<form  method='post'>"));
+  html_add_form();
+
   html_table_class_normal();
   addFormFixedFirstColumn(); // This must be added as the first element in a table definition
   addFormHeader(strformat(F("%s Interfaces Settings"), FsP(getGpMenuIcon(navMenuIndex))), F(""), F("Interfaces/Interfaces.html"));
@@ -149,8 +150,7 @@ void handle_interfaces() {
   html_end_table();
   html_end_form();
 
-  sendHeadandTail_stdtemplate(_TAIL);
-  TXBuffer.endStream();
+  sendTail_stdtemplate();
 }
 
 void save_interfaces() {

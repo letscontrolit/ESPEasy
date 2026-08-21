@@ -30,8 +30,7 @@ bool P035_data_struct::plugin_init(struct EventStruct *event) {
 
   if ((Plugin_035_irSender == nullptr) && validGpio(_gpioPin)) {
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      addLog(LOG_LEVEL_INFO, F("INIT: IR TX"));
-      addLog(LOG_LEVEL_INFO, F("IR lib Version: " _IRREMOTEESP8266_VERSION_STR));
+      addLog(LOG_LEVEL_INFO, F("INIT: IR TX, lib Version: " _IRREMOTEESP8266_VERSION_STR));
       # ifdef P035_DEBUG_LOG
       addLog(LOG_LEVEL_INFO, concat(F("Supported Protocols by IRSEND: "), listProtocols()));
       # endif // ifdef P035_DEBUG_LOG

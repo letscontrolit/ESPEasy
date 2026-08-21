@@ -319,6 +319,7 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
 
       if (Plugin_091_init)
       {
+        success = true;
         while (ESPEASY_SERIAL_0.available() > 0) {
           yield();
 
@@ -533,7 +534,6 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
           }
         }
       }                              // plugin initialized end
-      success = true;
       break;
     }
 

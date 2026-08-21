@@ -110,12 +110,17 @@ void NWPluginData_static_runtime::mark_start()
     }
   }
 
-  const String hostname = strformat(
-    F("%s-%s"),
-    NetworkCreateRFCCompliantHostname().c_str(), 
-    _eventInterfaceName.c_str());
+  // FIXME TD-er: Should we always create a hostname with "-WiFi" or "-eth" etc.? Or add a setting for this?
+  if (Settings.getAppendNetworkAdapterNameToHostname(_networkIndex)) {
+    const String hostname = strformat(
+      F("%s-%s"),
+      NetworkCreateRFCCompliantHostname().c_str(), 
+      _eventInterfaceName.c_str());
 
-  _netif->setHostname(hostname.c_str());
+    _netif->setHostname(hostname.c_str());
+  } else {
+    _netif->setHostname(NetworkCreateRFCCompliantHostname().c_str());
+  }
 # if FEATURE_USE_IPV6
   _netif->enableIPv6(_enableIPv6);
 # endif

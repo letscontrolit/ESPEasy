@@ -33,6 +33,12 @@
 #include <stdlib.h>
 #include "SparkFun_VL53L1X.h"
 
+#include "st_src/RangeSensor.h"
+#include "st_src/vl53l1_error_codes.h"
+#include "st_src/ComponentObject.h"
+#include "st_src/RangeSensor.h"
+
+
 SFEVL53L1X::SFEVL53L1X()
 {
 	_i2cPort = &Wire;

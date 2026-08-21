@@ -19,10 +19,7 @@
 // Web Interface Tools page
 // ********************************************************************************
 void handle_tools() {
-  if (!isLoggedIn()) { return; }
-  navMenuIndex = MENU_INDEX_TOOLS;
-  TXBuffer.startStream();
-  sendHeadandTail_stdtemplate(_HEAD);
+  if (!startStream_send_stdTemplate(MENU_INDEX_TOOLS)) { return; }
 
   String webrequest = webArg(F("cmd"));
 
@@ -51,15 +48,7 @@ void handle_tools() {
   addRTDHelpButton(F("Reference/Command.html"));
   html_TR_TD();
 
-  if (printWebString.length() > 0)
-  {
-    addRowColspan(2);
-    addHtml(F("Command Output<BR><textarea readonly rows='10' wrap='on'>"));
-    addHtml(printWebString);
-    addHtml(F("</textarea>"));
-    free_string(printWebString);
-  }
-
+  handle_printWebString();
 
   addFormSubHeader(F("System"));
 
@@ -96,6 +85,10 @@ void handle_tools() {
   # ifdef WEBSERVER_SYSVARS
   addWideButtonPlusDescription(F("sysvars"), F("System Variables"), F("Show all system variables and conversions"));
   # endif // ifdef WEBSERVER_SYSVARS
+
+  #if FEATURE_EEPROM_EXTERNAL || FEATURE_RTC_SRAM_STORAGE
+  addWideButtonPlusDescription(F("eepromvars"), F("External EEPROM/RTC values"), F("Show all values stored in the external EEPROM or RTC SRAM"));
+  #endif // if FEATURE_EEPROM_EXTERNAL || FEATURE_RTC_SRAM_STORAGE
 
   #if FEATURE_PLUGIN_LIST
   addWideButtonPlusDescription(F("pluginlist"), F("Included Plugins"), F("Show all plugins that are included in this build"));
@@ -204,8 +197,9 @@ void handle_tools() {
 
   html_end_table();
   html_end_form();
-  sendHeadandTail_stdtemplate(_TAIL);
-  TXBuffer.endStream();
+  sendTail_stdtemplate();
+
+  // FIXME TD-er: Is this still needed?
   free_string(printWebString);
   printToWeb     = false;
 }
