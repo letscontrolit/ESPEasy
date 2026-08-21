@@ -1104,9 +1104,9 @@
 
     ``WriteEE,<slot>,<value>`` for writing a value to a slot.
     
-    ``WriteRTC,erase,erase`` for erasing all data from the module.
+    ``WriteEE,erase,erase`` for erasing all data from the module.
 
-    ``WriteRTC,check,wp`` for re-checking the write-protect status of the module.
+    ``WriteEE,check,wp`` for re-checking the write-protect status of the module.
     "
     "
     WriteRTC","
