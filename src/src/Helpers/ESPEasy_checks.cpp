@@ -47,7 +47,6 @@
 #include "../DataStructs/NotificationSettingsStruct.h"
 #endif // if FEATURE_NOTIFIER
 
-
 // ********************************************************************************
 // Check struct sizes at compile time
 // Usage:
@@ -83,10 +82,10 @@ void run_compiletime_checks() {
   check_size<SecurityStruct,                        593u>();
   check_max_size<SecurityStruct,                    DAT_SECURITYSETTINGS_SIZE>();
   #ifdef ESP32
-  constexpr unsigned int SettingsStructSize = (376 + 84 * TASKS_MAX);
+  constexpr unsigned int SettingsStructSize = (380 + 84 * TASKS_MAX);
   #endif
   #ifdef ESP8266
-  constexpr unsigned int SettingsStructSize = (344 + 84 * TASKS_MAX);
+  constexpr unsigned int SettingsStructSize = (348 + 84 * TASKS_MAX);
   #endif
   #if FEATURE_CUSTOM_PROVISIONING
   check_size<ProvisioningStruct,                    256u>();
@@ -179,7 +178,7 @@ void run_compiletime_checks() {
   static_assert(198u == offsetof(SettingsStruct, TaskDeviceNumber), "NOTIFICATION_MAX has changed?");
 
   // All settings related to N_TASKS
-  static_assert((232 + TASKS_MAX) == offsetof(SettingsStruct, OLD_TaskDeviceID), ""); // 32-bit alignment, so offset of 2 bytes.
+  static_assert((236 + TASKS_MAX) == offsetof(SettingsStruct, OLD_TaskDeviceID), ""); // 32-bit alignment, so offset of 2 bytes.
   static_assert((200 + (67 * TASKS_MAX)) == offsetof(SettingsStruct, ControllerEnabled), "");
 
   // Used to compute true offset.
@@ -192,6 +191,7 @@ void run_compiletime_checks() {
   static_assert(GPIO_DIRECTION_NR_BITS== NR_BITS(static_cast<uint8_t>(gpio_direction::gpio_direction_MAX)), "Correct GPIO_DIRECTION_NR_BITS");
 
 }
+
 String ReportOffsetErrorInStruct(const String& structname, size_t offset) {
   String error;
   if (error.reserve(48 + structname.length())) {
@@ -269,4 +269,4 @@ String checkTaskSettings(taskIndex_t taskIndex) {
   #endif
   return err;
 }
-#endif
+#endif // ifndef LIMIT_BUILD_SIZE

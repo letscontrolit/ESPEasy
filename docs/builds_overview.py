@@ -173,7 +173,7 @@ def generateBuildOverview(fileName):
   
   print('Writing build sets overview to:', filepath)
 
-  output = open(filepath, "w")
+  output = open(filepath, "w", encoding="utf-8")
   output.write('Plugins per build set\n')
   output.write('=====================\n')
   output.write('\n')

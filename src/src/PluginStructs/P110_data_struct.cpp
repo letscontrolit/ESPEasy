@@ -16,8 +16,8 @@ bool P110_data_struct::begin(uint32_t interval_ms) {
   sensor.setAddress(_i2cAddress); // Initialize for configured address
 
   if (!sensor.init()) {
+    addLogMove(LOG_LEVEL_ERROR, strformat(F("VL53L0X: Sensor not found, init failed for 0x%02x"), _i2cAddress));
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      addLogMove(LOG_LEVEL_INFO, strformat(F("VL53L0X: Sensor not found, init failed for 0x%02x"), _i2cAddress));
       addLog(LOG_LEVEL_INFO, sensor.getInitResult());
     }
     return false;
@@ -97,12 +97,12 @@ bool P110_data_struct::plugin_read(struct EventStruct *event) {
       //      direction_changed ||
       (std::abs(displacement) > P110_DELTA);
 
-        # ifdef P110_INFO_LOG
+    # ifdef P110_INFO_LOG
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       addLog(LOG_LEVEL_INFO, strformat(F("VL53L0x: Perform read: trig: %d, prev: %d, dist: %d"), triggered, p_dist, dist));
     }
-        # endif // ifdef P110_INFO_LOG
+    # endif // ifdef P110_INFO_LOG
     // Value is classified as invalid when > 8190, so no conversion or 'split' needed
     UserVar.setFloat(event->TaskIndex, 0, _filtered);
     UserVar.setFloat(event->TaskIndex, 1, disp_dir);       // Trend of value
