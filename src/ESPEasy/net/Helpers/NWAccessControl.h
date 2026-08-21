@@ -15,8 +15,7 @@ namespace net {
 bool ipInAllowedSubnet(const IPAddress& ip);
 
 String describeAllowedIPrange();
-
-bool getIPallowedRange(IPAddress& low, IPAddress& high);
+String describeAllowedIPrange(const IPAddress& ip);
 
 
 } // namespace net

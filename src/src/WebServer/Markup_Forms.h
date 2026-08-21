@@ -330,28 +330,36 @@ bool getCheckWebserverArg_int(const String& key,
                               uint32_t      & value);
 
 bool update_whenset_FormItemInt(const __FlashStringHelper * key,
-                                int         & value);
+                                int         & value,
+                                bool* changed = nullptr);
 
 bool update_whenset_FormItemInt(const String& key,
-                                int         & value);
+                                int         & value,
+                                bool* changed = nullptr);
 
 bool update_whenset_FormItemInt(const __FlashStringHelper * key,
-                                uint32_t    & value);
+                                uint32_t    & value,
+                                bool* changed = nullptr);
 
 bool update_whenset_FormItemInt(const String& key,
-                                uint32_t    & value);
+                                uint32_t    & value,
+                                bool* changed = nullptr);
 
 bool update_whenset_FormItemInt(const __FlashStringHelper * key,
-                                int8_t      & value);
+                                int8_t      & value,
+                                bool* changed = nullptr);
 
 bool update_whenset_FormItemInt(const String& key,
-                                int8_t      & value);
+                                int8_t      & value,
+                                bool* changed = nullptr);
 
 bool update_whenset_FormItemInt(const __FlashStringHelper * key,
-                                uint8_t     & value);
+                                uint8_t     & value,
+                                bool* changed = nullptr);
 
 bool update_whenset_FormItemInt(const String& key,
-                                uint8_t     & value);
+                                uint8_t     & value,
+                                bool* changed = nullptr);
 
 // Note: Checkbox values will not appear in POST Form data if unchecked.
 // So if webserver does not have an argument for a checkbox form, it means it should be considered unchecked.

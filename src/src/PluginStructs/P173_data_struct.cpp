@@ -62,12 +62,14 @@ bool P173_data_struct::plugin_read(struct EventStruct *event)           {
       success    = true;
       errorCount = 0;
 
+      #ifndef BUILD_NO_DEBUG
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         addLog(LOG_LEVEL_INFO, strformat(F("%s: Temperature: %s, Humidity: %s"),
                                          getTaskDeviceName(event->TaskIndex).c_str(),
                                          formatUserVarNoCheck(event, 0).c_str(),
                                          formatUserVarNoCheck(event, 1).c_str()));
       }
+      #endif // ifndef BUILD_NO_DEBUG
     } else {
       addLog(LOG_LEVEL_ERROR, concat(F("SHTC3: READ CRC Error, data: 0x"), formatToHex_array(data, 6)));
       errorCount++;

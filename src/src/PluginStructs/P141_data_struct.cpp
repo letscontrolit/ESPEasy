@@ -73,7 +73,9 @@ bool P141_data_struct::plugin_init(struct EventStruct *event) {
 
 
   if (nullptr == pcd8544) {
+    #ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_INFO, F("PCD8544: Init start."));
+    #endif // ifndef BUILD_NO_DEBUG
 
     pcd8544 = new (std::nothrow) Adafruit_PCD8544(P141_DC_PIN, P141_CS_PIN, P141_RST_PIN
                                                   # ifdef ESP32
@@ -95,7 +97,7 @@ bool P141_data_struct::plugin_init(struct EventStruct *event) {
     }
     # endif // ifndef BUILD_NO_DEBUG
   } else {
-    addLog(LOG_LEVEL_INFO, F("PCD8544: No init?"));
+    addLog(LOG_LEVEL_ERROR, F("PCD8544: No init?"));
   }
 
   if (nullptr != pcd8544) {

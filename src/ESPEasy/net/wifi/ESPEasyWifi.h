@@ -21,7 +21,9 @@
 #  define SOFTAP_STATION_COUNT  WiFi.AP.stationCount()
 # endif
 # ifdef ESP8266
-#  define SOFTAP_STATION_COUNT  WiFi.softAPgetStationNum()
+//#  define SOFTAP_STATION_COUNT  WiFi.softAPgetStationNum()
+
+#  define SOFTAP_STATION_COUNT  wifi_softap_get_station_num()
 # endif
 
 

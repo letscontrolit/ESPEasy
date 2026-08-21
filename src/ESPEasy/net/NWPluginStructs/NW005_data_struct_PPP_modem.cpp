@@ -980,6 +980,8 @@ bool NW005_data_struct_PPP_modem::init(EventStruct *event)
   _modem_task_data.initializing      = false;
   _modem_task_data.dtrPin            = _kvs->getValueAsInt_or_default(NW005_KEY_PIN_DTR, -1);
 
+  stats_and_cache.clear(event->NetworkIndex);
+
   stats_and_cache.mark_begin_establish_connection();
 
   xTaskCreatePinnedToCore(

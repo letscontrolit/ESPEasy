@@ -13,7 +13,6 @@ P129_data_struct::P129_data_struct(int8_t  dataPin,
                                    uint8_t chipCount)
   : _dataPin(dataPin), _clockPin(clockPin), _enablePin(enablePin), _loadPin(loadPin), _chipCount(chipCount) {}
 
-
 bool P129_data_struct::plugin_init(struct EventStruct *event) {
   if (isInitialized()) {
     for (uint8_t i = 0; i < P129_MAX_CHIP_COUNT; ++i) { // Clear entire buffer
@@ -29,6 +28,7 @@ bool P129_data_struct::plugin_init(struct EventStruct *event) {
 
     if (validGpio(_enablePin)) { DIRECT_pinWrite(_enablePin, HIGH); }
 
+    plugin_readData(event); // Initial read, next PLUGIN_READ takes care of filling the UserVars
     return true;
   }
   return false;
@@ -74,6 +74,7 @@ enum class p129_subcommands_e {
   setchipcount,
   samplefrequency,
   eventperpin
+
 };
 
 bool P129_data_struct::plugin_write(struct EventStruct *event,
@@ -91,7 +92,8 @@ bool P129_data_struct::plugin_write(struct EventStruct *event,
       return false;
     }
 
-    switch (static_cast<p129_subcommands_e>(command_i)) {
+    switch (static_cast<p129_subcommands_e>(command_i))
+    {
       case p129_subcommands_e::pinevent:
       { // ShiftIn,pinevent,<pin>,<0|1>
         const uint8_t pin   = event->Par2 - 1;

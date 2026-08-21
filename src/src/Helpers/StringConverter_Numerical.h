@@ -35,6 +35,11 @@ String ull2String(uint64_t value,
 String ll2String(int64_t value,
                  uint8_t base = 10);
 
+String ul2stringFixed(uint32_t value,
+                      uint8_t  base,
+                      bool     dotSeparator);
+
+
 String trimTrailingZeros(const String& value);
 
 String toStringNoZero(int64_t value);

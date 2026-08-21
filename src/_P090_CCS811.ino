@@ -281,10 +281,12 @@ boolean Plugin_090(uint8_t function, struct EventStruct *event, String& string)
             UserVar.setFloat(event->TaskIndex, 1, P090_data->myCCS811.getCO2());
             P090_data->newReadingAvailable = true;
 
+            #ifndef BUILD_NO_DEBUG
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
               addLogMove(LOG_LEVEL_INFO,
                          strformat(F("CCS811 : tVOC: %d, eCO2: %d"), P090_data->myCCS811.getTVOC(), P090_data->myCCS811.getCO2()));
             }
+            #endif // ifndef BUILD_NO_DEBUG
           }
         }
       }

@@ -123,7 +123,7 @@ void free_string(String& str) {
 #if defined(ESP32) || defined(CORE_POST_3_0_0)
   // Use current implementation of String::copy as this
   // invalidates and thus deallocates current buffer
-  str = (const char*)nullptr;
+//  str = (const char*)nullptr;
   str = String(); // No idea why this is needed, without it, some ESP32's may bootloop
 #else
   str = String();

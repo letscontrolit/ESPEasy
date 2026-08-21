@@ -11,8 +11,6 @@
 # include "../Helpers/StringParser.h"
 # include "../Globals/MQTT.h"
 
-# include <ArduinoJson.h>
-
 // # define PLUGIN_037_DEBUG     // Additional debugging information
 
 # if (defined(PLUGIN_BUILD_CUSTOM) || defined(PLUGIN_BUILD_MAX_ESP32) || defined(ESP32) \
@@ -83,6 +81,12 @@
 #   define P037_FILTER_PER_TOPIC
 #  endif // ifndef P037_FILTER_PER_TOPIC
 # endif  // if P037_FILTER_SUPPORT && P037_MAX_FILTERS == VARS_PER_TASK
+
+#if P037_JSON_SUPPORT
+# include "../Helpers/JSON_helper.h"
+
+# include <ArduinoJson.h>
+#endif // if P037_JSON_SUPPORT
 
 # define P037_ARRAY_SIZE      (P037_MAX_MAPPINGS + P037_MAX_FILTERS) // Storage layout definitions
 # define P037_START_MAPPINGS  0
@@ -197,9 +201,13 @@ private:
   String _filterListItem;
   # endif // if P037_FILTER_SUPPORT
   # if P037_JSON_SUPPORT
-  DynamicJsonDocument *root                  = nullptr;
-  uint16_t             lastJsonMessageLength = 512;
+  uint16_t lastJsonMessageLength = 512;
+
+public:
+
+  DynamicJsonDocument *root = nullptr;
   # endif // if P037_JSON_SUPPORT
+
 };
 
 #endif    // ifdef USED_P037

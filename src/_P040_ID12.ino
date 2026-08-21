@@ -77,7 +77,9 @@ boolean Plugin_040(uint8_t function, struct EventStruct *event, String& string)
       if (Plugin_040_init) {
         // Reset card id on timeout
         UserVar.setSensorTypeLong(event->TaskIndex, 0);
+        #ifndef BUILD_NO_DEBUG
         addLog(LOG_LEVEL_INFO, F("RFID : Removed Tag"));
+        #endif // ifndef BUILD_NO_DEBUG
         sendData(event);
         success = true;
       }
@@ -88,6 +90,7 @@ boolean Plugin_040(uint8_t function, struct EventStruct *event, String& string)
     {
       if (Plugin_040_init)
       {
+        success = true;
         uint8_t val = 0;
         uint8_t code[6];
         uint8_t checksum  = 0;
@@ -187,7 +190,6 @@ boolean Plugin_040(uint8_t function, struct EventStruct *event, String& string)
             Scheduler.setPluginTaskTimer(500, event->TaskIndex, event->Par1);
           }
         }
-        success = true;
       }
       break;
     }

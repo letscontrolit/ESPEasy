@@ -4,22 +4,22 @@
 #include "../../../src/DataStructs/TimingStats.h"
 #include "../../../src/DataTypes/ESPEasy_plugin_functions.h"
 #ifdef ESP32
-#include "../../../src/Globals/SecuritySettings.h"
+# include "../../../src/Globals/SecuritySettings.h"
 #endif
 #include "../../../src/Globals/Settings.h"
 #include "../Helpers/_NWPlugin_init.h"
 #ifdef ESP32
-#include "../Helpers/NWAccessControl.h"
+# include "../Helpers/NWAccessControl.h"
 #endif
 
 #include "../../../src/Globals/ESPEasy_Scheduler.h"
+#include "../../../src/Helpers/Networking.h"
 
 #include "../_NWPlugin_Helper.h"
 #ifdef ESP8266
-#include "../wifi/ESPEasyWifi.h"
+# include "../wifi/ESPEasyWifi.h"
 #endif
 #include "../ESPEasyNetwork.h"
-
 
 
 namespace ESPEasy {
@@ -324,11 +324,11 @@ bool NWPluginCall(NWPlugin::Function Function, EventStruct *event, String& str)
 
     // calls to specific network which need to be enabled before calling
     case NWPlugin::Function::NWPLUGIN_INIT:
-//    case NWPlugin::Function::NWPLUGIN_CONNECT_SUCCESS:
-//    case NWPlugin::Function::NWPLUGIN_CONNECT_FAIL:
+    //    case NWPlugin::Function::NWPLUGIN_CONNECT_SUCCESS:
+    //    case NWPlugin::Function::NWPLUGIN_CONNECT_FAIL:
     case NWPlugin::Function::NWPLUGIN_WEBFORM_SHOW_ACTIVE:
     case NWPlugin::Function::NWPLUGIN_WEBFORM_SHOW_CONNECTED:
-//    case NWPlugin::Function::NWPLUGIN_WEBFORM_SHOW_EXTENDED:
+    //    case NWPlugin::Function::NWPLUGIN_WEBFORM_SHOW_EXTENDED:
     case NWPlugin::Function::NWPLUGIN_WEBFORM_SHOW_HW_ADDRESS:
     case NWPlugin::Function::NWPLUGIN_WEBFORM_SHOW_IP:
 #ifdef ESP32
@@ -356,7 +356,7 @@ bool NWPluginCall(NWPlugin::Function Function, EventStruct *event, String& str)
     case NWPlugin::Function::NWPLUGIN_WEBFORM_LOAD:
     case NWPlugin::Function::NWPLUGIN_WEBFORM_SAVE:
 
-//    case NWPlugin::Function::NWPLUGIN_DRIVER_TEMPLATE:
+      //    case NWPlugin::Function::NWPLUGIN_DRIVER_TEMPLATE:
     {
       const networkIndex_t networkIndex = event->NetworkIndex;
       bool success                      = false;
@@ -468,20 +468,43 @@ bool NWPluginCall(NWPlugin::Function Function, EventStruct *event, String& str)
 
                 case NWPlugin::Function::NWPLUGIN_CLIENT_IP_WEB_ACCESS_ALLOWED:
                 {
-                  IPAddress client_ip;
-                  client_ip.fromString(str);
+                  if (!Settings.getNetworkInterfaceSubnetBlockClientIP(event->NetworkIndex)) {
+                    IPAddress client_ip;
+                    client_ip.fromString(str);
 
-                  if ((SecuritySettings.IPblockLevel == LOCAL_SUBNET_ALLOWED) &&
-                      !Settings.getNetworkInterfaceSubnetBlockClientIP(event->NetworkIndex)) {
-                    success = NWPlugin::IP_in_subnet(client_ip, event->networkInterface);
-                  } else if (SecuritySettings.IPblockLevel == ONLY_IP_RANGE_ALLOWED) {
-                    const IPAddress low(SecuritySettings.AllowedIPrangeLow);
-                    const IPAddress high(SecuritySettings.AllowedIPrangeHigh);
-                    success = NWPlugin::ipInRange(client_ip, low, high) &&
-                              NWPlugin::IP_in_subnet(low,  event->networkInterface) &&
-                              NWPlugin::IP_in_subnet(high, event->networkInterface);
-                  } else {
                     success = true;
+
+                    if (SecuritySettings.IPblockLevel == LOCAL_SUBNET_ALLOWED) {
+                      success = NWPlugin::IP_in_subnet(client_ip, event->networkInterface);
+
+                      const NWPlugin::IP_type ip_type = NWPlugin::get_IP_type(client_ip);
+
+                      IPAddress networkID;
+                      IPAddress broadcast;
+
+                      if (NWPlugin::get_subnet(ip_type, event->networkInterface, networkID, broadcast)) {
+                        # if FEATURE_USE_IPV6
+                        const bool includeZone = ip_type == NWPlugin::IP_type::ipv6_link_local;
+                        event->String1 = formatIP(networkID, includeZone);
+                        event->String2 = formatIP(broadcast, includeZone);
+                        # else // if FEATURE_USE_IPV6
+                        event->String1 = formatIP(networkID);
+                        event->String2 = formatIP(broadcast);
+                        # endif // if FEATURE_USE_IPV6
+                      }
+                    } else if (SecuritySettings.IPblockLevel == ONLY_IP_RANGE_ALLOWED) {
+                      const IPAddress low(SecuritySettings.AllowedIPrangeLow);
+                      const IPAddress high(SecuritySettings.AllowedIPrangeHigh);
+
+                      if (IPAddressSet(low) || IPAddressSet(high))
+                      {
+                        // Use || as for example 0.0.0.0 ... 123.0.0.0 might also be a possible range.
+                        // Though I have no idea for what practical use case...
+                        success        = NWPlugin::ipInRange(client_ip, low, high);
+                        event->String1 = formatIP(low);
+                        event->String2 = formatIP(high);
+                      }
+                    }
                   }
                   break;
                 }
@@ -493,7 +516,8 @@ bool NWPluginCall(NWPlugin::Function Function, EventStruct *event, String& str)
           }
 #endif // ifdef ESP32
         }
-//#ifdef ESP32
+
+        // #ifdef ESP32
 
         if (Function == NWPlugin::Function::NWPLUGIN_EXIT) {
           //          Cache.clearNetworkSettings(networkIndex);
@@ -505,7 +529,8 @@ bool NWPluginCall(NWPlugin::Function Function, EventStruct *event, String& str)
           }
           clearNWPluginData(event->NetworkIndex);
         }
-//#endif // ifdef ESP32
+
+        // #endif // ifdef ESP32
       }
       return success;
     }

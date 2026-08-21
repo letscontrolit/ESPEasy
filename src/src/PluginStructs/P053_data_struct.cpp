@@ -545,7 +545,9 @@ bool P053_data_struct::checkAndClearValuesReceived(struct EventStruct *event) {
 bool P053_data_struct::resetSensor() {
   if (validGpio(_resetPin)) { // Reset if pin is configured
     // Toggle 'reset' to assure we start reading header
+    #ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_INFO, F("PMSx003: resetting module"));
+    #endif // ifndef BUILD_NO_DEBUG
     pinMode(_resetPin, OUTPUT);
     digitalWrite(_resetPin, LOW);
     delay(250);
@@ -560,7 +562,9 @@ bool P053_data_struct::wakeSensor() {
   if (!initialized()) {
     return false;
   }
+  #ifndef BUILD_NO_DEBUG
   addLog(LOG_LEVEL_INFO, F("PMSx003: Wake sensor"));
+  #endif // ifndef BUILD_NO_DEBUG
 
   if (validGpio(_pwrPin)) {
     // Make sure the sensor is "on"
@@ -594,7 +598,9 @@ bool P053_data_struct::sleepSensor() {
   }
 
   // Put the sensor to sleep
+  #ifndef BUILD_NO_DEBUG
   addLog(LOG_LEVEL_INFO, F("PMSx003: Sleep sensor"));
+  #endif // ifndef BUILD_NO_DEBUG
 
   if (_pwrPin >= 0) {
     pinMode(_pwrPin, OUTPUT);

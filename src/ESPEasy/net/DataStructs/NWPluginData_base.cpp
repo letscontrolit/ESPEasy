@@ -355,14 +355,16 @@ bool NWPluginData_base::handle_priority_route_changed()
       auto tmp = _netif->dnsIP(i);
 
       if (valid_DNS_address(cache->_dns_cache[i]) && (cache->_dns_cache[i] != tmp)) {
-        addLog(LOG_LEVEL_INFO, strformat(
+        #ifndef BUILD_NO_DEBUG
+if (loglevelActiveFor(LOG_LEVEL_DEBUG))
+    addLog(LOG_LEVEL_DEBUG, strformat(
                  F("%s: Restore cached DNS server %d from %s to %s"),
                  _netif->desc(),
                  i,
                  tmp.toString().c_str(),
                  cache->_dns_cache[i].toString().c_str()
                  ));
-
+#endif
         _netif->dnsIP(i, cache->_dns_cache[i]);
         res = true;
       }

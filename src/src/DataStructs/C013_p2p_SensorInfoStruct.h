@@ -25,7 +25,7 @@ struct __attribute__((__packed__)) C013_SensorInfoStruct
   C013_SensorInfoStruct() = default;
 
 
-  static UP_C013_SensorInfoStruct create(const uint8_t *data, size_t size);
+  static UP_C013_SensorInfoStruct createFromReceived(const uint8_t *data, size_t size);
 
   bool prepareForSend(size_t& sizeToSend);
 

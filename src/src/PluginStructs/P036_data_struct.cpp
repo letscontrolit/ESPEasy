@@ -173,6 +173,10 @@ constexpr tSizeSettings SizeSettings[] = {
   { 64,                  48,                   32, // 64x48
     3,                                             // max. line count
     32,  10                                        // WiFi indicator
+  },
+  { 72,                  40,                   28, // 72x40
+    3,                                             // max. line count
+    28,  12                                        // WiFi indicator
   }
 };
 
@@ -1164,6 +1168,8 @@ tIndividualFontSettings P036_data_struct::CalculateIndividualFontSettings(uint8_
               break;
             case p036_resolution::pix128x32: lSpace = -2;
               break;
+            case p036_resolution::pix72x40: lSpace = -1;
+              break;
             case p036_resolution::pix64x48: lSpace = -1;
               break;
           }
@@ -1309,6 +1315,8 @@ tFontSettings P036_data_struct::CalculateFontSettings(uint8_t lDefaultLines) {
       case p036_resolution::pix128x32:  result.Space = -2;
         break;
       case p036_resolution::pix64x48:  result.Space = -1;
+        break;
+      case p036_resolution::pix72x40:  result.Space = -1;
         break;
     }
     iFontIndex = NR_ELEMENTS(FontSizes) - 1;

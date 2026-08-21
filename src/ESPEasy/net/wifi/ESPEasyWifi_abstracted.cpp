@@ -82,6 +82,13 @@ bool doSetAPinternal(bool enable)
     String softAPSSID = NetworkCreateRFCCompliantHostname();
     String pwd        = SecuritySettings.WifiAPKey;
     IPAddress subnet(DEFAULT_AP_SUBNET);
+
+    // AP mode (and AP netif on ESP32) must be enabled before softAPConfig,
+    // otherwise DHCP server setup fails when STA is active but not connected.
+    if (!doSetAP(true)) {
+      return false;
+    }
+
     # ifdef ESP32
     IPAddress dhcp_lease_start = (uint32_t)0;
 
@@ -137,10 +144,6 @@ bool doSetAPinternal(bool enable)
     if (WifiIsSTA(WiFi.getMode()) && WiFiConnected()) {
       channel = WiFi.channel();
     }
-
-#ifdef ESP32
-    doSetAP(true);
-#endif
 
     if (WiFi.softAP(softAPSSID.c_str(), pwd.c_str(), channel)) {
       auto data = getWiFi_AP_NWPluginData_static_runtime();
@@ -204,6 +207,7 @@ bool doSetAPinternal(bool enable)
 #  endif // if FEATURE_DNS_SERVER
 # endif // ifdef ESP32
     }
+    return true;
   } else {
     # if FEATURE_DNS_SERVER
 
@@ -218,7 +222,7 @@ bool doSetAPinternal(bool enable)
 
     doSetAP(false);
   }
-  return false;
+  return true;
 }
 
 void doSetConnectionSpeed() {

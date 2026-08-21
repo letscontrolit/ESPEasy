@@ -317,6 +317,12 @@ const char Internal_commands_w[] PROGMEM =
   "wdconfig|"
   "wdread|"
 #endif // ifndef LIMIT_BUILD_SIZE
+#if FEATURE_EEPROM_EXTERNAL
+  "writeee|"
+#endif // if FEATURE_EEPROM_EXTERNAL
+#if FEATURE_RTC_SRAM_STORAGE
+  "writertc|"
+#endif // if FEATURE_RTC_SRAM_STORAGE
 ;
 #endif
 

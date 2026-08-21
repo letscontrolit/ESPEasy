@@ -70,6 +70,7 @@ enum class p038_commands_e : int8_t {
   neopixelfor,
   neopixelforhsv,
   # endif // if P038_FEATURE_NEOPIXELFOR
+
 };
 
 bool P038_data_struct::plugin_write(struct EventStruct *event, const String& string) {
@@ -82,14 +83,18 @@ bool P038_data_struct::plugin_write(struct EventStruct *event, const String& str
 
     if (cmd_i < 0) { return false; } // Fail fast
 
+    # ifndef BUILD_NO_DEBUG
+
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       addLogMove(LOG_LEVEL_INFO, concat(F("P038 : write - "), string));
     }
+    # endif // ifndef BUILD_NO_DEBUG
     const p038_commands_e cmde = static_cast<p038_commands_e>(cmd_i);
 
     success = true;
 
-    switch (cmde) {
+    switch (cmde)
+    {
       case p038_commands_e::invalid:
         break;
       case p038_commands_e::neopixel:

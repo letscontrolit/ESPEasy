@@ -100,6 +100,7 @@ boolean Plugin_034(uint8_t function, struct EventStruct *event, String& string)
           UserVar.setFloat(event->TaskIndex, 0, temperature);
           UserVar.setFloat(event->TaskIndex, 1, humidity);
 
+          #ifndef BUILD_NO_DEBUG
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             addLogMove(LOG_LEVEL_INFO,
                        concat(F("DHT12: Temperature: "),
@@ -118,13 +119,16 @@ boolean Plugin_034(uint8_t function, struct EventStruct *event, String& string)
                         addLog(LOG_LEVEL_INFO, log);
              */
           }
+          #endif // ifndef BUILD_NO_DEBUG
           success = true;
         } // checksum
       }   // error
 
       if (!success)
       {
+        #ifndef BUILD_NO_DEBUG
         addLog(LOG_LEVEL_INFO, F("DHT12: No reading!"));
+        #endif // ifndef BUILD_NO_DEBUG
         UserVar.setFloat(event->TaskIndex, 0, NAN);
         UserVar.setFloat(event->TaskIndex, 1, NAN);
       }

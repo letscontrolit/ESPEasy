@@ -115,11 +115,19 @@ bool P119_data_struct::init_sensor() {
   itg3205 = new (std::nothrow) ITG3205(_i2cAddress);
 
   if (initialized()) {
+    #ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_INFO, F("ITG3205: Initializing Gyro..."));
+    #endif // ifndef BUILD_NO_DEBUG
     itg3205->initGyro();
+    #ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_INFO, F("ITG3205: Calibrating Gyro..."));
+    #endif // ifndef BUILD_NO_DEBUG
     itg3205->calibrate();
+    #ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_INFO, F("ITG3205: Calibration done."));
+    #else // ifndef BUILD_NO_DEBUG
+    addLog(LOG_LEVEL_INFO, F("ITG3205: Init done."));
+    #endif // ifndef BUILD_NO_DEBUG
   } else {
     addLog(LOG_LEVEL_ERROR, F("ITG3205: Initialization of Gyro failed."));
     return false;

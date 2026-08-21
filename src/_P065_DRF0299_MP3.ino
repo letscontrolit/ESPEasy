@@ -53,7 +53,6 @@
 ESPeasySerial *P065_easySerial = nullptr;
 uint8_t P065_initialVolumeSet  = P065_VOLUME_DELAY;
 
-
 boolean Plugin_065(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
@@ -63,9 +62,10 @@ boolean Plugin_065(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_DEVICE_ADD:
     {
       auto& dev = Device[++deviceCount];
-      dev.Number   = PLUGIN_ID_065;
-      dev.Type     = DEVICE_TYPE_SERIAL;
-      dev.VType    = Sensor_VType::SENSOR_TYPE_NONE;
+      dev.Number             = PLUGIN_ID_065;
+      dev.Type               = DEVICE_TYPE_SERIAL;
+      dev.VType              = Sensor_VType::SENSOR_TYPE_NONE;
+      dev.SerialPortsAllowed = INCLUDE_NOT_CDC_SERIAL;
       break;
     }
 
@@ -221,6 +221,7 @@ boolean Plugin_065(uint8_t function, struct EventStruct *event, String& string)
         success = true;
       }
 
+      #ifndef BUILD_NO_DEBUG
       if (success && loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log;
         log.reserve(20);
@@ -232,6 +233,7 @@ boolean Plugin_065(uint8_t function, struct EventStruct *event, String& string)
         }
         addLogMove(LOG_LEVEL_INFO, log);
       }
+      #endif // ifndef BUILD_NO_DEBUG
       break;
     }
   }
@@ -274,10 +276,7 @@ void Plugin_065_SetMode(int8_t mode)
   Plugin_065_SendCmd(0x08, mode);
 }
 
-void Plugin_065_SetRepeat(int8_t repeat)
-{
-  Plugin_065_SendCmd(0x11, (repeat <= 0) ? 0 : 1);
-}
+void Plugin_065_SetRepeat(int8_t repeat) { Plugin_065_SendCmd(0x11, (repeat <= 0) ? 0 : 1); }
 
 void Plugin_065_SendCmd(uint8_t cmd, int16_t data)
 {

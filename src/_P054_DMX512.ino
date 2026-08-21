@@ -90,9 +90,10 @@ boolean Plugin_054(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_DEVICE_ADD:
     {
       auto& dev = Device[++deviceCount];
-      dev.Number   = PLUGIN_ID_054;
-      dev.Type     = DEVICE_TYPE_SERIAL;
-      dev.VType    = Sensor_VType::SENSOR_TYPE_NONE;
+      dev.Number             = PLUGIN_ID_054;
+      dev.Type               = DEVICE_TYPE_SERIAL;
+      dev.VType              = Sensor_VType::SENSOR_TYPE_NONE;
+      dev.SerialPortsAllowed = INCLUDE_HW_SERIAL | INCLUDE_SW_SERIAL;
       break;
     }
 
@@ -130,19 +131,6 @@ boolean Plugin_054(uint8_t function, struct EventStruct *event, String& string)
         CONFIG_PIN2 = CONFIG_PIN1;
         CONFIG_PIN1 = -1;
       }
-      break;
-    }
-
-    case PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS:
-    {
-      addFormNote(F("An on-chip ESP Serial port"
-                    # if USES_USBCDC
-                    " (<B>not</B> USB CDC)"
-                    # endif // if USES_USBCDC
-                    # if USES_HWCDC
-                    " (<B>not</B> USB HWCDC)"
-                    # endif // if USES_HWCDC
-                    " must be selected!"));
       break;
     }
 

@@ -78,7 +78,9 @@ bool P162_data_struct::hw_reset() {
     digitalWrite(_rstPin, LOW);
     delayMicroseconds(1); // Reset requires low signal for at least 150 nsec, so 1 microsecond should suffice
     digitalWrite(_rstPin, HIGH);
+    #ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_INFO, F("Digipot: Hardware reset applied."));
+    #endif // ifndef BUILD_NO_DEBUG
     return true;
   }
   return false;
@@ -106,7 +108,9 @@ bool P162_data_struct::plugin_write(struct EventStruct *event,
         updateUserVars(event);
         write_pot(event, P162_BOTH_POT_SEL, _pot0_value); // Single command
         success = true;
+        #ifndef BUILD_NO_DEBUG
         addLog(LOG_LEVEL_INFO, F("Digipot: Software reset applied."));
+        #endif // ifndef BUILD_NO_DEBUG
       }
     } else
 

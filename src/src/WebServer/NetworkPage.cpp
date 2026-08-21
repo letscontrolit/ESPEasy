@@ -35,11 +35,7 @@ void handle_networks()
   checkRAM(F("handle_networks"));
 # endif // ifndef BUILD_NO_RAM_TRACKER
 
-  if (!isLoggedIn()) { return; }
-  navMenuIndex = MENU_INDEX_NETWORK;
-  TXBuffer.startStream();
-  sendHeadandTail_stdtemplate(_HEAD);
-
+  if (!startStream_send_stdTemplate(MENU_INDEX_NETWORK)) { return; }
 
   // 'index' value in the URL
   uint8_t networkindex       = getFormItemInt(F("index"), 0);
@@ -115,8 +111,6 @@ void handle_networks()
 
   }
 
-  html_add_form();
-
   if (networkIndexSet)
   {
     handle_networks_NetworkSettingsPage(networkindex);
@@ -126,8 +120,7 @@ void handle_networks()
     handle_networks_ShowAllNetworksTable();
   }
 
-  sendHeadandTail_stdtemplate(_TAIL);
-  TXBuffer.endStream();
+  sendTail_stdtemplate();
 }
 
 void handle_networks_clearLoadDefaults(ESPEasy::net::networkIndex_t networkindex, NetworkSettingsStruct& NetworkSettings) {
@@ -159,6 +152,7 @@ void handle_networks_CopySubmittedSettings_NWPluginCall(ESPEasy::net::networkInd
 # ifdef ESP32
     Settings.setRoutePrio_for_network(networkindex, getFormItemInt(F("routeprio"), 0));
     Settings.setNetworkInterface_isFallback(networkindex, isFormItemChecked(F("fallback")));
+    Settings.setAppendNetworkAdapterNameToHostname(networkindex, isFormItemChecked(F("append_hostname")));
     Settings.setNetworkInterfaceSubnetBlockClientIP(networkindex, isFormItemChecked(F("block_web_access")));
 # endif // ifdef ESP32
 # ifdef ESP8266
@@ -184,6 +178,7 @@ void handle_networks_CopySubmittedSettings_NWPluginCall(ESPEasy::net::networkInd
 
 void handle_networks_ShowAllNetworksTable()
 {
+  html_add_form();
   html_table_class_multirow();
   html_TR();
   html_table_header(F(""),           70);
@@ -321,6 +316,8 @@ void handle_networks_NetworkSettingsPage(ESPEasy::net::networkIndex_t networkind
 {
   if (!validNetworkIndex(networkindex)) { return; }
 
+  html_add_form();
+
   const networkDriverIndex_t networkDriverIndex =
     getNetworkDriverIndex_from_NWPluginID(
       Settings.getNWPluginID_for_network(networkindex));
@@ -405,6 +402,7 @@ void handle_networks_NetworkSettingsPage(ESPEasy::net::networkIndex_t networkind
 # ifdef ESP32
     addFormNote(F(
                   "For fallback interface, it is the delay after connection of primary interface has failed. For non-fallback it is the delay from boot"));
+    addFormCheckBox(F("Append Name to Hostname"), F("append_hostname"), Settings.getAppendNetworkAdapterNameToHostname(networkindex));
 # endif // ifdef ESP32
     addFormCheckBox(F("Block Web Access"), F("block_web_access"), Settings.getNetworkInterfaceSubnetBlockClientIP(networkindex));
     addFormNote(F("When checked, any host from a subnet on this network interface will be blocked to access the ESPEasy web interface"));

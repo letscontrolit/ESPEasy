@@ -1,0 +1,56 @@
+StateDiagram [frame=true framecolor=steelblue label="State Diagram ESPEasy WiFi_STA_State_e"] {
+  state Disabled
+  state TimeOut
+  state begin
+  state WiFiOFF
+  state AP_only
+  state AP_Fallback
+  state IdleWaiting
+  state STA_Scanning
+  state STA_AP_Scanning
+  state STA_Connecting
+  state STA_Reconnecting
+  state STA_Connected
+  state STA_Connected_Setup
+  choice bConn 
+  choice bCand 
+  choice bScan 
+  choice bAPmode 
+  choice timeoutSetupMode
+  initialState->WiFiOFF
+  TimeOut -> timeoutSetupMode "Setup"
+  timeoutSetupMode -> IdleWaiting "!connected"
+  timeoutSetupMode -> WiFiOFF "!Setup"
+  WiFiOFF -> begin
+  begin -> bConn 
+  bConn -> STA_Connected "connected"
+  bConn -> bCand "!connected"
+  bCand -> IdleWaiting "hasCandidates"
+  bCand -> bScan "!hasCandidates"
+  bScan -> AP_only "scanned"
+  bScan -> bAPmode "!scanned"
+  bAPmode -> STA_AP_Scanning "APmode"
+  bAPmode -> STA_Scanning "!APmode"
+  AP_only -> IdleWaiting "!APactiveUsed & (hasCandidates || timeout)"
+  AP_Fallback -> IdleWaiting "!APactiveUsed & (hasCandidates || timeout)"
+  IdleWaiting -> STA_Connected_Setup "connected() && mode==setup"
+  IdleWaiting -> STA_Connected "connected() && mode!=setup"
+  IdleWaiting -> STA_Connecting "timeout & hasCandidates"
+  IdleWaiting -> STA_AP_Scanning "timeout & !hasCandidates & scanfail & APmode"
+  IdleWaiting -> STA_Scanning "timeout & !hasCandidates & scanfail & !APmode"
+  STA_Scanning -> WiFiOFF "scanfail || scansuccess || !startAP_fallback"
+  STA_Scanning -> AP_Fallback "scanfail & startAP_fallback"
+  STA_AP_Scanning -> WiFiOFF "scanfail || scansuccess || !startAP_fallback"
+  STA_AP_Scanning -> AP_Fallback "scanfail & startAP_fallback"
+  STA_AP_Scanning -> AP_only "scanfail & !startAP_fallback"
+  STA_AP_Scanning -> STA_AP_Scanning "scan next channel"
+  STA_Connecting -> STA_Connected_Setup "connected & SetupMode"
+  STA_Connecting -> STA_Connected "connected & !SetupMode"
+  STA_Connecting -> STA_Reconnecting "!connected & timeout"
+  STA_Reconnecting -> IdleWaiting "!connected & timeout"
+  STA_Reconnecting -> STA_Connected_Setup "connected & SetupMode"
+  STA_Reconnecting -> STA_Connected "connected & !SetupMode"
+  STA_Connected -> STA_Connecting "!connected & hasCandidates"
+  STA_Connected -> STA_Scanning "!connected & !hasCandidates"
+  STA_Connected -> STA_Connected "connected + setTXpwr"
+}

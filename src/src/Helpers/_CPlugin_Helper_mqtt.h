@@ -91,8 +91,7 @@ bool MQTT_DiscoveryPublish(controllerIndex_t ControllerIndex,
                            uint8_t           v,
                            bool              retained = false);
 
-bool MQTT_DiscoveryPublishWithStatusAndSet(taskIndex_t               taskIndex,
-                                           uint8_t                   taskValue,
+bool MQTT_DiscoveryPublishWithStatusAndSet(uint8_t                   taskValue,
                                            const String            & valueName,
                                            controllerIndex_t         ControllerIndex,
                                            ControllerSettingsStruct& ControllerSettings,

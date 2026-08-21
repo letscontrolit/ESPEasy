@@ -23,11 +23,8 @@
 #  endif // if defined(LIMIT_BUILD_SIZE) && defined(ESP8266)
 # endif // ifndef P113_USE_ROI
 
-# include <SparkFun_VL53L1X.h>
+class SFEVL53L1X; // Forward declaration
 
-# if P113_USE_ROI
-#  include "../Static/WebStaticData.h" // Javascript and support functions
-# endif // if P113_USE_ROI
 
 # define P113_I2C_ADDRESS   PCONFIG(0)
 # define P113_TIMING        PCONFIG(1)

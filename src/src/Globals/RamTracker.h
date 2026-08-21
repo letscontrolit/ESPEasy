@@ -16,11 +16,11 @@
 class RamTracker {
 private:
 
-  String traces[TRACES];                            // trace of latest memory checks
-  unsigned int tracesMemory[TRACES];                // lowest memory for that  trace
+  String traces[TRACES]{};                            // trace of latest memory checks
+  unsigned int tracesMemory[TRACES]{};                // lowest memory for that  trace
   unsigned int readPtr, writePtr;                   // pointer to cyclic buffer
-  String nextAction[TRACEENTRIES];                  // buffer to record the names of functions before they are transfered to a trace
-  unsigned int nextActionStartMemory[TRACEENTRIES]; // memory levels for the functions.
+  String nextAction[TRACEENTRIES]{};                  // buffer to record the names of functions before they are transfered to a trace
+  unsigned int nextActionStartMemory[TRACEENTRIES]{}; // memory levels for the functions.
 
   unsigned int bestCaseTrace(void);
 

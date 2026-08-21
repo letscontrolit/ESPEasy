@@ -108,11 +108,13 @@ boolean Plugin_107(uint8_t function, struct EventStruct *event, String& string)
 
       P107_data->uv.reset(); // Stop the sensor reading
 
+      #ifndef BUILD_NO_DEBUG
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         addLogMove(LOG_LEVEL_INFO, concat(F("SI1145: Visible: "), formatUserVarNoCheck(event, 0)));
         addLogMove(LOG_LEVEL_INFO, concat(F("SI1145: Infrared: "), formatUserVarNoCheck(event, 1)));
         addLogMove(LOG_LEVEL_INFO, concat(F("SI1145: UV index: "), formatUserVarNoCheck(event, 2)));
       }
+      #endif // ifndef BUILD_NO_DEBUG
       success = true;
       break;
     }

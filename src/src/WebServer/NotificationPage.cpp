@@ -39,10 +39,7 @@ void handle_notifications() {
   checkRAM(F("handle_notifications"));
   # endif // ifndef BUILD_NO_RAM_TRACKER
 
-  if (!isLoggedIn()) { return; }
-  navMenuIndex = MENU_INDEX_NOTIFICATIONS;
-  TXBuffer.startStream();
-  sendHeadandTail_stdtemplate(_HEAD);
+  if (!startStream_send_stdTemplate(MENU_INDEX_NOTIFICATIONS)) { return; }
 
   struct EventStruct TempEvent;
 
@@ -324,8 +321,7 @@ void handle_notifications() {
     html_end_table();
     html_end_form();
   }
-  sendHeadandTail_stdtemplate(_TAIL);
-  TXBuffer.endStream();
+  sendTail_stdtemplate();
 }
 
 #endif // FEATURE_NOTIFIER

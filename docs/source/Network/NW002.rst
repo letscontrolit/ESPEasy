@@ -22,6 +22,81 @@ GitHub: |NW002_github|_
 
 Maintainer: |NW002_maintainer|
 
+.. include:: Network_standard_parameters.repl
+
+
+Wifi AP Settings
+----------------
+
+WPA AP Mode Key
+^^^^^^^^^^^^^^^
+
+The WPA key to use for the WiFi AP mode.
+
+Default key is ``configesp``
+
+.. note:: WPA Key must be at least 8 characters long
+
+Wifi AP channel
+^^^^^^^^^^^^^^^
+
+Suggested channel to use for AP mode.
+
+.. note:: This will only be used when running in AP-only mode. When running in AP+STA mode, the AP will use the same channel as STA to make sure the ESP will not continously switch between channels for AP and STA.
+
+Enable NAPT
+^^^^^^^^^^^
+
+(ESP32-only)
+
+NAPT is like NAT which is known from any consumer internet router.
+
+When checked, the ESP may act as a gateway to another network, when also connected via another network interface.
+
+For example when the ESP is connected via WiFi STA, Ethernet or PPP, any WiFi client device connected via the ESP's AP can also reach the network via the other connected interface.
+Like a single ESP board with a PPP modem and AP active. With NAPT checked, the connected WiFi clients can access the internet via the PPP modem.
+
+.. note:: This will only work when `force /setup` is not enabled.
+
+
+Wifi AP Fallback
+----------------
+
+Force /setup in AP-Mode
+^^^^^^^^^^^^^^^^^^^^^^^
+
+This is also known as "Captive Portal" mode, like what can be seen on some "free WiFi" networks where you get redirected to some welcome screen where you may need to agree to terms and conditions first before you can continue.
+
+It does reply to any DNS request with the IP of the ESP's WiFi AP network interface and redirect the client to the ``/setup`` page for WiFi setup.
+
+.. note:: Since this feature does actively reply to any DNS request with the ESP's own IP, this cannot be used along with the "NAPT" feature.
+
+Start AP on No Credentials
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+When checked, the AP interface will be started when there are no WiFi credentials set.
+
+
+Start AP on Connect Fail
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+When checked, the AP interface will be started when there the ESP may fail to connect to any configured WiFi access point.
+
+
+Max. Uptime to Start AP
+^^^^^^^^^^^^^^^^^^^^^^^
+
+Limit the window in which the AP is allowed to start.
+The set value refers to the number of minutes since the ESP booted.
+
+When set to 0, the AP is allowed to start regardless the uptime of the ESP board.
+
+AP Minimal 'on' Time
+^^^^^^^^^^^^^^^^^^^^
+
+Minimal time in seconds, the AP should remain turned 'on', waiting for a user to connect.
+
+
 Change log
 ----------
 
@@ -37,5 +112,3 @@ Change log
   |added|
   Initial release version.
 
-Description
------------

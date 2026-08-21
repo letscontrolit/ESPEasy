@@ -35,7 +35,7 @@ bool P126_data_struct::plugin_init(struct EventStruct *event) {
     }
 
     const uint16_t maxVar = min(static_cast<uint8_t>(VARS_PER_TASK),
-                                static_cast<uint8_t>(ceil((P126_CONFIG_CHIP_COUNT - P126_CONFIG_SHOW_OFFSET) / 4.0)));
+                                static_cast<uint8_t>(ceilf((P126_CONFIG_CHIP_COUNT - P126_CONFIG_SHOW_OFFSET) / 4.0f)));
     uint32_t par;
 
     for (uint16_t varNr = 0; varNr < maxVar; ++varNr) {

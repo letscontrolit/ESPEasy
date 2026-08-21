@@ -216,7 +216,9 @@ boolean Plugin_088(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_EXIT:
     {
+      #ifndef BUILD_NO_DEBUG
       addLog(LOG_LEVEL_INFO, F("P088: Heatpump IR transmitter deactivated"));
+      #endif // ifndef BUILD_NO_DEBUG
 
       if (Plugin_088_irSender != nullptr)
       {
@@ -243,7 +245,9 @@ boolean Plugin_088(uint8_t function, struct EventStruct *event, String& string)
             enableIR_RX(true);
 
             delete panasonicHeatpumpIR;
+            #ifndef BUILD_NO_DEBUG
             addLog(LOG_LEVEL_INFO, F("P088: The TIMER led on Panasonic CKP should now be OFF"));
+            #endif // ifndef BUILD_NO_DEBUG
           }
         }
       }

@@ -2222,7 +2222,9 @@ void ESPEasy_TouchHandler::generateObjectEvent(struct EventStruct *event,
     eventCommand += ',';
     eventCommand += wrapWithQuotesIfContainsParameterSeparatorChar(TouchObjects[objectIndex].objectName);
     ExecuteCommand_all({ EventValueSource::Enum::VALUE_SOURCE_RULES, eventCommand }, true); // Simulate like from rules
+    #ifndef BUILD_NO_DEBUG
     addLogMove(LOG_LEVEL_INFO, eventCommand);
+    #endif // ifndef BUILD_NO_DEBUG
     delay(0);
 
     // Handle group actions
@@ -2251,7 +2253,9 @@ void ESPEasy_TouchHandler::generateObjectEvent(struct EventStruct *event,
           case Touch_action_e::Default:
             break;
         }
+        #ifndef BUILD_NO_DEBUG
         addLogMove(LOG_LEVEL_INFO, concat(F("TOUCH event: "), toString(action)));
+        #endif // ifndef BUILD_NO_DEBUG
       }
     }
   }

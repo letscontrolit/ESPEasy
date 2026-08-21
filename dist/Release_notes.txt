@@ -1,4 +1,869 @@
 -------------------------------------------------
+Changes in release mega-20260720 (since mega-20260125)
+-------------------------------------------------
+
+Release date: ma 20 jul 2026 13:16:21 CEST
+
+Gijs Noorlander (9):
+      [MFRC522] Speedup reading tag
+      [network] Fix wifi#connected and wifi#disconnected events
+      [network] Fix typo in event
+      [Network] Add AT command write to PPP modem
+      [Network] Add connected/disconnected event handling for all interfaces
+      [network] Reduce CPU load + fix init NW interface event names
+      [MQTT] Fix merge issues
+      [Build] Change ESP8266 normal and collection builds to core 3.1.2
+      [Build] Enable BUILD_NO_DEBUG for 2nd heap ESP8266 normal builds
+
+TD-er (611):
+      [WiFi] Split WiFi code specific for ESP8266 and ESP32
+      [Cleanup] Get rid of ESP32-IDF code for IDF3.x or older
+      [Cleanup] Fix spelling error in filename
+      [WiFi] First part of moving code around to restructure WiFi code
+      [WiFi] Start using simplified state machine for WiFi
+      [WiFi] Restructure ESP32/ESP8266 code
+      [WiFi] Allow connecting to hidden SSID network
+      [WiFi] Fix build issue due to enum naming conflict
+      [IPv6] Disable IPv6 for ESP32-C2
+      [PSRAM] Free GPIO-16 and -17 on ESP32-classic when no PSRAM present
+      [PSRAM] Fix build on ESP-IDF 5.1 + add special case of ESP32-picoD4
+      [PSRAM] Cleanup code
+      [PSRAM] Fix solo1 builds
+      [WiFi] Add some debug log to track GotIP event
+      [WiFi] Fix not showing /setup page
+      [WiFi] Update to latest ESP-IDF SDK + handle gotIP event on ESP8266
+      [WiFi] Fix event handling for WiFi on ESP32
+      [WiFi] Fix start AP for setup
+      [WiFi] Call WiFi_AP_Candidates.force_reload() on saving security setting
+      [PSRAM] Use PSRAM for logs, events and controller queues
+      [Memory] Fix freeing of allocated strings
+      [Memory] Add small optimization in free_string() to prevent copying
+      [ESP-IDF] Update to latest Arduino 3.1.2 for LittleFS builds
+      [ESP-SDK] Update to ESP32/Arduino 3.1.3
+      [ESPEasy p2p] Add node-IDs for new Espressif SoC models
+      [WiFi] Fix processing connected event
+      [ESP8266] Fix crash on processing log with weblog enabled.
+      [Cleanup] Simplify generating sysinfo page
+      [ESP8266] Fix crash on ESP8266 SDK 2.7.4
+      [ESP8266] Balance more what should be allocated on 2nd heap
+      [Build] Fix build issues on ESP32-xx
+      [Memory] Make memory allocation on ESP8266 2nd heap more stable
+      [Memory] Move C001 and C002 queue elements to 2nd heap (ESP8266)
+      [Memory] Move other controller queue elements to 2nd heap (ESP8266)
+      [ESP32S3] Fix bootloop on ESP32S3 with OPI PSRAM
+      [WiFi] Fix not setting wifi as initialized too often
+      [Memory] Improve memory usage on Strings and task data
+      [Memory] Fix crashes on ESP32-S2 with 8M PSRAM
+      [WiFi] Fix setting dynamic WiFi TX power
+      [Cleanup] Optimize parsing system variables
+      [Rules] Fix broken math parsing
+      [WiFi] Fix (re-)connecting after WiFi connection lost
+      [WiFi] Fix build error on ESP8266
+      [Cleanup] Uncrustify WiFi/Network code
+      [WiFi] Fix reconnecting + WiFi scan
+      [ESP-IDF5.4] Prepare for ESP-IDF5.4 with Arduino 3.2.0
+      [Eastron] Speed up parsing Modbus RTU messages
+      [Serial] Add setXxBufferSize functions
+      [ESP-IDF5.3] Update to latest Arduino/ESP-IDF5.3 version
+      [timing stats] Simplify and speedup collecting timing stats
+      [1-wire] Fix ESP8266 builds not fitting in IRAM
+      [ESP32-C5] Add preliminary support for ESP32-C5 with dual band WiFi
+      [ESP32-C5] Minor tweaks formatting used WiFi protocol
+      [ESP32-C5] Fix file name error for platformio_esp32c5_envs.ini
+      [ESP-IDF] Update to latest SDK/IDF
+      [ESPtool] Prepare use of esptool v5.0.0
+      [ESP32-S2] Change ADC for ESP32-S2 back to 13 bit
+      [ESP-IDF] Revert to older build due to broken UART support
+      [ESP32-C5] Add hardware specific info about ESP32-C5
+      [Build] Get rid of all ESP32-SPIFFS builds
+      [Build] Fix display ESP32 build
+      [build] Change ESP32 IRExt builds to LIMIT_BUILD_SIZE
+      [ESP32-C61] Start adding support for new SoC & generalize WiFi features
+      [ADC] Fix not setting attenuation on internal ADC
+      [ESP-IDF] Update to latest IDF/Arduino code for IDF 5.5
+      [MFRC522] Speed-up detecting cards + make error recovery more stable
+      [MFRC522] Improve range of reader
+      Add HTML_Print and PrintToString helpers
+      [MFRC522] Simplify board reset during init
+      [MFRC522] Allow to dump card info to debug logs
+      [MFRC522] Do proper timing for communicating with card
+      [Rules] Fix processing variables with index > 2^31
+      [Log] Add PrintToLog helper
+      [Build] Add ESP32C5 to release.yml build script
+      [ESP-IDF] Update to latest SDK version
+      [MFRC522] Speedup reading by acting on interrupt pin
+      [PWM motor] Speedup acting on limit switch interrupt
+      [Web flasher] Update esp web tools to 8.1.10 to support ESP32-C5
+      [PubSubClient] Update to new fork PubSubClient3
+      [PubSubClient3] Speedup publish large messages using buffer
+      [Build] Fix failed build due to missing include
+      [ESP32-C5] Add option to force WiFi band 2.4/5 GHz
+      [PubSubClient3] Add check for nullptr in CHECK_STRING_LENGTH
+      [Controller] Fix crashes on MQTT callback calls
+      [Network] Start adding Network config page
+      [Network] Continue adding network config page
+      [Network] Rename NetworkAdapter to NetworkDriver
+      [Network] Start on initial first WiFi STA/AP drivers
+      [Network] Add webform load/save for WiFi STA and AP
+      [Network] Fix looping over CONTROLLER_MAX instead of NETWORK_MAX
+      [ESP32P4] Add preliminary support for ESP32P4
+      [ESP32P4] Fix crashes when trying to connect to WiFi
+      [ESP32P4] Add more warnings for specific GPIO pins
+      [Cleanup] Fix JS issues
+      [Network] Add ETH config page + tweak Network Page
+      [ESP32-P4] Add OTA update command for ESP32C6 WiFi firmware
+      Merge branch 'mega' into bugfix/WiFi_state_machine
+      [Network] Split ESP32P4 code from other MCUs
+      [Network] Fix Ethernet on ESP32P4 + allow multiple active interfaces
+      [Network] List all IP-addresses per network interface
+      [Network] Process info based on NetworkInterface baseclass when possible
+      [Network] Show Network Interface flags
+      [PPP Modem] Add framework for new PPP Modem network interface
+      [ESP32P4] Add extra HW serial ports supported by ESP32P4
+      [Network] Split ETH into RMII and SPI + add template for PPP modem
+      [Storage] Add generic key/value store to simplify data storage
+      [Storage] Add load function for new key/value store
+      [Storage] Add save function for new key/value store
+      [Network] Add NetworkSettings type to store network interface settings
+      [Network] Fix build issues
+      [Network] Uncrustify new code
+      [Storage] Add NWPluginData_base & optimize key/value store
+      [Storage] Add tests for key/value store
+      [Storage] Fix issues storing/loading from key/value store
+      [Storage] Remove 0-termination for strings from raw stored data
+      [Storage] Use key value store for storing network interfaces
+      [PPP Modem] Add modem parameters to NW005 + fix compile issues
+      [PPP modem] Add more settings + simplify key/value/store use
+      [PPP modem] Add APN/Pin settings + show modem status
+      [PPP Modem] Show more cell info + correct reported RSSI/BER values
+      [Storage] Fix build on ESP8266 builds
+      [PPP modem] Remove PPP Modem plugin from ESP32-C3 as there isn't support
+      [PPP Modem] Fix build on LIMIT_BUILD_SIZE ESP32 builds
+      [PPP Modem] Add UE Cell info + fix ESP32C2 build
+      [PPP Modem] Disable PPP Modem plugin for 4M flash builds due to size
+      [Build] Fix ESP32C6 builds
+      [Build] Remove "_CDC_" from all env names due to linker issues
+      [ESP-IDF] Update IDF 5.5 builds (P4/S3) to latest version
+      [Network] Allow crash detection to turn off network interfaces
+      [ESP32P4] Set Ethernet as default on ESP32P4 builds
+      [PubSubClient] Update to latest lib version
+      [PubSubClient3] Speedup publish large messages using buffer
+      [Storage] Fix storing bool types
+      [Controller] Fix bug not being able to add controller
+      [Cleanup] Rename CPlugin and NWPlugin calls to make clear where used
+      [Network] Add WiFi/AP when not present in settings + limit options
+      [Plugin] Rename PluginCall functions to use same convention as controllers
+      [PPP Modem] Make PPP.begin() non-blocking by running in RTOS task
+      [PPP Modem] Initialize C-code to NULL instead of nullptr
+      [Network] Fix saving WiFi STA & WiFi AP settings
+      [Network] Add route prio to network overview
+      [Network] Move network plugin code to new ESPEasy::net namespace
+      [Network] Move ESPEasy::net namespace code to new folder structure
+      [Network] Move global runtime data to new ESPEasy::net namespace
+      [Network] Move more WiFi related code into ESPEasy::net::wifi namespace
+      [Network] Move Network code to ESPEasy::net namespace
+      [Network] Disable ETH for ESP32-xx Display builds to make builds fit
+      [Network] Fix ESP32-classic  display build with ETH disabled
+      [Network] Move EthernetParameters to ESPEasy::net namespace
+      [Network] Move MetworkMedium to new ESPEasy::net:: namespace
+      [Network] Move WiFiAPcandidates files to ESPEasy::net::wifi namespace
+      [Network] Fix setting up last network/controller entry
+      [Network] Move WiFi init code to NW001_WiFi_STA plugin
+      [MQTT AutoDiscovery] Fix merge issues
+      [PPP modem] Make init of PPP modem more reliable
+      [Network] Show connected duration in more readable format
+      [Network] Add networkenable / -disable commands + fix for controllers
+      [Controller] Fix proper checking when calling CPLUGIN_xxx functions
+      [Network] Fix build on ESP8266
+      [Controllers] Call [C/NW]PLUGIN_EXIT before _INIT when saving settings
+      [Tasks] Fix scheduled Plugin Task Timer & proper task exit/init
+      [Build] Fix failing ESP8266 custom build
+      [Build] Reduce build size for ESP8266 builds
+      [ESP-IDF] Update to latest ESP-IDF/Arduino for ESP32-xx
+      [PPP Modem] Disable PPP Modem on platforms that don't support it
+      [Network] Add mechanism to restore cached DNS servers
+      [Network] Fix ESP8266 build + add log when DNS is restored from cache
+      [Network] Fix mangled DNS servers when switching default route interface
+      [Network] Trigger checking for DNS server on default NW-IF after event
+      [Network] Make connected info more consistent among network interfaces
+      [Network] Move common code to collect connection stats to base class
+      [Network] Add test to see if we can track interface traffic count
+      [Build] Fix ESP32 build due to missing include
+      [Network] Show connection info for each interface
+      [Network] Reduce code duplication showing connection info
+      [Build] Fix ESP-IDF 5.5 platform to specific one before pip -> uv change
+      [WiFi] Show WiFi Auth mode in connection info
+      [Network] Start removing connected checks from WiFi/Eth EventData
+      [Network] Clean up code duplication handling network events
+      [Controller] Make connection timeout dynamic per host & networkinterface
+      [Network] Remove more legacy WiFiEventData code
+      [Network] Cleanup + add charts for RSSI/TX-pwr, traffic, etc.
+      [Network] Fix ESP8266 build issues
+      [Network] Fix build on ESP8266 1M build
+      [Build] Reduce build size on ESP8266 builds
+      [Build] Fix copy/paste error on ESP32 builds
+      [Network] Fix corrupting settings on ESP8266
+      [Network] Add Route Prio setting for each network interface (ESP32-xx)
+      [Network] Fix access control check for accessing web config
+      [Network] Add column with interface number to Network overview page
+      [Network] Fix NAPT forwarding when client connects/disconnects
+      [Network] Show connected clients to AP + cleanup charts/stats
+      [cleanup] Remove duplicate code in xPlugin tables
+      [network] Fix 'Enable' checkbox consistency & bootloop  with AP disabled
+      [Network] Fix crashes when toggling WiFi/AP on/off
+      [network] Show detailed received IPv6 info in the logs
+      [Network] Fix ESP8266 build
+      [Network] Fix merge-conflict on ESP32-build
+      [ESP-IDF] Move to IDF5.5 for all ESP32-xx builds
+      [Build] Fix missing include
+      [Build] Define BUILD_NO_DEBUG for Collection_E builds
+      [ESP-IDF] update to latest ESP-IDF5.5
+      [Build] Define BUILD_NO_DEBUG for all collection builds
+      [USBCDC] Fix USB-CDC for ESP32S2 builds
+      [Build] Define BUILD_NO_DEBUG for ESP32 Collection A builds
+      [Network] Fix collecting RX/TX traffic data
+      [Network] Add FEATURE_NETWORK_TRAFFIC_COUNT to toggle tracking traffic
+      [Network] Add FEATURE_NETWORK_STATS to toggle collecting network stats
+      [Network] Fix reported traffic RX/TX Bytes
+      [USBCDC] Properly fix USB CDC issues on ESP32-S2
+      [Build] Define BUILD_NO_DEBUG for Display builds
+      [Network] Fix xxx#Connected / #Disconnected events
+      [Build] Fix merge issues
+      [WiFi] Fix WiFi reconnect issues
+      [RC522] Add support for 7-byte NFC UIDs
+      [webUI] Move Hardware tab before Network tab
+      [Build] Fix merge issue
+      [SysVars] Fix showing variables with hex number as index
+      [MFRC522] Add immediate event on tag removal
+      [LAN867x] Add support for LAN867x Ethernet controller (RMII)
+      [Network] Exit all networks before reboot
+      [WiFi] Fix scanning WiFi returns no networks found
+      [Network] Fix showing stats and connection info
+      [WiFi] Fix reported WiFi enc. mode on ESP8266
+      [WiFi] Clear uses of WiFiEventData for ESP8266 builds
+      [Eth] Clear uses of EthEventData for ESP32 builds
+      [Build] Fix ESP8266 build
+      [WiFi] Fix wifi reconnect (on ESP32)
+      [WiFi] Fix internal WiFi state matching real connected state.
+      [Network] Log got IP events
+      [Network] Add checks to see if _netif is a valid pointer
+      [Network] Make logging gotIPv6 events not do memory allocation
+      [NeoPixel] Make NeoPixelSendStatus use less memory allocations
+      [MQTTDiscovery] Reduce mem alloc MQTT_DiscoveryPublishWithStatusAndSet
+      [Network] Remove unused base_class check for NWPluginData structs
+      [Network] Add ESPEasy event when network is enabled/disabled
+      [Log] Only process log to serial when in "Arduino RTOS task"
+      [WiFi] Make sure WiFi actually is disconnected when trying to reconnect
+      [MQTT] Only try to run background MQTT connect when connected to network
+      [CSS] Tweaks for newly added Network tab
+      [web UI] Change tab icons to be more uniform and working on Apple
+      [WiFi] Fix automatic redirect on Captive Portal
+      [MQTT] Reduce work/memory in background task, use xTaskDelay as required
+      [WiFi AP] Fix switching between NAPT and Captive Portal
+      [Build] Reduce bin size for ESP32 collection builds
+      [Provision] Fix not able to provision files
+      [PPP modem] Fix crash when PPP modem is enabled but not present
+      [Docs] Add stubs for documenting new Network design
+      [TaskValueSet] Fix setting 64-bit int values to a dummy task
+      [CacheReader] Fix reading cache files from CacheController
+      [CacheReader] Add support for 64bit ints + output as events
+      [CacheReader] Fix continue reading after crash/reboot
+      [CacheReader] Fix incorrect settings array index
+      [CacheReader] Fix incorrect settings array index
+      [CacheReader] Fix incorrect settings array index
+      [Cleanup] Only show MQTT connected stats on enabled controller
+      [CacheReader] Fix reading cache files when files are missing
+      [PPP modem] Add DTR pin option to regain access to modem in CMUX mode
+      [Cleanup] Simplify managing key-value representation in web UI / JSON
+      [JSON] Simplify writing JSON page
+      [JSON] Fine-tune + speedup generating JSON
+      [Log] Use new streaming JSON writer to generate web log
+      [Cache Controller] Use new JSON functions to generate cache_json
+      [JSON] Fine tune new JSON generation functions
+      [Cleanup] Wrap #ifdef WEBSERVER_NEW_UI.. around functions only used then
+      [JSON] Change handle_sysinfo_json() to use new JSON formatting functions
+      [JSON] Fix pretty-print generated JSON + add createChild() option
+      [JSON] Use new createChild function
+      [JSON] Simplify code + reduce build size due to less dependencies
+      [JSON] Add option to print JSON to String + convert Domoticz JSON
+      [Build] Set ESP8266 IR builds to esp8266/Arduino 3.1.2
+      [Build] Fix custom_IR_ESP8266_4M1M build
+      [C009 FHEM] Use new JSON code to generate response
+      [Cleanup] Remove no longer used to_json_object_value functions
+      [Cleanup] Reduce bin size: unsigned long to uint32_t and long to int32_t
+      [JSON] Move KeyValueWriter_JSON to src/Helpers/
+      [Network] Use new WebForm writer for gathering network adapter info
+      [Network] Cleanup code + generate more network info using new K/V writer
+      [JSON] Add same info on network adapters & sysinfo & JSON page
+      [Build] Fix ESP8266 build fail due to variable type mismatch
+      [Build] Reduce bin size by disabling logs in BUILD_NO_DEBUG builds
+      [Build] Fix failed custom ESP8266 build, disable CustomProvisioning
+      [Build] Disable C014 (Homie) and C017 (Zabbix) for ESP8266 Collections
+      [Build] Disable more logs with BUILD_NO_DEBUG on ESP8266
+      [Build] Fix failing build hard_SONOFF_POW_4M1M
+      [Build] Fix build errors on RISC-V like ESP32-C2/C3/C5/C6
+      [Build] Fix build error on safeboot builds
+      [Build] Set BUILD_NO_DEBUG for all NeoPixel builds to make builds fit
+      [Build] Fix failing max_ESP32c5_8M1M_LittleFS_ETH builds
+      [Cleanup] Reduce bin size & simplify ValueStruct
+      [ESP-IDF] Update to latest Arduino/ESP-IDF
+      [Log] Simplify web log buffering
+      [Log] Speedup finding 'next' log element to process
+      [Build] Fix ESP8266 build fail as std::make_unique is not (yet) known
+      [WebLog] Send many log messages in chunks of 200 msec.
+      [TLS] Update TLS to be able to use ECDHE_ECDSA_AES_128_GCM_SHA256 cipher
+      [TimingStats] Add stat to measure time spent processing MQTT messages
+      [TLS-MQTT] Automatic switch to ECDSA when error is 296 (TLS handshake)
+      [Provision] Add option to store (WiFi) credentials to separate file
+      [Build] Fix build issues on ESP8266
+      [WiFi Setup] Store credentials via setup page to separate file
+      [TAR] Fix creating unusable TAR files when backup all
+      [WiFi AP] Fix generating correct events when WiFi AP turns on/off
+      [WiFi] Fix starting AP when no credentials present or known APs found
+      [Log] Convert all ESPEasy console output to LOG_LEVEL_NONE log entry
+      [Log] Serial Console pulls logitems when UART buffer is ready + colorize
+      [Log] Fix log output to webflasher console + colorize LogEntry output
+      [Log] Clearly mark commands in log + source of the command
+      [Log] Cleanup and simplify log level code
+      [Log] Make syslog to use the new log queue + fix syslog crashes
+      [Log] Fix build on ESP8266 + log level label in console + syslog format
+      [ChartJS] Use new JSON key-value-writer + cleanup ChartJS code
+      [Cleanup] Rename Sp_KeyValueWriter to Up_KeyValueWriter
+      [ChartJS] Cleanup forcing "null" on NaN values in JSON
+      [Cleanup] Simplify use of LabelType
+      [ESP8266] Fix build issues due to older compiler for ESP8266 2.7.4
+      [Cleanup] Make nearly all of sysinfo page use new KeyValueStruct writers
+      [Cleanup] Make ESP8266 builds fit again + tweak reducing generated HTML
+      [Climate] Remove P169 (AS3935 lightning Detector) from ESP8266 builds
+      [Build] Revert ESP-IDF/Arduino to make Solo1 and ESP32-P4 build again
+      [Cleanup] Simplify ValueStruct to reduce bin size + speed up processing
+      [ESPEasy] Increase nr of ints in EventStruct
+      [PPP modem] Show mobile provider name from SIM card
+      [ValueStruct] Reduce memory allocations on short strings
+      [LogEntry] Reduce LogEntry struct to 16 bytes per log item in memory
+      [ValueStruct] Fix order initialization members
+      [KeyValueStruct] Add standard Unit-of-Measure units
+      [WebForm] Show bool types from key/value struct as checkmark
+      [ValueStruct] Fix edge case crash copying values.
+      [Build] Wrap calls to setUnit in #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+      [ChartJS] Make charts appear on the full width and responsive
+      [Charts] Remove no longer needed chart height/width & cleanup code
+      [ESPEasy p2p] Cleanup use of std::unique_ptr + p2p data structs
+      [Ethernet] Set hostname when Ethernet device is started
+      [Build] Reduce build size by disabling GitHub copy button for ESP8266
+      [ESP32-P4] Fix WiFi/Eth issues on ESP32-P4 + optimize memory allocations
+      [Units Of Measure] fix merge issues PR #5419
+      [ESP32P4] Disable USB HWCDC to fix ESPEasy console for ESP32P4
+      [ESP-Hosted] Show more info on ESP-Hosted-MCU WiFi (ESP32-P4)
+      [ESP-Hosted] Make sure hostname is set on ESP-Hosted-MCU before DHCP
+      [IPv6] Add option to enable/disable IPv6 per network adapter
+      [JSON] Write empty "Sensors" array when no tasks defined
+      [Eth] Move duplicate code to shared functions to display info
+      [ETH] Remove left-over code duplication after split RMII/SPI adapters
+      [ESPEasy Console] Fix console on both HWCDC and Serial0
+      [Network] Make connected check more direct when  starting connection
+      [Build] Fix flush() vs. clear() as it differs between ESP8266 and ESP32
+      [Build] Make normal_ESP8266_1M_VCC not fail building (still too big)
+      [Build] Fix build issue due to missing forward decl. of enum
+      [Sysinfo] Add missing Unit-of-measure on file system size
+      [Ethernet] Add already setup Ethernet when upgrading ESPEasy
+      [Sysinfo] Hide WiFi info when no WiFi is enabled
+      [Network] Start adding JSON import/export Network settings per adapter
+      [Build] Disable Framed OLED on 1M ESP8266 Normal builds due to size
+      [Network] Add networkexportconfig command to export to JSON
+      [Network] Add NetworkImportConfig command
+      [Eth] Store settings for RMII and SPI Ethernet to KV-store
+      [Ethernet] Allocate unused ETH interface support multiple ETH instances
+      [Ethernet] Fix saving settings to KVS
+      [Network] Restart services (e.g. ESPEasy p2p) when default route changes
+      [ESP-IDF] Update to latest Arduino/IDF code with fix for SPI Eth MAC
+      [ESP8266] Fix failing ESP8266 build
+      [Build] Remove _LittleFS and _ETH from build names due to linker issues
+      [Build] Fix build fail with builds without Ethernet support
+      [ESP32-P4] Disable OTA update for ESP-HOSTED-MCU on ESP32P4 for now
+      [Build] Enable `custom_remove_include` to not build ignored libs
+      [Web Flasher] Update script to generate webflasher for new build names
+      [Network] Simplify ETH Event handling + update ESP-IDF/Arduino 3.3.3
+      [Build] Limit package building to use Python 3.13
+      [Build] Fix Solo1 builds
+      [Ethernet] Fix loading RMII Eth settings from KVS
+      [Ethernet] Fix loading SPI Ethernet settings from KVS
+      [Ethernet] Cleanup showing GPIO conflicts/usage
+      [Ethernet] Remove no longer needed commands to setup ETH
+      [Ethernet] Make Periman reported conflicts the reported conflicts
+      [Network] Remove obsolete code from Config and Tools->Advanced page
+      [ESP32-C61] Add initial support for ESP32-C61
+      [Collection] Remove P038 and P095 from ESP32 Collection builds
+      [ESP32-solo1] Add flags to fix IDF5.5 issues for 'esp32-solo1' boards
+      [ESP32-P4] Add chip-variant option to support P4 rev 1 and rev 3
+      [Build] Speed up builds, add not used libs to lib_ignore
+      [WebFlasher] Add support for ESP32-C5/C61 for the webflasher
+      [ESPEasy p2p] Add IDs of not yet supported ESP MCUs
+      [ESP32-P4/-C61] Update Arduino/IDF to support ESP32-C61 & ESP32-P4 preV3
+      [ColorCode] Add NetworkEnable/Disable commands to ColorCode JavaScript
+      [WiFi] Fix check for available credentials only in device specific file
+      [Network] Fix processing network events on disconnect + simplify check
+      [webflasher] Add 'chipVariant' to distinguish ESP32-P4 variants
+      [Hardware Info] Show differences between ESP32-C6H4 and ESP32-C6H8
+      [Cleanup] Mark unused members in SettingsStruct
+      [WiFi] Cleanup WiFi/AP settings + simplify when to start AP mode
+      [Build] Fix failed minimal ESP8266 build
+      [Build] Fix solo1 builds due to wrongly set LTO flags
+      [WebUI] Simplify adding HTML form fields
+      [WiFi] Simplify WiFi AP fallback scenarios
+      [Build] Fix failing ESP8266 builds
+      [P180] BusCmd_Helper processing I2C commands via cmd subcommand was locked out
+      [C023] Clone C018 code to C023
+      [C023] Remove links to RN2483 code
+      [C023] Add initial support for Dragino LA66 LoRaWAN module
+      [C023] Add querying LA66 + receive downlink messages
+      [C023] Add option to trigger events via downlink messages + code cleanup
+      [C023] Fix timeout reading from LoRa + set ClassC after joined
+      [C023] Cleanup LoRa AT-command controller + fix parse responses
+      [WiFi] Add link to ESP-Hosted-MCU firmware builds
+      [C023] Add initial support for RAK3172 LoRaWAN (m5stack AtomDTU)
+      [C023] Cleanup AT-command LoRaWAN
+      [C023] Add support for RAK3172 LoRaWAN (m5stack AtomDTU)
+      [ESP-IDF] Update to latest ESP-IDF/Arduino
+      [USBCDC] Simplify code defining USBCDC(TinyUSB) vs. HWCDC
+      [C023] Remove debug log
+      [Bug] Fix formatToHex_wordarray
+      [Network] Enable Network Stats when plugin stats are also enabled
+      [WiFi] Fix reconnecting when connection gets interrupted
+      [Network] Fix enable/disable IPv6 per network interface
+      [Build] Make syslog optional to reduce build size
+      [Build] Add flags to disable webserver JSON or syslog to reduce bin size
+      [OLED] Fix: 128×64 shows only left half in display_A builds (#5469)
+      [Web Flasher] Fix generated web flasher manifest JSON
+      [Serial Console] Fix outputting data to USBCDC port for ESP32S2
+      [TimingStats] Tweak timing stats for console output
+      [Domoticz] Fix Domoticz MQTT outputting svalue wrapped in quotes
+      Update README.md
+      [Build] Fix failing custom build (#5485)
+      [Build] Fix failing custom build (#5485)
+      [ESP-IDF] Update to latest 1901-1318-5.5 platform build
+      [Build] Fix compile issues
+      Revert "[ESP-IDF] Update to latest 1901-1318-5.5 platform build"
+      [Sysinfo] Show free space on file system
+      [ESP-IDF] Update to latest IDF/Arduino code to test if P4 builds work
+      [Build] Fix non-ESP32P4 builds with latest ESP-IDF/Arduino
+      [Build] Set BUILD_NO_DEBUG for Climate-A builds to make them fit again
+      [SPI] Fix returning 'other' SPI bus for user defined SPI
+      [Interfaces] Split SPI and I2C config into new Interfaces page
+      [WebUI] Add some icon to Interfaces tab + minor tweaks
+      [ESP-IDF] Update to latest ESP-IDF/Arduino SDK
+      [Web UI] Change icon for Interfaces
+      [Build] Try to reduce build size for ESP8266 minimal, disable I2C/SPI
+      [Build] Fix failing neopixel_ESP8266_1M_Domoticz  build
+      [Build] Fix failing minimal_IRext_ESP8266_4M1M
+      [Build] Fix failing build safeboot_ESP32c2_4M_LittleFS
+      Update generate_web_flasher_manifest.py fix showing C6 in list
+      [Network] Add 'Fallback Network Interface' concept.
+      [Network] Fix failing build on ESP8266
+      [Network] Start documenting Fallback Network Interface
+      [WiFi] Make WiFi AP act as fallback device when set as such.
+      [USB-CDC] Fix USB disconnect on reboot for USB-JTAG/CDC boards
+      [USB-CDC] Fix USB disconnect on reboot for USB-JTAG/CDC boards
+      [TM1637] Fix timing issues for ESP32-builds for P073 TM1637
+      [TM1637] Fix timing issues for ESP32-builds for P073 TM1637
+      [Direct GPIO] Add missing function decl. for ESP8266
+      [Direct GPIO] Add missing function decl. for ESP8266
+      [ESP8266 build] Fix failing custom ESP8266 build using Custom.h
+      [ESP8266 build] Fix failing custom ESP8266 build using Custom.h
+      [WiFi] Fix setting hostname before starting WiFi on ESP8266
+      [WiFi] Fix build on ESP8266 SDK 2.7.4
+      [WiFi] Set ESP8266 hostname each time before starting WiFi.begin()
+      [TM1637] Fine tune signal timing
+      [TM1637] Fine tune signal timing
+      [TM1637] Make clock timing more constant + fix end of transmission mark
+      [TM1637] Make clock timing more constant + fix end of transmission mark
+      [TM1637] Pull DIO pin low before switching to input for ACK
+      [TM1637] Pull DIO pin low before switching to input for ACK
+      [TM1637] Change init procedure not calling directGPIO at init
+      [TM1637] Change GPIO toggling to toggle input/output + enable pull-up
+      [TM1637] Fix proper timings for start/end sequence
+      [TM1637] Change init procedure not calling directGPIO at init
+      [TM1637] Change GPIO toggling to toggle input/output + enable pull-up
+      [TM1637] Fix proper timings for start/end sequence
+      [ESP-IDF] Switch to latest ESP-IDF / Arduino SDK & GCC 15.2
+      [Build] Fix failing build for minimal_core_274_ESP8266_1M_OTA_FHEM_HA
+      [Build] Fix failing build for minimal_core_274_ESP8266_1M_OTA_FHEM_HA
+      [Build] Reduce build size by tweaking compile flags
+      [Build] Fix mDNS builds + failing FEATURE_MQTT_TLS=0 & HTTP_TLS=1
+      [ESP32-P4] Fix failing ESP32-P4 build due to upstream ESP-IDF changes
+      [mDNS] Fix mDNS on ESP8266
+      [ESPEasyP2P] Add ESP32-S31 as node ID to be recognized as ESP type
+      [Serial Console] Fix showing console output in VScode
+      [Console] Fix sluggish reply on console input + allow disable color logs
+      [Git] Add sdkconfig.* to .gitignore
+      [GPIO] Fix GPIO re-assign on ESP32 previously used by serial
+      [Build] Add missing changes for disable colorize logs
+      [ESP-IDF6.0] Add support for latest IDF6.0
+      [mDNS] Properly destruct MDNS objects when updating
+      [SPI Eth] Fix SPI Ethernet using correct SPI bus
+      [ESP-IDF] Revert to IDF 5.5.3
+      [SPI] Fix build on ESP32C3
+      [SPI] Simplify SPI code + fix SPI bus selection
+      [Build] Fix build missing #if FEATURE_SD
+      [Web UI] Fix selected disabled item not getting saved
+      [SPI] Fix potential uninitialized spi gpio pins
+      [WiFi-AP] Extend WiFiAPmode command to toggle WiFi-AP without disable it
+      [P169] AS3935 Lightning Detector was missing from Climate B builds
+      [Network] Fix starting fallback interfaces if all are fallback on ESP32
+      [mDNS] Add mDNS for ESP32 builds
+      [mDNS] Update ESP32 mDNS lib + improve handling fallback AP on ESP8266
+      [Docs] Update links to datasheets + TR of supported ESP chips
+      [Docs] Fix frequency of ESP32-S31 + ESPEasy supported since
+      [Docs] Fix rendering supported CPUs table
+      [mDNS] Add flag to toggle mDNS
+      [Network] Reduce includes in network code
+      [Network] Fix failing custom_beta_2ndheap_ESP8266_4M1M
+      [Network] Reduce number of includes in WiFi/Network code
+      [Build] Fix hard_SONOFF_POW_4M1M  build
+      [Cleanup] Reduce number of includes
+      [Build] Fix failing build collection_C_ESP32_IRExt_4M316k
+      [WiFi] Fix odd WiFi behavior on ESP8266
+      [Build] Reduce size of custom ESP8266 build
+      [ESP8266] Simplify device info functions on ESP8266
+      [ESP8266] Define more bus specifics for ESP8266 in esp8266_soc_caps.h
+      [Cleanup] Add 'override' to virtual controller queue functions
+      [Cleanup] Add 'override' to virtual functions libs changed for ESPEasy
+      [Cleanup] Fix failing builds due to different virtual function sigs
+      [Network] Cleanup code + show connection info on ESP8266 adapter page
+      [Cleanup] Comment unused NWPluigin functions
+      [mDNS] Disable mDNS in builds as it is considered unstable
+      [WiFi] Fix initial WiFi setup via soft-AP
+      [Build] Fix missing include for ESP32 builds
+      [WiFi] Fix uncrustify messing up wifiChannels table
+      [WiFi] Fix captive portal and initial setup for ESP32-S2
+      [WiFi] Fix crash on saving WiFi settings with active network connections
+      [WiFi] Add OTA update for ESP-Hosted-MCU on ESP32-P4
+      [sendToHttp] Fix  SendToHttp HTTPS command using HTTPClientLight
+      [Build] Fix include for ESP8266 builds
+      [sendToHTTP] Fix sendToHTTP using the new lib for https. (revuew by Ton)
+      [ESP-IDF] Update to latest ESP-IDF/Arduino
+      [RMII Eth] Fix setting clock mode + document NW config import/export
+      [Docs] Update ESP-Chips table
+      [ESP32P4r3] Add support for ESP32-P4 rev3
+      [Eth] Fix static IP for Ethernet
+      [Build] Fix missing include on minimal_core_312_ESP8266_1M_OTA_Domoticz
+      [Build] Fix missing include for collection_H_ESP32_IRExt_4M316k build
+      [WiFi] Fix slowdown issues using Eth on ESP32-P4 with WiFi off
+      [WiFi] Make Captive Portal more intuitive and only act when connected to AP
+      [WiFi] Fix continuous logs flood + fix check for no credentials
+      [Build] Fix ESP8266 build
+      Fix syslog packets contain only a prefix (#5538)
+      [ETH] Fix setting static IP for Ethernet network interfaces
+      [Build] Remove normal_beta_ESP8266_16M_LittleFS
+      [Build] Fix missing include
+      [WiFi] Fix static IP for WiFi
+      [WiFi] Fix static IP for ESP8266
+      [ESP32S2] Add MAX 8M1M build for ESP32-S2
+      [ESP-IDF] Update to latest IDF/Arduino code
+      [Sysinfo] Fix reporting used sketch size on sysinfo page
+      [Console] Fix setting correct TX buffer size + add checks + cleanup
+      [WiFi] Fix setting init/exit/gotIP flags on Network interfaces
+      [ESP32S2] Fix using UART/USBCDC on ESP32S2
+      [WiFi] Fix some minor WiFi issues when saving settings (still 5min wait)
+      [WiFi] Fix WiFi reconnect + event duplicates on ESP8266
+      [ESP32P4] Fix crashes on older ESP-HOSTED-MCU fw & detection 32M flash
+      [32M flash] Fix including all 'MAX' plugins for 32M flash builds
+      [ESP-Hosted-MCU] Fix OTA URL + speedup log output to serial
+      [ESP32-P4] Enable WiFi STA interface on factory reset
+      [Webflasher] Add 32M builds to the page generator script
+      [Webflasher] Use flash size detection to simplify MAX build selection
+      [webflasher] Cleanup Python script to generate page + set to 460800 baud
+      [DirectGPIO] Use low-level HAL commands from ESP-IDF for ESP32-xx
+      [PubSubClient3] Update to latest MQTT Client PubSubClient3
+      [Network] Improve response time on network disconnect for MQTT client
+      [Network] Add setting whether to collect network stats (ESP32-only)
+      [ESP32S2] Improve free RAM on ESP32S2
+      [Network] Fix crash saving network interface settings with p2p active
+      [TM1637] Fix ESP8266 not working with TM1637 (#5541)
+      [ESP32S3] Fix random crashes on ESP32S3 with PSRAM
+      [WiFi] Fix using all set WiFi credentials
+      [AccessControl] Fix checking for allowed IP range
+      [ESP8266] Fix ESP8266 builds missing include
+      [WiFi AP] Fix really stupid error setting WiFi AP static IP
+      [ESP-IDF] Update Arduino/ESP-IDF to latest version
+      [WebFlasher] Update webflasher to 12.2.4
+      [Network] Fix route setting priority (ESP32-only)
+      [Network] Fix properly clearing runtime data when starting nw interface
+      [Arduino 3.3.9] Update to latest espressif32/Arduino 3.3.9
+      [Docs] Add link to Supported Features and Peripherals on ESP32-xx
+      [AccessControl] Fix checking for allowed IP access of webinterface
+      [Build] Fix custom build missing an include for Metrics.cpp
+      [Build] Fix sort custom vars on ESP8266
+      [SysVarSort] Only sort system variables on ESP32 due to build size
+      [WiFi] Fix stack overflow crash when no credentials set
+      [WiFi] Simplify state machine for WiFi STA
+      [WiFi] Update WiFi state diagrams
+      [WiFi] Simplify WiFi STA state machine
+      [WiFi] Cleanup STA state machine code
+      [WiFi] Add state diagrams to WiFi documentation
+      [Network] Simplify connected/disconnected and enabled/disabled events
+      [PWM] Disable fade for ESP32 PWM for now.
+      [SendToHttps] Fix crash and actually working + connect timeout
+      [Build] Fix failing ESP32C2 Safeboot build.
+      [SendToHttps] Log HTTP return code even on BUILD_NO_DEBUG
+      [Forms] Add optional changed bool to simplify checking for changes
+      [Webserver] Remove code duplication send start of page
+      [Webserver] Remove & simplify duplicate code send end of page
+      [PPP] Show info even when no connection to provider is active
+      [PPP Docs] Add documentation on NW005 PPP Modem
+      [PPP Docs] Add description and some tips regarding power
+      [Docs] Add documentation for WiFi STA/AP + reformat other network docs
+      [Docs] Describe WiFi modes and Passive/Active scan
+      [WiFi] Simplify passive/active scan note
+      [Docs] Describe rest of WiFi settings
+      [Docs] Fix section/subsection marking on PPP page.
+      [Docs] Remove empty 'Description' subsection from NW001 page
+      [Docs] Add missing documentation for WiFi AP + cleanup network docs
+      [Network] Add option to append NW interface name to hostname
+      [Docs] Add link of ESP32-Arduino supported features per ESP32-variant
+      [Cleanup] Set development/debug log as LOG_LEVEL_DEBUG
+      [Network] Add "Append Name to Hostname" to import/export
+      [Network] Fix import/export for WiFi STA and AP
+      [Docs] Document the Network overview tab
+      [Docs] Document the devsecurity.dat file
+      [Docs] Add missing network overview tab screenshot
+
+Ton Huisman (166):
+      [SPI] Add support for multiple SPI buses
+      [P095] Enable support for configurable SPI bus
+      [P104] Enable support for configurable SPI bus
+      [P116] Enable support for configurable SPI bus
+      [P141] Enable support for configurable SPI bus
+      [P172] Enable support for configurable SPI bus
+      [P162] Enable support for configurable SPI bus
+      [P162] Fix compilation for ESP8266
+      [P125] Enable support for configurable SPI bus
+      [P118] Enable support for configurable SPI bus
+      [P111] Enable support for configurable SPI bus (and reformat source)
+      [P099] Enable support for configurable SPI bus
+      [P096] Enable support for configurable SPI bus
+      [P039] Move (nearly) all code to PluginStrucs files
+      [P039] Enable support for configurable SPI bus
+      [SPI] Show SPI Bus selector also if only second bus enabled
+      [SPI] Fix initialization for standard FSPI bus
+      [SPI] Improvements in cross-bus GPIO config validation
+      [Storage] Add settings for External EEPROM
+      [SPI] Rename SPI1 object to SPIe to avoid conflict for ESP32-Classic builds
+      [SPI] Code improvements, separate SPI functions, re-init SPI when saving Hardware page
+      [P039] Fix compiler warning (nested comments)
+      [MQTT] Reconnect on unexpected network interruptions
+      [SPI] Disconnect SPI GPIO pins also when not using them
+      [P116] Fix GPIO display on Devices page, no default GPIO pins for ESP32
+      [P095] Fix GPIO display on Devices page, fix typos, no default GPIO pins for ESP32
+      [SPI] Rename settings variable for better usage indication (review comment)
+      [MQTT] Cancel background connection request after 2 minutes when still not connected
+      [MQTT] Fix reconnect on unexpected network interruptions
+      [Discovery] Avoid setting the timeout more than once
+      [MQTT] Use client timeout for delay between connection attempts
+      [Build] Fix missing FEATURE_SD check
+      [P132] Additional support for INA226, INA228, INA230, INA231 and INA260
+      [P132] Fix some typos
+      [P132] Fix some more typos
+      [P132] Fix one more typo and clean up code
+      [P132] Add INA231 to plugin name
+      [P132] Update documentation
+      [P132] Fix conversion rate settings for INA228
+      [P132] Fix defaults for INA228
+      [P132] Update documentation for INA228 conversion rates
+      [P132] Refactor Shunt settings and add more high-current options
+      [P132] Update documentation for extended Shunt setting
+      [P132] Fix rounding for 400A shunt
+      [P132] Better selector-descriptions for shunt values
+      Merge branch 'mega' of https://github.com/letscontrolit/ESPEasy into feature/SPI-add-support-for-multiple-buses, fix conflicts
+      [P135] Bugfix: Correct Discovery VTypes
+      [SPI] Add SPI bus selector to SPI Ethernet plugin
+      [MQTT] Bugfix: Import wasn't initiated and handled correctly
+      [Cleanup] Remove Provisioningxxx fall-back commands and other fixes
+      [Docs] Fix some small typos
+      [Log] Restore EVENT: (some event) in logging for BUILD_NO_DEBUG builds
+      [Log] Restore ACT  : (rules action) in logging for BUILD_NO_DEBUG builds
+      [P073] Bugfix: Display stays blank after upgrade without settings-save (#5475)
+      [P132] Improve calculation accuracy determining shunt microVolt factor
+      [P132] Only read measurement when conversion is ready
+      [P132] Enable extended features for Energy build ESP8266 for now
+      [Build] Fix compilation with Custom.h and TLS on ESP32
+      [Fixes] Various fixes and improvements Feb 2026
+      [CI] Fix github yaml syntax issues
+      [P132] Fix MQTT Discovery for Power setting
+      [Docs] Fix warnings and doc-build errors, remove deprecated plugin from conf.py
+      [P104] Add font with Cyrillic characters in high-ASCII area
+      [P104] Updated documentation for Cyrillic font
+      [P104] Updated Cyrillic ext. font with more elaborate character set
+      [P104] Updated Cyrillic ext. font with a more visually pleasing character set
+      [SPI] Add support (check) for ESP32-C61 in getSPIBusCount()
+      [P180] Set Cache-name field by default when empty for better performance, docs updated
+      [Docs] Use pioarduino plugin instead of PlatformIO for VSCode
+      [Docs] Fix error in internal commands list so it is visible again
+      [Build] Disable unneeded 'page will reload' messages
+      [Docs] Fix typo
+      [Feature] Split Interfaces page into separate tab per interface
+      [Build] Remove unneeded ifdef check
+      [UI] Add support for collapsible sections on web pages
+      [Interfaces] Add collapsible sections for I2C and SPI configuration
+      [Build] Fix compiler warnings
+      [UI] Fix minor display issue
+      [UI] Add support for collapsible sections on web pages
+      [Docs] Move Interfaces and Network docs to more appropriate locations
+      [Docs] A few textual updates
+      [P104] Improved Cyrillic font
+      [UI] Improved css when used on small screens
+      [UI] Improved css when used on small screens, more updates
+      [UI] Improved css when used on small screens, more updates
+      [P104] Update Cyrillic font doc screenshot
+      [P104] Improved Ë and ë in the Cyrillic set to align with the other Cyrillic characters, and updated screenshot
+      [UI] Improved css to have a pointer cursor and some spacing around the Details... label
+      [UI] Fine-tune css for nicer menu tabs in dark mode
+      [UI] Revert: Fine-tune css for nicer menu tabs in dark mode
+      [UI] Fine-tune css for nicer menu sub-tabs (Interfaces)
+      [UI] Fine-tune css fixes by @chromoxdor
+      [UI] Compatibility css fix by @chromoxdor
+      [Docs] Separate ESP32 and ESP8266 status
+      [Docs] Separate status for ESP32 and ESP8266 on each page
+      [Docs] Small update on excluded plugins
+      [Docs] Small updates for supported chips
+      [Docs] Small updates for supported chips
+      [UI] Disable the Interfaces/Modbus subtab for now, as it's still TODO
+      [Docs] Update documentation
+      [Build] - Ignore clangd configuration file
+      [Build] Add P047 (Moisture sensors) to Climate B, as mentioned in the docs
+      [Advanced] Remove I2C ClockStretchLimit note
+      [Network] Fix missing reload-indicator for Network Driver selector
+      [Docs] Corrections for some recent changes
+      [Docs] Expand description for creating a Custom build
+      [Docs] Expand description for creating a Custom build, small typo fixes
+      [Bugfix] [I2C] Connection-check failure didn't correctly disable the plugin
+      [P180] [BusCmd] Allow rules variables in get/read and put/write (bus) commands
+      [Build] Use pioarduino also on Github builds
+      [Build][GH] Bump github-scripts plugin from v8 to v9
+      [Build] Rename library.json for HeatpumpIR to avoid constant re-installs of (outdated version) IRremoteESP8266
+      [P180] [BusCmd] Allow rules variables in read and put/write (bus) commands
+      [P180] Process I2C commands synchronous when called from rules and other internal sources
+      [P180] Update documentation
+      [P180] [BusCmd] Allow rules variables in read and put/write (bus) commands
+      [P180] Update documentation
+      [Build] Create separate ESP32P4 binaries zip in release script
+      [Fixes] %iswifi% report status value instead of boolean
+      [Metrics] Add network traffic data TX/RX bytes and frames (Prometheus)
+      [Docs] Fix typo
+      [Ni]otifications] Add usesTLS flag to attributes and show in PluginList
+      [Ni]otifications] Add usesTLS flag to attributes and show in PluginList
+      [Network] Add define to select factory-default network adapter
+      [Custom] Add some missing #define variables to Custom-sample.h
+      [Network] Fix struct initialization
+      [Settings] Fix waring for VariousBits_2
+      [Network] Add size-check for NetworkDriverStruct
+      [Custom] Add secure Cloudflare DNS entries
+      [Docs] Fix missing column for LoopTimerSetAndRun
+      [Build] Add C5 4MB Custom, 16MB MAX and 32 MB MAX32 and P4 32MB MAX32 builds
+      [Build] Fix a few typos in 32MB board definitions
+      [Build] Missed a typo in 16MB board definition
+      [Dist] Update Espressif Flash Download tool to v3.9.10
+      [Build] Update documentation
+      [Network] Allow network interfaces to be enabled on factory reset
+      [Network] Fix small typo
+      [P180] Add documentation for TCA9554 I/O extender to control relays
+      [P073] Fix build with P073_DEBUG and BUILD_NO_DEBUG enabled
+      [Build] uv: Activate the PENV, then install missing requirements there
+      [C016] Remove Experimental label, clean up initialization
+      [Network] Initially collapse the Statistics section of the page
+      [Metrics] Only export metrics when stats enabled
+      [Build] Fix comment
+      [Network] Allow to not default-enable WiFi interface
+      Revert: [Metrics] Only export metrics when stats enabled
+      [Docs] Fix link to I2C Bus settings
+      [Console] Accept all valid ASCII characters for input
+      [Build] Fix install-requirements script on Windows
+      [UI] Update icon for Tools tab
+      [P039] Fix for initialization error
+      [SysVars] List variables numerically sorted
+      [SysVars] Sort alphabetic values too (though they come in already sorted)
+      [Docs] Suggest VSCode plugin TODO Highlight as Todo Tree doesn't work anymore without an external tool
+      [Docs] Update VSCode plugin list
+      [C005] Add note MQTT Auto Discovery not enabled in ESP8266 builds
+      [Bugfix] Improve initialization of Task Interval
+      [Bugfix] Partial revert for saving Task Interval
+      [Bugfix] Include PLUGIN_FORMAT_USERVAR values for json updates
+      [PLUGIN_FORMAT_USERVAR] Allow optional value display formatting by setting ParN[idx] to 1
+      [P126][P129] Code optimization by moving ul2stringFixed to StringConverter_Numerical
+      [P126][P129] Code optimization using ceilf instead of ceil, fix conditional compile error
+      [Docs] Small typo P124
+      [Bugfix] Limit humidity to 100% after applying temperature compensation
+      [UI] DevicesPage: Hide Controllers if no values to send
+      [Docs] Clarification about Collection builds including Normal plugin set, mention 32MB flash units
+
+andbad (18):
+      Update _P036_FrameOLED.ino
+      Add new display configuration for 72x40 resolution
+      Add case for pix72x40 resolution handling
+      Update p036_resolution enum values
+      Add new display option '72x40' to OLed_helper
+      Fix enum values for p036_resolution
+      Reorder resolution options in OLED frame
+      Fix formatting of optionValues array in FrameOLED
+      Reorder display size options in OLed_helper.cpp
+      Remove and re-add 72x40 resolution configuration
+      Update OLedFormSizes call to include element count
+      Update OLedFormSizes to use optionsSize parameter
+      Add default parameters to OLedFormSizes function
+      Refactor FormSelectorOptions initialization
+      Fix formatting of enum value for p036_resolution
+      Fix formatting in P036_data_struct.h
+      Add 72x40 OLED size to changelog
+      Add 72x40 size
+
+chromoxdor (35):
+      Update for the HTTP Response Parser
+      minor changes
+      Update HTTPResponseParser.h
+      Update HTTPResponseParser.h
+      HttpResponseParser fix:prevent race condition
+      [ESP8266] Enable CORS globally
+      [CSS] Future CSS for Wi-Fi & Interfaces tab
+      no need here
+      [CSS] small update
+      Update HTTPResponseParser.cpp
+      Update HTTPResponseParser.cpp
+      update colorcode files
+      Update HTTPResponseParser.cpp
+      FIX json?showpluginstats
+      Update espeasy.min.js
+      [ESP8266] Enable CORS globally (Update)
+      [LOG] add filter
+      [LOG] refining the filter
+      [LOG] revert changes for plugin_sets
+      [LOG] add filter field for older builds
+      [LOG] reverting accidents
+      [LOG] autoscroll fix, code reduction
+      [LOG] Removed unnecessary code.
+      [LOG+DevicePage_JS] refining the device page JS
+      [JS] update WebStaticData.h
+      [LOG] Fix for the minified JS
+      Delete fetch_and_parse_log.min.js
+      [PWM] Fix led flickering
+      [PWM] undoing 16-bit changes
+      Update Hardware_PWM.cpp
+      [PWM] add ledcReadFreq(pin) for comparison
+      [PWM] multipin state tracking
+      Update Hardware_PWM.cpp
+      [PWM] using ledcRead()
+      [PWM] reduce function
+
+dependabot[bot] (3):
+      Bump actions/download-artifact from 7 to 8
+      Bump actions/upload-artifact from 6 to 7
+      Bump actions/checkout from 6 to 7
+
+yosinn1-blip (2):
+      docs: fix received spelling in docs
+      docs: fix occurrence spelling in docs
+
+
+-------------------------------------------------
 Changes in release mega-20260108 (since mega-20260107)
 -------------------------------------------------
 

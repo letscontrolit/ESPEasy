@@ -18,6 +18,11 @@
 # include "../Helpers/SystemVariables.h"
 
 
+#if defined(ESP32) && (!defined(LIMIT_BUILD_SIZE) || FEATURE_STRING_VARIABLES)
+#define FEATURE_CUSTOM_STRING_SORT  1
+#else
+#define FEATURE_CUSTOM_STRING_SORT  0
+#endif
 // ********************************************************************************
 // Web Interface sysvars showing all system vars and their value.
 // ********************************************************************************
@@ -36,9 +41,7 @@ void handle_sysvars() {
   checkRAM(F("handle_sysvars"));
   # endif // ifndef BUILD_NO_RAM_TRACKER
 
-  if (!isLoggedIn()) { return; }
-  TXBuffer.startStream();
-  sendHeadandTail_stdtemplate(_HEAD);
+  if (!startStream_send_stdTemplate(MENU_INDEX_TOOLS)) { return; }
 
   html_BR();
   addHtml(F("<p>This page may load slow.<BR>Do not load too often, since it may affect performance of the node.</p>"));
@@ -52,6 +55,19 @@ void handle_sysvars() {
   html_table_header(F("URL encoded"), F("RTDReference/SystemVariable.html"), 0);
 
   addTableSeparator(F("Custom Variables"), 3, 3);
+  #if FEATURE_CUSTOM_STRING_SORT
+  auto numAlphaSort = [](const String& a, const String& b) {
+                        const int32_t ai = a.toInt();
+                        const int32_t bi = b.toInt();
+
+                        if (!ai && !bi) { return !!(a < b); } // a..z , need to cast to bool for ESP8266
+
+                        if (!ai) { return false; } // Alphanum after num
+                        return ai < bi;     // Numerical order
+                      };
+  std::vector<String> customStringSort;
+
+  # endif // FEATURE_CUSTOM_STRING_SORT
 
   if (customFloatVar.empty()) {
     html_TR_TD();
@@ -59,14 +75,33 @@ void handle_sysvars() {
     html_TD();
     html_TD();
   } else {
+    #if FEATURE_CUSTOM_STRING_SORT
+
+    for (auto it = customFloatVar.begin(); it != customFloatVar.end(); ++it) {
+      customStringSort.push_back(it->first);
+    }
+    std::sort(customStringSort.begin(), customStringSort.end(), numAlphaSort);
+
+    for (auto& it : customStringSort) {
+      NumericalType detectedType;
+      bool isv_ = true;
+
+      if (getNumerical(it, NumericalType::HexadecimalUInt, detectedType).length() > 0) {
+        isv_ = detectedType != NumericalType::Integer;
+      }
+      addSysVar_html(strformat(F("%%%s%s%%"), FsP(isv_ ? F("v_") : F("v")), it.c_str()), false);
+    }
+    # else // FEATURE_CUSTOM_STRING_SORT
     for (auto it = customFloatVar.begin(); it != customFloatVar.end(); ++it) {
       NumericalType detectedType;
       bool isv_ = true;
+
       if (getNumerical(it->first, NumericalType::HexadecimalUInt, detectedType).length() > 0) {
         isv_ = detectedType != NumericalType::Integer;
       }
       addSysVar_html(strformat(F("%%%s%s%%"), FsP(isv_ ? F("v_") : F("v")), it->first.c_str()), false);
     }
+    # endif // FEATURE_CUSTOM_STRING_SORT
   }
 
   # if FEATURE_STRING_VARIABLES
@@ -78,8 +113,15 @@ void handle_sysvars() {
     html_TD();
     html_TD();
   } else {
+    customStringSort.clear();
+
     for (auto it = customStringVar.begin(); it != customStringVar.end(); ++it) {
-      addSysVar_html(strformat(F("[str#%s]"), it->first.c_str()), false);
+      customStringSort.push_back(it->first);
+    }
+    std::sort(customStringSort.begin(), customStringSort.end(), numAlphaSort);
+
+    for (auto& it : customStringSort) {
+      addSysVar_html(strformat(F("[str#%s]"), it.c_str()), false);
     }
   }
   # endif // if FEATURE_STRING_VARIABLES
@@ -501,8 +543,7 @@ void handle_sysvars() {
   }
   html_end_table();
   html_end_form();
-  sendHeadandTail_stdtemplate(_TAIL);
-  TXBuffer.endStream();
+  sendTail_stdtemplate();
 }
 
 void addSysVar_html(const __FlashStringHelper *input) {

@@ -30,43 +30,31 @@ bool ipInAllowedSubnet(const IPAddress& ip)
 }
 
 String describeAllowedIPrange() {
-  String reply;
-
-  switch (SecuritySettings.IPblockLevel)
-  {
-    case ALL_ALLOWED:
-      reply +=  F("All Allowed");
-      break;
-    default:
-    {
-      IPAddress low, high;
-      getIPallowedRange(low, high);
-      reply +=  formatIP(low);
-      reply +=  F(" - ");
-      reply +=  formatIP(high);
-    }
-  }
-  return reply;
+  return describeAllowedIPrange(ESPEasy::net::NetworkLocalIP());
 }
 
-bool getIPallowedRange(IPAddress& low, IPAddress& high)
-{
-  switch (SecuritySettings.IPblockLevel)
-  {
-    case LOCAL_SUBNET_ALLOWED:
-      low  = NetworkID();
-      high = NetworkBroadcast();
-      return true;
-    case ONLY_IP_RANGE_ALLOWED:
-      low  = IPAddress(SecuritySettings.AllowedIPrangeLow);
-      high = IPAddress(SecuritySettings.AllowedIPrangeHigh);
-      break;
-    default:
-      low  = IPAddress(0, 0, 0, 0);
-      high = IPAddress(255, 255, 255, 255);
-      return false;
+String describeAllowedIPrange(const IPAddress& ip) {
+  if (SecuritySettings.IPblockLevel == ALL_ALLOWED) {
+    return F("All Allowed");
   }
-  return true;
+  String allowedRange;
+  String ip_str = ip.toString();
+
+  for (networkIndex_t x = 0; x < NETWORK_MAX; x++) {
+    EventStruct tempEvent;
+    tempEvent.NetworkIndex = x;
+
+    if (NWPluginCall(NWPlugin::Function::NWPLUGIN_CLIENT_IP_WEB_ACCESS_ALLOWED, &tempEvent, ip_str)) {
+      if (!tempEvent.String1.isEmpty() && !tempEvent.String2.isEmpty()) {
+
+        if (!allowedRange.isEmpty()) { allowedRange += F(", "); }
+        allowedRange +=  tempEvent.String1;
+        allowedRange +=  F(" - ");
+        allowedRange +=  tempEvent.String2;
+      }
+    }
+  }
+  return allowedRange;
 }
 
 } // namespace net

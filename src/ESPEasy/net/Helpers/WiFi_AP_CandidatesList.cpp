@@ -9,6 +9,7 @@
 #include "../../../src/Globals/SecuritySettings.h"
 #include "../../../src/Globals/Settings.h"
 #include "../../../src/Helpers/StringConverter.h"
+#include "../wifi/ESPEasyWifi.h"
 
 #if defined(ESP8266)
   # include <ESP8266WiFi.h>
@@ -85,7 +86,6 @@ void WiFi_AP_CandidatesList::load_knownCredentials() {
           }
         }
         known.push_back(tmp_known);
-        ++index;
       }
     }
   }
@@ -591,7 +591,7 @@ bool WiFi_AP_CandidatesList::get_SSID_key(uint8_t index, String& ssid, String& k
 # endif // if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE
 
   // Spaces are allowed in both SSID and pass phrase, so make sure to not trim the ssid and key.
-  return !ssid.isEmpty() && key.length() >= 8;
+  return ESPEasy::net::wifi::validWiFiCredentials(ssid, key);
 }
 
 bool WiFi_AP_CandidatesList::hasWiFiCredentials()

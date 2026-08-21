@@ -91,7 +91,7 @@ bool ESPEasy_key_value_store::load(
     return false;
   }
 # ifndef BUILD_NO_DEBUG
-  addLog(LOG_LEVEL_INFO, strformat(F("KVS Load : Total size %d + offset %d, max size %d"), totalSize, offset_in_block, max_size));
+  addLog(LOG_LEVEL_DEBUG, strformat(F("KVS Load : Total size %d + offset %d, max size %d"), totalSize, offset_in_block, max_size));
 # endif
 
   size_t bytesLeftPartialString{};
@@ -111,10 +111,15 @@ bool ESPEasy_key_value_store::load(
                            reinterpret_cast<uint8_t *>(&buffer),
                            readSize,
                            readPos);
-    addLog(LOG_LEVEL_INFO, strformat(
-             F("KVS: LoadFromFile  readSize %d readPos %d"),
-             readSize,
-             readPos));
+# ifndef BUILD_NO_DEBUG
+
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+      addLog(LOG_LEVEL_DEBUG, strformat(
+               F("KVS: LoadFromFile  readSize %d readPos %d"),
+               readSize,
+               readPos));
+    }
+# endif // ifndef BUILD_NO_DEBUG
     uint32_t bufPos           = 0;
     bool     loadNextFromFile = false;
 
@@ -294,7 +299,7 @@ bool ESPEasy_key_value_store::store(
 {
   if (getState() == State::NotChanged) {
     # ifndef BUILD_NO_DEBUG
-    addLog(LOG_LEVEL_INFO, F("KVS: Content not changed, no need to save"));
+    addLog(LOG_LEVEL_DEBUG, F("KVS: Content not changed, no need to save"));
     # endif
     return true;
   }
@@ -515,8 +520,11 @@ bool ESPEasy_key_value_store::store(
   // Consider a successful save the same as a fresh load.
   // The data is now the same as what is stored
 # ifndef BUILD_NO_DEBUG
-  addLog(LOG_LEVEL_INFO, strformat(F("KVS: Written %d bytes"), writePos));
-# endif
+
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    addLog(LOG_LEVEL_DEBUG, strformat(F("KVS: Written %d bytes"), writePos));
+  }
+# endif // ifndef BUILD_NO_DEBUG
   _state = State::NotChanged;
   dump();
   return true;
@@ -1195,7 +1203,12 @@ void ESPEasy_key_value_store::updateHasStorageType(KVS_StorageType::Enum storage
 
 void ESPEasy_key_value_store::dump() const
 {
-  addLog(LOG_LEVEL_INFO, strformat(F("KVS: Payload Storage size : %d"), getPayloadStorageSize()));
+# ifndef BUILD_NO_DEBUG
+
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    addLog(LOG_LEVEL_DEBUG, strformat(F("KVS: Payload Storage size : %d"), getPayloadStorageSize()));
+  }
+# endif // ifndef BUILD_NO_DEBUG
 
   for (auto it = _string_data.begin(); it != _string_data.end(); ++it)
   {
@@ -1208,14 +1221,17 @@ void ESPEasy_key_value_store::dump() const
           val)) {
       val = '-';
     }
+# ifndef BUILD_NO_DEBUG
 
-    addLog(LOG_LEVEL_INFO, strformat(
-             F("KVS: type: %d, combined-key: %x, key: %d, value: '%s' '%s'"),
-             KVS_StorageType::get_StorageType_from_combined_key(it->first),
-             it->first, KVS_StorageType::getKey_from_combined_key(it->first),
-             it->second.c_str(),
-             val.c_str()));
-
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+      addLog(LOG_LEVEL_DEBUG, strformat(
+               F("KVS: type: %d, combined-key: %x, key: %d, value: '%s' '%s'"),
+               KVS_StorageType::get_StorageType_from_combined_key(it->first),
+               it->first, KVS_StorageType::getKey_from_combined_key(it->first),
+               it->second.c_str(),
+               val.c_str()));
+    }
+# endif // ifndef BUILD_NO_DEBUG
   }
 
   for (auto it = _4byte_data.begin(); it != _4byte_data.end(); ++it)
@@ -1229,17 +1245,21 @@ void ESPEasy_key_value_store::dump() const
       val = '-';
     }
 
-    addLog(LOG_LEVEL_INFO, strformat(
-             F("KVS: type: %d, comb: %x, key: %d, val: '%x %x %x %x' strval: '%s'"),
-             KVS_StorageType::get_StorageType_from_combined_key(it->first),
-             it->first, KVS_StorageType::getKey_from_combined_key(it->first),
-             it->second.getBinary()[0],
-             it->second.getBinary()[1],
-             it->second.getBinary()[2],
-             it->second.getBinary()[3],
-             val.c_str()
-             ));
+# ifndef BUILD_NO_DEBUG
 
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+      addLog(LOG_LEVEL_DEBUG, strformat(
+               F("KVS: type: %d, comb: %x, key: %d, val: '%x %x %x %x' strval: '%s'"),
+               KVS_StorageType::get_StorageType_from_combined_key(it->first),
+               it->first, KVS_StorageType::getKey_from_combined_key(it->first),
+               it->second.getBinary()[0],
+               it->second.getBinary()[1],
+               it->second.getBinary()[2],
+               it->second.getBinary()[3],
+               val.c_str()
+               ));
+    }
+# endif // ifndef BUILD_NO_DEBUG
   }
 
   for (auto it = _8byte_data.begin(); it != _8byte_data.end(); ++it)
@@ -1253,21 +1273,25 @@ void ESPEasy_key_value_store::dump() const
       val = '-';
     }
 
-    addLog(LOG_LEVEL_INFO, strformat(
-             F("KVS: type: %d, comb: %x, key: %d, val: '%x %x %x %x  %x %x %x %x' strval: '%s'"),
-             KVS_StorageType::get_StorageType_from_combined_key(it->first),
-             it->first, KVS_StorageType::getKey_from_combined_key(it->first),
-             it->second.getBinary()[0],
-             it->second.getBinary()[1],
-             it->second.getBinary()[2],
-             it->second.getBinary()[3],
-             it->second.getBinary()[4],
-             it->second.getBinary()[5],
-             it->second.getBinary()[6],
-             it->second.getBinary()[7],
-             val.c_str()
-             ));
+# ifndef BUILD_NO_DEBUG
 
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+      addLog(LOG_LEVEL_DEBUG, strformat(
+               F("KVS: type: %d, comb: %x, key: %d, val: '%x %x %x %x  %x %x %x %x' strval: '%s'"),
+               KVS_StorageType::get_StorageType_from_combined_key(it->first),
+               it->first, KVS_StorageType::getKey_from_combined_key(it->first),
+               it->second.getBinary()[0],
+               it->second.getBinary()[1],
+               it->second.getBinary()[2],
+               it->second.getBinary()[3],
+               it->second.getBinary()[4],
+               it->second.getBinary()[5],
+               it->second.getBinary()[6],
+               it->second.getBinary()[7],
+               val.c_str()
+               ));
+    }
+# endif // ifndef BUILD_NO_DEBUG
   }
 
 }

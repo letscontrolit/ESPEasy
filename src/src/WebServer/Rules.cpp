@@ -55,8 +55,8 @@ void handle_rules() {
     if (f) { f.close(); }
   }
 
-  TXBuffer.startStream();
-  sendHeadandTail_stdtemplate(_HEAD);
+  // Already checked for login
+  startStream_send_stdTemplate_NoLoginCheck(MENU_INDEX_RULES);
   addHtmlError(error);
 
   html_table_class_normal();
@@ -104,8 +104,7 @@ void handle_rules() {
   addButton(fileName, F("Download to file"));
   html_end_table();
 
-  sendHeadandTail_stdtemplate(_TAIL);
-  TXBuffer.endStream();
+  sendTail_stdtemplate();
 
   checkRuleSets();
 }
@@ -127,10 +126,8 @@ void handle_rules_new() {
   #  ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_rules"));
   #  endif // ifndef BUILD_NO_RAM_TRACKER
-  navMenuIndex = 5;
-  TXBuffer.startStream();
-  sendHeadandTail(F("TmplStd"), _HEAD);
-
+  if (!startStream_send_stdTemplate(MENU_INDEX_RULES)) { return; }
+  
   // define macro
   #  if defined(ESP8266)
   String rootPath = F("rules");
@@ -254,8 +251,7 @@ void handle_rules_new() {
   }
 
   // TXBuffer += F("<BR><BR>");
-  sendHeadandTail(F("TmplStd"), _TAIL);
-  TXBuffer.endStream();
+  sendTail_stdtemplate();
   #  ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_rules"));
   #  endif // ifndef BUILD_NO_RAM_TRACKER
@@ -465,7 +461,7 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
 
         if (f)
         {
-          addLog(LOG_LEVEL_INFO, String(F(" Write to file: ")) + fileName);
+          addLog(LOG_LEVEL_INFO, concat(F(" Write to file: "), fileName));
           f.print(rules);
           f.close();
         }
@@ -477,9 +473,7 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
         }
       }
     }
-    navMenuIndex = 5;
-    TXBuffer.startStream();
-    sendHeadandTail(F("TmplStd"));
+    startStream_send_stdTemplate_NoLoginCheck(MENU_INDEX_RULES);
 
     if (error.length() > 0) {
       addHtmlError(error);
@@ -529,8 +523,7 @@ bool handle_rules_edit(String originalUri, bool isAddNew) {
 
     addHtml(F("</table></form>"));
 
-    sendHeadandTail(F("TmplStd"), true);
-    TXBuffer.endStream();
+    sendTail_stdtemplate();
     # endif // WEBSERVER_NEW_RULES
   }
   # ifndef BUILD_NO_RAM_TRACKER

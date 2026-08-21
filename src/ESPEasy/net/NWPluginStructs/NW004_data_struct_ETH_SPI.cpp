@@ -293,9 +293,10 @@ bool NW004_data_struct_ETH_SPI::webform_getPort(KeyValueWriter *writer) { return
 bool NW004_data_struct_ETH_SPI::init(EventStruct *event)
 {
   _load();
-    {
+  {
     auto runtime_data = getNWPluginData_static_runtime();
     if (runtime_data) {
+      runtime_data->clear(event->NetworkIndex);
       IPAddress ip, gateway, sn, dns;
       getStaticIPAddresses(ip, gateway, sn, dns);
       runtime_data->setStaticIP(ip, gateway, sn, dns);

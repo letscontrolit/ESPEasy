@@ -43,7 +43,9 @@ void clear_rtttl_melody() {
   // The non-blocking play will read from a char pointer.
   // So we must stop the playing before changing the string as it could otherwise lead to a crash.
   if (anyrtttl::nonblocking::isPlaying()) { // If currently playing, cancel that
+    #ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_INFO, F("RTTTL: Cancelling running song..."));
+    #endif // ifndef BUILD_NO_DEBUG
     anyrtttl::nonblocking::stop();
     #   if FEATURE_RTTTL_EVENTS
 

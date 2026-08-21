@@ -77,24 +77,16 @@ IPAddress NetworkLocalIP()   { return WiFi.localIP(); }
 
 IPAddress NetworkID()
 {
-  const IPAddress subnet = NetworkSubnetMask();
-  IPAddress networkID    = ESPEasy::net::NetworkLocalIP();
-
-  for (uint8_t i = 0; i < 4; ++i) {
-    networkID[i] &= subnet[i];
-  }
-  return networkID;
+  return NWPlugin::getNetworkID(
+    ESPEasy::net::NetworkLocalIP(),
+    NetworkSubnetMask());
 }
 
 IPAddress NetworkBroadcast()
 {
-  const IPAddress subnet = NetworkSubnetMask();
-  IPAddress broadcast    = ESPEasy::net::NetworkLocalIP();
-
-  for (uint8_t i = 0; i < 4; ++i) {
-    broadcast[i] |= ~subnet[i];
-  }
-  return broadcast;
+  return NWPlugin::getNetworkBroadcast(
+    ESPEasy::net::NetworkLocalIP(),
+    NetworkSubnetMask());
 }
 
 IPAddress   NetworkSubnetMask()          { return WiFi.subnetMask(); }

@@ -35,7 +35,6 @@
 #include "../Helpers/StringGenerator_System.h"
 #include "../WebServer/ESPEasy_WebServer.h"
 
-
 #ifdef USE_RTOS_MULTITASKING
 # include "../Helpers/Networking.h"
 # include "../Helpers/PeriodicalActions.h"

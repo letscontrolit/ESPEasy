@@ -1,0 +1,40 @@
+#######################################
+# Syntax Coloring Map For AT24C
+####################################### 
+# Class
+#######################################
+
+AT24C01	KEYWORD3
+AT24C02	KEYWORD3
+AT24C04	KEYWORD3
+AT24C08	KEYWORD3
+AT24C16	KEYWORD3
+AT24C32	KEYWORD3
+AT24C64	KEYWORD3
+AT24C128	KEYWORD3
+AT24C256	KEYWORD3
+
+#######################################
+# Methods and Functions 
+#######################################	
+
+read  KEYWORD2
+write KEYWORD2
+update  KEYWORD2
+length  KEYWORD2
+writeBuffer KEYWORD2
+readBuffer  KEYWORD2
+getLastError  KEYWORD2
+
+#######################################
+# Constants
+#######################################
+ 
+AT24C_ADDRESS_0	LITERAL1 
+AT24C_ADDRESS_1	LITERAL1 
+AT24C_ADDRESS_2	LITERAL1 
+AT24C_ADDRESS_3	LITERAL1 
+AT24C_ADDRESS_4	LITERAL1 
+AT24C_ADDRESS_5	LITERAL1 
+AT24C_ADDRESS_6	LITERAL1 
+AT24C_ADDRESS_7	LITERAL1 

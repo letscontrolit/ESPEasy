@@ -7,6 +7,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2026-06-30 tonhuisman: Code optimization by moving ul2stringFixed to StringConverter_Numerical
  * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported for Shift registers)
  * 2022-02-27 tonhuisman: Rename plugin title to Output - Shift registers (74HC595)
  * 2022-02-25 tonhuisman: Again rename commands, now using separate prefix shiftout and the rest of the previous command as subcommand.
@@ -58,19 +59,6 @@
 # define PLUGIN_VALUENAME4_126  "State_D"
 
 # include "./src/PluginStructs/P126_data_struct.h"
-
-// TODO tonhuisman: ? Move to StringConverter ? though it is a bit specific, can also be used by P129
-String P126_ul2stringFixed(uint32_t value, uint8_t base) {
-  uint64_t val = static_cast<uint64_t>(value);
-
-  val &= 0x0ffffffff;   // Keep 32 bits
-  val |= 0x100000000;   // Set bit just left of 32 bits so we will see the leading zeroes
-  String valStr = ull2String(val, base);
-
-  valStr.remove(0, 1);  // Delete leading 1 we added
-  valStr.toUpperCase(); // uppercase hex for readability
-  return valStr;
-}
 
 boolean Plugin_126(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -286,15 +274,16 @@ boolean Plugin_126(uint8_t function, struct EventStruct *event, String& string)
           (P126_CONFIG_FLAGS_GET_OUTPUT_SELECTION == P126_OUTPUT_HEXBIN)) {
         string += '0';
         string += (P126_CONFIG_FLAGS_GET_VALUES_DISPLAY ? 'b' : 'x');
-        string += P126_ul2stringFixed(UserVar.getUint32(event->TaskIndex, event->idx),
-                                      # ifdef P126_SHOW_VALUES
-                                      (P126_CONFIG_FLAGS_GET_VALUES_DISPLAY ? BIN :
-                                      # endif // ifdef P126_SHOW_VALUES
-                                      HEX
-                                      # ifdef P126_SHOW_VALUES
-                                      )
-                                      # endif // ifdef P126_SHOW_VALUES
-                                      );
+
+        string += ul2stringFixed(UserVar.getUint32(event->TaskIndex, event->idx),
+                                 # ifdef P126_SHOW_VALUES
+                                 (P126_CONFIG_FLAGS_GET_VALUES_DISPLAY ? BIN :
+                                 # endif // ifdef P126_SHOW_VALUES
+                                 HEX
+                                 # ifdef P126_SHOW_VALUES
+                                 )
+                                 # endif // ifdef P126_SHOW_VALUES
+                                 , 1 == event->ParN[event->idx]);
       }
       success = true;
       break;
@@ -308,21 +297,15 @@ boolean Plugin_126(uint8_t function, struct EventStruct *event, String& string)
         const String abcd = F("ABCDEFGH");                                                          // In case anyone dares to extend
                                                                                                     // VARS_PER_TASK to 8...
         const uint16_t endCheck = P126_CONFIG_CHIP_COUNT + (P126_CONFIG_CHIP_COUNT == 255 ? 3 : 4); // 4(.0) = nr of bytes in an uint32_t.
-        const uint16_t maxVar   = min(static_cast<uint8_t>(VARS_PER_TASK), static_cast<uint8_t>(ceil(P126_CONFIG_CHIP_COUNT / 4.0)));
-        uint8_t dotInsert;
-        uint8_t dotOffset;
+        const uint16_t maxVar   = min(static_cast<uint8_t>(VARS_PER_TASK), static_cast<uint8_t>(ceilf(P126_CONFIG_CHIP_COUNT / 4.0f)));
 
         for (uint16_t varNr = 0; varNr < maxVar; ++varNr) {
           if (P126_CONFIG_FLAGS_GET_VALUES_DISPLAY) {
             label     = F("Bin");
             state     = F("0b");
-            dotInsert = 10;
-            dotOffset = 9;
           } else {
             label     = F("Hex");
             state     = F("0x");
-            dotInsert = 4;
-            dotOffset = 3;
           }
           label += strformat(F(" State_%s "), abcd.substring(varNr, varNr + 1).c_str());
 
@@ -331,11 +314,7 @@ boolean Plugin_126(uint8_t function, struct EventStruct *event, String& string)
           label += (P126_CONFIG_SHOW_OFFSET + (4 * varNr) + 1);          // 4 = nr of bytes in an uint32_t.
 
           if ((P126_CONFIG_SHOW_OFFSET + (4 * varNr) + 4) <= endCheck) { // Only show if still in range
-            state += P126_ul2stringFixed(UserVar.getUint32(event->TaskIndex, varNr), P126_CONFIG_FLAGS_GET_VALUES_DISPLAY ? BIN : HEX);
-
-            for (uint8_t i = 0; i < 3; ++i, dotInsert += dotOffset) {    // Insert readability separators
-              state = state.substring(0, dotInsert) + '.' + state.substring(dotInsert);
-            }
+            state += ul2stringFixed(UserVar.getUint32(event->TaskIndex, varNr), P126_CONFIG_FLAGS_GET_VALUES_DISPLAY ? BIN : HEX, true);
             pluginWebformShowValue(event->TaskIndex, VARS_PER_TASK + varNr, label, state, true);
           }
         }

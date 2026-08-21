@@ -119,7 +119,9 @@ bool P105_data_struct::updateMeasurements(taskIndex_t task_index) {
       addLogMove(LOG_LEVEL_ERROR, strformat(F("%s : unable to initialize"), getDeviceName().c_str()));
       return false;
     }
+    #ifndef BUILD_NO_DEBUG
     addLogMove(LOG_LEVEL_INFO, strformat(F("%s : initialized"), getDeviceName().c_str()));
+    #endif // ifndef BUILD_NO_DEBUG
 
     trigger_time = current_time;
     state        = AHTx_state::AHTx_Trigger_measurement;

@@ -1,6 +1,6 @@
 
 Ethernet with PoE
-^^^^^^^^^^^^^^^^^
+-----------------
 
 Some ethernet boards support Power over Ethernet (PoE), so only a single (ethernet) cable to the ESP is needed, and the ESP (and any sensors) will be powered via an onboard converter.
 
@@ -15,7 +15,7 @@ Most likely, this warning is applicable to other brands as well.
 
 
 Ethernet Isolation
-^^^^^^^^^^^^^^^^^^
+------------------
 
 Most Ethernet RJ45 phy (the connector on the PCB) have isolation transformers in them.
 This does isolate the TX/RX pins to make sure there is no direct connection between the long cables and the Ethernet controller chip.

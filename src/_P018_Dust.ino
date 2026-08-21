@@ -100,9 +100,11 @@ boolean Plugin_018(uint8_t function, struct EventStruct *event, String& string)
       ISR_interrupts();
       UserVar.setFloat(event->TaskIndex, 0, value);
 
+      #ifndef BUILD_NO_DEBUG
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         addLogMove(LOG_LEVEL_INFO, concat(F("GPY  : Dust value: "), value));
       }
+      #endif // ifndef BUILD_NO_DEBUG
 
       success = true;
       break;

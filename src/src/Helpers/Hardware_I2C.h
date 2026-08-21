@@ -24,6 +24,11 @@ void I2CBegin(int8_t   sda,
 #if FEATURE_I2CMULTIPLEXER
 bool    isI2CMultiplexerEnabled(uint8_t i2cBus);
 
+uint8_t I2CMultiplexerShiftBit(uint8_t i2cBus, uint8_t i);
+
+void    I2CMultiplexerSelectByBusAndMux(uint8_t i2cBus,
+                                        bool    singleMulti,
+                                        int     muxPort);
 void    I2CMultiplexerSelectByTaskIndex(taskIndex_t taskIndex);
 void    I2CMultiplexerSelect(uint8_t i2cBus,
                              uint8_t i);

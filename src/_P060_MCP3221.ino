@@ -157,7 +157,9 @@ boolean Plugin_060(uint8_t function, struct EventStruct *event, String& string)
       if (nullptr != P060_data) {
         UserVar.setFloat(event->TaskIndex, 0, P060_data->getValue());
 
+        #ifndef BUILD_NO_DEBUG
         String log = concat(F("ADMCP: Analog value: "), formatUserVarNoCheck(event, 0));
+        #endif // ifndef BUILD_NO_DEBUG
 
         if (PCONFIG(3)) // Calibration?
         {
@@ -171,11 +173,15 @@ boolean Plugin_060(uint8_t function, struct EventStruct *event, String& string)
             const float normalized = (UserVar[event->BaseVarIndex] - adc1) / static_cast<float>(adc2 - adc1);
             UserVar.setFloat(event->TaskIndex, 0, normalized * (out2 - out1) + out1);
 
+            #ifndef BUILD_NO_DEBUG
             log += concat(F(" = "), formatUserVarNoCheck(event, 0));
+            #endif // ifndef BUILD_NO_DEBUG
           }
         }
 
+        #ifndef BUILD_NO_DEBUG
         addLogMove(LOG_LEVEL_INFO, log);
+        #endif // ifndef BUILD_NO_DEBUG
         success = true;
       }
       break;

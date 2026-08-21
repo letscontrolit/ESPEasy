@@ -145,11 +145,13 @@ bool   P111_data_struct::reset(int8_t csPin,
                                int8_t resetPin) {
   if ((resetPin != -1) &&
       (initPhase == P111_initPhases::Ready)) {
+    #ifndef BUILD_NO_DEBUG
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       addLogMove(
         LOG_LEVEL_INFO,
         concat(F("MFRC522: Reset on pin: "), resetPin));
     }
+    #endif // ifndef BUILD_NO_DEBUG
 
     init();
     return true;

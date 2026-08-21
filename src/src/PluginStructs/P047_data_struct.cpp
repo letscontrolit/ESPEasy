@@ -11,7 +11,7 @@ P047_data_struct::P047_data_struct(uint8_t address,
   _address(address), _model(static_cast<P047_SensorModels>(model)) {
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     addLog(LOG_LEVEL_INFO,
-           strformat(F("SoilMoisture: Initializing sensor: %s, version: 0x%x"), String(toString(_model)).c_str(), getVersion()));
+           strformat(F("SoilMoisture: Initializing sensor: %s, version: 0x%x"), FsP(toString(_model)), getVersion()));
   }
 }
 
@@ -120,6 +120,7 @@ bool P047_data_struct::plugin_read(struct EventStruct *event) {
           UserVar.setFloat(event->TaskIndex, 1, moisture);
           UserVar.setFloat(event->TaskIndex, 2, light);
 
+          #ifndef BUILD_NO_DEBUG
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             String log = strformat(F("SoilMoisture: Address: 0x%02x"), P047_I2C_ADDR);
 
@@ -134,6 +135,7 @@ bool P047_data_struct::plugin_read(struct EventStruct *event) {
               addLogMove(LOG_LEVEL_INFO, concat(F("SoilMoisture: Light: "), formatUserVarNoCheck(event, 2)));
             }
           }
+          #endif // ifndef BUILD_NO_DEBUG
 
           if (P047_SENSOR_SLEEP) {
             // send sensor to sleep

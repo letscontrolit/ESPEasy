@@ -97,6 +97,23 @@
 #define DEFAULT_WIFI_INCLUDE_HIDDEN_SSID false  // Allow to connect to hidden SSID APs
 #endif
 
+#ifndef DEFAULT_STA_APPEND_NW_NAME_TO_HOSTNAME
+#define DEFAULT_STA_APPEND_NW_NAME_TO_HOSTNAME  false
+#endif
+
+#ifndef DEFAULT_AP_APPEND_NW_NAME_TO_HOSTNAME
+#define DEFAULT_AP_APPEND_NW_NAME_TO_HOSTNAME  true
+#endif
+
+#ifndef DEFAULT_ETH_APPEND_NW_NAME_TO_HOSTNAME
+#define DEFAULT_ETH_APPEND_NW_NAME_TO_HOSTNAME  true
+#endif
+
+#ifndef DEFAULT_PPP_APPEND_NW_NAME_TO_HOSTNAME
+#define DEFAULT_PPP_APPEND_NW_NAME_TO_HOSTNAME  true
+#endif
+
+
 #ifndef DEFAULT_STA_ROUTE_PRIO
 #define DEFAULT_STA_ROUTE_PRIO              100 // ESP32-only default route priority
 #endif

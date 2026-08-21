@@ -2,6 +2,13 @@
 
 #ifdef USES_P113
 
+# if P113_USE_ROI
+#  include "../Static/WebStaticData.h" // Javascript and support functions
+# endif // if P113_USE_ROI
+
+# include <SparkFun_VL53L1X.h>
+
+
 P113_data_struct::P113_data_struct(uint8_t i2c_addr, int timing, bool range) : i2cAddress(i2c_addr), timing(timing), range(range) {
   sensor = new (std::nothrow) SFEVL53L1X();
 }

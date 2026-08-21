@@ -32,9 +32,7 @@ void handle_pinstates_json() {
   checkRAM(F("handle_pinstates"));
   # endif // ifndef BUILD_NO_RAM_TRACKER
 
-  if (!isLoggedIn()) { return; }
-  navMenuIndex = MENU_INDEX_TOOLS;
-  TXBuffer.startJsonStream();
+  if (!startJSON_Stream()) { return; }
 
   bool first = true;
   addHtml('[');
@@ -75,10 +73,7 @@ void handle_pinstates() {
   checkRAM(F("handle_pinstates"));
   # endif // ifndef BUILD_NO_RAM_TRACKER
 
-  if (!isLoggedIn()) { return; }
-  navMenuIndex = MENU_INDEX_TOOLS;
-  TXBuffer.startStream();
-  sendHeadandTail_stdtemplate(_HEAD);
+  if (!startStream_send_stdTemplate(MENU_INDEX_TOOLS)) { return; }
 
   # ifdef ESP32
   html_BR();
@@ -303,8 +298,7 @@ void handle_pinstates() {
 #  endif // if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 5, 0)
 
 # endif // ifdef ESP32
-  sendHeadandTail_stdtemplate(_TAIL);
-  TXBuffer.endStream();
+  sendTail_stdtemplate();
 }
 
 #endif // ifdef WEBSERVER_PINSTATES

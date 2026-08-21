@@ -79,6 +79,7 @@ enum class P020_Events : uint8_t {
   Generic       = 1u,
   RFLink        = 2u,
   P1WiFiGateway = 3u,
+
 };
 
 # if P020_USE_PROTOCOL
@@ -86,7 +87,9 @@ enum class P020_Protocol_e : uint8_t {
   TCP     = 0u,
   UDP     = 1u,
   TCP_UDP = 2u,
+
 };
+
 # endif // if P020_USE_PROTOCOL
 
 struct P020_Task : public PluginTaskData_base {
@@ -94,6 +97,7 @@ struct P020_Task : public PluginTaskData_base {
     WAITING,
     READING,
     CHECKSUM
+
   };
 
   P020_Task(struct EventStruct *event);
@@ -120,7 +124,8 @@ struct P020_Task : public PluginTaskData_base {
   void                handleSerialIn(struct EventStruct *event);
   void                handleClientIn(struct EventStruct *event);
   void                discardSerialIn();
-  void                rulesEngine(const String& message);
+  void                rulesEngine(const String      & message,
+                                  struct EventStruct *event);
 
   bool                isInit() const;
 
@@ -187,6 +192,7 @@ struct P020_Task : public PluginTaskData_base {
   bool          _eventAsHex        = false;
 
   ESPEasySerialPort _port;
+
 };
 
 #endif // ifdef USES_P020

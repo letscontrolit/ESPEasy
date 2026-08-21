@@ -54,7 +54,7 @@ public:
   static int              getMaxFilePos(Enum settingsType);
   static int              getFileSize(Enum settingsType);
 
-#ifndef BUILD_NO_DEBUG
+#if FEATURE_CHART_STORAGE_LAYOUT && !defined(BUILD_NO_DEBUG)
   static unsigned int     getSVGcolor(Enum settingsType);
 #endif
 

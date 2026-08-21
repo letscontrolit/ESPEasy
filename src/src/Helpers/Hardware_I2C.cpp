@@ -7,6 +7,9 @@
 #include "../Helpers/I2C_access.h"
 #include "../Helpers/StringConverter.h"
 
+#if FEATURE_EEPROM_EXTERNAL
+# include "../../ESPEasy/eeprom/Helpers/EEPROMExternal.h"
+#endif // if FEATURE_EEPROM_EXTERNAL
 #if FEATURE_I2C
 
 #include <Wire.h>
@@ -27,12 +30,12 @@ void initI2C() {
   {
     if (Settings.isI2CEnabled(i2cBus)) {
       #ifndef LIMIT_BUILD_SIZE
-      #if !FEATURE_I2C_MULTIPLE
+      # if !FEATURE_I2C_MULTIPLE
       addLog(LOG_LEVEL_INFO, F("INIT : I2C Bus"));
-      #else // if !FEATURE_I2C_MULTIPLE
+      # else // if !FEATURE_I2C_MULTIPLE
       addLog(LOG_LEVEL_INFO, concat(F("INIT : I2C Bus "), i2cBus));
-      #endif // if !FEATURE_I2C_MULTIPLE
-      #endif
+      # endif // if !FEATURE_I2C_MULTIPLE
+      #endif // ifndef BUILD_MINIMAL_OTA
       I2CSelectHighClockSpeed(i2cBus); // Set normal clock speed, on I2C Bus 1 (index 0)
     }
   }
@@ -75,6 +78,11 @@ void initI2C() {
       }
     }
   }
+
+  #if FEATURE_EEPROM_EXTERNAL
+  ESPEasy::eeprom::initializeEEPROMExternal();
+  #endif // if FEATURE_EEPROM_EXTERNAL
+
   I2CSelectHighClockSpeed(0); // Select first interface by default
 }
 
@@ -144,10 +152,11 @@ void I2CBegin(int8_t sda, int8_t scl, uint32_t clockFreq, uint32_t clockStretch)
     // No need to change the clock speed.
     return;
   }
-  if (sda == -1 || scl == -1) {
+
+  if ((sda == -1) || (scl == -1)) {
 #ifdef ESP32
     Wire.end();
-#endif
+#endif // ifdef ESP32
     last_sda = sda;
     last_scl = scl;
     return;
@@ -239,6 +248,25 @@ uint8_t I2CMultiplexerShiftBit(uint8_t i2cBus, uint8_t i) {
       break;
   }
   return toWrite;
+}
+
+void I2CMultiplexerSelectByBusAndMux(uint8_t i2cBus, bool singleMulti, int muxPort) {
+  uint8_t toWrite{};
+
+  if ((singleMulti && (muxPort > 0)) ||
+      (!singleMulti && (muxPort > -1))) {
+    if (!singleMulti) {
+      uint8_t i = muxPort;
+
+      if (i < 8) {
+        toWrite = I2CMultiplexerShiftBit(i2cBus, i);
+      }
+    } else {
+      toWrite = muxPort; // Bitpattern is already correctly stored
+    }
+  }
+
+  SetI2CMultiplexer(i2cBus, toWrite);
 }
 
 // As initially constructed by krikk in PR#254, quite adapted

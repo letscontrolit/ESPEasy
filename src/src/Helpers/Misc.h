@@ -60,9 +60,11 @@ bool setControllerEnableStatus(controllerIndex_t controllerIndex,
 /********************************************************************************************\
    Toggle task enabled state
  \*********************************************************************************************/
-bool setTaskEnableStatus(struct EventStruct *event,
+bool setTaskEnableStatus(taskIndex_t taskIndex,
                          bool        enabled);
 
+bool setTaskEnableStatus(struct EventStruct *event,
+                         bool        enabled);
 
 /********************************************************************************************\
    Clear task settings for given task

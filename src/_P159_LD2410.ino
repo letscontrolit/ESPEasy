@@ -92,6 +92,7 @@ boolean Plugin_159(uint8_t function, struct EventStruct *event, String& string)
       dev.PluginStats        = true;
       dev.ExitTaskBeforeSave = false; // Enable calling PLUGIN_WEBFORM_SAVE on the instantiated object
       dev.CustomVTypeVar     = true;
+      dev.SerialPortsAllowed = INCLUDE_NOT_CDC_SERIAL;
 
       break;
     }

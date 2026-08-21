@@ -23,7 +23,6 @@ ESPEasy_RTC_ATTR RTC_cache_struct RTC_cache;
 ESPEasy_RTC_ATTR uint8_t RTC_cache_data[RTC_CACHE_DATA_SIZE];
 #endif // ifdef ESP32
 
-
 /********************************************************************************************\
    RTC located cache
  \*********************************************************************************************/
@@ -501,6 +500,7 @@ bool RTC_cache_handler_struct::saveRTCcache(unsigned int startOffset, size_t nrB
 {
   RTC_cache.checksumData     = getDataChecksum();
   RTC_cache.checksumMetadata = calc_CRC32(reinterpret_cast<const uint8_t *>(&RTC_cache), sizeof(RTC_cache) - sizeof(uint32_t));
+
   #ifdef ESP32
   return true;
   #endif // ifdef ESP32

@@ -31,6 +31,7 @@ void OLedFormContrast(const __FlashStringHelper *id,
 void OLedFormSizes(const __FlashStringHelper *id,
                    const int                 *values,
                    uint8_t                    selectedIndex,
+                   uint8_t                    optionsSize = 3,
                    bool                       reloadOnChange = false);
 void OLedSetContrast(OLEDDisplay   *_display,
                      const uint8_t& OLED_contrast);

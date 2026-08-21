@@ -84,23 +84,18 @@ bool SecurityStruct_deviceSpecific::hasWiFiCredentials() const
 
 bool SecurityStruct_deviceSpecific::hasWiFiCredentials(uint8_t index) const
 {
-  if (index >= MAX_EXTRA_WIFI_CREDENTIALS_SEPARATE_FILE) { return false; }
-  String ssid, pass;
-
-  if (!_kvs.getValue(createKey(KeyType::WiFi_SSID, index), ssid, KVS_StorageType::Enum::string_type) ||
-      !_kvs.getValue(createKey(KeyType::WiFi_Password, index), pass, KVS_StorageType::Enum::string_type)) {
-    return false;
-  }
-  return ESPEasy::net::wifi::validWiFiCredentials(ssid, pass);
+  String ssid, passwd;
+  return getWiFiCredentials(index, ssid, passwd);
 }
 
 bool SecurityStruct_deviceSpecific::getWiFiCredentials(uint8_t index,
                                                        String& ssid,
                                                        String& passwd) const
 {
-  return
-    index < MAX_EXTRA_WIFI_CREDENTIALS_SEPARATE_FILE &&
-    getCredentials(KeyType::WiFi_SSID, KeyType::WiFi_Password, index, ssid, passwd);
+  if (index >= MAX_EXTRA_WIFI_CREDENTIALS_SEPARATE_FILE) { return false; }
+
+  if (!getCredentials(KeyType::WiFi_SSID, KeyType::WiFi_Password, index, ssid, passwd)) { return false; }
+  return ESPEasy::net::wifi::validWiFiCredentials(ssid, passwd);
 }
 
 void SecurityStruct_deviceSpecific::setWiFiCredentials(

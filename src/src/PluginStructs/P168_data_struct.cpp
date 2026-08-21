@@ -38,7 +38,9 @@ bool P168_data_struct::init(struct EventStruct *event) {
     veml->setPowerSaveMode(_psm_mode);
     veml->enable(true);
 
+    #ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_INFO, F("VEML : 6030/7700 Initialized."));
+    #endif // ifndef BUILD_NO_DEBUG
 
     initialized = true;
   } else {

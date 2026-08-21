@@ -17,11 +17,14 @@
 // ########################## Adapted to ESPEasy 2.0 by Jochen Krapf #####################################
 // #######################################################################################################
 
-// Changelog:
-// 2023-04-28 @iz8mbw: Rename sensor to SHT3x from SHT30/31/35
-// 2021-06-12 @tonhuisman: Add temperature offset setting, with humidity compensation method 'borrowed' from BME280 sensor
-// 2020-??    @TD-er: Maitenance updates
-// 2017-07-18 @JK-de: Plugin adaption for ESPEasy 2.0
+/** Changelog:
+ * 2026-07-03 tonhuisman: Cap humidity at 100% when applying temperature compensation value
+ *                        Reformat Changelog
+ * 2023-04-28 @iz8mbw: Rename sensor to SHT3x from SHT30/31/35
+ * 2021-06-12 @tonhuisman: Add temperature offset setting, with humidity compensation method 'borrowed' from BME280 sensor
+ * 2020-??    @TD-er: Maitenance updates
+ * 2017-07-18 @JK-de: Plugin adaption for ESPEasy 2.0
+ */
 
 # define PLUGIN_068
 # define PLUGIN_ID_068         68
@@ -129,10 +132,12 @@ boolean Plugin_068(uint8_t function, struct EventStruct *event, String& string)
       UserVar.setFloat(event->TaskIndex, 0, sht3x->tmp);
       UserVar.setFloat(event->TaskIndex, 1, sht3x->hum);
 
+      #ifndef BUILD_NO_DEBUG
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         addLogMove(LOG_LEVEL_INFO, concat(F("SHT3x: Temperature: "), formatUserVarNoCheck(event, 0)));
         addLogMove(LOG_LEVEL_INFO, concat(F("SHT3x: Humidity: "), formatUserVarNoCheck(event, 1)));
       }
+      #endif // ifndef BUILD_NO_DEBUG
       success = true;
       break;
     }

@@ -436,7 +436,7 @@ For example, there is a task named "bme280" which has a value named "temperature
 
 Its value can be referenced like this: ``[bme280#temperature]``.
 This can be used in some plugins like the "OLED Framed" plugin to populate some lines on the display.
-It can also be used in rules. Every occurance of this text will then be replaced by its value.
+It can also be used in rules. Every occurrence of this text will then be replaced by its value.
 
 When having a rule to handle the value of a task, like this:
 
@@ -1099,6 +1099,196 @@ Usage: ``{lookup:<index>:<length>:<string_with_lookup_values>}``
 ``<length>``: The length of the value to retrieve. This implies that all values to lookup are required to have the same length. Shorter lookup values should be padded with spaces or another character to that length.
 
 ``<string_with_lookup_values>``: The combined string with all lookup values padded to have the same length, f.e. ``"Off.Fan HeatCool"``, where all lookup values are of length 4. The index to retrieve the word ``Off.`` is 0, ``Fan`` (including a space) is index 1, etc. This string should be wrapped in quotes if it contains space or colon ``:`` character(s).
+
+UnEscape and Escape
+^^^^^^^^^^^^^^^^^^^
+
+(Added: 2026/08/01, only available when String Variables feature is included in the build)
+
+With ``UnEscape`` any ``\`` escape characters added before ``%``, ``[``, ``]``, ``{``, ``}``, ``(``, ``)`` and/or ``:`` is removed so the intended string value is made available, f.e. when sending to an external destination.
+
+Usage: ``{unescape:<string-to-unescape>}``
+
+As P037, and possibly other plugins, can generate events that include escaped JSON content, this helps to pass that on to other destinations.
+
+With ``Escape`` in a string containing ``%``, ``[``, ``]``, ``{``, ``}``, ``(``, ``)`` and/or ``:``, any of these characters is prefixed with a ``\``, so it isn't interpreted as possible rules variables or functions.
+
+Usage: ``{escape:<string-to-escape>}``
+
+For passing received JSON or similar data as an argument to an event function.
+
+Example:
+
+.. code-block:: none
+
+  On testEscape Do
+    LetStr,j1,'\{"method"\:"setDo0","params"\:true\}'
+    LetStr,j2,`{unescape:[str#j1]}`
+    LogEntry,'j1=[str#j1], unescape=[str#j2], escape={escape:[str#j2]}'
+  Endon
+
+Output:
+
+.. code-block:: none
+
+  00:04:25.248 : (86376) Info       | ACT  : LetStr,j1,'\{"method"\:"setDo0","params"\:true\}'
+  00:04:25.257 : (86380) Info       | ACT  : LetStr,j2,`{"method":"setDo0","params":true}`
+  00:04:25.267 : (86216) Info       | ACT  : LogEntry,'j1=\{"method"\:"setDo0","params"\:true\}, unescape={"method":"setDo0","params":true}, escape=\{"method"\:"setDo0","params"\:true\}'
+  00:04:25.272 : >  LogEntry,'j1=\{"method"\:"setDo0","params"\:true\}, unescape={"method":"setDo0","params":true}, escape=\{"method"\:"setDo0","params"\:true\}'
+  00:04:25.274 : (85772) Info       | j1=\{"method"\:"setDo0","params"\:true\}, unescape={"method":"setDo0","params":true}, escape=\{"method"\:"setDo0","params"\:true\}
+  00:04:25.276 : >  j1=\{"method"\:"setDo0","params"\:true\}, unescape={"method":"setDo0","params":true}, escape=\{"method"\:"setDo0","params"\:true\}
+  00:04:25.280 : >  OK
+
+
+Parse
+^^^^^
+
+(Added: 2026/08/02, only available when String Variables feature is included in the build)
+
+Helps to 'parse out' parts of a string, based on a provided separator, based on the internal ``parseString()`` function. All input for the string processing functions is un-escaped before processing.
+
+Usage: ``{parse:<param>:[<separator>]:<string-to-parse>}``
+
+``param``: the nth option in the ``string-to-parse`` provided. n = 1-based
+
+``separator``: choose the desired separator for parsing out the desired value. Defaults to ``,`` (comma) when left empty.
+
+Example:
+
+.. code-block:: none
+
+  On testParse Do
+    LetStr,p1,"!RFLink#AcuriteV2;ID=feb1;TEMP=80d5;HUM=65;BAT=OK;^^" // an input like received from RFlink
+    LetStr,RFDevice,{parse:2:#:{parse:1:;:[str#p1]}}  // Split on ';', 1st element, then split on '#' > AcuriteV2
+    LetStr,RFID,{parse:2:=:{parse:2:;:[str#p1]}}      // Split on ';', 2nd element, then split on '=' > feb1
+    LetStr,p2,{parse:2:=:{parse:3:;:'[str#p1]'}}      // Split on ';', 3rd element, then split on '=' > 80d5
+    Let,temp,{and:0x[str#p2]:0x3ff}/10                // Calculate (nb. partially correct)
+    LetStr,p3,{parse:2:=:{parse:4:;:'[str#p1]'}}      // Split on ';', 4th element, then split on '=' > 65
+    Let,hum,[str#p3]
+    LetStr,bat,{parse:2:=:{parse:5:;:'[str#p1]'}}     // Split on ';', 5th element, then split on '=' > OK
+    LogEntry,'p2=[str#p2], p3=[str#p3]' // Check values
+    LogEntry,'[str#RFDevice]-[str#RFID],{"temp":[var#temp],"hum":%v_hum%,"bat":"[str#bat]"}'
+  Endon
+
+Output:
+
+.. code-block:: none
+
+  00:09:21.204 : (89356) Info       | ACT  : LetStr,p1,"!RFLink#AcuriteV2;ID=feb1;TEMP=80d5;HUM=65;BAT=OK;^^"
+  00:09:21.212 : (89392) Info       | ACT  : LetStr,RFDevice,{parse:2:#:!RFLink#AcuriteV2}
+  00:09:21.221 : (89436) Info       | ACT  : LetStr,RFID,{parse:2:=:ID=feb1}
+  00:09:21.229 : (89436) Info       | ACT  : LetStr,p2,{parse:2:=:TEMP=80d5}
+  00:09:21.236 : (89444) Info       | ACT  : Let,temp,213/10
+  00:09:21.244 : (89436) Info       | ACT  : LetStr,p3,{parse:2:=:HUM=65}
+  00:09:21.251 : (89524) Info       | ACT  : Let,hum,65
+  00:09:21.258 : (89436) Info       | ACT  : LetStr,bat,{parse:2:=:BAT=OK}
+  00:09:21.265 : (89436) Info       | ACT  : LogEntry,'p2=80d5, p3=65'
+  00:09:21.268 : >  LogEntry,'p2=80d5, p3=65'
+  00:09:21.269 : (89324) Info       | p2=80d5, p3=65
+  00:09:21.270 : >  p2=80d5, p3=65
+  00:09:21.278 : (89308) Info       | ACT  : LogEntry,'AcuriteV2-feb1,{"temp":21.3,"hum":65,"bat":"OK"}'
+  00:09:21.283 : >  LogEntry,'AcuriteV2-feb1,{"temp":21.3,"hum":65,"bat":"OK"}'
+  00:09:21.284 : (89092) Info       | AcuriteV2-feb1,{"temp":21.3,"hum":65,"bat":"OK"}
+  00:09:21.286 : >  AcuriteV2-feb1,{"temp":21.3,"hum":65,"bat":"OK"}
+  00:09:21.288 : >  OK
+
+
+Json
+^^^^
+
+(Added: 2026/08/02, only available when JSON Parse feature is included in the build)
+
+Extract a value (numeric, text, bool) from a (valid) JSON object (string). All input for the string processing functions is un-escaped before processing.
+
+Usage: ``{json:<attribute-to-retrieve>:[<asJson>]:<json-string>}``
+
+``attribute-to-retrieve`` can use this format: ``level.attr[n].subattr``, multi-level supported, arrays[] are 0-based
+
+``asJson``: Set to 1 (true) to return the value in JSON format (quoted strings, bool = true/false), default: 0 (false), some examples included below.
+
+Returns 0/1 for a false/true ``bool`` value.
+
+Returns a comma-separated list for array values without an index, see example. Returns ``unknown`` for unsupported value types, and a comma-separated name/value list for objects.
+
+Example:
+
+.. code-block:: none
+
+  On testJson Do
+    LetStr,j1,'\{"method"\:"setDo0","params"\:true,"values":\[1,2,3\],"args":\{"bla"\:"that","blip"\:false\},"array"\:\[\{"a":1,"b":2\},\{"a":10,"b":20\}\],"sub":\{"array":\[\{"c":1,"d":2\},\{"c":10,"d":20\}\]\}\}'
+    LetStr,j2,'{json:params::`[str#j1]`}'
+    LetStr,j3,'{json:values::[str#j1]}'
+    LetStr,j4,'{json:values[1]::[str#j1]}'
+    LogEntry,'json: {unescape:[str#j1]}'
+    LogEntry,'attributes: params=[str#j2], values=[str#j3], values[1]=[str#j4], bla={json:args.bla::[str#j1]},{json:args.bla:1:[str#j1]}, blip={json:args.blip::[str#j1]},{json:args.blip:1:[str#j1]}, array[1].b={json:array[1].b::[str#j1]}, sub.array[0].c={json:sub.array[0].c::[str#j1]}'
+    LogEntry,'array={json:array::[str#j1]}, sub={json:sub::[str#j1]}, (JSON)sub={json:sub:1:[str#j1]}'
+  Endon
+
+The input, as assigned to ``j1``, is like it can be received from MQTT Import plugin. You can also use an incoming JSON payload, ``escape`` that (see above), and parse it. As JSON contains at least some ``{``, ``}`` and ``:`` characters, escaping is *required*, as these string functions use ``:`` as the parameter separator, and ``}`` as the function terminator.
+
+Formatted JSON as used in the above example: (values marked with ``//`` are retrieved in the example)
+
+.. code-block:: json
+
+  {
+    "method": "setDo0",
+    "params": true, //
+    "values": [ //
+      1,
+      2, //
+      3
+    ],
+    "args": {
+      "bla": "that", //
+      "blip": false //
+    },
+    "array": [ //
+      {
+        "a": 1,
+        "b": 2
+      },
+      {
+        "a": 10, //
+        "b": 20
+      }
+    ],
+    "sub": { //
+      "array": [
+        {
+          "c": 1, //
+          "d": 2
+        },
+        {
+          "c": 10,
+          "d": 20
+        }
+      ]
+    }
+  }
+
+
+Output:
+
+.. code-block:: none
+
+  00:01:22.983 : (87572) Info       | ACT  : LetStr,j1,'\{"method"\:"setDo0","params"\:true,"values":\[1,2,3\],"args":\{"bla"\:"that","blip"\:false\},"array"\:\[\{"a":1,"b":2\},\{"a":10,"b":20\}\],"sub":\{"array":\[\{"c":1,"d":2\},\{"c":10,"d":20\}\]\}\}'
+  00:01:22.996 : (87712) Info       | ACT  : LetStr,j2,'1'
+  00:01:23.005 : (87572) Info       | ACT  : LetStr,j3,'1,2,3'
+  00:01:23.014 : (87600) Info       | ACT  : LetStr,j4,'2'
+  00:01:23.023 : (87116) Info       | ACT  : LogEntry,'json: {"method":"setDo0","params":true,"values":[1,2,3],"args":{"bla":"that","blip":false},"array":[{"a":1,"b":2},{"a":10,"b":20}],"sub":{"array":[{"c":1,"d":2},{"c":10,"d":20}]}}'
+  00:01:23.034 : >  LogEntry,'json: {"method":"setDo0","params":true,"values":[1,2,3],"args":{"bla":"that","blip":false},"array":[{"a":1,"b":2},{"a":10,"b":20}],"sub":{"array":[{"c":1,"d":2},{"c":10,"d":20}]}}'
+  00:01:23.036 : (86528) Info       | json: {"method":"setDo0","params":true,"values":[1,2,3],"args":{"bla":"that","blip":false},"array":[{"a":1,"b":2},{"a":10,"b":20}],"sub":{"array":[{"c":1,"d":2},{"c":10,"d":20}]}}
+  00:01:23.038 : >  json: {"method":"setDo0","params":true,"values":[1,2,3],"args":{"bla":"that","blip":false},"array":[{"a":1,"b":2},{"a":10,"b":20}],"sub":{"array":[{"c":1,"d":2},{"c":10,"d":20}]}}
+  00:01:23.063 : (87132) Info       | ACT  : LogEntry,'attributes: params=1, values=1,2,3, values[1]=2, bla=that,"that", blip=0,false, array[1].b=20, sub.array[0].c=1'
+  00:01:23.067 : >  LogEntry,'attributes: params=1, values=1,2,3, values[1]=2, bla=that,"that", blip=0,false, array[1].b=20, sub.array[0].c=1'
+  00:01:23.077 : (86724) Info       | attributes: params=1, values=1,2,3, values[1]=2, bla=that,"that", blip=0,false, array[1].b=20, sub.array[0].c=1
+  00:01:23.096 : >  attributes: params=1, values=1,2,3, values[1]=2, bla=that,"that", blip=0,false, array[1].b=20, sub.array[0].c=1
+  00:01:23.110 : (86748) Info       | ACT  : LogEntry,'array=a,1,b,2,a,10,b,20, sub=array,c,1,d,2,c,10,d,20, (JSON)sub={"array",[{"c",1},{"d",2},{"c",10},{"d",20}]}'
+  00:01:23.116 : >  LogEntry,'array=a,1,b,2,a,10,b,20, sub=array,c,1,d,2,c,10,d,20, (JSON)sub={"array",[{"c",1},{"d",2},{"c",10},{"d",20}]}'
+  00:01:23.124 : (86356) Info       | array=a,1,b,2,a,10,b,20, sub=array,c,1,d,2,c,10,d,20, (JSON)sub={"array",[{"c",1},{"d",2},{"c",10},{"d",20}]}
+  00:01:23.135 : >  array=a,1,b,2,a,10,b,20, sub=array,c,1,d,2,c,10,d,20, (JSON)sub={"array",[{"c",1},{"d",2},{"c",10},{"d",20}]}
+  00:01:23.139 : >  OK
+
 
 IndexOf and IndexOf_ci
 ^^^^^^^^^^^^^^^^^^^^^^

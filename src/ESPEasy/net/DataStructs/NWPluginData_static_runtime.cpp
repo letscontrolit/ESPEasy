@@ -15,8 +15,9 @@
 
 
 #if FEATURE_MDNS
-//#include "../../../src/Helpers/MDNS_Helper.h"
-#endif
+
+// #include "../../../src/Helpers/MDNS_Helper.h"
+#endif // if FEATURE_MDNS
 
 
 namespace ESPEasy {
@@ -103,7 +104,9 @@ void NWPluginData_static_runtime::clear(networkIndex_t networkIndex)
   _gotIPStats.reset();
 #if FEATURE_USE_IPV6
   _gotIP6Stats.reset();
-#endif
+
+  // TODO TD-er: Must also clear _gotIP6Events
+#endif // if FEATURE_USE_IPV6
   _operationalStats.reset();
 #if FEATURE_NETWORK_TRAFFIC_COUNT
 
@@ -121,12 +124,20 @@ void NWPluginData_static_runtime::clear(networkIndex_t networkIndex)
       _eventInterfaceName = _netif->desc();
       _eventInterfaceName.toUpperCase();
     }
+    _enableIPv6 = Settings.EnableIPv6() && Settings.getNetworkEnabled_IPv6(_networkIndex);
   }
+  _routePrio = Settings.getRoutePrio_for_network(_networkIndex);
+
+  _dns_cache[0] = INADDR_NONE;
+  _dns_cache[1] = INADDR_NONE;
 #endif // ifdef ESP32
 
   _connectionFailures = 0;
 
-  // FIXME TD-er: Should also clear dns cache and/or static IP?
+  _ip      = INADDR_NONE;
+  _gateway = INADDR_NONE;
+  _sn      = INADDR_NONE;
+  _dns     = INADDR_NONE;
 }
 
 void NWPluginData_static_runtime::processEvent_and_clear()
@@ -197,8 +208,9 @@ void NWPluginData_static_runtime::processEvents()
   # endif // ifndef BUILD_NO_DEBUG
 #endif // ifdef ESP8266
 #if FEATURE_MDNS
-//    update_mDNS();
-#endif
+
+    //    update_mDNS();
+#endif // if FEATURE_MDNS
   }
 
 #if FEATURE_USE_IPV6
@@ -225,20 +237,25 @@ void NWPluginData_static_runtime::processEvents()
         }
       }
     }
-#if FEATURE_MDNS
-//    update_mDNS();
-#endif
+# if FEATURE_MDNS
+
+    //    update_mDNS();
+# endif // if FEATURE_MDNS
   }
 #endif // if FEATURE_USE_IPV6
 
   if (connected_changed || establishConnect_changed)
   {
-    if (_connectedStats.isOn()) {
-      log_connected();
+    if (_establishConnectStats.isSet()) {
+      if (_connectedStats.isOn()) {
+        log_connected();
 
-      //    _establishConnectStats.resetCount();
-    } else if (_connectedStats.isOff() && !_establishConnectStats.isOn()) {
-      log_disconnected();
+        //    _establishConnectStats.resetCount();
+      } else if (_establishConnectStats.isSet() &&
+                 _connectedStats.isOff() &&
+                 !_establishConnectStats.isOn()) {
+        log_disconnected();
+      }
     }
   }
 
@@ -267,19 +284,9 @@ void NWPluginData_static_runtime::processEvents()
     if (Settings.UseRules && _eventInterfaceName.length())
     {
       if (_operationalStats.isOn()) {
-        if (_isAP) {
-          eventQueue.addDeDup(F("WiFi#APmodeConnected"));
-        }
-        else {
-          eventQueue.addDeDup(concat(_eventInterfaceName, F("#Connected")));
-        }
+        eventQueue.addDeDup(concat(_eventInterfaceName, F("#Connected")));
       } else if (_operationalStats.isOff()) {
-        if (_isAP) {
-          eventQueue.addDeDup(F("WiFi#APmodeDisconnected"));
-        }
-        else {
-          eventQueue.addDeDup(concat(_eventInterfaceName, F("#Disconnected")));
-        }
+        eventQueue.addDeDup(concat(_eventInterfaceName, F("#Disconnected")));
       }
     }
     statusLED(true);
@@ -287,30 +294,28 @@ void NWPluginData_static_runtime::processEvents()
 
   if (_startStopStats.changedSinceLastCheck_and_clear() && Settings.UseRules) {
     if (_startStopStats.isOn()) {
-      if (_isAP) {
-        eventQueue.addDeDup(F("WiFi#APmodeEnabled"));
-      }
-      else {
-        eventQueue.addDeDup(concat(_eventInterfaceName, F("#Enabled")));
-      }
+      eventQueue.addDeDup(concat(_eventInterfaceName, F("#Enabled")));
     } else if (_startStopStats.isOff()) {
-      if (_isAP) {
-        eventQueue.addDeDup(F("WiFi#APmodeDisabled"));
-      }
-      else {
-        eventQueue.addDeDup(concat(_eventInterfaceName, F("#Disabled")));
-      }
+      eventQueue.addDeDup(concat(_eventInterfaceName, F("#Disabled")));
     }
   }
 }
 
-void NWPluginData_static_runtime::setStaticIP(const IPAddress & ip, const IPAddress & gateway, const IPAddress & subnetmask, const IPAddress & dns)
+void NWPluginData_static_runtime::setStaticIP(const IPAddress& ip, const IPAddress& gateway, const IPAddress& subnetmask,
+                                              const IPAddress& dns)
 {
   _useStaticIP = IPAddressSet(ip) && IPAddressSet(gateway) && IPAddressSet(subnetmask);
-  _ip = ip;
-  _gateway = gateway;
-  _sn = subnetmask;
-  _dns = dns;
+  _ip          = ip;
+  _gateway     = gateway;
+  _sn          = subnetmask;
+  _dns         = dns;
+#ifdef ESP32
+
+  if (_useStaticIP) {
+    _dns_cache[0] = dns;
+    _dns_cache[1] = INADDR_NONE;
+  }
+#endif // ifdef ESP32
 }
 
 String NWPluginData_static_runtime::statusToString() const
@@ -323,7 +328,8 @@ String NWPluginData_static_runtime::statusToString() const
 
   if (hasIP()) {
     log += F("IP ");
-    if (_useStaticIP) log += F("(static) ");
+
+    if (_useStaticIP) { log += F("(static) "); }
   }
 
   if (operational()) {

@@ -71,7 +71,9 @@ bool P120_data_struct::read_sensor(struct EventStruct *event) {
   }
 
   if (initialized()) {
-    _x = 0; _y = 0; _z = 0;
+    _x = 0;
+    _y = 0;
+    _z = 0;
     adxl345->readAccel(&_x, &_y, &_z);
     _XA[_aUsed] = _x;
     _YA[_aUsed] = _y;
@@ -134,7 +136,8 @@ bool P120_data_struct::read_data(struct EventStruct *event) const
       const uint8_t pconfigIndex = i + P120_QUERY1_CONFIG_POS;
       float value                = 0.0f;
 
-      switch (static_cast<valueType>(PCONFIG(pconfigIndex))) {
+      switch (static_cast<valueType>(PCONFIG(pconfigIndex)))
+      {
         case valueType::Empty:
           break;
         case valueType::X_RAW:
@@ -238,6 +241,7 @@ bool P120_data_struct::init_sensor(struct EventStruct *event) {
   } else {
     # ifdef ESP32
     auto spi_ptr = getSPIBusForTask(event->TaskIndex);
+
     if (!spi_ptr) {
       return false;
     }
@@ -252,6 +256,8 @@ bool P120_data_struct::init_sensor(struct EventStruct *event) {
   if (initialized()) {
     uint8_t act = 0, freeFall = 0, singleTap = 0, doubleTap = 0;
 
+    # ifndef BUILD_NO_DEBUG
+
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log = F("ADXL345: Initializing sensor for ");
 
@@ -263,6 +269,7 @@ bool P120_data_struct::init_sensor(struct EventStruct *event) {
       log += F("...");
       addLogMove(LOG_LEVEL_INFO, log);
     }
+    # endif // ifndef BUILD_NO_DEBUG
     adxl345->powerOn();
     adxl345->setRangeSetting(2 ^ (get2BitFromUL(P120_CONFIG_FLAGS1, P120_FLAGS1_RANGE) + 1)); // Range is stored in 2 bits, only 4 possible
                                                                                               // options
@@ -373,12 +380,13 @@ void P120_data_struct::sensor_check_interrupt(struct EventStruct *event) {
   // Do not call again until you need to recheck for triggered actions
   uint8_t interrupts = adxl345->getInterruptSource();
   String  payload;
+  const bool doLog = bitRead(P120_CONFIG_FLAGS1, P120_FLAGS1_LOG_ACTIVITY);
 
   payload.reserve(30);
 
   // Free Fall Detection
   if (adxl345->triggered(interrupts, ADXL345_FREE_FALL)) {
-    if (bitRead(P120_CONFIG_FLAGS1, P120_FLAGS1_LOG_ACTIVITY)) {
+    if (doLog) {
       addLog(LOG_LEVEL_INFO, F("ADXL345: *** FREE FALL ***"));
     }
     payload = F("FreeFall=");
@@ -390,7 +398,7 @@ void P120_data_struct::sensor_check_interrupt(struct EventStruct *event) {
   if (adxl345->triggered(interrupts, ADXL345_INACTIVITY) &&
       bitRead(P120_CONFIG_FLAGS1, P120_FLAGS1_SEND_ACTIVITY)) {
     if (!inactivityTriggered) {
-      if (bitRead(P120_CONFIG_FLAGS1, P120_FLAGS1_LOG_ACTIVITY)) {
+      if (doLog) {
         addLog(LOG_LEVEL_INFO, F("ADXL345: *** INACTIVITY ***"));
       }
       payload = F("Inactivity=");
@@ -408,7 +416,7 @@ void P120_data_struct::sensor_check_interrupt(struct EventStruct *event) {
   if (adxl345->triggered(interrupts, ADXL345_ACTIVITY) &&
       bitRead(P120_CONFIG_FLAGS1, P120_FLAGS1_SEND_ACTIVITY)) {
     if (!activityTriggered) {
-      if (bitRead(P120_CONFIG_FLAGS1, P120_FLAGS1_LOG_ACTIVITY)) {
+      if (doLog) {
         addLog(LOG_LEVEL_INFO, F("ADXL345: *** ACTIVITY ***"));
       }
       payload = F("Activity=");
@@ -427,14 +435,14 @@ void P120_data_struct::sensor_check_interrupt(struct EventStruct *event) {
   if (adxl345->triggered(interrupts, ADXL345_DOUBLE_TAP) ||
       (adxl345->triggered(interrupts, ADXL345_SINGLE_TAP))) {
     if (adxl345->triggered(interrupts, ADXL345_SINGLE_TAP)) {
-      if (bitRead(P120_CONFIG_FLAGS1, P120_FLAGS1_LOG_ACTIVITY)) {
+      if (doLog) {
         addLog(LOG_LEVEL_INFO, F("ADXL345: *** TAP ***"));
       }
       payload = F("Tapped");
     }
 
-    if (adxl345->triggered(interrupts, ADXL345_DOUBLE_TAP)) {      // tonhuisman: Double-tap overrides single-tap event
-      if (bitRead(P120_CONFIG_FLAGS1, P120_FLAGS1_LOG_ACTIVITY)) { // This is on purpose and as intended!
+    if (adxl345->triggered(interrupts, ADXL345_DOUBLE_TAP)) { // tonhuisman: Double-tap overrides single-tap event
+      if (doLog) {                                            // This is on purpose and as intended!
         addLog(LOG_LEVEL_INFO, F("ADXL345: *** DOUBLE TAP ***"));
       }
       payload = F("DoubleTapped");
@@ -792,7 +800,8 @@ void P120_data_struct::plugin_get_device_value_names(struct EventStruct *event)
 }
 
 const __FlashStringHelper * P120_data_struct::valuename(uint8_t value_nr, bool displayString) {
-  switch (static_cast<valueType>(value_nr)) {
+  switch (static_cast<valueType>(value_nr))
+  {
     case valueType::Empty:    return displayString ? F("Empty") : F("");
     case valueType::X_RAW:    return displayString ? F("X RAW") : F("X");
     case valueType::Y_RAW:    return displayString ? F("Y RAW") : F("Y");
@@ -808,9 +817,6 @@ const __FlashStringHelper * P120_data_struct::valuename(uint8_t value_nr, bool d
   return F("");
 }
 
-bool P120_data_struct::isXYZ(valueType vtype)
-{
-  return vtype >= valueType::X_RAW &&  vtype <= valueType::Z_g;
-}
+bool P120_data_struct::isXYZ(valueType vtype) { return vtype >= valueType::X_RAW &&  vtype <= valueType::Z_g; }
 
 #endif // if defined(USES_P120) || defined(USES_P125)

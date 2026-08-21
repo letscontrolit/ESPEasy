@@ -161,10 +161,12 @@ boolean Plugin_115(uint8_t function, struct EventStruct *event, String& string)
         UserVar.setFloat(event->TaskIndex, 2, P115_data->alert);
         UserVar.setFloat(event->TaskIndex, 3, P115_data->changeRate);
 
+        #ifndef BUILD_NO_DEBUG
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           addLogMove(LOG_LEVEL_INFO, strformat(F("MAX1704x : Voltage: %.2f SoC: %.2f Alert: %d Rate: %.2f"),
                                                P115_data->voltage, P115_data->soc, P115_data->alert, P115_data->changeRate));
         }
+        #endif // ifndef BUILD_NO_DEBUG
         success = true;
       }
       break;

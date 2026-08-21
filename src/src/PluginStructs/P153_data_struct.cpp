@@ -170,6 +170,7 @@ bool P153_data_struct::plugin_read(struct EventStruct *event)           {
           }
         }
 
+        #ifndef BUILD_NO_DEBUG
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           const String taskName = getTaskDeviceName(event->TaskIndex);
           addLogMove(LOG_LEVEL_INFO, strformat(F("%s: Temperature: %s"),
@@ -180,6 +181,7 @@ bool P153_data_struct::plugin_read(struct EventStruct *event)           {
                                                taskName.c_str(),
                                                formatUserVarNoCheck(event, 1).c_str()));
         }
+        #endif // ifndef BUILD_NO_DEBUG
       } else {
         UserVar.setFloat(event->TaskIndex, 0, NAN);
         UserVar.setFloat(event->TaskIndex, 1, NAN);

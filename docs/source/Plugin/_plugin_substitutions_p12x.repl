@@ -60,7 +60,7 @@
 .. |P124_porttype| replace:: `.`
 .. |P124_status| replace:: :yellow:`COLLECTION D`
 .. |P124_status_lb| replace:: :yellow:`COLLECTION D`
-.. |P124_github| replace:: P124_MultiTelay.ino
+.. |P124_github| replace:: P124_MultiRelay.ino
 .. _P124_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P124_MyltiRelay.ino
 .. |P124_usedby| replace:: `.`
 .. |P124_shortinfo| replace:: `Seeed Studio I2C Multi Relay boards`

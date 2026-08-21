@@ -22,6 +22,8 @@ GitHub: |NW004_github|_
 
 Maintainer: |NW004_maintainer|
 
+.. include:: Network_standard_parameters.repl
+
 .. include:: Ethernet_generic.repl
 
 .. include:: Ethernet_spi.repl
@@ -43,5 +45,3 @@ Change log
   |added|
   Initial release version.
 
-Description
------------

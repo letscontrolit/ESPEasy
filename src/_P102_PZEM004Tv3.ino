@@ -368,6 +368,7 @@ boolean                    Plugin_102(uint8_t function, struct EventStruct *even
 # if FEATURE_PACKED_RAW_DATA
     case PLUGIN_GET_PACKED_RAW_DATA:
     {
+      if (P102_PZEM_sensor == nullptr) break;
       // Matching JS code for PZEM-004T:
       // return decode(bytes, [header, int16_1e1, int32_1e3, int32_1e1, int32_1e1, uint16_1e2, uint8_1e1],
       //   ['header', 'voltage', 'current', 'power', 'energy', 'powerfactor', 'frequency']);

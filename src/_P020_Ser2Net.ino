@@ -8,6 +8,7 @@
 
 /************
  * Changelog:
+ * 2026-07-11 tonhuisman: Send also Derived values when sending the event with received data, when enabled and available
  * 2025-03-26 tonhuisman: Add optional receiving (relaying) of UDP data to Serial. Uses the same port as configured for the (default) TCP
  *                        connection. Available on ESP32 only.
  *                        Can be enabled for ESP8266 in a Custom build by adding #define P020_USE_PROTOCOL 1

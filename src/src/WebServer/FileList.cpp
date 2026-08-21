@@ -140,10 +140,7 @@ void handle_filelist() {
   checkRAM(F("handle_filelist"));
   #endif
 
-  if (!clientIPallowed()) { return; }
-  navMenuIndex = MENU_INDEX_TOOLS;
-  TXBuffer.startStream();
-  sendHeadandTail_stdtemplate(_HEAD);
+  if (!startStream_send_stdTemplate(MENU_INDEX_TOOLS)) { return; }
 
   if (tryDeleteFile(webArg(F("delete"))))
   {
@@ -333,8 +330,7 @@ void handle_filelist_buttons(int start_prev, int start_next, bool cacheFilesPres
   }
 #endif
   addHtml(F("<BR><BR>"));
-  sendHeadandTail_stdtemplate(_TAIL);
-  TXBuffer.endStream();
+  sendTail_stdtemplate();
 }
 
 #endif // ifdef WEBSERVER_FILELIST
@@ -348,11 +344,7 @@ void handle_SDfilelist() {
   checkRAM(F("handle_SDfilelist"));
   #endif
 
-  if (!clientIPallowed()) { return; }
-  navMenuIndex = MENU_INDEX_TOOLS;
-  TXBuffer.startStream();
-  sendHeadandTail_stdtemplate(_HEAD);
-
+  if (!startStream_send_stdTemplate(MENU_INDEX_TOOLS)) { return; }
 
   String fdelete;
   String ddelete;
@@ -498,8 +490,7 @@ void handle_SDfilelist() {
 
   html_BR();
   addButton(F("/uploadsd"), F("Upload"));
-  sendHeadandTail_stdtemplate(_TAIL);
-  TXBuffer.endStream();
+  sendTail_stdtemplate();
 }
 
 #endif // if FEATURE_SD

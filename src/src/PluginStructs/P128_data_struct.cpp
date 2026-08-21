@@ -46,8 +46,8 @@ bool P128_data_struct::plugin_read(struct EventStruct *event) {
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     addLogMove(LOG_LEVEL_INFO, strformat(
       F("Lights: mode: %s lastmode: %s fadetime: %d fadedelay: %d"),
-      String(P128_modeType_toString(mode)).c_str(),
-      String(P128_modeType_toString(savemode)).c_str(),
+      FsP(P128_modeType_toString(mode)),
+      FsP(P128_modeType_toString(savemode)),
       (int)UserVar[event->BaseVarIndex + 2],
       (int)UserVar[event->BaseVarIndex + 3]));
   }

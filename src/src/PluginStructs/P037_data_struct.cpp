@@ -33,8 +33,9 @@ bool P037_data_struct::loadSettings() {
 
   if (_taskIndex < TASKS_MAX) {
     # ifdef USE_SECOND_HEAP
-//    HeapSelectIram ephemeral;
-    #endif
+
+    //    HeapSelectIram ephemeral;
+    # endif // ifdef USE_SECOND_HEAP
     size_t offset = 0;
     LoadCustomTaskSettings(_taskIndex, mqttTopics,
                            VARS_PER_TASK, 41, offset);
@@ -50,7 +51,7 @@ bool P037_data_struct::loadSettings() {
       LoadCustomTaskSettings(_taskIndex, tmp,
                              1, 41, offset);
       move_special(globalTopicPrefix, std::move(tmp[0]));
-      offset           += 41;
+      offset += 41;
     }
 
 
@@ -292,7 +293,7 @@ bool P037_data_struct::webform_load(
         html_TD();
         addTextBox(getPluginCustomArgName(idx + 100 + 0),
                    parseStringKeepCase(valueArray[filterOffset], 1, P037_VALUE_SEPARATOR),
-                   32, 
+                   32,
                    F("xwide"));
       }
       {
@@ -302,7 +303,7 @@ bool P037_data_struct::webform_load(
         html_TD();
 
         addTextBox(getPluginCustomArgName(idx + 100 + 2), parseStringKeepCase(valueArray[filterOffset], 3, P037_VALUE_SEPARATOR),
-                   32, 
+                   32,
                    F(""));
         addUnit(F("Range/List: separate values with ; "));
         html_TD();
@@ -314,17 +315,13 @@ bool P037_data_struct::webform_load(
     #  ifdef PLUGIN_037_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String info;
-      info.reserve(25);
-      info += concat(F("P037 maxFilter: "), (int)_maxFilter);
-      info += concat(F(" idx: "), (int)idx);
-      addLogMove(LOG_LEVEL_INFO, info);
+      addLogMove(LOG_LEVEL_INFO, strformat(F("P037 maxFilter: %d idx: %d"), _maxFilter, idx));
     }
     #  endif // ifdef PLUGIN_037_DEBUG
     #  ifndef P037_FILTER_PER_TOPIC
     filterIndex = 0;
     uint8_t extraFilters = 0;
-    
+
     while (extraFilters < P037_EXTRA_VALUES && idx < P037_MAX_FILTERS * 3) {
       {
         html_TR_TD();
@@ -332,7 +329,7 @@ bool P037_data_struct::webform_load(
         addHtmlInt(filterNr);
         html_TD();
         addTextBox(getPluginCustomArgName(idx + 100 + 0), EMPTY_STRING,
-                   32, 
+                   32,
                    F("xwide"));
       }
       {
@@ -340,7 +337,7 @@ bool P037_data_struct::webform_load(
         selector.addSelector(getPluginCustomArgName(idx + 100 + 1), filterIndex);
         html_TD();
         addTextBox(getPluginCustomArgName(idx + 100 + 2), EMPTY_STRING,
-                   32, 
+                   32,
                    F(""));
         addUnit(F("Range/List: separate values with ; "));
         html_TD();
@@ -355,9 +352,7 @@ bool P037_data_struct::webform_load(
     #   ifdef PLUGIN_037_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      info  = concat(F("P037 extraFilters: "), (int)extraFilters);
-      info += concat(F(" idx: "), (int)idx);
-      addLogMove(LOG_LEVEL_INFO, info);
+      addLogMove(LOG_LEVEL_INFO, strformat(F("P037 extraFilters: %d idx: %d"), extraFilters, idx));
     }
     #   endif // ifdef PLUGIN_037_DEBUG
     #  endif  // ifndef P037_FILTER_PER_TOPIC
@@ -388,8 +383,8 @@ bool P037_data_struct::webform_load(
     html_table_header(F("Value"),         300);
 
     const __FlashStringHelper *operandOptions[] = {
-      F("map"),                          // map name to int
-      F("percentage") };                 // map attribute value to percentage of provided value
+      F("map"),          // map name to int
+      F("percentage") }; // map attribute value to percentage of provided value
     const int operandIndices[] = { 0, 1 };
     const FormSelectorOptions selector(P037_OPERAND_COUNT, operandOptions, operandIndices);
 
@@ -408,7 +403,7 @@ bool P037_data_struct::webform_load(
         html_TD();
         addTextBox(getPluginCustomArgName(idx + 0),
                    parseStringKeepCase(valueArray[mappingOffset], 1, P037_VALUE_SEPARATOR),
-                   32, 
+                   32,
                    F(""));
       }
       {
@@ -419,7 +414,7 @@ bool P037_data_struct::webform_load(
         html_TD();
         addTextBox(getPluginCustomArgName(idx + 2),
                    parseStringKeepCase(valueArray[mappingOffset], 3, P037_VALUE_SEPARATOR),
-                   32, 
+                   32,
                    F(""));
         html_TD();
       }
@@ -429,11 +424,7 @@ bool P037_data_struct::webform_load(
     #  ifdef PLUGIN_037_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String info;
-      info.reserve(25);
-      info += concat(F("P037 maxIdx: "), (int)_maxIdx);
-      info += concat(F(" idx: "), (int)idx);
-      addLogMove(LOG_LEVEL_INFO, info);
+      addLogMove(LOG_LEVEL_INFO, strformat(F("P037 maxIdx: %d idx: %d"), _maxIdx, idx));
     }
     #  endif // ifdef PLUGIN_037_DEBUG
     operandIndex = 0;
@@ -445,18 +436,18 @@ bool P037_data_struct::webform_load(
         addHtml(F("&nbsp;"));
         addHtmlInt(mapNr);
         html_TD();
-        addTextBox(getPluginCustomArgName(idx + 0), 
+        addTextBox(getPluginCustomArgName(idx + 0),
                    EMPTY_STRING,
-                   32, 
+                   32,
                    F(""));
       }
       {
         html_TD();
         selector.addSelector(getPluginCustomArgName(idx + 1), operandIndex);
         html_TD();
-        addTextBox(getPluginCustomArgName(idx + 2), 
+        addTextBox(getPluginCustomArgName(idx + 2),
                    EMPTY_STRING,
-                   32, 
+                   32,
                    F(""));
         html_TD();
       }
@@ -468,19 +459,15 @@ bool P037_data_struct::webform_load(
     #  ifdef PLUGIN_037_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String info;
-      info.reserve(35);
-      info += concat(F("P037 extraMappings: "), (int)extraMappings);
-      info += concat(F(" idx: "), (int)idx);
-      addLogMove(LOG_LEVEL_INFO, info);
+      addLogMove(LOG_LEVEL_INFO, strformat(F("P037 extraMappings: %d idx: %d"), extraMappings, idx));
     }
     #  endif // ifdef PLUGIN_037_DEBUG
     addFormNote(F("Both Name and Value must be filled for a valid mapping. Mappings are case-sensitive."));
 
     if (extraMappings == P037_EXTRA_VALUES) {
       addFormNote(strformat(
-        F("After filling all mappings, submitting this page will make extra mappings available (up to %d)."),
-                                  P037_MAX_MAPPINGS));
+                    F("After filling all mappings, submitting this page will make extra mappings available (up to %d)."),
+                    P037_MAX_MAPPINGS));
     }
   }
   # endif // if P037_MAPPING_SUPPORT
@@ -638,14 +625,10 @@ bool P037_data_struct::webform_save(
 
 # if P037_MAPPING_SUPPORT
 #  ifdef PLUGIN_037_DEBUG
+
 void P037_data_struct::logMapValue(const String& input, const String& result) {
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String info;
-    info.reserve(45);
-    info += concat(F("IMPT : MQTT mapped value '"), input);
-    info += concat(F("' to '"), result);
-    info += '\'';
-    addLogMove(LOG_LEVEL_INFO, info);
+    addLogMove(LOG_LEVEL_INFO, strformat(F("IMPT : MQTT mapped value '%s' to '%s'"), input.c_str(), result.c_str()));
   }
 } // logMapValue
 
@@ -671,7 +654,8 @@ String P037_data_struct::mapValue(const String& input, const String& attribute) 
       if ((name == input) || ((!attribute.isEmpty()) && (name == attribute))) {
         int8_t operandIndex = operands.indexOf(oper);
 
-        switch (operandIndex) {
+        switch (operandIndex)
+        {
           case 0: // = => 1:1 mapping
           {
             if (!valu.isEmpty()) {
@@ -690,9 +674,12 @@ String P037_data_struct::mapValue(const String& input, const String& attribute) 
             if (validDoubleFromString(input, inputDouble) &&
                 validDoubleFromString(valu, mappingDouble)) {
               if (compareDoubleValues('>', mappingDouble, 0.0)) {
-                ESPEASY_RULES_FLOAT_TYPE resultDouble = (static_cast<ESPEASY_RULES_FLOAT_TYPE>(100) / mappingDouble) * inputDouble; // Simple calculation to percentage
-                int8_t decimals     = 0;
-                int8_t dotPos       = input.indexOf('.');
+                ESPEASY_RULES_FLOAT_TYPE resultDouble = (static_cast<ESPEASY_RULES_FLOAT_TYPE>(100) / mappingDouble) * inputDouble; // Simple
+                                                                                                                                    // calculation
+                                                                                                                                    // to
+                                                                                                                                    // percentage
+                int8_t decimals = 0;
+                int8_t dotPos   = input.indexOf('.');
 
                 if (dotPos > -1) {
                   String decPart = input.substring(dotPos + 1);
@@ -733,6 +720,7 @@ bool P037_data_struct::hasFilters() {
 } // hasFilters
 
 #  ifdef P037_FILTER_PER_TOPIC
+
 String P037_data_struct::getFilterAsTopic(uint8_t topicId) {
   String result;
 
@@ -763,15 +751,10 @@ String P037_data_struct::getFilterAsTopic(uint8_t topicId) {
 #  endif // P037_FILTER_PER_TOPIC
 
 #  ifdef PLUGIN_037_DEBUG
+
 void P037_data_struct::logFilterValue(const String& text, const String& key, const String& value, const String& match) {
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log;
-    log.reserve(text.length() + key.length() + value.length() + match.length() + 16);
-    log += text;
-    log += key;
-    log += concat(F(" value: "), value);
-    log += concat(F(" match: "), match);
-    addLogMove(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_INFO, strformat(F("%s %s value: %s match: %s"), text.c_str(), key.c_str(), value.c_str(), match.c_str()));
   }
 } // logFilterValue
 
@@ -790,10 +773,10 @@ bool P037_data_struct::checkFilters(const String& key, const String& value, int8
 
   if ((!key.isEmpty()) &&
       (!value.isEmpty())) { // Ignore empty input(s)
-    String  filters = P037_FILTER_LIST;
-    String  valueData = value;
-    String  fltKey, fltIndex, filterData, fltOper;
-    ESPEASY_RULES_FLOAT_TYPE  from, to, doubleValue;
+    String filters   = P037_FILTER_LIST;
+    String valueData = value;
+    String fltKey, fltIndex, filterData, fltOper;
+    ESPEASY_RULES_FLOAT_TYPE from, to, doubleValue;
     int8_t  rangeSeparator;
     bool    accept       = true;
     bool    matchTopicId = true;
@@ -825,8 +808,9 @@ bool P037_data_struct::checkFilters(const String& key, const String& value, int8
         filterData = parseStringKeepCase(valueArray[flt], 3, P037_VALUE_SEPARATOR);
         parseSystemVariables(filterData, false); // Replace system variables
 
-        switch (filterIndex) {
-          case 0:                                // = => equals
+        switch (filterIndex)
+        {
+          case 0: // = => equals
           {
             _filterListItem = EMPTY_STRING;
 
@@ -903,7 +887,8 @@ bool P037_data_struct::checkFilters(const String& key, const String& value, int8
                 validDoubleFromString(valueData, doubleValue)) {
               accept = false;
 
-              do {
+              do
+              {
                 item = filterData.substring(0, rangeSeparator);
                 item.trim();
                 filterData = filterData.substring(rangeSeparator + 1);
@@ -980,7 +965,8 @@ bool P037_data_struct::parseJSONMessage(const String& message) {
     // Try to allocate in PSRAM or 2nd heap if possible
     constexpr unsigned size = sizeof(DynamicJsonDocument);
     void *ptr               = special_calloc(1, size);
-    if (ptr) {    
+
+    if (ptr) {
       root = new (ptr) DynamicJsonDocument(lastJsonMessageLength); // Dynamic allocation
     }
   }
@@ -989,9 +975,9 @@ bool P037_data_struct::parseJSONMessage(const String& message) {
     deserializeJson(*root, message);
 
     if (!root->isNull()) {
-      # ifdef USE_SECOND_HEAP
+      #  ifdef USE_SECOND_HEAP
       HeapSelectIram ephemeral;
-      # endif // ifdef USE_SECOND_HEAP
+      #  endif // ifdef USE_SECOND_HEAP
 
       result = true;
       doc    = root->as<JsonObject>();

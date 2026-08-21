@@ -103,25 +103,33 @@ bool P049_data_struct::plugin_write(struct EventStruct *event, const String& str
   if (equals(command, F("mhzcalibratezero")))
   {
     send_mhzCmd(mhzCmdCalibrateZero);
+    #ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_INFO, F("MHZ19: Calibrated zero point!"));
+    #endif // ifndef BUILD_NO_DEBUG
     return true;
   }
   else if (equals(command, F("mhzreset")))
   {
     send_mhzCmd(mhzCmdReset);
+    #ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_INFO, F("MHZ19: Sent sensor reset!"));
+    #endif // ifndef BUILD_NO_DEBUG
     return true;
   }
   else if (equals(command, F("mhzabcenable")))
   {
     send_mhzCmd(mhzCmdABCEnable);
+    #ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_INFO, F("MHZ19: Sent sensor ABC Enable!"));
+    #endif // ifndef BUILD_NO_DEBUG
     return true;
   }
   else if (equals(command, F("mhzabcdisable")))
   {
     send_mhzCmd(mhzCmdABCDisable);
+    #ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_INFO, F("MHZ19: Sent sensor ABC Disable!"));
+    #endif // ifndef BUILD_NO_DEBUG
     return true;
   }
 
@@ -130,25 +138,33 @@ bool P049_data_struct::plugin_write(struct EventStruct *event, const String& str
     if (equals(command, F("mhzmeasurementrange1000")))
     {
       send_mhzCmd(mhzCmdMeasurementRange1000);
+      #ifndef BUILD_NO_DEBUG
       addLog(LOG_LEVEL_INFO, F("MHZ19: Sent measurement range 0-1000PPM!"));
+      #endif // ifndef BUILD_NO_DEBUG
       return true;
     }
     else if (equals(command, F("mhzmeasurementrange2000")))
     {
       send_mhzCmd(mhzCmdMeasurementRange2000);
+      #ifndef BUILD_NO_DEBUG
       addLog(LOG_LEVEL_INFO, F("MHZ19: Sent measurement range 0-2000PPM!"));
+      #endif // ifndef BUILD_NO_DEBUG
       return true;
     }
     else if (equals(command, F("mhzmeasurementrange3000")))
     {
       send_mhzCmd(mhzCmdMeasurementRange3000);
+      #ifndef BUILD_NO_DEBUG
       addLog(LOG_LEVEL_INFO, F("MHZ19: Sent measurement range 0-3000PPM!"));
+      #endif // ifndef BUILD_NO_DEBUG
       return true;
     }
     else if (equals(command, F("mhzmeasurementrange5000")))
     {
       send_mhzCmd(mhzCmdMeasurementRange5000);
+      #ifndef BUILD_NO_DEBUG
       addLog(LOG_LEVEL_INFO, F("MHZ19: Sent measurement range 0-5000PPM!"));
+      #endif // ifndef BUILD_NO_DEBUG
       return true;
     }
   }

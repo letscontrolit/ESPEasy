@@ -10,12 +10,12 @@
 
 # if FEATURE_JSON_EVENT
 #  include "../Helpers/ESPEasy_Storage.h"
+#  include "../Helpers/JSON_helper.h"
 #  include "../WebServer/LoadFromFS.h"
 
 #  include <ArduinoJson.h>
 
 # endif // if FEATURE_JSON_EVENT
-
 
 void eventFromResponse(const String& host, const int& httpCode, const String& uri, ESPEasy_HTTPClient& http, const int& parseJson) {
   if ((httpCode == 200)) {
@@ -236,10 +236,13 @@ void eventFromResponse(const String& host, const int& httpCode, const String& ur
 
       // Allocate memory for root if needed
       if (root == nullptr) {
-  #  ifdef USE_SECOND_HEAP
-        HeapSelectIram ephemeral;
-  #  endif // ifdef USE_SECOND_HEAP
-        root = new (std::nothrow) DynamicJsonDocument(lastJsonMessageLength);
+        // Try to allocate in PSRAM or 2nd heap if possible
+        constexpr unsigned size = sizeof(DynamicJsonDocument);
+        void *ptr               = special_calloc(1, size);
+
+        if (ptr) {
+          root = new (ptr) DynamicJsonDocument(lastJsonMessageLength); // Dynamic allocation
+        }
       }
 
       if (root != nullptr) {
@@ -319,6 +322,15 @@ void readAndProcessJsonKeys(DynamicJsonDocument *root, int numJson) {
       }
     }
 
+    #  if FEATURE_JSON_PARSE
+    const String val = getJsonValue(root, key, false); // Return arrays and objects as csv, _not_ JSON formatted
+
+    if (!val.isEmpty()) {
+      successfullyProcessedCount++;
+      csvOutput += val;
+      csvOutput += ',';
+    }
+    #  else // if FEATURE_JSON_PARSE
     // Process the key and navigate the JSON
     JsonVariant value = *root;
     size_t start = 0, end;
@@ -414,8 +426,11 @@ void readAndProcessJsonKeys(DynamicJsonDocument *root, int numJson) {
       }
     } else {
       csvOutput += F("null"); // Indicate missing value
+      csvOutput += val;
+      csvOutput += ',';
     }
     csvOutput += ',';
+    #  endif // if FEATURE_JSON_PARSE
   }
 
   keyFile.close();
@@ -429,11 +444,11 @@ void readAndProcessJsonKeys(DynamicJsonDocument *root, int numJson) {
     // Log the results
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       addLog(LOG_LEVEL_INFO, strformat(F("Successfully processed %d out of %d keys"), successfullyProcessedCount, keyCount));
-      eventQueue.addMove(strformat(F("JsonReply%s%s=%s"),
-                                   numJson != 0 ? "#" : "",
-                                   toStringNoZero(numJson).c_str(),
-                                   csvOutput.c_str()));
     }
+    eventQueue.addMove(strformat(F("JsonReply%s%s=%s"),
+                                 numJson != 0 ? "#" : "",
+                                 toStringNoZero(numJson).c_str(),
+                                 csvOutput.c_str()));
   }
 }
 

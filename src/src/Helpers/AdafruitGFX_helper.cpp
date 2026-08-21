@@ -764,7 +764,9 @@ AdafruitGFX_helper::AdafruitGFX_helper(Adafruit_GFX              *display,
   _textPrintMode(textPrintMode), _fontscaling(fontscaling), _fgcolor(fgcolor), _bgcolor(bgcolor),
   _useValidation(useValidation), _textBackFill(textBackFill), _defaultFontId(defaultFontId)
 {
+  #ifndef BUILD_NO_DEBUG
   addLog(LOG_LEVEL_INFO, F("AdaGFX_helper: GFX Init."));
+  #endif // ifndef BUILD_NO_DEBUG
 }
 
 # if ADAGFX_ENABLE_BMP_DISPLAY
@@ -785,7 +787,9 @@ AdafruitGFX_helper::AdafruitGFX_helper(Adafruit_SPITFT           *display,
   _useValidation(useValidation), _textBackFill(textBackFill), _defaultFontId(defaultFontId)
 {
   _display = _tft;
+  #ifndef BUILD_NO_DEBUG
   addLog(LOG_LEVEL_INFO, F("AdaGFX_helper: TFT Init."));
+  #endif // ifndef BUILD_NO_DEBUG
 }
 
 # endif // if ADAGFX_ENABLE_BMP_DISPLAY

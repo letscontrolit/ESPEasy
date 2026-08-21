@@ -61,6 +61,7 @@ void handle_wifiscanner() {
   checkRAM(F("handle_wifiscanner"));
   #endif
 
+  // Check for logged in state before potentially interrupting WiFi connection
   if (!isLoggedIn()) { return; }
 
   WiFiMode_t cur_wifimode = WiFi.getMode();
@@ -69,9 +70,8 @@ void handle_wifiscanner() {
   int8_t scanCompleteStatus = ESPEasy::net::wifi::WiFi_AP_Candidates.scanComplete();
   ESPEasy::net::wifi::setWifiMode(cur_wifimode);
 
-  navMenuIndex = MENU_INDEX_TOOLS;
-  TXBuffer.startStream();
-  sendHeadandTail_stdtemplate(_HEAD);
+  if (!startStream_send_stdTemplate(MENU_INDEX_TOOLS)) { return; }
+
   html_table_class_multirow();
   html_TR();
   html_table_header(getLabel(LabelType::SSID));
@@ -97,8 +97,7 @@ void handle_wifiscanner() {
   }
 
   html_end_table();
-  sendHeadandTail_stdtemplate(_TAIL);
-  TXBuffer.endStream();
+  sendTail_stdtemplate();
 }
 
 #endif // ifdef WEBSERVER_WIFI_SCANNER

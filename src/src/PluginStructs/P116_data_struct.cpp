@@ -169,7 +169,9 @@ bool P116_data_struct::plugin_init(struct EventStruct *event) {
   DebounceCounter = 0;     // debounce counter
 
   if (nullptr == st77xx) {
+    #ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_INFO, F("ST77xx: Init start."));
+    #endif // ifndef BUILD_NO_DEBUG
     uint8_t initRoptions = 0xFF;
 
     #ifdef ESP32
@@ -320,7 +322,7 @@ bool P116_data_struct::plugin_init(struct EventStruct *event) {
     }
     # endif // ifndef BUILD_NO_DEBUG
   } else {
-    addLog(LOG_LEVEL_INFO, F("ST77xx: No init?"));
+    addLog(LOG_LEVEL_ERROR, F("ST77xx: No init?"));
   }
 
   if (nullptr != st77xx) {

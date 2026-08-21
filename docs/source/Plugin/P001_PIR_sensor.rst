@@ -98,11 +98,8 @@ Advanced event management
 * **Long press min interval (ms)**: Same as above..
 * **Use safe button (slower)**: Same as above..
 
-Data acquisition
-^^^^^^^^^^^^^^^^
+.. include:: DataAcquisition.repl
 
-* **Send to controller** 1..3: Check which controller (if any) you want to publish to. All or no controller can be used.
-* **Interval**: How often should the task publish its value (optional for switch plugins).
 
 Indicators/values (recommended settings)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

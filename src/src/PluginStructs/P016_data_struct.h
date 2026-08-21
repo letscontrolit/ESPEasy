@@ -19,10 +19,15 @@
 #  endif // if defined(P016_CHECK_HEAP)
 # endif // if defined(LIMIT_BUILD_SIZE)
 
+# ifndef P016_EVENT_ON_ERROR
+#  define P016_EVENT_ON_ERROR  1
+# endif // ifndef P016_EVENT_ON_ERROR
+
 // bit definition in PCONFIG_LONG(0)
 # define P016_BitAddNewCode  0        // Add automatically new code into Code of the command structure
 # define P016_BitExecuteCmd  1        // Execute command if received code matches Code or AlternativeCode of the command structure
 # define P016_BitAcceptUnknownType  2 // Accept unknown DecodeType as valid IR code (UNKNOWH is only the result of DECODE_HASH)
+# define P016_EventOnError   3        // Generate <taskName>#Overflow event on buffer overflow
 
 # define P16_Nlines   10              // The number of different lines which can be displayed - each line is 64 chars max
 # define P16_Nchars   64              // max chars per command line
@@ -57,6 +62,7 @@ typedef struct {
   char     Command[P16_Nchars] = { 0 };
   uint32_t Code                = 0; // received code (can be added automatically)
   uint32_t AlternativeCode     = 0; // alternative code fpr the same command
+
 } tCommandLinesV1;
 # endif // ifdef P16_SETTINGS_V1
 
@@ -75,7 +81,9 @@ struct tCommandLinesV2 {
   decode_type_t AlternativeCodeDecodeType = decode_type_t::UNUSED;
   uint16_t      CodeFlags                 = 0;
   uint16_t      AlternativeCodeFlags      = 0;
+
 };
+
 # endif // if P016_FEATURE_COMMAND_HANDLING
 
 struct P016_data_struct : public PluginTaskData_base {
@@ -132,6 +140,7 @@ private:
   # ifdef P016_CHECK_HEAP
   void CheckHeap(String dbgtxt);
   # endif // ifdef P016_CHECK_HEAP
+
 };
 
 #endif // ifdef USES_P016

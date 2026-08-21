@@ -263,10 +263,12 @@ boolean Plugin_071(uint8_t function, struct EventStruct *event, String& string)
             UserVar.setFloat(event->TaskIndex, 0, m_energy); // gives energy in Wh
             UserVar.setFloat(event->TaskIndex, 1, m_volume); // gives volume in liters
 
+            #ifndef BUILD_NO_DEBUG
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
               addLogMove(LOG_LEVEL_INFO, strformat(F("Kamstrup  : Heat value: %.3f kWh"), m_energy / 1000));
               addLogMove(LOG_LEVEL_INFO, strformat(F("Kamstrup  : Volume value: %d Liter"), m_volume));
             }
+            #endif // ifndef BUILD_NO_DEBUG
           }
           else
           {

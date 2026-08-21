@@ -181,7 +181,7 @@ boolean Plugin_117(uint8_t function, struct EventStruct *event, String& string)
           UserVar.setFloat(event->TaskIndex, 3, scd30_CO2);
 
           if (scd30_CO2EAvg > 5000) {
-            addLog(LOG_LEVEL_INFO, F("SCD30: Sensor saturated! > 5000 ppm"));
+            addLog(LOG_LEVEL_ERROR, F("SCD30: Sensor saturated! > 5000 ppm"));
           }
           break;
         case ERROR_SCD30_NO_DATA:

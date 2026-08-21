@@ -5,6 +5,8 @@
 
 #ifdef WEBSERVER_METRICS
 
+#include "../../ESPEasy/net/ESPEasyNetwork.h"
+
 # if FEATURE_NETWORK_STATS
 #  ifdef ESP8266
 #   define MAX_NR_NETWORKS_IN_TABLE  2
