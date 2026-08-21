@@ -50,13 +50,19 @@ void handle_hardware() {
     
     // EEPROM settings
     #if FEATURE_EEPROM_EXTERNAL
+    bool eepromChanged = false;
+    int tmp = getFormItemInt(F("eepromtype"),
+                             static_cast<int>(ESPEasy::eeprom::EEPROMExternal_Type_e::AT24C256));
+    eepromChanged |= tmp != Settings.EEPROMExternalType();
 
-    Settings.EEPROMExternalType(getFormItemInt(F("eepromtype"),
-                                static_cast<int>(ESPEasy::eeprom::EEPROMExternal_Type_e::AT24C256)));
-    Settings.EEPROMExternalI2CAddress(getFormItemInt(F("i2c_eeprom"), 0));
+    Settings.EEPROMExternalType(tmp);
+    tmp = getFormItemInt(F("i2c_eeprom"), 0);
+    eepromChanged |= tmp != Settings.EEPROMExternalI2CAddress();
+    Settings.EEPROMExternalI2CAddress(tmp);
     
     #  if FEATURE_I2C_MULTIPLE
     const uint8_t i2cBus = getFormItemInt(F("pi2cbuseeprom"), 0);
+    eepromChanged |= i2cBus != Settings.getI2CInterfaceEEPROM();
     set3BitToUL(Settings.I2C_peripheral_bus, I2C_PERIPHERAL_BUS_EEPROM, i2cBus);
     #endif // if FEATURE_I2C_MULTIPLE
 
@@ -71,6 +77,7 @@ void handle_hardware() {
     uint16_t muxFlags{};
     bitWrite(muxFlags, EEPROM_MUX_FLAGS_MULTI, muxPortsOption);
     set8BitToUL(muxFlags, EEPROM_MUX_FLAGS_PORT, selectedPorts);
+    eepromChanged |= muxFlags != Settings.EEPROMExternalI2CMultiplexerFlags();
     Settings.EEPROMExternalI2CMultiplexerFlags(muxFlags);
     # endif // if FEATURE_I2CMULTIPLEXER
 
@@ -96,6 +103,11 @@ void handle_hardware() {
     }
     error += SaveSettings();
     addHtmlError(error);
+    #if FEATURE_EEPROM_EXTERNAL
+    if (error.isEmpty() && eepromChanged) {
+      ESPEasy::eeprom::initializeEEPROMExternal();
+    }
+    #endif // if FEATURE_EEPROM_EXTERNAL
   }
 
   html_add_form();
