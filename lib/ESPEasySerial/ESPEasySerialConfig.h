@@ -24,6 +24,10 @@
 struct ESPEasySerialConfig {
   ESPEasySerialConfig() = default;
 
+  bool operator==(const ESPEasySerialConfig& other) const;
+
+  ESPEasySerialConfig& operator=(const ESPEasySerialConfig& other) = default;
+
   void validate();
 
   #ifdef ESP8266

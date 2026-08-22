@@ -99,9 +99,11 @@ bool P134_data_struct::plugin_read(struct EventStruct *event)           {
     if (measurementStatus == A02YYUW_status_e::STATUS_OK) {
       UserVar.setFloat(event->TaskIndex, 0, static_cast<float>(measuredDistance));
 
+      #ifndef BUILD_NO_DEBUG
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         addLogMove(LOG_LEVEL_INFO, concat(F("A02YYUW: Distance value = "), static_cast<int>(measuredDistance)));
       }
+      #endif // ifndef BUILD_NO_DEBUG
       success = true;
     } else {
       if (loglevelActiveFor(LOG_LEVEL_ERROR)) {

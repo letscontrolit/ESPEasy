@@ -558,6 +558,9 @@ void addFormSelectorI2C(const String& id,
   {
     String option = formatToHex_decimal(addresses[x]);
 
+    if (0 == addresses[x]) {
+      option = F("Disabled");
+    } else
     if (((x == 0) && (defaultAddress == 0)) || (defaultAddress == addresses[x])) {
       option += F(" (default)");
     }
@@ -703,15 +706,19 @@ bool getCheckWebserverArg_int(const String& key,
 }
 
 bool update_whenset_FormItemInt(const __FlashStringHelper * key,
-                                int         & value) 
+                                int         & value,
+                                bool* changed) 
 {
-  return update_whenset_FormItemInt(String(key), value);
+  return update_whenset_FormItemInt(String(key), value, changed);
 }
 
-bool update_whenset_FormItemInt(const String& key, int& value) {
+bool update_whenset_FormItemInt(const String& key, int& value,
+                                bool* changed) {
   int tmpVal;
 
   if (getCheckWebserverArg_int(key, tmpVal)) {
+    if (changed != nullptr && value != tmpVal)
+      *changed = true;
     value = tmpVal;
     return true;
   }
@@ -719,17 +726,21 @@ bool update_whenset_FormItemInt(const String& key, int& value) {
 }
 
 bool update_whenset_FormItemInt(const __FlashStringHelper * key,
-                                uint32_t    & value) 
+                                uint32_t    & value,
+                                bool* changed) 
 {
-  return update_whenset_FormItemInt(String(key), value);
+  return update_whenset_FormItemInt(String(key), value, changed);
 }
 
 bool update_whenset_FormItemInt(const String& key,
-                                uint32_t    & value)
+                                uint32_t    & value,
+                                bool* changed)
 {
   uint32_t tmpVal;
 
   if (getCheckWebserverArg_int(key, tmpVal)) {
+    if (changed != nullptr && value != tmpVal)
+      *changed = true;
     value = tmpVal;
     return true;
   }
@@ -738,16 +749,20 @@ bool update_whenset_FormItemInt(const String& key,
 
 
 bool update_whenset_FormItemInt(const __FlashStringHelper * key,
-                                int8_t& value) 
+                                int8_t& value,
+                                bool* changed) 
 {
-  return update_whenset_FormItemInt(String(key), value);
+  return update_whenset_FormItemInt(String(key), value, changed);
 }
 
 
-bool update_whenset_FormItemInt(const String& key, int8_t& value) {
+bool update_whenset_FormItemInt(const String& key, int8_t& value,
+                                bool* changed) {
   int tmpVal;
 
   if (getCheckWebserverArg_int(key, tmpVal)) {
+    if (changed != nullptr && value != tmpVal)
+      *changed = true;
     value = tmpVal;
     return true;
   }
@@ -755,16 +770,20 @@ bool update_whenset_FormItemInt(const String& key, int8_t& value) {
 }
 
 bool update_whenset_FormItemInt(const __FlashStringHelper * key,
-                                uint8_t& value) 
+                                uint8_t& value,
+                                bool* changed) 
 {
-  return update_whenset_FormItemInt(String(key), value);
+  return update_whenset_FormItemInt(String(key), value, changed);
 }
 
 
-bool update_whenset_FormItemInt(const String& key, uint8_t& value) {
+bool update_whenset_FormItemInt(const String& key, uint8_t& value,
+                                bool* changed) {
   int tmpVal;
 
   if (getCheckWebserverArg_int(key, tmpVal)) {
+    if (changed != nullptr && value != tmpVal)
+      *changed = true;
     value = tmpVal;
     return true;
   }

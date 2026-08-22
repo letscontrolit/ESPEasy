@@ -43,6 +43,9 @@ public:
   bool setRS485Mode(int8_t rtsPin, bool enableCollisionDetection = false);
 
 private:
+
+  bool isConnected() const;
+
 #if !ARDUINO_USB_CDC_ON_BOOT
   HWCDC myUsbSerial;
 #endif

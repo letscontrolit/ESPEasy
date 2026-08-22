@@ -160,6 +160,7 @@ boolean Plugin_127(uint8_t function, struct EventStruct *event, String& string)
         addLog(LOG_LEVEL_ERROR, F("CDM7160: Sensor saturated! > 10000 ppm"));
       }
 
+      #ifndef BUILD_NO_DEBUG
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         addLogMove(LOG_LEVEL_INFO, strformat(F("CDM7160: Address: 0x%02x: CO2 ppm: %d, alt: %d, comp: %d"),
                                              P127_CONFIG_I2C_ADDRESS,
@@ -167,6 +168,7 @@ boolean Plugin_127(uint8_t function, struct EventStruct *event, String& string)
                                              P127_data->getAltitude(),
                                              P127_data->getCompensation()));
       }
+      #endif // ifndef BUILD_NO_DEBUG
       break;
     }
     case PLUGIN_WRITE:

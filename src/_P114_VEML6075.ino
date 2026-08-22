@@ -161,6 +161,7 @@ boolean Plugin_114(uint8_t function, struct EventStruct *event, String& string)
         UserVar.setFloat(event->TaskIndex, 1, UVB);
         UserVar.setFloat(event->TaskIndex, 2, UVIndex);
 
+        #ifndef BUILD_NO_DEBUG
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           addLogMove(LOG_LEVEL_INFO, strformat(F("VEML6075: Address: 0x%02x / Integration Time: %d / "
                                                  "Dynamic Mode: %d / divisor: %d / UVA: %.2f / UVB: %.2f / UVIndex: %.2f"),
@@ -169,6 +170,7 @@ boolean Plugin_114(uint8_t function, struct EventStruct *event, String& string)
                                                UserVar[event->BaseVarIndex + 1],
                                                UserVar[event->BaseVarIndex + 2]));
         }
+        #endif // ifndef BUILD_NO_DEBUG
 
         success = true;
       }
