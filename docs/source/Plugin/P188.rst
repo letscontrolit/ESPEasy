@@ -26,19 +26,22 @@ Used libraries: |P188_usedlibraries|
 Introduction
 ------------
 
-The `TLA2528 <https://www.ti.com/product/de-de/TLA2528>`__ is an eight channel analog to digital converter chip with 12 bit resolution and I2C interface.
+The `TLA2528 <https://www.ti.com/product/de-de/TLA2528>`__ is an eight-channel analog to digital converter chip with 12-bit resolution and I2C interface.
 
 The plugin supports up to 4 output channels, where each is configurable to be
 
-singled ended measurement (voltage measured to GND)
+* **singled ended measurement**
+    single voltage measured to GND
 
 .. image:: P188_SingleEnded.png
 
-difference measurement (voltage difference between two inputs - each measured to GND)
+* **difference measurement**
+    voltage difference between two inputs - two consecutive inputs measured to GND
 
-.. image:: P188_Difference.png
+.. image:: P188_Difference.png 
 
-resistor measurement (voltage drop over a reference resistor - two inputs measured to GND)  
+* **resistor measurement**
+    voltage drop over a reference resistor - two consecutive inputs measured to GND
 
 .. image:: P188_Resistor.png
 
@@ -48,73 +51,71 @@ Configuration
 .. image:: P188_Config_Initial.png
   :alt: Device configuration
 
-* **Name**: Required by ESPEasy, must be unique among the list of available devices/tasks.
+* **Name**: 
+    Required by ESPEasy, must be unique among the list of available devices/tasks.
 
-* **Enabled**: The device can be disabled or enabled. When not enabled, no output data is generated.
+* **Enabled**: 
+    The device can be disabled or enabled. When not enabled, no output data is generated.
 
 I\ :sup:`2`\C options
-^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^
 
 The available I\ :sup:`2`\C settings here depend on the build used.
 The I\ :sup:`2`\C address for the device is determined by connecting external resistors to the ADDR pin. 
-The voltage level on the ADDR pin is measured at power-up time and the adress can be in the range of 0x10 to 0x17.
-The specific adress for your hardware can be found in the related documentation, the schematic or by using the ``i2cscanner`` command.
+The voltage level on the ADDR pin is measured at power-up time and the address can be in the range of 0x10 to 0x17.
+The specific address for your hardware can be found in the related documentation, the schematic or by using the ``i2cscanner`` command.
 
 For details see the device datasheet (chapter 7.3.5) and the :ref:`i2c-bus` page.
 
 Device Settings
 ^^^^^^^^^^^^^^^
 
-Depending on the selected 'Number Output values', up to four sections are used to configure the output values (press 'Submit' after changing) :
+* **ADC reference voltage**:
+    The TLA2528 uses the analog supply voltage of the ADC as reference (float value, 2.35V to 5.5V)
 
-Output Sinus
-~~~~~~~~~~~~
+* **Resistor measurement clipping**: 
+    Clipping value, which is returned when the measured resistance exceeds the maximum value (float value, 0.0 to 1000000000 Ohm) - only available when compiled with P188_FEATURE_RESISTOR_MEASUREMENT defined.
 
-.. image:: P188_Config_Sinus.png
-  :alt: Output sinus configuration
+Depending on the selected 'Number Output values', up to four sections are used to configure the output values (press 'Submit' after changing):
 
-* **Amplitude**: Amplitude of the signal (integer value -65537 to +65537)
-* **Offset**: Offset from 0-Line (integer value -65537 to +65537)
-* **Period**: period time in seconds (integer value 60 - 3600)
-* **Phase**: phase offset in degrees (integer value 0 - 359)
+Output [1-4] Settings
+^^^^^^^^^^^^^^^^^^^^^
 
-.. image:: P188_Output_Sinus2.png
-  :alt: Output sinus view
+* **Reference Resistor Value**:
+    The value of the reference resistor used for the resistor measurement (integer value, 100 to 470000 Ohm) - only available when compiled with P188_FEATURE_RESISTOR_MEASUREMENT defined.
 
-- for floating value output, use formula to divide output levels (e.g. floating value output with 2 decimals use the formula '%value%/100')
+* **Parallel Resistor Value**:
+    The value of the parallel resistor used for the resistor measurement (integer value, 0 to 470000 Ohm) - only available when compiled with P188_FEATURE_RESISTOR_MEASUREMENT defined. Set Parallel Resistor Value to 0 if no parallel resistor is used.
 
-Output Trapezoid
-~~~~~~~~~~~~~~~~
+* **Output Raw ADC Value**:
+    When checked, the raw ADC value is output instead of the calculated value.
 
-.. image:: P188_Config_Trapezoid.png
-  :alt: Output trapezoid configuration
-
-* **On-Level**: output level during On-Time period (integer value -65537 to +65537)
-* **Off-Level**: output level during Off-Time period (integer value -65537 to +65537)
-* **Period**: period time in seconds (must be greater than On-Time + Rise-Time + Fall-Time)
-* **On-Time**: duration of On-Time period in seconds
-* **Rise-Time**: duration of linear slope from Off-Level to On-Level
-* **Fall-Time**: duration of linear slope from On-Level to Off-Level
-
-.. image:: P188_Output_Trapezoid2.png
-  :alt: Output trapezoid view
+* **Two Point Calibration**
+    The measured samples taken by the ADC often has to be adjusted in order to compensate for parts tolerances of the input circuit or to be mapped on to a specific range.
+    
+    For example, measuring the current going through a resistor, one normally needs to apply a formula to transform the measured voltage difference to a current value. 
+    The two point calibration allows to map the measured difference values to a known output range, by applying a linear transformation.
   
-- for inverted output, swap On-Level value with Off-Level value.
-- for floating value output, use formula to divide output levels (e.g. floating value output with 2 decimals use the formula '%value%/100')
+    .. image:: P188_Current.png
 
-Output Random
-~~~~~~~~~~~~~
+    In single ended mode, the raw ADC values are mapped to the desired output values, whereas in difference and resistance mode, the calculations are performed using the raw ADC values and the two point calibration is performed afterwards.
 
-.. image:: P188_Config_Random.png
-  :alt: Output random configuration
+    To find the correct calibration values, one must perform following measurements without applying the calibration:
 
-* **Max-Level**: maximum output level (integer value -65537 to +65537)
-* **Min-Level**: minimum output level (integer value -65537 to +65537)
+    - In single ended mode, one must measure 2 known voltages and record their corresponding raw ADC values.
+    - In difference and resistance mode, one must apply 2 known input parameters and record their corresponding measured values.
 
-.. image:: P188_Output_Random2.png
-  :alt: Output random view
 
-- for floating value output, use formula to divide output levels (e.g. floating value output with 2 decimals use the formula '%value%/100')
+    With these measurements results, the calibration values can be entered and the two point calibration can be enabled.
+
+Output Configuration
+^^^^^^^^^^^^^^^^^^^^
+
+* **Number Output Values**: 
+    The number of output values to be generated (Single, Dual, Triple or Quad). Depending on the selected number of output values, the corresponding number of output sections will be available for configuration.
+
+* **Value x**: 
+    Select the ADC input channels (0 to 7) and mode to be used for each of the output values. The selection can be configured in detail in the corresponding output section as described above.
 
 Change log
 ----------
@@ -124,8 +125,4 @@ Change log
 
   |added|
   Initial release version.
-
-
-
-
 
