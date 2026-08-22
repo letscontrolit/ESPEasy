@@ -83,35 +83,6 @@
 
 #define TLA2528_REG_AUTO_SEQ_CH_SEL   0x12
 
-/**********************************************/
-
-// enum {
-//   P188_OUTPUT_MAPPING_NONE       = 0x0000,
-//   // single channel
-//   P188_OUTPUT_MAPPING_AIN0       = 0x0001,
-//   P188_OUTPUT_MAPPING_AIN1       = 0x1002,
-//   P188_OUTPUT_MAPPING_AIN2       = 0x2004,
-//   P188_OUTPUT_MAPPING_AIN3       = 0x3008,
-//   P188_OUTPUT_MAPPING_AIN4       = 0x4010,
-//   P188_OUTPUT_MAPPING_AIN5       = 0x5020,
-//   P188_OUTPUT_MAPPING_AIN6       = 0x6040,
-//   P188_OUTPUT_MAPPING_AIN7       = 0x7080,
-//   // abs(differential)
-//   P188_OUTPUT_MAPPING_ABS_AIN0_1 = 0x8103,
-//   P188_OUTPUT_MAPPING_ABS_AIN2_3 = 0x910c,
-//   P188_OUTPUT_MAPPING_ABS_AIN4_5 = 0xa130,
-//   P188_OUTPUT_MAPPING_ABS_AIN6_7 = 0xb1c0,
-//   // resistor measurement
-//   P188_OUTPUT_MAPPING_RES_AIN0_1 = 0xc203,
-//   P188_OUTPUT_MAPPING_RES_AIN2_3 = 0xd20c,
-//   P188_OUTPUT_MAPPING_RES_AIN4_5 = 0xe230,
-//   P188_OUTPUT_MAPPING_RES_AIN6_7 = 0xf2c0
-//   // 0xabcd
-//   // a  .. order number
-//   // b  .. output mode (0:single channel, 1:differential, 2:resistor measurement)
-//   // cd .. sample group indicator
-// };
-
 #ifdef P188_FEATURE_RESISTOR_MEASUREMENT
   #define P188_OUTPUT_OPTION_CNT 16
 #else
@@ -197,7 +168,7 @@ public:
 
   uint16_t raw_samples[TLA2528_CHANNEL_NUM]; 
   // bits 16..4 ADC raw value
-  // bit 3..0   channel number 
+  // bits  3..0 channel number 
   
   bool isInitialized() const {
     return initialized;

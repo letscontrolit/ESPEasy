@@ -31,17 +31,18 @@ The `TLA2528 <https://www.ti.com/product/de-de/TLA2528>`__ is an eight-channel a
 The plugin supports up to 4 output channels, where each is configurable to be
 
 * **singled ended measurement**
-    single voltage measured to GND
+    Single voltage input measured to GND.
 
 .. image:: P188_SingleEnded.png
 
 * **difference measurement**
-    voltage difference between two inputs - two consecutive inputs measured to GND
+    Voltage difference between two inputs - two consecutive inputs measured to GND.
 
 .. image:: P188_Difference.png 
 
 * **resistor measurement**
-    voltage drop over a reference resistor - two consecutive inputs measured to GND
+    | Voltage drop over a reference resistor - two consecutive inputs measured to GND.
+    | Only avaiable when compiled with ``P188_FEATURE_RESISTOR_MEASUREMENT`` defined
 
 .. image:: P188_Resistor.png
 
@@ -74,7 +75,8 @@ Device Settings
     The TLA2528 uses the analog supply voltage of the ADC as reference (float value, 2.35V to 5.5V)
 
 * **Resistor measurement clipping**: 
-    Clipping value, which is returned when the measured resistance exceeds the maximum value (float value, 0.0 to 1000000000 Ohm) - only available when compiled with P188_FEATURE_RESISTOR_MEASUREMENT defined.
+    | Clipping value, which is returned when the measured resistance exceeds the maximum value (float value, 0.0 to 1000000000 Ohm).
+    | Only available when compiled with ``P188_FEATURE_RESISTOR_MEASUREMENT`` defined.
 
 Depending on the selected 'Number Output values', up to four sections are used to configure the output values (press 'Submit' after changing):
 
@@ -82,10 +84,12 @@ Output [1-4] Settings
 ^^^^^^^^^^^^^^^^^^^^^
 
 * **Reference Resistor Value**:
-    The value of the reference resistor used for the resistor measurement (integer value, 100 to 470000 Ohm) - only available when compiled with P188_FEATURE_RESISTOR_MEASUREMENT defined.
+    | The value of the reference resistor used for the resistor measurement (integer value, 100 to 470000 Ohm).
+    | Only available when compiled with ``P188_FEATURE_RESISTOR_MEASUREMENT`` defined.
 
 * **Parallel Resistor Value**:
-    The value of the parallel resistor used for the resistor measurement (integer value, 0 to 470000 Ohm) - only available when compiled with P188_FEATURE_RESISTOR_MEASUREMENT defined. Set Parallel Resistor Value to 0 if no parallel resistor is used.
+    | The value of the parallel resistor used for the resistor measurement (integer value, 0 to 470000 Ohm).
+    | Only available when compiled with ``P188_FEATURE_RESISTOR_MEASUREMENT`` defined. Set Parallel Resistor Value to 0 if no parallel resistor is used.
 
 * **Output Raw ADC Value**:
     When checked, the raw ADC value is output instead of the calculated value.
@@ -94,7 +98,7 @@ Output [1-4] Settings
     The measured samples taken by the ADC often has to be adjusted in order to compensate for parts tolerances of the input circuit or to be mapped on to a specific range.
     
     For example, measuring the current going through a resistor, one normally needs to apply a formula to transform the measured voltage difference to a current value. 
-    The two point calibration allows to map the measured difference values to a known output range, by applying a linear transformation.
+    The two point calibration allows to map the measured difference values to a known output range by applying a linear transformation.
   
     .. image:: P188_Current.png
 

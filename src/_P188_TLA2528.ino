@@ -6,7 +6,7 @@
 // #######################################################################################################
 
 /** Changelog:
- * 2026-06-27 SuksAe: Initial release
+ * 2026-08-22 SuksAe: Initial release
  */
 
 # include "src/WebServer/DevicesPage.h" // Needed for format_I2C_port_description
