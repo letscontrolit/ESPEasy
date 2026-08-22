@@ -109,31 +109,6 @@ boolean Plugin_187(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_SET_DEFAULTS:
     {
-      /*
-         Configuration and working variables are implemented as is because:
-
-         -- excerpt from https://github.com/letscontrolit/ESPEasy/pull/5566#issuecomment-4739927575:
-
-         PLUGIN_SET_DEFAULTS is called only once, right after the new plugin instance is added to the Devices list.
-         And never again after that. This is the place to set initial defaults for your plugin.
-
-         PLUGIN_INIT is called every time the plugin is enabled, and should return true if all is OK,
-         or false if there is an error causing the plugin to stay disabled.
-
-         -- excerpt end
-
-         So in PLUGIN_SET_DEFAULTS, the persistent configuration values in flash are initialized.
-         This flash data is used in PLUGIN_WEBFORM_LOAD to provide data for the UI generation. The
-         flash data is updated in PLUGIN_WEBFORM_SAVE when new configuration values are submitted by
-         the user.
-
-         Afterwards, when the plugin task instance is enabled via the UI (and output data starts
-         to be generated), a working copy of the configuration values is created by loading them
-         from flash to RAM.
-         Stored together with the volatile variables, this data is used for fast processing of
-         the signal generation code.
-       */
-
       P187_config_struct tmp_config[VARS_PER_TASK];
 
       P187_OUTPUT_TYPE = static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_QUAD);
