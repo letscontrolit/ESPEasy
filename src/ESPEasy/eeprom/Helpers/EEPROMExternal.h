@@ -6,7 +6,7 @@
 # include "../../../src/DataTypes/TaskIndex.h"
 # include "../../../src/Helpers/LongTermTimer.h"
 
-# include <AT24CX.h>
+# include <at24cxxx.h>
 
 namespace ESPEasy {
 namespace eeprom {
@@ -17,7 +17,7 @@ enum class EEPROMExternal_WriteProtect_e : uint8_t {
 
 };
 
-extern AT24CX *EEPROMExternal;
+extern AT24Cxxx *EEPROMExternal;
 extern EEPROMExternal_WriteProtect_e EEPROMExternalWriteProtect;
 extern bool EEPROMParamsOkState;
 extern LongTermTimer EEPROMParamsOkTimer;
@@ -78,9 +78,10 @@ bool                          isEEPROMExternalWriteProtected();
 
 uint8_t                       selectEEPROMI2CBusAndMultiplexer();
 
-uint32_t                      getEEPROMSize(EEPROMExternal_Type_e type);
-uint32_t                      getEEPROMSize(EEPROMExternal_Type_e type,
-                                            uint8_t             & pageSize);
+size_t                        getEEPROMSize(EEPROMExternal_Type_e type);
+size_t                        getEEPROMSize(EEPROMExternal_Type_e type,
+                                            uint8_t             & pageSize,
+                                            uint8_t             & delay);
 const __FlashStringHelper*    getEEPROMName(EEPROMExternal_Type_e type);
 
 uint32_t                      getEEPROMAddressForSlot(uint32_t slot);

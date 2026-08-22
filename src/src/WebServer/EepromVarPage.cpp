@@ -96,7 +96,7 @@ void handle_eepromvars() {
 
     html_end_table();
   } else {
-    addHtml(F("External EEPROM not enabled.<BR>"));
+    addHtml(F("<BR>External EEPROM not enabled.<BR>"));
   }
   # endif // if FEATURE_EEPROM_EXTERNAL
   # if FEATURE_RTC_SRAM_STORAGE
@@ -168,8 +168,6 @@ void handle_eepromvars() {
     html_TD();
 
     html_end_table();
-  } else {
-    addHtml(F("External RTC SRAM not available."));
   }
   # endif // if FEATURE_RTC_SRAM_STORAGE
   html_end_form();

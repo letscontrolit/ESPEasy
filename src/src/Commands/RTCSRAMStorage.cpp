@@ -8,6 +8,7 @@
 
 # include "../DataStructs/ESPEasy_EventStruct.h"
 
+# include "../Helpers/ESPEasy_time_calc.h"
 # include "../Helpers/Misc.h"
 # include "../Helpers/Numerical.h"
 # include "../Helpers/StringConverter.h"
@@ -28,7 +29,9 @@ const __FlashStringHelper* Command_writeRTC(struct EventStruct *event, const cha
 
   if (validUIntFromString(parseString(Line, 2), slot) && validValue) {
     return return_command_boolean_result_flashstr(ESPEasy::eeprom::writeRTCSRAMSlot(slot, value));
-  } else if (equals(parseString(Line, 2), F("erase")) && equals(parseString(Line, 3), F("erase")))  {
+  } else if (equals(parseString(Line, 2), F("erase")) && equals(parseString(Line, 3), F("erase"))) {
+    uint32_t start = millis();
+
     for (uint32_t slot = 0; slot < ESPEasy::eeprom::getRTCSRAMMaxSlots(); ++slot) {
       # if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
       ESPEasy::eeprom::writeRTCSRAMSlot(slot, 0.0);
@@ -36,7 +39,10 @@ const __FlashStringHelper* Command_writeRTC(struct EventStruct *event, const cha
       ESPEasy::eeprom::writeRTCSRAMSlot(slot, 0.0f);
       # endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
 
-      if (slot % 50 == 0) { delay(0); }
+      if ((slot % 50 == 0) || (timePassedSince(start) > 50)) {
+        delay(0);
+        start = millis();
+      }
     }
     addLog(LOG_LEVEL_INFO, F("RTC SRAM: All slot-values erased."));
     return return_command_success_flashstr();
