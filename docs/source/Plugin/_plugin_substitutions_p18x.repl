@@ -12,3 +12,16 @@
 .. |P180_compileinfo| replace:: `.`
 .. |P180_usedlibraries| replace:: `.`
 
+.. |P188_name| replace:: :cyan:`TLA2528`
+.. |P188_type| replace:: :cyan:`Analog input`
+.. |P188_typename| replace:: :cyan:`Analog input - TLA2528`
+.. |P188_porttype| replace:: `.`
+.. |P188_status| replace:: :green:`NORMAL` 
+.. |P188_status_lb| replace:: :green:`NORMAL` 
+.. |P188_github| replace:: P188_TLA2528.ino
+.. _P188_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P188_TLA2528.ino
+.. |P188_usedby| replace:: `.`
+.. |P188_shortinfo| replace:: `.`
+.. |P188_maintainer| replace:: `.`
+.. |P188_compileinfo| replace:: `.`
+.. |P188_usedlibraries| replace:: `.`
