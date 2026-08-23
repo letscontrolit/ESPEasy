@@ -15,6 +15,91 @@
 
 PluginTaskData_base *Plugin_task_data[TASKS_MAX] = {};
 
+#if DEBUG_PCONFIG_RANGE_CHECK
+int16_t& do_PCONFIG(struct EventStruct *event, uint8_t n)
+{
+  constexpr uint8_t max_n = NR_ELEMENTS(Settings.TaskDevicePluginConfig[0]);
+  if (validTaskIndex(event->TaskIndex) && n < max_n)
+    return Settings.TaskDevicePluginConfig[event->TaskIndex][(n)];
+
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG))
+    addLog(LOG_LEVEL_DEBUG, concat(
+      F("PCONFIG"),
+      strformat(F("(%u) out of range for taskIndex %u"), n, event->TaskIndex)));
+
+  static int16_t invalid{};
+  invalid = 0;
+  return invalid;
+}
+
+float& do_PCONFIG_FLOAT(struct EventStruct *event, uint8_t n)
+{
+  constexpr uint8_t max_n = NR_ELEMENTS(Settings.TaskDevicePluginConfigFloat[0]);
+  if (validTaskIndex(event->TaskIndex) && n < max_n)
+    return Settings.TaskDevicePluginConfigFloat[event->TaskIndex][(n)];
+
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG))
+    addLog(LOG_LEVEL_DEBUG, concat(
+      F("PCONFIG_FLOAT"),
+      strformat(F("(%u) out of range for taskIndex %u"), n, event->TaskIndex)));
+
+  static float invalid{};
+  invalid = 0;
+  return invalid;
+}
+
+int32_t& do_PCONFIG_LONG(struct EventStruct *event, uint8_t n)
+{
+  constexpr uint8_t max_n = NR_ELEMENTS(Settings.TaskDevicePluginConfigLong[0]);
+  if (validTaskIndex(event->TaskIndex) && n < max_n)
+    return Settings.TaskDevicePluginConfigLong[event->TaskIndex][(n)];
+
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG))
+    addLog(LOG_LEVEL_DEBUG, concat(
+      F("PCONFIG_LONG"),
+      strformat(F("(%u) out of range for taskIndex %u"), n, event->TaskIndex)));
+
+  static int32_t invalid{};
+  invalid = 0;
+  return invalid;
+}
+
+uint32_t& do_PCONFIG_ULONG(struct EventStruct *event, uint8_t n)
+{
+  constexpr uint8_t max_n = NR_ELEMENTS(Settings.TaskDevicePluginConfigULong[0]);
+  if (validTaskIndex(event->TaskIndex) && n < max_n)
+    return Settings.TaskDevicePluginConfigULong[event->TaskIndex][(n)];
+
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG))
+    addLog(LOG_LEVEL_DEBUG, concat(
+      F("PCONFIG_ULONG"),
+      strformat(F("(%u) out of range for taskIndex %u"), n, event->TaskIndex)));
+
+
+  static uint32_t invalid{};
+  invalid = 0;
+  return invalid;
+}
+
+
+int8_t& do_PIN(struct EventStruct *event, uint8_t n)
+{
+  // N.B. order of array indices taskIndex_t and n differs from the other PCONFIGxxx
+  constexpr uint8_t max_n = 3;
+  if (validTaskIndex(event->TaskIndex) && n < max_n)
+    return Settings.TaskDevicePin[n][event->TaskIndex];
+
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG))
+      addLog(LOG_LEVEL_DEBUG, concat(
+      F("PIN"),
+      strformat(F("(%u) out of range for taskIndex %u"), n, event->TaskIndex)));
+
+  static int8_t invalid{};
+  invalid = -1;
+  return invalid;
+}
+
+#endif
 
 String PCONFIG_LABEL(int n) {
   if (n < PLUGIN_CONFIGVAR_MAX) {

@@ -4651,4 +4651,15 @@ To create/register a plugin, you have to :
 #endif
 #endif // if !FEATURE_SPI && !FEATURE_I2C && !FEATURE_MODBUS && !FEATURE_CAN && !FEATURE_WRMBUS && !FEATURE_WIMBUS
 
+
+
+#ifndef DEBUG_PCONFIG_RANGE_CHECK
+#ifndef BUILD_NO_DEBUG
+#define DEBUG_PCONFIG_RANGE_CHECK 1
+#else
+#define DEBUG_PCONFIG_RANGE_CHECK 0
+#endif 
+#endif
+
+
 #endif // CUSTOMBUILD_DEFINE_PLUGIN_SETS_H
