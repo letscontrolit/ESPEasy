@@ -4654,11 +4654,19 @@ To create/register a plugin, you have to :
 
 
 #ifndef DEBUG_PCONFIG_RANGE_CHECK
-#ifndef BUILD_NO_DEBUG
-#define DEBUG_PCONFIG_RANGE_CHECK 1
-#else
-#define DEBUG_PCONFIG_RANGE_CHECK 0
-#endif 
+// 0: no range check (use for builds with already build size issues)
+// 1: Basic range check, log when out of bounds
+// 2: Include line nr of file where error occured
+// 3: include filename
+# ifndef BUILD_NO_DEBUG
+#  ifdef PLUGIN_BUILD_MAX_ESP32
+#   define DEBUG_PCONFIG_RANGE_CHECK 2
+#  else
+#   define DEBUG_PCONFIG_RANGE_CHECK 1
+#  endif
+# else
+#  define DEBUG_PCONFIG_RANGE_CHECK 0
+# endif 
 #endif
 
 

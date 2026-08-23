@@ -17,25 +17,78 @@ PluginTaskData_base *Plugin_task_data[TASKS_MAX] = {};
 
 #if DEBUG_PCONFIG_RANGE_CHECK
 
-bool PCONFIGxxx_outOfBounds(const __FlashStringHelper *prefix, const struct EventStruct *event, const uint8_t n, const uint8_t max_n)
+bool PCONFIGxxx_outOfBounds(
+  const __FlashStringHelper   *prefix,
+  const struct EventStruct    *event,
+  const uint8_t                n,
+  const uint8_t max_n
+# if DEBUG_PCONFIG_RANGE_CHECK > 1
+  , uint16_t                  linenr
+#  if DEBUG_PCONFIG_RANGE_CHECK > 2
+  , const __FlashStringHelper *filename
+#  endif
+# endif 
+
+  )
 {
   if (validTaskIndex(event->TaskIndex) && (n < max_n)) { return false; }
 
   if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+# if DEBUG_PCONFIG_RANGE_CHECK > 2
     addLog(LOG_LEVEL_ERROR, strformat(
-             F("%s(%u) out of range for taskIndex %u"),
+             F("%s(%u) out of range (max: %u) for taskIndex %u (%s:%u)"),
              FsP(prefix),
              n,
-             event->TaskIndex));
+             max_n,
+             event->TaskIndex + 1,
+             FsP(filename),
+             linenr));
+# elif DEBUG_PCONFIG_RANGE_CHECK > 1
+    addLog(LOG_LEVEL_ERROR, strformat(
+             F("%s(%u) out of range (max: %u) for taskIndex %u (line: %u)"),
+             FsP(prefix),
+             n,
+             max_n,
+             event->TaskIndex + 1,
+             linenr));
+# else 
+    addLog(LOG_LEVEL_ERROR, strformat(
+             F("%s(%u) out of range (max: %u) for taskIndex %u"),
+             FsP(prefix),
+             n,
+             max_n,
+             event->TaskIndex + 1));
+# endif 
   }
   return true;
 }
 
-int16_t& do_PCONFIG(struct EventStruct *event, uint8_t n)
+int16_t& do_PCONFIG(
+  const struct EventStruct *event,
+  uint8_t                   n
+# if DEBUG_PCONFIG_RANGE_CHECK > 1
+  ,
+  uint16_t                  linenr
+#  if DEBUG_PCONFIG_RANGE_CHECK > 2
+  , const __FlashStringHelper *filename
+#  endif
+# endif 
+  )
 {
   constexpr uint8_t max_n = NR_ELEMENTS(Settings.TaskDevicePluginConfig[0]);
 
-  if (!PCONFIGxxx_outOfBounds(F("PCONFIG"), event, n, max_n)) {
+  if (!PCONFIGxxx_outOfBounds(
+        F("PCONFIG"),
+        event,
+        n,
+        max_n
+# if DEBUG_PCONFIG_RANGE_CHECK > 1
+        , linenr
+# endif
+# if DEBUG_PCONFIG_RANGE_CHECK > 2
+        , filename
+# endif
+        )) {
     return Settings.TaskDevicePluginConfig[event->TaskIndex][(n)];
   }
   static int16_t invalid{};
@@ -43,11 +96,32 @@ int16_t& do_PCONFIG(struct EventStruct *event, uint8_t n)
   return invalid;
 }
 
-float& do_PCONFIG_FLOAT(struct EventStruct *event, uint8_t n)
+float& do_PCONFIG_FLOAT(
+  const struct EventStruct *event,
+  uint8_t                   n
+# if DEBUG_PCONFIG_RANGE_CHECK > 1
+  ,
+  uint16_t                  linenr
+#  if DEBUG_PCONFIG_RANGE_CHECK > 2
+  , const __FlashStringHelper *filename
+#  endif
+# endif 
+  )
 {
   constexpr uint8_t max_n = NR_ELEMENTS(Settings.TaskDevicePluginConfigFloat[0]);
 
-  if (!PCONFIGxxx_outOfBounds(F("PCONFIG_FLOAT"), event, n, max_n)) {
+  if (!PCONFIGxxx_outOfBounds(
+        F("PCONFIG_FLOAT"),
+        event,
+        n,
+        max_n
+# if DEBUG_PCONFIG_RANGE_CHECK > 1
+        , linenr
+# endif
+# if DEBUG_PCONFIG_RANGE_CHECK > 2
+        , filename
+# endif
+        )) {
     return Settings.TaskDevicePluginConfigFloat[event->TaskIndex][(n)];
   }
 
@@ -56,11 +130,32 @@ float& do_PCONFIG_FLOAT(struct EventStruct *event, uint8_t n)
   return invalid;
 }
 
-int32_t& do_PCONFIG_LONG(struct EventStruct *event, uint8_t n)
+int32_t& do_PCONFIG_LONG(
+  const struct EventStruct *event,
+  uint8_t                   n
+# if DEBUG_PCONFIG_RANGE_CHECK > 1
+  ,
+  uint16_t                  linenr
+#  if DEBUG_PCONFIG_RANGE_CHECK > 2
+  , const __FlashStringHelper *filename
+#  endif
+# endif 
+  )
 {
   constexpr uint8_t max_n = NR_ELEMENTS(Settings.TaskDevicePluginConfigLong[0]);
 
-  if (!PCONFIGxxx_outOfBounds(F("PCONFIG_LONG"), event, n, max_n)) {
+  if (!PCONFIGxxx_outOfBounds(
+        F("PCONFIG_LONG"),
+        event,
+        n,
+        max_n
+# if DEBUG_PCONFIG_RANGE_CHECK > 1
+        , linenr
+# endif
+# if DEBUG_PCONFIG_RANGE_CHECK > 2
+        , filename
+# endif
+        )) {
     return Settings.TaskDevicePluginConfigLong[event->TaskIndex][(n)];
   }
   static int32_t invalid{};
@@ -68,11 +163,32 @@ int32_t& do_PCONFIG_LONG(struct EventStruct *event, uint8_t n)
   return invalid;
 }
 
-uint32_t& do_PCONFIG_ULONG(struct EventStruct *event, uint8_t n)
+uint32_t& do_PCONFIG_ULONG(
+  const struct EventStruct *event,
+  uint8_t                   n
+# if DEBUG_PCONFIG_RANGE_CHECK > 1
+  ,
+  uint16_t                  linenr
+#  if DEBUG_PCONFIG_RANGE_CHECK > 2
+  , const __FlashStringHelper *filename
+#  endif
+# endif 
+  )
 {
   constexpr uint8_t max_n = NR_ELEMENTS(Settings.TaskDevicePluginConfigULong[0]);
 
-  if (!PCONFIGxxx_outOfBounds(F("PCONFIG_ULONG"), event, n, max_n)) {
+  if (!PCONFIGxxx_outOfBounds(
+        F("PCONFIG_ULONG"),
+        event,
+        n,
+        max_n
+# if DEBUG_PCONFIG_RANGE_CHECK > 1
+        , linenr
+# endif
+# if DEBUG_PCONFIG_RANGE_CHECK > 2
+        , filename
+# endif
+        )) {
     return Settings.TaskDevicePluginConfigULong[event->TaskIndex][(n)];
   }
   static uint32_t invalid{};
@@ -80,12 +196,33 @@ uint32_t& do_PCONFIG_ULONG(struct EventStruct *event, uint8_t n)
   return invalid;
 }
 
-int8_t& do_PIN(struct EventStruct *event, uint8_t n)
+int8_t& do_PIN(
+  const struct EventStruct *event,
+  uint8_t                   n
+# if DEBUG_PCONFIG_RANGE_CHECK > 1
+  ,
+  uint16_t                  linenr
+#  if DEBUG_PCONFIG_RANGE_CHECK > 2
+  , const __FlashStringHelper *filename
+#  endif
+# endif 
+  )
 {
   // N.B. order of array indices taskIndex_t and n differs from the other PCONFIGxxx
   constexpr uint8_t max_n = 3;
 
-  if (!PCONFIGxxx_outOfBounds(F("PIN"), event, n, max_n)) {
+  if (!PCONFIGxxx_outOfBounds(
+        F("PIN"),
+        event,
+        n,
+        max_n
+# if DEBUG_PCONFIG_RANGE_CHECK > 1
+        , linenr
+# endif
+# if DEBUG_PCONFIG_RANGE_CHECK > 2
+        , filename
+# endif
+        )) {
     return Settings.TaskDevicePin[n][event->TaskIndex];
   }
   static int8_t invalid{};
@@ -126,9 +263,9 @@ bool initPluginTaskData(taskIndex_t taskIndex, PluginTaskData_base *data) {
   }
 
   // 2nd heap may have been active to allocate the PluginTaskData, but here we need to keep the default heap active
-  #ifdef USE_SECOND_HEAP
+#ifdef USE_SECOND_HEAP
   HeapSelectDram ephemeral;
-  #endif // ifdef USE_SECOND_HEAP
+#endif // ifdef USE_SECOND_HEAP
 
 
   clearPluginTaskData(taskIndex);
@@ -138,7 +275,7 @@ bool initPluginTaskData(taskIndex_t taskIndex, PluginTaskData_base *data) {
       Plugin_task_data[taskIndex]                     = data;
       Plugin_task_data[taskIndex]->_taskdata_pluginID = Settings.getPluginID_for_task(taskIndex);
 
-  #if FEATURE_PLUGIN_STATS
+#if FEATURE_PLUGIN_STATS
       const uint8_t valueCount = getValueCountForTask(taskIndex);
 
       for (size_t i = 0; i < valueCount; ++i) {
@@ -146,12 +283,12 @@ bool initPluginTaskData(taskIndex_t taskIndex, PluginTaskData_base *data) {
           Plugin_task_data[taskIndex]->initPluginStats(i);
         }
       }
-  #endif // if FEATURE_PLUGIN_STATS
-  #if FEATURE_PLUGIN_FILTER
+#endif // if FEATURE_PLUGIN_STATS
+#if FEATURE_PLUGIN_FILTER
 
       // TODO TD-er: Implement init
 
-  #endif // if FEATURE_PLUGIN_FILTER
+#endif // if FEATURE_PLUGIN_FILTER
 
     } else {
       delete data;

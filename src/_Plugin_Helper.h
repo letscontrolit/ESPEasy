@@ -63,68 +63,148 @@
 #include "src/WebServer/ESPEasy_WebServer.h"
 
 #if DEBUG_PCONFIG_RANGE_CHECK
-int16_t&  do_PCONFIG(struct EventStruct *event,
-                     uint8_t             n);
-float&    do_PCONFIG_FLOAT(struct EventStruct *event,
-                           uint8_t             n);
-int32_t&  do_PCONFIG_LONG(struct EventStruct *event,
-                          uint8_t             n);
-uint32_t& do_PCONFIG_ULONG(struct EventStruct *event,
-                           uint8_t             n);
-int8_t&   do_PIN(struct EventStruct *event,
-                 uint8_t             n);
+int16_t& do_PCONFIG(
+  const struct EventStruct *event,
+  uint8_t                   n
+# if DEBUG_PCONFIG_RANGE_CHECK > 1
+  ,
+  uint16_t                  linenr
+#  if DEBUG_PCONFIG_RANGE_CHECK > 2
+  ,
+  const __FlashStringHelper *filename
+#  endif // if DEBUG_PCONFIG_RANGE_CHECK > 2
+# endif // if DEBUG_PCONFIG_RANGE_CHECK > 1
+  );
+float& do_PCONFIG_FLOAT(
+  const struct EventStruct *event,
+  uint8_t                   n
+# if DEBUG_PCONFIG_RANGE_CHECK > 1
+  ,
+  uint16_t                  linenr
+#  if DEBUG_PCONFIG_RANGE_CHECK > 2
+  ,
+  const __FlashStringHelper *filename
+#  endif // if DEBUG_PCONFIG_RANGE_CHECK > 2
+# endif // if DEBUG_PCONFIG_RANGE_CHECK > 1
+  );
+int32_t& do_PCONFIG_LONG(
+  const struct EventStruct *event,
+  uint8_t                   n
+# if DEBUG_PCONFIG_RANGE_CHECK > 1
+  ,
+  uint16_t                  linenr
+#  if DEBUG_PCONFIG_RANGE_CHECK > 2
+  ,
+  const __FlashStringHelper *filename
+#  endif // if DEBUG_PCONFIG_RANGE_CHECK > 2
+# endif // if DEBUG_PCONFIG_RANGE_CHECK > 1
+  );
+uint32_t& do_PCONFIG_ULONG(
+  const struct EventStruct *event,
+  uint8_t                   n
+# if DEBUG_PCONFIG_RANGE_CHECK > 1
+  ,
+  uint16_t                  linenr
+#  if DEBUG_PCONFIG_RANGE_CHECK > 2
+  ,
+  const __FlashStringHelper *filename
+#  endif // if DEBUG_PCONFIG_RANGE_CHECK > 2
+# endif // if DEBUG_PCONFIG_RANGE_CHECK > 1
+  );
+int8_t& do_PIN(
+  const struct EventStruct *event,
+  uint8_t                   n
+# if DEBUG_PCONFIG_RANGE_CHECK > 1
+  ,
+  uint16_t                  linenr
+#  if DEBUG_PCONFIG_RANGE_CHECK > 2
+  ,
+  const __FlashStringHelper *filename
+#  endif // if DEBUG_PCONFIG_RANGE_CHECK > 2
+# endif // if DEBUG_PCONFIG_RANGE_CHECK > 1
+  );
 #endif // if DEBUG_PCONFIG_RANGE_CHECK
 
 
 // Defines to make plugins more readable.
 #ifndef PCONFIG
-  # if DEBUG_PCONFIG_RANGE_CHECK
-    #  define PCONFIG(n) do_PCONFIG(event, n)
-  # else
-    #  define PCONFIG(n) (Settings.TaskDevicePluginConfig[event->TaskIndex][(n)])
-  # endif // if DEBUG_PCONFIG_RANGE_CHECK
+# if DEBUG_PCONFIG_RANGE_CHECK
+#  if DEBUG_PCONFIG_RANGE_CHECK > 2
+#   define PCONFIG(n) do_PCONFIG(event, n, __LINE__, F(__FILE__))
+#  elif DEBUG_PCONFIG_RANGE_CHECK > 1
+#   define PCONFIG(n) do_PCONFIG(event, n, __LINE__)
+#  else // if DEBUG_PCONFIG_RANGE_CHECK > 2
+#   define PCONFIG(n) do_PCONFIG(event, n)
+#  endif // if DEBUG_PCONFIG_RANGE_CHECK > 2
+# else // if DEBUG_PCONFIG_RANGE_CHECK
+#  define PCONFIG(n) (Settings.TaskDevicePluginConfig[event->TaskIndex][(n)])
+# endif // if DEBUG_PCONFIG_RANGE_CHECK
 #endif // ifndef PCONFIG
 #ifndef PCONFIG_FLOAT
-  # if DEBUG_PCONFIG_RANGE_CHECK
-    #  define PCONFIG_FLOAT(n) do_PCONFIG_FLOAT(event, n)
-  # else
-    #  define PCONFIG_FLOAT(n) (Settings.TaskDevicePluginConfigFloat[event->TaskIndex][(n)])
-  # endif // if DEBUG_PCONFIG_RANGE_CHECK
+# if DEBUG_PCONFIG_RANGE_CHECK
+#  if DEBUG_PCONFIG_RANGE_CHECK > 2
+#   define PCONFIG_FLOAT(n) do_PCONFIG_FLOAT(event, n, __LINE__, F(__FILE__))
+#  elif DEBUG_PCONFIG_RANGE_CHECK > 1
+#   define PCONFIG_FLOAT(n) do_PCONFIG_FLOAT(event, n, __LINE__)
+#  else // if DEBUG_PCONFIG_RANGE_CHECK > 2
+#   define PCONFIG_FLOAT(n) do_PCONFIG_FLOAT(event, n)
+#  endif // if DEBUG_PCONFIG_RANGE_CHECK > 2
+# else // if DEBUG_PCONFIG_RANGE_CHECK
+#  define PCONFIG_FLOAT(n) (Settings.TaskDevicePluginConfigFloat[event->TaskIndex][(n)])
+# endif // if DEBUG_PCONFIG_RANGE_CHECK
 #endif // ifndef PCONFIG_FLOAT
 #ifndef PCONFIG_LONG
-  # if DEBUG_PCONFIG_RANGE_CHECK
-    #  define PCONFIG_LONG(n) do_PCONFIG_LONG(event, n)
-  # else
-    #  define PCONFIG_LONG(n) (Settings.TaskDevicePluginConfigLong[event->TaskIndex][(n)])
-  # endif // if DEBUG_PCONFIG_RANGE_CHECK
+# if DEBUG_PCONFIG_RANGE_CHECK
+#  if DEBUG_PCONFIG_RANGE_CHECK > 2
+#   define PCONFIG_LONG(n) do_PCONFIG_LONG(event, n, __LINE__, F(__FILE__))
+#  elif DEBUG_PCONFIG_RANGE_CHECK > 1
+#   define PCONFIG_LONG(n) do_PCONFIG_LONG(event, n, __LINE__)
+#  else // if DEBUG_PCONFIG_RANGE_CHECK > 2
+#   define PCONFIG_LONG(n) do_PCONFIG_LONG(event, n)
+#  endif // if DEBUG_PCONFIG_RANGE_CHECK > 2
+# else // if DEBUG_PCONFIG_RANGE_CHECK
+#  define PCONFIG_LONG(n) (Settings.TaskDevicePluginConfigLong[event->TaskIndex][(n)])
+# endif // if DEBUG_PCONFIG_RANGE_CHECK
 #endif // ifndef PCONFIG_LONG
 #ifndef PCONFIG_ULONG
-  # if DEBUG_PCONFIG_RANGE_CHECK
-    #  define PCONFIG_ULONG(n) do_PCONFIG_ULONG(event, n)
-  # else
-    #  define PCONFIG_ULONG(n) (Settings.TaskDevicePluginConfigULong[event->TaskIndex][(n)])
-  # endif // if DEBUG_PCONFIG_RANGE_CHECK
+# if DEBUG_PCONFIG_RANGE_CHECK
+#  if DEBUG_PCONFIG_RANGE_CHECK > 2
+#   define PCONFIG_ULONG(n) do_PCONFIG_ULONG(event, n, __LINE__, F(__FILE__))
+#  elif DEBUG_PCONFIG_RANGE_CHECK > 1
+#   define PCONFIG_ULONG(n) do_PCONFIG_ULONG(event, n, __LINE__)
+#  else // if DEBUG_PCONFIG_RANGE_CHECK > 2
+#   define PCONFIG_ULONG(n) do_PCONFIG_ULONG(event, n)
+#  endif // if DEBUG_PCONFIG_RANGE_CHECK > 2
+# else // if DEBUG_PCONFIG_RANGE_CHECK
+#  define PCONFIG_ULONG(n) (Settings.TaskDevicePluginConfigULong[event->TaskIndex][(n)])
+# endif // if DEBUG_PCONFIG_RANGE_CHECK
 #endif // ifndef PCONFIG_ULONG
 #ifndef PIN
 
 // Please note the 'offset' of N compared to normal pin numbering.
-  # if DEBUG_PCONFIG_RANGE_CHECK
-    #  define PIN(n) do_PIN(event, n)
-  # else
-  #  define PIN(n) (Settings.TaskDevicePin[n][event->TaskIndex])
-  # endif // if DEBUG_PCONFIG_RANGE_CHECK
+# if DEBUG_PCONFIG_RANGE_CHECK
+#  if DEBUG_PCONFIG_RANGE_CHECK > 2
+#   define PIN(n) do_PIN(event, n, __LINE__, F(__FILE__))
+#  elif DEBUG_PCONFIG_RANGE_CHECK > 1
+#   define PIN(n) do_PIN(event, n, __LINE__)
+#  else // if DEBUG_PCONFIG_RANGE_CHECK > 2
+#   define PIN(n) do_PIN(event, n)
+#  endif // if DEBUG_PCONFIG_RANGE_CHECK > 2
+# else // if DEBUG_PCONFIG_RANGE_CHECK
+#  define PIN(n) (Settings.TaskDevicePin[n][event->TaskIndex])
+# endif // if DEBUG_PCONFIG_RANGE_CHECK
 #endif // ifndef PIN
 #ifndef CONFIG_PIN1
-  # define CONFIG_PIN1 (Settings.TaskDevicePin1[event->TaskIndex])
+# define CONFIG_PIN1 (Settings.TaskDevicePin1[event->TaskIndex])
 #endif // ifndef CONFIG_PIN1
 #ifndef CONFIG_PIN2
-  # define CONFIG_PIN2 (Settings.TaskDevicePin2[event->TaskIndex])
+# define CONFIG_PIN2 (Settings.TaskDevicePin2[event->TaskIndex])
 #endif // ifndef CONFIG_PIN2
 #ifndef CONFIG_PIN3
-  # define CONFIG_PIN3 (Settings.TaskDevicePin3[event->TaskIndex])
+# define CONFIG_PIN3 (Settings.TaskDevicePin3[event->TaskIndex])
 #endif // ifndef CONFIG_PIN3
 #ifndef CONFIG_PORT
-  # define CONFIG_PORT (Settings.TaskDevicePort[event->TaskIndex])
+# define CONFIG_PORT (Settings.TaskDevicePort[event->TaskIndex])
 #endif // ifndef CONFIG_PORT
 
 
