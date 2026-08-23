@@ -63,66 +63,19 @@
 #include "src/WebServer/ESPEasy_WebServer.h"
 
 #if DEBUG_PCONFIG_RANGE_CHECK
-int16_t& do_PCONFIG(
-  const struct EventStruct *event,
-  uint8_t                   n
-# if DEBUG_PCONFIG_RANGE_CHECK > 1
-  ,
-  uint16_t                  linenr
-#  if DEBUG_PCONFIG_RANGE_CHECK > 2
-  ,
-  const __FlashStringHelper *filename
-#  endif // if DEBUG_PCONFIG_RANGE_CHECK > 2
-# endif // if DEBUG_PCONFIG_RANGE_CHECK > 1
-  );
-float& do_PCONFIG_FLOAT(
-  const struct EventStruct *event,
-  uint8_t                   n
-# if DEBUG_PCONFIG_RANGE_CHECK > 1
-  ,
-  uint16_t                  linenr
-#  if DEBUG_PCONFIG_RANGE_CHECK > 2
-  ,
-  const __FlashStringHelper *filename
-#  endif // if DEBUG_PCONFIG_RANGE_CHECK > 2
-# endif // if DEBUG_PCONFIG_RANGE_CHECK > 1
-  );
-int32_t& do_PCONFIG_LONG(
-  const struct EventStruct *event,
-  uint8_t                   n
-# if DEBUG_PCONFIG_RANGE_CHECK > 1
-  ,
-  uint16_t                  linenr
-#  if DEBUG_PCONFIG_RANGE_CHECK > 2
-  ,
-  const __FlashStringHelper *filename
-#  endif // if DEBUG_PCONFIG_RANGE_CHECK > 2
-# endif // if DEBUG_PCONFIG_RANGE_CHECK > 1
-  );
-uint32_t& do_PCONFIG_ULONG(
-  const struct EventStruct *event,
-  uint8_t                   n
-# if DEBUG_PCONFIG_RANGE_CHECK > 1
-  ,
-  uint16_t                  linenr
-#  if DEBUG_PCONFIG_RANGE_CHECK > 2
-  ,
-  const __FlashStringHelper *filename
-#  endif // if DEBUG_PCONFIG_RANGE_CHECK > 2
-# endif // if DEBUG_PCONFIG_RANGE_CHECK > 1
-  );
-int8_t& do_PIN(
-  const struct EventStruct *event,
-  uint8_t                   n
-# if DEBUG_PCONFIG_RANGE_CHECK > 1
-  ,
-  uint16_t                  linenr
-#  if DEBUG_PCONFIG_RANGE_CHECK > 2
-  ,
-  const __FlashStringHelper *filename
-#  endif // if DEBUG_PCONFIG_RANGE_CHECK > 2
-# endif // if DEBUG_PCONFIG_RANGE_CHECK > 1
-  );
+# if DEBUG_PCONFIG_RANGE_CHECK > 2
+#  define DEBUG_PCONFIG_RANGE_CHECK_args_decl   const struct EventStruct *event, uint8_t n, uint16_t linenr, const __FlashStringHelper *filename
+# elif DEBUG_PCONFIG_RANGE_CHECK > 1
+#  define DEBUG_PCONFIG_RANGE_CHECK_args_decl   const struct EventStruct *event, uint8_t n, uint16_t linenr
+# else
+#  define DEBUG_PCONFIG_RANGE_CHECK_args_decl   const struct EventStruct *event, uint8_t n
+#endif
+
+int16_t& do_PCONFIG(DEBUG_PCONFIG_RANGE_CHECK_args_decl);
+float& do_PCONFIG_FLOAT(DEBUG_PCONFIG_RANGE_CHECK_args_decl);
+int32_t& do_PCONFIG_LONG(DEBUG_PCONFIG_RANGE_CHECK_args_decl);
+uint32_t& do_PCONFIG_ULONG(DEBUG_PCONFIG_RANGE_CHECK_args_decl);
+int8_t& do_PIN(DEBUG_PCONFIG_RANGE_CHECK_args_decl);
 #endif // if DEBUG_PCONFIG_RANGE_CHECK
 
 
