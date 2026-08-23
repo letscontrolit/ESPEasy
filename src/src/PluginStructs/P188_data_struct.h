@@ -103,26 +103,6 @@
 #define P188_OUTPUT_TYPE      PCONFIG(5)
 #define P188_CONFIG_BITS      PCONFIG(6)
 
-#define P188_CAL_INDEX        0
-#define P188_CAL_RAW0_P1      PCONFIG_LONG(0)
-#define P188_CAL_RAW0_P2      PCONFIG_LONG(1)
-#define P188_CAL_RAW1_P1      PCONFIG_LONG(2)
-#define P188_CAL_RAW1_P2      PCONFIG_LONG(3)
-#define P188_CAL_RAW2_P1      PCONFIG_LONG(4)
-#define P188_CAL_RAW2_P2      PCONFIG_LONG(5)
-#define P188_CAL_RAW3_P1      PCONFIG_LONG(6)
-#define P188_CAL_RAW3_P2      PCONFIG_LONG(7)
-
-#define P188_CAL_OUT0_P1      PCONFIG_FLOAT(0)
-#define P188_CAL_OUT0_P2      PCONFIG_FLOAT(1)
-#define P188_CAL_OUT1_P1      PCONFIG_FLOAT(2)
-#define P188_CAL_OUT1_P2      PCONFIG_FLOAT(3)
-#define P188_CAL_OUT2_P1      PCONFIG_FLOAT(4)
-#define P188_CAL_OUT2_P2      PCONFIG_FLOAT(5)
-#define P188_CAL_OUT3_P1      PCONFIG_FLOAT(6)
-#define P188_CAL_OUT3_P2      PCONFIG_FLOAT(7)
-
-
 struct P188_CONFIG_BITS_t {
   union {
     struct {
@@ -141,12 +121,15 @@ struct P188_CONFIG_BITS_t {
 const __FlashStringHelper* Plugin_188_output_mapping_name(uint8_t value_nr, bool displayString);
 
 struct P188_config_struct {
-    uint8_t  i2cAddress;
-    float ADC_Vref;
-    float R_Clip;
+    uint8_t  i2cAddress{};
+    float ADC_Vref{};
+    float R_Clip{};
+
+    float CalIn[4][2]{}; // 4 calibration points, each with 2 ADC values
+    float CalOut[4][2]{}; // 4 calibration points, each with 2 output values
 #ifdef P188_FEATURE_RESISTOR_MEASUREMENT
-    uint32_t Rref[VARS_PER_TASK];
-    uint32_t Rpar[VARS_PER_TASK];
+    uint32_t Rref[VARS_PER_TASK]{};
+    uint32_t Rpar[VARS_PER_TASK]{};
 #endif // P188_FEATURE_RESISTOR_MEASUREMENT
 };
 

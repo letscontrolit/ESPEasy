@@ -29,18 +29,18 @@ boolean Plugin_188(uint8_t function, struct EventStruct *event, String& string)
       dev.Number             = PLUGIN_ID_188;                    // Plugin ID number.   (PLUGIN_ID_xxx)
       dev.Type               = DEVICE_TYPE_I2C;                  // How the device is connected. e.g. DEVICE_TYPE_SINGLE => connected through 1 datapin
       dev.VType              = Sensor_VType::SENSOR_TYPE_QUAD;   // Type of value the plugin will return. e.g. SENSOR_TYPE_STRING
-      dev.Ports              = 0;                                // Port to use when device has multiple I/O pins  (N.B. not used much)
+//      dev.Ports              = 0;                                // Port to use when device has multiple I/O pins  (N.B. not used much)
       dev.ValueCount         = 4;                                // The number of output values of a plugin. The value should match the number of keys PLUGIN_VALUENAME1_xxx
       dev.OutputDataType     = Output_Data_type_t::Simple;       // Subset of selectable output data types  (Default = no selection)
-      dev.PullUpOption       = false;                            // Allow to set internal pull-up resistors.
-      dev.InverseLogicOption = false;                            // Allow to invert the boolean state (e.g. a switch)
+//      dev.PullUpOption       = false;                            // Allow to set internal pull-up resistors.
+//      dev.InverseLogicOption = false;                            // Allow to invert the boolean state (e.g. a switch)
       dev.FormulaOption      = true;                             // Allow to enter a formula to convert values during read. (not possible with Custom enabled)
-      dev.Custom             = false;
+//      dev.Custom             = false;
       dev.SendDataOption     = true;                             // Allow to send data to a controller.
-      dev.GlobalSyncOption   = false;                            // No longer used. Was used for ESPeasy values sync between nodes
+//      dev.GlobalSyncOption   = false;                            // No longer used. Was used for ESPeasy values sync between nodes
       dev.TimerOption        = true;                             // Allow to set the "Interval" timer for the plugin.
-      dev.TimerOptional      = false;                            // When taskdevice timer is not set and not optional, use default "Interval" delay (Settings.Delay)
-      dev.DecimalsOnly       = false;                            // Allow to set the number of decimals (otherwise treated a 0 decimals)
+//      dev.TimerOptional      = false;                            // When taskdevice timer is not set and not optional, use default "Interval" delay (Settings.Delay)
+//      dev.DecimalsOnly       = false;                            // Allow to set the number of decimals (otherwise treated a 0 decimals)
       dev.CustomVTypeVar     = true;                             // Enable to allow the user to configure the Sensor_VType per Value that's available for the plugin
       dev.PluginStats        = true;                             // Support for PluginStats to record last N task values, show charts etc.
       dev.MqttStateClass     = true;
@@ -123,7 +123,7 @@ boolean Plugin_188(uint8_t function, struct EventStruct *event, String& string)
 
       tmp_config.ADC_Vref = 5.0f;
 #ifdef P188_FEATURE_RESISTOR_MEASUREMENT
-      tmp_config.R_Clip = 0.0f;
+      tmp_config.R_Clip = 10000000.0f;
 #endif
       tmp_config.i2cAddress = P188_I2C_ADDR;
       for (int i = 0; i < VARS_PER_TASK; i++)
@@ -152,15 +152,21 @@ boolean Plugin_188(uint8_t function, struct EventStruct *event, String& string)
 
       addFormFloatNumberBox(F("ADC reference voltage"),F("ADC_Vref"),tmp_config.ADC_Vref,2.35f,5.5f,2,0.01f);
 #ifdef P188_FEATURE_RESISTOR_MEASUREMENT
-      addFormFloatNumberBox(F("Resistor measurment clipping"),F("R_Clip"),tmp_config.R_Clip,0.0f,1000000000,2,0.01f);
+      if ((P188_OUTPUT_MAPPING_0 > 11) || (P188_OUTPUT_MAPPING_1 > 11) || (P188_OUTPUT_MAPPING_2 > 11) || (P188_OUTPUT_MAPPING_3 > 11))
+      {
+        addFormFloatNumberBox(F("Resistor measurment clipping"),F("R_Clip"),tmp_config.R_Clip,0.0f,10000000,2,0.01f);
+      }
 #endif
 
       for (int i = 0; i < valueCount; i++)
       {
         addFormSubHeader(strformat(F("Output %d - %s"), i + 1, FsP(Plugin_188_output_mapping_name(PCONFIG(i + P188_OUTPUT_MAPPING_OFFSET), true))));
 #ifdef P188_FEATURE_RESISTOR_MEASUREMENT
-        addFormNumericBox(F("Reference Resistor Value"), getPluginCustomArgName(i * 8 + 0), tmp_config.Rref[i], 100, 470000);
-        addFormNumericBox(F("Parallel Resistor Value"),  getPluginCustomArgName(i * 8 + 1), tmp_config.Rpar[i],   0, 470000);
+        if (PCONFIG(i + P188_OUTPUT_MAPPING_OFFSET) > 11)
+        {
+          addFormNumericBox(F("Reference Resistor Value"), getPluginCustomArgName(i * 8 + 0), tmp_config.Rref[i], 100, 470000);
+          addFormNumericBox(F("Parallel Resistor Value"),  getPluginCustomArgName(i * 8 + 1), tmp_config.Rpar[i],   0, 470000);
+        }
 #endif // P188_FEATURE_RESISTOR_MEASUREMENT
         addFormCheckBox(F("Output Raw ADC Value"), getPluginCustomArgName(i * 8 + 2), ((P188_configBits.raw_val >> i) & 0x01));
 
@@ -170,13 +176,13 @@ boolean Plugin_188(uint8_t function, struct EventStruct *event, String& string)
 
         addFormCheckBox(F("Enable Calibration"), getPluginCustomArgName(i * 8 + 3), ((P188_configBits.en_cal >> i) & 0x01));
 
-        addFormNumericBox(F("Point 1"), getPluginCustomArgName(i * 8 + 4), PCONFIG_LONG(P188_CAL_INDEX + 2*i), -32768, 32767);
+        addFormFloatNumberBox(F("Point 1"), getPluginCustomArgName(i * 8 + 4), tmp_config.CalIn[i][0], -1000000, 1000000, 2, 1.0f); 
         html_add_estimate_symbol();
-        addTextBox(getPluginCustomArgName(i * 8 + 5), toString(PCONFIG_FLOAT(P188_CAL_INDEX + 2*i), 3), 10);
+        addFloatNumberBox(getPluginCustomArgName(i * 8 + 5), tmp_config.CalOut[i][0], -1000000, 1000000, 2, 1.0f);
 
-        addFormNumericBox(F("Point 2"), getPluginCustomArgName(i * 8 + 6), PCONFIG_LONG(P188_CAL_INDEX + 2*i+1), -32768, 32767);
+        addFormFloatNumberBox(F("Point 2"), getPluginCustomArgName(i * 8 + 6), tmp_config.CalIn[i][1], -1000000, 1000000, 2, 1.0f); 
         html_add_estimate_symbol();
-        addTextBox(getPluginCustomArgName(i * 8 + 7), toString(PCONFIG_FLOAT(P188_CAL_INDEX + 2*i+1), 3), 10);
+        addFloatNumberBox(getPluginCustomArgName(i * 8 + 7), tmp_config.CalOut[i][1], -1000000, 1000000, 2, 1.0f);
       }
 
       success = true;
@@ -205,6 +211,8 @@ boolean Plugin_188(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
     {
       P188_config_struct tmp_config;
+      LoadCustomTaskSettings(event->TaskIndex, (uint8_t *)&(tmp_config), sizeof(tmp_config));  // load configuration from flash
+      
       P188_CONFIG_BITS_t P188_configBits(P188_CONFIG_BITS);
 
       P188_configBits.raw_val = 0;
@@ -215,22 +223,22 @@ boolean Plugin_188(uint8_t function, struct EventStruct *event, String& string)
       tmp_config.ADC_Vref = getFormItemFloat(F("ADC_Vref"));
 
 #ifdef P188_FEATURE_RESISTOR_MEASUREMENT
-      tmp_config.R_Clip = getFormItemFloat(F("R_Clip"));
-#endif
-
-      for (uint8_t i = 0; i < P188_NR_OUTPUT_VALUES; ++i) {
-        const uint8_t pconfigIndex = P188_OUTPUT_MAPPING_OFFSET + i;
-        const uint8_t choice       = PCONFIG(pconfigIndex);
-        sensorTypeHelper_saveOutputSelector(event, pconfigIndex, i, Plugin_188_output_mapping_name(choice, false));
+      if ((P188_OUTPUT_MAPPING_0 > 11) || (P188_OUTPUT_MAPPING_1 > 11) || (P188_OUTPUT_MAPPING_2 > 11) || (P188_OUTPUT_MAPPING_3 > 11))
+      {
+        tmp_config.R_Clip = getFormItemFloat(F("R_Clip"));
       }
+#endif
 
       const int valueCount = getValueCountFromSensorType(static_cast<Sensor_VType>(P188_OUTPUT_TYPE));
 
       for (int i = 0; i < valueCount; i++)
       {
 #ifdef P188_FEATURE_RESISTOR_MEASUREMENT
-        tmp_config.Rref[i] = getFormItemInt(getPluginCustomArgName(i * 8 + 0));
-        tmp_config.Rpar[i] = getFormItemInt(getPluginCustomArgName(i * 8 + 1));
+        if (PCONFIG(i + P188_OUTPUT_MAPPING_OFFSET) > 11)
+        {
+          tmp_config.Rref[i] = getFormItemInt(getPluginCustomArgName(i * 8 + 0));
+          tmp_config.Rpar[i] = getFormItemInt(getPluginCustomArgName(i * 8 + 1));
+        }
 #endif // P188_FEATURE_RESISTOR_MEASUREMENT
 
         P188_configBits.raw_val |= ((uint8_t)isFormItemChecked(getPluginCustomArgName(i * 8 + 2))) << i;
@@ -244,12 +252,18 @@ boolean Plugin_188(uint8_t function, struct EventStruct *event, String& string)
         P188_CONFIG_BITS           = P188_configBits.pconfigvalue(); 
 
         // Point 1
-        PCONFIG_LONG(P188_CAL_INDEX + 2*i) = getFormItemInt(getPluginCustomArgName(i * 8 + 4));
-        PCONFIG_FLOAT(P188_CAL_INDEX + 2*i) = getFormItemFloat(getPluginCustomArgName(i * 8 + 5));
+        tmp_config.CalIn[i][0] = getFormItemFloat(getPluginCustomArgName(i * 8 + 4));
+        tmp_config.CalOut[i][0] = getFormItemFloat(getPluginCustomArgName(i * 8 + 5));
 
         // Point 2
-        PCONFIG_LONG(P188_CAL_INDEX + 2*i+1) = getFormItemInt(getPluginCustomArgName(i * 8 + 6));
-        PCONFIG_FLOAT(P188_CAL_INDEX + 2*i+1) = getFormItemFloat(getPluginCustomArgName(i * 8 + 7));
+        tmp_config.CalIn[i][1] = getFormItemFloat(getPluginCustomArgName(i * 8 + 6));
+        tmp_config.CalOut[i][1] = getFormItemFloat(getPluginCustomArgName(i * 8 + 7));
+      }
+
+      for (uint8_t i = 0; i < P188_NR_OUTPUT_VALUES; ++i) {
+        const uint8_t pconfigIndex = P188_OUTPUT_MAPPING_OFFSET + i;
+        const uint8_t choice       = PCONFIG(pconfigIndex);
+        sensorTypeHelper_saveOutputSelector(event, pconfigIndex, i, Plugin_188_output_mapping_name(choice, false));
       }
 
       success = SaveCustomTaskSettings(event->TaskIndex, (uint8_t *)&(tmp_config), sizeof(tmp_config), 0);  // save configuration to flash
@@ -312,10 +326,10 @@ boolean Plugin_188(uint8_t function, struct EventStruct *event, String& string)
               {
                 if ((P188_configBits.en_cal >> i) & 0x01) 
                 { // do calibration
-                  const int   adc1 = PCONFIG_LONG(P188_CAL_INDEX + 2*i);
-                  const int   adc2 = PCONFIG_LONG(P188_CAL_INDEX + 2*i+1);
-                  const float out1 = PCONFIG_FLOAT(P188_CAL_INDEX + 2*i);
-                  const float out2 = PCONFIG_FLOAT(P188_CAL_INDEX + 2*i+1);
+                  const float adc1 = P188_data->P188_config.CalIn[i][0];
+                  const float adc2 = P188_data->P188_config.CalIn[i][1];
+                  const float out1 = P188_data->P188_config.CalOut[i][0];
+                  const float out2 = P188_data->P188_config.CalOut[i][1];
 
                   if (adc1 != adc2) 
                   {
@@ -381,10 +395,10 @@ boolean Plugin_188(uint8_t function, struct EventStruct *event, String& string)
 
               if ((P188_configBits.en_cal >> i) & 0x01) 
               { // do calibration
-                const int   adc1 = PCONFIG_LONG(P188_CAL_INDEX + 2*i);
-                const int   adc2 = PCONFIG_LONG(P188_CAL_INDEX + 2*i+1);
-                const float out1 = PCONFIG_FLOAT(P188_CAL_INDEX + 2*i);
-                const float out2 = PCONFIG_FLOAT(P188_CAL_INDEX + 2*i+1);
+                const float adc1 = P188_data->P188_config.CalIn[i][0];
+                const float adc2 = P188_data->P188_config.CalIn[i][1];
+                const float out1 = P188_data->P188_config.CalOut[i][0];
+                const float out2 = P188_data->P188_config.CalOut[i][1];
 
                 if (adc1 != adc2) 
                 {
