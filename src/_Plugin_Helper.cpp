@@ -16,17 +16,28 @@
 PluginTaskData_base *Plugin_task_data[TASKS_MAX] = {};
 
 #if DEBUG_PCONFIG_RANGE_CHECK
+
+bool PCONFIGxxx_outOfBounds(const __FlashStringHelper *prefix, const struct EventStruct *event, const uint8_t n, const uint8_t max_n)
+{
+  if (validTaskIndex(event->TaskIndex) && (n < max_n)) { return false; }
+
+  if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+    addLog(LOG_LEVEL_ERROR, strformat(
+             F("%s(%u) out of range for taskIndex %u"),
+             FsP(prefix),
+             n,
+             event->TaskIndex));
+  }
+  return true;
+}
+
 int16_t& do_PCONFIG(struct EventStruct *event, uint8_t n)
 {
   constexpr uint8_t max_n = NR_ELEMENTS(Settings.TaskDevicePluginConfig[0]);
-  if (validTaskIndex(event->TaskIndex) && n < max_n)
+
+  if (!PCONFIGxxx_outOfBounds(F("PCONFIG"), event, n, max_n)) {
     return Settings.TaskDevicePluginConfig[event->TaskIndex][(n)];
-
-  if (loglevelActiveFor(LOG_LEVEL_DEBUG))
-    addLog(LOG_LEVEL_DEBUG, concat(
-      F("PCONFIG"),
-      strformat(F("(%u) out of range for taskIndex %u"), n, event->TaskIndex)));
-
+  }
   static int16_t invalid{};
   invalid = 0;
   return invalid;
@@ -35,13 +46,10 @@ int16_t& do_PCONFIG(struct EventStruct *event, uint8_t n)
 float& do_PCONFIG_FLOAT(struct EventStruct *event, uint8_t n)
 {
   constexpr uint8_t max_n = NR_ELEMENTS(Settings.TaskDevicePluginConfigFloat[0]);
-  if (validTaskIndex(event->TaskIndex) && n < max_n)
-    return Settings.TaskDevicePluginConfigFloat[event->TaskIndex][(n)];
 
-  if (loglevelActiveFor(LOG_LEVEL_DEBUG))
-    addLog(LOG_LEVEL_DEBUG, concat(
-      F("PCONFIG_FLOAT"),
-      strformat(F("(%u) out of range for taskIndex %u"), n, event->TaskIndex)));
+  if (!PCONFIGxxx_outOfBounds(F("PCONFIG_FLOAT"), event, n, max_n)) {
+    return Settings.TaskDevicePluginConfigFloat[event->TaskIndex][(n)];
+  }
 
   static float invalid{};
   invalid = 0;
@@ -51,14 +59,10 @@ float& do_PCONFIG_FLOAT(struct EventStruct *event, uint8_t n)
 int32_t& do_PCONFIG_LONG(struct EventStruct *event, uint8_t n)
 {
   constexpr uint8_t max_n = NR_ELEMENTS(Settings.TaskDevicePluginConfigLong[0]);
-  if (validTaskIndex(event->TaskIndex) && n < max_n)
+
+  if (!PCONFIGxxx_outOfBounds(F("PCONFIG_LONG"), event, n, max_n)) {
     return Settings.TaskDevicePluginConfigLong[event->TaskIndex][(n)];
-
-  if (loglevelActiveFor(LOG_LEVEL_DEBUG))
-    addLog(LOG_LEVEL_DEBUG, concat(
-      F("PCONFIG_LONG"),
-      strformat(F("(%u) out of range for taskIndex %u"), n, event->TaskIndex)));
-
+  }
   static int32_t invalid{};
   invalid = 0;
   return invalid;
@@ -67,39 +71,29 @@ int32_t& do_PCONFIG_LONG(struct EventStruct *event, uint8_t n)
 uint32_t& do_PCONFIG_ULONG(struct EventStruct *event, uint8_t n)
 {
   constexpr uint8_t max_n = NR_ELEMENTS(Settings.TaskDevicePluginConfigULong[0]);
-  if (validTaskIndex(event->TaskIndex) && n < max_n)
+
+  if (!PCONFIGxxx_outOfBounds(F("PCONFIG_ULONG"), event, n, max_n)) {
     return Settings.TaskDevicePluginConfigULong[event->TaskIndex][(n)];
-
-  if (loglevelActiveFor(LOG_LEVEL_DEBUG))
-    addLog(LOG_LEVEL_DEBUG, concat(
-      F("PCONFIG_ULONG"),
-      strformat(F("(%u) out of range for taskIndex %u"), n, event->TaskIndex)));
-
-
+  }
   static uint32_t invalid{};
   invalid = 0;
   return invalid;
 }
 
-
 int8_t& do_PIN(struct EventStruct *event, uint8_t n)
 {
   // N.B. order of array indices taskIndex_t and n differs from the other PCONFIGxxx
   constexpr uint8_t max_n = 3;
-  if (validTaskIndex(event->TaskIndex) && n < max_n)
+
+  if (!PCONFIGxxx_outOfBounds(F("PIN"), event, n, max_n)) {
     return Settings.TaskDevicePin[n][event->TaskIndex];
-
-  if (loglevelActiveFor(LOG_LEVEL_DEBUG))
-      addLog(LOG_LEVEL_DEBUG, concat(
-      F("PIN"),
-      strformat(F("(%u) out of range for taskIndex %u"), n, event->TaskIndex)));
-
+  }
   static int8_t invalid{};
   invalid = -1;
   return invalid;
 }
 
-#endif
+#endif // if DEBUG_PCONFIG_RANGE_CHECK
 
 String PCONFIG_LABEL(int n) {
   if (n < PLUGIN_CONFIGVAR_MAX) {
@@ -132,9 +126,9 @@ bool initPluginTaskData(taskIndex_t taskIndex, PluginTaskData_base *data) {
   }
 
   // 2nd heap may have been active to allocate the PluginTaskData, but here we need to keep the default heap active
-  # ifdef USE_SECOND_HEAP
+  #ifdef USE_SECOND_HEAP
   HeapSelectDram ephemeral;
-  # endif // ifdef USE_SECOND_HEAP
+  #endif // ifdef USE_SECOND_HEAP
 
 
   clearPluginTaskData(taskIndex);
@@ -146,16 +140,18 @@ bool initPluginTaskData(taskIndex_t taskIndex, PluginTaskData_base *data) {
 
   #if FEATURE_PLUGIN_STATS
       const uint8_t valueCount = getValueCountForTask(taskIndex);
+
       for (size_t i = 0; i < valueCount; ++i) {
         if (Cache.enabledPluginStats(taskIndex, i)) {
           Plugin_task_data[taskIndex]->initPluginStats(i);
         }
       }
-  #endif
+  #endif // if FEATURE_PLUGIN_STATS
   #if FEATURE_PLUGIN_FILTER
-  // TODO TD-er: Implement init
 
-  #endif
+      // TODO TD-er: Implement init
+
+  #endif // if FEATURE_PLUGIN_FILTER
 
     } else {
       delete data;
@@ -166,7 +162,7 @@ bool initPluginTaskData(taskIndex_t taskIndex, PluginTaskData_base *data) {
 
 PluginTaskData_base* getPluginTaskData(taskIndex_t taskIndex) {
   if (pluginTaskData_initialized(taskIndex)) {
-    
+
     if (!Plugin_task_data[taskIndex]->baseClassOnly()) {
       return Plugin_task_data[taskIndex];
     }
@@ -181,7 +177,6 @@ PluginTaskData_base* getPluginTaskDataBaseClassOnly(taskIndex_t taskIndex) {
   return nullptr;
 }
 
-
 bool pluginTaskData_initialized(taskIndex_t taskIndex) {
   if (!validTaskIndex(taskIndex)) {
     return false;
@@ -190,29 +185,22 @@ bool pluginTaskData_initialized(taskIndex_t taskIndex) {
          (Plugin_task_data[taskIndex]->_taskdata_pluginID == Settings.getPluginID_for_task(taskIndex));
 }
 
-String getPluginCustomArgName(int varNr) {
-  return getPluginCustomArgName(F("pc_arg"), varNr);
-}
+String getPluginCustomArgName(int varNr)                                   { return getPluginCustomArgName(F("pc_arg"), varNr); }
 
-String getPluginCustomArgName(const __FlashStringHelper * label, int varNr) {
-  return concat(label, varNr + 1);
-}
+String getPluginCustomArgName(const __FlashStringHelper *label, int varNr) { return concat(label, varNr + 1); }
 
-int getFormItemIntCustomArgName(int varNr) {
-  return getFormItemInt(getPluginCustomArgName(varNr));
-}
+int    getFormItemIntCustomArgName(int varNr)                              { return getFormItemInt(getPluginCustomArgName(varNr)); }
 
 // Helper function to create formatted custom values for display in the devices overview page.
 // When called from PLUGIN_WEBFORM_SHOW_VALUES, the last item should add a traling div_br class
 // if the regular values should also be displayed.
 // The call to PLUGIN_WEBFORM_SHOW_VALUES should only return success = true when no regular values should be displayed
 // Note that the varNr of the custom values should not conflict with the existing variable numbers (e.g. start at VARS_PER_TASK)
-void pluginWebformShowValue(taskIndex_t taskIndex, uint8_t varNr, const __FlashStringHelper * label, const String& value, bool addTrailingBreak) {
-  pluginWebformShowValue(taskIndex, varNr, String(label), value, addTrailingBreak);
-}
+void pluginWebformShowValue(taskIndex_t taskIndex, uint8_t varNr, const __FlashStringHelper *label, const String& value,
+                            bool addTrailingBreak) { pluginWebformShowValue(taskIndex, varNr, String(label), value, addTrailingBreak); }
 
 void pluginWebformShowValue(taskIndex_t   taskIndex,
-                            uint8_t          varNr,
+                            uint8_t       varNr,
                             const String& label,
                             const String& value,
                             bool          addTrailingBreak) {
@@ -260,11 +248,12 @@ bool pluginOptionalTaskIndexArgumentMatch(taskIndex_t taskIndex, const String& s
   return found_taskIndex == taskIndex;
 }
 
-bool pluginWebformShowGPIOdescription(taskIndex_t taskIndex,
-                                      const __FlashStringHelper * newline,
-                                      String& description)
+bool pluginWebformShowGPIOdescription(taskIndex_t                taskIndex,
+                                      const __FlashStringHelper *newline,
+                                      String                   & description)
 {
   struct EventStruct TempEvent(taskIndex);
+
   TempEvent.String1 = newline;
   return PluginCall(PLUGIN_WEBFORM_SHOW_GPIO_DESCR, &TempEvent, description);
 }
@@ -284,6 +273,7 @@ int checkDeviceVTypeForTask(struct EventStruct *event) {
       String dummy;
 
       event->idx = -1;
+
       if (PluginCall(PLUGIN_GET_DEVICEVTYPE, event, dummy)) {
         return event->idx; // pconfig_index
       }
