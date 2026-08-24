@@ -36,10 +36,10 @@ bool PCONFIGxxx_outOfBounds(
     const auto pluginID = getPluginID_from_TaskIndex(event->TaskIndex);
 # if DEBUG_PCONFIG_RANGE_CHECK > 1
     addLog(LOG_LEVEL_ERROR, strformat(
-             F("%s(%u) out of range (max: %u) for taskIndex %u (%s: %s) (%s:%u)"),
+             F("%s(%u) out of range (range: 0..%u) for taskIndex %u (%s: %s) (%s:%u)"),
              FsP(prefix),
              n,
-             max_n,
+             max_n - 1,
              event->TaskIndex + 1,
              pluginID.toDisplayString().c_str(),
              getPluginNameFromPluginID(pluginID).c_str(),
@@ -51,10 +51,10 @@ bool PCONFIGxxx_outOfBounds(
              linenr));
 # else 
     addLog(LOG_LEVEL_ERROR, strformat(
-             F("%s(%u) out of range (max: %u) for taskIndex %u (%s: %s)"),
+             F("%s(%u) out of range (range: 0..%u) for taskIndex %u (%s: %s)"),
              FsP(prefix),
              n,
-             max_n,
+             max_n - 1,
              event->TaskIndex + 1,
              pluginID.toDisplayString().c_str(),
              getPluginNameFromPluginID(pluginID).c_str()));

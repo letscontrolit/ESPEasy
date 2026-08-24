@@ -64,18 +64,19 @@
 
 #if DEBUG_PCONFIG_RANGE_CHECK
 # if DEBUG_PCONFIG_RANGE_CHECK > 2
-#  define DEBUG_PCONFIG_RANGE_CHECK_args_decl   const struct EventStruct *event, uint8_t n, uint16_t linenr, const __FlashStringHelper *filename
+#  define DEBUG_PCONFIG_RANGE_CHECK_args_decl   const struct EventStruct *event, uint8_t n, uint16_t linenr, \
+        const __FlashStringHelper *filename
 # elif DEBUG_PCONFIG_RANGE_CHECK > 1
 #  define DEBUG_PCONFIG_RANGE_CHECK_args_decl   const struct EventStruct *event, uint8_t n, uint16_t linenr
-# else
+# else // if DEBUG_PCONFIG_RANGE_CHECK > 2
 #  define DEBUG_PCONFIG_RANGE_CHECK_args_decl   const struct EventStruct *event, uint8_t n
-#endif
+# endif // if DEBUG_PCONFIG_RANGE_CHECK > 2
 
-int16_t& do_PCONFIG(DEBUG_PCONFIG_RANGE_CHECK_args_decl);
-float& do_PCONFIG_FLOAT(DEBUG_PCONFIG_RANGE_CHECK_args_decl);
-int32_t& do_PCONFIG_LONG(DEBUG_PCONFIG_RANGE_CHECK_args_decl);
+int16_t & do_PCONFIG(DEBUG_PCONFIG_RANGE_CHECK_args_decl);
+float   & do_PCONFIG_FLOAT(DEBUG_PCONFIG_RANGE_CHECK_args_decl);
+int32_t & do_PCONFIG_LONG(DEBUG_PCONFIG_RANGE_CHECK_args_decl);
 uint32_t& do_PCONFIG_ULONG(DEBUG_PCONFIG_RANGE_CHECK_args_decl);
-int8_t& do_PIN(DEBUG_PCONFIG_RANGE_CHECK_args_decl);
+int8_t  & do_PIN(DEBUG_PCONFIG_RANGE_CHECK_args_decl);
 #endif // if DEBUG_PCONFIG_RANGE_CHECK
 
 

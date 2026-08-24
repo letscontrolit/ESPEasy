@@ -4654,13 +4654,15 @@ To create/register a plugin, you have to :
 
 
 #ifndef DEBUG_PCONFIG_RANGE_CHECK
+// N.B. Build size increase compared to previous level, based on MAX builds 20260824
+//      Size increase of level 3 depends also on path length of source files.
 // 0: no range check (use for builds with already build size issues)
-// 1: Basic range check, log when out of bounds
-// 2: Include line nr of file where error occured
-// 3: include filename
+// 1: Basic range check, log when out of bounds (+1k)
+// 2: Include line nr of file where error occured (+13k)
+// 3: include filename + path of source file (+23k)
 # ifndef BUILD_NO_DEBUG
 #  ifdef PLUGIN_BUILD_MAX_ESP32
-#   define DEBUG_PCONFIG_RANGE_CHECK 2
+#   define DEBUG_PCONFIG_RANGE_CHECK 3
 #  else
 #   define DEBUG_PCONFIG_RANGE_CHECK 1
 #  endif
