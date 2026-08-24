@@ -1506,7 +1506,7 @@ String getDigestAuth(const String& authReq,
     md5.toString().c_str()); // response
 }
 
-# ifndef BUILD_NO_DEBUG
+# if !defined(BUILD_NO_DEBUG) || defined(ESP32)
 
 void log_http_result(const ESPEasy_HTTPClient& http,
                      const String    & logIdentifier,
@@ -1617,7 +1617,7 @@ int http_authenticate(const String& logIdentifier,
     http.setRedirectLimit(2);
   }
 #  if FEATURE_TLS
-  http.setTimeout(timeout);
+  http.setConnectTimeout(10000);
 #else
   # ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
 
@@ -1643,6 +1643,9 @@ int http_authenticate(const String& logIdentifier,
 # if defined(CORE_POST_2_6_0) || defined(ESP32)
 #  if FEATURE_TLS
   const String fullURL = joinURL(user, pass, host, port, uri, protocol);
+#ifndef LIMIT_BUILD_SIZE
+  addLog(LOG_LEVEL_INFO, concat(F("SendToHTTP full URL: "), fullURL));
+#endif
   if (fullURL.startsWith(F("https")))
     http.begin(fullURL, nullptr); // HTTPS
   else 
@@ -1676,12 +1679,14 @@ int http_authenticate(const String& logIdentifier,
       //      }
     }
   }
+  String tmp = HttpMethod;
+  const char* httpMethod_cstr = &tmp[0];
 
   // start connection and send HTTP header (and body)
   if (equals(HttpMethod, F("HEAD")) || equals(HttpMethod, F("GET"))) {
-    httpCode = http.sendRequest(HttpMethod.c_str());
+    httpCode = http.sendRequest(httpMethod_cstr);
   } else {
-    httpCode = http.sendRequest(HttpMethod.c_str(), postStr);
+    httpCode = http.sendRequest(httpMethod_cstr, postStr);
   }
 
   // Check to see if we need to try digest auth
@@ -1723,9 +1728,9 @@ int http_authenticate(const String& logIdentifier,
 
       // start connection and send HTTP header (and body)
       if (equals(HttpMethod, F("HEAD")) || equals(HttpMethod, F("GET"))) {
-        httpCode = http.sendRequest(HttpMethod.c_str());
+        httpCode = http.sendRequest(httpMethod_cstr);
       } else {
-        httpCode = http.sendRequest(HttpMethod.c_str(), postStr);
+        httpCode = http.sendRequest(httpMethod_cstr, postStr);
       }
     }
   }
@@ -1750,7 +1755,7 @@ int http_authenticate(const String& logIdentifier,
   }
 // -----------------------------------------------------------
 
-# ifndef BUILD_NO_DEBUG
+# if !defined(BUILD_NO_DEBUG) || defined(ESP32)
   log_http_result(http, logIdentifier, host + ':' + port, HttpMethod, httpCode, EMPTY_STRING);
 # endif
   return httpCode;

@@ -483,6 +483,12 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
       return KeyValueStruct(F("MQTT Connect in background"), Settings.MQTTConnectInBackground());
     }
 #endif // if FEATURE_MQTT_CONNECT_BACKGROUND
+    #if FEATURE_MQTT_DISCOVER
+    case LabelType::MQTT_DISCOVER_GROUP_INCL_TASKNAME:
+    {
+      return KeyValueStruct(F("MQTT Discover, Group incl. Taskname"), Settings.MQTTDiscoverGroupInclTaskname());
+    }
+    #endif // if FEATURE_MQTT_DISCOVER
 #if FEATURE_COLORIZE_CONSOLE_LOGS
     case LabelType::COLORIZE_CONSOLE_LOGS:
     {
@@ -1362,7 +1368,7 @@ String getFormNote(LabelType::Enum label)
       break;
 # ifdef ESP32
     case LabelType::WIFI_PASSIVE_SCAN:
-      flash_str = F("Passive scan listens for WiFi beacons, Active scan probes for AP. Passive scan is typically faster.");
+      flash_str = F("Passive scan listens for WiFi beacons, Active scan probes for AP.");
       break;
 # endif // ifdef ESP32
     case LabelType::HIDDEN_SSID_SLOW_CONNECT:

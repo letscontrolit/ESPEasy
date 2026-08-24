@@ -136,6 +136,16 @@ enum class TimingStatsElements {
   WIFI_SCAN_ASYNC,
   WIFI_SCAN_SYNC,
 
+  // EEPROM/RTC related
+#if FEATURE_EEPROM_EXTERNAL
+  READ_EEPROM_SLOT,
+  WRITE_EEPROM_SLOT,
+#endif
+#if FEATURE_RTC_SRAM_STORAGE
+  READ_RTC_SLOT,
+  WRITE_RTC_SLOT,
+#endif
+
   // Time sync (also network related)
   NTP_SUCCESS,
   NTP_FAIL,

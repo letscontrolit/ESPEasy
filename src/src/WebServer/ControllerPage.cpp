@@ -36,10 +36,7 @@ void handle_controllers() {
   checkRAM(F("handle_controllers"));
   # endif // ifndef BUILD_NO_RAM_TRACKER
 
-  if (!isLoggedIn()) { return; }
-  navMenuIndex = MENU_INDEX_CONTROLLERS;
-  TXBuffer.startStream();
-  sendHeadandTail_stdtemplate(_HEAD);
+  if (!startStream_send_stdTemplate(MENU_INDEX_CONTROLLERS)) { return; }
 
   // 'index' value in the URL
   uint8_t controllerindex       = getFormItemInt(F("index"), 0);
@@ -103,7 +100,11 @@ void handle_controllers() {
           mqttDiscoveryTimeout = random(10, MQTT_DISCOVERY_MAX_DELAY_0_1_SECONDS);
 
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            #ifndef BUILD_NO_DEBUG
             addLog(LOG_LEVEL_INFO, strformat(F("MQTT : Start AutoDiscovery on Save. Starting in %.1f sec."), mqttDiscoveryTimeout / 10));
+            #else // ifndef BUILD_NO_DEBUG
+            addLog(LOG_LEVEL_INFO, strformat(F("MQTT : Discovery starting in %.1f sec."), mqttDiscoveryTimeout / 10));
+            #endif // ifndef BUILD_NO_DEBUG
           }
         }
         # endif // if FEATURE_MQTT_DISCOVER
@@ -125,8 +126,6 @@ void handle_controllers() {
     }
   }
 
-  html_add_form();
-
   if (controllerIndexSet)
   {
     handle_controllers_ControllerSettingsPage(controllerindex);
@@ -134,8 +133,7 @@ void handle_controllers() {
     handle_controllers_ShowAllControllersTable();
   }
 
-  sendHeadandTail_stdtemplate(_TAIL);
-  TXBuffer.endStream();
+  sendTail_stdtemplate();
 }
 
 // ********************************************************************************
@@ -217,6 +215,7 @@ void handle_controllers_CopySubmittedSettings_CPluginCall(uint8_t controllerinde
 // ********************************************************************************
 void handle_controllers_ShowAllControllersTable()
 {
+  html_add_form();
   html_table_class_multirow();
   html_TR();
   html_table_header(F(""),        70);
@@ -284,6 +283,8 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
   if (!validControllerIndex(controllerindex)) {
     return;
   }
+
+  html_add_form();
 
   // Show controller settings page
   html_table_class_normal();

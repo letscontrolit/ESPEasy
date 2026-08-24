@@ -259,7 +259,7 @@ void C013_Receive(struct EventStruct *event) {
         // Allocate this is a separate scope since C013_SensorInfoStruct is a HUGE object
         // Should not be left allocated on the stack when calling PLUGIN_INIT and save, etc.
 
-        auto infoReply = C013_SensorInfoStruct::create(event->Data, event->Par2);
+        auto infoReply = C013_SensorInfoStruct::createFromReceived(event->Data, event->Par2);
         if (!infoReply) return;
 
         {
@@ -280,13 +280,13 @@ void C013_Receive(struct EventStruct *event) {
           if ((mustUpdateCurrentTask || !validPluginID_fullcheck(currentPluginID)) &&
               supportedPluginID(infoReply->deviceNumber))
           {
-            taskClear(infoReply->destTaskIndex, false);
+            if (mustUpdateCurrentTask) {
+              setTaskEnableStatus(infoReply->destTaskIndex, false);
+            } else {
+              taskClear(infoReply->destTaskIndex, false);
+            }
             Settings.TaskDeviceNumber[infoReply->destTaskIndex]   = infoReply->deviceNumber.value;
             Settings.TaskDeviceDataFeed[infoReply->destTaskIndex] = infoReply->sourceUnit; // remote feed store unit nr sending the data
-
-            if (mustUpdateCurrentTask) {
-              Settings.TaskDeviceEnabled(infoReply->destTaskIndex, true);
-            }
 
             constexpr pluginID_t DUMMY_PLUGIN_ID{ 33 };
 
@@ -336,8 +336,7 @@ void C013_Receive(struct EventStruct *event) {
           struct EventStruct TempEvent(taskIndex);
           TempEvent.Source = EventValueSource::Enum::VALUE_SOURCE_UDP;
 
-          String dummy;
-          PluginCall(PLUGIN_INIT, &TempEvent, dummy);
+          setTaskEnableStatus(&TempEvent, true);
         }
       }
       break;

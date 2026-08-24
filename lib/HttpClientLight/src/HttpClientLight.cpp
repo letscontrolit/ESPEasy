@@ -625,7 +625,7 @@ int HTTPClientLight::sendRequest(const char * type, uint8_t * payload, size_t si
 
         // connect to server
         if(!connect()) {
-            if (_secure) {
+            if (_secure && _transportTraits) {
                 int32_t ret = _transportTraits->getLastError(*_client);
                 if (ret) {
                     return returnError(-1000 - ret); // BearSSL error 46 transformed to -1046

@@ -2,12 +2,10 @@
 
 #ifdef USES_NW002
 
-# ifdef ESP32
-#  include "../../../src/Globals/Settings.h"
-# endif
-
 # include "../wifi/ESPEasyWifi.h"
+# include "../Globals/NetworkState.h"
 
+# include "../../../src/Globals/Settings.h"
 # include "../../../src/Helpers/Networking.h"
 
 # ifdef ESP32
@@ -95,6 +93,7 @@ bool NW002_data_struct_WiFi_AP::init(EventStruct *event)
     auto runtime_data = getNWPluginData_static_runtime();
 
     if (runtime_data) {
+      runtime_data->clear(event->NetworkIndex);
       IPAddress ip, gateway, sn, dns;
       getStaticIPAddresses(ip, gateway, sn, dns);
       runtime_data->setStaticIP(ip, gateway, sn, dns);
@@ -105,10 +104,16 @@ bool NW002_data_struct_WiFi_AP::init(EventStruct *event)
   nw002_enable_NAPT = Settings.WiFi_AP_enable_NAPT();
 # endif
 
-  ESPEasy::net::wifi::setAPinternal(true);
+  if (!ESPEasy::net::wifi::setAPinternal(true)) {
+    return false;
+  }
 # ifdef ESP32
+
+  if (NW_PLUGIN_INTERFACE.hasIP()) {
+    stats_and_cache.mark_got_IP();
+  }
   NW002_update_NAPT();
-# endif
+# endif // ifdef ESP32
   # if FEATURE_MDNS
   #  ifdef ESP8266
 
@@ -146,28 +151,26 @@ NWPluginData_static_runtime * NW002_data_struct_WiFi_AP::getNWPluginData_static_
 
 bool NW002_data_struct_WiFi_AP::getStaticIPAddress(IPAddressType addressType, IPAddress& ip) const
 {
-  // TODO TD-er: Implement for AP
-
-  /*
-     IPAddress res;
-
-     switch (addressType)
-     {
-      case IPAddressType::IP: res = IPAddress(Settings.IP);
-        break;
-      case IPAddressType::Gateway: res = IPAddress(Settings.Gateway);
-        break;
-      case IPAddressType::Subnetmask: res = IPAddress(Settings.Subnet);
-        break;
-      case IPAddressType::DNS: res = IPAddress(Settings.DNS);
-        break;
-     }
-
-     if (IPAddressSet(res)) {
-      ip = res;
+  switch (addressType)
+  {
+    case IPAddressType::IP:
+      ip = apIP;
       return true;
-     }
-   */
+    case IPAddressType::Gateway:
+      ip = apIP;
+      return true;
+    case IPAddressType::Subnetmask:
+      ip = IPAddress(DEFAULT_AP_SUBNET);
+      return true;
+    case IPAddressType::DNS:
+
+      if (Settings.ApCaptivePortal()) {
+        ip = apIP;
+      } else {
+        ip = IPAddress(DEFAULT_AP_DNS);
+      }
+      return true;
+  }
   return false;
 }
 
@@ -264,6 +267,10 @@ void NW002_data_struct_WiFi_AP::onEvent(arduino_event_id_t   event,
   {
     case ARDUINO_EVENT_WIFI_AP_START:
       stats_and_cache.mark_start();
+
+      if (NW_PLUGIN_INTERFACE.hasIP()) {
+        stats_and_cache.mark_got_IP();
+      }
       break;
     case ARDUINO_EVENT_WIFI_AP_STOP:
       stats_and_cache.mark_stop();
@@ -271,7 +278,12 @@ void NW002_data_struct_WiFi_AP::onEvent(arduino_event_id_t   event,
     case ARDUINO_EVENT_WIFI_AP_STACONNECTED:
       stats_and_cache.mark_connected();
       NW002_update_NAPT();
-      addLog(LOG_LEVEL_INFO, F("AP_STACONNECTED"));
+#  ifndef BUILD_NO_DEBUG
+
+      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+        addLog(LOG_LEVEL_DEBUG, F("AP_STACONNECTED"));
+      }
+#  endif // ifndef BUILD_NO_DEBUG
       break;
     case ARDUINO_EVENT_WIFI_AP_STADISCONNECTED:
 
@@ -279,16 +291,40 @@ void NW002_data_struct_WiFi_AP::onEvent(arduino_event_id_t   event,
         stats_and_cache.mark_disconnected();
       }
       NW002_update_NAPT();
-      addLog(LOG_LEVEL_INFO, F("AP_STADISCONNECTED"));
+#  ifndef BUILD_NO_DEBUG
+
+      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+        addLog(LOG_LEVEL_DEBUG, F("AP_STADISCONNECTED"));
+      }
+#  endif // ifndef BUILD_NO_DEBUG
       break;
     case ARDUINO_EVENT_WIFI_AP_STAIPASSIGNED:
-      addLog(LOG_LEVEL_INFO, F("AP_STAIPASSIGNED"));
+#  ifndef BUILD_NO_DEBUG
+
+      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+        addLog(LOG_LEVEL_DEBUG, F("AP_STAIPASSIGNED"));
+      }
+#  endif // ifndef BUILD_NO_DEBUG
+
+      if (!stats_and_cache.hasIP() && NW_PLUGIN_INTERFACE.hasIP()) {
+        stats_and_cache.mark_got_IP();
+      }
       break;
     case ARDUINO_EVENT_WIFI_AP_PROBEREQRECVED:
-      addLog(LOG_LEVEL_INFO, F("AP_PROBEREQRECVED"));
+#  ifndef BUILD_NO_DEBUG
+
+      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+        addLog(LOG_LEVEL_DEBUG, F("AP_PROBEREQRECVED"));
+      }
+#  endif // ifndef BUILD_NO_DEBUG
       break;
     case ARDUINO_EVENT_WIFI_AP_GOT_IP6:
-      addLog(LOG_LEVEL_INFO, F("AP_GOT_IP6"));
+#  ifndef BUILD_NO_DEBUG
+
+      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+        addLog(LOG_LEVEL_DEBUG, F("AP_GOT_IP6"));
+      }
+#  endif // ifndef BUILD_NO_DEBUG
       break;
 
     default: break;

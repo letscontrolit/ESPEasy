@@ -30,7 +30,8 @@ DeviceStruct::DeviceStruct() :
   OutputDataType(Output_Data_type_t::Default),
   Pin1Direction(static_cast<uint8_t>(gpio_direction::gpio_direction_MAX)),
   Pin2Direction(static_cast<uint8_t>(gpio_direction::gpio_direction_MAX)), 
-  Pin3Direction(static_cast<uint8_t>(gpio_direction::gpio_direction_MAX))
+  Pin3Direction(static_cast<uint8_t>(gpio_direction::gpio_direction_MAX)),
+  SerialPortsAllowed(INCLUDE_DEFAULT_SERIAL)
 {
   // Only initialize union members in the constructor body
   // TODO: Rename this so it can be default initialized to 'false'

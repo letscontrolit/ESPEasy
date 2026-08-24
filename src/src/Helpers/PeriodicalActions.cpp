@@ -38,7 +38,7 @@
 #include "../../ESPEasy/net/Globals/ESPEasyWiFiEvent.h"
 #include "../../ESPEasy/net/Globals/NetworkState.h"
 #include "../../ESPEasy/net/Globals/NWPlugins.h"
-#include "../../ESPEasy/net/wifi/WiFi_State.h"
+#include "../../ESPEasy/net/wifi/WiFi_STA_State.h"
 
 
 #ifdef USES_C015
@@ -48,7 +48,6 @@
 #if FEATURE_MDNS
 #include "../Helpers/MDNS_Helper.h"
 #endif
-
 
 #define PLUGIN_ID_MQTT_IMPORT         37
 
@@ -411,7 +410,12 @@ void updateMQTTclient_connected() {
   const bool actual_MQTTclient_connected = ESPEasy::net::NetworkConnected(true) && MQTTclient.connected();
   if (MQTTclient_connected != actual_MQTTclient_connected) {
     MQTTclient_connected = actual_MQTTclient_connected;
-    if (!actual_MQTTclient_connected) mqtt.stop();  // Make sure PubSubClient isn't trying to do a graceful disconnect
+    if (!actual_MQTTclient_connected) {
+      // Make sure PubSubClient isn't trying to do a graceful disconnect
+      // FIXME TD-er: This seems to cause a crash on ESP32-xx, though no idea how to fix.
+      // See also: https://github.com/espressif/arduino-esp32/issues/12517
+      mqtt.stop();  
+    }
     MQTTclient_connected_stats.set(actual_MQTTclient_connected);
     if (!MQTTclient_connected) {
       if (loglevelActiveFor(LOG_LEVEL_ERROR)) {

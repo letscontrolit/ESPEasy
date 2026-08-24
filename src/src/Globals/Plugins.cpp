@@ -207,15 +207,22 @@ uint8_t getTaskI2CAddress(taskIndex_t taskIndex) {
 // ********************************************************************************
 #if FEATURE_I2C
 bool prepare_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex) {
-  if (!validTaskIndex(taskIndex) || !validDeviceIndex(DeviceIndex)) {
+if (!validTaskIndex(taskIndex) || 
+    !validDeviceIndex(DeviceIndex)) {
     return false;
   }
 
-  if (Device[DeviceIndex].Type != DEVICE_TYPE_I2C) {
-    return true; // No I2C task, so consider all-OK
+  if (!Settings.TaskDeviceEnabled(taskIndex) || 
+      Device[DeviceIndex].Type != DEVICE_TYPE_I2C) {
+    return true; // No (enabled) I2C task, so consider all-OK
   }
+  #if FEATURE_I2C_MULTIPLE
+  const uint8_t i2cBus = Settings.getI2CInterface(taskIndex);
+  #else // if FEATURE_I2C_MULTIPLE
+  const uint8_t i2cBus = 0;
+  #endif // if FEATURE_I2C_MULTIPLE
 
-  if (!Settings.isI2CEnabled(Settings.getI2CInterface(taskIndex))) {
+  if (!Settings.isI2CEnabled(i2cBus)) {
     return false; // Plugin-selected I2C bus is not configured, fail
   }
 #if FEATURE_CLEAR_I2C_STUCK
@@ -223,11 +230,6 @@ bool prepare_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex) 
     return false; // Bus state is not OK, so do not consider task runnable
   }
 #endif
-  #if FEATURE_I2C_MULTIPLE
-  const uint8_t i2cBus = Settings.getI2CInterface(taskIndex);
-  #else // if FEATURE_I2C_MULTIPLE
-  const uint8_t i2cBus = 0;
-  #endif // if FEATURE_I2C_MULTIPLE
 
   if (bitRead(Settings.I2C_SPI_bus_Flags[taskIndex], I2C_FLAGS_SLOW_SPEED)) {
     I2CSelectLowClockSpeed(i2cBus);  // Set to slow, also switch the bus
@@ -246,11 +248,13 @@ bool prepare_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex) 
 }
 
 void post_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex) {
-  if (!validTaskIndex(taskIndex) || !validDeviceIndex(DeviceIndex)) {
+if (!validTaskIndex(taskIndex) || 
+    !validDeviceIndex(DeviceIndex)) {
     return;
   }
 
-  if (Device[DeviceIndex].Type != DEVICE_TYPE_I2C) {
+  if (!Settings.TaskDeviceEnabled(taskIndex) || 
+      Device[DeviceIndex].Type != DEVICE_TYPE_I2C) {
     return;
   }
   #if FEATURE_I2C_MULTIPLE
@@ -258,6 +262,11 @@ void post_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex) {
   #else // if FEATURE_I2C_MULTIPLE
   const uint8_t i2cBus = 0;
   #endif // ifdef ESP32
+
+  if (!Settings.isI2CEnabled(i2cBus)) {
+    return; // Plugin-selected I2C bus is not configured, fail
+  }
+
   #if FEATURE_I2CMULTIPLEXER
   I2CMultiplexerOff(i2cBus);
   #endif // if FEATURE_I2CMULTIPLEXER
@@ -807,15 +816,19 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
         return false;
       }
 
-      if ((Function == PLUGIN_READ) || (Function == PLUGIN_INIT) || (Function == PLUGIN_PROCESS_CONTROLLER_DATA)) {
+      if ((Function == PLUGIN_READ) 
+       || (Function == PLUGIN_INIT) 
+       || (Function == PLUGIN_GET_PACKED_RAW_DATA)
+       || (Function == PLUGIN_TASKTIMER_IN) 
+       || (Function == PLUGIN_PROCESS_CONTROLLER_DATA)) {
         if (!Settings.TaskDeviceEnabled(event->TaskIndex)) {
           return false;
         }
+      }
 
-        if (Function == PLUGIN_INIT) {
-          clearTaskCache(event->TaskIndex);
-          UserVar.clear_computed(event->TaskIndex);
-        }
+      if (Function == PLUGIN_INIT) {
+        clearTaskCache(event->TaskIndex);
+        UserVar.clear_computed(event->TaskIndex);
       }
       const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
 
@@ -826,7 +839,9 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
             // Only exception is when ErrorStateValues is needed.
             // Therefore only need to call LoadTaskSettings for those tasks with ErrorStateValues
             LoadTaskSettings(event->TaskIndex);
-          } else if ((Function == PLUGIN_INIT) || (Function == PLUGIN_WEBFORM_LOAD) || (Function == PLUGIN_WEBFORM_LOAD_ALWAYS)) {
+          } else if ((Function == PLUGIN_INIT) 
+                  || (Function == PLUGIN_WEBFORM_LOAD) 
+                  || (Function == PLUGIN_WEBFORM_LOAD_ALWAYS)) {
             // LoadTaskSettings may call PLUGIN_GET_DEVICEVALUENAMES.
             LoadTaskSettings(event->TaskIndex);
           }

@@ -287,10 +287,10 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
 
         // $localip	Device → Controller	IP of the device on the local network	Yes	Yes
         # ifdef CPLUGIN_014_V3
-        CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex, F("$localip"), formatIP(NetworkLocalIP()), errorCounter);
+        CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex, F("$localip"), formatIP(NetworkLocalIP()),        errorCounter);
 
         // $mac	Device → Controller	Mac address of the device network interface. The format MUST be of the type A1:B2:C3:D4:E5:F6	Yes	Yes
-        CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex, F("$mac"),     ESPEasy::net::NetworkMacAddress(),        errorCounter);
+        CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex, F("$mac"),     ESPEasy::net::NetworkMacAddress(), errorCounter);
 
         // $implementation	Device → Controller	An identifier for the Homie implementation (example esp8266)	Yes	Yes
         CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex, F("$implementation"),
@@ -436,7 +436,8 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
                         // $datatype	The data type. See Payloads.	Enum: [integer, float, boolean,string, enum, color]
                         unitName.clear();
 
-                        switch (Settings.TaskDevicePluginConfig[x][varNr]) {
+                        switch (Settings.TaskDevicePluginConfig[x][varNr])
+                        {
                           case 0:
                             valueName = F("integer");
 
@@ -457,8 +458,10 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
                                                    ExtraTaskSettings.TaskDevicePluginConfig[varNr + valueCount]);
                             }
                             break;
-                          case 2: valueName = F("boolean"); break;
-                          case 3: valueName = F("string"); break;
+                          case 2: valueName = F("boolean");
+                            break;
+                          case 3: valueName = F("string");
+                            break;
                           case 4:
                             valueName = F("enum");
                             unitName  = ExtraTaskSettings.TaskDeviceFormula[varNr];
@@ -687,7 +690,8 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
         CPlugin_014_sendMQTTdevice(pubname, event->TaskIndex, F("$state"), F("ready"), errorCounter);
         success = true;
       }
-#ifndef BUILD_NO_DEBUG
+# ifndef BUILD_NO_DEBUG
+
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         addLog(LOG_LEVEL_INFO,
                strformat(F("C014 : autodiscover information of %d Devices and %d Nodes sent with %s errors! (%d messages)"),
@@ -697,7 +701,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
                          msgCounter)
                );
       }
-#endif
+# endif // ifndef BUILD_NO_DEBUG
       msgCounter   = 0;
       errorCounter = 0;
       break;
@@ -721,7 +725,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         String log = strformat(F("C014 : Device: %s got invalid (disconnect%s"),
-                               Settings.getHostname().c_str(), String(success ? F("ed).") : F(") failed!")).c_str());
+                               Settings.getHostname().c_str(), FsP(success ? F("ed).") : F(") failed!")));
         addLogMove(LOG_LEVEL_INFO, log);
       }
       break;
@@ -919,7 +923,8 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
                 addLogMove(LOG_LEVEL_ERROR, log);
               }
             } else if (equals(commandName, F(CPLUGIN_014_HOMIEVALUESET_COMMAND))) { // acknowledges value form P086 Homie Receiver
-              switch (Settings.TaskDevicePluginConfig[deviceIndex - 1][taskVarIndex]) {
+              switch (Settings.TaskDevicePluginConfig[deviceIndex - 1][taskVarIndex])
+              {
                 case 0:                                                             // PLUGIN_085_VALUE_INTEGER
                   valueInt = static_cast<int>(UserVar[userVarIndex]);
                   valueStr = toString(UserVar[userVarIndex], 0);

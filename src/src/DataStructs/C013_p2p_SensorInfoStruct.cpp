@@ -94,7 +94,7 @@ bool C013_SensorInfoStruct::prepareForSend(size_t& sizeToSend)
   return true;
 }
 
-UP_C013_SensorInfoStruct C013_SensorInfoStruct::create(const uint8_t *data, size_t size)
+UP_C013_SensorInfoStruct C013_SensorInfoStruct::createFromReceived(const uint8_t *data, size_t size)
 {
   {
     UP_C013_SensorInfoStruct invalid_res{};

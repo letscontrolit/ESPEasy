@@ -104,12 +104,13 @@ bool SecurityStruct::hasWiFiCredentials(SecurityStruct::WiFiCredentialsSlot slot
 
 String SecurityStruct::getSSID(WiFiCredentialsSlot slot) const
 {
-  if (hasWiFiCredentials(slot)) {
+  String res;
   if (slot == SecurityStruct::WiFiCredentialsSlot::first)
-      return WifiSSID;
+      res = WifiSSID;
   if (slot == SecurityStruct::WiFiCredentialsSlot::second)
-      return WifiSSID2;
-  }
+      res = WifiSSID2;
+  if (ESPEasy::net::wifi::validWiFiSSID(res))
+    return res;
   return EMPTY_STRING;
 }
 

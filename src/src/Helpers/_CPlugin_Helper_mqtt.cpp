@@ -9,9 +9,9 @@
 #  include "../Helpers/StringGenerator_System.h"
 # endif // if FEATURE_MQTT_DISCOVER
 # include "../Helpers/SystemVariables.h"
-#if FEATURE_TASKVALUE_UNIT_OF_MEASURE
-# include "../Helpers/ESPEasy_UnitOfMeasure.h"
-#endif
+# if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+#  include "../Helpers/ESPEasy_UnitOfMeasure.h"
+# endif
 
 # ifdef USES_P001
 #  include "../PluginStructs/P001_data_struct.h"
@@ -662,7 +662,7 @@ bool MQTT_HomeAssistant_SendAutoDiscovery(controllerIndex_t         ControllerIn
                   const String uom = MQTT_DiscoveryHelperGetValueUoM(x, v, discoveryItems[s]);
 
                   if (discoveryItems[s].canSet) {
-                    success &= MQTT_DiscoveryPublishWithStatusAndSet(x, v, valuename,
+                    success &= MQTT_DiscoveryPublishWithStatusAndSet(v, valuename,
                                                                      ControllerIndex,
                                                                      ControllerSettings,
                                                                      F("device_automation"),
@@ -676,7 +676,7 @@ bool MQTT_HomeAssistant_SendAutoDiscovery(controllerIndex_t         ControllerIn
                                                                      useGroupId ? elementName : EMPTY_STRING, elementIds,
                                                                      true); // Send Trigger discovery
                   }
-                  success &= MQTT_DiscoveryPublishWithStatusAndSet(x, v, valuename,
+                  success &= MQTT_DiscoveryPublishWithStatusAndSet(v, valuename,
                                                                    ControllerIndex,
                                                                    ControllerSettings,
                                                                    componentClass,
@@ -720,7 +720,7 @@ bool MQTT_HomeAssistant_SendAutoDiscovery(controllerIndex_t         ControllerIn
                     #  else // if FEATURE_MQTT_STATE_CLASS
                     const String stateClass = EMPTY_STRING;
                     #  endif // if FEATURE_MQTT_STATE_CLASS
-                    success &= MQTT_DiscoveryPublishWithStatusAndSet(x, v, valuename,
+                    success &= MQTT_DiscoveryPublishWithStatusAndSet(v, valuename,
                                                                      ControllerIndex,
                                                                      ControllerSettings,
                                                                      F("sensor"),
@@ -755,7 +755,7 @@ bool MQTT_HomeAssistant_SendAutoDiscovery(controllerIndex_t         ControllerIn
                     #  else // if FEATURE_MQTT_STATE_CLASS
                     const String stateClass = EMPTY_STRING;
                     #  endif // if FEATURE_MQTT_STATE_CLASS
-                    success &= MQTT_DiscoveryPublishWithStatusAndSet(x, v, valuename,
+                    success &= MQTT_DiscoveryPublishWithStatusAndSet(v, valuename,
                                                                      ControllerIndex,
                                                                      ControllerSettings,
                                                                      F("sensor"),
@@ -794,7 +794,7 @@ bool MQTT_HomeAssistant_SendAutoDiscovery(controllerIndex_t         ControllerIn
                     #  else // if FEATURE_MQTT_STATE_CLASS
                     const String stateClass = EMPTY_STRING;
                     #  endif // if FEATURE_MQTT_STATE_CLASS
-                    success &= MQTT_DiscoveryPublishWithStatusAndSet(x, v, valuename,
+                    success &= MQTT_DiscoveryPublishWithStatusAndSet(v, valuename,
                                                                      ControllerIndex,
                                                                      ControllerSettings,
                                                                      F("sensor"),
@@ -877,7 +877,7 @@ bool MQTT_HomeAssistant_SendAutoDiscovery(controllerIndex_t         ControllerIn
                   #  else // if FEATURE_MQTT_STATE_CLASS
                   const String stateClass = EMPTY_STRING;
                   #  endif // if FEATURE_MQTT_STATE_CLASS
-                  success &= MQTT_DiscoveryPublishWithStatusAndSet(x, v, valuename,
+                  success &= MQTT_DiscoveryPublishWithStatusAndSet(v, valuename,
                                                                    ControllerIndex,
                                                                    ControllerSettings,
                                                                    F("sensor"),
@@ -1078,8 +1078,7 @@ bool MQTT_DiscoveryPublish(controllerIndex_t ControllerIndex,
   return result;
 }
 
-bool MQTT_DiscoveryPublishWithStatusAndSet(taskIndex_t               taskIndex,
-                                           uint8_t                   taskValue,
+bool MQTT_DiscoveryPublishWithStatusAndSet(uint8_t                   taskValue,
                                            const String            & valueName,
                                            controllerIndex_t         ControllerIndex,
                                            ControllerSettingsStruct& ControllerSettings,
@@ -1096,13 +1095,12 @@ bool MQTT_DiscoveryPublishWithStatusAndSet(taskIndex_t               taskIndex,
                                            const String            & elementId,
                                            bool                      sendTrigger) {
   if (!valueName.isEmpty()) {
-    //    const String discoveryTopic(ControllerSettings.MqttAutoDiscoveryTopic);
-    //    const String publishTopic(ControllerSettings.Publish);
-
-    const String taskName = makeHomeAssistantCompliantName(getTaskDeviceName(taskIndex));
+    const String taskName = makeHomeAssistantCompliantName(getTaskDeviceName(event->TaskIndex));
     const String valName  = makeHomeAssistantCompliantName(valueName);
 
     const String uniqueId = elementName.isEmpty() ? MQTT_TaskValueUniqueName(taskName, valName)
+                                                  : Settings.MQTTDiscoverGroupInclTaskname()
+                                                  ? strformat(F("%s_%s_%s"), elementId.c_str(), taskName.c_str(), valName.c_str())
                                                   : strformat(F("%s_%s"), elementId.c_str(), valName.c_str());
     String message;
     {
@@ -1160,7 +1158,7 @@ bool MQTT_DiscoveryPublishWithStatusAndSet(taskIndex_t               taskIndex,
     return MQTT_DiscoveryPublish(ControllerIndex,
                                  topic,
                                  message,
-                                 taskIndex,
+                                 event->TaskIndex,
                                  taskValue,
                                  retainDsc);
   }

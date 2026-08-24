@@ -354,6 +354,11 @@ class SettingsStruct_tmpl
   inline void MQTTConnectInBackground(bool value) { VariousBits_2.MQTTConnectInBackground = !value; }
   #endif // if FEATURE_MQTT_CONNECT_BACKGROUND
 
+  #if FEATURE_MQTT_DISCOVER
+  inline bool MQTTDiscoverGroupInclTaskname() const { return VariousBits_1.MQTTDiscoverGroupInclTaskname; }
+  inline void MQTTDiscoverGroupInclTaskname(bool value) { VariousBits_1.MQTTDiscoverGroupInclTaskname = value; }
+  #endif // if FEATURE_MQTT_DISCOVER
+
   // Flag indicating whether all task values should be sent in a single event or one event per task value (default behavior)
   bool CombineTaskValues_SingleEvent(taskIndex_t taskIndex) const;
   void CombineTaskValues_SingleEvent(taskIndex_t taskIndex, bool value);
@@ -535,7 +540,19 @@ public:
   uint8_t getI2CInterfaceRTC() const;
   uint8_t getI2CInterfaceWDT() const;
   uint8_t getI2CInterfacePCFMCP() const;
+  #if FEATURE_EEPROM_EXTERNAL
+  uint8_t getI2CInterfaceEEPROM() const;
+  #endif // if FEATURE_EEPROM_EXTERNAL
   #endif // if FEATURE_I2C_MULTIPLE
+
+  #if FEATURE_EEPROM_EXTERNAL
+  uint8_t  EEPROMExternalI2CAddress() const;
+  void     EEPROMExternalI2CAddress(uint8_t address);
+  uint16_t EEPROMExternalI2CMultiplexerFlags() const;
+  void     EEPROMExternalI2CMultiplexerFlags(uint16_t muxFlags);
+  uint8_t  EEPROMExternalType() const;
+  void     EEPROMExternalType(uint8_t type);
+  #endif // if FEATURE_EEPROM_EXTERNAL
 
   #if FEATURE_I2CMULTIPLEXER
   int8_t getI2CMultiplexerType(uint8_t i2cBus) const;
@@ -578,6 +595,21 @@ public:
   void setVariousBits2(uint32_t value) {
     VariousBits_2._all_bits = value;
   }
+
+private: 
+
+  static bool getNetworkFlag(const uint8_t& bitfield, ESPEasy::net::networkIndex_t index);
+  static void setNetworkFlag(uint8_t& bitfield, ESPEasy::net::networkIndex_t index, bool enabled);
+
+public:
+
+
+#ifdef ESP32
+  // Append "-WiFi" or "-eth" to the hostname for that adapter, e.g. to be used in the DHCP request.
+  bool getAppendNetworkAdapterNameToHostname(ESPEasy::net::networkIndex_t index) const;
+
+  void setAppendNetworkAdapterNameToHostname(ESPEasy::net::networkIndex_t index, bool enabled);
+#endif
 
   bool getNetworkEnabled(ESPEasy::net::networkIndex_t index) const;
 
@@ -643,7 +675,15 @@ public:
   uint8_t       WebLogLevel = 0;
   uint8_t       SDLogLevel = 0;
   uint32_t BaudRate = 115200;
-  uint32_t MessageDelay_unused = 0;  // MQTT settings now moved to the controller settings.
+  union {
+    struct {
+      uint32_t AppendNetworkAdapterNameToHostname  : 8; // Bit  0 .. 7
+      uint32_t unused_08_15                        : 8; // Bit  8 .. 15
+      uint32_t unused_16_23                        : 8; // Bit 16 .. 23
+      uint32_t unused_24_31                        : 8; // Bit 24 .. 31
+    };
+    uint32_t _all_bits{};
+  } NetworkFlags;  //-V730  // Was:   uint32_t MessageDelay_unused = 0;  // MQTT settings now moved to the controller settings.
   #if FEATURE_UNNAMED_BITFIELDS_1
   union {
     struct {
@@ -778,7 +818,8 @@ public:
   int8_t        SPI1_SCLK_pin = -1;
   int8_t        SPI1_MISO_pin = -1;
   int8_t        SPI1_MOSI_pin = -1;
-  unsigned int  OLD_TaskDeviceID[N_TASKS - 8] = {0};  // UNUSED: this can be reused
+  uint32_t      EEPROMSaveOptions = 0;
+  uint32_t      OLD_TaskDeviceID[N_TASKS - 9] = {0};  // UNUSED: this can be reused
 
   // FIXME TD-er: When used on ESP8266, this conversion union may not work
   // It might work as it is 32-bit in size.
@@ -992,7 +1033,7 @@ union {
 
   // VariousBits_1 defaults to 0, keep in mind when adding bit lookups.
   struct {
-      uint32_t unused_00                    : 1;  // Bit 00
+      uint32_t MQTTDiscoverGroupInclTaskname  : 1;  // Bit 00
       uint32_t appendUnitToHostname         : 1;  // Bit 01  Inverted
       uint32_t unused_02                    : 1;  // Bit 02 uniqueMQTTclientIdReconnect_unused
       uint32_t OldRulesEngine               : 1;  // Bit 03  Inverted
@@ -1087,8 +1128,8 @@ union {
       uint32_t ShowUnitOfMeasureOnDevicesPage      : 1; // Bit 07  // inverted
       uint32_t WiFi_band_mode                      : 2; // Bit 08 & 09
       uint32_t WiFi_AP_enable_NAPT                 : 1; // Bit 10  // inverted
-      uint32_t RestoreUserVarsFromEEPROMOnColdBoot : 1; // Bit 11
-      uint32_t RestoreUserVarsFromEEPROMOnWarmBoot : 1; // Bit 12
+      uint32_t unused_11                           : 1; // Bit 11
+      uint32_t unused_12                           : 1; // Bit 12
       uint32_t MQTTConnectInBackground             : 1; // Bit 13  // inverted
 
       uint32_t StartAPfallback_NoCredentials       : 1; // Bit 14  // inverted
@@ -1119,6 +1160,8 @@ union {
 #endif
   // TODO TD-er: For ESP8266 we may likely ever use upto 2 or 3 network interfaces, so maybe re-use the rest later?
   uint16_t  NetworkInterfaceStartupDelay[NETWORK_MAX]{};
+
+  uint32_t  EEPROMExternalFlags{};
 
 
   // Try to extend settings to make the checksum 4-uint8_t aligned.

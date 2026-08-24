@@ -295,7 +295,6 @@ void ResetFactory(bool formatFS)
   // advanced Settings
   //  Settings.UseRules                         = DEFAULT_USE_RULES;
   Settings.ControllerEnabled(0, DEFAULT_CONTROLLER_ENABLED);
-  Settings.MessageDelay_unused              = DEFAULT_MQTT_DELAY;
   Settings.MQTTUseUnitNameAsClientId_unused = DEFAULT_MQTT_USE_UNITNAME_AS_CLIENTID;
 
   #if FEATURE_NETWORK_STATS
