@@ -14,10 +14,10 @@ const __FlashStringHelper* Plugin_188_output_mapping_name(uint8_t value_nr, bool
     F("AIN5 to GND Single-Ended"),          F("V_AIN5"),           // 5
     F("AIN6 to GND Single-Ended"),          F("V_AIN6"),           // 6
     F("AIN7 to GND Single-Ended"),          F("V_AIN7"),           // 7
-    F("ABS(AIN1 - AIN0) (Difference)"),     F("V_abs(AIN1_AIN0)"), // 8
-    F("ABS(AIN3 - AIN2) (Difference)"),     F("V_abs(AIN3_AIN2)"), // 9
-    F("ABS(AIN5 - AIN4) (Difference)"),     F("V_abs(AIN5_AIN4)"), // 10
-    F("ABS(AIN7 - AIN6) (Difference)"),     F("V_abs(AIN7_AIN6)"), // 11
+    F("abs(AIN1 - AIN0) (Difference)"),     F("V_abs(AIN1-AIN0)"), // 8
+    F("abs(AIN3 - AIN2) (Difference)"),     F("V_abs(AIN3-AIN2)"), // 9
+    F("abs(AIN5 - AIN4) (Difference)"),     F("V_abs(AIN5-AIN4)"), // 10
+    F("abs(AIN7 - AIN6) (Difference)"),     F("V_abs(AIN7-AIN6)"), // 11
 #ifdef P188_FEATURE_RESISTOR_MEASUREMENT
     F("AIN1, AIN0 Resistor Measurement"),   F("R_(AIN1_AIN0)"),    // 12
     F("AIN3, AIN2 Resistor Measurement"),   F("R_(AIN3_AIN2)"),    // 13
