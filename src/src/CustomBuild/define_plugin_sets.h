@@ -711,6 +711,10 @@ To create/register a plugin, you have to :
         #undef FEATURE_EXT_RTC
     #endif
     #define FEATURE_EXT_RTC 0
+    #ifdef FEATURE_EXT_RTC_PCF8583
+        #undef FEATURE_EXT_RTC_PCF8583
+    #endif
+    #define FEATURE_EXT_RTC_PCF8583 0
     #ifdef FEATURE_SYSLOG
     #undef FEATURE_SYSLOG
     #endif
@@ -2198,6 +2202,17 @@ To create/register a plugin, you have to :
     #define USES_P180   // Generic - I2C Generic
   #endif
 
+  #if FEATURE_CHART_JS // && defined(ESP8266)
+    // Does not fit in build
+    #undef FEATURE_CHART_JS
+  #endif
+  #ifndef FEATURE_CHART_JS
+    #if PLUGIN_BUILD_MAX_ESP32
+    #define FEATURE_CHART_JS  1
+    #else
+    #define FEATURE_CHART_JS  0
+    #endif
+  #endif
 #endif // ifdef PLUGIN_DISPLAY_B_COLLECTION
 
 // Collection of climate A plugins.
@@ -2539,12 +2554,16 @@ To create/register a plugin, you have to :
   #ifdef ESP8266
     #define FEATURE_PLUGIN_STATS  0
   #endif
-  #if FEATURE_CHART_JS && defined(ESP8266)
+  #if FEATURE_CHART_JS // && defined(ESP8266)
     // Does not fit in build
     #undef FEATURE_CHART_JS
   #endif
-  #ifdef ESP8266
+  #ifndef FEATURE_CHART_JS
+    #if PLUGIN_BUILD_MAX_ESP32
+    #define FEATURE_CHART_JS  1
+    #else
     #define FEATURE_CHART_JS  0
+    #endif
   #endif
   #if !defined(USES_P138) && defined(ESP32)
     #define USES_P138   // IP5306
@@ -3238,6 +3257,10 @@ To create/register a plugin, you have to :
     #undef FEATURE_EXT_RTC
   #endif
   #define FEATURE_EXT_RTC 0
+  #ifdef FEATURE_EXT_RTC_PCF8583
+    #undef FEATURE_EXT_RTC_PCF8583
+  #endif
+  #define FEATURE_EXT_RTC_PCF8583 0
   #ifndef BUILD_NO_DEBUG
     #define BUILD_NO_DEBUG
   #endif
@@ -4356,6 +4379,48 @@ To create/register a plugin, you have to :
   #endif
 #endif // if FEATURE_TASKVALUE_ATTRIBUTES
 
+#ifndef FEATURE_EEPROM_EXTERNAL
+  #ifdef ESP32
+    #define FEATURE_EEPROM_EXTERNAL  1
+  #endif
+  #ifdef ESP8266
+    #ifdef LIMIT_BUILD_SIZE
+      #define FEATURE_EEPROM_EXTERNAL  0 // Disabled for limited builds on ESP8266
+    #else
+      #define FEATURE_EEPROM_EXTERNAL  0 // Disabled by default on ESP8266
+    #endif
+  #endif
+#endif // ifndef FEATURE_EEPROM_EXTERNAL
+
+#if FEATURE_EXT_RTC
+#ifndef FEATURE_RTC_SRAM_STORAGE
+  #ifdef ESP32
+    #define FEATURE_RTC_SRAM_STORAGE      1
+  #endif
+  #ifdef ESP8266
+    #ifdef LIMIT_BUILD_SIZE
+      #define FEATURE_RTC_SRAM_STORAGE    0 // Disabled for limited builds on ESP8266
+    #else
+      #define FEATURE_RTC_SRAM_STORAGE    0 // Disabled by default on ESP8266
+    #endif
+  #endif
+#endif // ifndef FEATURE_RTC_SRAM_STORAGE
+#ifndef FEATURE_EXT_RTC_PCF8583
+  #if defined(PLUGIN_BUILD_MAX_ESP32)
+    #define FEATURE_EXT_RTC_PCF8583       1 // Also include PCF8583, that has 240 bytes of SRAM
+  #else // if defined(PLUGIN_BUILD_MAX_ESP32)
+    #define FEATURE_EXT_RTC_PCF8583       0 // Also include PCF8583, that has 240 bytes of SRAM
+  #endif // if defined(PLUGIN_BUILD_MAX_ESP32)
+#endif
+#else // if FEATURE_EXT_RTC
+  #define FEATURE_RTC_SRAM_STORAGE      0  // Not available
+#endif // if FEATURE_EXT_RTC
+#if FEATURE_RTC_SRAM_STORAGE
+  #define FEATURE_SRAM_STORAGE_DOUBLE   1 // 1 = double-size SRAM storage = 8 bytes per slot
+#else // if FEATURE_RTC_SRAM_STORAGE
+  #define FEATURE_SRAM_STORAGE_DOUBLE   0 // 0 = float-size SRAM storage = 4 bytes per slot
+#endif // if FEATURE_RTC_SRAM_STORAGE
+
 #ifndef FEATURE_PLUGIN_LIST
   #ifdef ESP32
     #define FEATURE_PLUGIN_LIST           1
@@ -4419,6 +4484,27 @@ To create/register a plugin, you have to :
 #endif
 //-------------------End of HTTPResponseParser Section----------
 
+#ifndef FEATURE_JSON_PARSE
+  #if defined(ESP32) && (defined(USES_P037) || FEATURE_JSON_EVENT) // and other JSON-parsing features
+    #define FEATURE_JSON_PARSE    1 // By default only on ESP32
+  #else
+    #define FEATURE_JSON_PARSE    0
+  #endif // if defined(USES_P037) || FEATURE_JSON_EVENT
+#endif // ifndef FEATURE_JSON_PARSE
+
+#ifndef FEATURE_EXTENDED_STRING_FUNCTIONS
+  #ifdef ESP32
+    #define FEATURE_EXTENDED_STRING_FUNCTIONS   1
+  #endif // ifdef ESP32
+  #ifdef ESP8266
+    #define FEATURE_EXTENDED_STRING_FUNCTIONS   0
+  #endif // ifdef ESP8266
+#endif // ifndef FEATURE_EXTENDED_STRING_FUNCTIONS
+#if defined(ESP8266) && FEATURE_JSON_PARSE && !FEATURE_EXTENDED_STRING_FUNCTIONS
+  #undef FEATURE_JSON_PARSE
+  #define FEATURE_JSON_PARSE  0
+#endif // if FEATURE_JSON_PARSE && !FEATURE_EXTENDED_STRING_FUNCTIONS
+
   #if !(defined(SOC_DAC_SUPPORTED) && SOC_DAC_SUPPORTED)
     #ifdef USES_P152
       #undef USES_P152
@@ -4439,7 +4525,7 @@ To create/register a plugin, you have to :
 #if FEATURE_WIFI
   #ifndef USES_NW001
     #define USES_NW001
-  #endif
+  #endif 
   #ifndef USES_NW002
     #define USES_NW002
   #endif
@@ -4588,5 +4674,26 @@ To create/register a plugin, you have to :
 #undef WEBSERVER_INTERFACES
 #endif
 #endif // if !FEATURE_SPI && !FEATURE_I2C && !FEATURE_MODBUS && !FEATURE_CAN && !FEATURE_WRMBUS && !FEATURE_WIMBUS
+
+
+
+#ifndef DEBUG_PCONFIG_RANGE_CHECK
+// N.B. Build size increase compared to previous level, based on MAX builds 20260824
+//      Size increase of level 3 depends also on path length of source files.
+// 0: no range check (use for builds with already build size issues)
+// 1: Basic range check, log when out of bounds (+1k)
+// 2: Include line nr of file where error occured (+13k)
+// 3: include filename + path of source file (+23k)
+# ifndef BUILD_NO_DEBUG
+#  ifdef PLUGIN_BUILD_MAX_ESP32
+#   define DEBUG_PCONFIG_RANGE_CHECK 3
+#  else
+#   define DEBUG_PCONFIG_RANGE_CHECK 1
+#  endif
+# else
+#  define DEBUG_PCONFIG_RANGE_CHECK 0
+# endif 
+#endif
+
 
 #endif // CUSTOMBUILD_DEFINE_PLUGIN_SETS_H

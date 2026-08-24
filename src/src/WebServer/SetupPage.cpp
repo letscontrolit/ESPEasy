@@ -145,9 +145,7 @@ void handle_setup() {
 # ifndef BUILD_NO_DEBUG
 
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-              String reconnectlog = F("WIFI : Credentials Changed, retry connection. SSID: ");
-              reconnectlog += ssid;
-              addLogMove(LOG_LEVEL_INFO, reconnectlog);
+              addLogMove(LOG_LEVEL_INFO, concat(F("WIFI : Credentials Changed, retry connection. SSID: "), ssid));
             }
 # endif // ifndef BUILD_NO_DEBUG
             status       = HANDLE_SETUP_CONNECTING_STAGE;

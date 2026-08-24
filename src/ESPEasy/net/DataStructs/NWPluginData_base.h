@@ -7,6 +7,7 @@
 #include "../DataStructs/NWPluginData_static_runtime.h"
 #include "../../../src/DataStructs/ESPEasy_EventStruct.h"
 #include "../../../src/DataStructs/PluginStats_array.h"
+#include "../../../src/DataStructs/PluginStats_Config.h"
 
 #if FEATURE_STORE_NETWORK_INTERFACE_SETTINGS
 # include "../../../src/Helpers/_ESPEasy_key_value_store.h"

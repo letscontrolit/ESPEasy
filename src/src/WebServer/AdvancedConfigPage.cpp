@@ -10,6 +10,9 @@
 
 #include "../../ESPEasy/net/wifi/ESPEasyWifi.h"
 
+#if FEATURE_RTC_SRAM_STORAGE
+#include "../../ESPEasy/eeprom/Helpers/RTCSRAMStorage.h"
+#endif // if FEATURE_RTC_SRAM_STORAGE
 
 #include "../Globals/ESPEasy_time.h"
 #include "../Globals/Settings.h"
@@ -161,6 +164,9 @@ void handle_advanced() {
     #if FEATURE_MQTT_CONNECT_BACKGROUND
     Settings.MQTTConnectInBackground(isFormItemChecked(LabelType::MQTT_CONNECT_IN_BACKGROUND));
     #endif // if FEATURE_MQTT_CONNECT_BACKGROUND
+    #if FEATURE_MQTT_DISCOVER
+    Settings.MQTTDiscoverGroupInclTaskname(isFormItemChecked(LabelType::MQTT_DISCOVER_GROUP_INCL_TASKNAME));
+    #endif // if FEATURE_MQTT_DISCOVER
     #if FEATURE_COLORIZE_CONSOLE_LOGS
     Settings.ColorizeSerialLog(isFormItemChecked(LabelType::COLORIZE_CONSOLE_LOGS));
     #endif
@@ -172,7 +178,8 @@ void handle_advanced() {
     }
   }
 
-  addHtml(F("<form  method='post'>"));
+  html_add_form();
+
   html_table_class_normal();
 
   addFormHeader(F("Advanced Settings"), F("RTDTools/Tools.html#advanced"));
@@ -200,6 +207,12 @@ void handle_advanced() {
   if (Settings.ExtTimeSource() != ExtTimeSource_e::None) {
     addFormNote(concat(getLabel(LabelType::EXT_RTC_UTC_TIME), F(": ")) + getValue(LabelType::EXT_RTC_UTC_TIME));
   }
+  #if FEATURE_RTC_SRAM_STORAGE
+  if (ESPEasy::eeprom::checkRTCSRAMEnabled()) {
+    addRowLabel(F("'WriteRTC' slots available"));
+    addHtmlInt(ESPEasy::eeprom::getRTCSRAMMaxSlots());
+  }
+  #endif // if FEATURE_RTC_SRAM_STORAGE
   #if FEATURE_I2C_MULTIPLE
   {
     const uint8_t i2cBus = Settings.getI2CInterfaceRTC();
@@ -331,6 +344,9 @@ void handle_advanced() {
       #if FEATURE_MQTT_CONNECT_BACKGROUND
       ,LabelType::MQTT_CONNECT_IN_BACKGROUND
       #endif // if FEATURE_MQTT_CONNECT_BACKGROUND
+      #if FEATURE_MQTT_DISCOVER
+      ,LabelType::MQTT_DISCOVER_GROUP_INCL_TASKNAME
+      #endif // if FEATURE_MQTT_DISCOVER
       #if FEATURE_COLORIZE_CONSOLE_LOGS
       ,LabelType::COLORIZE_CONSOLE_LOGS
       #endif
@@ -455,14 +471,29 @@ void addFormDstSelect(bool isStart, uint16_t choice) {
 void addFormExtTimeSourceSelect(const __FlashStringHelper * label, const __FlashStringHelper * id, ExtTimeSource_e choice)
 {
   addRowLabel(label);
-  const __FlashStringHelper * options[] =
-    { F("None"), F("DS1307"), F("DS3231"), F("PCF8523"), F("PCF8563")};
+  const __FlashStringHelper * options[] = {
+    F("None"),
+    toString(ExtTimeSource_e::DS1307),
+    toString(ExtTimeSource_e::DS3231),
+    toString(ExtTimeSource_e::DS3232),
+    toString(ExtTimeSource_e::PCF8523),
+    toString(ExtTimeSource_e::PCF8563),
+    #if FEATURE_EXT_RTC_PCF8583
+    toString(ExtTimeSource_e::PCF8583),
+    toString(ExtTimeSource_e::PCF8583a),
+    #endif // if FEATURE_EXT_RTC_PCF8583
+  };
   constexpr int optionValues[] = { 
     static_cast<int>(ExtTimeSource_e::None),
     static_cast<int>(ExtTimeSource_e::DS1307),
     static_cast<int>(ExtTimeSource_e::DS3231),
+    static_cast<int>(ExtTimeSource_e::DS3232),
     static_cast<int>(ExtTimeSource_e::PCF8523),
-    static_cast<int>(ExtTimeSource_e::PCF8563)
+    static_cast<int>(ExtTimeSource_e::PCF8563),
+    #if FEATURE_EXT_RTC_PCF8583
+    static_cast<int>(ExtTimeSource_e::PCF8583),
+    static_cast<int>(ExtTimeSource_e::PCF8583a),
+    #endif // if FEATURE_EXT_RTC_PCF8583
     };
 
   const FormSelectorOptions selector(NR_ELEMENTS(optionValues), options, optionValues);

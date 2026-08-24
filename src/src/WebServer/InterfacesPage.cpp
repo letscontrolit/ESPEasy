@@ -102,7 +102,8 @@ void handle_interfaces() {
   save_interfaces();
 
 
-  addHtml(F("<form  method='post'>"));
+  html_add_form();
+
   html_table_class_normal();
   addFormFixedFirstColumn(); // This must be added as the first element in a table definition
   addFormHeader(strformat(F("%s Interfaces Settings"), FsP(getGpMenuIcon(navMenuIndex))), F(""), F("Interfaces/Interfaces.html"));

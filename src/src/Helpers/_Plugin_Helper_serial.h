@@ -4,10 +4,6 @@
 
 #include "../../ESPEasy_common.h"
 
-#ifdef PLUGIN_USES_SERIAL
-
-#include <ESPeasySerial.h>
-
 constexpr uint8_t INCLUDE_SW_SERIAL  = (1 << 0);
 constexpr uint8_t INCLUDE_HW_SERIAL  = (1 << 1); // Ignored for now, always enabled
 constexpr uint8_t INCLUDE_I2C_SERIAL = (1 << 2);
@@ -15,6 +11,10 @@ constexpr uint8_t INCLUDE_CDC_SERIAL = (1 << 3);
 constexpr uint8_t INCLUDE_ALL_SERIAL = (INCLUDE_SW_SERIAL | INCLUDE_HW_SERIAL | INCLUDE_I2C_SERIAL | INCLUDE_CDC_SERIAL);
 constexpr uint8_t INCLUDE_DEFAULT_SERIAL = INCLUDE_ALL_SERIAL;
 constexpr uint8_t INCLUDE_NOT_CDC_SERIAL = (INCLUDE_SW_SERIAL | INCLUDE_HW_SERIAL | INCLUDE_I2C_SERIAL);
+
+#ifdef PLUGIN_USES_SERIAL
+
+#include <ESPeasySerial.h>
 
 struct ESPeasySerialType;
 
