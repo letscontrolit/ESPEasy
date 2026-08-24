@@ -1892,6 +1892,9 @@ To create/register a plugin, you have to :
   #if !defined(USES_P178) && defined(ESP32)
     #define USES_P178   // Extra IO - LU9685 Servo controller
   #endif
+  #if !defined(USES_P188) && defined(ESP32)
+    #define USES_P188   // TLA2528
+  #endif
 #endif // ifdef PLUGIN_SET_COLLECTION_H
 
 // Collection of all energy related plugins.
@@ -3026,6 +3029,10 @@ To create/register a plugin, you have to :
 
   #ifndef USES_P180
     #define USES_P180   // Generic - I2C Generic
+  #endif
+  
+  #ifndef USES_P188
+    #define USES_P188   // TLA2528
   #endif
 
   // Controllers

@@ -6,23 +6,23 @@
 
 const __FlashStringHelper* Plugin_188_output_mapping_name(uint8_t value_nr, bool displayString) {
   const __FlashStringHelper *strings[] {
-    F("AIN0 to GND Single-Ended"),          F("V_AIN0"),          // 0
-    F("AIN1 to GND Single-Ended"),          F("V_AIN1"),          // 1
-    F("AIN2 to GND Single-Ended"),          F("V_AIN2"),          // 2
-    F("AIN3 to GND Single-Ended"),          F("V_AIN3"),          // 3
-    F("AIN4 to GND Single-Ended"),          F("V_AIN4"),          // 4
-    F("AIN5 to GND Single-Ended"),          F("V_AIN5"),          // 5
-    F("AIN6 to GND Single-Ended"),          F("V_AIN6"),          // 6
-    F("AIN7 to GND Single-Ended"),          F("V_AIN7"),          // 7
-    F("ABS|AIN1 - AIN0| (Difference)"),     F("V_|AIN10|"),       // 8
-    F("ABS|AIN3 - AIN2| (Difference)"),     F("V_|AIN32|"),       // 9
-    F("ABS|AIN5 - AIN4| (Difference)"),     F("V_|AIN54|"),       // 10
-    F("ABS|AIN7 - AIN6| (Difference)"),     F("V_|AIN76|"),       // 11
+    F("AIN0 to GND Single-Ended"),          F("V_AIN0"),           // 0
+    F("AIN1 to GND Single-Ended"),          F("V_AIN1"),           // 1
+    F("AIN2 to GND Single-Ended"),          F("V_AIN2"),           // 2
+    F("AIN3 to GND Single-Ended"),          F("V_AIN3"),           // 3
+    F("AIN4 to GND Single-Ended"),          F("V_AIN4"),           // 4
+    F("AIN5 to GND Single-Ended"),          F("V_AIN5"),           // 5
+    F("AIN6 to GND Single-Ended"),          F("V_AIN6"),           // 6
+    F("AIN7 to GND Single-Ended"),          F("V_AIN7"),           // 7
+    F("ABS(AIN1 - AIN0) (Difference)"),     F("V_abs(AIN1_AIN0)"), // 8
+    F("ABS(AIN3 - AIN2) (Difference)"),     F("V_abs(AIN3_AIN2)"), // 9
+    F("ABS(AIN5 - AIN4) (Difference)"),     F("V_abs(AIN5_AIN4)"), // 10
+    F("ABS(AIN7 - AIN6) (Difference)"),     F("V_abs(AIN7_AIN6)"), // 11
 #ifdef P188_FEATURE_RESISTOR_MEASUREMENT
-    F("AIN1, AIN0 Resistor Measurement"),   F("Resistance_10"),   // 12
-    F("AIN3, AIN2 Resistor Measurement"),   F("Resistance_32"),   // 13
-    F("AIN5, AIN4 Resistor Measurement"),   F("Resistance_54"),   // 14
-    F("AIN7, AIN6 Resistor Measurement"),   F("Resistance_76")    // 15
+    F("AIN1, AIN0 Resistor Measurement"),   F("R_(AIN1_AIN0)"),    // 12
+    F("AIN3, AIN2 Resistor Measurement"),   F("R_(AIN3_AIN2)"),    // 13
+    F("AIN5, AIN4 Resistor Measurement"),   F("R_(AIN5_AIN4)"),    // 14
+    F("AIN7, AIN6 Resistor Measurement"),   F("R_(AIN7_AIN6)")     // 15
 #endif // P188_FEATURE_RESISTOR_MEASUREMENT
   };
   const size_t index         = (2 * value_nr) + (displayString ? 0 : 1);

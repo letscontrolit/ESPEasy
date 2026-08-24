@@ -57,11 +57,11 @@ boolean Plugin_188(uint8_t function, struct EventStruct *event, String& string)
     {
       const int valueCount = getValueCountFromSensorType(static_cast<Sensor_VType>(P188_OUTPUT_TYPE));
 
-      for (uint8_t i = 0; i < VARS_PER_TASK; ++i) {
-        if (i < valueCount) {
-          ExtraTaskSettings.setTaskDeviceValueName(i, Plugin_188_output_mapping_name(PCONFIG(i + P188_OUTPUT_MAPPING_OFFSET), false));
+      for (uint8_t chNum = 0; chNum < VARS_PER_TASK; ++chNum) {
+        if (chNum < valueCount) {
+          ExtraTaskSettings.setTaskDeviceValueName(chNum, Plugin_188_output_mapping_name(PCONFIG(chNum + P188_OUTPUT_MAPPING_OFFSET), false));
         } else {
-          ExtraTaskSettings.clearTaskDeviceValueName(i);
+          ExtraTaskSettings.clearTaskDeviceValueName(chNum);
         }
       }
 
@@ -126,12 +126,12 @@ boolean Plugin_188(uint8_t function, struct EventStruct *event, String& string)
       tmp_config.R_Clip = 10000000.0f;
 #endif
       tmp_config.i2cAddress = P188_I2C_ADDR;
-      for (int i = 0; i < VARS_PER_TASK; i++)
+      for (int chNum = 0; chNum < VARS_PER_TASK; chNum++)
       {
-        PCONFIG(i + P188_OUTPUT_MAPPING_OFFSET) = i;
+        PCONFIG(chNum + P188_OUTPUT_MAPPING_OFFSET) = chNum;
 #ifdef P188_FEATURE_RESISTOR_MEASUREMENT
-        tmp_config.Rref[i] = 4700;
-        tmp_config.Rpar[i] = 100000;
+        tmp_config.Rref[chNum] = 4700;
+        tmp_config.Rpar[chNum] = 100000;
 #endif // P188_FEATURE_RESISTOR_MEASUREMENT
       }
 
@@ -152,37 +152,40 @@ boolean Plugin_188(uint8_t function, struct EventStruct *event, String& string)
 
       addFormFloatNumberBox(F("ADC reference voltage"),F("ADC_Vref"),tmp_config.ADC_Vref,2.35f,5.5f,2,0.01f);
 #ifdef P188_FEATURE_RESISTOR_MEASUREMENT
-      if ((P188_OUTPUT_MAPPING_0 > 11) || (P188_OUTPUT_MAPPING_1 > 11) || (P188_OUTPUT_MAPPING_2 > 11) || (P188_OUTPUT_MAPPING_3 > 11))
+      if ((P188_OUTPUT_MAPPING_0 > P188_OUTPUT_MAPPING_RESISTOR_MODES_OFFSET) || 
+          (P188_OUTPUT_MAPPING_1 > P188_OUTPUT_MAPPING_RESISTOR_MODES_OFFSET) || 
+          (P188_OUTPUT_MAPPING_2 > P188_OUTPUT_MAPPING_RESISTOR_MODES_OFFSET) || 
+          (P188_OUTPUT_MAPPING_3 > P188_OUTPUT_MAPPING_RESISTOR_MODES_OFFSET))
       {
         addFormFloatNumberBox(F("Resistor measurment clipping"),F("R_Clip"),tmp_config.R_Clip,0.0f,10000000,2,0.01f);
       }
 #endif
 
-      for (int i = 0; i < valueCount; i++)
+      for (int chNum = 0; chNum < valueCount; chNum++)
       {
-        addFormSubHeader(strformat(F("Output %d - %s"), i + 1, FsP(Plugin_188_output_mapping_name(PCONFIG(i + P188_OUTPUT_MAPPING_OFFSET), true))));
+        addFormSubHeader(strformat(F("Output %d - %s"), chNum + 1, FsP(Plugin_188_output_mapping_name(PCONFIG(chNum + P188_OUTPUT_MAPPING_OFFSET), true))));
 #ifdef P188_FEATURE_RESISTOR_MEASUREMENT
-        if (PCONFIG(i + P188_OUTPUT_MAPPING_OFFSET) > 11)
+        if (PCONFIG(chNum + P188_OUTPUT_MAPPING_OFFSET) > P188_OUTPUT_MAPPING_RESISTOR_MODES_OFFSET)
         {
-          addFormNumericBox(F("Reference Resistor Value"), getPluginCustomArgName(i * 8 + 0), tmp_config.Rref[i], 100, 470000);
-          addFormNumericBox(F("Parallel Resistor Value"),  getPluginCustomArgName(i * 8 + 1), tmp_config.Rpar[i],   0, 470000);
+          addFormNumericBox(F("Reference Resistor Value"), getPluginCustomArgName(chNum * 8 + 0), tmp_config.Rref[chNum], 100, 470000);
+          addFormNumericBox(F("Parallel Resistor Value"),  getPluginCustomArgName(chNum * 8 + 1), tmp_config.Rpar[chNum],   0, 470000);
         }
 #endif // P188_FEATURE_RESISTOR_MEASUREMENT
-        addFormCheckBox(F("Output Raw ADC Value"), getPluginCustomArgName(i * 8 + 2), ((P188_configBits.raw_val >> i) & 0x01));
+        addFormCheckBox(F("Output Raw ADC Value"), getPluginCustomArgName(chNum * 8 + 2), bitRead(P188_configBits.raw_val, chNum));
 
         /* Callibration */
 
         addTableSeparator(F("Two Point Calibration"), 2, 4);
 
-        addFormCheckBox(F("Enable Calibration"), getPluginCustomArgName(i * 8 + 3), ((P188_configBits.en_cal >> i) & 0x01));
+        addFormCheckBox(F("Enable Calibration"), getPluginCustomArgName(chNum * 8 + 3), bitRead(P188_configBits.en_cal, chNum));
 
-        addFormFloatNumberBox(F("Point 1"), getPluginCustomArgName(i * 8 + 4), tmp_config.CalIn[i][0], -1000000, 1000000, 2, 1.0f); 
+        addFormFloatNumberBox(F("Point 1"), getPluginCustomArgName(chNum * 8 + 4), tmp_config.CalIn[chNum][0], -1000000.0f, 1000000.0f, 2, 1.0f); 
         html_add_estimate_symbol();
-        addFloatNumberBox(getPluginCustomArgName(i * 8 + 5), tmp_config.CalOut[i][0], -1000000, 1000000, 2, 1.0f);
+        addFloatNumberBox(getPluginCustomArgName(chNum * 8 + 5), tmp_config.CalOut[chNum][0], -1000000.0f, 1000000.0f, 2, 1.0f);
 
-        addFormFloatNumberBox(F("Point 2"), getPluginCustomArgName(i * 8 + 6), tmp_config.CalIn[i][1], -1000000, 1000000, 2, 1.0f); 
+        addFormFloatNumberBox(F("Point 2"), getPluginCustomArgName(chNum * 8 + 6), tmp_config.CalIn[chNum][1], -1000000.0f, 1000000.0f, 2, 1.0f); 
         html_add_estimate_symbol();
-        addFloatNumberBox(getPluginCustomArgName(i * 8 + 7), tmp_config.CalOut[i][1], -1000000, 1000000, 2, 1.0f);
+        addFloatNumberBox(getPluginCustomArgName(chNum * 8 + 7), tmp_config.CalOut[chNum][1], -1000000.0f, 1000000.0f, 2, 1.0f);
       }
 
       success = true;
@@ -199,9 +202,9 @@ boolean Plugin_188(uint8_t function, struct EventStruct *event, String& string)
 
       const int valueCount = getValueCountFromSensorType(static_cast<Sensor_VType>(P188_OUTPUT_TYPE));
 
-      for (uint8_t i = 0; i < valueCount; ++i) {
-        const uint8_t pconfigIndex = i + P188_OUTPUT_MAPPING_OFFSET;
-        sensorTypeHelper_loadOutputSelector(event, pconfigIndex, i, P188_OUTPUT_OPTION_CNT, options);
+      for (uint8_t chNum = 0; chNum < valueCount; ++chNum) {
+        const uint8_t pconfigIndex = chNum + P188_OUTPUT_MAPPING_OFFSET;
+        sensorTypeHelper_loadOutputSelector(event, pconfigIndex, chNum, P188_OUTPUT_OPTION_CNT, options);
       }
 
       success = true;
@@ -223,7 +226,10 @@ boolean Plugin_188(uint8_t function, struct EventStruct *event, String& string)
       tmp_config.ADC_Vref = getFormItemFloat(F("ADC_Vref"));
 
 #ifdef P188_FEATURE_RESISTOR_MEASUREMENT
-      if ((P188_OUTPUT_MAPPING_0 > 11) || (P188_OUTPUT_MAPPING_1 > 11) || (P188_OUTPUT_MAPPING_2 > 11) || (P188_OUTPUT_MAPPING_3 > 11))
+      if ((P188_OUTPUT_MAPPING_0 > P188_OUTPUT_MAPPING_RESISTOR_MODES_OFFSET) || 
+          (P188_OUTPUT_MAPPING_1 > P188_OUTPUT_MAPPING_RESISTOR_MODES_OFFSET) || 
+          (P188_OUTPUT_MAPPING_2 > P188_OUTPUT_MAPPING_RESISTOR_MODES_OFFSET) || 
+          (P188_OUTPUT_MAPPING_3 > P188_OUTPUT_MAPPING_RESISTOR_MODES_OFFSET))
       {
         tmp_config.R_Clip = getFormItemFloat(F("R_Clip"));
       }
@@ -231,39 +237,39 @@ boolean Plugin_188(uint8_t function, struct EventStruct *event, String& string)
 
       const int valueCount = getValueCountFromSensorType(static_cast<Sensor_VType>(P188_OUTPUT_TYPE));
 
-      for (int i = 0; i < valueCount; i++)
+      for (int chNum = 0; chNum < valueCount; chNum++)
       {
 #ifdef P188_FEATURE_RESISTOR_MEASUREMENT
-        if (PCONFIG(i + P188_OUTPUT_MAPPING_OFFSET) > 11)
+        if (PCONFIG(chNum + P188_OUTPUT_MAPPING_OFFSET) > P188_OUTPUT_MAPPING_RESISTOR_MODES_OFFSET)
         {
-          tmp_config.Rref[i] = getFormItemInt(getPluginCustomArgName(i * 8 + 0));
-          tmp_config.Rpar[i] = getFormItemInt(getPluginCustomArgName(i * 8 + 1));
+          tmp_config.Rref[chNum] = getFormItemInt(getPluginCustomArgName(chNum * 8 + 0));
+          tmp_config.Rpar[chNum] = getFormItemInt(getPluginCustomArgName(chNum * 8 + 1));
         }
 #endif // P188_FEATURE_RESISTOR_MEASUREMENT
-
-        P188_configBits.raw_val |= ((uint8_t)isFormItemChecked(getPluginCustomArgName(i * 8 + 2))) << i;
+        
+        bitWrite(P188_configBits.raw_val, chNum, isFormItemChecked(getPluginCustomArgName(chNum * 8 + 2)));
 
         /* Callibration */
 
         // Enable
-        P188_configBits.en_cal  |= ((uint8_t)isFormItemChecked(getPluginCustomArgName(i * 8 + 3))) << i;
+        bitWrite(P188_configBits.en_cal, chNum, isFormItemChecked(getPluginCustomArgName(chNum * 8 + 3)));
 
         // Save configBits
         P188_CONFIG_BITS           = P188_configBits.pconfigvalue(); 
 
         // Point 1
-        tmp_config.CalIn[i][0] = getFormItemFloat(getPluginCustomArgName(i * 8 + 4));
-        tmp_config.CalOut[i][0] = getFormItemFloat(getPluginCustomArgName(i * 8 + 5));
+        tmp_config.CalIn[chNum][0] = getFormItemFloat(getPluginCustomArgName(chNum * 8 + 4));
+        tmp_config.CalOut[chNum][0] = getFormItemFloat(getPluginCustomArgName(chNum * 8 + 5));
 
         // Point 2
-        tmp_config.CalIn[i][1] = getFormItemFloat(getPluginCustomArgName(i * 8 + 6));
-        tmp_config.CalOut[i][1] = getFormItemFloat(getPluginCustomArgName(i * 8 + 7));
+        tmp_config.CalIn[chNum][1] = getFormItemFloat(getPluginCustomArgName(chNum * 8 + 6));
+        tmp_config.CalOut[chNum][1] = getFormItemFloat(getPluginCustomArgName(chNum * 8 + 7));
       }
 
-      for (uint8_t i = 0; i < P188_NR_OUTPUT_VALUES; ++i) {
-        const uint8_t pconfigIndex = P188_OUTPUT_MAPPING_OFFSET + i;
+      for (uint8_t chNum = 0; chNum < P188_NR_OUTPUT_VALUES; ++chNum) {
+        const uint8_t pconfigIndex = P188_OUTPUT_MAPPING_OFFSET + chNum;
         const uint8_t choice       = PCONFIG(pconfigIndex);
-        sensorTypeHelper_saveOutputSelector(event, pconfigIndex, i, Plugin_188_output_mapping_name(choice, false));
+        sensorTypeHelper_saveOutputSelector(event, pconfigIndex, chNum, Plugin_188_output_mapping_name(choice, false));
       }
 
       success = SaveCustomTaskSettings(event->TaskIndex, (uint8_t *)&(tmp_config), sizeof(tmp_config), 0);  // save configuration to flash
@@ -274,8 +280,8 @@ boolean Plugin_188(uint8_t function, struct EventStruct *event, String& string)
     {
       format_I2C_port_description(event->TaskIndex);
 
-      for (uint8_t i = 0; i < P188_NR_OUTPUT_VALUES; ++i) {
-        const uint8_t choice = PCONFIG(P188_OUTPUT_MAPPING_OFFSET + i);
+      for (uint8_t chNum = 0; chNum < P188_NR_OUTPUT_VALUES; ++chNum) {
+        const uint8_t choice = PCONFIG(P188_OUTPUT_MAPPING_OFFSET + chNum);
 
         if ((choice >= 0) && (choice < 16)) {
           addHtml(F("<br>"));
@@ -308,76 +314,80 @@ boolean Plugin_188(uint8_t function, struct EventStruct *event, String& string)
         String log;
 #endif // BUILD_NO_DEBUG
 
-        for (taskVarIndex_t i = 0; i < P188_NR_OUTPUT_VALUES; ++i) {
+        for (taskVarIndex_t chNum = 0; chNum < P188_NR_OUTPUT_VALUES; ++chNum) {
 
-          if (PCONFIG(P188_OUTPUT_MAPPING_OFFSET + i) < 8) { // single-ended measurement
+          if (PCONFIG(P188_OUTPUT_MAPPING_OFFSET + chNum) <= P188_OUTPUT_MAPPING_DIFFERENCE_OFFSET)  // single-ended measurement
+          {
             float value{};
-            success = P188_data->read_raw(event, value, PCONFIG(P188_OUTPUT_MAPPING_OFFSET + i));
+            success = P188_data->read_raw(event, value, PCONFIG(P188_OUTPUT_MAPPING_OFFSET + chNum));
 
-            if (success) {
+            if (success) 
+            {
 #ifndef BUILD_NO_DEBUG
-              log = strformat(F("P188 : Output: %d / Mapping %d / Raw Value: %.2f "), i, PCONFIG(P188_OUTPUT_MAPPING_OFFSET + i), value);
+              log = strformat(F("P188 : Output: %d / Mapping %d / Raw Value: %.2f "), chNum, PCONFIG(P188_OUTPUT_MAPPING_OFFSET + chNum), value);
 #endif // BUILD_NO_DEBUG
-              if ((P188_configBits.raw_val >> i) & 0x01) 
+              if (bitRead(P188_configBits.raw_val, chNum)) 
               { // return raw value
-                UserVar.setFloat(event->TaskIndex, i, value);
+                UserVar.setFloat(event->TaskIndex, chNum, value);
               }
               else 
               {
-                if ((P188_configBits.en_cal >> i) & 0x01) 
-                { // do calibration
-                  const float adc1 = P188_data->P188_config.CalIn[i][0];
-                  const float adc2 = P188_data->P188_config.CalIn[i][1];
-                  const float out1 = P188_data->P188_config.CalOut[i][0];
-                  const float out2 = P188_data->P188_config.CalOut[i][1];
+                if (bitRead(P188_configBits.en_cal, chNum))  // do calibration
+                {
+                  const float adc1 = P188_data->P188_config.CalIn[chNum][0];
+                  const float adc2 = P188_data->P188_config.CalIn[chNum][1];
+                  const float out1 = P188_data->P188_config.CalOut[chNum][0];
+                  const float out2 = P188_data->P188_config.CalOut[chNum][1];
 
-                  if (adc1 != adc2) 
+                  if (!essentiallyEqual(adc1, adc2)) 
                   {
                     const float normalized = static_cast<float>(value - adc1) / static_cast<float>(adc2 - adc1);
-                    UserVar.setFloat(event->TaskIndex, i, normalized * (out2 - out1) + out1);
+                    UserVar.setFloat(event->TaskIndex, chNum, normalized * (out2 - out1) + out1);
 #ifndef BUILD_NO_DEBUG
                     log += " Callibrated Value: ";
-                    log += formatUserVarNoCheck(event, i);
+                    log += formatUserVarNoCheck(event, chNum);
 #endif // BUILD_NO_DEBUG
                   }
                 }
-                else 
-                { // return voltage value
-                  UserVar.setFloat(event->TaskIndex, i, value * VoltLSB);
+                else // return voltage value
+                {
+                  UserVar.setFloat(event->TaskIndex, chNum, value * VoltLSB);
 #ifndef BUILD_NO_DEBUG
                   log += " Output Value: ";
-                  log += formatUserVarNoCheck(event, i);
+                  log += formatUserVarNoCheck(event, chNum);
 #endif // BUILD_NO_DEBUG
                 }
               }
             }
           }
-          else // differential measurement
+          else // difference measurement
           {
             float value{};
             float ref_value{};
 
-            success =            P188_data->read_raw(event, value,     (( PCONFIG(P188_OUTPUT_MAPPING_OFFSET + i)-8) % 4) * 2);      // ch 0, 2, 4, 6
-            success = success && P188_data->read_raw(event, ref_value, (((PCONFIG(P188_OUTPUT_MAPPING_OFFSET + i)-8) % 4) * 2) + 1); // ch 1, 3, 5, 7
+            success =            P188_data->read_raw(event, value,     (( PCONFIG(P188_OUTPUT_MAPPING_OFFSET + chNum)-8) % 4) * 2);      // ch 0, 2, 4, 6
+            success = success && P188_data->read_raw(event, ref_value, (((PCONFIG(P188_OUTPUT_MAPPING_OFFSET + chNum)-8) % 4) * 2) + 1); // ch 1, 3, 5, 7
 
-            if (success){
+            if (success)
+            {
 #ifndef BUILD_NO_DEBUG
-              log = strformat(F("P188 : Output: %d / Mapping %d / Differential - Raw Value: %.2f / Reference Raw Value %.2f "), i, PCONFIG(P188_OUTPUT_MAPPING_OFFSET + i), value, ref_value);
+              log = strformat(F("P188 : Output: %d / Mapping %d / Difference- Raw Value: %.2f / Reference Raw Value %.2f "), chNum, PCONFIG(P188_OUTPUT_MAPPING_OFFSET + chNum), value, ref_value);
 #endif // BUILD_NO_DEBUG
-              if (PCONFIG(P188_OUTPUT_MAPPING_OFFSET + i) < 12) { // plain differential
+              if (PCONFIG(P188_OUTPUT_MAPPING_OFFSET + chNum) <= P188_OUTPUT_MAPPING_RESISTOR_MODES_OFFSET)  // difference measurement
+              {
                 value = abs(ref_value - value) * VoltLSB;
               }
 #ifdef P188_FEATURE_RESISTOR_MEASUREMENT
-              else
-              { // resistor measurement
+              else // resistor measurement
+              {
                 if (abs(ref_value - value) > 0) 
                 {
-                  const float R_total = value * P188_data->P188_config.Rref[i] / abs(ref_value - value);
+                  const float R_total = value * P188_data->P188_config.Rref[chNum] / abs(ref_value - value);
 
-                  if (P188_data->P188_config.Rpar[i])
+                  if (P188_data->P188_config.Rpar[chNum])
                   {
-                    if (((float)P188_data->P188_config.Rpar[i] - R_total) > 1)
-                      value = (float)P188_data->P188_config.Rpar[i] * R_total / ((float)P188_data->P188_config.Rpar[i] - R_total);
+                    if (((float)P188_data->P188_config.Rpar[chNum] - R_total) > 1)
+                      value = (float)P188_data->P188_config.Rpar[chNum] * R_total / ((float)P188_data->P188_config.Rpar[chNum] - R_total);
                     else
                       value = P188_data->P188_config.R_Clip; // clip
                   }
@@ -388,34 +398,33 @@ boolean Plugin_188(uint8_t function, struct EventStruct *event, String& string)
                     value = P188_data->P188_config.R_Clip; // clip
                 }
                 else
-                    value = P188_data->P188_config.R_Clip; // clip
-
+                  value = P188_data->P188_config.R_Clip; // clip
               }
 #endif // P188_FEATURE_RESISTOR_MEASUREMENT
 
-              if ((P188_configBits.en_cal >> i) & 0x01) 
-              { // do calibration
-                const float adc1 = P188_data->P188_config.CalIn[i][0];
-                const float adc2 = P188_data->P188_config.CalIn[i][1];
-                const float out1 = P188_data->P188_config.CalOut[i][0];
-                const float out2 = P188_data->P188_config.CalOut[i][1];
+              if (bitRead(P188_configBits.en_cal, chNum)) // do calibration
+              {
+                const float adc1 = P188_data->P188_config.CalIn[chNum][0];
+                const float adc2 = P188_data->P188_config.CalIn[chNum][1];
+                const float out1 = P188_data->P188_config.CalOut[chNum][0];
+                const float out2 = P188_data->P188_config.CalOut[chNum][1];
 
-                if (adc1 != adc2) 
+                if (!essentiallyEqual(adc1, adc2))
                 {
                   const float normalized = static_cast<float>(value - adc1) / static_cast<float>(adc2 - adc1);
-                  UserVar.setFloat(event->TaskIndex, i, normalized * (out2 - out1) + out1);
+                  UserVar.setFloat(event->TaskIndex, chNum, normalized * (out2 - out1) + out1);
 #ifndef BUILD_NO_DEBUG
                   log += " Difference Callibrated Value: ";
-                  log += formatUserVarNoCheck(event, i);
+                  log += formatUserVarNoCheck(event, chNum);
 #endif // BUILD_NO_DEBUG
                 }
               }
-              else
-              { // return voltage value
-                UserVar.setFloat(event->TaskIndex, i, value);
+              else // return voltage value
+              {
+                UserVar.setFloat(event->TaskIndex, chNum, value);
 #ifndef BUILD_NO_DEBUG
                 log += " Difference Output Value: ";
-                log += formatUserVarNoCheck(event, i); 
+                log += formatUserVarNoCheck(event, chNum); 
 #endif // BUILD_NO_DEBUG
               }
             }

@@ -4,6 +4,10 @@
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P188
 
+#ifndef P188_FEATURE_RESISTOR_MEASUREMENT
+  #define P188_FEATURE_RESISTOR_MEASUREMENT 1 // default: enable resistor measurement mode, can be dsiabled in Custom.h
+#endif // #ifndef P188_FEATURE_RESISTOR_MEASUREMENT
+
 /**********************************************/
 /********** TLA2528 specific defines **********/
 /**********************************************/
@@ -90,6 +94,8 @@
 #endif
 
 #define P188_OUTPUT_MAPPING_OFFSET 0
+#define P188_OUTPUT_MAPPING_DIFFERENCE_OFFSET 7
+#define P188_OUTPUT_MAPPING_RESISTOR_MODES_OFFSET 11
 
 #define P188_OUTPUT_MAPPING_0 PCONFIG(0)
 #define P188_OUTPUT_MAPPING_1 PCONFIG(1)
@@ -106,8 +112,8 @@
 struct P188_CONFIG_BITS_t {
   union {
     struct {
-      uint16_t en_cal     : 4;
-      uint16_t raw_val    : 4;
+      uint16_t en_cal     : 4; // one bit for each channel
+      uint16_t raw_val    : 4; // one bit for each channel
       uint16_t unused     : 8;
     };
     uint16_t _regValue{};
