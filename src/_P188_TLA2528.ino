@@ -90,13 +90,13 @@ boolean Plugin_188(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-    # if FEATURE_MQTT_DISCOVER
+# if FEATURE_MQTT_DISCOVER
     case PLUGIN_GET_DISCOVERY_VTYPES:
     {
       success = getDiscoveryVType(event, Plugin_QueryVType_Analog, 255, event->Par5);
       break;
     }
-    # endif // if FEATURE_MQTT_DISCOVER
+# endif // if FEATURE_MQTT_DISCOVER
 
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
@@ -112,14 +112,14 @@ boolean Plugin_188(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-    # if FEATURE_I2C_GET_ADDRESS
+# if FEATURE_I2C_GET_ADDRESS
     case PLUGIN_I2C_GET_ADDRESS:
     {
       event->Par1 = P188_I2C_ADDR;
       success     = true;
       break;
     }
-    # endif // if FEATURE_I2C_GET_ADDRESS
+# endif // if FEATURE_I2C_GET_ADDRESS
 
     case PLUGIN_SET_DEFAULTS:
     {
@@ -128,14 +128,16 @@ boolean Plugin_188(uint8_t function, struct EventStruct *event, String& string)
       P188_OUTPUT_TYPE = static_cast<uint8_t>(Sensor_VType::SENSOR_TYPE_QUAD);
 
       tmp_config.ADC_Vref = 5.0f;
+
 # if P188_FEATURE_RESISTOR_MEASUREMENT
       tmp_config.R_Clip = 10000000.0f;
 # endif // P188_FEATURE_RESISTOR_MEASUREMENT
+
       tmp_config.i2cAddress = P188_I2C_ADDR;
 
       for (int chNum = 0; chNum < VARS_PER_TASK; chNum++)
       {
-        PCONFIG(chNum + P188_OUTPUT_MAPPING_OFFSET) = chNum;
+        PCONFIG(chNum + P188_OUTPUT_MAPPING_OFFSET) = 2 * chNum;
 
 # if P188_FEATURE_RESISTOR_MEASUREMENT
         tmp_config.Rref[chNum] = 4700;
@@ -165,7 +167,7 @@ boolean Plugin_188(uint8_t function, struct EventStruct *event, String& string)
           (P188_OUTPUT_MAPPING_2 > P188_OUTPUT_MAPPING_RESISTOR_MODES_OFFSET) ||
           (P188_OUTPUT_MAPPING_3 > P188_OUTPUT_MAPPING_RESISTOR_MODES_OFFSET))
       {
-        addFormFloatNumberBox(F("Resistor measurment clipping"), F("R_Clip"), tmp_config.R_Clip, 0.0f, 10000000, 2, 0.01f);
+        addFormFloatNumberBox(F("Resistor measurment clipping"), F("R_Clip"), tmp_config.R_Clip, 0.0f, 10000000.0f, 2, 0.01f);
       }
 # endif // P188_FEATURE_RESISTOR_MEASUREMENT
 
@@ -348,11 +350,13 @@ boolean Plugin_188(uint8_t function, struct EventStruct *event, String& string)
 
             if (success)
             {
+
 # ifndef BUILD_NO_DEBUG
-              log = strformat(F("P188 : Output: %d / Mapping %d / Raw Value: %.2f "),
+              log = strformat(F("P188 : Output: %d / Mapping %d / Raw Value: %.2f / VoltsLSB: %.5f "),
                               chNum,
                               PCONFIG(P188_OUTPUT_MAPPING_OFFSET + chNum),
-                              value);
+                              value,
+                              VoltLSB);
 # endif // BUILD_NO_DEBUG
 
               if (bitRead(P188_configBits.raw_val, chNum))
@@ -405,7 +409,7 @@ boolean Plugin_188(uint8_t function, struct EventStruct *event, String& string)
             {
 
 # ifndef BUILD_NO_DEBUG
-              log = strformat(F("P188 : Output: %d / Mapping %d / Difference- Raw Value: %.2f / Reference Raw Value %.2f "), chNum,
+              log = strformat(F("P188 : Output: %d / Mapping %d / Difference - Raw Value: %.2f / Reference Raw Value %.2f "), chNum,
                               PCONFIG(P188_OUTPUT_MAPPING_OFFSET + chNum), value, ref_value);
 # endif // BUILD_NO_DEBUG
 
