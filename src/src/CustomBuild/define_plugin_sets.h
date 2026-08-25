@@ -1723,6 +1723,9 @@ To create/register a plugin, you have to :
       #if !defined(USES_P139) && defined(ESP32)
         #define USES_P139   // AXP2101
       #endif
+      #if !defined(USES_P157) && defined(ESP32)
+        #define USES_P157   // HT16K33 14 segment
+      #endif
     #endif
     #if !defined(USES_P180) && defined(ESP32)
       #define USES_P180   // Generic - I2C Generic
@@ -2073,6 +2076,9 @@ To create/register a plugin, you have to :
   #if !defined(USES_P148) && defined(ESP32)
     #define USES_P148   // Sonoff POWR3xxD and THR3xxD display
   #endif
+  #if !defined(USES_P157) && defined(ESP32)
+    #define USES_P157   // Display - HT16K33 14 segment
+  #endif
   // #if !defined(USES_P165) && defined(ESP32)
   //   #define USES_P165   // Display - NeoPixel (7-Segment)
   // #endif
@@ -2183,6 +2189,9 @@ To create/register a plugin, you have to :
   #endif
   #if !defined(USES_P148) && defined(ESP32)
     #define USES_P148   // Sonoff POWR3xxD and THR3xxD display
+  #endif
+  #if !defined(USES_P157) && defined(ESP32)
+    #define USES_P157   // Display - HT16K33 14 segment
   #endif
   // #if !defined(USES_P165) && defined(ESP32)
   //   #define USES_P165   // Display - NeoPixel (7-Segment)
@@ -2976,6 +2985,9 @@ To create/register a plugin, you have to :
   #endif
   #ifndef USES_P154
     #define USES_P154   // Environment - BMP3xx I2C
+  #endif
+  #ifndef USES_P157
+    #define USES_P157   // Display - HT16K33 14 segment
   #endif
   #ifndef USES_P172
     #define USES_P172   // Environment - BMP3xx SPI
@@ -4650,5 +4662,26 @@ To create/register a plugin, you have to :
 #undef WEBSERVER_INTERFACES
 #endif
 #endif // if !FEATURE_SPI && !FEATURE_I2C && !FEATURE_MODBUS && !FEATURE_CAN && !FEATURE_WRMBUS && !FEATURE_WIMBUS
+
+
+
+#ifndef DEBUG_PCONFIG_RANGE_CHECK
+// N.B. Build size increase compared to previous level, based on MAX builds 20260824
+//      Size increase of level 3 depends also on path length of source files.
+// 0: no range check (use for builds with already build size issues)
+// 1: Basic range check, log when out of bounds (+1k)
+// 2: Include line nr of file where error occured (+13k)
+// 3: include filename + path of source file (+23k)
+# ifndef BUILD_NO_DEBUG
+#  ifdef PLUGIN_BUILD_MAX_ESP32
+#   define DEBUG_PCONFIG_RANGE_CHECK 3
+#  else
+#   define DEBUG_PCONFIG_RANGE_CHECK 1
+#  endif
+# else
+#  define DEBUG_PCONFIG_RANGE_CHECK 0
+# endif 
+#endif
+
 
 #endif // CUSTOMBUILD_DEFINE_PLUGIN_SETS_H
