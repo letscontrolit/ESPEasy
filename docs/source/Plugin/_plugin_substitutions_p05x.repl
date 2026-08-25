@@ -96,9 +96,9 @@
 .. |P056_compileinfo| replace:: `.`
 .. |P056_usedlibraries| replace:: `.`
 
-.. |P057_name| replace:: :cyan:`HT16K33`
+.. |P057_name| replace:: :cyan:`HT16K33 4 digit clock/num`
 .. |P057_type| replace:: :cyan:`Display`
-.. |P057_typename| replace:: :cyan:`Display - HT16K33`
+.. |P057_typename| replace:: :cyan:`Display - HT16K33 4 digit clock/num`
 .. |P057_porttype| replace:: `.`
 .. |P057_status| replace:: :yellow:`DISPLAY` :yellow:`COLLECTION`
 .. |P057_status_lb| replace:: :yellow:`DISPLAY` :yellow:`COLLECTION`
