@@ -550,7 +550,7 @@ public:
   uint8_t       Gateway[4] = {0};
   uint8_t       Subnet[4] = {0};
   uint8_t       DNS[4] = {0};
-  uint8_t       IP_Octet = 0;
+  uint8_t       IP_Octet_unused = 0; // No longer applicable after 2026-Network rewrite-merged
   uint8_t       Unit = 0;
   char          Name[26] = {0};
   char          NTPHost[64] = {0};
