@@ -60,7 +60,7 @@ bool LogHelper::getNext(LogDestination logDestination, uint32_t& timestamp, Stri
   return _logBuffer.getNext(logDestination, timestamp, message, loglevel);
 }
 
-uint32_t LogHelper::getNrMessages(LogDestination logDestination) const
+uint32_t LogHelper::getNrMessages(LogDestination logDestination)
 {
   return _logBuffer.getNrMessages(logDestination);
 }

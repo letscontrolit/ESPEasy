@@ -220,9 +220,9 @@ ESPEasySerialPort EspEasy_Console_Port::getPortType() const
 
 bool EspEasy_Console_Port::process_serialWriteBuffer()
 {
-  if (_serialWriteBuffer.getNrMessages() == 0) { return false; }
-
-  if (_serial == nullptr) { return false; }
+  if ((_serial == nullptr) || (_serialWriteBuffer.getNrMessages() == 0)) {
+    return false;
+  }
 #ifdef ESP32
 
   if (!xPortCanYield()) { return false; }

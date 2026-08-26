@@ -19,7 +19,7 @@ public:
                String  & message,
                uint8_t & loglevel);
 
-  uint32_t getNrMessages(LogDestination logDestination) const;
+  uint32_t getNrMessages(LogDestination logDestination);
 
   void     loop(bool serialOnly);
 

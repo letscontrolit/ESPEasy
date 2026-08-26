@@ -34,7 +34,7 @@ bool LogBuffer::getNext(LogDestination logDestination, uint32_t& timestamp, Stri
   return false;
 }
 
-uint32_t LogBuffer::getNrMessages(LogDestination logDestination) const
+uint32_t LogBuffer::getNrMessages(LogDestination logDestination)
 {
   uint32_t res{};
 
@@ -46,6 +46,10 @@ uint32_t LogBuffer::getNrMessages(LogDestination logDestination) const
     if (LogEntries[pos].validForSubscriber(logDestination)) {
       ++res;
     }
+  }
+
+  if (!res) {
+    lastReadTimeStamp[logDestination] = millis(); // Reset if we aren't going to fetch a next message
   }
   return res;
 }

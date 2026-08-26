@@ -53,7 +53,7 @@ struct LogBuffer {
                uint8_t & loglevel);
 
   // Return the number of messages left for given log destination.
-  uint32_t getNrMessages(LogDestination logDestination) const;
+  uint32_t getNrMessages(LogDestination logDestination);
 
   bool logActiveRead(LogDestination logDestination);
 
