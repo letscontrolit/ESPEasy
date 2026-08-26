@@ -14,6 +14,7 @@
 #endif // if FEATURE_SD
 
 #if FEATURE_SD
+
 void addToSDLog(uint8_t logLevel, const String& str)
 {
   if (!str.isEmpty() && loglevelActiveFor(LOG_TO_SDCARD, logLevel)) {
@@ -31,6 +32,7 @@ void addToSDLog(uint8_t logLevel, const String& str)
     logFile.close();
   }
 }
+
 #endif // if FEATURE_SD
 
 void LogHelper::addLogEntry(LogEntry_t&& logEntry)
@@ -60,14 +62,12 @@ bool LogHelper::getNext(LogDestination logDestination, uint32_t& timestamp, Stri
   return _logBuffer.getNext(logDestination, timestamp, message, loglevel);
 }
 
-uint32_t LogHelper::getNrMessages(LogDestination logDestination)
-{
-  return _logBuffer.getNrMessages(logDestination);
-}
+bool LogHelper::hasMessages(LogDestination logDestination) { return _logBuffer.hasMessages(logDestination); }
 
 void LogHelper::loop(bool serialOnly)
 {
 #if FEATURE_SD
+
   if (!serialOnly) {
     String   message;
     uint32_t timestamp{};
@@ -78,14 +78,11 @@ void LogHelper::loop(bool serialOnly)
       addToSDLog(loglevel, message);
     }
   }
-#endif
+#endif // if FEATURE_SD
   _logBuffer.clearExpiredEntries();
 }
 
-bool LogHelper::logActiveRead(LogDestination logDestination)
-{ 
-  return _logBuffer.logActiveRead(logDestination); 
-}
+bool LogHelper::logActiveRead(LogDestination logDestination)  { return _logBuffer.logActiveRead(logDestination); }
 
 void LogHelper::consolePrint(const __FlashStringHelper *text) { _tmpConsoleOutput += text; }
 
