@@ -36,24 +36,21 @@ bool LogBuffer::getNext(LogDestination logDestination, uint32_t& timestamp, Stri
 
 bool LogBuffer::hasMessages(LogDestination logDestination)
 {
-  uint32_t res{};
-
-  if (logDestination >= NR_LOG_TO_DESTINATIONS) { return res; }
+  if (logDestination >= NR_LOG_TO_DESTINATIONS) { return false; }
 
   clearExpiredEntries(); // Cleanup the old stuff first
 
   uint32_t pos = cache_iterator_pos[logDestination];
 
-  for (; pos < LogEntries.size() && !res; ++pos) {
+  for (; pos < LogEntries.size(); ++pos) {
     if (LogEntries[pos].validForSubscriber(logDestination)) {
-      ++res;
+      cache_iterator_pos[logDestination] = pos;
+      return true;
     }
   }
 
-  if (!res) {
-    lastReadTimeStamp[logDestination] = millis(); // Reset if we aren't going to fetch a next message
-  }
-  return !!res;
+  lastReadTimeStamp[logDestination] = millis(); // Reset if we aren't going to fetch a next message
+  return false;
 }
 
 bool LogBuffer::logActiveRead(LogDestination logDestination) {
