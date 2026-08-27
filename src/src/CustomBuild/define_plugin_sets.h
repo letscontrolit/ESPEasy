@@ -2085,6 +2085,15 @@ To create/register a plugin, you have to :
   #if !defined(USES_P180) && defined(ESP32)
     #define USES_P180   // Generic - I2C Generic
   #endif
+
+  // Remove both LoRaWAN controllers from display builds as those are the most size-critical
+  #ifdef USES_C018
+    #undef USES_C018 // TTN RN2483
+  #endif
+  #ifdef USES_C023
+    #undef USES_C023 // AT-command LoRaWAN
+  #endif
+
 #endif // ifdef PLUGIN_DISPLAY_A_COLLECTION
 
 // Collection of display plugins, set B (AdaGFX_Helper).
@@ -2191,13 +2200,21 @@ To create/register a plugin, you have to :
     #define USES_P148   // Sonoff POWR3xxD and THR3xxD display
   #endif
   #if !defined(USES_P157) && defined(ESP32)
-    #define USES_P157   // Display - HT16K33 14 segment
+//    #define USES_P157   // Display - HT16K33 14 segment
   #endif
   // #if !defined(USES_P165) && defined(ESP32)
   //   #define USES_P165   // Display - NeoPixel (7-Segment)
   // #endif
   #if !defined(USES_P180) && defined(ESP32)
     #define USES_P180   // Generic - I2C Generic
+  #endif
+
+  // Remove both LoRaWAN controllers from display builds as those are the most size-critical
+  #ifdef USES_C018
+    #undef USES_C018 // TTN RN2483
+  #endif
+  #ifdef USES_C023
+    #undef USES_C023 // AT-command LoRaWAN
   #endif
 
   #if FEATURE_CHART_JS // && defined(ESP8266)
@@ -3100,7 +3117,7 @@ To create/register a plugin, you have to :
 #if defined(USES_P044) && !defined(USES_P020) // P020 is used to replace/emulate P044
   #define USES_P020
 #endif
-#if defined(USES_P020) || defined(USES_P049) || defined(USES_P052) || defined(USES_P053) || defined(USES_P056)  || defined(USES_P065) || defined(USES_P071) || defined(USES_P075) || defined(USES_P077) || defined(USES_P078) || defined(USES_P082) || defined(USES_P085) || defined(USES_P087) || defined(USES_P093)|| defined(USES_P094) || defined(USES_P102) || defined(USES_P108) || defined(USES_P134) || defined(USES_P144) || defined(USES_P159) || defined(USES_P176) || defined(USES_C018)
+#if defined(USES_P020) || defined(USES_P049) || defined(USES_P052) || defined(USES_P053) || defined(USES_P056)  || defined(USES_P065) || defined(USES_P071) || defined(USES_P075) || defined(USES_P077) || defined(USES_P078) || defined(USES_P082) || defined(USES_P085) || defined(USES_P087) || defined(USES_P093)|| defined(USES_P094) || defined(USES_P102) || defined(USES_P108) || defined(USES_P134) || defined(USES_P144) || defined(USES_P159) || defined(USES_P176) || defined(USES_C018) || defined(USES_C023)
   // At least one plugin uses serial.
   #ifndef PLUGIN_USES_SERIAL
     #define PLUGIN_USES_SERIAL
@@ -4662,7 +4679,6 @@ To create/register a plugin, you have to :
 #undef WEBSERVER_INTERFACES
 #endif
 #endif // if !FEATURE_SPI && !FEATURE_I2C && !FEATURE_MODBUS && !FEATURE_CAN && !FEATURE_WRMBUS && !FEATURE_WIMBUS
-
 
 
 #ifndef DEBUG_PCONFIG_RANGE_CHECK

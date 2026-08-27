@@ -2,7 +2,8 @@
 
 #ifdef USES_P109
 
-# include "../src/src/Globals/ESPEasy_time.h"
+# include "../../ESPEasy/net/ESPEasyNetwork.h"
+# include "../Globals/ESPEasy_time.h"
 
 /**************************************************************************
  * Constructor
