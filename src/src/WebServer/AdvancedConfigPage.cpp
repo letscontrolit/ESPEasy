@@ -44,7 +44,7 @@ void handle_advanced() {
 
   if (!webArg(F("edit")).isEmpty())
   {
-    Settings.IP_Octet     = webArg(F("ip")).toInt();
+    // Settings.IP_Octet_unused     = webArg(F("ip")).toInt(); // No longer applicable after 2026-Network rewrite-merged
     strncpy_webserver_arg(Settings.NTPHost, F("ntphost"));
     Settings.TimeZone = getFormItemInt(F("timezone"));
     TimeChangeRule dst_start(getFormItemInt(F("dststartweek")), getFormItemInt(F("dststartdow")), getFormItemInt(F("dststartmonth")), getFormItemInt(F("dststarthour")), Settings.TimeZone);
@@ -298,7 +298,7 @@ void handle_advanced() {
   addFormNumericBox(F("Webserver port"), F("webport"), Settings.WebserverPort, 0, 65535);
   addFormNote(F("Requires reboot to activate"));
 
-  addFormNumericBox(F("Fixed IP Octet"), F("ip"),           Settings.IP_Octet,     0, 255);
+  // addFormNumericBox(F("Fixed IP Octet"), F("ip"),           Settings.IP_Octet_unused,     0, 255); // No longer applicable after 2026-Network rewrite-merged
 
   addFormNumericBox(F("WD I2C Address"), F("wdi2caddress"), Settings.WDI2CAddress, 0, 127);
   addHtml(F(" (decimal)"));
