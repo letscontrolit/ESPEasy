@@ -14,16 +14,16 @@ public:
 
   void addLogEntry(LogEntry_t&& logEntry);
 
-  bool getNext(LogDestination   logDestination,
-               uint32_t& timestamp,
-               String  & message,
-               uint8_t & loglevel);
+  bool getNext(LogDestination logDestination,
+               uint32_t     & timestamp,
+               String       & message,
+               uint8_t      & loglevel);
 
-  uint32_t getNrMessages(LogDestination logDestination) const;
+  bool hasMessages(LogDestination logDestination);
 
-  void     loop(bool serialOnly);
+  void loop(bool serialOnly);
 
-  bool     logActiveRead(LogDestination logDestination);
+  bool logActiveRead(LogDestination logDestination);
 
 
   // Append to internal buffer, which will only be flushed on consolePrintln
