@@ -693,7 +693,6 @@ void SettingsStruct_tmpl<N_TASKS>::clearMisc() {
   PID                      = ESP_PROJECT_PID;
   Version                  = VERSION;
   Build                    = get_build_nr();
-  IP_Octet                 = 0;
   Delay                    = DEFAULT_DELAY;
   Pin_i2c_sda              = DEFAULT_PIN_I2C_SDA;
   Pin_i2c_scl              = DEFAULT_PIN_I2C_SCL;

@@ -411,18 +411,6 @@ See for more detailed information "Controller - ESPEasy P2P Networking"
 Special and Experimental Settings
 ---------------------------------
 
-Fixed IP Octet
-^^^^^^^^^^^^^^
-
-Sets the last byte(octet) of the IP address to this value, regardless of what IP is given using DHCP (all other settings received via DHCP will be used)
-
-So if you receive 192.168.1.234 from your DHCP server and this value is set to "10",
-then the used IP in your node is 192.168.1.10.
-But since you're receiving more information from the DHCP server,
-like subnet mask / gateway / DNS, it may still be useful.
-This allows a somewhat static IP in your network (N.B. use it with an 'octet' outside the range of the DHCP IPs) while still having set to DHCP.
-So if you take the node to another network which does use 192.168.52.x then you will know it will be on 192.168.52.10 (when setting this value to "10")
-
 WD I2C Address
 ^^^^^^^^^^^^^^
 

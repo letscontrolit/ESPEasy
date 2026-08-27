@@ -9,6 +9,7 @@
 // written by Jochen Krapf (jk@nerd2nerd.org)
 
 /** Changelog:
+ * 2026-05-23 tonhuisman: Update plugin name to better distinguish from P157
  * 2024-12-14 tonhuisman: Fix mprint command to skip the colon segment when printing a non-colon character in that position.
  * 2024-12 tonhuisman: Start changelog.
  */
@@ -72,7 +73,7 @@
 
 # define PLUGIN_057
 # define PLUGIN_ID_057         57
-# define PLUGIN_NAME_057       "Display - HT16K33"
+# define PLUGIN_NAME_057       "Display - HT16K33 4 digit clock/num"
 
 
 # include "src/PluginStructs/P057_data_struct.h"

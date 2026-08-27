@@ -3,19 +3,19 @@
 #if FEATURE_SYSLOG
 
 
-#include "../../ESPEasy/net/ESPEasyNetwork.h"
-#include "../../ESPEasy/net/Globals/NetworkState.h"
-#include "../Globals/ESPEasy_time.h"
-#include "../Globals/Settings.h"
-#include "../Helpers/ESPEasy_time_calc.h"
-#include "../Helpers/Networking.h"
-#include "../Helpers/StringConverter.h"
+# include "../../ESPEasy/net/ESPEasyNetwork.h"
+# include "../../ESPEasy/net/Globals/NetworkState.h"
+# include "../Globals/ESPEasy_time.h"
+# include "../Globals/Settings.h"
+# include "../Helpers/ESPEasy_time_calc.h"
+# include "../Helpers/Networking.h"
+# include "../Helpers/StringConverter.h"
 
-#define MAX_LENGTH_SYSLOG_MESSAGE  1000
+# define MAX_LENGTH_SYSLOG_MESSAGE  1000
 
 bool SyslogWriter::process()
 {
-  if ((Settings.SyslogLevel == 0) || (getNrMessages() == 0)) {
+  if ((Settings.SyslogLevel == 0) || !hasMessages()) {
     return false;
   }
 
@@ -136,4 +136,5 @@ void SyslogWriter::prepare_prefix()
     formattedTimestamp.c_str(),
     hostname.c_str());
 }
-#endif
+
+#endif // if FEATURE_SYSLOG

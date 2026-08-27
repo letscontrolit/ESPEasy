@@ -207,14 +207,14 @@ uint8_t getTaskI2CAddress(taskIndex_t taskIndex) {
 // ********************************************************************************
 #if FEATURE_I2C
 bool prepare_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex) {
-if (!Settings.TaskDeviceEnabled[taskIndex] || 
-    !validTaskIndex(taskIndex) || 
+if (!validTaskIndex(taskIndex) || 
     !validDeviceIndex(DeviceIndex)) {
     return false;
   }
 
-  if (Device[DeviceIndex].Type != DEVICE_TYPE_I2C) {
-    return true; // No I2C task, so consider all-OK
+  if (!Settings.TaskDeviceEnabled[taskIndex] || 
+      Device[DeviceIndex].Type != DEVICE_TYPE_I2C) {
+    return true; // No (enabled) I2C task, so consider all-OK
   }
   #if FEATURE_I2C_MULTIPLE
   const uint8_t i2cBus = Settings.getI2CInterface(taskIndex);
@@ -248,13 +248,13 @@ if (!Settings.TaskDeviceEnabled[taskIndex] ||
 }
 
 void post_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex) {
-if (!Settings.TaskDeviceEnabled[taskIndex] || 
-    !validTaskIndex(taskIndex) || 
+if (!validTaskIndex(taskIndex) || 
     !validDeviceIndex(DeviceIndex)) {
     return;
   }
 
-  if (Device[DeviceIndex].Type != DEVICE_TYPE_I2C) {
+  if (!Settings.TaskDeviceEnabled[taskIndex] || 
+      Device[DeviceIndex].Type != DEVICE_TYPE_I2C) {
     return;
   }
   #if FEATURE_I2C_MULTIPLE

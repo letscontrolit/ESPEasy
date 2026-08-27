@@ -634,7 +634,6 @@
 
 #define DEFAULT_USE_GLOBAL_SYNC                 false           // (true|false)
 
-#define DEFAULT_IP_OCTET                        0                       //
 #define DEFAULT_WD_IC2_ADDRESS                  0                       //
 #define DEFAULT_USE_SSDP                        false           // (true|false)
 #define DEFAULT_CON_FAIL_THRES                  0                       //

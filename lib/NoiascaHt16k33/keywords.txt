@@ -1,0 +1,41 @@
+#######################################
+# Syntax Coloring Map For NoiascaHt16K33
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+Noiasca_ht16k33_hw_14	KEYWORD1
+Noiasca_ht16k33_hw_14_4	KEYWORD1
+Noiasca_ht16k33_hw_14_ext	KEYWORD1
+Noiasca_ht16k33_hw_7	KEYWORD1
+Noiasca_ht16k33_hw_7_4_c	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+begin	KEYWORD2
+blinkRate	KEYWORD2
+clear	KEYWORD2
+off	KEYWORD2
+on	KEYWORD2
+isConnected	KEYWORD2
+scroll	KEYWORD2
+setBrightness	KEYWORD2
+setCursor	KEYWORD2
+setDigits	KEYWORD2
+setScrolltext	KEYWORD2
+setScrollIntervall	KEYWORD2
+setScrollWait	KEYWORD2
+#writeLowLevel	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+HT16K33_BLINK_OFF	LITERAL1
+HT16K33_BLINK_2HZ	LITERAL1
+HT16K33_BLINK_1HZ	LITERAL1
+HT16K33_BLINK_HALFHZ	LITERAL1
