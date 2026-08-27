@@ -17,6 +17,8 @@
 # define PLUGIN_ID_188 188
 # define PLUGIN_NAME_188 "Analog input - TLA2528"
 
+# define P188_DEBUG 0  // change to 1 to include debug output for this plugin
+
 boolean Plugin_188(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
@@ -337,9 +339,9 @@ boolean Plugin_188(uint8_t function, struct EventStruct *event, String& string)
       if (nullptr != P188_data) {
         const float VoltLSB =  P188_data->P188_config.ADC_Vref / 4096.0f;
 
-# ifndef BUILD_NO_DEBUG
+# if P188_DEBUG
         String log;
-# endif // BUILD_NO_DEBUG
+# endif // P188_DEBUG
 
         for (taskVarIndex_t chNum = 0; chNum < P188_NR_OUTPUT_VALUES; ++chNum) {
 
@@ -351,13 +353,13 @@ boolean Plugin_188(uint8_t function, struct EventStruct *event, String& string)
             if (success)
             {
 
-# ifndef BUILD_NO_DEBUG
+# if P188_DEBUG
               log = strformat(F("P188 : Output: %d / Mapping %d / Raw Value: %.2f / VoltsLSB: %.5f "),
                               chNum,
                               PCONFIG(P188_OUTPUT_MAPPING_OFFSET + chNum),
                               value,
                               VoltLSB);
-# endif // BUILD_NO_DEBUG
+# endif // P188_DEBUG
 
               if (bitRead(P188_configBits.raw_val, chNum))
               { // return raw value
@@ -377,10 +379,10 @@ boolean Plugin_188(uint8_t function, struct EventStruct *event, String& string)
                     const float normalized = (value - adc1) / (adc2 - adc1);
                     UserVar.setFloat(event->TaskIndex, chNum, normalized * (out2 - out1) + out1);
 
-# ifndef BUILD_NO_DEBUG
-                    log += " Callibrated Value: ";
+# if P188_DEBUG
+                    log += F(" Callibrated Value: ");
                     log += formatUserVarNoCheck(event, chNum);
-# endif // BUILD_NO_DEBUG
+# endif // P188_DEBUG
 
                   }
                 }
@@ -388,10 +390,10 @@ boolean Plugin_188(uint8_t function, struct EventStruct *event, String& string)
                 {
                   UserVar.setFloat(event->TaskIndex, chNum, value * VoltLSB);
 
-# ifndef BUILD_NO_DEBUG
-                  log += " Output Value: ";
+# if P188_DEBUG
+                  log += F(" Output Value: ");
                   log += formatUserVarNoCheck(event, chNum);
-# endif // BUILD_NO_DEBUG
+# endif // P188_DEBUG
 
                 }
               }
@@ -408,10 +410,10 @@ boolean Plugin_188(uint8_t function, struct EventStruct *event, String& string)
             if (success)
             {
 
-# ifndef BUILD_NO_DEBUG
+# if P188_DEBUG
               log = strformat(F("P188 : Output: %d / Mapping %d / Difference - Raw Value: %.2f / Reference Raw Value %.2f "), chNum,
                               PCONFIG(P188_OUTPUT_MAPPING_OFFSET + chNum), value, ref_value);
-# endif // BUILD_NO_DEBUG
+# endif // P188_DEBUG
 
               if (PCONFIG(P188_OUTPUT_MAPPING_OFFSET + chNum) <= P188_OUTPUT_MAPPING_RESISTOR_MODES_OFFSET) // difference measurement
               {
@@ -462,10 +464,10 @@ boolean Plugin_188(uint8_t function, struct EventStruct *event, String& string)
                   const float normalized = (value - adc1) / (adc2 - adc1);
                   UserVar.setFloat(event->TaskIndex, chNum, normalized * (out2 - out1) + out1);
 
-# ifndef BUILD_NO_DEBUG
-                  log += " Difference Callibrated Value: ";
+# if P188_DEBUG
+                  log += F(" Difference Callibrated Value: ");
                   log += formatUserVarNoCheck(event, chNum);
-# endif // BUILD_NO_DEBUG
+# endif // P188_DEBUG
 
                 }
               }
@@ -473,20 +475,20 @@ boolean Plugin_188(uint8_t function, struct EventStruct *event, String& string)
               {
                 UserVar.setFloat(event->TaskIndex, chNum, value);
 
-# ifndef BUILD_NO_DEBUG
-                log += " Difference Output Value: ";
+# if P188_DEBUG
+                log += F(" Difference Output Value: ");
                 log += formatUserVarNoCheck(event, chNum);
-# endif // BUILD_NO_DEBUG
+# endif // P188_DEBUG
 
               }
             }
           }
 
-# ifndef BUILD_NO_DEBUG
+# if P188_DEBUG
           if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
             addLogMove(LOG_LEVEL_DEBUG, log);
           }
-# endif // ifndef BUILD_NO_DEBUG
+# endif // P188_DEBUG
 
         }
       }
