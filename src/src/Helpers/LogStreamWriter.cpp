@@ -20,11 +20,11 @@ bool LogStreamWriter::process(Print*stream, size_t availableForWrite)
   return write(*stream, availableForWrite) != 0;
 }
 
-bool     LogStreamWriter::process() { return false; }
+bool LogStreamWriter::process() { return false; }
 
-uint32_t LogStreamWriter::getNrMessages() const
+bool LogStreamWriter::hasMessages() const
 {
-  return Logging.getNrMessages(_log_destination);
+  return Logging.hasMessages(_log_destination);
 }
 
 size_t LogStreamWriter::write(Print& stream, size_t nrBytesToWrite)
@@ -84,9 +84,9 @@ size_t LogStreamWriter::write_item(Print& stream,
   bool done = false;
 
 
-
   while (!done && bytesWritten < nrBytesToWrite) {
     const size_t bytesWritten_startLoop = bytesWritten;
+
     if (!_prefix.isEmpty()) {
       bytesWritten += write_part(_prefix, stream, nrBytesToWrite - bytesWritten);
     }
@@ -101,10 +101,11 @@ size_t LogStreamWriter::write_item(Print& stream,
       clear();
       done = true;
     }
+
     if (bytesWritten_startLoop == bytesWritten)
-    { 
+    {
       // Nothing written in this loop, retry later.
-      return bytesWritten; 
+      return bytesWritten;
     }
   }
   return bytesWritten;
@@ -119,6 +120,7 @@ size_t LogStreamWriter::write_part(String& str, Print& stream, size_t  nrBytesTo
     bytesWritten = stream.write(&str[_readpos], bytesLeft);
     _readpos    += bytesWritten;
   }
+
   if (_readpos >= str.length()) {
     // Clear str
     str.clear();

@@ -41,6 +41,10 @@
 #  include "../Helpers/Hardware_temperature_sensor.h"
 # endif
 
+#if FEATURE_EEPROM_EXTERNAL
+#include "../../ESPEasy/eeprom/Helpers/EEPROMExternal.h"
+#endif // if FEATURE_EEPROM_EXTERNAL
+
 # ifdef ESP32
 #  include <esp_partition.h>
 # endif // ifdef ESP32
@@ -724,6 +728,27 @@ void handle_sysinfo_Storage() {
   getPartitionTableSVG();
   #    endif // ifdef ESP8266
 #   endif // if FEATURE_CHART_STORAGE_LAYOUT
+
+  #ifndef LIMIT_BUILD_SIZE
+
+  #if FEATURE_EEPROM_EXTERNAL
+  {
+    const bool eepromChecked = ESPEasy::eeprom::checkEEPROMEnabled() > 0;
+    if (eepromChecked) {
+      addFormSubHeader(F("External I2C EEPROM"));
+      addRowLabel(F("EEPROM Model/size"));
+      addHtml(getEEPROMName(static_cast<ESPEasy::eeprom::EEPROMExternal_Type_e>(Settings.EEPROMExternalType())));
+      addRowLabel(F("EEPROM Enabled"));
+      addEnabled(eepromChecked);
+      if (ESPEasy::eeprom::isEEPROMExternalWriteProtected()) {
+        addHtml(F(" Write-protected!"));
+      } 
+      addRowLabel(F("'WriteEE' slots available"));
+      addHtmlInt(ESPEasy::eeprom::getEEPROMMaxSlots());
+    }
+  }
+  #endif // if FEATURE_EEPROM_EXTERNAL
+  #endif // ifndef LIMIT_BUILD_SIZE
 }
 
 #  endif // ifndef WEBSERVER_SYSINFO_MINIMAL
