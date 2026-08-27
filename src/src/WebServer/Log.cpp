@@ -111,10 +111,10 @@ void handle_log_JSON() {
             }
           }
         }
-        const uint32_t nrEntriesLeft = Logging.getNrMessages(LOG_TO_WEBLOG);
-        int32_t logTimeSpan       = timeDiff(firstTimeStamp, lastTimeStamp);
-        int32_t refreshSuggestion = (nrEntriesLeft > 0) ? 200 : 1000;
-        int32_t newOptimum        = 1000;
+        const bool entriesAvailable = Logging.hasMessages(LOG_TO_WEBLOG);
+        const int32_t logTimeSpan   = timeDiff(firstTimeStamp, lastTimeStamp);
+        int32_t refreshSuggestion   = entriesAvailable ? 200 : 1000;
+        int32_t newOptimum          = 1000;
 
 
         if ((nrEntries > 2) && (logTimeSpan > 1)) {
