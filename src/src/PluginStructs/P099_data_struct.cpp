@@ -1,8 +1,9 @@
 #include "../PluginStructs/P099_data_struct.h"
 
 #ifdef USES_P099
-# include "../ESPEasyCore/ESPEasyNetwork.h"
+# include "../../ESPEasy/net/ESPEasyNetwork.h"
 # include "../Helpers/ESPEasy_Storage.h"
+# include "../Helpers/Hardware_SPI.h"
 # include "../Helpers/Scheduler.h"
 # include "../Helpers/StringConverter.h"
 # include "../Helpers/SystemVariables.h"
@@ -55,7 +56,11 @@ bool P099_data_struct::init(taskIndex_t taskIndex,
   _ts_x_res       = ts_x_res;
   _ts_y_res       = ts_y_res;
 
-  touchscreen = new (std::nothrow) XPT2046_Touchscreen(_address_ts_cs);
+  auto spi_ptr = getSPIBusForTask(taskIndex);
+  if (!spi_ptr) { return false; }
+  touchscreen = new (std::nothrow) XPT2046_Touchscreen(
+    _address_ts_cs, 
+    *spi_ptr);
 
   if (touchscreen != nullptr) {
     touchscreen->setRotation(_rotation);
@@ -328,7 +333,7 @@ bool P099_data_struct::plugin_write(struct EventStruct *event, const String& str
     subcommand = parseString(string, 2);
 
     if (equals(command, F("touch"))) {
-      int  command_i = GetCommandCode(subcommand.c_str(), p099_subcommands);
+      int command_i = GetCommandCode(subcommand.c_str(), p099_subcommands);
 
       if (command_i == -1) {
         // No matching subcommand found

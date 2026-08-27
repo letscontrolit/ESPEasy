@@ -1,21 +1,20 @@
 #include "../Commands/HTTP.h"
 
-#include "../../ESPEasy_common.h"
-
 #include "../Commands/Common.h"
 
 #include "../DataStructs/ControllerSettingsStruct.h"
 #include "../DataStructs/SettingsStruct.h"
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
-#include "../ESPEasyCore/ESPEasyNetwork.h"
+#include "../../ESPEasy/net/ESPEasyNetwork.h"
 
 #include "../Globals/Settings.h"
 
-#include "../Helpers/_CPlugin_Helper.h"
-#include "../Helpers/Misc.h"
 #include "../Helpers/Networking.h"
-#include "../Helpers/StringParser.h"
+
+#if FEATURE_JSON_EVENT
+# include "../Helpers/HTTPResponseParser.h"
+#endif // if FEATURE_JSON_EVENT
 
 #if FEATURE_SEND_TO_HTTP || FEATURE_POST_TO_HTTP || FEATURE_PUT_TO_HTTP
 const __FlashStringHelper* httpEmitToHTTP(struct EventStruct        *event,
@@ -28,8 +27,8 @@ const __FlashStringHelper* httpEmitToHTTP(struct EventStruct        *event,
                                           const bool                 useBody,
                                           const bool                 useHttps)
 {
-  if (NetworkConnected()) {
-    String   user, pass, host, file, path, header, postBody;
+  if (ESPEasy::net::NetworkConnected()) {
+    String   user, pass, host, file, path, header, postBody, protocol;
     uint16_t port;
     uint8_t  idx;
 
@@ -37,7 +36,7 @@ const __FlashStringHelper* httpEmitToHTTP(struct EventStruct        *event,
 
     if (arg1.indexOf(F("://")) != -1) {
       // Full url given
-      path = splitURL(arg1, user, pass, host, port, file);
+      path = splitURL(arg1, user, pass, host, port, file, protocol);
       idx  = 3;
 
       if (useHeader || useBody) {
@@ -99,6 +98,7 @@ const __FlashStringHelper* httpEmitToHTTP(struct EventStruct        *event,
     #endif // if FEATURE_HTTP_TLS
 
     int httpCode = -1;
+
     send_via_http(
       logIdentifier,
       timeout,
@@ -111,7 +111,8 @@ const __FlashStringHelper* httpEmitToHTTP(struct EventStruct        *event,
       header,
       postBody,
       httpCode,
-      waitForAck
+      waitForAck,
+      protocol
       #if FEATURE_HTTP_TLS
       , tlsType
       #endif // if FEATURE_HTTP_TLS

@@ -13,8 +13,7 @@
 # include "../Helpers/ESPEasy_FactoryDefault.h"
 # include "../Helpers/ESPEasy_Storage.h"
 # include "../Helpers/Misc.h"
-# include "../Helpers/Networking.h"
-# include "../Helpers/StringParser.h"
+# include "../Helpers/StringConverter.h"
 
 
 // ********************************************************************************
@@ -25,10 +24,8 @@ void handle_settingsarchive() {
   checkRAM(F("handle_settingsarchive"));
   # endif // ifndef BUILD_NO_RAM_TRACKER
 
-  if (!isLoggedIn()) { return; }
-  navMenuIndex = MENU_INDEX_TOOLS;
-  TXBuffer.startStream();
-  sendHeadandTail_stdtemplate(_HEAD);
+  if (!startStream_send_stdTemplate(MENU_INDEX_TOOLS)) { return; }
+
   html_add_form();
   html_table_class_normal();
   html_TR();
@@ -235,8 +232,7 @@ void handle_settingsarchive() {
 
   html_end_table();
   html_end_form();
-  sendHeadandTail_stdtemplate(_TAIL);
-  TXBuffer.endStream();
+  sendTail_stdtemplate();
 }
 
 // ********************************************************************************
@@ -257,6 +253,9 @@ void storeDownloadFiletypeCheckbox(FileType::Enum filetype, unsigned int filenr)
     case FileType::NOTIFICATION_DAT: ResetFactoryDefaultPreference.fetchNotificationDat(isChecked); break;
     case FileType::RULES_TXT: { ResetFactoryDefaultPreference.fetchRulesTXT(filenr, isChecked); break; }
     case FileType::PROVISIONING_DAT: { ResetFactoryDefaultPreference.fetchProvisioningDat(isChecked); break; }
+#if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE
+    case FileType::DEV_SECURITY_DAT: { ResetFactoryDefaultPreference.fetchDeviceSecurityDat(isChecked); break; }
+#endif
 
     case FileType::MAX_FILETYPE:
       break;

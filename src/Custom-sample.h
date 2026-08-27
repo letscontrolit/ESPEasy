@@ -30,6 +30,10 @@
 #define FEATURE_JSON_EVENT              0  // Generates an event with the values of a JSON repsonse of an HTTP call. Keys are stored in json.keys one key per line (e.g.: Body.Data.DAY_ENERGY.Values.1)
 // #define FEATURE_SD                   1  // Enable SD card support
 // #define FEATURE_DOWNLOAD             1  // Enable downloading a file from an url
+// #define FEATURE_EEPROM_EXTERNAL      1  // Enable support for AT24Cxxx EEPROM chips AT24C32(4kB)..AT24C1024(128kB), optional: AT24C2048(256kB) and FRAM MB85RC32(4kB)..MB85RC1M(128kB), optional: MB85RC2M(256kB)
+// #define FEATURE_RTC_SRAM_STORAGE     1  // Enable storing values in supported RTC Clock chip SRAM (DS1307, DS3232, PCF8583)
+// #define FEATURE_JSON_PARSE           1  // Enable extended JSON parsing, disabled by default on ESP8266
+// #define FEATURE_EXTENDED_STRING_FUNCTIONS  1  // Enable extra Rules string functions. Also required to enable FEATURE_JSON_PARSE on ESP8266, as it's disabled by default for ESP8266
 
 #ifdef BUILD_GIT
 # undef BUILD_GIT
@@ -46,6 +50,15 @@
 #define DEFAULT_AP_IP       192, 168, 4, 1                           // Enter IP address (comma separated) for AP (config) mode
 #define DEFAULT_AP_SUBNET   255, 255, 255, 0                         // Enter IP address (comma separated) for AP (config) mode
 #define DEFAULT_AP_KEY      "configesp"                              // Enter network WPA key for AP (config) mode
+
+// #define DEFAULT_AP_DNS      1,1,1,1                                  // Used by PPP/NAPT feature (mind the comma-separated parts!),
+                                                                     // Cloudflare DNS: 1.1.1.1 and 1.0.0.1 and 1.1.1.2 (secure) and 1.1.1.3 (censored)
+                                                                     // Alternatives
+                                                                     // Cleanbrowsing: 185.228.168.9 and 185.228.169.9
+                                                                     // Google Public DNS: 8.8.8.8 and 8.8.4.4
+                                                                     // Quad9:  9.9.9.9 and 149.112.112.112
+                                                                     // OpenDNS: 208.67.222.222 and 208.67.220.220
+                                                                     // Comodo Secure DNS: 8.26.56.26 and 8.20.247.20
 
 // --- Wifi Client Mode -----------------------------------------------------------------------------
 #define DEFAULT_SSID                         "MyHomeSSID"            // Enter your network SSID
@@ -77,7 +90,7 @@
                                                    // See: https://github.com/letscontrolit/ESPEasy/issues/2724
 #define DEFAULT_SEND_TO_HTTP_ACK             false // Wait for ack with SendToHttp command.
 
-#define DEFAULT_AP_DONT_FORCE_SETUP          false // Allow optional usage of Sensor without WIFI avaiable // When set you can use the Sensor in AP-Mode without beeing forced to /setup
+#define DEFAULT_AP_FORCE_SETUP               true  // When set, start Captive Portal to redirect user to web interface when connecting to AP
 #define DEFAULT_DONT_ALLOW_START_AP          false // Usually the AP will be started when no WiFi is defined, or the defined one cannot be found. This flag may prevent it.
 
 // --- Default Controller ------------------------------------------------------------------------------
@@ -218,6 +231,7 @@
 #define FEATURE_SSDP  1
 
 #define FEATURE_EXT_RTC  1         // Support for external RTC clock modules like PCF8563/PCF8523/DS3231/DS1307 
+#define FEATURE_EXT_RTC_PCF8583  1 // As we enable External RTC clock modules, we can also include PCF8583
 
 #define FEATURE_PLUGIN_STATS  1    // Support collecting historic data + computing stats on historic data
 #ifdef ESP8266
@@ -295,6 +309,27 @@
 //  #define DEFAULT_PROVISIONING_PASS               ""
 #endif
 
+/*
+ #######################################################################################################
+   Defining Ethernet & GPIO
+ #######################################################################################################
+ */
+// Actual values can be obtained from product documentation and ESPEasyDefaults.h 
+// #define DEFAULT_ETH_PHY_ADDR             0
+// #define DEFAULT_ETH_PHY_TYPE             0 // See EthernetParameters.h enum EthPhyType_t
+// #define DEFAULT_ETH_PIN_MDC              -1
+// #define DEFAULT_ETH_PIN_MDIO             -1
+// #define DEFAULT_ETH_PIN_POWER            -1
+// #define DEFAULT_ETH_CLOCK_MODE           (0) // See EthernetParameters.h enum EthClockMode_t
+
+// #define DEFAULT_NETWORK_MEDIUM       ESPEasy::net::NetworkMedium_t::WIFI
+
+// #define DEFAULT_ENABLED_NW001            1 // Enable NWPLUGIN_001, on factory reset/initial setup
+// #define DEFAULT_ENABLED_NW002            1 // Enable NWPLUGIN_002, on factory reset/initial setup
+// #define DEFAULT_ENABLED_NW003            1 // Enable NWPLUGIN_003, on factory reset/initial setup
+// #define DEFAULT_ENABLED_NW004            1 // Enable NWPLUGIN_004, on factory reset/initial setup
+// #define DEFAULT_ENABLED_NW005            1 // Enable NWPLUGIN_005, on factory reset/initial setup
+// This list should be updated when adding new Network Interface plugins
 
 
 
@@ -308,7 +343,9 @@
 /*
 #define MENU_INDEX_CONFIG_VISIBLE        false
 #define MENU_INDEX_CONTROLLERS_VISIBLE   false
+#define MENU_INDEX_NETWORK_VISIBLE       false
 #define MENU_INDEX_HARDWARE_VISIBLE      false
+#define MENU_INDEX_BUSES_VISIBLE         false
 #define MENU_INDEX_DEVICES_VISIBLE       false
 #define MENU_INDEX_RULES_VISIBLE         false
 #define MENU_INDEX_NOTIFICATIONS_VISIBLE false
@@ -538,6 +575,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 
 // #define USES_P131   // NeoPixel Matrix
 // #define USES_P132   // INA3221
+//   #define P132_EXTENDED 1 // Extend support with INA219, INA226, INA228, INA230, INA231 and INA260
 // #define USES_P133   // LTR390 UV
 // #define USES_P134   // A02YYUW
 // #define USES_P135   // SCD4x
@@ -614,7 +652,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_C016   // Cache controller
 // #define USES_C017   // Zabbix
 // #define USES_C018   // TTN/RN2483
-
+// #define USES_C023   // AT-command LoRaWAN
 
 /*
  #######################################################################################################

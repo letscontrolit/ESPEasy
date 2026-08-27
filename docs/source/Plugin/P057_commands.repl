@@ -1,0 +1,50 @@
+.. csv-table::
+    :header: "Command Syntax", "Extra information"
+    :widths: 20, 30
+
+    "
+    | ``m,<param>[,<param>,<param>...]``
+    ","
+    | Light up leds on the display, description of params below, all values treated as decimal.
+
+    | This is a low-level command, giving exact control over what led/segment is lit.
+    "
+    "
+    | ``mx,<param>[,<param>,<param>...]``
+    ","
+    | Light up leds on the display, description of params below, all values treated as hexadecimal.
+
+    | This is a low-level command, giving exact control over what led/segment is lit.
+    "
+    "
+    | ``mnum,<param>[,<param>,<param>...]``
+    ","
+    | Light up segments on the display, description of params below, all values to be used as numeric content for a 7-segment display.
+    "
+    "
+    | ``mprint,<text>``
+    ","
+    | Light up numeric digits on a 7-segment display. If a colon is configured, and another character would land on that segment, then the colon-segment is skipped, a colon would be shown on the colon segment.
+
+    | This would be the standard command to display numeric data on the display, when not used in Clock-mode.
+    "
+    "
+    | ``mbr,<0..255>``
+    ","
+    | Set the brightness of the display in given range, 0 is off, 255 is max. brightness.
+    "
+    "
+    | ``<param>``
+    ","
+    | A ``<param>`` can be one of these:
+
+    | ``<value>`` : A numeric (or hexadecimal, without any prefix, for ``MX`` command) value, that is displayed starting on segment 0, auto-incrementing the segment for multiple values in a single command.
+
+    | ``<seg>=<value>`` : Address an explicit segment with a value.
+
+    | ``clear`` : Set all values to 0, turning off all leds/segments.
+
+    | ``test`` : Fill the leds/segments with a test-pattern.
+
+    | ``log`` : Write the current led-buffer values to the log (INFO level).
+    "

@@ -3,6 +3,7 @@
 .. |P150_typename| replace:: :cyan:`Environment - TMP117 Temperature`
 .. |P150_porttype| replace:: `.`
 .. |P150_status| replace:: :yellow:`COLLECTION F` :yellow:`CLIMATE`
+.. |P150_status_lb| replace:: :yellow:`COLLECTION F` :yellow:`CLIMATE`
 .. |P150_github| replace:: P150_TMP117.ino
 .. _P150_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P150_TMP117.ino
 .. |P150_usedby| replace:: `.`
@@ -16,6 +17,7 @@
 .. |P151_typename| replace:: :cyan:`Environment - I2C Honeywell Pressure`
 .. |P151_porttype| replace:: `.`
 .. |P151_status| replace:: :yellow:`COLLECTION F` :yellow:`CLIMATE`
+.. |P151_status_lb| replace:: :yellow:`COLLECTION F` :yellow:`CLIMATE`
 .. |P151_github| replace:: P151_Honeywell_pressure.ino
 .. _P151_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P151_Honeywell_pressure.ino
 .. |P151_usedby| replace:: `.`
@@ -29,6 +31,7 @@
 .. |P152_typename| replace:: :cyan:`Output - ESP32 DAC`
 .. |P152_porttype| replace:: `.`
 .. |P152_status| replace:: :green:`NORMAL`
+.. |P152_status_lb| replace:: :green:`NORMAL`
 .. |P152_github| replace:: P152_DAC.ino
 .. _P152_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P152_DAC.ino
 .. |P152_usedby| replace:: `.`
@@ -42,6 +45,7 @@
 .. |P153_typename| replace:: :cyan:`Environment - SHT4x`
 .. |P153_porttype| replace:: `.`
 .. |P153_status| replace:: :yellow:`COLLECTION F` :yellow:`CLIMATE`
+.. |P153_status_lb| replace:: :yellow:`COLLECTION F` :yellow:`CLIMATE`
 .. |P153_github| replace:: P153_SHT4x.ino
 .. _P153_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P153_SHT4x.ino
 .. |P153_usedby| replace:: `.`
@@ -55,6 +59,7 @@
 .. |P154_typename| replace:: :cyan:`Environment - BMP3xx (I2C)`
 .. |P154_porttype| replace:: `.`
 .. |P154_status| replace:: :yellow:`COLLECTION G` :yellow:`CLIMATE`
+.. |P154_status_lb| replace:: :yellow:`COLLECTION G` :yellow:`CLIMATE`
 .. |P154_github| replace:: P154_BMP3xx.ino
 .. _P154_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P154_BMP3xx.ino
 .. |P154_usedby| replace:: `.`
@@ -63,11 +68,26 @@
 .. |P154_compileinfo| replace:: `.`
 .. |P154_usedlibraries| replace:: `Adafruit BMP3XX Library`
 
+.. |P157_name| replace:: :cyan:`HT16K33 14-/7-segment`
+.. |P157_type| replace:: :cyan:`Display`
+.. |P157_typename| replace:: :cyan:`Display - HT16K33 14-/7-segment`
+.. |P157_porttype| replace:: `.`
+.. |P157_status| replace:: :yellow:`DISPLAY` :yellow:`COLLECTION`
+.. |P157_status_lb| replace:: `.`
+.. |P157_github| replace:: P157_14DGT.ino
+.. _P157_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P157_14DGT.ino
+.. |P157_usedby| replace:: `.`
+.. |P157_shortinfo| replace:: `.`
+.. |P157_maintainer| replace:: `tonhuisman`
+.. |P157_compileinfo| replace:: `.`
+.. |P157_usedlibraries| replace:: `Noiasca HT16K33 (with a few minor modifications)`
+
 .. |P159_name| replace:: :cyan:`LD2410`
 .. |P159_type| replace:: :cyan:`Presence`
 .. |P159_typename| replace:: :cyan:`Presence - LD2410`
 .. |P159_porttype| replace:: `.`
 .. |P159_status| replace:: :yellow:`COLLECTION G`
+.. |P159_status_lb| replace:: :yellow:`COLLECTION G`
 .. |P159_github| replace:: P159_LD2410.ino
 .. _P159_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P159_LD2410.ino
 .. |P159_usedby| replace:: `.`

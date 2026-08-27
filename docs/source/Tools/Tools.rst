@@ -240,6 +240,8 @@ Showing detailed information about the flash chip and used file system.
 * **Maximum open files**:	Configured maximum number of simultaneous open files. Example: ``5``
 * **Maximum path length**:	Maximum length of file name + path. Example: ``32``
 
+.. _tools-advanced:
+
 Advanced
 ========
 
@@ -265,8 +267,10 @@ Supported RTC chips:
 
 * `DS1307 <https://datasheets.maximintegrated.com/en/ds/DS1307.pdf>`_
 * `DS3231  <https://datasheets.maximintegrated.com/en/ds/DS3231.pdf>`_
+* `DS3232  <https://datasheets.maximintegrated.com/en/ds/DS3232.pdf>`_ (added: 2026-08-19)
 * `PCF8523  <https://www.nxp.com/docs/en/data-sheet/PCF8523.pdf>`_
 * `PCF8563  <https://www.nxp.com/docs/en/data-sheet/PCF8563.pdf>`_
+* `PCF8583  <https://www.nxp.com/docs/en/data-sheet/PCF8583.pdf>`_ (added: 2026-08-19 Not available in ``LIMIT_BUILD_SIZE`` builds)
 
 Most modules sold with one of these RTC chips also have a battery socket to keep track of time while the rest is not powered.
 This allows ESPEasy to know the correct date and time after been powered off for a while, or deep sleep, without the need for working network to query a NTP server.
@@ -280,6 +284,19 @@ When multiple I2C Buses are configured (ESP32 only), we need to configure on whi
 .. image:: images/Tools_RTC_I2CSelector.png
 
 NB: If only 1 I2C Bus is configured, this configuration option isn't shown.
+
+Added: 2026-08-19
+
+With some RTC chips, there is a battery-backed SRAM option available. This SRAM can be used for persistent storage of numeric values.
+
+This storage is available in DS1307 (56 bytes = 7 slots), DS3232 (236 bytes = 29 slots) and PCF8583 (240 bytes = 30 slots).
+
+If one of the supported Time Sources is connected, the number of available SRAM slots is shown.
+
+Slots can be written using the ``WriteRTC,<slot>,<value>`` command, and read using the special variable ``[ReadRTC#<slot>]``, and the number of slots via ``[ReadRTC#max]``. See also :ref:`Command-Reference`
+
+NB: ``<slot>`` is in the range 0 .. (Max.slots - 1) !
+
 
 
 Procedure to configure a real time clock (RTC) chip:
@@ -394,18 +411,6 @@ See for more detailed information "Controller - ESPEasy P2P Networking"
 Special and Experimental Settings
 ---------------------------------
 
-Fixed IP Octet
-^^^^^^^^^^^^^^
-
-Sets the last byte(octet) of the IP address to this value, regardless of what IP is given using DHCP (all other settings received via DHCP will be used)
-
-So if you receive 192.168.1.234 from your DHCP server and this value is set to "10",
-then the used IP in your node is 192.168.1.10.
-But since you're receiving more information from the DHCP server,
-like subnet mask / gateway / DNS, it may still be useful.
-This allows a somewhat static IP in your network (N.B. use it with an 'octet' outside the range of the DHCP IPs) while still having set to DHCP.
-So if you take the node to another network which does use 192.168.52.x then you will know it will be on 192.168.52.10 (when setting this value to "10")
-
 WD I2C Address
 ^^^^^^^^^^^^^^
 
@@ -492,6 +497,16 @@ Depending on the internet connection, f.e. when connecting via a low-end mobile 
 On ESP32, tasks like starting the MQTT connection can be delegated to an independent background task, to avoid blocking the normal working of ESPEasy, that will report the result when completed. This feature is enabled by default, as it is the preferred setting, but when this way of connecting is causing issues, it can be disabled.
 
 
+MQTT Discover, Group incl. Taskname
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Added: 2026-08-14
+
+To make the unique-id for Auto Discovery more unique when a Group is used, the Taskname can be inserted by enabling this option. Not enabled by default for backward compatibility with existing groups Auto-discovered by Home Assistant.
+
+Only enabled if MQTT Auto Discovery is included in the build.
+
+
 Allow OTA without size-check
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -562,47 +577,9 @@ Number of failed network connect attempts before issuing a reboot (0 = disabled)
 A side effect is that trying to reach some server which is offline, may also result
 in reboots of the ESP node.
 
-Force WiFi B/G
-^^^^^^^^^^^^^^
 
-Force the WiFi to use only 802.11-B or -G protocol (not -N)
-Since the 802.11 G mode of the ESP is more tolerant to noise, it may improve link
-stability on some nodes.
 
-Restart WiFi on lost conn.
-^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Force a complete WiFi radio shutdown & restart when connection with access point is lost.
-
-Force WiFi no sleep
-^^^^^^^^^^^^^^^^^^^
-
-This option will set the WiFi sleep mode to no sleep.
-This may cause the node to consume maximum power and should only be used for testing purposes.
-It may even lead to more instability on nodes where the power supply is not
-sufficient or the extra heat cannot be dissipated.
-
-Since changing the mode back to the default setting may lead to crashes in some core versions, this option is only enabled when starting the node.
-To activate a change of this setting, a reboot is required.
-
-Periodical send Gratuitous ARP
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The ESP node may sometimes miss ARP broadcast packets and thus not answer them if needed.
-This may lead to the situation where a packet sent to the node cannot be delivered,
-since the switch does not know how to route the packet.
-To overcome this, the ESP node may send a *Gratuitous ARP* packet, which is
-essentially an answer to a request which hasn't been made.
-These gratuitous ARP packets however may help the switch to remember which
-MAC address is connected via what port.
-
-By default the ESP will send out such a gratuitous ARP packet every time it
-receives an IP address and also when it was unable to make a connection to a host.
-It could be the other host was replying, but the packet was not routable to the ESP node.
-
-This *Periodical send Gratuitous ARP* option will send these kind of ARP packets
-continuously with some interval.
-This interval is defined in the source code in ``TIMER_GRATUITOUS_ARP_MAX`` (e.g. 5000 msec)
 
 
 CPU Eco mode
@@ -623,125 +600,6 @@ then this is a great way to save energy and also reduce heat.
 
 See also :any:`cpu-eco-mode-explanation`
 
-WiFi TX Power
-^^^^^^^^^^^^^
-
-(Added: 2021-01-26)
-
-The default TX power of an ESP unit is:
-
-* 802.11 b: +20 dBm
-* 802.11 g: +17 dBm
-* 802.11 n: +14 dBm
-
-For some units it can help to reduce the TX power of the WiFi.
-As of now the exact reason why this may improve stability is a bit unclear.
-For example, the power supply may be slightly underdimensioned, or the antenna impedance isn't perfect. (can be affected by a lot of factors)
-
-The effect of a reduction in TX power is of course lower energy consumption, but also a reduction in WiFi range as the received signal strength on the access point will be lower.
-The unit for WiFi TX power is expressed in dBm, which makes it very easy to calculate the effect.
-
-.. note:: dBm represents an absolute power level (in mWatt) while dB is a relative index.
-          RSSI is a bit confusing in its unit of measure as both dBm and dB are used.
-          As a rule of thumb, if the RSSI is expressed as a negative value, it is usually referring to dBm. 
-          For positive values (i.e. 0 .. 100) it is in dB.
-          To further confuse the understanding, our ESPs use an RSSI of +31 as an error code.
-
-
-The relation between TX power in dBm and Watt:
-
-* 20 dBm = 0.1 Watt  (= 30 mA @3.3V)
-* 10 dBm = 0.01 Watt
-* 0 dBm = 0.001 Watt
-* -10 dBm = 0.0001 Watt
-
-Every 10 dBm lower is a factor 10 less energy sent from the antenna.
-N.B. Since most ESP boards use a linear voltage regulator from 5V to 3.3V, the power reduction can be as high as 0.15 Watt.
-
-See also "WiFi Sensitivity Margin"
-
-For example the AP does receive the signal from your ESP node with an RSSI of -60 dBm.
-If we lower the TX power from 20 dBm to 10 dBm, the access point will receive our signal with an RSSI of -70 dBm.
-
-Lowering the TX power can also be useful to make it more likely a node will connect to an access point close to the node in a setup with a number of access points using the same SSID.
-Most access points will disconnect a node if its signal drops below a certain RSSI value.  (some brands of access points allow to set this threshold)
-
-
-WiFi Sensitivity Margin
-^^^^^^^^^^^^^^^^^^^^^^^
-
-(Added: 2021-01-26)
-
-See also WiFi TX Power.
-
-The ESP boards have a RX sensitivity depending on the used WiFi connection protocol:
-
-* 802.11 b: –91 dbm (11 Mbps)
-* 802.11 g: –75 dbm (54 Mbps)
-* 802.11 n: –72 dbm (MCS7)
-
-These are the numbers for an ESP8266.
-
-N.B. The ESP32 is more sensitive for lower bit rates, but we use these more conservative ones.
-
-The WiFi Sensitivity Margin is added to these RX sensitivity numbers above.
-
-Our dynamic WiFi TX power strategy is based on the following assumptions:
-
-* Without any changes in TX power on both the ESP as well as the access point (AP), we can assume the signal strength attenuates the same from the AP to the ESP as the return path from the ESP to the AP.
-  Meaning if we see the signal from an AP has an RSSI value of -60 dBm, we can assume the AP receiving our signal has a similar signal strength with an RSSI of -60 dBm.
-* An access point usually has a better RX sensitivity than an ESP board.
-
-With these assumptions in mind, we can lower our WiFi TX power.
-
-Let's assume the ESP is connected to an access point using 802.11N and we see an RSSI of -60 dBm.
-Without lowering TX power on the ESP, the access point will receive the ESP with an RSSI of -60 dBm.
-
-When the TX power on this ESP is lowered from 14 dBm to 4 dBm, the access point will receive the ESP with an RSSI of -70 dBm.
-This is still within the stated -72 dBm RX sensitivity.
-
-However for improved stability, it is wise to add some margin. For example a margin of 5 dBm.
-When applying this margin of +5 dBm, the ESP must try to match its output power to make sure the access point will receive the ESP with an RSSI of at least - 67 dBm.
-The set TX output power will then be (-60 dBm - -67 dBm =) +7 dBm, which is still a significant improvement in power consumption.
-
-This margin can also be used to compensate for an access point which is set to a non default TX power.
-For example, it is good practice to lower the TX power of an access point to improve separation and take over in a network with multiple APs set to use the same SSID to provide roaming.
-Since these offsets are also expressed in dBm, they can be used without conversion for correcting this margin.
-
-* Negative margin: Used for access point with better RX sensitivity (high SNR) and/or lowered TX power
-* Positive margin: Used for access point with lower RX sensitivity (low SNR) and/or increased TX power
-
-.. note:: It is almost always a bad idea to increase TX power of an access point. The signal from the access point may cover a longer range, but the RX sensitivity is not improved thus the client can not reply.  It also affects other WiFi networks in the neighborhood, causing more interference.
-
-.. note:: Changing the antenna of an access point for a "High Gain Antenna" does improve TX range as well as RX sensitivity and thus cancel each other out regarding this margin setting. A high gain antenna is more directional than traditional antennas.
-
-To get a feeling of RSSI values (in dBm) in relation to the experienced link quality:
-
-* -30 dBm: Amazing
-* -67 dBm: Very Good
-* -70 dBm: Okay
-* -80 dBm: Not Good
-* -90 dBm: Likely Unstable
-
-Link quality depends on more then just the RSSI.
-For example a connection with lower band width (e.g. 802.11g compared to 802.11n) is usually more forgiving.
-
-The actual link quality depends on the ratio between received signal strength (RSSI) and the noise floor.
-The noise floor is simply erroneous background transmissions that are emitted from either other devices that are too far away for the signal to be intelligible, or by devices that are inadvertently creating interference on the same frequency. 
-Some brands of access points can show the current noise floor and/or the SNR.
-
-For example, if a signal is received at -80 dBm and the noise floor is -100 dBm, the effective signal-to-noise ratio (SNR) is 20 dB, which is still very usable for ESP nodes as we don't send lots of data.
-
-For a stable link the SNR should be > 15 dB.
-The SNR does have big of impact on how responsive an ESPEasy node will 'feel' when operating it.
-
-Sending with a very strong signal may also affect the link stability of other nodes as it will increase the noise floor for all access points in the neighborhood.
-
-For best link stability of all nodes, it is best to target somewhere between -67 and -70 dBm.
-Therefore the default value of +3dB margin will attempt to let the access point receive with a signal strength of roughly that sweet spot.
-
-Of course nodes with an already high signal attenuation cannot send with more than the max allowed TX power of roughly 20.5 dBm.
-Trying to reach this sweet spot in signal strength is just a best effort and not a guarantee.
 
 Extra WiFi scan loops
 ^^^^^^^^^^^^^^^^^^^^^
@@ -774,24 +632,6 @@ Added: 2021-04-16
 Removed: 2021-10-18
 
 
-Use Last Connected AP from RTC
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Added: 2021-06-20
-
-The last used (stable) connection is stored in RTC memory.
-This will survive a reboot (and deep sleep) as long as the unit remains powered.
-
-On WiFi reconnect, the stored last active connection is tried first.
-This can reduce the time needed to reconnect on a reboot, or when waking from deep sleep.
-
-Side effect is that if a node cannot see the stronger configured AP when connecting, it may never try to connect to the stronger AP as on reconnect the last used is tried first.
-
-Especially on mesh networks this appears to cause a lot of instability, therefore this is now made an optional feature.
-
-This is no new functionality, as it was present before and also enabled by default.
-
-New default value since 2021-06-20: unchecked
 
 
 Extra Wait WiFi Connect
@@ -804,36 +644,8 @@ It is unclear what exactly causes these issues.
 However experiments have shown that an added delay of upto 1000 msec right after calling ``WiFi.begin()`` does improve the success rate of connecting to such access points.
 
 
-Enable SDK WiFi Auto Reconnect
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Added: 2023-04-05
-
-Some dual band access points (2.4 GHz and 5 GHz) try to balance connected nodes over these bands, based on their signal strength.
-This is called "Band Steering".
-
-WiFi clients supporting 802.11k and/or 802.11v can be redirected to another band and/or other meshed access point.
-Older WiFi clients, not supporting these protocols, will briefly be disconnected to force them to reconnect. Hopefully to another access point or frequency band.
-
-The problem is that such disconnects cause issues with Espressif modules, messing up the internal state of the WiFi.
-
-ESPEasy does act on WiFi events. But these events are not always dealt with in due time, messing up the connected state even more.
-In such cases, where "Band Steering" cannot be disabled, one can enable the Espressif SDK WiFi Auto Reconnect option.
-This will act much faster on these disconnect events. However it also seems to suppress some WiFi events.
-
-Whenever ESPEasy calls for a disconnect, or the disconnect takes longer than such a very brief disconnect initiated by the Band Steering algorithm of the access point, ESPEasy will turn off the WiFi and turn it on again as if "Restart WiFi Lost Conn" was enabled.
 
 
-Hidden SSID Slow Connect
-^^^^^^^^^^^^^^^^^^^^^^^^
-
-Added: 2023-11-20
-
-Some access points with hidden SSID do not react to a broadcast connect attempt with a given SSID.
-For example Mikrotik routers and access points only allow connecting to a hidden SSID when specifically addressed.
-This may cause a significant slow down connecting to a hidden AP when there are lots of hidden access points with a relative strong signal.
-
-This is enabled by default.
 
 
 Show JSON
@@ -1054,10 +866,26 @@ Via the :cyan:`Update Firmware` button, you can browse for an updated firmware, 
 File system
 ***********
 
+ESPEasy stores its settings and rules in files which are stored on the file system.
+On ESP8266 and older ESP32-builds the file system used is SPIFFS.
+
+On more recent ESP32 builds, we use LittleFS.
+
+
+
 File browser
 ============
 
 Via :cyan:`File browser` you can browse the files on the flash file system, download them separately, upload additional files, or delete any non-system files.
+
+ESPEasy files:
+
+* ``config.dat`` All not stored in the other files, like task configuration, controller setup, hardware config, etc.
+* ``security.dat`` All credentials, like username/password, WiFi credentials not stored in ``devsecurity.dat``
+* ``devsecurity.dat`` (ESP32 only, when ``FEATURE_STORE_CREDENTIALS_SEPARATE_FILE`` is defined as ``1``), stores node specific information like WiFi credentials entered via the setup page, SIM card pin number and APN.
+* ``notification.dat`` Stores settings for notifications like email.
+* ``provisioning.dat`` (ESP32 only When ``FEATURE_CUSTOM_PROVISIONING`` is defined as ``1``) stores settings used for remote provisioning settings or updated settings to an ESPEasy node.
+* ``rulesN.txt`` with ``N`` being 1 ... 4. Contains the ESPEasy rules as setup by the user.
 
 Factory Reset
 =============
@@ -1199,6 +1027,8 @@ Such a file may also be fetched from a server.
 The ``provisioning.dat`` file can also be automatically generated when performing a factory reset.
 For this the (custom) build must be prepared via a number of defined defaults.
 See the ``Custom-sample.h`` file for some examples.
+
+.. note:: In general the node specific info stored in ``devsecurity.dat`` typically should be excluded from provisioning. This allows an end user to setup local WiFi credentials which will then not be erased when updating the ``security.dat`` remotely via the provisioning feature.
 
 
 Allow Fetch by Command

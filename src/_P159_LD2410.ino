@@ -92,6 +92,7 @@ boolean Plugin_159(uint8_t function, struct EventStruct *event, String& string)
       dev.PluginStats        = true;
       dev.ExitTaskBeforeSave = false; // Enable calling PLUGIN_WEBFORM_SAVE on the instantiated object
       dev.CustomVTypeVar     = true;
+      dev.SerialPortsAllowed = INCLUDE_NOT_CDC_SERIAL;
 
       break;
     }
@@ -230,7 +231,7 @@ boolean Plugin_159(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       addFormSelector_YesNo(F("Engineering mode"), F("eng"), P159_GET_ENGINEERING_MODE, true);
-      addFormNote(F("When changing this setting the page will be reloaded"));
+      // addFormNote(F("When changing this setting the page will be reloaded"));
 
       addFormCheckBox(F("Generate Events only when changed"), F("diff"), P159_GET_UPDATE_DIFF_ONLY);
 

@@ -3,6 +3,8 @@
 
 #include "../../ESPEasy_common.h"
 
+#include "../../ESPEasy/net/wifi/WiFiDisconnectReason.h"
+
 const __FlashStringHelper * WiFi_encryptionType(uint8_t encryptionType);
 
 #ifdef ESP8266
@@ -15,6 +17,10 @@ const __FlashStringHelper * SDKwifiStatusToString(uint8_t sdk_wifistatus);
 
 String ArduinoWifiStatusToString(uint8_t arduino_corelib_wifistatus);
 
-String getLastDisconnectReason();
+WiFiDisconnectReason getWiFi_disconnectReason();
+
+String getWiFi_disconnectReason_str();
+
+const __FlashStringHelper*   getWiFi_encryptionType();
 
 #endif

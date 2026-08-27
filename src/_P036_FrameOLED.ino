@@ -14,6 +14,8 @@
 // Added to the main repository with some optimizations and some limitations.
 // As long as the device is not enabled, no RAM is wasted.
 //
+// @andbad: 2026-07-09
+// ADD: 72x40 OLED size added to the the existing sizes (128x64, 128x32, 64x48)
 // @tonhuisman: 2025-03-03
 // ADD: Setting for not showing the startup logo. Formatted source using Uncrustify with recent settings
 // @uwekaditz: 2024-08-06
@@ -223,7 +225,7 @@
 # ifdef P036_CHECK_HEAP
 #  include "src/Helpers/Memory.h"
 # endif // ifdef P036_CHECK_HEAP
-# include "src/ESPEasyCore/ESPEasyNetwork.h"
+# include "ESPEasy/net/ESPEasyNetwork.h"
 
 # define PLUGIN_036
 # define PLUGIN_ID_036         36
@@ -305,8 +307,9 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         const int optionValues[] =
         { static_cast<int>(p036_resolution::pix128x64),
           static_cast<int>(p036_resolution::pix128x32),
-          static_cast<int>(p036_resolution::pix64x48) };
-        OLedFormSizes(F("size"), optionValues, P036_RESOLUTION, true);
+          static_cast<int>(p036_resolution::pix64x48),
+          static_cast<int>(p036_resolution::pix72x40) };
+        OLedFormSizes(F("size"), optionValues, P036_RESOLUTION, NR_ELEMENTS(optionValues), true);
       }
 
       OLedFormRotation(F("rotate"), P036_ROTATE);
@@ -968,7 +971,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       if (P036_DisplayIsOn) {
         // Display is on.
 
-        if (!P036_data->bRunning && NetworkConnected() && (P036_data->ScrollingPages.Scrolling == 0)) {
+        if (!P036_data->bRunning && ESPEasy::net::NetworkConnected() && (P036_data->ScrollingPages.Scrolling == 0)) {
           // start page updates after network has connected
           P036_data->P036_DisplayPage(event);
         }

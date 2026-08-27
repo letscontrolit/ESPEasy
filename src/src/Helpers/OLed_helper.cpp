@@ -1,5 +1,7 @@
 #include "../Helpers/OLed_helper.h"
 
+#if defined(USES_P023) || defined(USES_P036) || defined(USES_P109)
+
 /**************************************************************************
  * Select controller type, SSD1306 or SH1106
  *************************************************************************/
@@ -64,12 +66,14 @@ void OLedFormContrast(const __FlashStringHelper *id,
 void OLedFormSizes(const __FlashStringHelper *id,
                    const int                 *values,
                    uint8_t                    selectedIndex,
+                   uint8_t                    optionsSize,
                    bool                       reloadOnChange) {
   const __FlashStringHelper *options3[] = {
     F("128x64"),
     F("128x32"),
-    F("64x48") };
-  FormSelectorOptions selector(NR_ELEMENTS(options3), options3, values);
+    F("64x48"),
+    F("72x40") };
+  FormSelectorOptions selector(optionsSize, options3, values);  
   selector.reloadonchange = reloadOnChange;
   selector.addFormSelector(
     F("Display Size"), 
@@ -126,3 +130,4 @@ bool OLedI2CAddressCheck(uint8_t                    function,
   }
   return success;
 }
+#endif

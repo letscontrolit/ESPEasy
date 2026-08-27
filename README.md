@@ -4,6 +4,20 @@
 
 For ways to *support* us, see [this announcement on the forum](https://www.letscontrolit.com/forum/viewtopic.php?f=14&t=5787), or have a look at the [Patreon](https://www.patreon.com/GrovkillenTDer), [Ko-Fi](https://ko-fi.com/grovkillentder) or [PayPal](https://www.paypal.me/espeasy) links above.
 
+
+# ESPEasy, Automate (using) Common Sense, No AI.
+
+The main objective for ESPEasy is to make people realize they can easily control appliances and act on sensor data.
+
+Anyone can use it and you don't need AI. 
+Only requirement is common sense and appreciate the satisfaction of seeing things just work.
+
+If you can't build it yourself, you don't 'own' it.  
+So let's make sure YOU control it.
+
+We are more than willing to assist via our [forum](https://www.letscontrolit.com/forum).
+
+
 # ESPEasy (development branch)
 
 
@@ -53,6 +67,7 @@ collection_F | Normal + plugin collection F              | Stable + Collection b
 collection_G | Normal + plugin collection G              | Stable + Collection base + set G |
 collection_H | Normal + plugin collection H              | Stable + Collection base + set H |
 max          | All available plugins                     | All available                    |
+max32        | All available plugins, 32MB Flash         | All available, large file system |
 energy       | All plugins related to energy measurement | Stable + Energy measurement      |
 display A    | All plugins related to displays A         | Stable + Displays A              |
 display B    | All plugins related to displays B         | Stable + Displays B              |
@@ -87,6 +102,10 @@ ESP32c3          | Espressif ESP32-C3 generic boards           |
 ESP32s3          | Espressif ESP32-S3 generic boards           |
 ESP32c2          | Espressif ESP32-C2 generic boards           |
 ESP32c6          | Espressif ESP32-C6 generic boards           |
+ESP32c61         | Espressif ESP32-C61 generic boards (experimental) |
+ESP32c5          | Espressif ESP32-C5 generic boards (experimental) |
+ESP32p4          | Espressif ESP32-P4 (Rev.1) generic boards   |
+ESP32p4r3        | Espressif ESP32-P4 (Rev.3/P4X) generic boards |
 ESP32-wrover-kit | Espressif ESP32 wrover-kit boards           |
 SONOFF           | Sonoff hardware specific                    |
 other_POW        | Switch with power measurement               |
@@ -110,10 +129,10 @@ Flash size | Description                 |
 16M        | 16 MB with 14 MB filesystem |
 4M316k     | 4 MB with 316 kB filesystem |
 8M1M       | 8 MB with 1 MB filesystem   |
-16M1M      | 16 MB with 1 MB filesystem  |
 16M8M      | 16 MB with 8 MB filesystem  |
+32M20M     | 32 MB with 20 MB filesystem |
 
-N.B. Starting with release 2023/12/25, All ESP32 LittleFS builds use IDF 5.3, to support newer ESP32 chips like ESP32-C2 and ESP32-C6, and SPI Ethernet. Other SPIFFS based ESP32 builds will be migrated to LittleFS as SPIFFS is no longer officially available in IDF 5 and later. As a temporary solution, a specially crafted IDF 5.1 build that still includes SPIFFS, is used for the SPIFFS builds. A migration plan will be made available in 2025.
+N.B. Starting with release 2023/12/25, All ESP32 LittleFS builds use IDF 5.3, to support newer ESP32 chips like ESP32-C2 and ESP32-C6, and SPI Ethernet. Other SPIFFS based ESP32 builds will be migrated to LittleFS as SPIFFS is no longer officially available in IDF 5 and later. As a temporary solution, a specially crafted IDF 5.1 build that still includes SPIFFS, is used for the SPIFFS builds. A migration plan is available, [here](https://espeasy.readthedocs.io/en/latest/Reference/Migrate_SPIFFS_to_LittleFS.html).
 
 N.B.2 Starting with builds made after 2025/11/04, ESP32 builds will no longer have ``_LittleFS`` in the name as all ESP32 builds use LittleFS. Also the suffix ``_ETH`` has been removed since all builds will have Ethernet support, except for ESP32C2 builds.
 
@@ -128,7 +147,7 @@ Domoticz_MQTT   | Only Domoticz controllers (MQTT) and plugins included         
 FHEM_HA         | Only FHEM/OpenHAB/Home Assistant (MQTT) controllers and plugins included                                  |
 ETH             | Ethernet support enabled (ESP32 and IDF 5.x based builds)                                                 |
 OPI_PSRAM       | Specific configuration to enable PSRAM detection, ESP32-S3 only                                           |
-CDC             | Support USBCDC/HWCDC-serial console on ESP32-C3, ESP32-S2, ESP32-S3 and ESP32-C6                          |
+CDC             | Support USBCDC/HWCDC-serial console on ESP32-C3, ESP32-S2, ESP32-S3, ESP32-C6, ESP32-C61 and ESP32-C5     |
 noOTA/NO_OTA    | Does not support OTA (Over The Air-updating of the firmware) Use [the flash page](https://td-er.nl/ESPEasy/) or ESPTool via USB Serial |
 
 N.B. Starting ca. 2025/02/27, many ESP32 builds are *only* available with _ETH suffix, indicating that Ethernet support is enabled, to reduce the (rather high) number of builds.
@@ -136,18 +155,17 @@ N.B. Starting ca. 2025/02/27, many ESP32 builds are *only* available with _ETH s
 Some example firmware names:
 Firmware name                                           | Hardware                                        | Included plugins                 |
 --------------------------------------------------------|-------------------------------------------------|----------------------------------|
-ESPEasy_mega-20230822_normal_ESP8266_1M.bin             | ESP8266/ESP8285 with 1MB flash                  | Stable                           |
-ESPEasy_mega-20230822_normal_ESP8266_4M1M.bin           | ESP8266 with 4MB flash                          | Stable                           |
-ESPEasy_mega-20230822_collection_A_ESP8266_4M1M.bin     | ESP8266 with 4MB flash                          | Stable + Collection base + set A |
-ESPEasy_mega-20230822_normal_ESP32_4M316k_ETH.bin       | ESP32 with 4MB flash                            | Stable                           |
-ESPEasy_mega-20230822_collection_A_ESP32_4M316k_ETH.bin | ESP32 with 4MB flash                            | Stable + Collection base + set A |
-ESPEasy_mega-20230822_collection_B_ESP32_4M316k_ETH.bin | ESP32 with 4MB flash                            | Stable + Collection base + set B |
-ESPEasy_mega-20230822_max_ESP32s3_8M1M.bin              | ESP32-S3 with 8MB flash, CDC-serial, Ethernet   | All available plugins            |
-ESPEasy_mega-20230822_max_ESP32s3_8M1M_OPI_PSRAM.bin    | ESP32-S3 8MB flash, PSRAM, CDC-serial, Ethernet | All available plugins            |
-ESPEasy_mega-20230822_max_ESP32_16M1M_ETH.bin           | ESP32 with 16MB flash, SPIFFS, Ethernet         | All available plugins            |
-ESPEasy_mega-20230822_max_ESP32_16M8M.bin               | ESP32 with 16MB flash, LittleFS, Ethernet       | All available plugins            |
+ESPEasy_mega-20260121_normal_ESP8266_1M.bin             | ESP8266/ESP8285 with 1MB flash                  | Stable                           |
+ESPEasy_mega-20260121_normal_ESP8266_4M1M.bin           | ESP8266 with 4MB flash                          | Stable                           |
+ESPEasy_mega-20260121_collection_A_ESP8266_4M1M.bin     | ESP8266 with 4MB flash                          | Stable + Collection base + set A |
+ESPEasy_mega-20260121_normal_ESP32_4M316k.bin           | ESP32 with 4MB flash                            | Stable                           |
+ESPEasy_mega-20260121_collection_A_ESP32_4M316k.bin     | ESP32 with 4MB flash                            | Stable + Collection base + set A |
+ESPEasy_mega-20260121_collection_B_ESP32_4M316k.bin     | ESP32 with 4MB flash                            | Stable + Collection base + set B |
+ESPEasy_mega-20260121_max_ESP32s3_8M1M.bin              | ESP32-S3 with 8MB flash, CDC-serial, Ethernet   | All available plugins            |
+ESPEasy_mega-20260121_max_ESP32s3_8M1M_OPI_PSRAM.bin    | ESP32-S3 8MB flash, PSRAM, CDC-serial, Ethernet | All available plugins            |
+ESPEasy_mega-20260121_max_ESP32_16M8M.bin               | ESP32 with 16MB flash, LittleFS, Ethernet       | All available plugins            |
 
-The binary files for the different ESP32 variants (S2, C3, S3, C2, C6, Solo1, 'Classic') are available in separate archives.
+The binary files for the different ESP32 variants (S2, C3, S3, C2, C6/C61, C5, P4, Solo1, 'Classic') are available in separate archives.
 
 To see what plugins are included in which collection set, you can find that on the [ESPEasy Plugin overview page](https://espeasy.readthedocs.io/en/latest/Plugin/_Plugin.html)
 

@@ -31,7 +31,12 @@ extern "C" {
 
 // FIXME TD-er: For ESP32 you need to provide the task number, or nullptr to get from the calling task.
 uint32_t getCurrentFreeStack() {
-  return ((uint8_t *)esp_cpu_get_sp()) - pxTaskGetStackStart(nullptr);
+  return ((uint8_t *)esp_cpu_get_sp()) - 
+  #if ESP_IDF_VERSION_MAJOR <= 5
+  pxTaskGetStackStart(nullptr);
+  #else
+  xTaskGetStackStart(nullptr);
+  #endif
 }
 
 uint32_t getFreeStackWatermark() {
@@ -64,7 +69,7 @@ bool allocatedOnStack(const void *address) {
 /********************************************************************************************\
    Get free system mem
  \*********************************************************************************************/
-unsigned long FreeMem()
+uint32_t FreeMem()
 {
   #if defined(ESP8266)
   return system_get_free_heap_size();
@@ -75,7 +80,7 @@ unsigned long FreeMem()
 }
 
 #ifdef USE_SECOND_HEAP
-unsigned long FreeMem2ndHeap()
+uint32_t FreeMem2ndHeap()
 {
   HeapSelectIram ephemeral;
 
@@ -85,9 +90,9 @@ unsigned long FreeMem2ndHeap()
 #endif // ifdef USE_SECOND_HEAP
 
 
-unsigned long getMaxFreeBlock()
+uint32_t getMaxFreeBlock()
 {
-  const unsigned long freemem = FreeMem();
+  const uint32_t freemem = FreeMem();
 
   // computing max free block is a rather extensive operation, so only perform when free memory is already low.
   if (freemem < 6144) {

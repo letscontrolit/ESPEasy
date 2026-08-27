@@ -13,7 +13,9 @@ Type: |P015_type|
 
 Name: |P015_name|
 
-Status: |P015_status|
+Status ESP32: |P015_status|
+
+Status ESP8266: |P015_status_lb|
 
 GitHub: |P015_github|_
 

@@ -13,7 +13,9 @@ Type: |P109_type|
 
 Name: |P109_name|
 
-Status: |P109_status|
+Status ESP32: |P109_status|
+
+Status ESP8266: |P109_status_lb|
 
 GitHub: |P109_github|_
 
@@ -48,7 +50,7 @@ Task settings
 I2C Options 
 ^^^^^^^^^^^^
 
-The available settings here depend on the build used. At least the **Force Slow I2C speed** option is available, but selections for the I2C Multiplexer can also be shown. For details see the :ref:`Hardware_page`
+The available settings here depend on the build used. At least the **Force Slow I2C speed** option is available, but selections for the I2C Multiplexer can also be shown. For details see the :ref:`i2c-bus` page
 
 **I2C Address**: The address the device is using. Some boards offer a solderable address selector that is to be used to select the address. The available addresses are ``0x3C`` and ``0x3D``.
 

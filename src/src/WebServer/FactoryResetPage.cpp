@@ -5,7 +5,6 @@
 
 #include "../WebServer/ESPEasy_WebServer.h"
 #include "../WebServer/HTML_wrappers.h"
-#include "../WebServer/JSON.h"
 #include "../WebServer/Markup.h"
 #include "../WebServer/Markup_Buttons.h"
 #include "../WebServer/Markup_Forms.h"
@@ -26,10 +25,8 @@ void handle_factoryreset() {
   checkRAM(F("handle_factoryreset"));
   #endif
 
-  if (!isLoggedIn()) { return; }
-  navMenuIndex = MENU_INDEX_TOOLS;
-  TXBuffer.startStream();
-  sendHeadandTail_stdtemplate(_HEAD);
+  if (!startStream_send_stdTemplate(MENU_INDEX_TOOLS)) { return; }
+
   html_add_form();
   html_table_class_normal();
   html_TR();
@@ -110,8 +107,7 @@ void handle_factoryreset() {
 
   html_end_table();
   html_end_form();
-  sendHeadandTail_stdtemplate(_TAIL);
-  TXBuffer.endStream();
+  sendTail_stdtemplate();
 }
 
 // ********************************************************************************

@@ -10,15 +10,16 @@
 #include "../DataStructs/TimingStats.h"
 
 #include "../ESPEasyCore/ESPEasy_Log.h"
-#include "../ESPEasyCore/ESPEasyNetwork.h"
+#include "../../ESPEasy/net/ESPEasyNetwork.h"
+#include "../../ESPEasy/net/wifi/ESPEasyWifi.h"
 
 #include "../Globals/CRCValues.h"
 #include "../Globals/ESPEasy_time.h"
-#include "../Globals/ESPEasyWiFiEvent.h"
+#include "../../ESPEasy/net/Globals/ESPEasyWiFiEvent.h"
 #if FEATURE_MQTT
 # include "../Globals/MQTT.h"
 #endif // if FEATURE_MQTT
-#include "../Globals/NetworkState.h"
+#include "../../ESPEasy/net/Globals/NetworkState.h"
 #include "../Globals/RulesCalculate.h"
 #include "../Globals/RuntimeData.h"
 #include "../Globals/Settings.h"
@@ -36,11 +37,31 @@
 #include "../Helpers/StringConverter_Numerical.h"
 #endif // ifndef LIMIT_BUILD_SIZE
 
+#ifdef USES_NW005
+# include <PPP.h>
+#endif
+
+
 #if defined(ESP8266)
   # include <ESP8266WiFi.h>
+int WIFI_CONNECT_STATUS() {
+  if (WiFi.isConnected()) {
+    return 7;
+  }
+  return 0;
+}
 #endif // if defined(ESP8266)
 #if defined(ESP32)
   # include <WiFi.h>
+int WIFI_CONNECT_STATUS() {
+  if (WiFi.STA.connected()) {
+    if (WiFi.STA.hasIP())  {
+      return 7;
+    }
+    return 1;
+  }
+  return 0;
+}
 #endif // if defined(ESP32)
 
 
@@ -168,9 +189,9 @@ String SystemVariables::getSystemVariable(SystemVariables::Enum enumval) {
   switch (enumval)
   {
     case BOOT_CAUSE:        intvalue = lastBootCause; break;                         // Integer value to be used in rules
-    case BSSID:             return (WiFiEventData.WiFiDisconnected()) ? MAC_address().toString() : WiFi.BSSIDstr();
+    case BSSID:             return (!WIFI_CONNECT_STATUS()) ? MAC_address().toString() : WiFi.BSSIDstr();
     case CR:                return String('\r');
-    case IP4:               intvalue = static_cast<int>(NetworkLocalIP()[3]); break; // 4th IP octet
+    case IP4:               intvalue = static_cast<int>(ESPEasy::net::NetworkLocalIP()[3]); break; // 4th IP octet
     case ISVAR_DOUBLE:      intvalue =
                             #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
                             1;
@@ -198,8 +219,12 @@ String SystemVariables::getSystemVariable(SystemVariables::Enum enumval) {
         0; break;
 
     case ISNTP:             intvalue = statusNTPInitialized ? 1 : 0; break;
-    case ISWIFI:            intvalue = WiFiEventData.wifiStatus; break; // 0=disconnected, 1=connected, 2=got ip, 4=services
-    // initialized
+    case ISWIFIAP:          intvalue = ESPEasy::net::wifi::WifiIsAP(WiFi.getMode()) ? 1 : 0; break;
+    case ISWIFI:            intvalue = WIFI_CONNECT_STATUS(); break;
+#ifdef USES_NW005
+    case ISPPP:             intvalue = PPP.connected() ? 1 : 0; break;
+#endif
+
     case LCLTIME_AM:        return node_time.getDateTimeString_ampm('-', ':', ' ');
     case LF:                return String('\n');
     case MAC_INT:           intvalue = getChipId(); break; // Last 24 bit of MAC address as integer, to be used in rules.
@@ -222,7 +247,9 @@ String SystemVariables::getSystemVariable(SystemVariables::Enum enumval) {
                             }
     #endif // ifndef LIMIT_BUILD_SIZE
     case SPACE:             return String(' ');
-    case SSID:              return (WiFiEventData.WiFiDisconnected()) ? String(F("--")) : WiFi.SSID();
+    case SSID:              return (!WIFI_CONNECT_STATUS()) ? String(F("--")) : WiFi.SSID();
+
+
     case SYSBUILD_DATE:     return get_build_date();
     case SYSBUILD_TIME:     return get_build_time();
     case SYSDAY:            intvalue = node_time.day(); break;
@@ -274,7 +301,7 @@ String SystemVariables::getSystemVariable(SystemVariables::Enum enumval) {
     #else // if FEATURE_ADC_VCC
     case VCC:               intvalue = -1; break;
     #endif // if FEATURE_ADC_VCC
-    case WI_CH:             intvalue = (WiFiEventData.WiFiDisconnected()) ? 0 : WiFi.channel(); break;
+    case WI_CH:             intvalue = !WIFI_CONNECT_STATUS() ? 0 : WiFi.channel(); break;
 
     default:
       // Already handled above.
@@ -640,6 +667,10 @@ const __FlashStringHelper * SystemVariables::toFlashString(SystemVariables::Enum
     case Enum::ISMQTT:             return F("ismqtt");
     case Enum::ISMQTTIMP:          return F("ismqttimp");
     case Enum::ISNTP:              return F("isntp");
+    case Enum::ISWIFIAP:           return F("iswifiap");
+#ifdef USES_NW005
+    case Enum::ISPPP:              return F("isppp");
+#endif
     case Enum::ISWIFI:             return F("iswifi");
     case Enum::LCLTIME:            return F("lcltime");
     case Enum::LCLTIME_AM:         return F("lcltime_am");

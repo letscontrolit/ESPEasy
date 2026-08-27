@@ -97,12 +97,12 @@ uint8_t getTaskI2CAddress(taskIndex_t taskIndex);
 
 String        getPluginNameFromPluginID(pluginID_t pluginID);
 
-
+#if FEATURE_I2C
 // Prepare I2C bus for next call to task
 // Return false if task is I2C, but I2C bus is not ready
 bool prepare_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex);
 void post_I2C_by_taskIndex(taskIndex_t taskIndex, deviceIndex_t DeviceIndex);
-
+#endif
 void loadDefaultTaskValueNames_ifEmpty(taskIndex_t TaskIndex);
 
 /*********************************************************************************************\

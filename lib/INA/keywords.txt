@@ -1,0 +1,45 @@
+################################
+# Classes/Datatypes (KEYWORD1) #
+################################
+INA_Class	KEYWORD1
+
+####################################
+# Methods and Functions (KEYWORD2) #
+####################################
+begin	KEYWORD2
+getBusMilliVolts	KEYWORD2
+getShuntMicroVolts	KEYWORD2
+getBusMicroAmps	KEYWORD2
+getBusMicroWatts	KEYWORD2
+getBusRaw	KEYWORD2
+getShuntRaw	KEYWORD2
+reset	KEYWORD2
+setMode	KEYWORD2
+setAveraging	KEYWORD2
+setBusConversion	KEYWORD2
+setShuntConversion	KEYWORD2
+AlertOnConversion	KEYWORD2
+waitForConversion	KEYWORD2
+conversionFinished  KEYWORD2
+AlertOnShuntOverVoltage	KEYWORD2
+AlertOnShuntUnderVoltage	KEYWORD2
+AlertOnBusOverVoltage	KEYWORD2
+AlertOnBusUnderVoltage	KEYWORD2
+
+########################
+# Constants (LITERAL1) #
+########################
+INA219	LITERAL1
+INA226	LITERAL1
+INA230	LITERAL1
+INA231	LITERAL1
+INA260	LITERAL1
+INA_MODE_SHUTDOWN	LITERAL1
+INA_MODE_TRIGGERED_SHUNT	LITERAL1
+INA_MODE_TRIGGERED_BOTH	LITERAL1
+INA_MODE_POWER_DOWN	LITERAL1
+INA_MODE_CONTINUOUS_SHUNT	LITERAL1
+INA_MODE_CONTINUOUS_BOTH	LITERAL1
+_EEPROM_offset	LITERAL1
+
+

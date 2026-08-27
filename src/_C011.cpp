@@ -32,6 +32,8 @@ struct C011_ConfigStruct
   char HttpBody[C011_HTTP_BODY_MAX_LEN]     = { 0 };
 };
 
+DEF_UP(C011_ConfigStruct);
+
 
 // Forward declarations
 bool load_C011_ConfigStruct(controllerIndex_t ControllerIndex,
@@ -154,7 +156,7 @@ bool CPlugin_011(CPlugin::Function function, struct EventStruct *event, String& 
       void *ptr               = special_calloc(1, size);
 
       if (ptr != nullptr) {
-        std::shared_ptr<C011_ConfigStruct> customConfig(new (ptr) C011_ConfigStruct);
+        UP_C011_ConfigStruct  customConfig(new (ptr) C011_ConfigStruct);
 
         if (customConfig) {
           uint8_t choice    = 0;
@@ -217,7 +219,7 @@ bool do_process_c011_delay_queue(cpluginID_t cpluginID, const Queue_element_base
   const C011_queue_element& element = static_cast<const C011_queue_element&>(element_base);
 // *INDENT-ON*
 
-if (!NetworkConnected()) { return false; }
+if (!ESPEasy::net::NetworkConnected()) { return false; }
 
 int httpCode = -1;
 
@@ -246,7 +248,7 @@ bool load_C011_ConfigStruct(controllerIndex_t ControllerIndex, String& HttpMetho
     return false;
   }
 
-  std::shared_ptr<C011_ConfigStruct>customConfig(new (ptr) C011_ConfigStruct);
+  UP_C011_ConfigStruct customConfig(new (ptr) C011_ConfigStruct);
 
   if (!customConfig) {
     return false;
@@ -281,7 +283,7 @@ boolean Create_schedule_HTTP_C011(struct EventStruct *event)
 
 
   // Add a new element to the queue with the minimal payload
-  std::unique_ptr<C011_queue_element>element(new (ptr) C011_queue_element(event));
+  UP_C011_queue_element element(new (ptr) C011_queue_element(event));
   bool success = C011_DelayHandler->addToQueue(std::move(element));
 
   if (success) {

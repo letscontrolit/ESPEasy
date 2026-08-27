@@ -11,15 +11,12 @@
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../ESPEasyCore/Serial.h"
 
-#include "../Globals/Device.h"
 #include "../Globals/ExtraTaskSettings.h"
 #include "../Globals/GlobalMapPortStatus.h"
 #include "../Globals/SecuritySettings.h"
 #include "../Globals/Settings.h"
 #include "../Globals/Statistics.h"
 
-#include "../Helpers/Convert.h"
-#include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/Misc.h"
 #include "../Helpers/_Plugin_init.h"
@@ -31,9 +28,9 @@
 #include <stdint.h>
 
 
-#ifndef BUILD_MINIMAL_OTA
+#ifndef BUILD_NO_DEBUG
 bool showSettingsFileLayout = false;
-#endif // ifndef BUILD_MINIMAL_OTA
+#endif 
 
 #ifndef BUILD_NO_DIAGNOSTIC_COMMANDS
 String Command_Lowmem(struct EventStruct *event, const char *Line)
@@ -91,7 +88,7 @@ const __FlashStringHelper * Command_MemInfo(struct EventStruct *event, const cha
 
 const __FlashStringHelper * Command_MemInfo_detail(struct EventStruct *event, const char *Line)
 {
-#ifndef BUILD_MINIMAL_OTA
+#ifndef BUILD_NO_DEBUG
   showSettingsFileLayout = true;
   Command_MemInfo(event, Line);
 
@@ -124,7 +121,7 @@ const __FlashStringHelper * Command_MemInfo_detail(struct EventStruct *event, co
   return return_see_serial(event);
   #else
   return return_command_failed_flashstr();
-  #endif // ifndef BUILD_MINIMAL_OTA
+  #endif
 }
 
 const __FlashStringHelper * Command_Background(struct EventStruct *event, const char *Line)
@@ -139,7 +136,6 @@ const __FlashStringHelper * Command_Background(struct EventStruct *event, const 
   serialPrintln(F("end"));
   return return_see_serial(event);
 }
-#endif // BUILD_NO_DIAGNOSTIC_COMMANDS
 
 const __FlashStringHelper * Command_Debug(struct EventStruct *event, const char *Line)
 {
@@ -152,6 +148,8 @@ const __FlashStringHelper * Command_Debug(struct EventStruct *event, const char 
   }
   return return_see_serial(event);
 }
+#endif
+
 
 String Command_logentry(struct EventStruct *event, const char *Line)
 {
@@ -165,7 +163,17 @@ String Command_logentry(struct EventStruct *event, const char *Line)
   #endif
     ) { level = event->Par2; }
   String res = tolerantParseStringKeepCase(Line, 2);
+#if FEATURE_COLORIZE_CONSOLE_LOGS
+  if (!EventValueSource::isExternalSource(event->Source)) {
+    addLog(LOG_LEVEL_NONE, Line);
+  }
+#endif
   addLog(level, res);
+#if FEATURE_COLORIZE_CONSOLE_LOGS
+  if (!EventValueSource::isExternalSource(event->Source)) {
+    addLog(LOG_LEVEL_NONE, res);
+  }
+#endif
   return res;
 }
 

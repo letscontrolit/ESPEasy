@@ -102,10 +102,7 @@ bool P114_data_struct::init_sensor() {
       }
       return false;
     } else if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String log;
-      log  = F("VEML6075: sensor initialised / CONF: ");
-      log += String((uint16_t)(IT << 4) | (HD << 3), BIN);
-      addLogMove(LOG_LEVEL_INFO, log);
+      addLogMove(LOG_LEVEL_INFO, concat(F("VEML6075: sensor initialised / CONF: "), String((uint16_t)(IT << 4) | (HD << 3), BIN)));
     }
   }
   return true;

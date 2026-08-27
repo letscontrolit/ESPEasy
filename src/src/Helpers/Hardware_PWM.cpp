@@ -25,7 +25,6 @@ uint32_t ledChannelFreq[LEDC_CHANNELS] = { 0 };
 # endif // if ESP_IDF_VERSION_MAJOR < 5
 #endif  // if defined(ESP32)
 
-
 // ********************************************************************************
 // Manage PWM state of GPIO pins.
 // ********************************************************************************
@@ -159,14 +158,15 @@ int8_t attachLedChannel(int pin, uint32_t frequency, uint8_t resolution)
   if (frequency == 0) {
     frequency = ESPEASY_PWM_DEFAULT_FREQUENCY;
   }
-  ledcDetach(pin);  // See: https://github.com/espressif/arduino-esp32/issues/9212
-  return ledcAttach(pin, frequency, resolution) ? 0 : -1;
+
+  if (ledcRead(pin) == 0) {
+    ledcDetach(pin); // See: https://github.com/espressif/arduino-esp32/issues/9212
+    return ledcAttach(pin, frequency, resolution) ? 0 : -1;
+  }
+  return 0;
 }
 
-void detachLedChannel(int pin)
-{
-  ledcDetach(pin);
-}
+void detachLedChannel(int pin) { ledcDetach(pin); }
 
 # endif // if ESP_IDF_VERSION_MAJOR < 5
 
@@ -216,7 +216,8 @@ bool set_Gpio_PWM(int gpio, uint32_t dutyCycle, uint32_t fadeDuration_ms, uint32
     return false;
   }
   portStatusStruct tempStatus;
-  if (frequency == 0) frequency = 1000;
+
+  if (frequency == 0) { frequency = 1000; }
 
   // FIXME TD-er: PWM values cannot be stored very well in the portStatusStruct.
   key = createKey(PLUGIN_GPIO, gpio);
@@ -234,6 +235,9 @@ bool set_Gpio_PWM(int gpio, uint32_t dutyCycle, uint32_t fadeDuration_ms, uint32
 #endif // if defined(ESP8266)
 
 #if ESP_IDF_VERSION_MAJOR >= 5
+
+// FIXME TD-er: For now fade is disabled. See: https://github.com/espressif/arduino-esp32/issues/12709
+//fadeDuration_ms = 0;
 
   if (fadeDuration_ms == 0)
   {
@@ -276,8 +280,8 @@ bool set_Gpio_PWM(int gpio, uint32_t dutyCycle, uint32_t fadeDuration_ms, uint32
       // Pin not yet attached
       if (!ledcAttach(gpio, frequency, resolution)) {
         addLog(LOG_LEVEL_ERROR, strformat(
-          F("PWM : ledcAttach failed  gpio:%d freq:%d res:%d"),
-          gpio, frequency, resolution));
+                 F("PWM : ledcAttach failed  gpio:%d freq:%d res:%d"),
+                 gpio, frequency, resolution));
         return false;
       }
     }

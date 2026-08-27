@@ -42,7 +42,7 @@ struct RTC_cache_handler_struct
 
   void         resetpeek();
 
-  bool         peekDataAvailable() const;
+  bool         peekDataAvailable();
 
   int          getPeekFilePos(int& peekFileNr);
 
@@ -76,6 +76,9 @@ struct RTC_cache_handler_struct
   void   closeOpenFiles();
 
 private:
+
+  bool     openPeekFile(int newPeekFileNr);
+  bool     openPeekFile();
 
   bool     loadMetaData();
 

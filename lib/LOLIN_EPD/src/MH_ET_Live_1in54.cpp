@@ -26,8 +26,8 @@ const unsigned char MH_ET_Live_lut_full_update[] PROGMEM =
     @param BUSY the busy pin to use
  */
 
-MH_ET_Live_1in54::MH_ET_Live_1in54(int width, int height, int8_t DC, int8_t RST, int8_t CS, int8_t BUSY)
-  : LOLIN_EPD(width, height, DC, RST, CS, BUSY), _width(width), _height(height) {
+MH_ET_Live_1in54::MH_ET_Live_1in54(int width, int height, int8_t DC, int8_t RST, int8_t CS, int8_t BUSY, SPIClass& spi)
+  : LOLIN_EPD(width, height, DC, RST, CS, BUSY, spi), _width(width), _height(height) {
   if ((_height % 8) > 0) {
     _height_8bit = (_height / 8 + 1) * 8;
   } else {

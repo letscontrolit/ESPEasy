@@ -10,8 +10,6 @@
 #include "../DataTypes/TaskIndex.h"
 #include "../DataTypes/PluginID.h"
 
-#include "../Static/WebStaticData.h"
-
 
 void handle_devices();
 
@@ -35,13 +33,20 @@ void handle_devicess_ShowAllTasksTable(uint8_t page);
 #if FEATURE_ESPEASY_P2P
 void format_originating_node(uint8_t remoteUnit);
 #endif
+#if FEATURE_I2C
 void format_I2C_port_description(taskIndex_t x);
+#endif
 
-void format_SPI_port_description(int8_t spi_gpios[3]);
-
+#if FEATURE_SPI
+void format_SPI_port_description(int8_t spi_gpios[3], uint8_t spi_bus);
+#endif
+#if FEATURE_I2C
 void format_I2C_pin_description(taskIndex_t x);
+#endif
 
+#if FEATURE_SPI
 void format_SPI_pin_description(int8_t spi_gpios[3], taskIndex_t x, bool showCSpin = true);
+#endif
 
 
 
@@ -53,11 +58,26 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page);
 void devicePage_show_pin_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex);
 
 #ifdef PLUGIN_USES_SERIAL
-void devicePage_show_serial_config(taskIndex_t taskIndex);
+void devicePage_show_serial_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex);
 #endif
 
-void devicePage_show_I2C_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex);
+#if FEATURE_SPI
+void devicePage_show_SPI_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex);
+#endif
 
+#if FEATURE_I2C
+void devicePage_show_I2C_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex);
+#endif
+
+# if FEATURE_I2CMULTIPLEXER
+void ShowI2CMultiplexerUI(uint8_t i2cBus,
+                          bool    muxPortsOption,
+                          int     taskDeviceI2CMuxPort);
+void GetI2CMultiplexerFromPage(uint8_t i2cBus,
+                               bool   &muxPortsOption,
+                               int    &selectedPorts);
+#endif // if FEATURE_I2CMULTIPLEXER
+  
 void devicePage_show_output_data_type(taskIndex_t taskIndex, deviceIndex_t DeviceIndex);
 
 #if FEATURE_PLUGIN_STATS

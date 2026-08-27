@@ -2,12 +2,14 @@
 
 #ifdef USES_P096
 
+# include "../Helpers/Hardware_SPI.h"
 
 /****************************************************************************
  * toString: Display-value for the EPD/eInk device selected
  ***************************************************************************/
 const __FlashStringHelper* toString(EPD_type_e device) {
-  switch (device) {
+  switch (device)
+  {
     case EPD_type_e::EPD_IL3897: return F("IL3897 (Lolin 250 x 122px)");
     case EPD_type_e::EPD_UC8151D: return F("UC8151D (white/black/red 212 x 104px)");
     case EPD_type_e::EPD_SSD1680: return F("SSD1680 (250 x 212px)");
@@ -28,7 +30,8 @@ const __FlashStringHelper* toString(EPD_type_e device) {
  * toString: return the command string selected
  ***************************************************************************/
 const __FlashStringHelper* toString(P096_CommandTrigger cmd) {
-  switch (cmd) {
+  switch (cmd)
+  {
     case P096_CommandTrigger::eInk: return F("eink");
     case P096_CommandTrigger::ePaper: return F("epaper");
     case P096_CommandTrigger::il3897: return F("il3897");
@@ -52,7 +55,8 @@ const __FlashStringHelper* toString(P096_CommandTrigger cmd) {
  * EPD_type_toResolution: X and Y resolution for the selected type
  ***************************************************************************/
 void EPD_type_toResolution(EPD_type_e device, uint16_t& x, uint16_t& y) {
-  switch (device) {
+  switch (device)
+  {
     case EPD_type_e::EPD_IL3897:
     case EPD_type_e::EPD_SSD1680:
       x = 250;
@@ -141,112 +145,148 @@ bool P096_data_struct::plugin_init(struct EventStruct *event) {
 
   bool success = false;
 
-  addLog(LOG_LEVEL_INFO, F("EPD  : Init start."));
+  if (nullptr == eInkScreen) {
+    # ifdef ESP32
+    auto spi_ptr = getSPIBusForTask(event->TaskIndex);
 
-  switch (_display) {
-    case EPD_type_e::EPD_IL3897:
-      eInkScreen = new (std::nothrow) LOLIN_IL3897(_xpix, _ypix, PIN(1), PIN(2), PIN(0), PIN(3));  // HSPI
-      break;
-    case EPD_type_e::EPD_UC8151D:
-      eInkScreen = new (std::nothrow) LOLIN_UC8151D(_xpix, _ypix, PIN(1), PIN(2), PIN(0), PIN(3)); // HSPI
-      break;
-    case EPD_type_e::EPD_SSD1680:
-      eInkScreen = new (std::nothrow) LOLIN_SSD1680(_xpix, _ypix, PIN(1), PIN(2), PIN(0), PIN(3)); // HSPI
-      break;
+    if (!spi_ptr) {
+      addLog(LOG_LEVEL_ERROR, F("EPD  : No SPI configured"));
+      return false;
+    }
+    # endif // ifdef ESP32
+
+
+    addLog(LOG_LEVEL_INFO, F("EPD  : Init start."));
+
+    switch (_display)
+    {
+      case EPD_type_e::EPD_IL3897:
+        eInkScreen = new (std::nothrow) LOLIN_IL3897(_xpix, _ypix, PIN(1), PIN(2), PIN(0), PIN(3)
+                                                     # ifdef ESP32
+                                                     , *spi_ptr
+                                                     # endif // ifdef ESP32
+                                                     ); // HSPI
+        break;
+      case EPD_type_e::EPD_UC8151D:
+        eInkScreen = new (std::nothrow) LOLIN_UC8151D(_xpix, _ypix, PIN(1), PIN(2), PIN(0), PIN(3)
+                                                      # ifdef ESP32
+                                                      , *spi_ptr
+                                                      # endif // ifdef ESP32
+                                                      ); // HSPI
+        break;
+      case EPD_type_e::EPD_SSD1680:
+        eInkScreen = new (std::nothrow) LOLIN_SSD1680(_xpix, _ypix, PIN(1), PIN(2), PIN(0), PIN(3)
+                                                      # ifdef ESP32
+                                                      , *spi_ptr
+                                                      # endif // ifdef ESP32
+                                                      ); // HSPI
+        break;
       # if P096_USE_WAVESHARE_2IN7
-    case EPD_type_e::EPD_WS2IN7:
-      eInkScreen = new (std::nothrow) Waveshare_2in7(_xpix, _ypix, PIN(1), PIN(2), PIN(0), PIN(3)); // HSPI
-      break;
+      case EPD_type_e::EPD_WS2IN7:
+        eInkScreen = new (std::nothrow) Waveshare_2in7(_xpix, _ypix, PIN(1), PIN(2), PIN(0), PIN(3)
+                                                       #  ifdef ESP32
+                                                       , *spi_ptr
+                                                       #  endif // ifdef ESP32
+                                                       ); // HSPI
+        break;
       # endif // if P096_USE_WAVESHARE_2IN7
       # if P096_USE_WAVESHARE_1IN54B
-    case EPD_type_e::EPD_WS1IN54B:
-      eInkScreen = new (std::nothrow) Waveshare_1in54b(_xpix, _ypix, PIN(1), PIN(2), PIN(0), PIN(3)); // HSPI
-      break;
+      case EPD_type_e::EPD_WS1IN54B:
+        eInkScreen = new (std::nothrow) Waveshare_1in54b(_xpix, _ypix, PIN(1), PIN(2), PIN(0), PIN(3)
+                                                         #  ifdef ESP32
+                                                         , *spi_ptr
+                                                         #  endif // ifdef ESP32
+                                                         ); // HSPI
+        break;
       # endif // if P096_USE_WAVESHARE_1IN54B
       # if P096_USE_MH_ET_LIVE_1IN54
-    case EPD_type_e::EPD_MHET1IN54:
-      eInkScreen = new (std::nothrow) MH_ET_Live_1in54(_xpix, _ypix, PIN(1), PIN(2), PIN(0), PIN(3)); // HSPI
-      break;
+      case EPD_type_e::EPD_MHET1IN54:
+        eInkScreen = new (std::nothrow) MH_ET_Live_1in54(_xpix, _ypix, PIN(1), PIN(2), PIN(0), PIN(3)
+                                                         #  ifdef ESP32
+                                                         , *spi_ptr
+                                                         #  endif // ifdef ESP32
+                                                         ); // HSPI
+        break;
       # endif // if P096_USE_MH_ET_LIVE_1IN54
-      // case EPD_type_e::EPD_MAX:
-      //   break;
-  }
-  _sequence_in_progress = false;
+    }
+    _sequence_in_progress = false;
   # ifdef P096_USE_ADA_GRAPHICS
 
-  if (nullptr != eInkScreen) {
-    eInkScreen->begin(); // Start the device
-    gfxHelper = new (std::nothrow) AdafruitGFX_helper(eInkScreen,
-                                                      _commandTrigger,
-                                                      _xpix,
-                                                      _ypix,
-                                                      _colorDepth,
-                                                      _textmode,
-                                                      _fontscaling,
-                                                      _fgcolor,
-                                                      _bgcolor,
-                                                      true,
-                                                      _textBackFill);
+    if (nullptr != eInkScreen) {
+      eInkScreen->begin(); // Start the device
+      gfxHelper = new (std::nothrow) AdafruitGFX_helper(eInkScreen,
+                                                        _commandTrigger,
+                                                        _xpix,
+                                                        _ypix,
+                                                        _colorDepth,
+                                                        _textmode,
+                                                        _fontscaling,
+                                                        _fgcolor,
+                                                        _bgcolor,
+                                                        true,
+                                                        _textBackFill);
     #  if P096_USE_EXTENDED_SETTINGS
 
-    if (nullptr != gfxHelper) {
-      gfxHelper->initialize();
-      gfxHelper->setRotation(_rotation);
-      gfxHelper->setColumnRowMode(bitRead(P096_CONFIG_FLAGS, P096_CONFIG_FLAG_USE_COL_ROW));
-      gfxHelper->setTxtfullCompensation(!bitRead(P096_CONFIG_FLAGS, P096_CONFIG_FLAG_COMPAT_P096) ? 0 : 1); // Inverted
-    }
+      if (nullptr != gfxHelper) {
+        gfxHelper->initialize();
+        gfxHelper->setRotation(_rotation);
+        gfxHelper->setColumnRowMode(bitRead(P096_CONFIG_FLAGS, P096_CONFIG_FLAG_USE_COL_ROW));
+        gfxHelper->setTxtfullCompensation(!bitRead(P096_CONFIG_FLAGS, P096_CONFIG_FLAG_COMPAT_P096) ? 0 : 1); // Inverted
+      }
     #  endif // if P096_USE_EXTENDED_SETTINGS
-  }
-  updateFontMetrics();
+    }
+    updateFontMetrics();
   # endif // ifdef P096_USE_ADA_GRAPHICS
 
   # ifndef BUILD_NO_DEBUG
 
-  if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    String log;
-    log.reserve(50);
-    log += F("EPD  : Init done, address: ");
-    log += formatToHex(reinterpret_cast<ulong>(eInkScreen));
-    log += ' ';
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String log;
+      log.reserve(50);
+      log += F("EPD  : Init done, address: ");
+      log += formatToHex(reinterpret_cast<ulong>(eInkScreen));
+      log += ' ';
 
-    if (nullptr == eInkScreen) {
-      log += F("in");
+      if (nullptr == eInkScreen) {
+        log += F("in");
+      }
+      log += F("valid, commands: ");
+      log += _commandTrigger;
+      log += F(", display: ");
+      log += toString(_display);
+      addLog(LOG_LEVEL_INFO, log);
+      #  ifndef LIMIT_BUILD_SIZE
+      log.clear();
+      log += F("EPD  : Foreground: ");
+      log += AdaGFXcolorToString(_fgcolor, static_cast<AdaGFXColorDepth>(P096_CONFIG_FLAG_GET_COLORDEPTH));
+      log += F(", background: ");
+      log += AdaGFXcolorToString(_bgcolor, static_cast<AdaGFXColorDepth>(P096_CONFIG_FLAG_GET_COLORDEPTH));
+      addLogMove(LOG_LEVEL_INFO, log);
+      #  endif // ifndef LIMIT_BUILD_SIZE
     }
-    log += F("valid, commands: ");
-    log += _commandTrigger;
-    log += F(", display: ");
-    log += toString(_display);
-    addLog(LOG_LEVEL_INFO, log);
-    log.clear();
-    log += F("EPD  : Foreground: ");
-    log += AdaGFXcolorToString(_fgcolor, static_cast<AdaGFXColorDepth>(P096_CONFIG_FLAG_GET_COLORDEPTH));
-    log += F(", background: ");
-    log += AdaGFXcolorToString(_bgcolor, static_cast<AdaGFXColorDepth>(P096_CONFIG_FLAG_GET_COLORDEPTH));
-    addLogMove(LOG_LEVEL_INFO, log);
-  }
   # endif // ifndef BUILD_NO_DEBUG
 
-  if (nullptr != eInkScreen) {
-    eInkScreen->begin(); // Start the device
-    eInkScreen->clearBuffer();
+    if (nullptr != eInkScreen) {
+      eInkScreen->begin(); // Start the device
+      eInkScreen->clearBuffer();
 
-    eInkScreen->setRotation(_rotation);
-    eInkScreen->setTextColor(_fgcolor);
-    eInkScreen->setTextSize(_fontscaling); // Handles 0 properly, text size, default 1 = very small
-    eInkScreen->setCursor(0, 0);           // move cursor to position (0, 0) pixel
+      eInkScreen->setRotation(_rotation);
+      eInkScreen->setTextColor(_fgcolor);
+      eInkScreen->setTextSize(_fontscaling); // Handles 0 properly, text size, default 1 = very small
+      eInkScreen->setCursor(0, 0);           // move cursor to position (0, 0) pixel
 
-    if (!stringsLoaded) {
-      LoadCustomTaskSettings(event->TaskIndex, strings, P096_Nlines, 0);
-      stringsLoaded = true;
+      if (!stringsLoaded) {
+        LoadCustomTaskSettings(event->TaskIndex, strings, P096_Nlines, 0);
+        stringsLoaded = true;
 
-      for (uint8_t x = 0; x < P096_Nlines && !stringsHasContent; x++) {
-        stringsHasContent = !strings[x].isEmpty();
+        for (uint8_t x = 0; x < P096_Nlines && !stringsHasContent; x++) {
+          stringsHasContent = !strings[x].isEmpty();
+        }
       }
+
+      success = true;
     }
-
-    success = true;
   }
-
   return success;
 }
 
@@ -268,7 +308,9 @@ void P096_data_struct::updateFontMetrics() {
  * plugin_exit: De-initialize before destruction
  ***************************************************************************/
 bool P096_data_struct::plugin_exit(struct EventStruct *event) {
+  # ifndef BUILD_NO_DEBUG
   addLog(LOG_LEVEL_INFO, F("EPD  : Exit."));
+  # endif // ifndef BUILD_NO_DEBUG
 
   # if P096_USE_EXTENDED_SETTINGS
 

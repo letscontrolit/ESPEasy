@@ -1,0 +1,57 @@
+Ethernet
+--------
+
+On nearly all ESP32 builds (exception: ESP32-C2), it is also possible to use ethernet instead of WiFi.
+Currently this is only present for ESP32 builds and no plans currently exist to support it for ESP82xx.
+
+Ethernet PHY type
+^^^^^^^^^^^^^^^^^
+
+ESP boards can be equiped with Ethernet.
+This is more stable and reliable compared to WiFi and allows for better responsiveness.
+
+Actual transfer speed (at least when using RMII) is also higher than can be achieved via WiFi, but this is less of a concern for typical use cases where ESPEasy is used.
+
+Ethernet chips/boards for ESP32-variant boards exist with 2 types of interfaces to the ESP.
+
+* RMII interface - Faster actual transfer speeds possible, uses more GPIO pins, only supported on ESP32-classic and ESP32-P4.
+* SPI interface - (Added: 2024/02) Supported on all ESP32-variants (not all tested) on builds based on ESP-IDF 5.1 and later.
+  SPI Ethernet adapters do obviously require the SPI interface to be configured.
+
+Supported Ethernet chips:
+
+* RMII Interface:
+    * LAN8710 (LAN8720 is also supported, but none of the newer features are supported)
+    * LAN867X (since ESP32 IDF 5.5)
+    * TLK110  
+    * RTL8201 (since ESP32 IDF 4.4)
+    * JL1101  (since ESP32 IDF 4.4)
+    * DP83848 (since ESP32 IDF 4.4)
+    * KSZ8041 (since ESP32 IDF 4.4)
+    * KSZ8081 (since ESP32 IDF 4.4)
+
+* SPI Interface: (since ESP32 IDF 5.1)
+    * DM9051 
+    * W5500 
+    * KSZ8851 
+
+.. note:: The LAN8710 and LAN8720 are also available with an "A" suffix.
+          These are the same chips, only produced after the brand SMSC was taken over by Microchip Technology.
+
+Ethernet PHY Address
+^^^^^^^^^^^^^^^^^^^^
+
+The PHY address depends on the hardware and the PHY configuration. 
+On some chips, like the LAN8720, the board designer may set this address by pulling some pins either high or low at power on.
+In theory, one could use multiple PHY adapters on the same RMII/SPI bus, but this is (currently) not supported by ESPEasy.
+
+* Espressif's Ethernet board with TLK110 PHY use PHY address 31.
+* Common Waveshare LAN8720 PHY breakout board (and clones) use PHY address 1.
+* Olimex ESP32 EVB REV B IoT LAN8710 PHY Board with CAN use PHY address 0.
+* Other LAN8720 breakouts often use PHY address 0.
+* ETH01-EVO (ESP32-C3 based board) uses PHY address 1.
+
+If the PHY address is incorrect then the EMAC will initialise but all attempts to read/write configuration registers on the PHY will fail.
+
+N.B. There is support for an auto detect of this PHY address, by setting it to -1, but at least on the LAN8720 this does not seem to work.
+

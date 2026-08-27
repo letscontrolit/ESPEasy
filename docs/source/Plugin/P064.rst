@@ -13,7 +13,9 @@ Type: |P064_type|
 
 Name: |P064_name|
 
-Status: |P064_status|
+Status ESP32: |P064_status|
+
+Status ESP8266: |P064_status_lb|
 
 GitHub: |P064_github|_
 
@@ -38,7 +40,7 @@ Device Configuration
 I2C options
 ^^^^^^^^^^^
 
-The available settings here depend on the build used. At least the **Force Slow I2C speed** option is available, but selections for the I2C Multiplexer can also be shown. For details see the :ref:`Hardware_page`
+The available settings here depend on the build used. At least the **Force Slow I2C speed** option is available, but selections for the I2C Multiplexer can also be shown. For details see the :ref:`i2c-bus` page
 
 There is only 1 I2C address available for this sensor, ``0x39`` (not shown).
 

@@ -2,7 +2,7 @@
 
 #if FEATURE_IMPROV
 # include "../CustomBuild/CompiletimeDefines.h"
-# include "../ESPEasyCore/ESPEasyNetwork.h"
+# include "../../ESPEasy/net/ESPEasyNetwork.h"
 # include "../Globals/SecuritySettings.h"
 # include "../Helpers/ESPEasy_Storage.h"
 # include "../Helpers/Hardware_device_info.h"
@@ -71,6 +71,11 @@ void Improv_Helper_t::init()
   // FIXME TD-er: Implement callback to use ESPEasy functions to connect to WiFi
 //  _improv.setCustomTryConnectToWiFi(OnImprovESPEasyConnectWiFi);
 
+  update();
+}
+
+void Improv_Helper_t::update()
+{
   String firmwareName      = get_binary_filename();
   const String buildString = getSystemBuildString();
 
@@ -94,7 +99,7 @@ void Improv_Helper_t::init()
   _improv.setDeviceInfo(
     firmwareName.c_str(),
     buildString.c_str(),
-    NetworkGetHostNameFromSettings().c_str());
+    ESPEasy::net::NetworkGetHostNameFromSettings().c_str());
 
   String chipModel = getChipModel();
 

@@ -60,10 +60,10 @@ struct PLUGIN_118_ExtraSettingsStruct {
 struct P118_data_struct : public PluginTaskData_base {
 public:
 
-  P118_data_struct(int8_t csPin,
-                   int8_t irqPin,
-                   bool   logData,
-                   bool   rfLog);
+  P118_data_struct(int8_t  csPin,
+                   int8_t  irqPin,
+                   bool    logData,
+                   bool    rfLog);
 
   P118_data_struct() = delete;
   virtual ~P118_data_struct();
@@ -104,10 +104,10 @@ private:
   int  _OldLastIDindex = 0;
   bool _InitRunned     = false;
 
-  int8_t _csPin  = -1;
-  int8_t _irqPin = -1;
-  bool   _log    = false;
-  bool   _rfLog  = false;
+  int8_t  _csPin  = -1;
+  int8_t  _irqPin = -1;
+  bool    _log    = false;
+  bool    _rfLog  = false;
 
   PLUGIN_118_ExtraSettingsStruct _ExtraSettings;
 

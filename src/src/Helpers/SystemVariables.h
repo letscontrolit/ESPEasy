@@ -54,6 +54,10 @@ public:
     ISMQTT,
     ISMQTTIMP,
     ISNTP,
+#ifdef USES_NW005
+    ISPPP,
+#endif
+    ISWIFIAP,
     ISWIFI,
     LCLTIME,
     LCLTIME_AM,

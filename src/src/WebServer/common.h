@@ -7,7 +7,7 @@
 #include "../Globals/Services.h"
 #include "../Globals/TXBuffer.h"
 #include "../Helpers/StringProvider.h"
-
+#include "../DataTypes/FormSelectorOptions.h"
 
 #include <FS.h>
 

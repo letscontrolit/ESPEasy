@@ -276,7 +276,8 @@ String TaskValues_Data_t::getAsString(uint8_t varNr, Sensor_VType  sensorType, u
   } else if (isInt32OutputDataType(sensorType)) {
     return String(getInt32(varNr));
   } else if (isUInt64OutputDataType(sensorType)) {
-    return ull2String(getUint64(varNr));
+    // Return unsigned 64-bit as hex string or else it could become way too long to be practical
+    return formatULLtoHex(getUint64(varNr));
   } else if (isInt64OutputDataType(sensorType)) {
     return ll2String(getInt64(varNr));
 #endif

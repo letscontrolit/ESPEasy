@@ -6,15 +6,17 @@ var commonAtoms = ["And", "Or"];
 var commonKeywords = ["If", "Else", "Elseif", "Endif"];
 var commonCommands = ["AccessInfo", "Background", "Build", "ClearAccessBlock", "ClearRTCam", "Config", "ControllerDisable",
   "ControllerEnable", "DateTime", "Debug", "Dec", "DeepSleep", "DisablePriorityTask", "DNS", "DST", "EraseSDKWiFi", "ExecuteRules", "FactoryReset", "Gateway", "I2Cscanner", "Inc",
-  "IP", "Latitude", "Let", "LetStr", "Load", "LogEntry", "LogPortStatus", "Longitude", "LoopTimerSet", "LoopTimerSet_ms", "LoopTimerSetAndRun", "LoopTimerSetAndRun_ms", "MemInfo", "MemInfoDetail", "Name", "Password", "PostToHTTP", "PostToHTTPS", "Publish", "PublishR",
+  "IP", "Latitude", "Let", "LetStr", "Load", "LogEntry", "LogPortStatus", "Longitude", "LoopTimerSet", "LoopTimerSet_ms", "LoopTimerSetAndRun", "LoopTimerSetAndRun_ms", "MemInfo", "MemInfoDetail", "Name", "NetworkDisable", "NetworkEnable", "Password", "PostToHTTP", "PostToHTTPS", "Publish", "PublishR",
   "PutToHTTP", "PutToHTTPS", "Reboot", "Save", "SendTo", "SendToHTTP", "SendToHTTPS", "SendToUDP", "SendToUDPMix", "Settings", "Subnet", "Subscribe", "TaskClear", "TaskClearAll",
   "TaskDisable", "TaskEnable", "TaskRun", "TaskValueSet", "TaskValueSetAndRun", "TaskValueSetDerived", "TaskValueSetPresentation", "TimerPause", "TimerResume", "TimerSet", "TimerSet_ms", "TimeZone",
   "UdpPort", "UdpTest", "Unit", "UseNTP", "WdConfig", "WdRead", "WiFi", "WiFiAllowAP", "WiFiAPMode", "WiFiConnect", "WiFiDisconnect", "WiFiKey",
   "WiFiKey2", "WiFiMode", "WiFiScan", "WiFiSSID", "WiFiSSID2", "WiFiSTAMode",
+  "WriteEE", "WriteRTC",
   "Event", "AsyncEvent",
   "GPIO", "GPIOToggle", "LongPulse", "LongPulse_mS", "Monitor", "Pulse", "PWM", "Servo", "Status", "Tone", "RTTTL", "UnMonitor",
   "Provision", "Provision,Config", "Provision,Security", "Provision,Notification", "Provision,Provision", "Provision,Rules", "Provision,CustomCdnUrl", "Provision,Firmware"];
-var commonEvents = ["Clock#Time", "Login#Failed", "MQTT#Connected", "MQTT#Disconnected", "MQTTimport#Connected", "MQTTimport#Disconnected", "Rules#Timer", "System#Boot",
+var commonEvents = ["Clock#Time", "JsonReply", "JsonReply#", "Login#Failed", "MQTT#Connected", "MQTT#Disconnected", "MQTTimport#Connected", "MQTTimport#Disconnected","OpenMeteo#current","OpenMeteo#daily", "OpenMeteo#hourly", "Rules#Timer", "System#Boot",
+  "ReadEE#", "ReadRTC#",
   "System#BootMode", "System#Sleep", "System#Wake", "TaskExit#", "TaskInit#", "ThingspeakReply", "Time#Initialized", "Time#Set", "WiFi#APmodeDisabled", "WiFi#APmodeEnabled",
   "WiFi#ChangedAccesspoint", "WiFi#ChangedWiFichannel", "WiFi#Connected", "WiFi#Disconnected"];
 var commonPlugins = [
@@ -174,7 +176,7 @@ var AnythingElse = [
   "%dns%", "%dns1%", "%dns2%", "%flash_freq%", "%flash_size%", "%flash_chip_vendor%", "%flash_chip_model%", "%fs_free%", "%fs_size%",
   "%cpu_id%", "%cpu_freq%", "%cpu_model%", "%cpu_rev%", "%cpu_cores%", "%board_name%", "%inttemp%", "%islimited_build%", "%isvar_double%",
   //String Functions
-  "substring", "lookup", "indexOf", "indexOf_ci", "equals", "equals_ci", "strtol", "timeToMin", "timeToSec",
+  "substring", "lookup", "indexOf", "indexOf_ci", "equals", "equals_ci", "strtol", "timeToMin", "timeToSec", "unescape", "escape", "parse", "json",
   //Ethernet
   "%ethwifimode%", "%ethconnected%", "%ethduplex%", "%ethspeed%", "%ethstate%", "%ethspeedstate%",
   //Standard Conversions
@@ -361,11 +363,7 @@ function addFindButtons() {
       title: 'Help',
       symbol: '?',
       action: () => {
-        alert(`Available shortcuts:
-• Ctrl+F / Cmd+F: Open search
-• Enter: Find next
-• Shift+Enter: Find previous
-• Use /re/ syntax for regex search`);
+        alert('Available shortcuts:\n• Ctrl+F / Cmd+F: Open search\n• Enter: Find next\n• Shift+Enter: Find previous\n• Use /re/ syntax for regex search');
       }
     }
   ];
@@ -375,10 +373,7 @@ function addFindButtons() {
     btn.title = title;
     btn.className = title.toLowerCase() === 'help' ? 'button help' : 'button';
     btn.innerHTML = symbol;
-    btn.style.cssText = `
-      cursor: pointer;
-      user-select: none;
-    `;
+    btn.style.cssText = 'cursor: pointer; user-select: none;';
     btn.addEventListener('click', (e) => {
       e.preventDefault();
       action();

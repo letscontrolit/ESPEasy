@@ -9,12 +9,14 @@
 # include "../DataTypes/TaskIndex.h"
 
 # include "../Helpers/LongTermTimer.h"
+# include "../Helpers/LongTermOnOffTimer.h"
 
 # include <WiFiClient.h>
 # include <PubSubClient.h>
 
 # if FEATURE_MQTT_TLS
   #  include <WiFiClientSecureLightBearSSL.h>
+  #  include "../CustomBuild/Certificate_CA.h"
 # endif // if FEATURE_MQTT_TLS
 
 # if FEATURE_MQTT_CONNECT_BACKGROUND
@@ -57,11 +59,13 @@ extern String mqtt_fingerprint;
 
 # endif  // if FEATURE_MQTT_TLS
 extern PubSubClient MQTTclient;
+extern LongTermOnOffTimer MQTTclient_connected_stats;
 extern bool MQTTclient_should_reconnect;
 extern bool MQTTclient_must_send_LWT_connected;
 extern bool MQTTclient_connected;
 extern int  mqtt_reconnect_count;
 extern LongTermTimer MQTTclient_next_connect_attempt;
+
 #endif // if FEATURE_MQTT
 
 #ifdef USES_P037

@@ -106,42 +106,53 @@ bool P087_data_struct::loop() {
 
     while (available > 0 && !fullSentenceReceived) {
       // Look for end marker
-      char c = easySerial->read();
+      uint8_t c = easySerial->read();
       --available;
 
       if (available == 0) {
         available = easySerial->available();
         delay(0);
       }
+      const size_t length = sentence_part.length();
+      # ifdef LIMIT_BUILD_SIZE
+      const bool addCharacter = (10u != c);
+      const bool finished     = (13u == c);
+      # else // ifdef LIMIT_BUILD_SIZE
+      const bool addCharacter = (10u != c) || handle_binary;  // Skip LF in ascii-mode
+      bool finished           = (13u == c) && !handle_binary; // Done on CR in ascii-mode
 
-      switch (c) {
-        case 13:
-        {
-          const size_t length = sentence_part.length();
-          bool valid          = length > 0;
+      if (0 != fixed_length) {
+        finished = (length == fixed_length);
 
-          for (size_t i = 0; i < length && valid; ++i) {
-            if ((sentence_part[i] > 127) || (sentence_part[i] < 32)) {
-              sentence_part = EMPTY_STRING;
-              ++sentences_received_error;
-              valid = false;
-            }
-          }
-
-          if (valid) {
-            fullSentenceReceived = true;
-            last_sentence        = sentence_part;
-            sentence_part        = EMPTY_STRING;
-          }
-          break;
+        if (finished) {
+          available = 0; // Forced exit
         }
-        case 10:
+      }
+      # endif // ifdef LIMIT_BUILD_SIZE
 
-          // Ignore LF
-          break;
-        default:
-          sentence_part += c;
-          break;
+      if (finished) {
+        bool valid = length > 0;
+
+        for (size_t i = 0; i < length && valid
+             # ifndef LIMIT_BUILD_SIZE
+             && !handle_binary // Skip valid-ascii check
+             # endif // ifndef LIMIT_BUILD_SIZE
+             ; ++i) {
+          if ((sentence_part[i] > 127) || (sentence_part[i] < 32)) {
+            sentence_part = EMPTY_STRING;
+            ++sentences_received_error;
+            valid = false;
+          }
+        }
+
+        if (valid) {
+          fullSentenceReceived = true;
+          last_sentence        = sentence_part;
+          sentence_part        = EMPTY_STRING;
+        }
+      }
+      else if (addCharacter) {
+        sentence_part += static_cast<char>(c);
       }
 
       if (max_length_reached()) { fullSentenceReceived = true; }
@@ -152,6 +163,16 @@ bool P087_data_struct::loop() {
     ++sentences_received;
     length_last_received = last_sentence.length();
   }
+  # ifndef LIMIT_BUILD_SIZE
+  else if (handle_binary && last_sentence.isEmpty() && !sentence_part.isEmpty()) { // Receive binary data (no end-marker)
+    fullSentenceReceived = true;
+    last_sentence        = sentence_part;
+    sentence_part        = EMPTY_STRING;
+    ++sentences_received;
+    length_last_received = last_sentence.length();
+  }
+  # endif // ifndef LIMIT_BUILD_SIZE
+
   return fullSentenceReceived;
 }
 

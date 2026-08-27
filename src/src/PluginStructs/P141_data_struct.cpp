@@ -2,6 +2,8 @@
 
 #ifdef USES_P141
 
+#include "../Helpers/Hardware_SPI.h"
+
 /****************************************************************************
  * toString: return the command string selected
  ***************************************************************************/
@@ -56,6 +58,11 @@ P141_data_struct::~P141_data_struct() {
  * plugin_init: Initialize display
  ***************************************************************************/
 bool P141_data_struct::plugin_init(struct EventStruct *event) {
+#ifdef ESP32
+  auto spi_ptr = getSPIBusForTask(event->TaskIndex);
+  if (!spi_ptr) return false;
+#endif
+
   updateFontMetrics();
   bool success = false;
 
@@ -63,10 +70,18 @@ bool P141_data_struct::plugin_init(struct EventStruct *event) {
   ButtonLastState = 0xFF;  // Last state checked (debouncing in progress)
   DebounceCounter = 0;     // debounce counter
 
-  if (nullptr == pcd8544) {
-    addLog(LOG_LEVEL_INFO, F("PCD8544: Init start."));
 
-    pcd8544 = new (std::nothrow) Adafruit_PCD8544(P141_DC_PIN, P141_CS_PIN, P141_RST_PIN);
+
+  if (nullptr == pcd8544) {
+    #ifndef BUILD_NO_DEBUG
+    addLog(LOG_LEVEL_INFO, F("PCD8544: Init start."));
+    #endif // ifndef BUILD_NO_DEBUG
+
+    pcd8544 = new (std::nothrow) Adafruit_PCD8544(P141_DC_PIN, P141_CS_PIN, P141_RST_PIN
+                                                  # ifdef ESP32
+                                                  , spi_ptr
+                                                  # endif // ifdef ESP32
+                                                  );
     # ifndef BUILD_NO_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -82,7 +97,7 @@ bool P141_data_struct::plugin_init(struct EventStruct *event) {
     }
     # endif // ifndef BUILD_NO_DEBUG
   } else {
-    addLog(LOG_LEVEL_INFO, F("PCD8544: No init?"));
+    addLog(LOG_LEVEL_ERROR, F("PCD8544: No init?"));
   }
 
   if (nullptr != pcd8544) {

@@ -19,8 +19,8 @@
     @param BUSY the busy pin to use
  */
 
-Waveshare_1in54b::Waveshare_1in54b(int width, int height, int8_t DC, int8_t RST, int8_t CS, int8_t BUSY)
-  : LOLIN_EPD(width, height, DC, RST, CS, BUSY) {
+Waveshare_1in54b::Waveshare_1in54b(int width, int height, int8_t DC, int8_t RST, int8_t CS, int8_t BUSY, SPIClass& spi)
+  : LOLIN_EPD(width, height, DC, RST, CS, BUSY, spi) {
   if ((height % 8) > 0) {
     _height_8bit = (height / 8 + 1) * 8;
   } else {

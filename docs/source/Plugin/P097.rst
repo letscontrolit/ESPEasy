@@ -13,7 +13,9 @@ Type: |P097_type|
 
 Name: |P097_name|
 
-Status: |P097_status|
+Status ESP32: |P097_status|
+
+Status ESP8266: |P097_status_lb|
 
 GitHub: |P097_github|_
 

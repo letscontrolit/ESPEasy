@@ -6,6 +6,7 @@
     "f_flash": "40000000L",
     "flash_mode": "dio",
     "mcu": "esp32",
+    "chip_variant": "esp32u",
     "variant": "esp32",
     "partitions": "boards/partitions/esp32_partition_app1810k_spiffs316k.csv"
   },
@@ -30,10 +31,8 @@
     "require_upload_port": true,
     "speed": 460800
   },
-  "espidf": {
-    "custom_sdkconfig": [
-      "CONFIG_FREERTOS_UNICORE=y" 
-    ]
+  "download": {
+    "speed": 230400
   },
   "url": "https://en.wikipedia.org/wiki/ESP32",
   "vendor": "Espressif"

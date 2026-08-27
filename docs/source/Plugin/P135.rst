@@ -13,7 +13,9 @@ Type: |P135_type|
 
 Name: |P135_name|
 
-Status: |P135_status|
+Status ESP32: |P135_status|
+
+Status ESP8266: |P135_status_lb|
 
 GitHub: |P135_github|_
 
@@ -42,7 +44,7 @@ Configuration
 I2C options
 ^^^^^^^^^^^
 
-The available settings here depend on the build used. At least the **Force Slow I2C speed** option is available, but selections for the I2C Multiplexer can also be shown. For details see the :ref:`Hardware_page`
+The available settings here depend on the build used. At least the **Force Slow I2C speed** option is available, but selections for the I2C Multiplexer can also be shown. For details see the :ref:`i2c-bus` page
 
 .. note:: According to the documentation, the SCD4x sensors support a max. I2C Clock Speed of 100 kHz, but during testing it worked fine at the regular 400 kHz speed, so your milage may vary. If the readings are out of range, or other issues arise, **Force Slow I2C speed** should be checked! (ESPEasy has a default setting of 100 kHz for I2C Slow device Clock Speed).
 

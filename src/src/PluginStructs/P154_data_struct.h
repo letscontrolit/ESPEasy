@@ -19,7 +19,7 @@ public:
   P154_data_struct()          = delete;
   virtual ~P154_data_struct() = default;
 
-  bool        begin(bool _i2cMode = true);
+  bool        begin(struct EventStruct *event, bool _i2cMode = true);
 
   bool        read(float& temp,
                    float& pressure);

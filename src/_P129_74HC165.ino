@@ -7,6 +7,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2026-06-30 tonhuisman: Code optimization by moving ul2stringFixed to StringConverter_Numerical
  * 2025-06-14 tonhuisman: Add support for Custom Value Type per task value
  * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported for Shift registers)
  * 2023-01-04 tonhuisman: Use DIRECT_pin GPIO functions for faster GPIO handling (mostly on ESP32), string optimization
@@ -42,19 +43,6 @@
 # define PLUGIN_VALUENAME4_129  "State_D"
 
 # include "./src/PluginStructs/P129_data_struct.h"
-
-// TODO tonhuisman: ? Move to StringConverter ? though it is a bit specific, can also be used by P126
-String P129_ul2stringFixed(uint32_t value, uint8_t base) {
-  // Set bit just left of 32 bits so we will see the leading zeroes
-  const uint64_t val = static_cast<uint64_t>(value) | 0x100000000ull;
-
-  String valStr = ull2String(val, base).substring(1); // Delete leading 1 we added
-
-  if (base == HEX) {
-    valStr.toUpperCase();                             // uppercase hex for readability
-  }
-  return valStr;
-}
 
 boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -146,7 +134,7 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_GET_DEVICEVALUECOUNT:
     {
       event->Par1 = min(static_cast<uint8_t>(VARS_PER_TASK),
-                        static_cast<uint8_t>(ceil(P129_CONFIG_CHIP_COUNT / 4.0f)));
+                        static_cast<uint8_t>(ceilf(P129_CONFIG_CHIP_COUNT / 4.0f)));
       success = true;
       break;
     }
@@ -155,7 +143,7 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
     {
       event->sensorType = static_cast<Sensor_VType>(
         min(static_cast<uint8_t>(VARS_PER_TASK),
-            static_cast<uint8_t>(ceil(P129_CONFIG_CHIP_COUNT / 4.0f))));
+            static_cast<uint8_t>(ceilf(P129_CONFIG_CHIP_COUNT / 4.0f))));
       event->idx = 0;
       success    = true;
       break;
@@ -187,7 +175,8 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
           F("Number of chips (Q7 &rarr; DS)"), F("chipcnt"), P129_CONFIG_CHIP_COUNT);
         addUnit(concat(F("Daisychained 1.."), P129_MAX_CHIP_COUNT));
         # ifndef LIMIT_BUILD_SIZE
-        addFormNote(F("Changing the number of chips will reload the page and update the Event configuration."));
+
+        // addFormNote(F("Changing the number of chips will reload the page and update the Event configuration."));
         # endif // ifndef LIMIT_BUILD_SIZE
       }
 
@@ -240,12 +229,12 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
           if (i % 4 == 0) {
             bits = PCONFIG_ULONG(i / 4) & 0x0ffffffff;
             off  = 0;
-            # ifndef P129_DEBUG_LOG
+            # ifdef P129_DEBUG_LOG
 
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-              addLog(LOG_LEVEL_INFO, strformat(F("74HC165 Reading from: %d, bits: %s"), i / 4, P129_ul2stringFixed(bits, BIN).c_str()));
+              addLog(LOG_LEVEL_INFO, strformat(F("74HC165 Reading from: %d, bits: %s"), i / 4, ul2stringFixed(bits, BIN, false).c_str()));
             }
-            # endif // ifndef P129_DEBUG_LOG
+            # endif // ifdef P129_DEBUG_LOG
           }
           html_TR();
           addHtml(F("<td align =\"center\">"));
@@ -310,15 +299,15 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
         }
         PCONFIG_ULONG(i / 4) = bits;
 
-        # ifndef P129_DEBUG_LOG
+        # ifdef P129_DEBUG_LOG
 
         if (loglevelActiveFor(LOG_LEVEL_INFO) && ((i % 4 == 3) || (i == P129_CONFIG_CHIP_COUNT))) {
           addLog(LOG_LEVEL_INFO, strformat(F("74HC165 Writing to: %d, offset: %d, bits: %s"),
                                            i / 4,
                                            off * 8,
-                                           P129_ul2stringFixed(bits, BIN).c_str()));
+                                           ul2stringFixed(bits, BIN, false).c_str()));
         }
-        # endif // ifndef P129_DEBUG_LOG
+        # endif // ifdef P129_DEBUG_LOG
         off++;
       }
       success = true;
@@ -391,15 +380,16 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
           (P129_CONFIG_FLAGS_GET_OUTPUT_SELECTION == P129_OUTPUT_HEXBIN)) {
         string += '0';
         string += (P129_CONFIG_FLAGS_GET_VALUES_DISPLAY ? 'b' : 'x');
-        string += P129_ul2stringFixed(UserVar.getUint32(event->TaskIndex, event->idx),
-                                      # ifdef P129_SHOW_VALUES
-                                      (P129_CONFIG_FLAGS_GET_VALUES_DISPLAY ? BIN :
-                                      # endif // ifdef P129_SHOW_VALUES
-                                      HEX
-                                      # ifdef P129_SHOW_VALUES
-                                      )
-                                      # endif // ifdef P129_SHOW_VALUES
-                                      );
+
+        string += ul2stringFixed(UserVar.getUint32(event->TaskIndex, event->idx),
+                                 # ifdef P129_SHOW_VALUES
+                                 (P129_CONFIG_FLAGS_GET_VALUES_DISPLAY ? BIN :
+                                 # endif // ifdef P129_SHOW_VALUES
+                                 HEX
+                                 # ifdef P129_SHOW_VALUES
+                                 )
+                                 # endif // ifdef P129_SHOW_VALUES
+                                 , 1 == event->ParN[event->idx]);
       }
       success = true;
       break;
@@ -412,21 +402,15 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
         state.reserve(40);
         const String   abcd     = F("ABCDEFGH");              // In case anyone dares to extend VARS_PER_TASK to 8...
         const uint16_t endCheck = P129_CONFIG_CHIP_COUNT + 4; // 4(.0) = nr of bytes in an uint32_t.
-        const uint16_t maxVar   = min(static_cast<uint8_t>(VARS_PER_TASK), static_cast<uint8_t>(ceil(P129_CONFIG_CHIP_COUNT / 4.0f)));
-        uint8_t dotInsert;
-        uint8_t dotOffset;
+        const uint16_t maxVar   = min(static_cast<uint8_t>(VARS_PER_TASK), static_cast<uint8_t>(ceilf(P129_CONFIG_CHIP_COUNT / 4.0f)));
 
         for (uint16_t varNr = 0; varNr < maxVar; ++varNr) {
           if (P129_CONFIG_FLAGS_GET_VALUES_DISPLAY) {
             label     = F("Bin");
             state     = F("0b");
-            dotInsert = 10;
-            dotOffset = 9;
           } else {
             label     = F("Hex");
             state     = F("0x");
-            dotInsert = 4;
-            dotOffset = 3;
           }
           label += strformat(F(" State_%s "), abcd.substring(varNr, varNr + 1).c_str());
 
@@ -435,11 +419,7 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
           label += (P129_CONFIG_SHOW_OFFSET + (4 * varNr) + 1);          // 4 = nr of bytes in an uint32_t.
 
           if ((P129_CONFIG_SHOW_OFFSET + (4 * varNr) + 4) <= endCheck) { // Only show if still in range
-            state += P129_ul2stringFixed(UserVar.getUint32(event->TaskIndex, varNr), P129_CONFIG_FLAGS_GET_VALUES_DISPLAY ? BIN : HEX);
-
-            for (uint8_t i = 0; i < 3; ++i, dotInsert += dotOffset) {    // Insert readability separators
-              state = state.substring(0, dotInsert) + '.' + state.substring(dotInsert);
-            }
+            state += ul2stringFixed(UserVar.getUint32(event->TaskIndex, varNr), P129_CONFIG_FLAGS_GET_VALUES_DISPLAY ? BIN : HEX, true);
             pluginWebformShowValue(event->TaskIndex, VARS_PER_TASK + varNr, label, state, true);
           }
         }

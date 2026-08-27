@@ -1,14 +1,9 @@
 #include "../Commands/Rules.h"
 
-
-#include "../../ESPEasy_common.h"
-
-
 #include "../Commands/Common.h"
 
 #include "../DataTypes/EventValueSource.h"
 
-#include "../ESPEasyCore/Controller.h"
 #include "../ESPEasyCore/ESPEasyRules.h"
 
 #include "../Globals/EventQueue.h"
@@ -17,7 +12,6 @@
 #include "../Globals/RuntimeData.h"
 #include "../Globals/Settings.h"
 
-#include "../Helpers/Misc.h"
 #include "../Helpers/StringConverter.h"
 
 const __FlashStringHelper * Command_Rules_Execute(struct EventStruct *event, const char *Line)
@@ -54,7 +48,7 @@ const __FlashStringHelper * Command_Rules_Events(struct EventStruct *event, cons
 {
   if (Settings.UseRules) {
     const bool executeImmediately =
-      SourceNeedsStatusUpdate(event->Source) ||
+      EventValueSource::SourceNeedsStatusUpdate(event->Source) ||
       event->Source == EventValueSource::Enum::VALUE_SOURCE_RULES ||
       event->Source == EventValueSource::Enum::VALUE_SOURCE_RULES_RESTRICTED;
 

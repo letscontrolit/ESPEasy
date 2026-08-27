@@ -95,9 +95,9 @@ constexpr size_t UserVar_nrelements = VARS_PER_TASK * TASKS_MAX;
 
 // Since the global UserVar and RTC objects are defined "extern", they cannot be located in the RTC memory.
 // Thus we have to keep a copy here.
-RTC_NOINIT_ATTR RTCStruct RTC_tmp;
-RTC_NOINIT_ATTR uint32_t UserVar_RTC[UserVar_nrelements];
-RTC_NOINIT_ATTR uint32_t UserVar_checksum;
+ESPEasy_RTC_ATTR RTCStruct RTC_tmp;
+ESPEasy_RTC_ATTR uint32_t UserVar_RTC[UserVar_nrelements];
+ESPEasy_RTC_ATTR uint32_t UserVar_checksum;
 #endif
 
 
@@ -168,7 +168,6 @@ bool saveUserVarToRTC()
     if (taskValues != nullptr) {
       for (uint8_t varNr = 0; varNr < VARS_PER_TASK; ++varNr) {
         const size_t index = (task * VARS_PER_TASK) + varNr;
-        constexpr bool raw = true;
         UserVar_RTC[index] = taskValues->getUint32(varNr);
       }
     }

@@ -4,8 +4,8 @@
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P141
 
-# include <Adafruit_GFX.h>                  // include Adafruit graphics library
-# include <Adafruit_PCD8544.h>              // include Adafruit PCD8544 LCD library
+# include <Adafruit_GFX.h>     // include Adafruit graphics library
+# include <Adafruit_PCD8544.h> // include Adafruit PCD8544 LCD library
 
 # include "../Helpers/AdafruitGFX_helper.h" // Use Adafruit graphics helper object
 
@@ -93,10 +93,10 @@ public:
                    bool                displayInverted = false
                    # if                ADAGFX_FONTS_INCLUDED
                    ,
-                   const uint8_t       defaultFontId = 0
+                   const uint8_t defaultFontId = 0
                    # endif // if ADAGFX_FONTS_INCLUDED
                    );
-  P141_data_struct()                                   = delete;
+  P141_data_struct() = delete;
   virtual ~P141_data_struct();
 
   bool plugin_init(struct EventStruct *event);

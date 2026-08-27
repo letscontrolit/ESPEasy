@@ -13,7 +13,9 @@ Type: |P060_type|
 
 Name: |P060_name|
 
-Status: |P060_status|
+Status ESP32: |P060_status|
+
+Status ESP8266: |P060_status_lb|
 
 GitHub: |P060_github|_
 

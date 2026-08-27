@@ -105,7 +105,7 @@
 
 # define TM1637_POWER_ON    0b10001000
 # define TM1637_POWER_OFF   0b10000000
-# define TM1637_CLOCKDELAY  40
+# define TM1637_CLOCKDELAY  10 // FIXME TD-er: Maybe lower this as we can get as low as 2 usec to remain below the max 250 kHz
 # define TM1637_4DIGIT      4
 # define TM1637_6DIGIT      2
 
@@ -225,20 +225,21 @@ uint8_t P073_revert7bits(uint8_t character);
 struct P073_data_struct : public PluginTaskData_base {
 public:
 
-  P073_data_struct()          = default;
+  P073_data_struct() = delete;
+  P073_data_struct(struct EventStruct *event);
   virtual ~P073_data_struct() = default;
 
-  void init(struct EventStruct *event);
-  bool plugin_write(struct EventStruct *event,
-                    const String      & string);
-  bool plugin_once_a_second(struct EventStruct *event);
+  virtual bool init(struct EventStruct *event);
+  bool         plugin_write(struct EventStruct *event,
+                            const String      & string);
+  bool         plugin_once_a_second(struct EventStruct *event);
   # if P073_SCROLL_TEXT
-  bool plugin_ten_per_second(struct EventStruct *event);
+  bool         plugin_ten_per_second(struct EventStruct *event);
   # endif // if P073_SCROLL_TEXT
 
   # if P073_USE_74HC595
   bool plugin_fifty_per_second(struct EventStruct *event);
-  bool is74HC595Matrix();
+  bool is74HC595Multiplex();
   # endif // if P073_USE_74HC595
   void FillBufferWithTime(bool    sevendgt_now,
                           uint8_t sevendgt_hours,
@@ -268,32 +269,46 @@ public:
                               int  rightTemperature,
                               bool rightWithDecimal);
   # endif // if P073_7DDT_COMMAND
-  void    FillBufferWithString(const String& textToShow,
-                               bool          useBinaryData = false);
+  void         FillBufferWithString(const String& textToShow,
+                                    bool          useBinaryData = false);
   # if P073_SCROLL_TEXT
-  int     getEffectiveTextLength(const String& text);
-  bool    NextScroll();
-  void    setTextToScroll(const String& text);
-  void    setScrollSpeed(uint8_t speed);
-  bool    isScrollEnabled();
-  void    setScrollEnabled(bool scroll);
+  int          getEffectiveTextLength(const String& text);
+  bool         NextScroll();
+  void         setTextToScroll(const String& text);
+  void         setScrollSpeed(uint8_t speed);
+  bool         isScrollEnabled();
+  void         setScrollEnabled(bool scroll);
   # endif // if P073_SCROLL_TEXT
   # if P073_7DBIN_COMMAND
-  void    setBinaryData(const String& data);
+  void         setBinaryData(const String& data);
   # endif // if P073_7DBIN_COMMAND
   # ifdef P073_DEBUG
-  void    LogBufferContent(String prefix);
+  void         LogBufferContent(String prefix);
   # endif // ifdef P073_DEBUG
-  void    FillBufferWithDash();
-  void    ClearBuffer();
+  void         FillBufferWithDash();
+  void         ClearBuffer();
 
-  uint8_t tm1637_getFontChar(uint8_t index,
-                             uint8_t fontset);
+  // To implement in derived structs
+  virtual void setPowerBrightness(uint8_t brightlvl,
+                                  bool    poweron) {}
 
-  int     dotpos                = -1;
-  uint8_t showbuffer[8]         = { 0 };
-  bool    showperiods[8]        = { 0 };
-  uint8_t spidata[2]            = { 0 };
+  virtual void showTime(bool sep) {}
+
+  virtual void showDate()         {}
+
+  virtual void showNumber()       {}
+
+  virtual void showTemperature(int8_t firstDot,
+                               int8_t secondDot) {}
+
+  virtual void toOutputBuffer() {}
+
+  virtual void showBuffer()     {}
+
+protected:
+
+  uint8_t showbuffer[8]{};
+  bool    showperiods[8]{};
   uint8_t pin1                  = 0xFF;
   uint8_t pin2                  = 0xFF;
   uint8_t pin3                  = 0xFF;
@@ -308,9 +323,9 @@ public:
   bool    rightAlignTempMAX7219 = false;
   bool    suppressLeading0      = false;
   uint8_t fontset               = 0;
-  #if P073_BLINK_DOT
+  # if P073_BLINK_DOT
   bool blinkdot = false;
-  #endif // if P073_BLINK_DOT
+  # endif // if P073_BLINK_DOT
   # if P073_7DBIN_COMMAND
   bool binaryData = false;
   # endif // P073_7DBIN_COMMAND
@@ -320,23 +335,17 @@ public:
   uint16_t scrollCount   = 0;
   uint16_t scrollPos     = 0;
   bool     scrollFull    = false;
-
-private:
-
-  uint16_t _scrollSpeed = 0;
+  uint16_t _scrollSpeed  = 0;
   # endif // P073_SCROLL_TEXT
   # if defined(P073_SCROLL_TEXT) || defined(P073_7DBIN_COMMAND)
   String _textToScroll;
   # endif // if defined(P073_SCROLL_TEXT) || defined(P073_7DBIN_COMMAND)
-  # ifdef P073_DEBUG
+  # if defined(P073_DEBUG) && P073_USE_74HC595
   uint32_t counter50 = 0;
-  # endif // ifdef P073_DEBUG
+  # endif // if defined(P073_DEBUG) && P073_USE_74HC595
   # if P073_USE_74HC595
-  int8_t dspDgt       = 0;
-  bool   isSequential = false;
+  bool isSequential = false;
   # endif // if P073_USE_74HC595
-
-private:
 
   void getDisplayLimits(int32_t& lLimit,
                         int32_t& uLimit,
@@ -359,21 +368,47 @@ private:
   bool plugin_write_7dbin(const String& text);
   # endif // if P073_7DBIN_COMMAND
 
-  // ---- TM1637 specific functions ----
+  void DIRECT_shiftOut(uint8_t dataPin,
+                       uint8_t clockPin,
+                       uint8_t bitOrder,
+                       uint8_t val);
+  void shiftinView();
+
+};
+
+struct P073_TM1637 : public P073_data_struct
+{
+public:
+
+  P073_TM1637(struct EventStruct *event);
+  virtual ~P073_TM1637() {}
+
+  virtual bool init(struct EventStruct *event) override;
+  virtual void setPowerBrightness(uint8_t brightlvl,
+                                  bool    poweron) override;
+  virtual void showTime(bool sep) override;
+  virtual void showDate() override;
+  virtual void showNumber() override;
+  virtual void showTemperature(int8_t firstDot,
+                               int8_t secondDot) override;
+  virtual void toOutputBuffer() override;
+  virtual void showBuffer() override;
+
+private:
+
+  void    initDisplay();
+  void    clearDisplay();
   void    tm1637_i2cStart();
   void    tm1637_i2cStop();
-  void    tm1637_i2cAck();
+  bool    tm1637_i2cAck();
   void    tm1637_i2cWrite_ack(uint8_t bytesToPrint[],
                               uint8_t length);
-  void    tm1637_i2cWrite_ack(uint8_t bytetoprint);
+  void    tm1637_i2cWriteByte_ack(uint8_t bytetoprint);
   void    tm1637_i2cWrite(uint8_t bytetoprint);
-  void    tm1637_ClearDisplay();
-  void    tm1637_SetPowerBrightness(uint8_t brightlvl,
-                                    bool    poweron);
-  void    tm1637_InitDisplay();
+  uint8_t tm1637_getFontChar(uint8_t index,
+                             uint8_t fontset);
   uint8_t tm1637_separator(uint8_t value,
                            bool    sep);
-  void    tm1637_ShowTime6();
   void    tm1637_ShowDate6(bool showTime = false);
   void    tm1637_ShowTemp6(bool sep);
   void    tm1637_ShowTimeTemp4(bool    sep,
@@ -383,34 +418,72 @@ private:
                             uint8_t lastPos,
                             bool    useBinaryData = false);
 
-  // ---- MAX7219 specific functions ----
-  void max7219_spiTransfer(ESPEASY_VOLATILE(uint8_t) opcode,
-                           ESPEASY_VOLATILE(uint8_t) data);
-  void max7219_ClearDisplay();
-  void max7219_SetPowerBrightness(uint8_t brightlvl,
-                                  bool    poweron);
-  void max7219_SetDigit(int     dgtpos,
-                        uint8_t dgtvalue,
-                        bool    showdot,
-                        bool    binaryData = false);
-  void max7219_InitDisplay();
+}; // struct P073_74HC595
+
+struct P073_MAX7219 : public P073_data_struct
+{
+public:
+
+  P073_MAX7219(struct EventStruct *event);
+  virtual ~P073_MAX7219() {}
+
+  virtual bool init(struct EventStruct *event) override;
+  virtual void setPowerBrightness(uint8_t brightlvl,
+                                  bool    poweron) override;
+  virtual void showTime(bool sep) override;
+  virtual void showDate() override;
+  virtual void showNumber() override;
+  virtual void showTemperature(int8_t firstDot,
+                               int8_t secondDot) override;
+  virtual void toOutputBuffer() override;
+  virtual void showBuffer() override;
+
+private:
+
+  void initDisplay();
+  void clearDisplay();
+  void setDigit(int     dgtpos,
+                uint8_t dgtvalue,
+                bool    showdot,
+                bool    binaryData = false);
   void max7219_ShowTime(bool sep);
   void max7219_ShowTemp(int8_t firstDot,
                         int8_t secondDot);
   void max7219_ShowDate();
-  void max7219_ShowBuffer();
-  # if P073_USE_74HC595
-  void hc595_InitDisplay();
-  void hc595_ShowBuffer();
-  void hc595_ToOutputBuffer();
-  void hc595_AdjustBuffer();
-  bool hc595_Sequential() {
-    return P073_HC595_SEQUENTIAL;
-  }
+  void max7219_spiTransfer(ESPEASY_VOLATILE(uint8_t) opcode,
+                           ESPEASY_VOLATILE(uint8_t) data);
 
+  uint8_t spidata[2]{};
+  uint8_t digitOffset = 0;
+
+}; // struct P073_MAX7219
+
+# if P073_USE_74HC595
+struct P073_74HC595 : public P073_data_struct
+{
+public:
+
+  P073_74HC595(struct EventStruct *event);
+  virtual ~P073_74HC595() {}
+
+  virtual bool init(struct EventStruct *event) override;
+  virtual void showTime(bool sep) override;
+  virtual void showDate() override;
+  virtual void showNumber() override;
+  virtual void showTemperature(int8_t firstDot,
+                               int8_t secondDot) override;
+  virtual void toOutputBuffer() override;
+  virtual void showBuffer() override;
+
+private:
+
+  void initDisplay();
+
+  int8_t  dspDgt = 0;
   uint8_t outputbuffer[8]{};
-  # endif // if P073_USE_74HC595
-};
+
+}; // struct P073_74HC595
+# endif // if P073_USE_74HC595
 
 #endif    // ifdef USES_P073
 #endif // ifndef PLUGINSTRUCTS_P073_DATA_STRUCT_H

@@ -402,6 +402,7 @@
     LoopTimerSetAndRun
     
     LoopTimerSetAndRun_ms","
+    :green:`Rules`","
     Set a Loop-Timer using ``LoopTimerSet`` or ``LoopTimerSet_ms`` and immediately run the first iteration.
 
     If a ``<nr of loops>`` value > 0 is included in the command, that count is decremented by 1 for the first iteration, as expected.
@@ -549,37 +550,49 @@
     :green:`Rules`","
     Like ``PostToHTTP`` but using a TLS connection, by default on port 443
 
-    NB: No certificate validation is done!
+    NB: No certificate validation is done!"
     "
-    ProvisionConfig","
+    Provision,Config","
     :red:`Internal`","
     Fetch ``config.dat`` as configured in the Provisioning configuration (see Settings Archive)
 
-    ``ProvisionConfig``"
+    ``Provision,Config``"
     "
-    ProvisionSecurity","
+    Provision,Security","
     :red:`Internal`","
     Fetch ``security.dat`` as configured in the Provisioning configuration (see Settings Archive)
 
-    ``ProvisionSecurity``"
+    ``Provision,Security``"
     "
-    ProvisionNotification","
+    Provision,DevSecurity","
+    :red:`Internal`","
+    Fetch ``devsecurity.dat`` as configured in the Provisioning configuration (see Settings Archive)
+
+    ``Provision,DevSecurity``"
+    "
+    Provision,Notification","
     :red:`Internal`","
     Fetch ``notification.dat`` as configured in the Provisioning configuration (see Settings Archive)
 
-    ``ProvisionNotification``"
+    ``Provision,Notification``"
     "
-    ProvisionProvision","
+    Provision,Provision","
     :red:`Internal`","
     Fetch ``provisioning.dat`` as configured in the Provisioning configuration (see Settings Archive)
 
-    ``ProvisionProvision``"
+    ``Provision,Provision``"
     "
-    ProvisionRules","
+    Provision,Rules","
     :red:`Internal`","
     Fetch ``rulesN.txt`` as configured in the Provisioning configuration (see Settings Archive)
 
-    ``ProvisionRules,1`` to fetch ``rules1.txt`` "
+    ``Provision,Rules,1`` to fetch ``rules1.txt`` "
+    "
+    Provision,Firmware","
+    :red:`Internal`","
+    Fetch a new firmware binary, and flash it on the unit, as configured in the Provisioning configuration (see Settings Archive)
+
+    ``Provision,Firmware,<url-to-firmware-file>`` to fetch and install the specified .bin file from the specified url."
     "
     Publish","
     :green:`Rules`","
@@ -656,7 +669,7 @@
     :green:`Rules`","
     Like ``PutToHTTP`` but using a TLS connection, by default on port 443
 
-    NB: No certificate validation is done!
+    NB: No certificate validation is done!"
     "
     Reboot","
     :red:`Internal`","
@@ -736,7 +749,7 @@
     :green:`Rules`","
     Like ``SendToHTTP`` but using a TLS connection, by default on port 443
 
-    NB: No certificate validation is done!
+    NB: No certificate validation is done!"
     "
     SendToUDP","
     :green:`Rules`","
@@ -1023,9 +1036,9 @@
     "
     WifiAPMode","
     :red:`Internal`","
-    Force the unit into AP mode.
+    Force the unit into AP mode or turn AP mode off.
 
-    ``WifiAPMode``"
+    ``WifiAPMode,<on|off|1|0>``"
     "
     WifiConnect","
     :red:`Internal`","
@@ -1074,6 +1087,46 @@
     Force the unit into STA mode.
 
     ``WifiSTAMode``"
+    "
+    WriteEE","
+    :green:`Rules`","
+    Store a value in a 'slot' in an external EEPROM (AT24Cxx) or FRAM (MB85RCxx) I2C module. Numeric values only, using the resolution as used by Rules (``double`` or ``float``). Stored as a ``double`` value.
+
+    The external EEPROM/FRAM module can be configured on the :ref:`Hardware_page`
+
+    Stored values can be read back using the special variable ``[ReadEE#<slot>]``, using the same slot number. The number of slots available is shown once the module is enabled and found working. Some modules support a Write Protect pin. During initialization this feature is checked, and shown on the Hardware page when active.
+
+    Retrieving the max. number of slots available is available in ``[ReadEE#max]``, and the write-protect status via ``[ReadEE#wp]`` (1 = write protected).
+
+    NB: ``<slot>`` is in the range 0 .. (Max.slots - 1) !
+
+    Syntax:
+
+    ``WriteEE,<slot>,<value>`` for writing a value to a slot.
+    
+    ``WriteEE,erase,erase`` for erasing all data from the module.
+
+    ``WriteEE,check,wp`` for re-checking the write-protect status of the module.
+    "
+    "
+    WriteRTC","
+    :green:`Rules`","
+    Store a value in a 'slot' in an external RTC (Realtime Clock) I2C module that has SRAM available, DS1307, DS3232 and PCF8583. Numeric values only, using the resolution as used by Rules (``double`` or ``float``). Stored as a ``double`` value.
+
+    The RTC module can be configured on the Tools/:ref:`tools-advanced` page in the **Time Source** section.
+
+    Stored values can be read back using the special variable ``[ReadRTC#<slot>]``, using the same slot number. The number of slots available is shown if the module is enabled and SRAM is available.
+
+    Retrieving the max. number of slots available is available in ``[ReadRTC#max]``.
+
+    NB: ``<slot>`` is in the range 0 .. (Max.slots - 1) !
+
+    Syntax:
+
+    ``WriteRTC,<slot>,<value>`` for writing a value to a slot.
+    
+    ``WriteRTC,erase,erase`` for erasing all data from the module.
+    "
 
 
 

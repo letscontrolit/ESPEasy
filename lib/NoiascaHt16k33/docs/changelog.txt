@@ -1,0 +1,14 @@
+Changelog Noiasca HT16K33
+
+1.1.1 Release Canditate 2021-11-27
+  2021-11-27  corrected TWCR to 328/2560 only
+
+1.1.0 Release Candidate 2021-03-14 
+  2021-03-14  extract chartables in separate font files
+              fonts are not static any more (only const PROGMEM)
+  
+1.0.2 Release Candidate 2020-06-07  
+  2020-06-05  on(), off()
+  2020-06-04  Wire.begin() must be called in the user sketch. 
+              A simple hook to catch on AVR platform is implemented
+  2020-09-19  fix for ESP8266

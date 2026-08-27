@@ -154,10 +154,11 @@ boolean Plugin_048(uint8_t function, struct EventStruct *event, String& string) 
                 speed = p4_int;
               }
               AFMS.begin();
-
+#ifndef BUILD_NO_DEBUG
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                 addLog(LOG_LEVEL_INFO, strformat(F("DCMotor%s->Forward Speed: %d"), param2.c_str(), speed));
               }
+#endif
               myMotor->setSpeed(speed);
               myMotor->run(FORWARD);
               success = true;
@@ -171,11 +172,11 @@ boolean Plugin_048(uint8_t function, struct EventStruct *event, String& string) 
                 speed = p4_int;
               }
               AFMS.begin();
-
+#ifndef BUILD_NO_DEBUG
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                 addLog(LOG_LEVEL_INFO, strformat(F("DCMotor%s->Backward Speed: %d"), param2.c_str(), speed));
               }
-
+#endif
               myMotor->setSpeed(speed);
               myMotor->run(BACKWARD);
               success = true;
@@ -184,10 +185,11 @@ boolean Plugin_048(uint8_t function, struct EventStruct *event, String& string) 
             if (equals(param3, F("release")))
             {
               AFMS.begin();
-
+#ifndef BUILD_NO_DEBUG
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                 addLog(LOG_LEVEL_INFO, strformat(F("DCMotor%s->Release"), param2.c_str()));
               }
+#endif
               myMotor->run(RELEASE);
               success = true;
             }
@@ -247,10 +249,11 @@ boolean Plugin_048(uint8_t function, struct EventStruct *event, String& string) 
                   myStepper->step(steps, FORWARD, MICROSTEP);
                   success = true;
                 }
-
+#ifndef BUILD_NO_DEBUG
                 if (success && loglevelActiveFor(LOG_LEVEL_INFO)) {
                   addLog(LOG_LEVEL_INFO, strformat(F("Stepper%s->Forward Steps: %d %s"), param2.c_str(), steps, param5.c_str()));
                 }
+#endif
               }
             }
 
@@ -287,20 +290,22 @@ boolean Plugin_048(uint8_t function, struct EventStruct *event, String& string) 
                   myStepper->step(steps, BACKWARD, MICROSTEP);
                   success = true;
                 }
-
+#ifndef BUILD_NO_DEBUG
                 if (success && loglevelActiveFor(LOG_LEVEL_INFO)) {
                   addLog(LOG_LEVEL_INFO, strformat(F("Stepper%s->Backward Steps: %d %s"), param2.c_str(), steps, param5.c_str()));
                 }
+#endif
               }
             }
 
             if (equals(param3, F("release")))
             {
               AFMS.begin();
-
+#ifndef BUILD_NO_DEBUG
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                 addLog(LOG_LEVEL_INFO, strformat(F("Stepper%s->Release."), param2.c_str()));
               }
+#endif
               myStepper->release();
               success = true;
             }

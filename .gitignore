@@ -89,4 +89,10 @@ dependencies.lock
 
 src/src/CustomBuild/CompiletimeDefines_generated.h
 
-bhutan_16m.bin
+sdkconfig.*
+
+src/Custom_.h
+
+compile_commands.json
+
+*.Identifier

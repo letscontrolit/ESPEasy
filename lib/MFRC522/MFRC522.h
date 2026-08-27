@@ -293,7 +293,7 @@ public:
 	/////////////////////////////////////////////////////////////////////////////////////
 	MFRC522();
 	MFRC522(uint8_t resetPowerDownPin);
-	MFRC522(uint8_t chipSelectPin, uint8_t resetPowerDownPin);
+	MFRC522(uint8_t chipSelectPin, uint8_t resetPowerDownPin, SPIClass& spi = SPI);
 	virtual ~MFRC522() {};
 	
 	/////////////////////////////////////////////////////////////////////////////////////
@@ -389,6 +389,7 @@ public:
 protected:
 	uint8_t _chipSelectPin;		// Arduino pin connected to MFRC522's SPI slave select input (Pin 24, NSS, active low)
 	uint8_t _resetPowerDownPin;	// Arduino pin connected to MFRC522's reset and power down input (Pin 6, NRSTPD, active low)
+	SPIClass& _spi = SPI;
 	StatusCode MIFARE_TwoStepHelper(uint8_t command, uint8_t blockAddr, int32_t data);
 };
 

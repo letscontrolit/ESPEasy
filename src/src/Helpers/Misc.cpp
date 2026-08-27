@@ -15,10 +15,11 @@
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringParser.h"
 
+#include "../../ESPEasy/net/_NWPlugin_Helper.h"
+
 #if FEATURE_SD
 # include <SD.h>
 #endif // if FEATURE_SD
-
 
 bool remoteConfig(struct EventStruct *event, const String& string)
 {
@@ -70,6 +71,43 @@ void delayBackground(unsigned long dsdelay)
 }
 
 /********************************************************************************************\
+   Toggle network enabled state
+ \*********************************************************************************************/
+bool setNetworkEnableStatus(ESPEasy::net::networkIndex_t networkIndex, bool enabled)
+{
+  if (!validNetworkIndex(networkIndex)) { return false; }
+  #ifndef BUILD_NO_RAM_TRACKER
+  checkRAM(F("setNetworkEnableStatus"));
+  #endif // ifndef BUILD_NO_RAM_TRACKER
+
+  // Only enable network if it has a network interface configured
+  if ((Settings.getNWPluginID_for_network(networkIndex) != ESPEasy::net::INVALID_NW_PLUGIN_ID) || !enabled) {
+    struct EventStruct TempEvent;
+    TempEvent.NetworkIndex = networkIndex;
+    String dummy;
+
+    if (!enabled) {
+      // Use the scheduler as this also removes any pending init calls.
+      Scheduler.setNetworkExitTimer(0, networkIndex);
+    }
+    Settings.setNetworkEnabled(networkIndex, enabled);
+
+    if (enabled) {
+      if (ESPEasy::net::getNWPluginData(networkIndex) == nullptr) {
+        // Only init when not yet started
+
+        if (!ESPEasy::net::NWPluginCall(NWPlugin::Function::NWPLUGIN_INIT, &TempEvent, dummy)) {
+          return false;
+        }
+      }
+    }
+
+    return true;
+  }
+  return false;
+}
+
+/********************************************************************************************\
    Toggle controller enabled state
  \*********************************************************************************************/
 bool setControllerEnableStatus(controllerIndex_t controllerIndex, bool enabled)
@@ -81,6 +119,14 @@ bool setControllerEnableStatus(controllerIndex_t controllerIndex, bool enabled)
 
   // Only enable controller if it has a protocol configured
   if ((Settings.Protocol[controllerIndex] != 0) || !enabled) {
+    struct EventStruct TempEvent;
+    TempEvent.ControllerIndex = controllerIndex;
+    String dummy;
+
+    if (!enabled) {
+      CPluginCall(CPlugin::Function::CPLUGIN_EXIT, &TempEvent, dummy);
+    }
+
     Settings.ControllerEnabled[controllerIndex] = enabled;
     const protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(controllerIndex);
 
@@ -90,7 +136,7 @@ bool setControllerEnableStatus(controllerIndex_t controllerIndex, bool enabled)
       String dummy;
       const CPlugin::Function cfunction =
         enabled ? CPlugin::Function::CPLUGIN_INIT : CPlugin::Function::CPLUGIN_EXIT;
-      return CPluginCall(ProtocolIndex, cfunction, &TempEvent, dummy) || CPlugin::Function::CPLUGIN_EXIT == cfunction;
+      return do_CPluginCall(ProtocolIndex, cfunction, &TempEvent, dummy) || CPlugin::Function::CPLUGIN_EXIT == cfunction;
     }
   }
   return false;
@@ -99,6 +145,17 @@ bool setControllerEnableStatus(controllerIndex_t controllerIndex, bool enabled)
 /********************************************************************************************\
    Toggle task enabled state
  \*********************************************************************************************/
+bool setTaskEnableStatus(taskIndex_t taskIndex,
+                         bool        enabled)
+{
+  if (Settings.TaskDeviceEnabled[taskIndex] != enabled) {
+    struct EventStruct TempEvent(taskIndex);
+    return setTaskEnableStatus(&TempEvent, enabled);
+  }
+  return true;
+}
+
+
 bool setTaskEnableStatus(struct EventStruct *event, bool enabled)
 {
   if (!validTaskIndex(event->TaskIndex)) { return false; }
@@ -146,18 +203,15 @@ void taskClear(taskIndex_t taskIndex, bool save)
   checkRAM(F("taskClear"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
 
-  if (Settings.TaskDeviceEnabled[taskIndex]) {
-    struct EventStruct TempEvent(taskIndex);
-    String dummy;
-    PluginCall(PLUGIN_EXIT, &TempEvent, dummy);
-  }
+  setTaskEnableStatus(taskIndex, false);
+
   Settings.clearTask(taskIndex);
   clearTaskCache(taskIndex); // Invalidate any cached values.
   ExtraTaskSettings.clear();
   ExtraTaskSettings.TaskIndex = taskIndex;
 
   if (save) {
-    #ifndef BUILD_MINIMAL_OTA
+    #ifndef LIMIT_BUILD_SIZE
     addLog(LOG_LEVEL_INFO, F("taskClear() save settings"));
     #endif // ifndef BUILD_MINIMAL_OTA
     SaveTaskSettings(taskIndex);
@@ -179,6 +233,7 @@ void taskClear(taskIndex_t taskIndex, bool save)
    it is excluded from the calculation !
  \*********************************************************************************************/
 #if defined(ARDUINO_ESP8266_RELEASE_2_3_0)
+
 void dump(uint32_t addr) { // Seems already included in core 2.4 ...
   serialPrint(String(addr, HEX));
   serialPrint(": ");
@@ -237,9 +292,7 @@ void dump(uint32_t addr) { // Seems already included in core 2.4 ...
 /********************************************************************************************\
    Handler for keeping ExtraTaskSettings up to date using cache
  \*********************************************************************************************/
-String getTaskDeviceName(taskIndex_t TaskIndex) {
-  return Cache.getTaskDeviceName(TaskIndex);
-}
+String getTaskDeviceName(taskIndex_t TaskIndex) { return Cache.getTaskDeviceName(TaskIndex); }
 
 /********************************************************************************************\
    Handler for getting Value Names from TaskIndex
@@ -540,22 +593,16 @@ void RGB2HSV(uint8_t r, uint8_t g, uint8_t b, float hsv[3]) {
   hsv[2] = v * 255.0f;
 }
 
-float getCPUload() {
-  return 100.0f - Scheduler.getIdleTimePct();
-}
+float getCPUload()         { return 100.0f - Scheduler.getIdleTimePct(); }
 
-int getLoopCountPerSec() {
-  return loopCounterLast / 30;
-}
+int   getLoopCountPerSec() { return loopCounterLast / 30; }
 
-int getUptimeMinutes() {
-  return wdcounter / 2;
-}
+int   getUptimeMinutes()   { return wdcounter / 2; }
 
 /******************************************************************************
  * scan an int array of specified size for a value
  *****************************************************************************/
-bool intArrayContains(const int arraySize, const int array[], const int& value) {
+bool  intArrayContains(const int arraySize, const int array[], const int& value) {
   for (int i = 0; i < arraySize; i++) {
     if (array[i] == value) { return true; }
   }
@@ -570,12 +617,13 @@ bool intArrayContains(const int arraySize, const uint8_t array[], const uint8_t&
 }
 
 #ifndef BUILD_NO_RAM_TRACKER
+
 void logMemUsageAfter(const __FlashStringHelper *function, int value) {
   // Store free memory in an int, as subtracting may sometimes result in negative value.
   // The recorded used memory is not an exact value, as background (or interrupt) tasks may also allocate or free heap memory.
   static int last_freemem = ESP.getFreeHeap();
   const int  freemem_end  = ESP.getFreeHeap();
-
+#ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     String log;
 
@@ -587,16 +635,19 @@ void logMemUsageAfter(const __FlashStringHelper *function, int value) {
         log += value;
       }
 
-      while (log.length() < 30) { log += ' '; }
+      while (log.length() < 30) { log += ' ';
+      }
       log += F("Free mem after: ");
       log += freemem_end;
 
-      while (log.length() < 55) { log += ' '; }
+      while (log.length() < 55) { log += ' ';
+      }
       log += F("diff: ");
       log += last_freemem - freemem_end;
       addLogMove(LOG_LEVEL_DEBUG, log);
     }
   }
+#endif
 
   last_freemem = freemem_end;
 }

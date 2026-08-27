@@ -3,10 +3,8 @@
 #ifdef WEBSERVER_I2C_SCANNER
 
 #include "../WebServer/ESPEasy_WebServer.h"
-#include "../WebServer/AccessControl.h"
 #include "../WebServer/HTML_wrappers.h"
 
-#include "../Globals/Device.h"
 #include "../Globals/Settings.h"
 
 #include "../Helpers/_Plugin_init.h"
@@ -111,9 +109,8 @@ void handle_i2cscanner_json() {
   checkRAM(F("handle_i2cscanner"));
   #endif
 
-  if (!isLoggedIn()) { return; }
-  navMenuIndex = MENU_INDEX_TOOLS;
-  TXBuffer.startJsonStream();
+  if (!startJSON_Stream()) { return; }
+
   json_init();
   json_open(true);
 
@@ -315,19 +312,25 @@ String getKnownI2Cdevice(uint8_t address) {
     case 0x4D:
       result += F("PCF8591,MCP3221,LM75A,INA219");
       break;
+    case 0x50:
+      result += F("PCF8583,AT24Cxx,MB85RCxx");
+      break;
+    case 0x52:
+      result += F("AT24Cxx,MB85RCxx");
+      break;
     case 0x51:
-      result += F("PCF8563");
+      result += F("PCF8563,PCF8583,AT24Cxx,MB85RCxx");
       break;
     case 0x53:
-      result += F("ADXL345,LTR390");
+      result += F("ADXL345,LTR390,AT24Cxx,MB85RCxx");
       break;
     case 0x55:
-      result += F("DFRobot Rotary enc,BeFlE Moisture");
+      result += F("DFRobot Rotary enc,BeFlE Moisture,AT24Cxx,MB85RCxx");
       break;
     case 0x54:
     case 0x56:
     case 0x57:
-      result += F("DFRobot Rotary enc");
+      result += F("DFRobot Rotary enc,AT24Cxx,MB85RCxx");
       break;
     case 0x58:
       result += F("SGP30,GP8403");
@@ -399,6 +402,9 @@ String getKnownI2Cdevice(uint8_t address) {
       break;
     case 0x78:
       result += F("LiquidLevel");
+      break;
+    case 0x7C:
+      result += F("MB85RCxx");
       break;
     case 0x7f:
       result += F("Arduino PME,XDB401");
@@ -491,10 +497,7 @@ void handle_i2cscanner() {
   checkRAM(F("handle_i2cscanner"));
   #endif
 
-  if (!isLoggedIn()) { return; }
-  navMenuIndex = MENU_INDEX_TOOLS;
-  TXBuffer.startStream();
-  sendHeadandTail_stdtemplate(_HEAD);
+  if (!startStream_send_stdTemplate(MENU_INDEX_TOOLS)) { return; }
 
   int nDevices = 0;
   #if !FEATURE_I2C_MULTIPLE
@@ -563,7 +566,6 @@ void handle_i2cscanner() {
     I2CSelectHighClockSpeed(0);   // By default the bus is in standard speed
 
   }
-  sendHeadandTail_stdtemplate(_TAIL);
-  TXBuffer.endStream();
+  sendTail_stdtemplate();
 }
 #endif // WEBSERVER_I2C_SCANNER

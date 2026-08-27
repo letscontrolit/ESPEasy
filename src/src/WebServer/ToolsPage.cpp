@@ -9,20 +9,17 @@
 #include "../WebServer/Markup_Forms.h"
 
 #include "../Helpers/OTA.h"
+#include "../Helpers/StringConverter.h"
 
 #include "../../ESPEasy-Globals.h"
 
-# include "../Commands/ExecuteCommand.h"
 # include "../Helpers/WebServer_commandHelper.h"
 
 // ********************************************************************************
 // Web Interface Tools page
 // ********************************************************************************
 void handle_tools() {
-  if (!isLoggedIn()) { return; }
-  navMenuIndex = MENU_INDEX_TOOLS;
-  TXBuffer.startStream();
-  sendHeadandTail_stdtemplate(_HEAD);
+  if (!startStream_send_stdTemplate(MENU_INDEX_TOOLS)) { return; }
 
   String webrequest = webArg(F("cmd"));
 
@@ -37,7 +34,7 @@ void handle_tools() {
 
   addFormSubHeader(F("Command"));
   html_TR_TD();
-  addHtml(F("<TR><TD colspan='2'>"));
+  addRowColspan(2);
   addHtml(F("<input "));
   addHtmlAttribute(F("style"), F("width: 98%"));
   addHtmlAttribute(F("type"),  F("text"));
@@ -51,14 +48,7 @@ void handle_tools() {
   addRTDHelpButton(F("Reference/Command.html"));
   html_TR_TD();
 
-  if (printWebString.length() > 0)
-  {
-    addHtml(F("<TR><TD colspan='2'>Command Output<BR><textarea readonly rows='10' wrap='on'>"));
-    addHtml(printWebString);
-    addHtml(F("</textarea>"));
-    free_string(printWebString);
-  }
-
+  handle_printWebString();
 
   addFormSubHeader(F("System"));
 
@@ -76,7 +66,9 @@ void handle_tools() {
   addWideButtonPlusDescription(F("advanced"),    F("Advanced"),     F("Open advanced settings"));
   # endif // ifdef WEBSERVER_ADVANCED
 
+  # ifdef WEBSERVER_JSON
   addWideButtonPlusDescription(F("json"),        F("Show JSON"),    F("Open JSON output"));
+  # endif
 
   # ifdef WEBSERVER_METRICS
   addWideButtonPlusDescription(F("metrics"),        F("Show Metrics"),    F("Open Prometheus Metrics"));
@@ -93,6 +85,10 @@ void handle_tools() {
   # ifdef WEBSERVER_SYSVARS
   addWideButtonPlusDescription(F("sysvars"), F("System Variables"), F("Show all system variables and conversions"));
   # endif // ifdef WEBSERVER_SYSVARS
+
+  #if FEATURE_EEPROM_EXTERNAL || FEATURE_RTC_SRAM_STORAGE
+  addWideButtonPlusDescription(F("eepromvars"), F("External EEPROM/RTC values"), F("Show all values stored in the external EEPROM or RTC SRAM"));
+  #endif // if FEATURE_EEPROM_EXTERNAL || FEATURE_RTC_SRAM_STORAGE
 
   #if FEATURE_PLUGIN_LIST
   addWideButtonPlusDescription(F("pluginlist"), F("Included Plugins"), F("Show all plugins that are included in this build"));
@@ -201,8 +197,9 @@ void handle_tools() {
 
   html_end_table();
   html_end_form();
-  sendHeadandTail_stdtemplate(_TAIL);
-  TXBuffer.endStream();
+  sendTail_stdtemplate();
+
+  // FIXME TD-er: Is this still needed?
   free_string(printWebString);
   printToWeb     = false;
 }

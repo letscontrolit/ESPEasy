@@ -57,23 +57,8 @@ int                        espeasy_analogRead(int  pin,
 int                        getCPU_MaxFreqMHz();
 int                        getCPU_MinFreqMHz();
 
-# if ESP_IDF_VERSION_MAJOR < 5
-#  if CONFIG_IDF_TARGET_ESP32
-#   define ESP_PM_CONFIG_T esp_pm_config_esp32_t
-#  elif CONFIG_IDF_TARGET_ESP32S3
-#   define ESP_PM_CONFIG_T esp_pm_config_esp32s3_t
-#  elif CONFIG_IDF_TARGET_ESP32S2
-#   define ESP_PM_CONFIG_T esp_pm_config_esp32s2_t
-#  elif CONFIG_IDF_TARGET_ESP32C6
-#   define ESP_PM_CONFIG_T esp_pm_config_esp32c3_t
-#  elif CONFIG_IDF_TARGET_ESP32C3
-#   define ESP_PM_CONFIG_T esp_pm_config_esp32c3_t
-#  elif CONFIG_IDF_TARGET_ESP32C2
-#   define ESP_PM_CONFIG_T esp_pm_config_esp32c2_t
-#  endif // if CONFIG_IDF_TARGET_ESP32
-# else // if ESP_IDF_VERSION_MAJOR < 5
-#  define ESP_PM_CONFIG_T esp_pm_config_t
-# endif // if ESP_IDF_VERSION_MAJOR < 5
+// if ESP_IDF_VERSION_MAJOR > 5
+# define ESP_PM_CONFIG_T esp_pm_config_t
 
 
 #endif // ifdef ESP32

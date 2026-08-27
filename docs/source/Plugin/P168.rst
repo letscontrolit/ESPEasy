@@ -13,7 +13,9 @@ Type: |P168_type|
 
 Name: |P168_name|
 
-Status: |P168_status|
+Status ESP32: |P168_status|
+
+Status ESP8266: |P168_status_lb|
 
 GitHub: |P168_github|_
 
@@ -41,7 +43,7 @@ Configuration
 I2C options
 ^^^^^^^^^^^
 
-The available settings here depend on the build used. At least the **Force Slow I2C speed** option is available, but selections for the I2C Multiplexer can also be shown. For details see the :ref:`Hardware_page`
+The available settings here depend on the build used. At least the **Force Slow I2C speed** option is available, but selections for the I2C Multiplexer can also be shown. For details see the :ref:`i2c-bus` page
 
 The VEML6030 has the option of selecting an alternative I2C address of ``0x48`` by pulling up the ADDR pin to VCC, when that pin is available on the board used. The VEML6030 also supports interrupt-driven operation, but that's not implemented in this plugin.
 

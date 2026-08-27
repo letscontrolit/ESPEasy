@@ -39,10 +39,7 @@ void handle_notifications() {
   checkRAM(F("handle_notifications"));
   # endif // ifndef BUILD_NO_RAM_TRACKER
 
-  if (!isLoggedIn()) { return; }
-  navMenuIndex = MENU_INDEX_NOTIFICATIONS;
-  TXBuffer.startStream();
-  sendHeadandTail_stdtemplate(_HEAD);
+  if (!startStream_send_stdTemplate(MENU_INDEX_NOTIFICATIONS)) { return; }
 
   struct EventStruct TempEvent;
 
@@ -152,22 +149,20 @@ void handle_notifications() {
       {
         LoadNotificationSettings(x, reinterpret_cast<uint8_t *>(NotificationSettings.get()), sizeof(NotificationSettingsStruct));
         NotificationSettings->validate();
-        html_TR_TD();
-        html_add_button_prefix();
-        addHtml(F("notifications?index="));
-        addHtmlInt(x + 1);
-        addHtml(F("'>Edit</a>"));
-        html_TD();
-        addHtmlInt(x + 1);
-        html_TD();
+        const bool nplugin_set = Settings.Notification[x] != INVALID_N_PLUGIN_ID.value;
 
-        if (Settings.Notification[x] != INVALID_N_PLUGIN_ID.value)
+        uint8_t NotificationProtocolIndex = getNProtocolIndex(npluginID_t::toPluginID(Settings.Notification[x]));
+
+        html_TR_TD();
+
+        addPlugin_Add_Edit_Button(F("notifications"), x, nplugin_set, validNProtocolIndex(NotificationProtocolIndex));
+
+        if (nplugin_set)
         {
           addEnabled(Settings.NotificationEnabled[x]);
 
           html_TD();
-          uint8_t NotificationProtocolIndex = getNProtocolIndex(npluginID_t::toPluginID(Settings.Notification[x]));
-          String  NotificationName          = F("(plugin not found?)");
+          String NotificationName = F("(plugin not found?)");
 
           if (validNProtocolIndex(NotificationProtocolIndex))
           {
@@ -223,6 +218,10 @@ void handle_notifications() {
 
     if (Settings.Notification[notificationindex] != INVALID_N_PLUGIN_ID.value)
     {
+      addRowLabel(F("Enabled"));
+      addCheckBox(F("notificationenabled"), Settings.NotificationEnabled[notificationindex]);
+      addFormSeparator(2);
+
       MakeNotificationSettings(NotificationSettings);
 
       if (!AllocatedNotificationSettings()) {
@@ -301,9 +300,6 @@ void handle_notifications() {
             addPinSelect(PinSelectPurpose::Generic, F("pin1"), NotificationSettings->Pin1);
           }
 
-          addRowLabel(F("Enabled"));
-          addCheckBox(F("notificationenabled"), Settings.NotificationEnabled[notificationindex]);
-
           TempEvent.NotificationIndex = notificationindex;
           String webformLoadString;
           NPlugin_ptr[NotificationProtocolIndex](NPlugin::Function::NPLUGIN_WEBFORM_LOAD, &TempEvent, webformLoadString);
@@ -325,8 +321,7 @@ void handle_notifications() {
     html_end_table();
     html_end_form();
   }
-  sendHeadandTail_stdtemplate(_TAIL);
-  TXBuffer.endStream();
+  sendTail_stdtemplate();
 }
 
 #endif // FEATURE_NOTIFIER

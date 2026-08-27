@@ -6,6 +6,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2026-07-03 tonhuisman: Cap humidity at 100% when applying temperature compensation value
  * 2023-07-27 tonhuisman: Revert most below changes and implement PLUGIN_GET_DEVICEVTYPE so the P2P controller validates against the correct
  *                        setting. Setting is only available if a remote data-feed is active, and offers BME280 and BMP280 options only.
  * 2023-07-26 tonhuisman: Ignore all humidity data (and log messages) if BMP280 Sensor model is selected
@@ -23,7 +24,6 @@
 # define PLUGIN_VALUENAME1_028 "Temperature"
 # define PLUGIN_VALUENAME2_028 "Humidity"
 # define PLUGIN_VALUENAME3_028 "Pressure"
-
 
 boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -67,7 +67,8 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
       ExtraTaskSettings.setAllowedRange(1, 0.0f,   100.0f);  // Humidity min/max
       ExtraTaskSettings.setAllowedRange(2, 300.0f, 1100.0f); // Barometric Pressure min/max
 
-      switch (P028_ERROR_STATE_OUTPUT) {                     // Only temperature error is configurable
+      switch (P028_ERROR_STATE_OUTPUT)                       // Only temperature error is configurable
+      {
         case P028_ERROR_IGNORE:
           ExtraTaskSettings.setIgnoreRangeCheck(0);
           break;
@@ -192,7 +193,7 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(P028_data_struct::BMx_DetectMode::BMP280),
         };
         const FormSelectorOptions selector(NR_ELEMENTS(detectOptionList), detectOptionList, detectOptions);
-        selector.addFormSelector(F("Output values mode"), F("det"),  P028_DETECTION_MODE);
+        selector.addFormSelector(F("Output values mode"), F("det"), P028_DETECTION_MODE);
 
         success = true;
       }
@@ -210,14 +211,15 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
         if ((P028_data_struct::BMx_DetectMode::BMP280 != static_cast<P028_data_struct::BMx_DetectMode>(P028_DETECTION_MODE)) &&
             P028_data->hasHumidity())
         {
+          addRowColspan(2);
           P028_data->plot_ChartJS_scatter(
             0,
             1,
             F("temphumscatter"),
             { F("Temp/Humidity Scatter Plot") },
-            { F("temp/hum"), F("rgb(255, 99, 132)") },
-            500,
-            500);
+            { F("temp/hum"), F("rgb(255, 99, 132)") }
+            );
+          addHtml(F("</td></tr>"));
         }
       }
 
@@ -255,12 +257,12 @@ boolean Plugin_028(uint8_t function, struct EventStruct *event, String& string)
         # endif // ifndef LIMIT_BUILD_SIZE
       };
       constexpr int P028_ERROR_STATE_COUNT = NR_ELEMENTS(resultsOptions);
-      const FormSelectorOptions selector(        
+      const FormSelectorOptions selector(
         P028_ERROR_STATE_COUNT,
         resultsOptions,
         resultsOptionValues);
       selector.addFormSelector(F("Temperature Error Value"), F("err"),
-                      P028_ERROR_STATE_OUTPUT);
+                               P028_ERROR_STATE_OUTPUT);
 
       break;
     }

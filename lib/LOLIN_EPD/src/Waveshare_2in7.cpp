@@ -76,8 +76,8 @@ static const unsigned char EPD_2in7_gray_lut_bb[] = {
     @param BUSY the busy pin to use
  */
 
-Waveshare_2in7::Waveshare_2in7(int width, int height, int8_t DC, int8_t RST, int8_t CS, int8_t BUSY)
-  : LOLIN_EPD(width, height, DC, RST, CS, BUSY) {
+Waveshare_2in7::Waveshare_2in7(int width, int height, int8_t DC, int8_t RST, int8_t CS, int8_t BUSY, SPIClass& spi)
+  : LOLIN_EPD(width, height, DC, RST, CS, BUSY, spi) {
   if ((height % 8) > 0) {
     _height_8bit = (height / 8 + 1) * 8;
   } else {
@@ -247,7 +247,7 @@ void Waveshare_2in7::drawPixel(int16_t x, int16_t y, uint16_t color) {
   if ((x < 0) || (x >= width()) || (y < 0) || (y >= height())) {
     return;
   }
-  
+
   // Corrections by @kretzp (Peter Kretz) 2022-03-27
   // check rotation, move pixel around if necessary
   switch (getRotation()) {

@@ -13,7 +13,9 @@ Type: |P147_type|
 
 Name: |P147_name|
 
-Status: |P147_status|
+Status ESP32: |P147_status|
+
+Status ESP8266: |P147_status_lb|
 
 GitHub: |P147_github|_
 
@@ -40,7 +42,7 @@ Configuration
 I2C options
 ^^^^^^^^^^^
 
-The available settings here depend on the build used. At least the **Force Slow I2C speed** option is available, but selections for the I2C Multiplexer can also be shown. For details see the :ref:`Hardware_page`
+The available settings here depend on the build used. At least the **Force Slow I2C speed** option is available, but selections for the I2C Multiplexer can also be shown. For details see the :ref:`i2c-bus` page
 
 The sensor has a fixed I2C address of 0x59, so to connect multiple sensors to a single ESP, an I2C multiplexer should be used.
 

@@ -3,7 +3,7 @@
 #ifdef USES_P020
 
 # include "../ESPEasyCore/Serial.h"
-# include "../ESPEasyCore/ESPEasyNetwork.h"
+# include "../../ESPEasy/net/ESPEasyNetwork.h"
 
 # include "../Globals/EventQueue.h"
 
@@ -71,11 +71,11 @@ void P020_Task::startServer(uint16_t portnumber) {
     gatewayPort   = portnumber;
     ser2netServer = new (std::nothrow) WiFiServer(portnumber);
 
-    if ((nullptr != ser2netServer) && NetworkConnected()) {
+    if ((nullptr != ser2netServer) && ESPEasy::net::NetworkConnected(true)) {
       ser2netServer->begin();
 
       if (serverActive(ser2netServer)) {
-        addLog(LOG_LEVEL_INFO, strformat(F("Ser2Net: WiFi server started at port %d"), portnumber));
+        addLog(LOG_LEVEL_INFO, concat(F("Ser2Net: WiFi server started at port "), portnumber));
       } else {
         addLog(LOG_LEVEL_ERROR, strformat(F("Ser2Net: WiFi server start FAILED at port %d, retrying..."), portnumber));
       }
@@ -90,7 +90,7 @@ void P020_Task::startServer(uint16_t portnumber) {
 }
 
 void P020_Task::checkServer() {
-  if ((nullptr != ser2netServer) && !serverActive(ser2netServer) && NetworkConnected()) {
+  if ((nullptr != ser2netServer) && !serverActive(ser2netServer) && ESPEasy::net::NetworkConnected()) {
     ser2netServer->close();
     ser2netServer->begin();
 
@@ -100,16 +100,16 @@ void P020_Task::checkServer() {
   }
   # if P020_USE_PROTOCOL
 
-  if ((nullptr != ser2netUdp) && !_udpInit && NetworkConnected()) {
+  if ((nullptr != ser2netUdp) && !_udpInit && ESPEasy::net::NetworkConnected()) {
     _udpInit = true; // Init only once
 
     if (ser2netUdp->begin(_udpport) == 0) {
       if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-        addLog(LOG_LEVEL_ERROR, strformat(F("Ser2Net: Cannot bind UDP at port %d"), _udpport));
+        addLog(LOG_LEVEL_ERROR, concat(F("Ser2Net: Cannot bind UDP at port "), _udpport));
       }
     } else {
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-        addLog(LOG_LEVEL_INFO, strformat(F("Ser2Net: UDP receiver started at port %d"), _udpport));
+        addLog(LOG_LEVEL_INFO, concat(F("Ser2Net: UDP receiver started at port "), _udpport));
       }
     }
   }
@@ -297,7 +297,8 @@ void P020_Task::handleSerialIn(struct EventStruct *event) {
   bool done      = false;
   char ch;
 
-  do {
+  do
+  {
     if (ser2netSerial->available()) {
       if ((serial_processing != P020_Events::P1WiFiGateway) // P1 handling without this check
           && (serial_buffer.length() > static_cast<size_t>(P020_RX_BUFFER))) {
@@ -357,7 +358,7 @@ void P020_Task::handleSerialIn(struct EventStruct *event) {
 
     blinkLED();
 
-    rulesEngine(serial_buffer);
+    rulesEngine(serial_buffer, event);
     ser2netClient.PR_9453_FLUSH_TO_CLEAR();
     clearBuffer();
     # ifndef BUILD_NO_DEBUG
@@ -375,14 +376,18 @@ void P020_Task::discardSerialIn() {
 }
 
 // We can also use the rules engine for local control!
-void P020_Task::rulesEngine(const String& message) {
+void P020_Task::rulesEngine(const String& message, struct EventStruct *event) {
   if (!Settings.UseRules || message.isEmpty() || (P020_Events::None == serial_processing)) { return; }
   int NewLinePos    = 0;
   uint16_t StartPos = 0;
+  # if FEATURE_STRING_VARIABLES
+  bool eventSent = false;
+  # endif // if FEATURE_STRING_VARIABLES
 
   NewLinePos = handleMultiLine ? message.indexOf('\n', StartPos) : message.length();
 
-  do {
+  do
+  {
     if (NewLinePos < 0) {
       NewLinePos = message.length();
     }
@@ -394,11 +399,14 @@ void P020_Task::rulesEngine(const String& message) {
       NewLinePos--;
     }
 
-    switch (serial_processing) {
-      case P020_Events::None: { break; }
-      case P020_Events::Generic: { // Generic
+    switch (serial_processing)
+    {
+      case P020_Events::None:
+        break;
+      case P020_Events::Generic: // Generic
+      {
         if (NewLinePos > StartPos) {
-          eventString = '!';       // F("!Serial");
+          eventString = '!';     // F("!Serial");
 
           if (_serialId) {
             eventString += ESPEasySerialPort_toString(_port, true);
@@ -421,8 +429,9 @@ void P020_Task::rulesEngine(const String& message) {
         }
         break;
       }
-      case P020_Events::RFLink: { // RFLink
-        StartPos += 6;            // RFLink, strip 20;xx; from incoming message
+      case P020_Events::RFLink: // RFLink
+      {
+        StartPos += 6;          // RFLink, strip 20;xx; from incoming message
 
         if (((NewLinePos - StartPos) >= 8) &&
             message.substring(StartPos, StartPos + 8)
@@ -442,6 +451,9 @@ void P020_Task::rulesEngine(const String& message) {
           eventString += message.substring(StartPos, NewLinePos);
         }
         eventQueue.addMove(std::move(eventString));
+        # if FEATURE_STRING_VARIABLES
+        eventSent = true;
+        # endif // if FEATURE_STRING_VARIABLES
         break;
       }
       case P020_Events::P1WiFiGateway: // P1 WiFi Gateway
@@ -466,6 +478,9 @@ void P020_Task::rulesEngine(const String& message) {
 
     if (!eventString.isEmpty()) {
       eventQueue.add(eventString);
+      # if FEATURE_STRING_VARIABLES
+      eventSent = true;
+      # endif // if FEATURE_STRING_VARIABLES
     }
     NewLinePos = message.indexOf('\n', StartPos);
 
@@ -473,6 +488,13 @@ void P020_Task::rulesEngine(const String& message) {
       NewLinePos = message.length();
     }
   } while (handleMultiLine && NewLinePos > StartPos);
+
+  # if FEATURE_STRING_VARIABLES
+
+  if (eventSent) {
+    sendData(event); // Send derived values
+  }
+  # endif // if FEATURE_STRING_VARIABLES
 }
 
 bool P020_Task::isInit() const {
@@ -483,10 +505,7 @@ bool P020_Task::isInit() const {
           ) && nullptr != ser2netSerial;
 }
 
-void P020_Task::sendConnectedEvent(bool connected)
-{
-  eventQueue.add(_taskIndex, F("Client"), (connected ? 1 : 0));
-}
+void P020_Task::sendConnectedEvent(bool connected) { eventQueue.add(_taskIndex, F("Client"), (connected ? 1 : 0)); }
 
 void P020_Task::blinkLED() {
   if (_ledEnabled) {
@@ -605,7 +624,8 @@ bool P020_Task::handleP1Char(char ch) {
   bool done    = false;
   bool invalid = false;
 
-  switch (_state) {
+  switch (_state)
+  {
     case ParserState::WAITING:
 
       if (ch == P020_DATAGRAM_START_CHAR)  {

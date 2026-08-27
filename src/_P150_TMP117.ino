@@ -162,7 +162,7 @@ boolean Plugin_150(uint8_t function, struct EventStruct *event, String& string)
         selector.reloadonchange = true;
         selector.addFormSelector(F("Conversion mode"), F("conv"), P150_GET_CONF_CONVERSION_MODE);
         # ifndef BUILD_NO_DEBUG
-        addFormNote(F("Changing this setting will save and reload this page."));
+        // addFormNote(F("Changing this setting will save and reload this page."));
         # endif // ifndef BUILD_NO_DEBUG
       }
 
@@ -196,7 +196,7 @@ boolean Plugin_150(uint8_t function, struct EventStruct *event, String& string)
 
       addFormSelector_YesNo(F("Enable 'Raw' value"), F("raw"), P150_GET_OPT_ENABLE_RAW ? 1 : 0, true);
       # ifndef BUILD_NO_DEBUG
-      addFormNote(F("Changing this setting will save and reload this page."));
+      // addFormNote(F("Changing this setting will save and reload this page."));
       # endif // ifndef BUILD_NO_DEBUG
 
       addFormCheckBox(F("Log measured values (INFO)"),  F("log"),  P150_GET_OPT_ENABLE_LOG);

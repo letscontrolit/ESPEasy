@@ -8,7 +8,11 @@
 #include "../WebServer/Markup_Forms.h"
 #include "../WebServer/ESPEasy_WebServer.h"
 
-#include "../ESPEasyCore/ESPEasyWifi.h"
+#include "../../ESPEasy/net/wifi/ESPEasyWifi.h"
+
+#if FEATURE_RTC_SRAM_STORAGE
+#include "../../ESPEasy/eeprom/Helpers/RTCSRAMStorage.h"
+#endif // if FEATURE_RTC_SRAM_STORAGE
 
 #include "../Globals/ESPEasy_time.h"
 #include "../Globals/Settings.h"
@@ -24,7 +28,7 @@
 #include "../Helpers/I2C_access.h"
 #endif
 
-void setLogLevelFor(uint8_t destination, LabelType::Enum label) {
+void setLogLevelFor(LogDestination destination, LabelType::Enum label) {
   setLogLevelFor(destination, getFormItemInt(getInternalLabel(label)));
 }
 
@@ -36,15 +40,11 @@ void handle_advanced() {
   checkRAM(F("handle_advanced"));
   #endif
 
-  if (!isLoggedIn()) { return; }
-  navMenuIndex = MENU_INDEX_TOOLS;
-  TXBuffer.startStream();
-  sendHeadandTail_stdtemplate(_HEAD);
+  if (!startStream_send_stdTemplate(MENU_INDEX_TOOLS)) { return; }
 
   if (!webArg(F("edit")).isEmpty())
   {
-//    Settings.MessageDelay_unused = getFormItemInt(F("messagedelay"));
-    Settings.IP_Octet     = webArg(F("ip")).toInt();
+    // Settings.IP_Octet_unused     = webArg(F("ip")).toInt(); // No longer applicable after 2026-Network rewrite-merged
     strncpy_webserver_arg(Settings.NTPHost, F("ntphost"));
     Settings.TimeZone = getFormItemInt(F("timezone"));
     TimeChangeRule dst_start(getFormItemInt(F("dststartweek")), getFormItemInt(F("dststartdow")), getFormItemInt(F("dststartmonth")), getFormItemInt(F("dststarthour")), Settings.TimeZone);
@@ -74,9 +74,13 @@ void handle_advanced() {
 #endif
 
 #endif
+#if FEATURE_SYSLOG
     setLogLevelFor(LOG_TO_SYSLOG, LabelType::SYSLOG_LOG_LEVEL);
+#endif
     setLogLevelFor(LOG_TO_SERIAL, LabelType::SERIAL_LOG_LEVEL);
+# ifdef WEBSERVER_LOG
     setLogLevelFor(LOG_TO_WEBLOG, LabelType::WEB_LOG_LEVEL);
+#endif
 #if FEATURE_SD
     setLogLevelFor(LOG_TO_SDCARD, LabelType::SD_LOG_LEVEL);
 #endif // if FEATURE_SD
@@ -102,10 +106,6 @@ void handle_advanced() {
     Settings.ArduinoOTAEnable            = isFormItemChecked(F("arduinootaenable"));
     Settings.UseRTOSMultitasking         = isFormItemChecked(F("usertosmultitasking"));
 
-    // MQTT settings now moved to the controller settings.
-//    Settings.MQTTRetainFlag_unused              = isFormItemChecked(F("mqttretainflag"));
-//    Settings.MQTTUseUnitNameAsClientId   = isFormItemChecked(F("mqttuseunitnameasclientid"));
-//    Settings.uniqueMQTTclientIdReconnect(isFormItemChecked(F("uniquemqttclientidreconnect")));
     Settings.Latitude  = getFormItemFloat(F("latitude"));
     Settings.Longitude = getFormItemFloat(F("longitude"));
     #ifdef WEBSERVER_NEW_RULES
@@ -114,20 +114,7 @@ void handle_advanced() {
     Settings.TolerantLastArgParse(isFormItemChecked(F("tolerantargparse")));
     Settings.SendToHttp_ack(isFormItemChecked(F("sendtohttp_ack")));
     Settings.SendToHTTP_follow_redirects(isFormItemChecked(F("sendtohttp_redir")));
-    Settings.ForceWiFi_bg_mode(isFormItemChecked(LabelType::FORCE_WIFI_BG));
-    Settings.WiFiRestart_connection_lost(isFormItemChecked(LabelType::RESTART_WIFI_LOST_CONN));
     Settings.EcoPowerMode(isFormItemChecked(LabelType::CPU_ECO_MODE));
-    Settings.WifiNoneSleep(isFormItemChecked(LabelType::FORCE_WIFI_NOSLEEP));
-#ifdef SUPPORT_ARP
-    Settings.gratuitousARP(isFormItemChecked(LabelType::PERIODICAL_GRAT_ARP));
-#endif // ifdef SUPPORT_ARP
-#if FEATURE_SET_WIFI_TX_PWR
-    Settings.setWiFi_TX_power(getFormItemFloat(LabelType::WIFI_TX_MAX_PWR));
-    Settings.WiFi_sensitivity_margin = getFormItemInt(LabelType::WIFI_SENS_MARGIN);
-    Settings.UseMaxTXpowerForSending(isFormItemChecked(LabelType::WIFI_SEND_AT_MAX_TX_PWR));
-#endif
-    Settings.NumberExtraWiFiScans = getFormItemInt(LabelType::WIFI_NR_EXTRA_SCANS);
-    Settings.UseLastWiFiFromRTC(isFormItemChecked(LabelType::WIFI_USE_LAST_CONN_FROM_RTC));
     Settings.JSONBoolWithoutQuotes(isFormItemChecked(LabelType::JSON_BOOL_QUOTES));
 #if FEATURE_TIMING_STATS
     Settings.EnableTimingStats(isFormItemChecked(LabelType::ENABLE_TIMING_STATISTICS));
@@ -139,16 +126,11 @@ void handle_advanced() {
     #if FEATURE_I2C_DEVICE_CHECK
     Settings.CheckI2Cdevice(isFormItemChecked(LabelType::ENABLE_I2C_DEVICE_CHECK));
     #endif // if FEATURE_I2C_DEVICE_CHECK
-#ifndef ESP32
-    Settings.WaitWiFiConnect(isFormItemChecked(LabelType::WAIT_WIFI_CONNECT));
-#endif
-    Settings.HiddenSSID_SlowConnectPerBSSID(isFormItemChecked(LabelType::HIDDEN_SSID_SLOW_CONNECT));
-    Settings.SDK_WiFi_autoreconnect(isFormItemChecked(LabelType::SDK_WIFI_AUTORECONNECT));
-#ifdef ESP32
-    Settings.PassiveWiFiScan(isFormItemChecked(LabelType::WIFI_PASSIVE_SCAN));
-#endif
 #if FEATURE_USE_IPV6
     Settings.EnableIPv6(isFormItemChecked(LabelType::ENABLE_IPV6));
+#endif
+#if FEATURE_MDNS
+    Settings.Use_mDNS(isFormItemChecked(LabelType::USE_MDNS));
 #endif
 
 
@@ -182,6 +164,12 @@ void handle_advanced() {
     #if FEATURE_MQTT_CONNECT_BACKGROUND
     Settings.MQTTConnectInBackground(isFormItemChecked(LabelType::MQTT_CONNECT_IN_BACKGROUND));
     #endif // if FEATURE_MQTT_CONNECT_BACKGROUND
+    #if FEATURE_MQTT_DISCOVER
+    Settings.MQTTDiscoverGroupInclTaskname(isFormItemChecked(LabelType::MQTT_DISCOVER_GROUP_INCL_TASKNAME));
+    #endif // if FEATURE_MQTT_DISCOVER
+    #if FEATURE_COLORIZE_CONSOLE_LOGS
+    Settings.ColorizeSerialLog(isFormItemChecked(LabelType::COLORIZE_CONSOLE_LOGS));
+    #endif
 
     addHtmlError(SaveSettings());
 
@@ -190,7 +178,8 @@ void handle_advanced() {
     }
   }
 
-  addHtml(F("<form  method='post'>"));
+  html_add_form();
+
   html_table_class_normal();
 
   addFormHeader(F("Advanced Settings"), F("RTDTools/Tools.html#advanced"));
@@ -201,25 +190,13 @@ void handle_advanced() {
   #ifdef WEBSERVER_NEW_RULES
   addFormCheckBox(F("Old Engine"), F("oldrulesengine"), Settings.OldRulesEngine());
   #endif // WEBSERVER_NEW_RULES
-  addFormCheckBox(LabelType::ENABLE_RULES_CACHING, Settings.EnableRulesCaching());
-//  addFormCheckBox(LabelType::ENABLE_RULES_EVENT_REORDER, Settings.EnableRulesEventReorder()); // TD-er: Disabled for now
+  addFormCheckBox(LabelType::ENABLE_RULES_CACHING);
+//  addFormCheckBox(LabelType::ENABLE_RULES_EVENT_REORDER); // TD-er: Disabled for now
 
   addFormCheckBox(F("Tolerant last parameter"), F("tolerantargparse"), Settings.TolerantLastArgParse());
   addFormNote(F("Perform less strict parsing on last argument of some commands (e.g. publish and sendToHttp)"));
   addFormCheckBox(F("SendToHTTP wait for ack"), F("sendtohttp_ack"), Settings.SendToHttp_ack());
   addFormCheckBox(F("SendToHTTP Follow Redirects"), F("sendtohttp_redir"), Settings.SendToHTTP_follow_redirects());
-
-  /*
-  // MQTT settings now moved to the controller settings.
-  addFormSubHeader(F("Controller Settings"));
-
-  addFormNumericBox(F("Message Interval"), F("messagedelay"), Settings.MessageDelay_unused, 0, INT_MAX);
-  addUnit(F("ms"));
-
-  addFormCheckBox(F("MQTT Retain Msg"), F("mqttretainflag"), Settings.MQTTRetainFlag_unused);
-  addFormCheckBox(F("MQTT use unit name as ClientId"),    F("mqttuseunitnameasclientid"),   Settings.MQTTUseUnitNameAsClientId);
-  addFormCheckBox(F("MQTT change ClientId at reconnect"), F("uniquemqttclientidreconnect"), Settings.uniqueMQTTclientIdReconnect_unused());
-*/
 
   addFormSubHeader(F("Time Source"));
 
@@ -230,6 +207,12 @@ void handle_advanced() {
   if (Settings.ExtTimeSource() != ExtTimeSource_e::None) {
     addFormNote(concat(getLabel(LabelType::EXT_RTC_UTC_TIME), F(": ")) + getValue(LabelType::EXT_RTC_UTC_TIME));
   }
+  #if FEATURE_RTC_SRAM_STORAGE
+  if (ESPEasy::eeprom::checkRTCSRAMEnabled()) {
+    addRowLabel(F("'WriteRTC' slots available"));
+    addHtmlInt(ESPEasy::eeprom::getRTCSRAMMaxSlots());
+  }
+  #endif // if FEATURE_RTC_SRAM_STORAGE
   #if FEATURE_I2C_MULTIPLE
   {
     const uint8_t i2cBus = Settings.getI2CInterfaceRTC();
@@ -259,11 +242,14 @@ void handle_advanced() {
 
   addFormIPBox(F("Syslog IP"), F("syslogip"), Settings.Syslog_IP);
   addFormNumericBox(F("Syslog UDP port"), F("syslogport"), Settings.SyslogPort, 0, 65535);
-
+#if FEATURE_SYSLOG
   addFormLogLevelSelect(LabelType::SYSLOG_LOG_LEVEL, Settings.SyslogLevel);
   addFormLogFacilitySelect(F("Syslog Facility"), F("syslogfacility"), Settings.SyslogFacility);
+#endif
   addFormLogLevelSelect(LabelType::SERIAL_LOG_LEVEL, Settings.SerialLogLevel);
+# ifdef WEBSERVER_LOG
   addFormLogLevelSelect(LabelType::WEB_LOG_LEVEL,    Settings.WebLogLevel);
+#endif
 
 #if FEATURE_SD
   addFormLogLevelSelect(LabelType::SD_LOG_LEVEL,     Settings.SDLogLevel);
@@ -273,15 +259,14 @@ void handle_advanced() {
 
 
   addFormSubHeader(F("Serial Console Settings"));
-  addFormCheckBox(LabelType::ENABLE_SERIAL_PORT_CONSOLE, Settings.UseSerial);
+  addFormCheckBox(LabelType::ENABLE_SERIAL_PORT_CONSOLE);
   addFormNumericBox(F("Baud Rate"), F("baudrate"), Settings.BaudRate, 0, 1000000);
 
 #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
   serialHelper_webformLoad(
     static_cast<ESPEasySerialPort>(Settings.console_serial_port), 
     Settings.console_serial_rxpin, 
-    Settings.console_serial_txpin, 
-    true);
+    Settings.console_serial_txpin);
 
   // Show serial port selection
   addFormPinSelect(
@@ -295,9 +280,9 @@ void handle_advanced() {
     F("taskdevicepin2"), 
     Settings.console_serial_txpin);
 
-  html_add_script(F("document.getElementById('serPort').onchange();"), false);
+  html_add_script(F("elId('serPort').onchange();"), false);
 #if USES_ESPEASY_CONSOLE_FALLBACK_PORT
-  addFormCheckBox(LabelType::CONSOLE_FALLBACK_TO_SERIAL0, Settings.console_serial0_fallback);
+  addFormCheckBox(LabelType::CONSOLE_FALLBACK_TO_SERIAL0);
 #endif
 
 #endif
@@ -313,7 +298,7 @@ void handle_advanced() {
   addFormNumericBox(F("Webserver port"), F("webport"), Settings.WebserverPort, 0, 65535);
   addFormNote(F("Requires reboot to activate"));
 
-  addFormNumericBox(F("Fixed IP Octet"), F("ip"),           Settings.IP_Octet,     0, 255);
+  // addFormNumericBox(F("Fixed IP Octet"), F("ip"),           Settings.IP_Octet_unused,     0, 255); // No longer applicable after 2026-Network rewrite-merged
 
   addFormNumericBox(F("WD I2C Address"), F("wdi2caddress"), Settings.WDI2CAddress, 0, 127);
   addHtml(F(" (decimal)"));
@@ -327,108 +312,99 @@ void handle_advanced() {
   }
   #endif // if FEATURE_I2C_MULTIPLE
 
-  // TODO: Remove this code
-  addRowLabel(F("I2C ClockStretchLimit"));
-  addUnit(F("Moved to Hardware page"));
-
   #if FEATURE_ARDUINO_OTA
   addFormCheckBox(F("Enable Arduino OTA"), F("arduinootaenable"), Settings.ArduinoOTAEnable);
   #endif // if FEATURE_ARDUINO_OTA
   #if defined(ESP32)
   addFormCheckBox_disabled(F("Enable RTOS Multitasking"), F("usertosmultitasking"), Settings.UseRTOSMultitasking);
   #endif // if defined(ESP32)
+  {
+    LabelType::Enum labels[]{
 
-  addFormCheckBox(LabelType::JSON_BOOL_QUOTES, Settings.JSONBoolWithoutQuotes());
-#if FEATURE_TIMING_STATS
-  addFormCheckBox(LabelType::ENABLE_TIMING_STATISTICS, Settings.EnableTimingStats());
-#endif // if FEATURE_TIMING_STATS
-#ifndef BUILD_NO_RAM_TRACKER
-  addFormCheckBox(LabelType::ENABLE_RAM_TRACKING, Settings.EnableRAMTracking());
-#endif
+      LabelType::JSON_BOOL_QUOTES
+    #if FEATURE_TIMING_STATS
+      ,LabelType::ENABLE_TIMING_STATISTICS
+    #endif // if FEATURE_TIMING_STATS
+    #ifndef BUILD_NO_RAM_TRACKER
+      ,LabelType::ENABLE_RAM_TRACKING
+    #endif
 
-  addFormCheckBox(LabelType::TASKVALUESET_ALL_PLUGINS, Settings.AllowTaskValueSetAllPlugins());
-#if FEATURE_CLEAR_I2C_STUCK
-  addFormCheckBox(LabelType::ENABLE_CLEAR_HUNG_I2C_BUS, Settings.EnableClearHangingI2Cbus());
-#endif
-  #if FEATURE_I2C_DEVICE_CHECK
-  addFormCheckBox(LabelType::ENABLE_I2C_DEVICE_CHECK, Settings.CheckI2Cdevice());
-  #endif // if FEATURE_I2C_DEVICE_CHECK
+      ,LabelType::TASKVALUESET_ALL_PLUGINS
+    #if FEATURE_CLEAR_I2C_STUCK
+      ,LabelType::ENABLE_CLEAR_HUNG_I2C_BUS
+    #endif
+      #if FEATURE_I2C_DEVICE_CHECK
+      ,LabelType::ENABLE_I2C_DEVICE_CHECK
+      #endif // if FEATURE_I2C_DEVICE_CHECK
 
-  #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
-  addFormCheckBox(LabelType::SHOW_UOM_ON_DEVICES_PAGE, Settings.ShowUnitOfMeasureOnDevicesPage());
-  #endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+      #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+      ,LabelType::SHOW_UOM_ON_DEVICES_PAGE
+      #endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 
-  #if FEATURE_MQTT_CONNECT_BACKGROUND
-  addFormCheckBox(LabelType::MQTT_CONNECT_IN_BACKGROUND, Settings.MQTTConnectInBackground());
-  #endif // if FEATURE_MQTT_CONNECT_BACKGROUND
+      #if FEATURE_MQTT_CONNECT_BACKGROUND
+      ,LabelType::MQTT_CONNECT_IN_BACKGROUND
+      #endif // if FEATURE_MQTT_CONNECT_BACKGROUND
+      #if FEATURE_MQTT_DISCOVER
+      ,LabelType::MQTT_DISCOVER_GROUP_INCL_TASKNAME
+      #endif // if FEATURE_MQTT_DISCOVER
+      #if FEATURE_COLORIZE_CONSOLE_LOGS
+      ,LabelType::COLORIZE_CONSOLE_LOGS
+      #endif
+      # ifndef NO_HTTP_UPDATER
+      ,LabelType::ALLOW_OTA_UNLIMITED
+      # endif // ifndef NO_HTTP_UPDATER
+    };
 
-  # ifndef NO_HTTP_UPDATER
-  addFormCheckBox(LabelType::ALLOW_OTA_UNLIMITED, Settings.AllowOTAUnlimited());
-  # endif // ifndef NO_HTTP_UPDATER
+    addFormCheckBoxes(labels, NR_ELEMENTS(labels));
+  }
   #if FEATURE_AUTO_DARK_MODE
-  const __FlashStringHelper * cssModeNames[] = {
-    F("Auto"),
-    F("Light"),
-    F("Dark"),
-  };
-  //const int cssModeOptions[] = { 0, 1, 2};
-  constexpr int nrCssModeOptions = NR_ELEMENTS(cssModeNames);
-  const FormSelectorOptions selector(
-    nrCssModeOptions,
-    cssModeNames/*,
-    cssModeOptions*/);
-  selector.addFormSelector(
-    getLabel(LabelType::ENABLE_AUTO_DARK_MODE),
-    getInternalLabel(LabelType::ENABLE_AUTO_DARK_MODE),
-    Settings.getCssMode());
+  {
+    const __FlashStringHelper * cssModeNames[] = {
+      F("Auto"),
+      F("Light"),
+      F("Dark"),
+    };
+    //const int cssModeOptions[] = { 0, 1, 2};
+    constexpr int nrCssModeOptions = NR_ELEMENTS(cssModeNames);
+    const FormSelectorOptions selector(
+      nrCssModeOptions,
+      cssModeNames/*,
+      cssModeOptions*/);
+    selector.addFormSelector(
+      getLabel(LabelType::ENABLE_AUTO_DARK_MODE),
+      getInternalLabel(LabelType::ENABLE_AUTO_DARK_MODE),
+      Settings.getCssMode());
+  }
   #endif // FEATURE_AUTO_DARK_MODE
+{
+  LabelType::Enum labels[]{
 
+  LabelType::CPU_ECO_MODE
+  #ifdef ESP8266
+  ,LabelType::DEEP_SLEEP_ALTERNATIVE_CALL
+  #endif
   #if FEATURE_RULES_EASY_COLOR_CODE
-  addFormCheckBox(LabelType::DISABLE_RULES_AUTOCOMPLETE, Settings.DisableRulesCodeCompletion());
+  ,LabelType::DISABLE_RULES_AUTOCOMPLETE
   #endif // if FEATURE_RULES_EASY_COLOR_CODE
   #if FEATURE_TARSTREAM_SUPPORT
-  addFormCheckBox(LabelType::DISABLE_SAVE_CONFIG_AS_TAR, Settings.DisableSaveConfigAsTar());
+  ,LabelType::DISABLE_SAVE_CONFIG_AS_TAR
   #endif // if FEATURE_TARSTREAM_SUPPORT
 
-  #ifdef ESP8266
-  addFormCheckBox(LabelType::DEEP_SLEEP_ALTERNATIVE_CALL, Settings.UseAlternativeDeepSleep());
-  #endif
+#if FEATURE_USE_IPV6
+  ,LabelType::ENABLE_IPV6
+#endif
+#if FEATURE_MDNS
+  ,LabelType::USE_MDNS
+#endif
 
-
+        };
+  addFormCheckBoxes(labels, NR_ELEMENTS(labels));
+}
   #if FEATURE_SSDP
   addFormCheckBox_disabled(F("Use SSDP"), F("usessdp"), Settings.UseSSDP);
   #endif // if FEATURE_SSDP
 
-  addFormNumericBox(LabelType::CONNECTION_FAIL_THRESH, Settings.ConnectionFailuresThreshold, 0, 100);
-  addFormCheckBox(LabelType::FORCE_WIFI_BG, Settings.ForceWiFi_bg_mode());
-
-  addFormCheckBox(LabelType::RESTART_WIFI_LOST_CONN, Settings.WiFiRestart_connection_lost());
-  addFormCheckBox(LabelType::FORCE_WIFI_NOSLEEP,     Settings.WifiNoneSleep());
-#ifdef SUPPORT_ARP
-  addFormCheckBox(LabelType::PERIODICAL_GRAT_ARP, Settings.gratuitousARP());
-#endif // ifdef SUPPORT_ARP
-  addFormCheckBox(LabelType::CPU_ECO_MODE,        Settings.EcoPowerMode());
-#if FEATURE_SET_WIFI_TX_PWR
-  addFormFloatNumberBox(LabelType::WIFI_TX_MAX_PWR, Settings.getWiFi_TX_power(), 0.0f, MAX_TX_PWR_DBM_11b, 2, 0.25f);
-  addFormNumericBox(LabelType::WIFI_SENS_MARGIN, Settings.WiFi_sensitivity_margin, -20, 30);
-  addFormCheckBox(LabelType::WIFI_SEND_AT_MAX_TX_PWR, Settings.UseMaxTXpowerForSending());
-#endif
-  {
-    addFormNumericBox(LabelType::WIFI_NR_EXTRA_SCANS, Settings.NumberExtraWiFiScans, 0, 5);
-  }
-  addFormCheckBox(LabelType::WIFI_USE_LAST_CONN_FROM_RTC, Settings.UseLastWiFiFromRTC());
-
-#ifndef ESP32
-  addFormCheckBox(LabelType::WAIT_WIFI_CONNECT,        Settings.WaitWiFiConnect());
-#endif
-  addFormCheckBox(LabelType::SDK_WIFI_AUTORECONNECT,   Settings.SDK_WiFi_autoreconnect());
-  addFormCheckBox(LabelType::HIDDEN_SSID_SLOW_CONNECT, Settings.HiddenSSID_SlowConnectPerBSSID());
-#ifdef ESP32
-  addFormCheckBox(LabelType::WIFI_PASSIVE_SCAN,        Settings.PassiveWiFiScan());
-#endif
-#if FEATURE_USE_IPV6
-  addFormCheckBox(LabelType::ENABLE_IPV6,      Settings.EnableIPv6());
-#endif
+  addFormNumericBox(LabelType::CONNECTION_FAIL_THRESH, 0, 100);
 
 
 
@@ -440,8 +416,7 @@ void handle_advanced() {
   addHtml(F("<input type='hidden' name='edit' value='1'>"));
   html_end_table();
   html_end_form();
-  sendHeadandTail_stdtemplate(_TAIL);
-  TXBuffer.endStream();
+  sendTail_stdtemplate();
 }
 
 void addFormDstSelect(bool isStart, uint16_t choice) {
@@ -496,14 +471,29 @@ void addFormDstSelect(bool isStart, uint16_t choice) {
 void addFormExtTimeSourceSelect(const __FlashStringHelper * label, const __FlashStringHelper * id, ExtTimeSource_e choice)
 {
   addRowLabel(label);
-  const __FlashStringHelper * options[] =
-    { F("None"), F("DS1307"), F("DS3231"), F("PCF8523"), F("PCF8563")};
+  const __FlashStringHelper * options[] = {
+    F("None"),
+    toString(ExtTimeSource_e::DS1307),
+    toString(ExtTimeSource_e::DS3231),
+    toString(ExtTimeSource_e::DS3232),
+    toString(ExtTimeSource_e::PCF8523),
+    toString(ExtTimeSource_e::PCF8563),
+    #if FEATURE_EXT_RTC_PCF8583
+    toString(ExtTimeSource_e::PCF8583),
+    toString(ExtTimeSource_e::PCF8583a),
+    #endif // if FEATURE_EXT_RTC_PCF8583
+  };
   constexpr int optionValues[] = { 
     static_cast<int>(ExtTimeSource_e::None),
     static_cast<int>(ExtTimeSource_e::DS1307),
     static_cast<int>(ExtTimeSource_e::DS3231),
+    static_cast<int>(ExtTimeSource_e::DS3232),
     static_cast<int>(ExtTimeSource_e::PCF8523),
-    static_cast<int>(ExtTimeSource_e::PCF8563)
+    static_cast<int>(ExtTimeSource_e::PCF8563),
+    #if FEATURE_EXT_RTC_PCF8583
+    static_cast<int>(ExtTimeSource_e::PCF8583),
+    static_cast<int>(ExtTimeSource_e::PCF8583a),
+    #endif // if FEATURE_EXT_RTC_PCF8583
     };
 
   const FormSelectorOptions selector(NR_ELEMENTS(optionValues), options, optionValues);
@@ -518,19 +508,10 @@ void addFormLogLevelSelect(LabelType::Enum label, int choice)
   #endif
 
   addRowLabel(getLabel(label));
-  const __FlashStringHelper * options[LOG_LEVEL_NRELEMENTS + 1];
-  int    optionValues[LOG_LEVEL_NRELEMENTS + 1] = { 0 };
-
-  options[0]      = getLogLevelDisplayString(0);
-
-  for (int i = 0; i < LOG_LEVEL_NRELEMENTS; ++i) {
-    options[i + 1] = getLogLevelDisplayStringFromIndex(i, optionValues[i + 1]);
-  }
-  const FormSelectorOptions selector(LOG_LEVEL_NRELEMENTS + 1, options, optionValues);
-  selector.addSelector(getInternalLabel(label), choice);
-
+  addLogLevelFormSelectorOptions(getInternalLabel(label), choice);
 }
 
+#if FEATURE_SYSLOG
 void addFormLogFacilitySelect(const __FlashStringHelper * label, const __FlashStringHelper * id, int choice)
 {
   addRowLabel(label);
@@ -542,5 +523,6 @@ void addFormLogFacilitySelect(const __FlashStringHelper * label, const __FlashSt
   const FormSelectorOptions selector(NR_ELEMENTS(options), options, optionValues);
   selector.addSelector(id, choice);
 }
+#endif
 
 #endif // ifdef WEBSERVER_ADVANCED

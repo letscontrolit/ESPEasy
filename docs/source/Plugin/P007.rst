@@ -13,7 +13,9 @@ Type: |P007_type|
 
 Name: |P007_name|
 
-Status: |P007_status|
+Status ESP32: |P007_status|
+
+Status ESP8266: |P007_status_lb|
 
 GitHub: |P007_github|_
 
@@ -52,7 +54,7 @@ Configuration
 I2C Options 
 ^^^^^^^^^^^^
 
-The available settings here depend on the build used. At least the **Force Slow I2C speed** option is available, but selections for the I2C Multiplexer can also be shown. For details see the :ref:`Hardware_page`
+The available settings here depend on the build used. At least the **Force Slow I2C speed** option is available, but selections for the I2C Multiplexer can also be shown. For details see the :ref:`i2c-bus`
 
 As the chip is specified to only work correctly up to 100 kHz, the **Force Slow I2C speed** checkbox should normally be *enabled*.
 

@@ -13,7 +13,9 @@ Type: |P137_type|
 
 Name: |P137_name|
 
-Status: |P137_status|
+Status ESP32: |P137_status|
+
+Status ESP8266: |P137_status_lb|
 
 GitHub: |P137_github|_
 
@@ -43,7 +45,7 @@ Configuration
 I2C Options 
 ^^^^^^^^^^^^
 
-The available settings here depend on the build used. At least the **Force Slow I2C speed** option is available, but selections for the I2C Multiplexer can also be shown. For details see the :ref:`Hardware_page`
+The available settings here depend on the build used. At least the **Force Slow I2C speed** option is available, but selections for the I2C Multiplexer can also be shown. For details see the :ref:`i2c-bus` page
 
 Device Settings
 ^^^^^^^^^^^^^^^^

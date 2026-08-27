@@ -44,6 +44,11 @@ public:
 
 private:
 
+  bool isConnected() const;
+
+#if !ARDUINO_USB_CDC_ON_BOOT
+  HWCDC myUsbSerial;
+#endif
   HWCDC *_hwcdc_serial= nullptr;
 };
 

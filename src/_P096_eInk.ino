@@ -21,6 +21,11 @@
  * Waveshare 2.7" 264x176px monochrome, Waveshare 1.54" (B) 200x200px white/black/red and MH-IT Live 200x200px white/black/red displays
  */
 
+/** Changelog:
+ * 2025-08-13 tonhuisman: Enable use of secondary SPI bus
+ * 2025-08-13 tonhuisman: Start changelog
+ */
+
 /* README.MD
 
  ## INTRO
@@ -130,6 +135,7 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
       dev.TimerOption   = true;
       dev.TimerOptional = true;
       # endif // if P096_USE_EXTENDED_SETTINGS
+      dev.SpiBusSelect = true;
       break;
     }
 
@@ -236,8 +242,8 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
           options4,
           optionValues4);
         selector.addFormSelector(F("eInk display model"),
-                        F("_type"),
-                        P096_CONFIG_FLAG_GET_DISPLAYTYPE);
+                                 F("_type"),
+                                 P096_CONFIG_FLAG_GET_DISPLAYTYPE);
       }
 
       addFormSubHeader(F("Layout"));
@@ -250,7 +256,7 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
         const __FlashStringHelper *options2[] = { F("Normal"), F("+90&deg;"), F("+180&deg;"), F("+270&deg;") };
         int optionValues2[]                   = { 0, 1, 2, 3 };
         constexpr size_t optionCount          = NR_ELEMENTS(optionValues2);
-        const FormSelectorOptions selector( optionCount, options2, optionValues2);
+        const FormSelectorOptions selector(optionCount, options2, optionValues2);
         selector.addFormSelector(F("Rotation"), F("_rotate"), P096_CONFIG_ROTATION);
       }
       # endif // ifdef P096_USE_ADA_GRAPHICS
@@ -299,8 +305,8 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
         }
         constexpr size_t optionCount = NR_ELEMENTS(colorDepthOptions);
         const FormSelectorOptions selector(optionCount, colorDepths, colorDepthOptions);
-        selector.addFormSelector(F("Greyscale levels"),F("_colorDepth"),
-            P096_CONFIG_FLAG_GET_COLORDEPTH);
+        selector.addFormSelector(F("Greyscale levels"), F("_colorDepth"),
+                                 P096_CONFIG_FLAG_GET_COLORDEPTH);
       }
 
       AdaGFXFormTextPrintMode(F("_mode"), P096_CONFIG_FLAG_GET_MODE);
@@ -349,7 +355,7 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
         constexpr size_t optionCount = NR_ELEMENTS(commandTriggerOptions);
         const FormSelectorOptions selector(optionCount, commandTriggers, commandTriggerOptions);
         selector.addFormSelector(F("Write Command trigger"), F("_commandtrigger"),
-                        P096_CONFIG_FLAG_GET_CMD_TRIGGER);
+                                 P096_CONFIG_FLAG_GET_CMD_TRIGGER);
         addFormNote(F("Select the command that is used to handle commands for this display."));
       }
 
@@ -472,7 +478,7 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_INIT:
     {
-      if (Settings.InitSPI != 0) {
+      if (Settings.isSPI_validForTask(event->TaskIndex)) {
         initPluginTaskData(event->TaskIndex,
                            # if P096_USE_EXTENDED_SETTINGS
                            new (std::nothrow) P096_data_struct(static_cast<EPD_type_e>(P096_CONFIG_FLAG_GET_DISPLAYTYPE),

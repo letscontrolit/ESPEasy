@@ -206,7 +206,9 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, St
     // The MTA Exchange
 
     if (!failFlag) {
+#ifndef BUILD_NO_DEBUG
       addLog(LOG_LEVEL_INFO, F("Email: Initializing ..."));
+#endif
 
       # ifndef BUILD_NO_DEBUG
       addLog(LOG_LEVEL_INFO, strformat(F("Email: Max Allowed Timeout is %d secs"), clientTimeout / 1000));
@@ -315,8 +317,9 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, St
           int    i                    = 0;
           String emailTo;
           const String receiver(tmp_ato);
-
+#ifndef BUILD_NO_DEBUG
           addLog(LOG_LEVEL_INFO, strformat(F("Email: Receiver(s): %s"), receiver.c_str()));
+#endif
 
           if (!getNextMailAddress(receiver, emailTo, i)) {
             addLog(LOG_LEVEL_ERROR, F("Email: Receiver missing!"));
@@ -324,9 +327,11 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, St
           }
 
           while (nextAddressAvailable) {
+#ifndef BUILD_NO_DEBUG
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
               addLog(LOG_LEVEL_INFO, concat(F("Email: To "), emailTo));
             }
+#endif
 
             if (!NPlugin_001_MTA(*client, strformat(F("RCPT TO:<%s>"), emailTo.c_str()), 250, clientTimeout))
             {
@@ -360,7 +365,7 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, St
         break;
       }
     }
-
+#ifndef BUILD_NO_DEBUG
     if (myStatus) {
       addLog(LOG_LEVEL_INFO, F("Email: Connection Closed Successfully"));
     } else {
@@ -368,6 +373,7 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, St
         addLogMove(LOG_LEVEL_ERROR, concat(F("Email: Connection Closed With Error. Used header: "),  mailheader));
       }
     }
+#endif
   }
 
   client->stop();
@@ -392,10 +398,11 @@ bool NPlugin_001_Auth(WiFiClient& client, const String& user, const String& pass
   if (!NPlugin_001_MTA(client, encoder.encode(user), 334, timeout)) { success = false; }
 
   if (!NPlugin_001_MTA(client, encoder.encode(pass), 235, timeout)) { success = false; }
-
+#ifndef BUILD_NO_DEBUG
   if (success) {
     addLog(LOG_LEVEL_INFO, F("Email: Credentials Accepted"));
   }
+#endif
   return success;
 }
 

@@ -3,13 +3,9 @@
 
 #include "../WebServer/common.h"
 
-
-#include "../CustomBuild/ESPEasyLimits.h"
 #include "../DataTypes/SettingsType.h"
-#include "../Globals/Plugins.h"
-#include "../Helpers/StringConverter.h"
-
 #include "../WebServer/WebTemplateParser.h"
+#include "../../ESPEasy/net/DataTypes/NetworkIndex.h"
 
 
 // Uncrustify must not be used on macros, so turn it off.
@@ -26,8 +22,7 @@ void sendHeadandTail(const __FlashStringHelper * tmplName,
                      bool       Tail      = false,
                      bool       rebooting = false);
 
-void   sendHeadandTail_stdtemplate(bool Tail,
-                                   bool rebooting = false);
+void   sendTail_stdtemplate(bool rebooting = false);
 
 
 void   WebServerInit();
@@ -37,6 +32,13 @@ void   WebServerInit();
 // Return true in that case so the page handler does not try to handle the request again.
 // ********************************************************************************
 bool   captivePortal();
+
+bool   clientConnectedToAP();
+
+// Determine which network interface is being used by the client to access this ESPEasy node
+ESPEasy::net::networkIndex_t getNetworkIndex_ClientConnectsTo();
+
+
 
 void   setWebserverRunning(bool state);
 
@@ -64,7 +66,7 @@ void   writeDefaultCSS(void);
 // FIXME TD-er: replace stream_xxx_json_object* into this code.
 // N.B. handling of numerical values differs (string vs. no string)
 // ********************************************************************************
-
+#ifdef WEBSERVER_NEW_UI
 extern int8_t level;
 extern int8_t lastLevel;
 
@@ -100,6 +102,7 @@ void json_prop(const String& name,
                const String& value);
 
 void json_prop(LabelType::Enum label);
+#endif
 
 // ********************************************************************************
 // Add a task select dropdown list
@@ -124,7 +127,20 @@ void addTaskValueSelect(const String& name,
 // ********************************************************************************
 bool isLoggedIn(bool mustProvideLogin = true);
 
+// Check isLoggedIn, set new navIndex and start serving standard template
+// Thus not for non-HTML pages.
+bool startStream_send_stdTemplate(uint8_t newNavIndex);
+
+void startStream_send_stdTemplate_NoLoginCheck(uint8_t newNavIndex, bool rebooting = false);
+
+// Check isLoggedIn and start JSON stream
+// JSON can be called from anywhere, so no need to update the nav index
+bool startJSON_Stream();
+
 String  getControllerSymbol(uint8_t index);
+
+
+void    handle_printWebString();
 
 /*
    String getValueSymbol(uint8_t index);
@@ -189,7 +205,7 @@ void write_SVG_image_header(int  width,
 void getWiFi_RSSI_icon(int rssi,
                        int width_pixels);
 
-#if FEATURE_CHART_STORAGE_LAYOUT
+#if FEATURE_CHART_STORAGE_LAYOUT && !defined(BUILD_NO_DEBUG)
 void getConfig_dat_file_layout();
 
 void getStorageTableSVG(SettingsType::Enum settingsType);

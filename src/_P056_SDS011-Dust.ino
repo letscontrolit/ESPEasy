@@ -220,9 +220,11 @@ void Plugin_056_setWorkingPeriod(EventStruct *event, int minutes) {
   }
   P056_data->SetWorkingPeriod(minutes);
 
+#ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     addLog(LOG_LEVEL_INFO, concat(F("SDS  : Working Period set to: "), Plugin_056_WorkingPeriodToString(minutes)));
   }
+#endif
 }
 
 // #endif

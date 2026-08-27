@@ -194,7 +194,7 @@ boolean Plugin_143(uint8_t function, struct EventStruct *event, String& string)
         FormSelectorOptions selector(optionCount, selectModeOptions, selectModeValues);
         selector.reloadonchange = true;
         selector.addFormSelector(F("Encoder type"), F("pdevice"), P143_ENCODER_TYPE);
-        addFormNote(F("Changing the Encoder type will reload the page and reset Encoder specific settings to default!"));
+        // addFormNote(F("Changing the Encoder type will reload the page and reset Encoder specific settings to default!"));
       }
 
       P143_DeviceType_e device = static_cast<P143_DeviceType_e>(P143_ENCODER_TYPE);

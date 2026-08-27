@@ -215,7 +215,7 @@ boolean Plugin_007(uint8_t function, struct EventStruct *event, String& string)
           {
             Wire.read();                                          // Read older value first (stored in chip)
             UserVar.setFloat(event->TaskIndex, var, Wire.read()); // now read actual value and store into Value var
-
+#ifndef BUILD_NO_DEBUG
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
               addLog(LOG_LEVEL_INFO, strformat(
                        F("PCF  : Analog port: A%d value %d: %s"),
@@ -223,6 +223,7 @@ boolean Plugin_007(uint8_t function, struct EventStruct *event, String& string)
                        var + 1,
                        formatUserVarNoCheck(event, var).c_str()));
             }
+#endif
             success = true;
           }
         } else {

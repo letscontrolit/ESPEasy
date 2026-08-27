@@ -9,8 +9,8 @@ name: Release
 
 on:
   push:
-    branches-ignore: '**'
-    tags: 'mega-*'
+    branches-ignore: ['**']
+    tags: ['mega-*']
 
 permissions:
   contents: read
@@ -21,14 +21,14 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-python@v6
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.13'
       - id: set-matrix
         run: |
           pip install uv
-          uv pip install --system platformio
+          uv pip install --system pioarduino
           python tools/ci/generate-matrix.py
 
   build:
@@ -37,8 +37,8 @@ jobs:
     strategy:
       matrix: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-python@v6
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.13'
       - name: Dependencies
@@ -58,7 +58,7 @@ jobs:
         uses: Entepotenz/change-string-case-action-min-dependencies@v1
         with:
           string: ${{ matrix.chip }}
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         with:
           name: Bin-${{ steps.string.outputs.uppercase }}-${{ matrix.env }}
           path: |
@@ -69,8 +69,10 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-python@v6
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.13'
       - name: Build documentation
         run: |
           cd docs
@@ -85,7 +87,7 @@ jobs:
           cd dist
           zip -r -qq ../ESPEasy_dist.zip *
           cd ..
-      - uses: actions/upload-artifact@v5
+      - uses: actions/upload-artifact@v7
         with:
           name: Distribution
           path: |
@@ -99,7 +101,7 @@ jobs:
       notes: ${{ steps.release-notes.outputs.result }}
     steps:
       - id: release-notes
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         with:
           result-encoding: string
           script: |
@@ -121,7 +123,7 @@ jobs:
     needs: [build, prepare-dist, prepare-notes]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.13'
       - name: Get current date
@@ -129,13 +131,13 @@ jobs:
         run: |
           echo "builddate=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
       - name: Download all successfully compiled artifacts
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8
         with:
           path: artifacts/bin/
           pattern: Bin-*
           merge-multiple: true
       - name: Download dist and docs zip files
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8
         with:
           path: distribution/
           name: Distribution
@@ -152,8 +154,10 @@ jobs:
           find . -name '*ESP32c3*' -print | zip -@ ../ESPEasy_ESP32c3.zip 
           find . -name '*ESP32s3*' -print | zip -@ ../ESPEasy_ESP32s3.zip 
           find . -name '*ESP32c2*' -print | zip -@ ../ESPEasy_ESP32c2.zip 
+          find . -name '*ESP32c5*' -print | zip -@ ../ESPEasy_ESP32c5.zip 
           find . -name '*ESP32c6*' -print | zip -@ ../ESPEasy_ESP32c6.zip 
           find . -name '*ESP32solo1*' -print | zip -@ ../ESPEasy_ESP32solo1.zip 
+          find . -name '*ESP32p4*' -print | zip -@ ../ESPEasy_ESP32p4.zip 
           find . -name '*ESP32_*' -print | zip -@ ../ESPEasy_ESP32.zip 
           cd ..
           # Add dist tools to each package, after removing some unneeded files
@@ -169,13 +173,15 @@ jobs:
           zipmerge ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32c3_binaries.zip ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32_binaries.zip ESPEasy_ESP32c3.zip
           zipmerge ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32s3_binaries.zip ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32_binaries.zip ESPEasy_ESP32s3.zip
           zipmerge ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32c2_binaries.zip ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32_binaries.zip ESPEasy_ESP32c2.zip
+          zipmerge ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32c5_binaries.zip ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32_binaries.zip ESPEasy_ESP32c5.zip
           zipmerge ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32c6_binaries.zip ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32_binaries.zip ESPEasy_ESP32c6.zip
           zipmerge ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32solo1_binaries.zip ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32_binaries.zip ESPEasy_ESP32solo1.zip
+          zipmerge ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32p4_binaries.zip ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32_binaries.zip ESPEasy_ESP32p4.zip
           zipmerge ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32_binaries.zip ESPEasy_ESP32.zip
       - uses: ncipollo/release-action@v1
         with:
           # Upload all separately supported CPU models and the docs zip
           # TODO if/when available: ESP32h2
-          artifacts: "ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP82xx_binaries.zip,ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32_binaries.zip,ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32solo1_binaries.zip,ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32s2_binaries.zip,ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32c3_binaries.zip,ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32s3_binaries.zip,ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32c2_binaries.zip,ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32c6_binaries.zip,distribution/*.zip"
+          artifacts: "ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP82xx_binaries.zip,ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32_binaries.zip,ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32solo1_binaries.zip,ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32s2_binaries.zip,ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32c3_binaries.zip,ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32s3_binaries.zip,ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32c2_binaries.zip,ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32c5_binaries.zip,ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32c6_binaries.zip,ESPEasy_mega_${{ steps.date.outputs.builddate }}_ESP32p4_binaries.zip,distribution/*.zip"
           body: ${{ needs.prepare-notes.outputs.notes }}
           token: ${{ secrets.GITHUB_TOKEN }}

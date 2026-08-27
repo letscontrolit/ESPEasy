@@ -1,11 +1,15 @@
 #include "../Helpers/I2C_access.h"
 
+#if FEATURE_I2C
+
 #include "../DataStructs/TimingStats.h"
 #include "../Globals/I2Cdev.h"
 #include "../Globals/Settings.h"
 #include "../Helpers/ESPEasy_time_calc.h"
 #include "../Helpers/Hardware_I2C.h"
 #include "../Helpers/StringConverter.h"
+
+#include "../Helpers/I2C_access.h"
 
 #if FEATURE_I2C_MULTIPLE
 # include "../WebServer/Markup_Forms.h"
@@ -482,10 +486,14 @@ bool I2C_deviceCheck(uint8_t     i2caddr,
       if (maxRetries > 0) {
         deviceCheckI2C[taskIndex]++;
 
+        // If the number of retries is reached, disable the device
         if (deviceCheckI2C[taskIndex] >= maxRetries) {
           // Disable temporarily as device check failed
           // FIXME TD-er: Should reschedule call to PLUGIN_INIT????
-          Settings.TaskDeviceEnabled[taskIndex] = false; // If the number of retries is reached, disable the device
+          struct EventStruct TempEvent(taskIndex);
+          String dummy;
+
+          PluginCall(PLUGIN_EXIT, &TempEvent, dummy);
           # ifndef BUILD_NO_DEBUG
           addLog(LOG_LEVEL_ERROR, concat(F("I2C  : Device doesn't respond for task: "), static_cast<int>(taskIndex + 1)));
           # endif // ifndef BUILD_NO_DEBUG
@@ -509,13 +517,7 @@ void I2CInterfaceSelector(String  label,
                           String  id,
                           uint8_t choice,
                           bool    reloadWhenNeeded) {
-  const uint8_t i2cMaxBusCount = (getI2CBusCount() > 1
-                                  ? ((Settings.isI2CEnabled(1) ? 1 : 0)
-                                    # if FEATURE_I2C_INTERFACE_3
-                                     + (Settings.isI2CEnabled(2) ? 1 : 0)
-                                    # endif // if FEATURE_I2C_INTERFACE_3
-                                     )
-                                  : 0) + (Settings.isI2CEnabled(0) ? 1 : 0);
+  const uint8_t i2cMaxBusCount = Settings.getNrConfiguredI2C_buses();
 
   if (i2cMaxBusCount > 1) {
     static uint8_t i2cBusCount = 0;
@@ -563,3 +565,4 @@ void I2CInterfaceSelector(String  label,
 }
 
 #endif // if FEATURE_I2C_MULTIPLE
+#endif

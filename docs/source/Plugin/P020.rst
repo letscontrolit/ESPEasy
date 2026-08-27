@@ -13,7 +13,9 @@ Type: |P020_type|
 
 Name: |P020_name|
 
-Status: |P020_status|
+Status ESP32: |P020_status|
+
+Status ESP8266: |P020_status_lb|
 
 GitHub: |P020_github|_
 

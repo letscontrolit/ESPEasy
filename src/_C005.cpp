@@ -93,9 +93,14 @@ bool CPlugin_005(CPlugin::Function function, struct EventStruct *event, String& 
           mqttDiscoveryTimeout    = random(10, MQTT_DISCOVERY_MAX_DELAY_0_1_SECONDS);
 
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            #  ifndef BUILD_NO_DEBUG
             addLog(LOG_LEVEL_INFO, strformat(F("C005 : INIT: AutoDiscovery for Controller %d in %.1f sec."),
                                              event->ControllerIndex + 1,
                                              mqttDiscoveryTimeout / 10.0f));
+            #  else // ifndef BUILD_NO_DEBUG
+            addLog(LOG_LEVEL_INFO, strformat(F("C005 : Discovery in %.1f sec."),
+                                             mqttDiscoveryTimeout / 10.0f));
+            #  endif // ifndef BUILD_NO_DEBUG
           }
         }
       }
@@ -112,7 +117,11 @@ bool CPlugin_005(CPlugin::Function function, struct EventStruct *event, String& 
 
         if (0 == mqttDiscoveryTimeout) {
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            #  ifndef BUILD_NO_DEBUG
             addLog(LOG_LEVEL_INFO, F("C005 : AutoDiscovery delay expired, starting now..."));
+            #  else // ifndef BUILD_NO_DEBUG
+            addLog(LOG_LEVEL_INFO, F("C005 : Discovery starting..."));
+            #  endif // ifndef BUILD_NO_DEBUG
           }
           success = MQTT_SendAutoDiscovery(event->ControllerIndex, CPLUGIN_ID_005);
         }
@@ -175,8 +184,13 @@ bool CPlugin_005(CPlugin::Function function, struct EventStruct *event, String& 
           mqttDiscoveryTimeout = random(10, MQTT_DISCOVERY_MAX_DELAY_0_1_SECONDS);
 
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            #ifndef BUILD_NO_DEBUG
             addLog(LOG_LEVEL_INFO, strformat(F("C005 : Request for AutoDiscovery received. %.1f sec."),
                                              mqttDiscoveryTimeout / 10.0f));
+            #else // ifndef BUILD_NO_DEBUG
+            addLog(LOG_LEVEL_INFO, strformat(F("C005 : Request Discovery. %.1f sec."),
+                                             mqttDiscoveryTimeout / 10.0f));
+            #endif // ifndef BUILD_NO_DEBUG
           }
 
           // FIXME Generate event when request received?

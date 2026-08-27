@@ -20,6 +20,7 @@ enum class ESPEasySerialPort : uint8_t {
 #if USABLE_SOC_UART_NUM > 2
   serial2 = 5,
 #endif // if USABLE_SOC_UART_NUM > 2
+
 #if USES_SW_SERIAL
   software = 6,
 #endif // if USES_SW_SERIAL
@@ -31,8 +32,17 @@ enum class ESPEasySerialPort : uint8_t {
   usb_cdc_0 = 8,
 //  usb_cdc_1 = 9,  // TD-er: Disable 2nd USB CDC port as it doesn't seem to work well
 #endif // if USES_USBCDC
+#if USABLE_SOC_UART_NUM > 3
+  serial3 = 10,
+#endif 
+#if USABLE_SOC_UART_NUM > 4
+  serial4 = 11,
+#endif 
+#if USABLE_SOC_UART_NUM > 5
+  serial5 = 12,
+#endif 
 
-  MAX_SERIAL_TYPE
+  MAX_SERIAL_TYPE // Keep enum values in numerical order so MAX_SERIAL_TYPE has a useable value
 };
 
 

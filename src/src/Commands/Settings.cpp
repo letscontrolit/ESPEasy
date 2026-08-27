@@ -1,12 +1,10 @@
 #include "../Commands/Settings.h"
 
-#include "../../ESPEasy_common.h"
-
 #include "../Commands/Common.h"
 
 #include "../CustomBuild/CompiletimeDefines.h"
 
-#include "../ESPEasyCore/ESPEasyNetwork.h"
+#include "../../ESPEasy/net/ESPEasyNetwork.h"
 #include "../ESPEasyCore/Serial.h"
 
 #include "../Globals/SecuritySettings.h"
@@ -92,7 +90,7 @@ const __FlashStringHelper * Command_Settings_Print(struct EventStruct *event, co
 	serialPrintln();
 
 	serialPrintln(F("System Info"));
-	serialPrint(F("  IP Address    : ")); serialPrintln(formatIP(NetworkLocalIP()));
+	serialPrint(F("  IP Address    : ")); serialPrintln(formatIP(ESPEasy::net::NetworkLocalIP()));
 	serialPrint(F("  Build         : ")); serialPrintln(String(get_build_nr()) + '/' + getSystemBuildString());
 	serialPrint(F("  Name          : ")); serialPrintln(Settings.getName());
 	serialPrint(F("  Unit          : ")); serialPrintln(String(static_cast<int>(Settings.Unit)));

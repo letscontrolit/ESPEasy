@@ -11,18 +11,23 @@
 #include "../DataTypes/SensorVType.h"
 
 #include "../Helpers/StringGenerator_GPIO.h"
+#include "../Helpers/_Plugin_Helper_serial.h"
 
 
 #define DEVICE_TYPE_SINGLE                  1 // connected through 1 datapin
 #define DEVICE_TYPE_DUAL                    2 // connected through 2 datapins
 #define DEVICE_TYPE_TRIPLE                  3 // connected through 3 datapins
 #define DEVICE_TYPE_ANALOG                 10 // AIN/tout pin
+#if FEATURE_I2C
 #define DEVICE_TYPE_I2C                    20 // connected through I2C
+#endif
 #define DEVICE_TYPE_SERIAL                 21 // connected through UART/Serial
 #define DEVICE_TYPE_SERIAL_PLUS1           22 // connected through UART/Serial + 1 extra signal pin
+#if FEATURE_SPI
 #define DEVICE_TYPE_SPI                    23 // connected through SPI
 #define DEVICE_TYPE_SPI2                   24 // connected through SPI, 2 GPIOs
 #define DEVICE_TYPE_SPI3                   25 // connected through SPI, 3 GPIOs
+#endif
 #define DEVICE_TYPE_CUSTOM0                30 // Custom labels, Not using TaskDevicePin1 ... TaskDevicePin3
 #define DEVICE_TYPE_CUSTOM1                31 // Custom labels, 1 GPIO
 #define DEVICE_TYPE_CUSTOM2                32 // Custom labels, 2 GPIOs
@@ -44,9 +49,26 @@
 #define I2C_PERIPHERAL_BUS_CLOCK  0 // bit-offset for I2C bus used for the RTC clock device
 #define I2C_PERIPHERAL_BUS_WDT    3 // bit-offset for I2C bus used for the watchdog timer
 #define I2C_PERIPHERAL_BUS_PCFMCP 6 // bit-offset for I2C bus used for PCF & MCP direct access
-// #define I2C_PERIPHERAL_BUS_???    9 // bit-offset for I2C bus used for the ???
+#if FEATURE_EEPROM_EXTERNAL
+#define I2C_PERIPHERAL_BUS_EEPROM 9 // bit-offset for I2C bus used for an external EEPROM
+#endif // if FEATURE_EEPROM_EXTERNAL
+// #define I2C_PERIPHERAL_BUS_???    12 // bit-offset for I2C bus used for the ???
 #endif // if FEATURE_I2C_MULTIPLE
 
+#if FEATURE_EEPROM_EXTERNAL
+#define EEPROM_EXTERNAL_FLAGS_ADDRESS   0 // bit-offset for the I2C Address (8 bits)
+#define EEPROM_EXTERNAL_FLAGS_SIZE      8 // bit-offset for the size-id of the EEPROM (4 bits)
+#define EEPROM_EXTERNAL_FLAGS_MUX      16 // bit-offset for the multiplexer flags of the EEPROM (16 bits)
+
+#define EEPROM_MUX_FLAGS_PORT           0 // bit-offset within multiplexerflags for the portnr/bits (8 bits)
+#define EEPROM_MUX_FLAGS_MULTI          8 // bit-offset within multiplexerflags for bits or port (1 bit)
+
+#endif // if FEATURE_EEPROM_EXTERNAL
+// Stored in Settings.I2C_SPI_bus_Flags !!!
+#define SPI_FLAGS_TASK_BUS_NUMBER           0 // 2 bit, stores the configured bus for a task
+// Stored in Settings.I2C_SPI_bus_Flags for Task 1 settings
+// #define SPI_FLAGS_xxx_unused            2 // 2 bit, available
+#define SPI_FLAGS_SDCARD_BUS_NUMBER         4 // 2 bit, stores the configured bus for the SDCard
 
 /*********************************************************************************************\
 * DeviceStruct
@@ -68,8 +90,9 @@ struct DeviceStruct
   }
 
   bool isSerial() const;
-
+#if FEATURE_SPI
   bool isSPI() const;
+#endif
 
   bool isCustom() const;
 
@@ -117,8 +140,8 @@ struct DeviceStruct
       uint32_t CustomVTypeVar     : 1;       // User-selectable VType per value
       uint32_t MqttStateClass     : 1;       // MQTT StateClass setting in DevicesPage
       uint32_t HideDerivedValues  : 1;       // Hide the options for derived values
-      uint32_t Dummy24            : 1;       // Dummy added to force alignment, can be re-used
-      uint32_t Dummy25            : 1;       // Dummy added to force alignment, can be re-used
+      uint32_t NoDeviceSettings   : 1;       // Indicating the device is not referencing actual hardware, like the Dummy task
+      uint32_t SpiBusSelect       : 1;       // Allow selection of the SPI bus, if multiple buses are configured
       uint32_t Dummy26            : 1;       // Dummy added to force alignment, can be re-used
       uint32_t Dummy27            : 1;       // Dummy added to force alignment, can be re-used
       uint32_t Dummy28            : 1;       // Dummy added to force alignment, can be re-used
@@ -144,7 +167,7 @@ struct DeviceStruct
       uint8_t PinDirection_unused : GPIO_DIRECTION_NR_BITS;
     };
   };
-  uint8_t            Unused{}; // Padding to 12 bytes struct size
+  uint8_t SerialPortsAllowed = INCLUDE_DEFAULT_SERIAL; // The bitmap for the allowed serial port types, uses global default
 };
 
 
