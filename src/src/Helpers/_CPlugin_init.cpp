@@ -10,12 +10,1037 @@
 
 #include "../Helpers/Misc.h"
 #include "../Helpers/StringConverter.h"
+#include <vector>
 
 // ********************************************************************************
 // Initialize all Controller CPlugins that where defined earlier
 // and initialize the function call pointer into the CCPlugin array
 // ********************************************************************************
 
+#if FEATURE_BUILD_DESCRIPTION
+const uint16_t controllersBitmap[] = {
+  0u // n=1 : m=0
+#ifdef USES_C001
+  | 1 << 15
+#endif // ifdef USES_C001
+
+#ifdef USES_C002
+  | 1 << 14
+#endif // ifdef USES_C002
+
+#ifdef USES_C003
+  | 1 << 13
+#endif // ifdef USES_C003
+
+#ifdef USES_C004
+  | 1 << 12
+#endif // ifdef USES_C004
+
+#ifdef USES_C005
+  | 1 << 11
+#endif // ifdef USES_C005
+
+#ifdef USES_C006
+  | 1 << 10
+#endif // ifdef USES_C006
+
+#ifdef USES_C007
+  | 1 << 9
+#endif // ifdef USES_C007
+
+#ifdef USES_C008
+  | 1 << 8
+#endif // ifdef USES_C008
+
+#ifdef USES_C009
+  | 1 << 7
+#endif // ifdef USES_C009
+
+#ifdef USES_C010
+  | 1 << 6
+#endif // ifdef USES_C010
+
+#ifdef USES_C011
+  | 1 << 5
+#endif // ifdef USES_C011
+
+#ifdef USES_C012
+  | 1 << 4
+#endif // ifdef USES_C012
+
+#ifdef USES_C013
+  | 1 << 3
+#endif // ifdef USES_C013
+
+#ifdef USES_C014
+  | 1 << 2
+#endif // ifdef USES_C014
+
+#ifdef USES_C015
+  | 1 << 1
+#endif // ifdef USES_C015
+
+#ifdef USES_C016
+  | 1 << 0
+#endif // ifdef USES_C016
+  , 0u // n=17 : m=0
+#ifdef USES_C017
+  | 1 << 15
+#endif // ifdef USES_C017
+
+#ifdef USES_C018
+  | 1 << 14
+#endif // ifdef USES_C018
+
+#ifdef USES_C019
+  | 1 << 13
+#endif // ifdef USES_C019
+
+#ifdef USES_C020
+  | 1 << 12
+#endif // ifdef USES_C020
+
+#ifdef USES_C021
+  | 1 << 11
+#endif // ifdef USES_C021
+
+#ifdef USES_C022
+  | 1 << 10
+#endif // ifdef USES_C022
+
+#ifdef USES_C023
+  | 1 << 9
+#endif // ifdef USES_C023
+
+#ifdef USES_C024
+  | 1 << 8
+#endif // ifdef USES_C024
+
+#ifdef USES_C025
+  | 1 << 7
+#endif // ifdef USES_C025
+
+#ifdef USES_C026
+  | 1 << 6
+#endif // ifdef USES_C026
+
+#ifdef USES_C027
+  | 1 << 5
+#endif // ifdef USES_C027
+
+#ifdef USES_C028
+  | 1 << 4
+#endif // ifdef USES_C028
+
+#ifdef USES_C029
+  | 1 << 3
+#endif // ifdef USES_C029
+
+#ifdef USES_C030
+  | 1 << 2
+#endif // ifdef USES_C030
+
+#ifdef USES_C031
+  | 1 << 1
+#endif // ifdef USES_C031
+
+#ifdef USES_C032
+  | 1 << 0
+#endif // ifdef USES_C032
+  , 0u // n=33 : m=0
+#ifdef USES_C033
+  | 1 << 15
+#endif // ifdef USES_C033
+
+#ifdef USES_C034
+  | 1 << 14
+#endif // ifdef USES_C034
+
+#ifdef USES_C035
+  | 1 << 13
+#endif // ifdef USES_C035
+
+#ifdef USES_C036
+  | 1 << 12
+#endif // ifdef USES_C036
+
+#ifdef USES_C037
+  | 1 << 11
+#endif // ifdef USES_C037
+
+#ifdef USES_C038
+  | 1 << 10
+#endif // ifdef USES_C038
+
+#ifdef USES_C039
+  | 1 << 9
+#endif // ifdef USES_C039
+
+#ifdef USES_C040
+  | 1 << 8
+#endif // ifdef USES_C040
+
+#ifdef USES_C041
+  | 1 << 7
+#endif // ifdef USES_C041
+
+#ifdef USES_C042
+  | 1 << 6
+#endif // ifdef USES_C042
+
+#ifdef USES_C043
+  | 1 << 5
+#endif // ifdef USES_C043
+
+#ifdef USES_C044
+  | 1 << 4
+#endif // ifdef USES_C044
+
+#ifdef USES_C045
+  | 1 << 3
+#endif // ifdef USES_C045
+
+#ifdef USES_C046
+  | 1 << 2
+#endif // ifdef USES_C046
+
+#ifdef USES_C047
+  | 1 << 1
+#endif // ifdef USES_C047
+
+#ifdef USES_C048
+  | 1 << 0
+#endif // ifdef USES_C048
+  , 0u // n=49 : m=0
+#ifdef USES_C049
+  | 1 << 15
+#endif // ifdef USES_C049
+
+#ifdef USES_C050
+  | 1 << 14
+#endif // ifdef USES_C050
+
+#ifdef USES_C051
+  | 1 << 13
+#endif // ifdef USES_C051
+
+#ifdef USES_C052
+  | 1 << 12
+#endif // ifdef USES_C052
+
+#ifdef USES_C053
+  | 1 << 11
+#endif // ifdef USES_C053
+
+#ifdef USES_C054
+  | 1 << 10
+#endif // ifdef USES_C054
+
+#ifdef USES_C055
+  | 1 << 9
+#endif // ifdef USES_C055
+
+#ifdef USES_C056
+  | 1 << 8
+#endif // ifdef USES_C056
+
+#ifdef USES_C057
+  | 1 << 7
+#endif // ifdef USES_C057
+
+#ifdef USES_C058
+  | 1 << 6
+#endif // ifdef USES_C058
+
+#ifdef USES_C059
+  | 1 << 5
+#endif // ifdef USES_C059
+
+#ifdef USES_C060
+  | 1 << 4
+#endif // ifdef USES_C060
+
+#ifdef USES_C061
+  | 1 << 3
+#endif // ifdef USES_C061
+
+#ifdef USES_C062
+  | 1 << 2
+#endif // ifdef USES_C062
+
+#ifdef USES_C063
+  | 1 << 1
+#endif // ifdef USES_C063
+
+#ifdef USES_C064
+  | 1 << 0
+#endif // ifdef USES_C064
+  , 0u // n=65 : m=0
+#ifdef USES_C065
+  | 1 << 15
+#endif // ifdef USES_C065
+
+#ifdef USES_C066
+  | 1 << 14
+#endif // ifdef USES_C066
+
+#ifdef USES_C067
+  | 1 << 13
+#endif // ifdef USES_C067
+
+#ifdef USES_C068
+  | 1 << 12
+#endif // ifdef USES_C068
+
+#ifdef USES_C069
+  | 1 << 11
+#endif // ifdef USES_C069
+
+#ifdef USES_C070
+  | 1 << 10
+#endif // ifdef USES_C070
+
+#ifdef USES_C071
+  | 1 << 9
+#endif // ifdef USES_C071
+
+#ifdef USES_C072
+  | 1 << 8
+#endif // ifdef USES_C072
+
+#ifdef USES_C073
+  | 1 << 7
+#endif // ifdef USES_C073
+
+#ifdef USES_C074
+  | 1 << 6
+#endif // ifdef USES_C074
+
+#ifdef USES_C075
+  | 1 << 5
+#endif // ifdef USES_C075
+
+#ifdef USES_C076
+  | 1 << 4
+#endif // ifdef USES_C076
+
+#ifdef USES_C077
+  | 1 << 3
+#endif // ifdef USES_C077
+
+#ifdef USES_C078
+  | 1 << 2
+#endif // ifdef USES_C078
+
+#ifdef USES_C079
+  | 1 << 1
+#endif // ifdef USES_C079
+
+#ifdef USES_C080
+  | 1 << 0
+#endif // ifdef USES_C080
+  , 0u // n=81 : m=0
+#ifdef USES_C081
+  | 1 << 15
+#endif // ifdef USES_C081
+
+#ifdef USES_C082
+  | 1 << 14
+#endif // ifdef USES_C082
+
+#ifdef USES_C083
+  | 1 << 13
+#endif // ifdef USES_C083
+
+#ifdef USES_C084
+  | 1 << 12
+#endif // ifdef USES_C084
+
+#ifdef USES_C085
+  | 1 << 11
+#endif // ifdef USES_C085
+
+#ifdef USES_C086
+  | 1 << 10
+#endif // ifdef USES_C086
+
+#ifdef USES_C087
+  | 1 << 9
+#endif // ifdef USES_C087
+
+#ifdef USES_C088
+  | 1 << 8
+#endif // ifdef USES_C088
+
+#ifdef USES_C089
+  | 1 << 7
+#endif // ifdef USES_C089
+
+#ifdef USES_C090
+  | 1 << 6
+#endif // ifdef USES_C090
+
+#ifdef USES_C091
+  | 1 << 5
+#endif // ifdef USES_C091
+
+#ifdef USES_C092
+  | 1 << 4
+#endif // ifdef USES_C092
+
+#ifdef USES_C093
+  | 1 << 3
+#endif // ifdef USES_C093
+
+#ifdef USES_C094
+  | 1 << 2
+#endif // ifdef USES_C094
+
+#ifdef USES_C095
+  | 1 << 1
+#endif // ifdef USES_C095
+
+#ifdef USES_C096
+  | 1 << 0
+#endif // ifdef USES_C096
+  , 0u // n=97 : m=0
+#ifdef USES_C097
+  | 1 << 15
+#endif // ifdef USES_C097
+
+#ifdef USES_C098
+  | 1 << 14
+#endif // ifdef USES_C098
+
+#ifdef USES_C099
+  | 1 << 13
+#endif // ifdef USES_C099
+
+#ifdef USES_C100
+  | 1 << 12
+#endif // ifdef USES_C100
+
+#ifdef USES_C101
+  | 1 << 11
+#endif // ifdef USES_C101
+
+#ifdef USES_C102
+  | 1 << 10
+#endif // ifdef USES_C102
+
+#ifdef USES_C103
+  | 1 << 9
+#endif // ifdef USES_C103
+
+#ifdef USES_C104
+  | 1 << 8
+#endif // ifdef USES_C104
+
+#ifdef USES_C105
+  | 1 << 7
+#endif // ifdef USES_C105
+
+#ifdef USES_C106
+  | 1 << 6
+#endif // ifdef USES_C106
+
+#ifdef USES_C107
+  | 1 << 5
+#endif // ifdef USES_C107
+
+#ifdef USES_C108
+  | 1 << 4
+#endif // ifdef USES_C108
+
+#ifdef USES_C109
+  | 1 << 3
+#endif // ifdef USES_C109
+
+#ifdef USES_C110
+  | 1 << 2
+#endif // ifdef USES_C110
+
+#ifdef USES_C111
+  | 1 << 1
+#endif // ifdef USES_C111
+
+#ifdef USES_C112
+  | 1 << 0
+#endif // ifdef USES_C112
+  , 0u // n=113 : m=0
+#ifdef USES_C113
+  | 1 << 15
+#endif // ifdef USES_C113
+
+#ifdef USES_C114
+  | 1 << 14
+#endif // ifdef USES_C114
+
+#ifdef USES_C115
+  | 1 << 13
+#endif // ifdef USES_C115
+
+#ifdef USES_C116
+  | 1 << 12
+#endif // ifdef USES_C116
+
+#ifdef USES_C117
+  | 1 << 11
+#endif // ifdef USES_C117
+
+#ifdef USES_C118
+  | 1 << 10
+#endif // ifdef USES_C118
+
+#ifdef USES_C119
+  | 1 << 9
+#endif // ifdef USES_C119
+
+#ifdef USES_C120
+  | 1 << 8
+#endif // ifdef USES_C120
+
+#ifdef USES_C121
+  | 1 << 7
+#endif // ifdef USES_C121
+
+#ifdef USES_C122
+  | 1 << 6
+#endif // ifdef USES_C122
+
+#ifdef USES_C123
+  | 1 << 5
+#endif // ifdef USES_C123
+
+#ifdef USES_C124
+  | 1 << 4
+#endif // ifdef USES_C124
+
+#ifdef USES_C125
+  | 1 << 3
+#endif // ifdef USES_C125
+
+#ifdef USES_C126
+  | 1 << 2
+#endif // ifdef USES_C126
+
+#ifdef USES_C127
+  | 1 << 1
+#endif // ifdef USES_C127
+
+#ifdef USES_C128
+  | 1 << 0
+#endif // ifdef USES_C128
+  , 0u // n=129 : m=0
+#ifdef USES_C129
+  | 1 << 15
+#endif // ifdef USES_C129
+
+#ifdef USES_C130
+  | 1 << 14
+#endif // ifdef USES_C130
+
+#ifdef USES_C131
+  | 1 << 13
+#endif // ifdef USES_C131
+
+#ifdef USES_C132
+  | 1 << 12
+#endif // ifdef USES_C132
+
+#ifdef USES_C133
+  | 1 << 11
+#endif // ifdef USES_C133
+
+#ifdef USES_C134
+  | 1 << 10
+#endif // ifdef USES_C134
+
+#ifdef USES_C135
+  | 1 << 9
+#endif // ifdef USES_C135
+
+#ifdef USES_C136
+  | 1 << 8
+#endif // ifdef USES_C136
+
+#ifdef USES_C137
+  | 1 << 7
+#endif // ifdef USES_C137
+
+#ifdef USES_C138
+  | 1 << 6
+#endif // ifdef USES_C138
+
+#ifdef USES_C139
+  | 1 << 5
+#endif // ifdef USES_C139
+
+#ifdef USES_C140
+  | 1 << 4
+#endif // ifdef USES_C140
+
+#ifdef USES_C141
+  | 1 << 3
+#endif // ifdef USES_C141
+
+#ifdef USES_C142
+  | 1 << 2
+#endif // ifdef USES_C142
+
+#ifdef USES_C143
+  | 1 << 1
+#endif // ifdef USES_C143
+
+#ifdef USES_C144
+  | 1 << 0
+#endif // ifdef USES_C144
+  , 0u // n=145 : m=0
+#ifdef USES_C145
+  | 1 << 15
+#endif // ifdef USES_C145
+
+#ifdef USES_C146
+  | 1 << 14
+#endif // ifdef USES_C146
+
+#ifdef USES_C147
+  | 1 << 13
+#endif // ifdef USES_C147
+
+#ifdef USES_C148
+  | 1 << 12
+#endif // ifdef USES_C148
+
+#ifdef USES_C149
+  | 1 << 11
+#endif // ifdef USES_C149
+
+#ifdef USES_C150
+  | 1 << 10
+#endif // ifdef USES_C150
+
+#ifdef USES_C151
+  | 1 << 9
+#endif // ifdef USES_C151
+
+#ifdef USES_C152
+  | 1 << 8
+#endif // ifdef USES_C152
+
+#ifdef USES_C153
+  | 1 << 7
+#endif // ifdef USES_C153
+
+#ifdef USES_C154
+  | 1 << 6
+#endif // ifdef USES_C154
+
+#ifdef USES_C155
+  | 1 << 5
+#endif // ifdef USES_C155
+
+#ifdef USES_C156
+  | 1 << 4
+#endif // ifdef USES_C156
+
+#ifdef USES_C157
+  | 1 << 3
+#endif // ifdef USES_C157
+
+#ifdef USES_C158
+  | 1 << 2
+#endif // ifdef USES_C158
+
+#ifdef USES_C159
+  | 1 << 1
+#endif // ifdef USES_C159
+
+#ifdef USES_C160
+  | 1 << 0
+#endif // ifdef USES_C160
+  , 0u // n=161 : m=0
+#ifdef USES_C161
+  | 1 << 15
+#endif // ifdef USES_C161
+
+#ifdef USES_C162
+  | 1 << 14
+#endif // ifdef USES_C162
+
+#ifdef USES_C163
+  | 1 << 13
+#endif // ifdef USES_C163
+
+#ifdef USES_C164
+  | 1 << 12
+#endif // ifdef USES_C164
+
+#ifdef USES_C165
+  | 1 << 11
+#endif // ifdef USES_C165
+
+#ifdef USES_C166
+  | 1 << 10
+#endif // ifdef USES_C166
+
+#ifdef USES_C167
+  | 1 << 9
+#endif // ifdef USES_C167
+
+#ifdef USES_C168
+  | 1 << 8
+#endif // ifdef USES_C168
+
+#ifdef USES_C169
+  | 1 << 7
+#endif // ifdef USES_C169
+
+#ifdef USES_C170
+  | 1 << 6
+#endif // ifdef USES_C170
+
+#ifdef USES_C171
+  | 1 << 5
+#endif // ifdef USES_C171
+
+#ifdef USES_C172
+  | 1 << 4
+#endif // ifdef USES_C172
+
+#ifdef USES_C173
+  | 1 << 3
+#endif // ifdef USES_C173
+
+#ifdef USES_C174
+  | 1 << 2
+#endif // ifdef USES_C174
+
+#ifdef USES_C175
+  | 1 << 1
+#endif // ifdef USES_C175
+
+#ifdef USES_C176
+  | 1 << 0
+#endif // ifdef USES_C176
+  , 0u // n=177 : m=0
+#ifdef USES_C177
+  | 1 << 15
+#endif // ifdef USES_C177
+
+#ifdef USES_C178
+  | 1 << 14
+#endif // ifdef USES_C178
+
+#ifdef USES_C179
+  | 1 << 13
+#endif // ifdef USES_C179
+
+#ifdef USES_C180
+  | 1 << 12
+#endif // ifdef USES_C180
+
+#ifdef USES_C181
+  | 1 << 11
+#endif // ifdef USES_C181
+
+#ifdef USES_C182
+  | 1 << 10
+#endif // ifdef USES_C182
+
+#ifdef USES_C183
+  | 1 << 9
+#endif // ifdef USES_C183
+
+#ifdef USES_C184
+  | 1 << 8
+#endif // ifdef USES_C184
+
+#ifdef USES_C185
+  | 1 << 7
+#endif // ifdef USES_C185
+
+#ifdef USES_C186
+  | 1 << 6
+#endif // ifdef USES_C186
+
+#ifdef USES_C187
+  | 1 << 5
+#endif // ifdef USES_C187
+
+#ifdef USES_C188
+  | 1 << 4
+#endif // ifdef USES_C188
+
+#ifdef USES_C189
+  | 1 << 3
+#endif // ifdef USES_C189
+
+#ifdef USES_C190
+  | 1 << 2
+#endif // ifdef USES_C190
+
+#ifdef USES_C191
+  | 1 << 1
+#endif // ifdef USES_C191
+
+#ifdef USES_C192
+  | 1 << 0
+#endif // ifdef USES_C192
+  , 0u // n=193 : m=0
+#ifdef USES_C193
+  | 1 << 15
+#endif // ifdef USES_C193
+
+#ifdef USES_C194
+  | 1 << 14
+#endif // ifdef USES_C194
+
+#ifdef USES_C195
+  | 1 << 13
+#endif // ifdef USES_C195
+
+#ifdef USES_C196
+  | 1 << 12
+#endif // ifdef USES_C196
+
+#ifdef USES_C197
+  | 1 << 11
+#endif // ifdef USES_C197
+
+#ifdef USES_C198
+  | 1 << 10
+#endif // ifdef USES_C198
+
+#ifdef USES_C199
+  | 1 << 9
+#endif // ifdef USES_C199
+
+#ifdef USES_C200
+  | 1 << 8
+#endif // ifdef USES_C200
+
+#ifdef USES_C201
+  | 1 << 7
+#endif // ifdef USES_C201
+
+#ifdef USES_C202
+  | 1 << 6
+#endif // ifdef USES_C202
+
+#ifdef USES_C203
+  | 1 << 5
+#endif // ifdef USES_C203
+
+#ifdef USES_C204
+  | 1 << 4
+#endif // ifdef USES_C204
+
+#ifdef USES_C205
+  | 1 << 3
+#endif // ifdef USES_C205
+
+#ifdef USES_C206
+  | 1 << 2
+#endif // ifdef USES_C206
+
+#ifdef USES_C207
+  | 1 << 1
+#endif // ifdef USES_C207
+
+#ifdef USES_C208
+  | 1 << 0
+#endif // ifdef USES_C208
+  , 0u // n=209 : m=0
+#ifdef USES_C209
+  | 1 << 15
+#endif // ifdef USES_C209
+
+#ifdef USES_C210
+  | 1 << 14
+#endif // ifdef USES_C210
+
+#ifdef USES_C211
+  | 1 << 13
+#endif // ifdef USES_C211
+
+#ifdef USES_C212
+  | 1 << 12
+#endif // ifdef USES_C212
+
+#ifdef USES_C213
+  | 1 << 11
+#endif // ifdef USES_C213
+
+#ifdef USES_C214
+  | 1 << 10
+#endif // ifdef USES_C214
+
+#ifdef USES_C215
+  | 1 << 9
+#endif // ifdef USES_C215
+
+#ifdef USES_C216
+  | 1 << 8
+#endif // ifdef USES_C216
+
+#ifdef USES_C217
+  | 1 << 7
+#endif // ifdef USES_C217
+
+#ifdef USES_C218
+  | 1 << 6
+#endif // ifdef USES_C218
+
+#ifdef USES_C219
+  | 1 << 5
+#endif // ifdef USES_C219
+
+#ifdef USES_C220
+  | 1 << 4
+#endif // ifdef USES_C220
+
+#ifdef USES_C221
+  | 1 << 3
+#endif // ifdef USES_C221
+
+#ifdef USES_C222
+  | 1 << 2
+#endif // ifdef USES_C222
+
+#ifdef USES_C223
+  | 1 << 1
+#endif // ifdef USES_C223
+
+#ifdef USES_C224
+  | 1 << 0
+#endif // ifdef USES_C224
+  , 0u // n=225 : m=0
+#ifdef USES_C225
+  | 1 << 15
+#endif // ifdef USES_C225
+
+#ifdef USES_C226
+  | 1 << 14
+#endif // ifdef USES_C226
+
+#ifdef USES_C227
+  | 1 << 13
+#endif // ifdef USES_C227
+
+#ifdef USES_C228
+  | 1 << 12
+#endif // ifdef USES_C228
+
+#ifdef USES_C229
+  | 1 << 11
+#endif // ifdef USES_C229
+
+#ifdef USES_C230
+  | 1 << 10
+#endif // ifdef USES_C230
+
+#ifdef USES_C231
+  | 1 << 9
+#endif // ifdef USES_C231
+
+#ifdef USES_C232
+  | 1 << 8
+#endif // ifdef USES_C232
+
+#ifdef USES_C233
+  | 1 << 7
+#endif // ifdef USES_C233
+
+#ifdef USES_C234
+  | 1 << 6
+#endif // ifdef USES_C234
+
+#ifdef USES_C235
+  | 1 << 5
+#endif // ifdef USES_C235
+
+#ifdef USES_C236
+  | 1 << 4
+#endif // ifdef USES_C236
+
+#ifdef USES_C237
+  | 1 << 3
+#endif // ifdef USES_C237
+
+#ifdef USES_C238
+  | 1 << 2
+#endif // ifdef USES_C238
+
+#ifdef USES_C239
+  | 1 << 1
+#endif // ifdef USES_C239
+
+#ifdef USES_C240
+  | 1 << 0
+#endif // ifdef USES_C240
+  , 0u // n=241 : m=0
+#ifdef USES_C241
+  | 1 << 15
+#endif // ifdef USES_C241
+
+#ifdef USES_C242
+  | 1 << 14
+#endif // ifdef USES_C242
+
+#ifdef USES_C243
+  | 1 << 13
+#endif // ifdef USES_C243
+
+#ifdef USES_C244
+  | 1 << 12
+#endif // ifdef USES_C244
+
+#ifdef USES_C245
+  | 1 << 11
+#endif // ifdef USES_C245
+
+#ifdef USES_C246
+  | 1 << 10
+#endif // ifdef USES_C246
+
+#ifdef USES_C247
+  | 1 << 9
+#endif // ifdef USES_C247
+
+#ifdef USES_C248
+  | 1 << 8
+#endif // ifdef USES_C248
+
+#ifdef USES_C249
+  | 1 << 7
+#endif // ifdef USES_C249
+
+#ifdef USES_C250
+  | 1 << 6
+#endif // ifdef USES_C250
+
+#ifdef USES_C251
+  | 1 << 5
+#endif // ifdef USES_C251
+
+#ifdef USES_C252
+  | 1 << 4
+#endif // ifdef USES_C252
+
+#ifdef USES_C253
+  | 1 << 3
+#endif // ifdef USES_C253
+
+#ifdef USES_C254
+  | 1 << 2
+#endif // ifdef USES_C254
+
+#ifdef USES_C255
+  | 1 << 1
+#endif // ifdef USES_C255
+};
+#else // if FEATURE_BUILD_DESCRIPTION
 constexpr cpluginID_t ProtocolIndex_to_CPlugin_id[] PROGMEM =
 {
 #ifdef USES_C001
@@ -1038,6 +2063,7 @@ constexpr cpluginID_t ProtocolIndex_to_CPlugin_id[] PROGMEM =
   255,
 #endif // ifdef USES_C255
 };
+#endif // if FEATURE_BUILD_DESCRIPTION
 
 
 typedef bool (*CPlugin_ptr_t)(CPlugin::Function,
@@ -2068,6 +3094,25 @@ const CPlugin_ptr_t PROGMEM CPlugin_ptr[] =
 };
 
 
+#if FEATURE_BUILD_DESCRIPTION
+size_t ProtocolIndex_to_CPlugin_id_size{};
+
+// Highest CPlugin ID included in the build
+size_t Highest_CPlugin_id{};
+
+bool isCPluginIncluded_(cpluginID_t cpluginID) {
+  if (cpluginID == INVALID_C_PLUGIN_ID) { return false; }
+  const uint16_t wordIndex = (cpluginID - 1) / 16;
+  const uint16_t bitIndex  = 15 - ((cpluginID - 1) % 16);
+
+  // Controller available?
+  return bitRead(controllersBitmap[wordIndex], bitIndex);
+}
+
+std::vector<ProtocolStruct> ProtocolArray;
+
+#else // if FEATURE_BUILD_DESCRIPTION
+
 constexpr size_t ProtocolIndex_to_CPlugin_id_size = sizeof(ProtocolIndex_to_CPlugin_id);
 
 // Highest CPlugin ID included in the build
@@ -2082,14 +3127,38 @@ protocolIndex_t CPlugin_id_to_ProtocolIndex[CPlugin_id_to_ProtocolIndex_size]{};
 
 
 ProtocolStruct ProtocolArray[ProtocolIndex_to_CPlugin_id_size + 1]{};
+#endif // if FEATURE_BUILD_DESCRIPTION
 
 ProtocolStruct& getProtocolStruct(protocolIndex_t protocolIndex)
 {
   if (protocolIndex >= ProtocolIndex_to_CPlugin_id_size) {
     protocolIndex = ProtocolIndex_to_CPlugin_id_size;
   }
+  #if FEATURE_BUILD_DESCRIPTION
+  if (ProtocolArray.size() <= static_cast<size_t>(protocolIndex)) {
+    ProtocolArray.resize(static_cast<size_t>(protocolIndex) + 1);
+  }
+  #endif // if FEATURE_BUILD_DESCRIPTION
   return ProtocolArray[protocolIndex];
 }
+
+#if FEATURE_BUILD_DESCRIPTION
+protocolIndex_t do_getProtocolIndex_from_CPluginID(cpluginID_t cpluginID) {
+  if (!isCPluginIncluded_(cpluginID)) { return INVALID_PROTOCOL_INDEX; }
+
+  size_t _highest; // ignored
+  const uint8_t protocolIndex = getIndexFromBitmap(controllersBitmap, cpluginID, cpluginID, _highest);
+
+  return static_cast<protocolIndex_t>(protocolIndex);
+}
+
+cpluginID_t do_getCPluginID_from_ProtocolIndex(protocolIndex_t protocolIndex) {
+  cpluginID_t pluginID = static_cast<cpluginID_t>(getIdFromBitmap(controllersBitmap, protocolIndex + 1, CPLUGIN_MAX + 1, static_cast<uint8_t>(INVALID_C_PLUGIN_ID))); // Protocol is 0-based, bitmap is 1-based
+
+  return pluginID;
+}
+
+#else // if FEATURE_BUILD_DESCRIPTION
 
 protocolIndex_t do_getProtocolIndex_from_CPluginID(cpluginID_t cpluginID)
 {
@@ -2109,6 +3178,7 @@ cpluginID_t do_getCPluginID_from_ProtocolIndex(protocolIndex_t protocolIndex)
   }
   return INVALID_C_PLUGIN_ID;
 }
+#endif // if FEATURE_BUILD_DESCRIPTION
 
 bool do_check_validProtocolIndex(protocolIndex_t protocolIndex)
 {
@@ -2151,6 +3221,38 @@ bool do_CPluginCall(protocolIndex_t protocolIndex, CPlugin::Function Function, s
   return false;
 }
 
+#if FEATURE_BUILD_DESCRIPTION
+void CPluginSetup()
+{
+  static bool setupDone = false;
+
+  if (setupDone) { return; }
+
+  if (ProtocolIndex_to_CPlugin_id_size == 0)
+  {
+    // Determine Controller count
+    ProtocolIndex_to_CPlugin_id_size = getIndexFromBitmap(controllersBitmap,
+                                                          CPLUGIN_MAX + 1,
+                                                          CPLUGIN_MAX + 1,
+                                                          Highest_CPlugin_id);
+  }
+
+  for (protocolIndex_t protocolIndex = 0; protocolIndex < ProtocolIndex_to_CPlugin_id_size; ++protocolIndex)
+  {
+    const cpluginID_t cpluginID = do_getCPluginID_from_ProtocolIndex(protocolIndex);
+
+    if (INVALID_C_PLUGIN_ID != cpluginID) {
+      struct EventStruct TempEvent;
+      TempEvent.idx = protocolIndex;
+      String dummy;
+      do_CPluginCall(protocolIndex, CPlugin::Function::CPLUGIN_PROTOCOL_ADD, &TempEvent, dummy);
+    }
+  }
+  setupDone = true;
+}
+
+#else // if FEATURE_BUILD_DESCRIPTION
+
 void CPluginSetup()
 {
   static bool setupDone = false;
@@ -2176,6 +3278,7 @@ void CPluginSetup()
   }
   setupDone = true;
 }
+#endif // if FEATURE_BUILD_DESCRIPTION
 
 void CPluginInit()
 {

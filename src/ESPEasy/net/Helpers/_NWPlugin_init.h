@@ -1,6 +1,9 @@
 #pragma once
 
 #include "../../../ESPEasy_common.h"
+#if FEATURE_BUILD_DESCRIPTION
+#include "../../src/src/Helpers/_BitmapArray_Helper.h"
+#endif // if FEATURE_BUILD_DESCRIPTION
 
 #include "../../../src/DataStructs/ESPEasy_EventStruct.h"
 #include "../DataStructs/NetworkDriverStruct.h"
@@ -11,6 +14,10 @@
 
 namespace ESPEasy {
 namespace net {
+
+#if FEATURE_BUILD_DESCRIPTION
+extern const uint16_t networksBitmap[];
+#endif // if FEATURE_BUILD_DESCRIPTION
 
 networkDriverIndex_t do_getNetworkDriverIndex_from_NWPluginID(nwpluginID_t pluginID);
 nwpluginID_t do_getNWPluginID_from_NetworkDriverIndex(networkDriverIndex_t networkDriverIndex);

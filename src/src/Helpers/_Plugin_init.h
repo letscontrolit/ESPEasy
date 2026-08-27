@@ -2,11 +2,17 @@
 #define HELPERS__PLUGIN_INIT_H
 
 #include "../../ESPEasy_common.h"
+#if FEATURE_BUILD_DESCRIPTION
+#include "../Helpers/_BitmapArray_Helper.h"
+#endif // if FEATURE_BUILD_DESCRIPTION
 
 #include "../DataTypes/DeviceIndex.h"
 #include "../DataTypes/PluginID.h"
 #include "../DataTypes/ESPEasy_plugin_functions.h"
 
+#if FEATURE_BUILD_DESCRIPTION
+extern const uint16_t pluginsBitmap[];
+#endif // if FEATURE_BUILD_DESCRIPTION
 
 struct EventStruct;
 

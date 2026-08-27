@@ -9,6 +9,7 @@
 #include "../../../src/Helpers/Networking.h"
 #include "../../../src/Helpers/StringConverter.h"
 #include "../Globals/NWPlugins.h"
+#include <vector>
 
 namespace ESPEasy {
 namespace net {
@@ -17,6 +18,1032 @@ namespace net {
 // Initialize all Network NWPlugins that where defined earlier
 // and initialize the function call pointer into the NWPlugin array
 // ********************************************************************************
+
+#if FEATURE_BUILD_DESCRIPTION
+const uint16_t networksBitmap[] = {
+  0u // n=1 : m=0
+#ifdef USES_NW001
+  | 1 << 15
+#endif // ifdef USES_NW001
+
+#ifdef USES_NW002
+  | 1 << 14
+#endif // ifdef USES_NW002
+
+#ifdef USES_NW003
+  | 1 << 13
+#endif // ifdef USES_NW003
+
+#ifdef USES_NW004
+  | 1 << 12
+#endif // ifdef USES_NW004
+
+#ifdef USES_NW005
+  | 1 << 11
+#endif // ifdef USES_NW005
+
+#ifdef USES_NW006
+  | 1 << 10
+#endif // ifdef USES_NW006
+
+#ifdef USES_NW007
+  | 1 << 9
+#endif // ifdef USES_NW007
+
+#ifdef USES_NW008
+  | 1 << 8
+#endif // ifdef USES_NW008
+
+#ifdef USES_NW009
+  | 1 << 7
+#endif // ifdef USES_NW009
+
+#ifdef USES_NW010
+  | 1 << 6
+#endif // ifdef USES_NW010
+
+#ifdef USES_NW011
+  | 1 << 5
+#endif // ifdef USES_NW011
+
+#ifdef USES_NW012
+  | 1 << 4
+#endif // ifdef USES_NW012
+
+#ifdef USES_NW013
+  | 1 << 3
+#endif // ifdef USES_NW013
+
+#ifdef USES_NW014
+  | 1 << 2
+#endif // ifdef USES_NW014
+
+#ifdef USES_NW015
+  | 1 << 1
+#endif // ifdef USES_NW015
+
+#ifdef USES_NW016
+  | 1 << 0
+#endif // ifdef USES_NW016
+  , 0u // n=17 : m=0
+#ifdef USES_NW017
+  | 1 << 15
+#endif // ifdef USES_NW017
+
+#ifdef USES_NW018
+  | 1 << 14
+#endif // ifdef USES_NW018
+
+#ifdef USES_NW019
+  | 1 << 13
+#endif // ifdef USES_NW019
+
+#ifdef USES_NW020
+  | 1 << 12
+#endif // ifdef USES_NW020
+
+#ifdef USES_NW021
+  | 1 << 11
+#endif // ifdef USES_NW021
+
+#ifdef USES_NW022
+  | 1 << 10
+#endif // ifdef USES_NW022
+
+#ifdef USES_NW023
+  | 1 << 9
+#endif // ifdef USES_NW023
+
+#ifdef USES_NW024
+  | 1 << 8
+#endif // ifdef USES_NW024
+
+#ifdef USES_NW025
+  | 1 << 7
+#endif // ifdef USES_NW025
+
+#ifdef USES_NW026
+  | 1 << 6
+#endif // ifdef USES_NW026
+
+#ifdef USES_NW027
+  | 1 << 5
+#endif // ifdef USES_NW027
+
+#ifdef USES_NW028
+  | 1 << 4
+#endif // ifdef USES_NW028
+
+#ifdef USES_NW029
+  | 1 << 3
+#endif // ifdef USES_NW029
+
+#ifdef USES_NW030
+  | 1 << 2
+#endif // ifdef USES_NW030
+
+#ifdef USES_NW031
+  | 1 << 1
+#endif // ifdef USES_NW031
+
+#ifdef USES_NW032
+  | 1 << 0
+#endif // ifdef USES_NW032
+  , 0u // n=33 : m=0
+#ifdef USES_NW033
+  | 1 << 15
+#endif // ifdef USES_NW033
+
+#ifdef USES_NW034
+  | 1 << 14
+#endif // ifdef USES_NW034
+
+#ifdef USES_NW035
+  | 1 << 13
+#endif // ifdef USES_NW035
+
+#ifdef USES_NW036
+  | 1 << 12
+#endif // ifdef USES_NW036
+
+#ifdef USES_NW037
+  | 1 << 11
+#endif // ifdef USES_NW037
+
+#ifdef USES_NW038
+  | 1 << 10
+#endif // ifdef USES_NW038
+
+#ifdef USES_NW039
+  | 1 << 9
+#endif // ifdef USES_NW039
+
+#ifdef USES_NW040
+  | 1 << 8
+#endif // ifdef USES_NW040
+
+#ifdef USES_NW041
+  | 1 << 7
+#endif // ifdef USES_NW041
+
+#ifdef USES_NW042
+  | 1 << 6
+#endif // ifdef USES_NW042
+
+#ifdef USES_NW043
+  | 1 << 5
+#endif // ifdef USES_NW043
+
+#ifdef USES_NW044
+  | 1 << 4
+#endif // ifdef USES_NW044
+
+#ifdef USES_NW045
+  | 1 << 3
+#endif // ifdef USES_NW045
+
+#ifdef USES_NW046
+  | 1 << 2
+#endif // ifdef USES_NW046
+
+#ifdef USES_NW047
+  | 1 << 1
+#endif // ifdef USES_NW047
+
+#ifdef USES_NW048
+  | 1 << 0
+#endif // ifdef USES_NW048
+  , 0u // n=49 : m=0
+#ifdef USES_NW049
+  | 1 << 15
+#endif // ifdef USES_NW049
+
+#ifdef USES_NW050
+  | 1 << 14
+#endif // ifdef USES_NW050
+
+#ifdef USES_NW051
+  | 1 << 13
+#endif // ifdef USES_NW051
+
+#ifdef USES_NW052
+  | 1 << 12
+#endif // ifdef USES_NW052
+
+#ifdef USES_NW053
+  | 1 << 11
+#endif // ifdef USES_NW053
+
+#ifdef USES_NW054
+  | 1 << 10
+#endif // ifdef USES_NW054
+
+#ifdef USES_NW055
+  | 1 << 9
+#endif // ifdef USES_NW055
+
+#ifdef USES_NW056
+  | 1 << 8
+#endif // ifdef USES_NW056
+
+#ifdef USES_NW057
+  | 1 << 7
+#endif // ifdef USES_NW057
+
+#ifdef USES_NW058
+  | 1 << 6
+#endif // ifdef USES_NW058
+
+#ifdef USES_NW059
+  | 1 << 5
+#endif // ifdef USES_NW059
+
+#ifdef USES_NW060
+  | 1 << 4
+#endif // ifdef USES_NW060
+
+#ifdef USES_NW061
+  | 1 << 3
+#endif // ifdef USES_NW061
+
+#ifdef USES_NW062
+  | 1 << 2
+#endif // ifdef USES_NW062
+
+#ifdef USES_NW063
+  | 1 << 1
+#endif // ifdef USES_NW063
+
+#ifdef USES_NW064
+  | 1 << 0
+#endif // ifdef USES_NW064
+  , 0u // n=65 : m=0
+#ifdef USES_NW065
+  | 1 << 15
+#endif // ifdef USES_NW065
+
+#ifdef USES_NW066
+  | 1 << 14
+#endif // ifdef USES_NW066
+
+#ifdef USES_NW067
+  | 1 << 13
+#endif // ifdef USES_NW067
+
+#ifdef USES_NW068
+  | 1 << 12
+#endif // ifdef USES_NW068
+
+#ifdef USES_NW069
+  | 1 << 11
+#endif // ifdef USES_NW069
+
+#ifdef USES_NW070
+  | 1 << 10
+#endif // ifdef USES_NW070
+
+#ifdef USES_NW071
+  | 1 << 9
+#endif // ifdef USES_NW071
+
+#ifdef USES_NW072
+  | 1 << 8
+#endif // ifdef USES_NW072
+
+#ifdef USES_NW073
+  | 1 << 7
+#endif // ifdef USES_NW073
+
+#ifdef USES_NW074
+  | 1 << 6
+#endif // ifdef USES_NW074
+
+#ifdef USES_NW075
+  | 1 << 5
+#endif // ifdef USES_NW075
+
+#ifdef USES_NW076
+  | 1 << 4
+#endif // ifdef USES_NW076
+
+#ifdef USES_NW077
+  | 1 << 3
+#endif // ifdef USES_NW077
+
+#ifdef USES_NW078
+  | 1 << 2
+#endif // ifdef USES_NW078
+
+#ifdef USES_NW079
+  | 1 << 1
+#endif // ifdef USES_NW079
+
+#ifdef USES_NW080
+  | 1 << 0
+#endif // ifdef USES_NW080
+  , 0u // n=81 : m=0
+#ifdef USES_NW081
+  | 1 << 15
+#endif // ifdef USES_NW081
+
+#ifdef USES_NW082
+  | 1 << 14
+#endif // ifdef USES_NW082
+
+#ifdef USES_NW083
+  | 1 << 13
+#endif // ifdef USES_NW083
+
+#ifdef USES_NW084
+  | 1 << 12
+#endif // ifdef USES_NW084
+
+#ifdef USES_NW085
+  | 1 << 11
+#endif // ifdef USES_NW085
+
+#ifdef USES_NW086
+  | 1 << 10
+#endif // ifdef USES_NW086
+
+#ifdef USES_NW087
+  | 1 << 9
+#endif // ifdef USES_NW087
+
+#ifdef USES_NW088
+  | 1 << 8
+#endif // ifdef USES_NW088
+
+#ifdef USES_NW089
+  | 1 << 7
+#endif // ifdef USES_NW089
+
+#ifdef USES_NW090
+  | 1 << 6
+#endif // ifdef USES_NW090
+
+#ifdef USES_NW091
+  | 1 << 5
+#endif // ifdef USES_NW091
+
+#ifdef USES_NW092
+  | 1 << 4
+#endif // ifdef USES_NW092
+
+#ifdef USES_NW093
+  | 1 << 3
+#endif // ifdef USES_NW093
+
+#ifdef USES_NW094
+  | 1 << 2
+#endif // ifdef USES_NW094
+
+#ifdef USES_NW095
+  | 1 << 1
+#endif // ifdef USES_NW095
+
+#ifdef USES_NW096
+  | 1 << 0
+#endif // ifdef USES_NW096
+  , 0u // n=97 : m=0
+#ifdef USES_NW097
+  | 1 << 15
+#endif // ifdef USES_NW097
+
+#ifdef USES_NW098
+  | 1 << 14
+#endif // ifdef USES_NW098
+
+#ifdef USES_NW099
+  | 1 << 13
+#endif // ifdef USES_NW099
+
+#ifdef USES_NW100
+  | 1 << 12
+#endif // ifdef USES_NW100
+
+#ifdef USES_NW101
+  | 1 << 11
+#endif // ifdef USES_NW101
+
+#ifdef USES_NW102
+  | 1 << 10
+#endif // ifdef USES_NW102
+
+#ifdef USES_NW103
+  | 1 << 9
+#endif // ifdef USES_NW103
+
+#ifdef USES_NW104
+  | 1 << 8
+#endif // ifdef USES_NW104
+
+#ifdef USES_NW105
+  | 1 << 7
+#endif // ifdef USES_NW105
+
+#ifdef USES_NW106
+  | 1 << 6
+#endif // ifdef USES_NW106
+
+#ifdef USES_NW107
+  | 1 << 5
+#endif // ifdef USES_NW107
+
+#ifdef USES_NW108
+  | 1 << 4
+#endif // ifdef USES_NW108
+
+#ifdef USES_NW109
+  | 1 << 3
+#endif // ifdef USES_NW109
+
+#ifdef USES_NW110
+  | 1 << 2
+#endif // ifdef USES_NW110
+
+#ifdef USES_NW111
+  | 1 << 1
+#endif // ifdef USES_NW111
+
+#ifdef USES_NW112
+  | 1 << 0
+#endif // ifdef USES_NW112
+  , 0u // n=113 : m=0
+#ifdef USES_NW113
+  | 1 << 15
+#endif // ifdef USES_NW113
+
+#ifdef USES_NW114
+  | 1 << 14
+#endif // ifdef USES_NW114
+
+#ifdef USES_NW115
+  | 1 << 13
+#endif // ifdef USES_NW115
+
+#ifdef USES_NW116
+  | 1 << 12
+#endif // ifdef USES_NW116
+
+#ifdef USES_NW117
+  | 1 << 11
+#endif // ifdef USES_NW117
+
+#ifdef USES_NW118
+  | 1 << 10
+#endif // ifdef USES_NW118
+
+#ifdef USES_NW119
+  | 1 << 9
+#endif // ifdef USES_NW119
+
+#ifdef USES_NW120
+  | 1 << 8
+#endif // ifdef USES_NW120
+
+#ifdef USES_NW121
+  | 1 << 7
+#endif // ifdef USES_NW121
+
+#ifdef USES_NW122
+  | 1 << 6
+#endif // ifdef USES_NW122
+
+#ifdef USES_NW123
+  | 1 << 5
+#endif // ifdef USES_NW123
+
+#ifdef USES_NW124
+  | 1 << 4
+#endif // ifdef USES_NW124
+
+#ifdef USES_NW125
+  | 1 << 3
+#endif // ifdef USES_NW125
+
+#ifdef USES_NW126
+  | 1 << 2
+#endif // ifdef USES_NW126
+
+#ifdef USES_NW127
+  | 1 << 1
+#endif // ifdef USES_NW127
+
+#ifdef USES_NW128
+  | 1 << 0
+#endif // ifdef USES_NW128
+  , 0u // n=129 : m=0
+#ifdef USES_NW129
+  | 1 << 15
+#endif // ifdef USES_NW129
+
+#ifdef USES_NW130
+  | 1 << 14
+#endif // ifdef USES_NW130
+
+#ifdef USES_NW131
+  | 1 << 13
+#endif // ifdef USES_NW131
+
+#ifdef USES_NW132
+  | 1 << 12
+#endif // ifdef USES_NW132
+
+#ifdef USES_NW133
+  | 1 << 11
+#endif // ifdef USES_NW133
+
+#ifdef USES_NW134
+  | 1 << 10
+#endif // ifdef USES_NW134
+
+#ifdef USES_NW135
+  | 1 << 9
+#endif // ifdef USES_NW135
+
+#ifdef USES_NW136
+  | 1 << 8
+#endif // ifdef USES_NW136
+
+#ifdef USES_NW137
+  | 1 << 7
+#endif // ifdef USES_NW137
+
+#ifdef USES_NW138
+  | 1 << 6
+#endif // ifdef USES_NW138
+
+#ifdef USES_NW139
+  | 1 << 5
+#endif // ifdef USES_NW139
+
+#ifdef USES_NW140
+  | 1 << 4
+#endif // ifdef USES_NW140
+
+#ifdef USES_NW141
+  | 1 << 3
+#endif // ifdef USES_NW141
+
+#ifdef USES_NW142
+  | 1 << 2
+#endif // ifdef USES_NW142
+
+#ifdef USES_NW143
+  | 1 << 1
+#endif // ifdef USES_NW143
+
+#ifdef USES_NW144
+  | 1 << 0
+#endif // ifdef USES_NW144
+  , 0u // n=145 : m=0
+#ifdef USES_NW145
+  | 1 << 15
+#endif // ifdef USES_NW145
+
+#ifdef USES_NW146
+  | 1 << 14
+#endif // ifdef USES_NW146
+
+#ifdef USES_NW147
+  | 1 << 13
+#endif // ifdef USES_NW147
+
+#ifdef USES_NW148
+  | 1 << 12
+#endif // ifdef USES_NW148
+
+#ifdef USES_NW149
+  | 1 << 11
+#endif // ifdef USES_NW149
+
+#ifdef USES_NW150
+  | 1 << 10
+#endif // ifdef USES_NW150
+
+#ifdef USES_NW151
+  | 1 << 9
+#endif // ifdef USES_NW151
+
+#ifdef USES_NW152
+  | 1 << 8
+#endif // ifdef USES_NW152
+
+#ifdef USES_NW153
+  | 1 << 7
+#endif // ifdef USES_NW153
+
+#ifdef USES_NW154
+  | 1 << 6
+#endif // ifdef USES_NW154
+
+#ifdef USES_NW155
+  | 1 << 5
+#endif // ifdef USES_NW155
+
+#ifdef USES_NW156
+  | 1 << 4
+#endif // ifdef USES_NW156
+
+#ifdef USES_NW157
+  | 1 << 3
+#endif // ifdef USES_NW157
+
+#ifdef USES_NW158
+  | 1 << 2
+#endif // ifdef USES_NW158
+
+#ifdef USES_NW159
+  | 1 << 1
+#endif // ifdef USES_NW159
+
+#ifdef USES_NW160
+  | 1 << 0
+#endif // ifdef USES_NW160
+  , 0u // n=161 : m=0
+#ifdef USES_NW161
+  | 1 << 15
+#endif // ifdef USES_NW161
+
+#ifdef USES_NW162
+  | 1 << 14
+#endif // ifdef USES_NW162
+
+#ifdef USES_NW163
+  | 1 << 13
+#endif // ifdef USES_NW163
+
+#ifdef USES_NW164
+  | 1 << 12
+#endif // ifdef USES_NW164
+
+#ifdef USES_NW165
+  | 1 << 11
+#endif // ifdef USES_NW165
+
+#ifdef USES_NW166
+  | 1 << 10
+#endif // ifdef USES_NW166
+
+#ifdef USES_NW167
+  | 1 << 9
+#endif // ifdef USES_NW167
+
+#ifdef USES_NW168
+  | 1 << 8
+#endif // ifdef USES_NW168
+
+#ifdef USES_NW169
+  | 1 << 7
+#endif // ifdef USES_NW169
+
+#ifdef USES_NW170
+  | 1 << 6
+#endif // ifdef USES_NW170
+
+#ifdef USES_NW171
+  | 1 << 5
+#endif // ifdef USES_NW171
+
+#ifdef USES_NW172
+  | 1 << 4
+#endif // ifdef USES_NW172
+
+#ifdef USES_NW173
+  | 1 << 3
+#endif // ifdef USES_NW173
+
+#ifdef USES_NW174
+  | 1 << 2
+#endif // ifdef USES_NW174
+
+#ifdef USES_NW175
+  | 1 << 1
+#endif // ifdef USES_NW175
+
+#ifdef USES_NW176
+  | 1 << 0
+#endif // ifdef USES_NW176
+  , 0u // n=177 : m=0
+#ifdef USES_NW177
+  | 1 << 15
+#endif // ifdef USES_NW177
+
+#ifdef USES_NW178
+  | 1 << 14
+#endif // ifdef USES_NW178
+
+#ifdef USES_NW179
+  | 1 << 13
+#endif // ifdef USES_NW179
+
+#ifdef USES_NW180
+  | 1 << 12
+#endif // ifdef USES_NW180
+
+#ifdef USES_NW181
+  | 1 << 11
+#endif // ifdef USES_NW181
+
+#ifdef USES_NW182
+  | 1 << 10
+#endif // ifdef USES_NW182
+
+#ifdef USES_NW183
+  | 1 << 9
+#endif // ifdef USES_NW183
+
+#ifdef USES_NW184
+  | 1 << 8
+#endif // ifdef USES_NW184
+
+#ifdef USES_NW185
+  | 1 << 7
+#endif // ifdef USES_NW185
+
+#ifdef USES_NW186
+  | 1 << 6
+#endif // ifdef USES_NW186
+
+#ifdef USES_NW187
+  | 1 << 5
+#endif // ifdef USES_NW187
+
+#ifdef USES_NW188
+  | 1 << 4
+#endif // ifdef USES_NW188
+
+#ifdef USES_NW189
+  | 1 << 3
+#endif // ifdef USES_NW189
+
+#ifdef USES_NW190
+  | 1 << 2
+#endif // ifdef USES_NW190
+
+#ifdef USES_NW191
+  | 1 << 1
+#endif // ifdef USES_NW191
+
+#ifdef USES_NW192
+  | 1 << 0
+#endif // ifdef USES_NW192
+  , 0u // n=193 : m=0
+#ifdef USES_NW193
+  | 1 << 15
+#endif // ifdef USES_NW193
+
+#ifdef USES_NW194
+  | 1 << 14
+#endif // ifdef USES_NW194
+
+#ifdef USES_NW195
+  | 1 << 13
+#endif // ifdef USES_NW195
+
+#ifdef USES_NW196
+  | 1 << 12
+#endif // ifdef USES_NW196
+
+#ifdef USES_NW197
+  | 1 << 11
+#endif // ifdef USES_NW197
+
+#ifdef USES_NW198
+  | 1 << 10
+#endif // ifdef USES_NW198
+
+#ifdef USES_NW199
+  | 1 << 9
+#endif // ifdef USES_NW199
+
+#ifdef USES_NW200
+  | 1 << 8
+#endif // ifdef USES_NW200
+
+#ifdef USES_NW201
+  | 1 << 7
+#endif // ifdef USES_NW201
+
+#ifdef USES_NW202
+  | 1 << 6
+#endif // ifdef USES_NW202
+
+#ifdef USES_NW203
+  | 1 << 5
+#endif // ifdef USES_NW203
+
+#ifdef USES_NW204
+  | 1 << 4
+#endif // ifdef USES_NW204
+
+#ifdef USES_NW205
+  | 1 << 3
+#endif // ifdef USES_NW205
+
+#ifdef USES_NW206
+  | 1 << 2
+#endif // ifdef USES_NW206
+
+#ifdef USES_NW207
+  | 1 << 1
+#endif // ifdef USES_NW207
+
+#ifdef USES_NW208
+  | 1 << 0
+#endif // ifdef USES_NW208
+  , 0u // n=209 : m=0
+#ifdef USES_NW209
+  | 1 << 15
+#endif // ifdef USES_NW209
+
+#ifdef USES_NW210
+  | 1 << 14
+#endif // ifdef USES_NW210
+
+#ifdef USES_NW211
+  | 1 << 13
+#endif // ifdef USES_NW211
+
+#ifdef USES_NW212
+  | 1 << 12
+#endif // ifdef USES_NW212
+
+#ifdef USES_NW213
+  | 1 << 11
+#endif // ifdef USES_NW213
+
+#ifdef USES_NW214
+  | 1 << 10
+#endif // ifdef USES_NW214
+
+#ifdef USES_NW215
+  | 1 << 9
+#endif // ifdef USES_NW215
+
+#ifdef USES_NW216
+  | 1 << 8
+#endif // ifdef USES_NW216
+
+#ifdef USES_NW217
+  | 1 << 7
+#endif // ifdef USES_NW217
+
+#ifdef USES_NW218
+  | 1 << 6
+#endif // ifdef USES_NW218
+
+#ifdef USES_NW219
+  | 1 << 5
+#endif // ifdef USES_NW219
+
+#ifdef USES_NW220
+  | 1 << 4
+#endif // ifdef USES_NW220
+
+#ifdef USES_NW221
+  | 1 << 3
+#endif // ifdef USES_NW221
+
+#ifdef USES_NW222
+  | 1 << 2
+#endif // ifdef USES_NW222
+
+#ifdef USES_NW223
+  | 1 << 1
+#endif // ifdef USES_NW223
+
+#ifdef USES_NW224
+  | 1 << 0
+#endif // ifdef USES_NW224
+  , 0u // n=225 : m=0
+#ifdef USES_NW225
+  | 1 << 15
+#endif // ifdef USES_NW225
+
+#ifdef USES_NW226
+  | 1 << 14
+#endif // ifdef USES_NW226
+
+#ifdef USES_NW227
+  | 1 << 13
+#endif // ifdef USES_NW227
+
+#ifdef USES_NW228
+  | 1 << 12
+#endif // ifdef USES_NW228
+
+#ifdef USES_NW229
+  | 1 << 11
+#endif // ifdef USES_NW229
+
+#ifdef USES_NW230
+  | 1 << 10
+#endif // ifdef USES_NW230
+
+#ifdef USES_NW231
+  | 1 << 9
+#endif // ifdef USES_NW231
+
+#ifdef USES_NW232
+  | 1 << 8
+#endif // ifdef USES_NW232
+
+#ifdef USES_NW233
+  | 1 << 7
+#endif // ifdef USES_NW233
+
+#ifdef USES_NW234
+  | 1 << 6
+#endif // ifdef USES_NW234
+
+#ifdef USES_NW235
+  | 1 << 5
+#endif // ifdef USES_NW235
+
+#ifdef USES_NW236
+  | 1 << 4
+#endif // ifdef USES_NW236
+
+#ifdef USES_NW237
+  | 1 << 3
+#endif // ifdef USES_NW237
+
+#ifdef USES_NW238
+  | 1 << 2
+#endif // ifdef USES_NW238
+
+#ifdef USES_NW239
+  | 1 << 1
+#endif // ifdef USES_NW239
+
+#ifdef USES_NW240
+  | 1 << 0
+#endif // ifdef USES_NW240
+  , 0u // n=241 : m=0
+#ifdef USES_NW241
+  | 1 << 15
+#endif // ifdef USES_NW241
+
+#ifdef USES_NW242
+  | 1 << 14
+#endif // ifdef USES_NW242
+
+#ifdef USES_NW243
+  | 1 << 13
+#endif // ifdef USES_NW243
+
+#ifdef USES_NW244
+  | 1 << 12
+#endif // ifdef USES_NW244
+
+#ifdef USES_NW245
+  | 1 << 11
+#endif // ifdef USES_NW245
+
+#ifdef USES_NW246
+  | 1 << 10
+#endif // ifdef USES_NW246
+
+#ifdef USES_NW247
+  | 1 << 9
+#endif // ifdef USES_NW247
+
+#ifdef USES_NW248
+  | 1 << 8
+#endif // ifdef USES_NW248
+
+#ifdef USES_NW249
+  | 1 << 7
+#endif // ifdef USES_NW249
+
+#ifdef USES_NW250
+  | 1 << 6
+#endif // ifdef USES_NW250
+
+#ifdef USES_NW251
+  | 1 << 5
+#endif // ifdef USES_NW251
+
+#ifdef USES_NW252
+  | 1 << 4
+#endif // ifdef USES_NW252
+
+#ifdef USES_NW253
+  | 1 << 3
+#endif // ifdef USES_NW253
+
+#ifdef USES_NW254
+  | 1 << 2
+#endif // ifdef USES_NW254
+
+#ifdef USES_NW255
+  | 1 << 1
+#endif // ifdef USES_NW255
+};
+
+#else // if FEATURE_BUILD_DESCRIPTION
 
 constexpr /*nwpluginID_t*/ uint8_t NetworkDriverIndex_to_NWPlugin_id[] PROGMEM =
 {
@@ -1041,6 +2068,7 @@ constexpr /*nwpluginID_t*/ uint8_t NetworkDriverIndex_to_NWPlugin_id[] PROGMEM =
 #endif // ifdef USES_NW255
 };
 
+#endif // if FEATURE_BUILD_DESCRIPTION
 
 typedef bool (*NWPlugin_ptr_t)(NWPlugin::Function,
                                EventStruct *,
@@ -2070,6 +3098,33 @@ const NWPlugin_ptr_t PROGMEM NWPlugin_ptr[] =
 };
 
 
+#if FEATURE_BUILD_DESCRIPTION
+size_t NetworkDriverIndex_to_NWPlugin_id_size = 0; // sizeof(NetworkDriverIndex_to_NWPlugin_id);
+
+// Highest NWPlugin ID included in the build
+size_t Highest_NWPlugin_id = 0; // NetworkDriverIndex_to_NWPlugin_id_size ==
+                                //       0 ? 0 : NetworkDriverIndex_to_NWPlugin_id[NetworkDriverIndex_to_NWPlugin_id_size - 1];
+
+size_t NWPlugin_id_to_NetworkDriverIndex_size = 0; // Highest_NWPlugin_id + 1;
+
+// Array filled during init.
+// Valid index: 1 ... Highest_NWPlugin_id
+// Returns index to the NetworkDriverIndex_to_NWPlugin_id array
+// networkDriverIndex_t NWPlugin_id_to_NetworkDriverIndex[NWPlugin_id_to_NetworkDriverIndex_size]{};
+
+
+bool isNWPluginIncluded_(nwpluginID_t nwpluginID) {
+  if (nwpluginID == INVALID_NW_PLUGIN_ID) { return false; }
+  const uint16_t wordIndex = (nwpluginID.value - 1) / 16;
+  const uint16_t bitIndex  = 15 - ((nwpluginID.value - 1) % 16);
+
+  // Driver available?
+  return bitRead(networksBitmap[wordIndex], bitIndex);
+}
+
+std::vector<NetworkDriverStruct> NetworkDriverArray; // [NetworkDriverIndex_to_NWPlugin_id_size + 1]{};
+#else // if FEATURE_BUILD_DESCRIPTION
+
 constexpr size_t NetworkDriverIndex_to_NWPlugin_id_size = sizeof(NetworkDriverIndex_to_NWPlugin_id);
 
 // Highest NWPlugin ID included in the build
@@ -2086,13 +3141,41 @@ networkDriverIndex_t NWPlugin_id_to_NetworkDriverIndex[NWPlugin_id_to_NetworkDri
 
 NetworkDriverStruct NetworkDriverArray[NetworkDriverIndex_to_NWPlugin_id_size + 1]{};
 
+#endif // if FEATURE_BUILD_DESCRIPTION
+
 NetworkDriverStruct& getNetworkDriverStruct(networkDriverIndex_t networkDriverIndex)
 {
   if (networkDriverIndex.value >= NetworkDriverIndex_to_NWPlugin_id_size) {
     networkDriverIndex = NetworkDriverIndex_to_NWPlugin_id_size;
   }
+  #if FEATURE_BUILD_DESCRIPTION
+  if (NetworkDriverArray.size() <= static_cast<size_t>(networkDriverIndex.value)) {
+    NetworkDriverArray.resize(networkDriverIndex.value + 1);
+  }
+  #endif // if FEATURE_BUILD_DESCRIPTION
   return NetworkDriverArray[networkDriverIndex.value];
 }
+
+#if FEATURE_BUILD_DESCRIPTION
+
+networkDriverIndex_t do_getNetworkDriverIndex_from_NWPluginID(nwpluginID_t nwpluginID)
+{
+  if (!isNWPluginIncluded_(nwpluginID)) { return INVALID_NETWORKDRIVER_INDEX; }
+
+  size_t _highest; // ignored
+  const uint8_t networkDriverIndex = getIndexFromBitmap(networksBitmap, nwpluginID.value, nwpluginID.value, _highest);
+
+  return networkDriverIndex_t::toNetworkDriverIndex(networkDriverIndex);
+}
+
+nwpluginID_t do_getNWPluginID_from_NetworkDriverIndex(networkDriverIndex_t networkDriverIndex)
+{
+  nwpluginID_t pluginID = nwpluginID_t::toPluginID(getIdFromBitmap(networksBitmap, networkDriverIndex.value + 1, CPLUGIN_MAX + 1, INVALID_NW_PLUGIN_ID.value)); // Protocol is 0-based, bitmap is 1-based
+
+  return pluginID;
+}
+
+#else // if FEATURE_BUILD_DESCRIPTION
 
 networkDriverIndex_t do_getNetworkDriverIndex_from_NWPluginID(nwpluginID_t nwpluginID)
 {
@@ -2112,6 +3195,8 @@ nwpluginID_t do_getNWPluginID_from_NetworkDriverIndex(networkDriverIndex_t netwo
   }
   return INVALID_NW_PLUGIN_ID;
 }
+
+#endif // if FEATURE_BUILD_DESCRIPTION
 
 bool do_check_validNetworkDriverIndex(networkDriverIndex_t networkDriverIndex)
 {
@@ -2159,6 +3244,44 @@ bool         do_NWPluginCall(networkDriverIndex_t networkDriverIndex, NWPlugin::
   return false;
 }
 
+#if FEATURE_BUILD_DESCRIPTION
+
+void NWPluginSetup()
+{
+  static bool setupDone = false;
+
+  if (setupDone) { return; }
+
+  if (NetworkDriverIndex_to_NWPlugin_id_size == 0)
+  {
+    // CPlugin_id_to_ProtocolIndex[id] = INVALID_PROTOCOL_INDEX;
+    // Determine Controller count
+    // size_t _highest;
+    NetworkDriverIndex_to_NWPlugin_id_size = getIndexFromBitmap(networksBitmap,
+                                                                NETWORKDRIVER_INDEX_MAX + 1,
+                                                                NETWORKDRIVER_INDEX_MAX + 1,
+                                                                Highest_NWPlugin_id);
+  }
+
+  networkDriverIndex_t networkDriverIndex{};
+
+  for (; networkDriverIndex.value < NetworkDriverIndex_to_NWPlugin_id_size; ++networkDriverIndex)
+  {
+    const nwpluginID_t nwpluginID = do_getNWPluginID_from_NetworkDriverIndex(networkDriverIndex);
+
+    if (INVALID_NW_PLUGIN_ID != nwpluginID) {
+      // CPlugin_id_to_ProtocolIndex[cpluginID] = protocolIndex;
+      struct EventStruct TempEvent;
+      TempEvent.idx = networkDriverIndex.value;
+      String dummy;
+      do_NWPluginCall(networkDriverIndex, NWPlugin::Function::NWPLUGIN_DRIVER_ADD, &TempEvent, dummy);
+    }
+  }
+  setupDone = true;
+}
+
+#else // if FEATURE_BUILD_DESCRIPTION
+
 void NWPluginSetup()
 {
   static bool setupDone = false;
@@ -2186,6 +3309,8 @@ void NWPluginSetup()
   }
   setupDone = true;
 }
+
+#endif // if FEATURE_BUILD_DESCRIPTION
 
 void NWPluginInit()
 {
