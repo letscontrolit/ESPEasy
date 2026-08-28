@@ -8,6 +8,8 @@
 // Maxim Integrated (ex Dallas) DS18B20 datasheet : https://datasheets.maximintegrated.com/en/ds/DS18B20.pdf
 
 /** Changelog:
+ * 2026-08-22 tonhuisman: Show more configuration when no GPIO pin(s) configured, and a note that pins must be configured
+ *                        Deny INIT when no GPIO pin(s) configured (as the plugin can't actually work without)
  * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery
  * 2024-05-11 tonhuisman: Add Get Config Value support for sensor statistics: Read success, Read retry, Read failed,
  *                        Read init failed, Resolution and Address (formatted)
@@ -42,7 +44,6 @@
 // Used to easily replace a sensor, without configuring.
 // Can only be used for a single instance of this plugin and a single sensor.
 # define P004_SCAN_ON_INIT       PCONFIG(3)
-
 
 boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -128,78 +129,88 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
 
       const int valueCount = P004_NR_OUTPUT_VALUES;
 
+      addFormCheckBox(F("Auto Select Sensor"), F("autoselect"), P004_SCAN_ON_INIT, valueCount > 1);
+      addFormNote(F("Auto Select can only be used for 1 Dallas sensor per GPIO pin."));
+
       if (validGpio(Plugin_004_DallasPin_RX) && validGpio(Plugin_004_DallasPin_TX)) {
-        addFormCheckBox(F("Auto Select Sensor"), F("autoselect"), P004_SCAN_ON_INIT, valueCount > 1);
-        addFormNote(F("Auto Select can only be used for 1 Dallas sensor per GPIO pin."));
         Dallas_addr_selector_webform_load(event->TaskIndex, Plugin_004_DallasPin_RX, Plugin_004_DallasPin_TX, valueCount);
+      # ifndef LIMIT_BUILD_SIZE
+      } else {
+        addFormNote(F("Configure GPIO pin(s) to select a sensor"));
+      # endif // ifndef LIMIT_BUILD_SIZE
+      }
 
-        {
-          // Device Resolution select
-          int activeRes =  P004_RESOLUTION;
+      {
+        // Device Resolution select
+        int activeRes =  P004_RESOLUTION;
 
-          uint8_t savedAddress[8];
-          Dallas_plugin_get_addr(savedAddress, event->TaskIndex);
+        uint8_t savedAddress[8]{};
+        Dallas_plugin_get_addr(savedAddress, event->TaskIndex);
 
+        if (validGpio(Plugin_004_DallasPin_RX) && validGpio(Plugin_004_DallasPin_TX)) {
           if (savedAddress[0] != 0) {
             activeRes = Dallas_getResolution(savedAddress, Plugin_004_DallasPin_RX, Plugin_004_DallasPin_TX);
           }
-
-          int resolutionChoice = P004_RESOLUTION;
-
-          if ((resolutionChoice < 9) || (resolutionChoice > 12)) { resolutionChoice = activeRes; }
-          constexpr int resultsOptionValues[] { 9, 10, 11, 12 };
-
-          const FormSelectorOptions selector(
-            NR_ELEMENTS(resultsOptionValues),
-            resultsOptionValues);
-          selector.addFormSelector(F("Device Resolution"), F("res"), resolutionChoice);
-          addUnit(F("bit"));
         }
 
-        {
-          // Value in case of Error
-          const __FlashStringHelper *resultsOptions[] = { F("NaN"), F("-127"), F("0"), F("125"), F("Ignore") };
-          constexpr int resultsOptionValues[] { P004_ERROR_NAN, P004_ERROR_MIN_RANGE, P004_ERROR_ZERO, P004_ERROR_MAX_RANGE,
-                                                P004_ERROR_IGNORE };
+        int resolutionChoice = P004_RESOLUTION;
 
-          const FormSelectorOptions selector(
-            NR_ELEMENTS(resultsOptionValues),
-            resultsOptions, resultsOptionValues);
-          selector.addFormSelector(F("Error State Value"), F("err"), P004_ERROR_STATE_OUTPUT);
-        }
-#ifndef LIMIT_BUILD_SIZE
-        addFormNote(F("External pull up resistor is needed, see docs!"));
+        if ((resolutionChoice < 9) || (resolutionChoice > 12)) { resolutionChoice = activeRes; }
+        constexpr int resultsOptionValues[] { 9, 10, 11, 12 };
 
-        {
-          P004_data_struct *P004_data =
-            static_cast<P004_data_struct *>(getPluginTaskData(event->TaskIndex));
+        const FormSelectorOptions selector(
+          NR_ELEMENTS(resultsOptionValues),
+          resultsOptionValues);
+        selector.addFormSelector(F("Device Resolution"), F("res"), resolutionChoice);
+        addUnit(F("bit"));
+      }
 
-          if (nullptr != P004_data) {
-            addFormSubHeader(F("Statistics"));
-            addRowLabel(F("Data pin Rise Time"));
-            const int riseTime = P004_data->measure_rise_time();
-            if (riseTime == 0) {
-              addHtml(F("< 1"));
-            } else {
-              if (riseTime >= 15) {
-                addHtml('>');
-              }
-              addHtmlInt(riseTime);
+      {
+        // Value in case of Error
+        const __FlashStringHelper *resultsOptions[] = { F("NaN"), F("-127"), F("0"), F("125"), F("Ignore") };
+        constexpr int resultsOptionValues[] { P004_ERROR_NAN, P004_ERROR_MIN_RANGE, P004_ERROR_ZERO, P004_ERROR_MAX_RANGE,
+                                              P004_ERROR_IGNORE };
+
+        const FormSelectorOptions selector(
+          NR_ELEMENTS(resultsOptionValues),
+          resultsOptions, resultsOptionValues);
+        selector.addFormSelector(F("Error State Value"), F("err"), P004_ERROR_STATE_OUTPUT);
+      }
+# ifndef LIMIT_BUILD_SIZE
+      addFormNote(F("External pull up resistor is needed, see docs!"));
+
+      {
+        P004_data_struct *P004_data =
+          static_cast<P004_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+        if (nullptr != P004_data) {
+          addFormSubHeader(F("Statistics"));
+          addRowLabel(F("Data pin Rise Time"));
+          const int riseTime = P004_data->measure_rise_time();
+
+          if (riseTime == 0) {
+            addHtml(F("< 1"));
+          } else {
+            if (riseTime >= 15) {
+              addHtml('>');
             }
-            addUnit(F("usec"));
-            if (riseTime > 6) {
-              addHtml(F("&nbsp;"));
-              addEnabled(false);
-              addHtml(F("&nbsp;Too Slow! Reduce pull-up resistance"));
-            }
-            for (uint8_t i = 0; i < valueCount; ++i) {
-              addFormSeparator(2);
-              Dallas_show_sensor_stats_webform_load(P004_data->get_sensor_data(i));
-            }
+            addHtmlInt(riseTime);
+          }
+          addUnit(F("usec"));
+
+          if (riseTime > 6) {
+            addHtml(F("&nbsp;"));
+            addEnabled(false);
+            addHtml(F("&nbsp;Too Slow! Reduce pull-up resistance"));
+          }
+
+          for (uint8_t i = 0; i < valueCount; ++i) {
+            addFormSeparator(2);
+            Dallas_show_sensor_stats_webform_load(P004_data->get_sensor_data(i));
           }
         }
-#endif
       }
+# endif // ifndef LIMIT_BUILD_SIZE
       success = true;
       break;
     }
@@ -222,7 +233,7 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
         if ((res < 9) || (res > 12)) { res = 12; }
         P004_RESOLUTION = res;
 
-        uint8_t savedAddress[8];
+        uint8_t savedAddress[8]{};
         Dallas_plugin_get_addr(savedAddress, event->TaskIndex);
         Dallas_setResolution(savedAddress, res, Plugin_004_DallasPin_RX, Plugin_004_DallasPin_TX);
       }
@@ -280,6 +291,8 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
       if (Plugin_004_DallasPin_TX == -1) {
         Plugin_004_DallasPin_TX = Plugin_004_DallasPin_RX;
       }
+
+      if (!validGpio(Plugin_004_DallasPin_RX) || !validGpio(Plugin_004_DallasPin_TX)) { break; }
 
       {
         # ifdef USE_SECOND_HEAP
@@ -349,10 +362,14 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
                 if (P004_ERROR_STATE_OUTPUT != P004_ERROR_IGNORE) {
                   float errorValue = NAN;
 
-                  switch (P004_ERROR_STATE_OUTPUT) {
-                    case P004_ERROR_MIN_RANGE: errorValue = -127.0f; break;
-                    case P004_ERROR_ZERO:      errorValue = 0.0f; break;
-                    case P004_ERROR_MAX_RANGE: errorValue = 125.0f; break;
+                  switch (P004_ERROR_STATE_OUTPUT)
+                  {
+                    case P004_ERROR_MIN_RANGE: errorValue = -127.0f;
+                      break;
+                    case P004_ERROR_ZERO:      errorValue = 0.0f;
+                      break;
+                    case P004_ERROR_MAX_RANGE: errorValue = 125.0f;
+                      break;
                     default:
                       break;
                   }
@@ -360,7 +377,8 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
                 }
               }
 
-              #ifndef BUILD_NO_DEBUG
+              # ifndef BUILD_NO_DEBUG
+
               if (loglevelActiveFor(LOG_LEVEL_INFO)) {
                 String log = F("DS   : Temperature: ");
 
@@ -372,7 +390,7 @@ boolean Plugin_004(uint8_t function, struct EventStruct *event, String& string)
                 log += strformat(F(" (%s)"), P004_data->get_formatted_address(i).c_str());
                 addLogMove(LOG_LEVEL_INFO, log);
               }
-              #endif // ifndef BUILD_NO_DEBUG
+              # endif // ifndef BUILD_NO_DEBUG
             }
             P004_data->set_measurement_inactive();
           }
