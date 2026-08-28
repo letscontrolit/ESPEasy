@@ -17,7 +17,11 @@
 # define PLUGIN_ID_188 188
 # define PLUGIN_NAME_188 "Analog input - TLA2528"
 
-# define P188_DEBUG 0  // change to 1 to include debug output for this plugin
+# ifndef BUILD_NO_DEBUG
+#  define P188_DEBUG 0  // change to 1 to include debug output for this plugin in debug build
+# else
+#  define P188_DEBUG 0
+# endif
 
 boolean Plugin_188(uint8_t function, struct EventStruct *event, String& string)
 {
