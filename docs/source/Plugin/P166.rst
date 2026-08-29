@@ -89,7 +89,7 @@ When leaving the *Name* field empty, that preset will not be saved, thus effecti
 Values
 ^^^^^^
 
-The plugin provides the ``Output0`` and ``Output1`` values, analogue to the availabe output connections. A formula can be set to recalculate the displayed, and sent, value. The number of decimals can be set as desired, and defaults to 2.
+The plugin provides the ``Output0`` and ``Output1`` values, analogue to the available output connections. A formula can be set to recalculate the displayed, and sent, value. The number of decimals can be set as desired, and defaults to 2.
 
 In selected builds, per Value is a **Stats** checkbox available, that when checked, gathers the data and presents recent data in a graph, as described here: :ref:`Task Value Statistics:  <Task Value Statistics>`
 
