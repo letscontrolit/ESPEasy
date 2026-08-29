@@ -11,7 +11,7 @@ ESPEasy has some centralized hardware configuration settings, shown in this page
 Wifi Status LED
 ---------------
 
-To display the Wifi acitivity, a pin can be configured to light up a LED when data is transfered via Wifi. Optionally, the LED signal can be 'inverted'.
+To display the Wifi acitivity, a pin can be configured to light up a LED when data is transferred via Wifi. Optionally, the LED signal can be 'inverted'.
 
 As many ESP boards have an onboard LED connected to GPIO-2 and inverted, it is shown as a note how to configure that.
 
