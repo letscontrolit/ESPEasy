@@ -108,8 +108,8 @@ void LogEntry_t::clear()
   if (!_isFlashString && (_message != nullptr)) {
     free(_message);
   }
-  _message = nullptr;
-  _subscriberPendingRead = 0;  // TODO TD-er: Maybe better to do _flags = 0 ???
+  _message               = nullptr;
+  _subscriberPendingRead = 0; // TODO TD-er: Maybe better to do _flags = 0 ???
 
   //  _strLength = 0;
 }
@@ -138,6 +138,7 @@ void LogEntry_t::updateSubscribers()
         }
       }
     }
+
     if (_subscriberPendingRead == 0) {
       clear();
     }

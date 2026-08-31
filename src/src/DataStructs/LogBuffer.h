@@ -8,7 +8,7 @@
 
 #include "../DataTypes/LogLevels.h"
 
-#include <deque>
+#include <list>
 
 /*********************************************************************************************\
 * LogBuffer
@@ -33,12 +33,12 @@
   # define LOG_BUFFER_ACTIVE_READ_TIMEOUT 5000
 #endif // ifdef ESP32
 
-typedef std::deque<LogEntry_t> LogEntry_queue;
+typedef std::list<LogEntry_t> LogEntry_queue;
 
 
 struct LogBuffer {
 
-  LogBuffer() = default;
+  LogBuffer();
 
   void add(LogEntry_t&& logEntry);
 
@@ -47,10 +47,10 @@ struct LogBuffer {
   }
 
   // Returns whether a line was retrieved.
-  bool getNext(LogDestination   logDestination,
-               uint32_t& timestamp,
-               String  & message,
-               uint8_t & loglevel);
+  bool getNext(LogDestination logDestination,
+               uint32_t     & timestamp,
+               String       & message,
+               uint8_t      & loglevel);
 
   // Return true if messages available for given log destination.
   bool hasMessages(LogDestination logDestination);
@@ -61,10 +61,9 @@ struct LogBuffer {
 
 private:
 
-  LogEntry_queue LogEntries;
-  uint32_t       lastReadTimeStamp[NR_LOG_TO_DESTINATIONS]{};
-
-  uint32_t cache_iterator_pos[NR_LOG_TO_DESTINATIONS]{};
+  LogEntry_queue           LogEntries{};
+  uint32_t                 lastReadTimeStamp[NR_LOG_TO_DESTINATIONS]{};
+  LogEntry_queue::iterator cache_iterator_pos[NR_LOG_TO_DESTINATIONS]{};
 
 };
 
