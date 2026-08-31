@@ -3,7 +3,7 @@
 
 
 #include "../../ESPEasy_common.h"
-#include <list>
+#include <forward_list>
 
 #include "../DataStructs/timer_id_couple.h"
 
@@ -26,8 +26,9 @@ struct msecTimerHandlerStruct {
   // N.B. the ID is the mixed ID.
   bool   getTimerForId(unsigned long  id,
                        unsigned long& timer) const;
-
+#ifndef BUILD_NO_DEBUG
   String getQueueStats();
+#endif
 
   void   updateIdleTimeStats();
 
@@ -43,21 +44,23 @@ private:
 
   void recordRunning();
 
+#ifndef BUILD_NO_DEBUG
   // Statistics
-  unsigned long get_called;
-  unsigned long get_called_ret_id;
-  unsigned long max_queue_length;
+  unsigned long get_called{};
+  unsigned long get_called_ret_id{};
+  unsigned long max_queue_length{};
+#endif
 
   // Compute idle system time
-  uint32_t last_exec_time_usec;
-  uint32_t total_idle_time_usec;
-  uint32_t last_log_start_time;
-  float         idle_time_pct;
-  bool          is_idle;
-  bool          eco_mode;
+  uint32_t last_exec_time_usec{};
+  uint32_t total_idle_time_usec{};
+  uint32_t last_log_start_time{};
+  float         idle_time_pct{};
+  bool          is_idle{};
+  bool          eco_mode{};
 
   // The list of set timers
-  std::list<timer_id_couple>_timer_ids;
+  std::forward_list<timer_id_couple>_timer_ids;
 };
 
 #endif // HELPERS_MSECTIMERHANDLERSTRUCT_H

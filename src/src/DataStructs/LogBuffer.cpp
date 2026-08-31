@@ -53,26 +53,44 @@ bool LogBuffer::hasMessages(LogDestination logDestination)
   return false;
 }
 
-bool LogBuffer::logActiveRead(LogDestination logDestination) {
+bool LogBuffer::logActiveRead(LogDestination logDestination) const {
   if (logDestination >= NR_LOG_TO_DESTINATIONS) { return false; }
   return timePassedSince(lastReadTimeStamp[logDestination]) < LOG_BUFFER_ACTIVE_READ_TIMEOUT;
 }
 
 void LogBuffer::clearExpiredEntries() {
+
+  #ifdef ESP32
+  if (xPortInIsrContext()) {
+    // When called from an ISR, you should not try to erase log entries
+    // Messing with memory from within an ISR is a big no-no.
+    return;
+  }
+  #endif // ifdef ESP32
+
+  static bool clearExpiredEntriesRunning{};
+  if (clearExpiredEntriesRunning) return;
+  clearExpiredEntriesRunning = true;
+
+  uint32_t pos{};
   for (auto it = LogEntries.begin(); it != LogEntries.end();)
   {
     it->updateSubscribers();
 
     if (it->isExpired()) {
       for (size_t i = 0; i < NR_LOG_TO_DESTINATIONS; ++i) {
-        if (cache_iterator_pos[i]) {
+        if (pos < cache_iterator_pos[i]) {
           --cache_iterator_pos[i];
         }
       }
-
+      if (pos) --pos;
       it = LogEntries.erase(it);
     } else {
-      return;
+//      ++pos;
+      ++it;
+//      clearExpiredEntriesRunning = false;
+//      return;
     }
   }
+  clearExpiredEntriesRunning = false;
 }

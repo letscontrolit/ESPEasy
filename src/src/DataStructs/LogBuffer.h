@@ -55,7 +55,7 @@ struct LogBuffer {
   // Return true if messages available for given log destination.
   bool hasMessages(LogDestination logDestination);
 
-  bool logActiveRead(LogDestination logDestination);
+  bool logActiveRead(LogDestination logDestination) const;
 
   void clearExpiredEntries();
 

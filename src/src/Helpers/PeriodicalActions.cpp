@@ -495,23 +495,6 @@ void runPeriodicalMQTT() {
 
 
 void logTimerStatistics() {
-# ifndef BUILD_NO_DEBUG
-  const uint8_t loglevel = LOG_LEVEL_DEBUG;
-#else
-  const uint8_t loglevel = LOG_LEVEL_NONE;
-#endif
-  updateLoopStats_30sec(loglevel);
-#ifndef BUILD_NO_DEBUG
-//  logStatistics(loglevel, true);
-  if (loglevelActiveFor(loglevel)) {
-    String queueLog = F("Scheduler stats: (called/tasks/max_length/idle%) ");
-    queueLog += Scheduler.getQueueStats();
-    addLogMove(loglevel, queueLog);
-  }
-#endif
-}
-
-void updateLoopStats_30sec(uint8_t loglevel) {
   loopCounterLast = loopCounter;
   loopCounter = 0;
   if (loopCounterLast > loopCounterMax)
@@ -520,23 +503,24 @@ void updateLoopStats_30sec(uint8_t loglevel) {
   Scheduler.updateIdleTimeStats();
 
 #ifndef BUILD_NO_DEBUG
+  const uint8_t loglevel = LOG_LEVEL_DEBUG;
   if (loglevelActiveFor(loglevel)) {
-    String log = F("LoopStats: shortestLoop: ");
-    log += shortestLoop;
-    log += F(" longestLoop: ");
-    log += longestLoop;
-    log += F(" avgLoopDuration: ");
-    log += loop_usec_duration_total / loopCounter_full;
-    log += F(" loopCounterMax: ");
-    log += loopCounterMax;
-    log += F(" loopCounterLast: ");
-    log += loopCounterLast;
-    addLogMove(loglevel, log);
+    addLogMove(loglevel, strformat(
+      F("LoopStats: shortest: %u longest: %u avg: %.2f LC_Max: %u LC_Last: %u"),
+      shortestLoop, 
+      longestLoop, 
+      loop_usec_duration_total / loopCounter_full, 
+      loopCounterMax, 
+      loopCounterLast));
+    addLogMove(loglevel, concat(
+      F("Scheduler stats: (called/tasks/max_length/idle%) "), 
+      Scheduler.getQueueStats()));
   }
 #endif
   loop_usec_duration_total = 0;
   loopCounter_full = 1;
 }
+
 
 
 /********************************************************************************************\

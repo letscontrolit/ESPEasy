@@ -4,10 +4,9 @@
 #include "../Helpers/ESPEasy_time_calc.h"
 
 
-#define MAX_SCHEDULER_WAIT_TIME 50 // Max delay used in the scheduler for passing idle time.
+#define MAX_SCHEDULER_WAIT_TIME 20 // Max delay used in the scheduler for passing idle time.
 
-  msecTimerHandlerStruct::msecTimerHandlerStruct() : get_called(0), get_called_ret_id(0), max_queue_length(0),
-    last_exec_time_usec(0), total_idle_time_usec(0),  idle_time_pct(0.0f), is_idle(false), eco_mode(true)
+  msecTimerHandlerStruct::msecTimerHandlerStruct() : eco_mode(true)
   {
     last_log_start_time = millis();
   }
@@ -30,17 +29,16 @@
   // Check if timeout has been reached and also return its set timer.
   // Return 0 if no item has reached timeout moment.
   unsigned long msecTimerHandlerStruct::getNextId(unsigned long& timer) {
+#ifndef BUILD_NO_DEBUG
     ++get_called;
+#endif
 
     if (_timer_ids.empty()) {
       recordIdle();
-
-      if (eco_mode) {
-        delay(MAX_SCHEDULER_WAIT_TIME); // Nothing to do, try save some power.
-      }
+      delay(eco_mode ? MAX_SCHEDULER_WAIT_TIME : 0); // Nothing to do, try save some power.
       return 0;
     }
-    timer_id_couple item = _timer_ids.front();
+    const timer_id_couple item = _timer_ids.front();
     const long passed    = timePassedSince(item._timer);
 
     if (passed < 0) {
@@ -61,12 +59,12 @@
       return 0;
     }
     recordRunning();
-    unsigned long size = _timer_ids.size();
 
-    if (size > max_queue_length) { max_queue_length = size; }
     _timer_ids.pop_front();
     timer = item._timer;
+#ifndef BUILD_NO_DEBUG
     ++get_called_ret_id;
+#endif
     return item._id;
   }
 
@@ -80,7 +78,7 @@
     }
     return false;
   }
-
+#ifndef BUILD_NO_DEBUG
   String msecTimerHandlerStruct::getQueueStats() {
     String result;
 
@@ -97,12 +95,15 @@
     // max_queue_length = 0;
     return result;
   }
+  #endif
 
   void msecTimerHandlerStruct::updateIdleTimeStats() {
-    const long duration = timePassedSince(last_log_start_time);
-
+    const long duration = timePassedSince(last_log_start_time) * 10;
+    if (duration == 0) return;
+    recordRunning();
     last_log_start_time  = millis();
-    idle_time_pct        = static_cast<float>(total_idle_time_usec) / duration / 10.0f;
+    idle_time_pct = static_cast<float>(total_idle_time_usec);
+    idle_time_pct /= static_cast<float>(duration);
     total_idle_time_usec = 0;
   }
 
@@ -110,38 +111,48 @@
     return idle_time_pct;
   }
 
-  struct match_id {
-    match_id(unsigned long id) : _id(id) {}
-
-    bool operator()(const timer_id_couple& item) {
-      return _id == item._id;
-    }
-
-    unsigned long _id;
-  };
-
   void msecTimerHandlerStruct::insert(const timer_id_couple& item) {
     if (item._id == 0) { return; }
 
     // Make sure only one is present with the same id.
-    _timer_ids.remove_if(match_id(item._id));
-    const bool mustSort = !_timer_ids.empty();
-    _timer_ids.push_front(item);
+    // Keep in mind: order is based on timer, uniqueness is based on id.
+    _timer_ids.remove_if(item);
 
-    if (mustSort) {
-      _timer_ids.sort(); // TD-er: Must check if this is an expensive operation.
+    // Insert into a sorted list, so find first pos which should be handled after this item.
+    auto prev = _timer_ids.begin();
+    if (_timer_ids.empty() || prev == _timer_ids.end() || item < *prev) {
+      _timer_ids.push_front(item);
+      return;
     }
 
-    // It should be a relative light operation, to insert into a sorted list.
-    // Perhaps it is better to use std::set ????
-    // Keep in mind: order is based on timer, uniqueness is based on id.
+//    _timer_ids.push_front(item);
+//    _timer_ids.sort();
+//    return;
+
+
+    auto it = prev;
+    ++it;
+    for (;it != _timer_ids.end() && *it < item; ++it, ++prev) {}
+
+
+//    auto stats_it = 
+    _timer_ids.insert_after(prev, item);
+#ifndef BUILD_NO_DEBUG
+    auto size = std::distance(_timer_ids.begin(), prev) + 1;
+
+    // TODO TD-er: No need to loop each time through the list.
+    // Stats are just some indication, don't need to be that exact.
+    // std::forward_list doesn't have size()
+//    for (; stats_it != _timer_ids.end(); ++stats_it, ++size) {}
+    if (size > max_queue_length) { max_queue_length = size; }    
+#endif
   }
 
   void msecTimerHandlerStruct::remove(const timer_id_couple& item) {
     if (item._id == 0) { return; }
 
     // Make sure only one is present with the same id.
-    _timer_ids.remove_if(match_id(item._id));
+    _timer_ids.remove_if(item);
   }
 
   void msecTimerHandlerStruct::recordIdle() {
