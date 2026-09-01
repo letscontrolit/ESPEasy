@@ -2,7 +2,7 @@
 
 #include "../Helpers/StringConverter.h"
 
-//#include "../WebServer/HTML_wrappers.h"
+// #include "../WebServer/HTML_wrappers.h"
 #include "../WebServer/Markup.h"
 
 
@@ -68,7 +68,8 @@ void KeyValueWriter_WebForm::write(const KeyValueStruct& kv)
   const size_t nrValues   = kv._values.size();
   const bool   format_pre =
     !plain_text &&
-//    !summary_value_only &&
+
+    //    !summary_value_only &&
     (nrValues > 1 || kv._format == KeyValueStruct::Format::PreFormatted);
 
   const bool format_note =
@@ -123,12 +124,13 @@ void KeyValueWriter_WebForm::write(const KeyValueStruct& kv)
   }
 
 #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+
   // May need to include the unit before ending </pre>
   // or else it will be shown on the next line
   if (!plain_text && (nrValues == 1) && !summary_value_only) {
     addUnit(kv.getUnit());
   }
-#endif
+#endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 
   if (format_pre) { getPrint().print(F("</pre>")); }
 
@@ -147,7 +149,7 @@ void KeyValueWriter_WebForm::write(const KeyValueStruct& kv)
 
 UP_KeyValueWriter KeyValueWriter_WebForm::createChild()
 {
-  UP_KeyValueWriter_WebForm  child(new (std::nothrow) KeyValueWriter_WebForm(this));
+  UP_KeyValueWriter_WebForm child(new (std::nothrow) KeyValueWriter_WebForm(this));
 
   return std::move(child);
 
@@ -156,7 +158,7 @@ UP_KeyValueWriter KeyValueWriter_WebForm::createChild()
 
 UP_KeyValueWriter KeyValueWriter_WebForm::createChild(const String& header)
 {
-  UP_KeyValueWriter_WebForm  child(new (std::nothrow) KeyValueWriter_WebForm(header, this));
+  UP_KeyValueWriter_WebForm child(new (std::nothrow) KeyValueWriter_WebForm(header, this));
 
   return std::move(child);
 
@@ -177,7 +179,7 @@ UP_KeyValueWriter KeyValueWriter_WebForm::createChildArray(const String& header)
 
 UP_KeyValueWriter KeyValueWriter_WebForm::createNew()
 {
-  UP_KeyValueWriter_WebForm  child(new (std::nothrow) KeyValueWriter_WebForm());
+  UP_KeyValueWriter_WebForm child(new (std::nothrow) KeyValueWriter_WebForm());
 
   return std::move(child);
 
@@ -186,7 +188,7 @@ UP_KeyValueWriter KeyValueWriter_WebForm::createNew()
 
 UP_KeyValueWriter KeyValueWriter_WebForm::createNew(const String& header)
 {
-  UP_KeyValueWriter_WebForm  child(new (std::nothrow) KeyValueWriter_WebForm(header));
+  UP_KeyValueWriter_WebForm child(new (std::nothrow) KeyValueWriter_WebForm(header));
 
   return std::move(child);
 

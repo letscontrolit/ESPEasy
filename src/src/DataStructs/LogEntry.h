@@ -46,16 +46,17 @@ struct LogEntry_t {
     return isValid();
   }
 
-  void   setSubscribers();
+  void     setSubscribers();
 
-  void   markReadBySubscriber(uint8_t subscriber);
+  void     markReadBySubscriber(uint8_t subscriber);
 
-  bool   validForSubscriber(uint8_t subscriber) const;
-/*
-  size_t print(Print& out,
-               size_t offset = 0,
-               size_t length = std::numeric_limits<size_t>::max()) const;
-*/
+  bool     validForSubscriber(uint8_t subscriber) const;
+
+  /*
+     size_t print(Print& out,
+                 size_t offset = 0,
+                 size_t length = std::numeric_limits<size_t>::max()) const;
+   */
   String   getMessage() const;
 
   bool     hasExpired(size_t freeMem) const;

@@ -143,28 +143,29 @@ bool LogEntry_t::validForSubscriber(uint8_t subscriber) const
 {
   return isValid() && (subscriber < NR_LOG_TO_DESTINATIONS) && bitRead(_subscriberPendingRead, subscriber);
 }
+
 /*
-size_t LogEntry_t::print(Print& out, size_t offset, size_t length) const
-{
-  if (offset > _strLength) { return 0; }
+   size_t LogEntry_t::print(Print& out, size_t offset, size_t length) const
+   {
+   if (offset > _strLength) { return 0; }
 
-  const char*begin = (const char *)_message;
-  const char*end   = begin;
+   const char*begin = (const char *)_message;
+   const char*end   = begin;
 
-  if (_strLength > (offset + length)) {
+   if (_strLength > (offset + length)) {
     end += (offset + length);
-  }
-  else {
+   }
+   else {
     end += _strLength;
-  }
-  const char*pos = begin + offset;
+   }
+   const char*pos = begin + offset;
 
-  for (; pos != end; ++pos) {
+   for (; pos != end; ++pos) {
     if ((*pos == '\0') || (out.write(*pos) == 0)) { return pos - begin - offset; }
-  }
-  return pos - begin - offset;
-}
-*/
+   }
+   return pos - begin - offset;
+   }
+ */
 String LogEntry_t::getMessage() const
 {
   if (_message == nullptr) { return EMPTY_STRING; }
@@ -180,7 +181,7 @@ bool LogEntry_t::hasExpired(size_t freeMem) const
   auto age = timePassedSince(_timestamp);
 
   if (!isValid()) {
-    return true; 
+    return true;
   }
 
   if (freeMem < LOGENTRY_FREEMEM_THRESHOLD) {
