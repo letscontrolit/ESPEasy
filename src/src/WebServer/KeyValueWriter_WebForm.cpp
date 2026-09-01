@@ -68,7 +68,7 @@ void KeyValueWriter_WebForm::write(const KeyValueStruct& kv)
   const size_t nrValues   = kv._values.size();
   const bool   format_pre =
     !plain_text &&
-    !summary_value_only &&
+//    !summary_value_only &&
     (nrValues > 1 || kv._format == KeyValueStruct::Format::PreFormatted);
 
   const bool format_note =

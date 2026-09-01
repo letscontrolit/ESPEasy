@@ -600,13 +600,13 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
 #endif // if FEATURE_USE_IPV6
     case LabelType::IP_ADDRESS:
     {
-      KeyValueStruct kv(F("IP Address"), formatIP(ESPEasy::net::NetworkLocalIP()));
+      KeyValueStruct kv(F("IP Address"), formatIP(ESPEasy::net::NetworkLocalIP()), KeyValueStruct::Format::PreFormatted);
       KV_SETID(F("ip"));
       return kv;
     }
     case LabelType::IP_SUBNET:
     {
-      KeyValueStruct kv(F("IP Subnet"), formatIP(ESPEasy::net::NetworkSubnetMask()));
+      KeyValueStruct kv(F("IP Subnet"), formatIP(ESPEasy::net::NetworkSubnetMask()), KeyValueStruct::Format::PreFormatted);
       KV_SETID(F("subnet"));
       return kv;
     }
@@ -619,13 +619,13 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
     }
     case LabelType::GATEWAY:
     {
-      KeyValueStruct kv(F("Gateway"), formatIP(ESPEasy::net::NetworkGatewayIP()));
+      KeyValueStruct kv(F("Gateway"), formatIP(ESPEasy::net::NetworkGatewayIP()), KeyValueStruct::Format::PreFormatted);
       KV_SETID(F("gw"));
       return kv;
     }
     case LabelType::CLIENT_IP:
     {
-      return KeyValueStruct(F("Client IP"), formatIP(web_server.client().remoteIP(), true));
+      return KeyValueStruct(F("Client IP"), formatIP(web_server.client().remoteIP(), true), KeyValueStruct::Format::PreFormatted);
     }
     #if FEATURE_MDNS
     case LabelType::M_DNS:
@@ -679,38 +679,38 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
     case LabelType::DNS_1:
     {
       if (extendedValue) { break; }
-      KeyValueStruct kv(F("DNS 1"), formatIP(ESPEasy::net::NetworkDnsIP(0)));
+      KeyValueStruct kv(F("DNS 1"), formatIP(ESPEasy::net::NetworkDnsIP(0)), KeyValueStruct::Format::PreFormatted);
       KV_SETID(F("dns1"));
       return kv;
     }
     case LabelType::DNS_2:
     {
       if (extendedValue) { break; }
-      KeyValueStruct kv(F("DNS 2"), formatIP(ESPEasy::net::NetworkDnsIP(1)));
+      KeyValueStruct kv(F("DNS 2"), formatIP(ESPEasy::net::NetworkDnsIP(1)), KeyValueStruct::Format::PreFormatted);
       KV_SETID(F("dns2"));
       return kv;
     }
     case LabelType::ALLOWED_IP_RANGE:
     {
-      KeyValueStruct kv(F("Allowed IP Range"), ESPEasy::net::describeAllowedIPrange());
+      KeyValueStruct kv(F("Allowed IP Range"), ESPEasy::net::describeAllowedIPrange(), KeyValueStruct::Format::PreFormatted);
       KV_SETID(F("allowed_range"));
       return kv;
     }
     case LabelType::STA_MAC:
     {
-      return KeyValueStruct(F("STA MAC"), ESPEasy::net::WifiSTAmacAddress().toString());
+      return KeyValueStruct(F("STA MAC"), ESPEasy::net::WifiSTAmacAddress().toString(), KeyValueStruct::Format::PreFormatted);
     }
     case LabelType::AP_MAC:
     {
-      return KeyValueStruct(F("AP MAC"), ESPEasy::net::WifiSoftAPmacAddress().toString());
+      return KeyValueStruct(F("AP MAC"), ESPEasy::net::WifiSoftAPmacAddress().toString(), KeyValueStruct::Format::PreFormatted);
     }
     case LabelType::SSID:
     {
-      return KeyValueStruct(F("SSID"), WiFi.SSID());
+      return KeyValueStruct(F("SSID"), WiFi.SSID(), KeyValueStruct::Format::PreFormatted);
     }
     case LabelType::BSSID:
     {
-      return KeyValueStruct(F("BSSID"), WiFi.BSSIDstr());
+      return KeyValueStruct(F("BSSID"), WiFi.BSSIDstr(), KeyValueStruct::Format::PreFormatted);
     }
     case LabelType::CHANNEL:
     {
@@ -724,11 +724,11 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
     }
     case LabelType::CONNECTED:
     {
-      return KeyValueStruct(F("Connected"), format_msec_duration(ESPEasy::net::NetworkConnectDuration_ms()));
+      return KeyValueStruct(F("Connected"), format_msec_duration(ESPEasy::net::NetworkConnectDuration_ms()), KeyValueStruct::Format::PreFormatted);
     }
     case LabelType::CONNECTED_MSEC:
     {
-      return KeyValueStruct(F("Connected msec"), ESPEasy::net::NetworkConnectDuration_ms());
+      return KeyValueStruct(F("Connected msec"), ESPEasy::net::NetworkConnectDuration_ms(), KeyValueStruct::Format::PreFormatted);
     }
     case LabelType::LAST_DISCONNECT_REASON:
     {
@@ -744,11 +744,11 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
     }
     case LabelType::WIFI_STORED_SSID1:
     {
-      return KeyValueStruct(F("Configured SSID1"), SecuritySettings.WifiSSID);
+      return KeyValueStruct(F("Configured SSID1"), SecuritySettings.WifiSSID, KeyValueStruct::Format::PreFormatted);
     }
     case LabelType::WIFI_STORED_SSID2:
     {
-      return KeyValueStruct(F("Configured SSID2"), SecuritySettings.WifiSSID2);
+      return KeyValueStruct(F("Configured SSID2"), SecuritySettings.WifiSSID2, KeyValueStruct::Format::PreFormatted);
     }
 
 
@@ -815,7 +815,7 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
         descr += ' ';
         descr += F(BUILD_NOTES);
       }
-      return KeyValueStruct(F("Build"), descr);
+      return KeyValueStruct(F("Build"), descr, KeyValueStruct::Format::PreFormatted);
     }
     case LabelType::BUILD_ORIGIN:
     {
@@ -826,20 +826,23 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
       String res(F(BUILD_GIT));
 
       if (res.isEmpty()) { res = get_git_head(); }
-      return KeyValueStruct(F("Git Build"), res);
+      return KeyValueStruct(F("Git Build"), res, KeyValueStruct::Format::PreFormatted);
     }
     case LabelType::SYSTEM_LIBRARIES:
     {
-      return KeyValueStruct(F("System Libraries"), getSystemLibraryString());
+      return KeyValueStruct(F("System Libraries"), getSystemLibraryString(), KeyValueStruct::Format::PreFormatted);
     }
 #ifdef ESP32
     case LabelType::ESP_IDF_SDK_VERSION:
     {
-      return KeyValueStruct(F("ESP-IDF Version"), strformat(
-                              F("%d.%d.%d"),
-                              ESP_IDF_VERSION_MAJOR,
-                              ESP_IDF_VERSION_MINOR,
-                              ESP_IDF_VERSION_PATCH));
+      return KeyValueStruct(
+        F("ESP-IDF Version"), 
+        strformat(
+          F("%d.%d.%d"),
+          ESP_IDF_VERSION_MAJOR,
+          ESP_IDF_VERSION_MINOR,
+          ESP_IDF_VERSION_PATCH), 
+        KeyValueStruct::Format::PreFormatted);
     }
 #endif // ifdef ESP32
     case LabelType::PLUGIN_COUNT:
@@ -848,28 +851,28 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
     }
     case LabelType::PLUGIN_DESCRIPTION:
     {
-      return KeyValueStruct(F("Plugin Description"), getPluginDescriptionString());
+      return KeyValueStruct(F("Plugin Description"), getPluginDescriptionString(), KeyValueStruct::Format::PreFormatted);
     }
     case LabelType::BUILD_TIME:
     {
-      return KeyValueStruct(F("Build Time"), String(get_build_date()) + ' ' + get_build_time());
+      return KeyValueStruct(F("Build Time"), String(get_build_date()) + ' ' + get_build_time(), KeyValueStruct::Format::PreFormatted);
     }
     case LabelType::BINARY_FILENAME:
     {
-      return KeyValueStruct(F("Binary Filename"), get_binary_filename());
+      return KeyValueStruct(F("Binary Filename"), get_binary_filename(), KeyValueStruct::Format::PreFormatted);
     }
     case LabelType::BUILD_PLATFORM:
     {
-      return KeyValueStruct(F("Build Platform"), get_build_platform());
+      return KeyValueStruct(F("Build Platform"), get_build_platform(), KeyValueStruct::Format::PreFormatted);
     }
     case LabelType::GIT_HEAD:
     {
-      return KeyValueStruct(F("Git HEAD"), get_git_head());
+      return KeyValueStruct(F("Git HEAD"), get_git_head(), KeyValueStruct::Format::PreFormatted);
     }
     #ifdef CONFIGURATION_CODE
     case LabelType::CONFIGURATION_CODE_LBL:
     {
-      return KeyValueStruct(F("Configuration code"), getConfigurationCode());
+      return KeyValueStruct(F("Configuration code"), getConfigurationCode(), KeyValueStruct::Format::PreFormatted);
     }
     #endif // ifdef CONFIGURATION_CODE
 #if FEATURE_CLEAR_I2C_STUCK
@@ -907,7 +910,7 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
 
     case LabelType::ESP_CHIP_ID:
     {
-      return KeyValueStruct(F("ESP Chip ID"), formatToHex(getChipId(), 6));
+      return KeyValueStruct(F("ESP Chip ID"), formatToHex(getChipId(), 6), KeyValueStruct::Format::PreFormatted);
     }
     case LabelType::ESP_CHIP_FREQ:
     {
@@ -937,7 +940,7 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
 #endif // ifdef ESP32
     case LabelType::ESP_CHIP_MODEL:
     {
-      return KeyValueStruct(F("ESP Chip Model"), getChipModel());
+      return KeyValueStruct(F("ESP Chip Model"), getChipModel(), KeyValueStruct::Format::PreFormatted);
     }
     case LabelType::ESP_CHIP_REVISION:
     {
@@ -958,7 +961,7 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
       auto flashChipId = getFlashChipId();
 
       if (flashChipId == 0) { break; }
-      return KeyValueStruct(F("Flash Chip ID"), formatToHex(flashChipId, 6));
+      return KeyValueStruct(F("Flash Chip ID"), formatToHex(flashChipId, 6), KeyValueStruct::Format::PreFormatted);
     }
     case LabelType::FLASH_CHIP_VENDOR:
     {
@@ -971,7 +974,7 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
         id += concat(F(" (PUYA"), puyaSupport() ? F(", supported") : F(HTML_SYMBOL_WARNING)) + ')';
       }
 
-      return KeyValueStruct(F("Flash Chip Vendor"), id);
+      return KeyValueStruct(F("Flash Chip Vendor"), id, KeyValueStruct::Format::PreFormatted);
     }
     case LabelType::FLASH_CHIP_MODEL:
     {
@@ -1025,7 +1028,7 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
     }
     case LabelType::FLASH_IDE_MODE:
     {
-      KeyValueStruct kv(F("Flash IDE Mode"), getFlashChipMode());
+      KeyValueStruct kv(F("Flash IDE Mode"), getFlashChipMode(), KeyValueStruct::Format::PreFormatted);
       KV_SETID(F("mode"));
       return kv;
     }

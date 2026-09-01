@@ -32,7 +32,7 @@ struct msecTimerHandlerStruct {
 
   void   updateIdleTimeStats();
 
-  float  getIdleTimePct() const;
+  float  getIdleTimePct() ;
 
 private:
 

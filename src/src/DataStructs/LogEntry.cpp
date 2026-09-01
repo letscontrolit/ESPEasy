@@ -25,7 +25,7 @@ LogEntry_t::LogEntry_t(const uint8_t logLevel,
   _subscriberPendingRead(0)
 {
   if (_strLength && loglevelActiveFor(logLevel)) {
-    _message = special_calloc(1, _strLength + 1);
+    _message = special_calloc(1, _strLength + 1, false);
 
     if (_message) {
       memcpy_P(_message, message, _strLength);
@@ -44,7 +44,7 @@ LogEntry_t::LogEntry_t(const uint8_t logLevel,
 {
   if (_strLength && loglevelActiveFor(logLevel)) {
 
-    _message = special_calloc(1, _strLength + 1);
+    _message = special_calloc(1, _strLength + 1, false);
 
     if (_message) {
       memcpy_P(_message, message.begin(), _strLength);
@@ -66,7 +66,7 @@ LogEntry_t::LogEntry_t(const uint8_t logLevel,
   String str = std::move(message);
 
   if (_strLength && loglevelActiveFor(logLevel)) {
-    _message = special_calloc(1, _strLength + 1);
+    _message = special_calloc(1, _strLength + 1, false);
 
     if (_message) {
       memcpy_P(_message, str.begin(), _strLength);
@@ -128,23 +128,6 @@ void LogEntry_t::setSubscribers()
   }
 }
 
-void LogEntry_t::updateSubscribers()
-{
-  if (isValid()) {
-    for (uint32_t i = 0; _subscriberPendingRead && i < NR_LOG_TO_DESTINATIONS; ++i) {
-      if (bitRead(_subscriberPendingRead, i)) {
-        if (!loglevelActiveFor(static_cast<LogDestination>(i), _logLevel)) {
-          bitClear(_subscriberPendingRead, i);
-        }
-      }
-    }
-
-    if (_subscriberPendingRead == 0) {
-      clear();
-    }
-  }
-}
-
 void LogEntry_t::markReadBySubscriber(uint8_t subscriber)
 {
   if (subscriber < NR_LOG_TO_DESTINATIONS) {
@@ -160,7 +143,7 @@ bool LogEntry_t::validForSubscriber(uint8_t subscriber) const
 {
   return isValid() && (subscriber < NR_LOG_TO_DESTINATIONS) && bitRead(_subscriberPendingRead, subscriber);
 }
-
+/*
 size_t LogEntry_t::print(Print& out, size_t offset, size_t length) const
 {
   if (offset > _strLength) { return 0; }
@@ -181,7 +164,7 @@ size_t LogEntry_t::print(Print& out, size_t offset, size_t length) const
   }
   return pos - begin - offset;
 }
-
+*/
 String LogEntry_t::getMessage() const
 {
   if (_message == nullptr) { return EMPTY_STRING; }
@@ -192,11 +175,39 @@ String LogEntry_t::getMessage() const
   return String((const char *)_message);
 }
 
-bool LogEntry_t::isExpired() const
+bool LogEntry_t::hasExpired(size_t freeMem) const
 {
-  return
-    !isValid() ||
-    timePassedSince(_timestamp) >= LOG_BUFFER_EXPIRE;
+  auto age = timePassedSince(_timestamp);
+
+  if (!isValid()) {
+    return true; 
+  }
+
+  if (freeMem < LOGENTRY_FREEMEM_THRESHOLD) {
+    // We need to free up memory, so try to throw away log entries
+    // which are less important (debug logs) and/or take up more memory
+    switch (_logLevel)
+    {
+      case LOG_LEVEL_ERROR: break;
+      case LOG_LEVEL_INFO:
+      {
+        // Keep non-flash string logs for half the expire duration
+        if (!_isFlashString) {
+          age *= 2;
+        }
+        break;
+      }
+      default:
+      {
+        // Keep non-flash string logs for 1/4th of the expire duration
+        // flash string logs for half the expire duration
+        const auto ageFactor = _isFlashString ? 2 : 4;
+        age *= ageFactor;
+        break;
+      }
+    }
+  }
+  return age >= LOG_BUFFER_EXPIRE;
 }
 
 bool LogEntry_t::isValid() const

@@ -319,6 +319,7 @@ void P023_data_struct::setCurrentText(const String& string, int X, int Y) {
     if (currentLines[X].length() >= static_cast<size_t>(Y)) {
       currentLines[X] = currentLines[X].substring(0, Y + 1) + string;
     } else {
+      // TODO TD-er: Check if we can use prefixToMinimumLength here
       for (size_t i = currentLines[X].length(); i < static_cast<size_t>(Y); ++i) {
         currentLines[X] += ' ';
       }

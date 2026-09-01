@@ -635,13 +635,11 @@ void logMemUsageAfter(const __FlashStringHelper *function, int value) {
         log += value;
       }
 
-      while (log.length() < 30) { log += ' ';
-      }
+      padToMinimumLength(log, 30);
       log += F("Free mem after: ");
       log += freemem_end;
 
-      while (log.length() < 55) { log += ' ';
-      }
+      padToMinimumLength(log, 55);
       log += F("diff: ");
       log += last_freemem - freemem_end;
       addLogMove(LOG_LEVEL_DEBUG, log);

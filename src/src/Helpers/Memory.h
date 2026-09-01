@@ -56,10 +56,12 @@ uint32_t getMaxFreeBlock();
 void *special_malloc(uint32_t size);
 void *special_realloc(void *ptr, size_t size);
 void *special_calloc(size_t num, size_t size);
+void *special_calloc(size_t num, size_t size, bool preferHeap);
 
 
 // Perform a special memory allocate for the buffer pointer in the String object
 // Allocation is tried either on 2nd heap (ESP8266) or PSRAM (ESP32)
 // when possible.
 bool String_reserve_special(String& str, size_t size);
+bool String_reserve_special(String& str, size_t size, size_t strLengthThreshold);
 

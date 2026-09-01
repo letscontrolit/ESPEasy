@@ -172,7 +172,12 @@ void* special_realloc(void *ptr, size_t size) {
   return res;
 }
 
-void* special_calloc(size_t num, size_t size) {
+void *special_calloc(size_t num, size_t size)
+{
+  return special_calloc(num, size, true);
+}
+
+void* special_calloc(size_t num, size_t size, bool preferHeap) {
   void *res = nullptr;
 
 #ifdef ESP32
@@ -182,7 +187,7 @@ void* special_calloc(size_t num, size_t size) {
   }
 #else // ifdef ESP32
 # ifdef USE_SECOND_HEAP
-  if (size > 64 || FreeMem() < 5000) {
+  if (!preferHeap || size > 64 || FreeMem() < 5000) {
 
     // Try allocating on ESP8266 2nd heap, only when sufficiently large data is needed
     HeapSelectIram ephemeral;
@@ -212,12 +217,17 @@ void* special_calloc(size_t num, size_t size) {
 
 #ifdef ESP8266
 bool String_reserve_special(String& str, size_t size) {
+  return String_reserve_special(str, size, 48);
+}
+
+bool String_reserve_special(String& str, size_t size, size_t strLengthThreshold) {
+
   if (str.length() >= size) {
     // Nothing needs to be done
     return true;
   }
   #ifdef USE_SECOND_HEAP
-  if (size >= 48 || FreeMem() < 5000) {
+  if (size >= strLengthThreshold || FreeMem() < 5000) {
     // Only try to store larger strings here as those tend to be kept for a longer period.
     HeapSelectIram ephemeral;
     // String does round up to nearest multiple of 16 bytes, so no need to round up to multiples of 32 bit here
@@ -256,8 +266,11 @@ class PSRAM_String : public String {
   }
 };
 
-
 bool String_reserve_special(String& str, size_t size) {
+  return String_reserve_special(str, size, 48);
+}
+
+bool String_reserve_special(String& str, size_t size, size_t strLengthThreshold) {
   if (size == 0) {
     return true;
   }

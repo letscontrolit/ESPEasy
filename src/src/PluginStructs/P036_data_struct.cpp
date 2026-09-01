@@ -2183,6 +2183,7 @@ void P036_data_struct::P036_DisplayPage(struct EventStruct *event)
               }
 
               if (addSpaces > 0) {
+                // TODO TD-er: Check if we can use prefixToMinimumLength here
                 currentLines[i].reserve(currentLines[i].length() + addSpaces);
 
                 while (addSpaces > 0) {
@@ -2288,10 +2289,13 @@ String P036_data_struct::P36_parseTemplate(String& tmpString, uint8_t lineIdx) {
   }
   # endif // if P036_ENABLE_TICKER
 
+  // FIXME TD-er: It looks like the "Align left" and "Align right" are used here as the exact opposite
+  // Might be functionally correct, but the enum names are then confusing to say the least.
   switch (iTextAlignment) {
     case TEXT_ALIGN_LEFT:
 
       // add leading spaces from tmpString to the result
+      // TODO TD-er: Check if we can use prefixToMinimumLength here
       for (uint16_t l = 0; l < tmpString.length(); ++l) {
         if (tmpString[l] != ' ') {
           break;
@@ -2302,6 +2306,7 @@ String P036_data_struct::P36_parseTemplate(String& tmpString, uint8_t lineIdx) {
     case TEXT_ALIGN_RIGHT:
 
       // add trailing spaces from tmpString to the result
+      // TODO TD-er: Check if we can use padToMinimumLength here
       for (int16_t l = tmpString.length() - 1; l >= 0; --l) {
         if (tmpString[l] != ' ') {
           break;

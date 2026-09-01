@@ -85,8 +85,12 @@ bool equals(const String& str, const char& c) {
 }
 
 void move_special(String& dest, String&& source) {
+  move_special(dest, std::move(source), 64);
+}
+
+void move_special(String& dest, String&& source, size_t strLengthThreshold) {
   // Only try to store larger strings here as those tend to be kept for a longer period.
-  if ((source.length() >= 64) 
+  if ((source.length() >= strLengthThreshold) 
 #ifdef USE_SECOND_HEAP
       && mmu_is_dram(&(source[0]))
 #endif
@@ -106,14 +110,23 @@ void move_special(String& dest, String&& source) {
 }
 
 String move_special(String&& source) {
+  return move_special(std::move(source), 64);
+}
+
+String move_special(String&& source, size_t strLengthThreshold) {
   String dest;
-  move_special(dest, std::move(source));
+  move_special(dest, std::move(source), strLengthThreshold);
   return dest;
 }
 
 
 bool reserve_special(String& str, size_t size) {
   return String_reserve_special(str, size);
+}
+
+bool reserve_special(String& str, size_t size, size_t strLengthThreshold)
+{
+  return String_reserve_special(str, size, strLengthThreshold);
 }
 
 void free_string(String& str) {
@@ -312,6 +325,22 @@ void replaceUnicodeByChar(String& line, char replChar) {
   }
 }
 
+void padToMinimumLength(String& line, uint32_t minimumLength, char padChar)
+{
+  if (line.length() >= minimumLength) return;
+  line.reserve(minimumLength);
+  while (line.length() < minimumLength) line += padChar;
+}
+
+void prefixToMinimumLength(String& line, uint32_t minimumLength, char prefixChar)
+{
+  if (line.length() >= minimumLength) return;
+ 
+  String prefix;
+  padToMinimumLength(prefix, minimumLength - line.length(), prefixChar);
+  line = prefix + line;
+}
+
 /*********************************************************************************************\
    Format a value to the set number of decimals
 \*********************************************************************************************/
@@ -474,21 +503,15 @@ String get_formatted_Plugin_number(pluginID_t pluginID)
 
 String formatIntLeadingZeroes(int value, int nrDigits)
 {
-  const String fmt = strformat(F("%%0%dd"), nrDigits);
-  return strformat(fmt, value);
-//  return formatIntLeadingZeroes(String(value), nrDigits);
+  String res(value);
+  prefixToMinimumLength(res, nrDigits, '0');
+  return res;
 }
 
 String formatIntLeadingZeroes(const String& value, int nrDigits)
 {
-  String res;
-  res.reserve(nrDigits);
-  int nrZeroes = nrDigits - value.length();
-  while (nrZeroes > 0) {
-    --nrZeroes;
-    res += '0';
-  }
-  res += value;
+  String res(value);
+  prefixToMinimumLength(res, nrDigits, '0');
   return res;
 }
 
@@ -548,19 +571,8 @@ String to_json_value(const String& value, bool wrapInQuotes) {
     // Empty string
     return F("\"\"");
   }
-  const size_t val_length = value.length();
-
-  if (val_length > 2) {
-    // Check for JSON objects or arrays
-    const char firstchar = value[0];
-    const char lastchar = value[val_length - 1];
-    if ((firstchar == '[' && lastchar == ']') ||
-        (firstchar == '{' && lastchar == '}')) 
-    {
-      return value;
-    }
-  }
-
+  
+  if (is_json_formatted(value)) return value;
 
   if (wrapInQuotes || mustConsiderAsJSONString(value)) {
     // Is not a numerical value, or BIN/HEX notation, thus wrap with quotes
@@ -571,7 +583,8 @@ String to_json_value(const String& value, bool wrapInQuotes) {
     const bool backslash_or_doubleQuote_found = 
       value.indexOf('\\') != -1 ||
       value.indexOf('"') != -1;
-    
+  
+    const size_t val_length = value.length();
     for (size_t i = 0; i < val_length; ++i) {
       const char c = value[i];
       // Special characters not allowed in JSON:
@@ -603,6 +616,22 @@ String to_json_value(const String& value, bool wrapInQuotes) {
   return value;
 }
 
+
+bool is_json_formatted(const String& value)
+{
+  const size_t val_length = value.length();
+  if (val_length > 2) {
+    // Check for JSON objects or arrays
+    const char firstchar = value[0];
+    const char lastchar = value[val_length - 1];
+    if ((firstchar == '[' && lastchar == ']') ||
+        (firstchar == '{' && lastchar == '}')) 
+    {
+      return true;
+    }
+  }
+  return false;
+}
 
 /*********************************************************************************************\
    Strip wrapping chars (e.g. quotes)

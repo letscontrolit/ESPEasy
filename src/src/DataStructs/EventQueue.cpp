@@ -10,7 +10,7 @@ void EventQueueStruct::add(const String& event, bool deduplicate)
   if (!deduplicate || !isDuplicate(event)) {
 #if defined(USE_SECOND_HEAP) || defined(ESP32)
     String tmp;
-    reserve_special(tmp, event.length());
+    reserve_special(tmp, event.length(), 0);
     tmp = event;
 
 #ifdef USE_SECOND_HEAP
@@ -29,7 +29,7 @@ void EventQueueStruct::add(const String& event, bool deduplicate)
 void EventQueueStruct::add(const __FlashStringHelper *event, bool deduplicate)
 {
   String str;
-  move_special(str, String(event));
+  move_special(str, String(event), 0);
   add(str, deduplicate);
 }
 
@@ -51,7 +51,7 @@ void EventQueueStruct::addMove(String&& event, bool deduplicate)
   if (!deduplicate || !isDuplicate(event)) {
     #if defined(USE_SECOND_HEAP) || defined(ESP32)
     String tmp;
-    move_special(tmp, std::move(event));
+    move_special(tmp, std::move(event), 0);
 
     #ifdef USE_SECOND_HEAP
     // Do not add to the list while on 2nd heap

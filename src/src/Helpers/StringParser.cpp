@@ -522,9 +522,7 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
   parse_string_commands(newString);
 
   // padding spaces
-  while (newString.length() < minimal_lineSize) {
-    newString += ' ';
-  }
+  padToMinimumLength(newString, minimal_lineSize);
 
   STOP_TIMER(PARSE_TEMPLATE_PADDED);
   #ifndef BUILD_NO_RAM_TRACKER
@@ -800,6 +798,7 @@ void transformValue(
 
               if (valueJustLength > 1)
               {
+                // TODO TD-er: Check if we can use prefixToMinimumLength here
                 if (isDigit(valueJust[1]))                          // Check Pn where n is between 0 and 9
                 {
                   int filler = valueJust[1] - value.length() - '0'; // char '0' = 48; char '9' = 58
@@ -814,6 +813,7 @@ void transformValue(
 
               if (valueJustLength > 1)
               {
+                // TODO TD-er: Check if we can use padToMinimumLength here
                 if (isDigit(valueJust[1]))                          // Check Sn where n is between 0 and 9
                 {
                   int filler = valueJust[1] - value.length() - '0'; // 48
@@ -888,6 +888,7 @@ void transformValue(
 
       if (rightJustify)
       {
+        // TODO TD-er: Check if we can use prefixToMinimumLength here
         int filler = lineSize - newString.length() - value.length() - tmpString.length();
 
         for (uint8_t f = 0; f < filler; f++) {
