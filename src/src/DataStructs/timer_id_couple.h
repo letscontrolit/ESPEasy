@@ -17,8 +17,12 @@ struct timer_id_couple {
 
   bool operator<(const timer_id_couple& other) const;
 
-  unsigned long _id;
-  unsigned long _timer;
+  // Returns true when _id matches.
+  bool operator()(const timer_id_couple& item) const;
+
+
+  unsigned long _id{};
+  unsigned long _timer{};
 };
 
 

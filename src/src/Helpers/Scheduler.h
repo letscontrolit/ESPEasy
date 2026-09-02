@@ -310,8 +310,9 @@ void                 setPluginTaskTimer(unsigned long msecFromNow,
   /*********************************************************************************************\
   * Statistics
   \*********************************************************************************************/
-
+#ifndef BUILD_NO_DEBUG
   String getQueueStats();
+#endif
 
   void   updateIdleTimeStats();
 
