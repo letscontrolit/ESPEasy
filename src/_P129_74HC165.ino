@@ -44,6 +44,29 @@
 
 # include "./src/PluginStructs/P129_data_struct.h"
 
+String P129_formatValue(uint32_t value, struct EventStruct *event, bool showSeparatorDot)
+{
+  const uint8_t base =
+# ifdef P129_SHOW_VALUES
+    P129_CONFIG_FLAGS_GET_VALUES_DISPLAY ? BIN :
+# endif // ifdef P126_SHOW_VALUES
+    HEX;
+
+  const uint8_t minNrDigits = (base == BIN) ? 32 : 8;
+  const char separatorChar = showSeparatorDot ? '.' : '\0';
+  constexpr bool toUpperCase = true;
+
+  return concat(
+    (base == BIN) ? F("0b") : F("0x"),
+    ull2String(
+      value,
+      base, 
+      minNrDigits,
+      separatorChar,
+      toUpperCase));
+}
+
+
 boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
@@ -232,7 +255,10 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
             # ifdef P129_DEBUG_LOG
 
             if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-              addLog(LOG_LEVEL_INFO, strformat(F("74HC165 Reading from: %d, bits: %s"), i / 4, ul2stringFixed(bits, BIN, false).c_str()));
+              addLog(LOG_LEVEL_INFO, strformat(
+                F("74HC165 Reading from: %d, bits: %s"), 
+                i / 4, 
+                ull2String(bits, BIN, 32, '\0', true).c_str()));
             }
             # endif // ifdef P129_DEBUG_LOG
           }
@@ -305,7 +331,7 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
           addLog(LOG_LEVEL_INFO, strformat(F("74HC165 Writing to: %d, offset: %d, bits: %s"),
                                            i / 4,
                                            off * 8,
-                                           ul2stringFixed(bits, BIN, false).c_str()));
+                                           ull2String(bits, BIN, 32, '\0', true).c_str()));
         }
         # endif // ifdef P129_DEBUG_LOG
         off++;
@@ -378,18 +404,10 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
 
       if ((P129_CONFIG_FLAGS_GET_OUTPUT_SELECTION == P129_OUTPUT_BOTH) ||
           (P129_CONFIG_FLAGS_GET_OUTPUT_SELECTION == P129_OUTPUT_HEXBIN)) {
-        string += '0';
-        string += (P129_CONFIG_FLAGS_GET_VALUES_DISPLAY ? 'b' : 'x');
-
-        string += ul2stringFixed(UserVar.getUint32(event->TaskIndex, event->idx),
-                                 # ifdef P129_SHOW_VALUES
-                                 (P129_CONFIG_FLAGS_GET_VALUES_DISPLAY ? BIN :
-                                 # endif // ifdef P129_SHOW_VALUES
-                                 HEX
-                                 # ifdef P129_SHOW_VALUES
-                                 )
-                                 # endif // ifdef P129_SHOW_VALUES
-                                 , 1 == event->ParN[event->idx]);
+        string += P129_formatValue(
+          UserVar.getUint32(event->TaskIndex, event->idx),
+          event,
+          (1 == event->ParN[event->idx]));
       }
       success = true;
       break;
@@ -419,7 +437,10 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
           label += (P129_CONFIG_SHOW_OFFSET + (4 * varNr) + 1);          // 4 = nr of bytes in an uint32_t.
 
           if ((P129_CONFIG_SHOW_OFFSET + (4 * varNr) + 4) <= endCheck) { // Only show if still in range
-            state += ul2stringFixed(UserVar.getUint32(event->TaskIndex, varNr), P129_CONFIG_FLAGS_GET_VALUES_DISPLAY ? BIN : HEX, true);
+            string += P129_formatValue(
+              UserVar.getUint32(event->TaskIndex, varNr),
+              event,
+              true);
             pluginWebformShowValue(event->TaskIndex, VARS_PER_TASK + varNr, label, state, true);
           }
         }

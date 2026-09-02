@@ -60,6 +60,28 @@
 
 # include "./src/PluginStructs/P126_data_struct.h"
 
+String P126_formatValue(uint32_t value, struct EventStruct *event, bool showSeparatorDot)
+{
+  const uint8_t base =
+# ifdef P126_SHOW_VALUES
+    P126_CONFIG_FLAGS_GET_VALUES_DISPLAY ? BIN :
+# endif // ifdef P126_SHOW_VALUES
+    HEX;
+
+  const uint8_t minNrDigits = (base == BIN) ? 32 : 8;
+  const char separatorChar = showSeparatorDot ? '.' : '\0';
+  constexpr bool toUpperCase = true;
+
+  return concat(
+    (base == BIN) ? F("0b") : F("0x"),
+    ull2String(
+      value,
+      base, 
+      minNrDigits,
+      separatorChar,
+      toUpperCase));
+}
+
 boolean Plugin_126(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
@@ -272,18 +294,10 @@ boolean Plugin_126(uint8_t function, struct EventStruct *event, String& string)
 
       if ((P126_CONFIG_FLAGS_GET_OUTPUT_SELECTION == P126_OUTPUT_BOTH) ||
           (P126_CONFIG_FLAGS_GET_OUTPUT_SELECTION == P126_OUTPUT_HEXBIN)) {
-        string += '0';
-        string += (P126_CONFIG_FLAGS_GET_VALUES_DISPLAY ? 'b' : 'x');
-
-        string += ul2stringFixed(UserVar.getUint32(event->TaskIndex, event->idx),
-                                 # ifdef P126_SHOW_VALUES
-                                 (P126_CONFIG_FLAGS_GET_VALUES_DISPLAY ? BIN :
-                                 # endif // ifdef P126_SHOW_VALUES
-                                 HEX
-                                 # ifdef P126_SHOW_VALUES
-                                 )
-                                 # endif // ifdef P126_SHOW_VALUES
-                                 , 1 == event->ParN[event->idx]);
+        string += P126_formatValue(
+          UserVar.getUint32(event->TaskIndex, event->idx),
+          event,
+          (1 == event->ParN[event->idx]));
       }
       success = true;
       break;
@@ -302,10 +316,8 @@ boolean Plugin_126(uint8_t function, struct EventStruct *event, String& string)
         for (uint16_t varNr = 0; varNr < maxVar; ++varNr) {
           if (P126_CONFIG_FLAGS_GET_VALUES_DISPLAY) {
             label     = F("Bin");
-            state     = F("0b");
           } else {
             label     = F("Hex");
-            state     = F("0x");
           }
           label += strformat(F(" State_%s "), abcd.substring(varNr, varNr + 1).c_str());
 
@@ -314,7 +326,10 @@ boolean Plugin_126(uint8_t function, struct EventStruct *event, String& string)
           label += (P126_CONFIG_SHOW_OFFSET + (4 * varNr) + 1);          // 4 = nr of bytes in an uint32_t.
 
           if ((P126_CONFIG_SHOW_OFFSET + (4 * varNr) + 4) <= endCheck) { // Only show if still in range
-            state += ul2stringFixed(UserVar.getUint32(event->TaskIndex, varNr), P126_CONFIG_FLAGS_GET_VALUES_DISPLAY ? BIN : HEX, true);
+            string += P126_formatValue(
+              UserVar.getUint32(event->TaskIndex, varNr),
+              event,
+              true);
             pluginWebformShowValue(event->TaskIndex, VARS_PER_TASK + varNr, label, state, true);
           }
         }

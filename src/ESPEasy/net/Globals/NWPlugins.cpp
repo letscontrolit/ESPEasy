@@ -439,7 +439,8 @@ bool NWPluginCall(NWPlugin::Function Function, EventStruct *event, String& str)
                     if (event->kvWriter->summaryValueOnly()) {
                       event->kvWriter->write({
                           EMPTY_STRING,
-                          concat(F("MAC: "), event->networkInterface->macAddress()) });
+                          concat(F("MAC: "), event->networkInterface->macAddress()),
+                          KeyValueStruct::Format::PreFormatted });
                     }
                     else {
                       event->kvWriter->write({
@@ -460,7 +461,7 @@ bool NWPluginCall(NWPlugin::Function Function, EventStruct *event, String& str)
                       static_cast<NWPlugin::IP_type>(event->Par1),
                       event->networkInterface,
                       prstr);
-                    event->kvWriter->write({ F("ip"), prstr.getMove() });
+                    event->kvWriter->write({ F("ip"), prstr.getMove(), KeyValueStruct::Format::PreFormatted });
                     success = true;
                   }
                   break;

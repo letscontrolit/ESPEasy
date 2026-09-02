@@ -554,24 +554,20 @@ void P073_data_struct::setTextToScroll(const String& text) {
 
   if (!text.isEmpty()) {
     const int bufToFill = P073_getDefaultDigits(displayModel, digits);
-    _textToScroll.reserve(text.length() + bufToFill + (scrollFull ? bufToFill : 0));
-
-    for (int i = 0; scrollFull && i < bufToFill; ++i) { // Scroll text in from the right, so start with all spaces
-      _textToScroll +=
+    const char fillChar =
         #  if P073_7DBIN_COMMAND
         binaryData ? (char)0x00 :
         #  endif // if P073_7DBIN_COMMAND
         ' ';
-    }
-    _textToScroll += text;
 
-    for (int i = 0; i < bufToFill; ++i) { // Scroll text off completely before restarting
-      _textToScroll +=
-        #  if P073_7DBIN_COMMAND
-        binaryData ? (char)0x00 :
-        #  endif // if P073_7DBIN_COMMAND
-        ' ';
+    _textToScroll = text;
+
+    if (scrollFull) {
+      // Scroll text in from the right, so start with all spaces
+      prefixToMinimumLength(_textToScroll, _textToScroll.length() + bufToFill, fillChar);
     }
+    // Scroll text off completely before restarting
+    padToMinimumLength(_textToScroll, _textToScroll.length() + bufToFill, fillChar);
   }
   scrollCount = _scrollSpeed;
   scrollPos   = 0;
