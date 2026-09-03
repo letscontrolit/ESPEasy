@@ -1645,7 +1645,6 @@ To create/register a plugin, you have to :
     #define USES_C013   // ESPEasy P2P network
 #endif
 
-
 #ifdef NOTIFIER_SET_STABLE
     #define USES_N001   // Email
     #define USES_N002   // Buzzer
@@ -1895,7 +1894,10 @@ To create/register a plugin, you have to :
   #if !defined(USES_P178) && defined(ESP32)
     #define USES_P178   // Extra IO - LU9685 Servo controller
   #endif
-#endif // ifdef PLUGIN_SET_COLLECTION_H
+  #if !defined(USES_P184) && defined(ESP32)
+    #define USES_P184   // Output - Triac
+  #endif
+#endif // ifdef PLUGIN_SET_COLLECTION_G
 
 // Collection of all energy related plugins.
 #ifdef PLUGIN_ENERGY_COLLECTION
@@ -1970,7 +1972,9 @@ To create/register a plugin, you have to :
   #if !defined(USES_P180) && defined(ESP32)
     #define USES_P180   // Generic - I2C Generic
   #endif
-
+  #if !defined(USES_P184) && defined(ESP32)
+    #define USES_P184   // Output - Triac
+  #endif
 #endif // ifdef PLUGIN_ENERGY_COLLECTION
 
 // Collection of display plugins, set A (non-AdaGFX_Helper).
@@ -3038,6 +3042,10 @@ To create/register a plugin, you have to :
 
   #ifndef USES_P180
     #define USES_P180   // Generic - I2C Generic
+  #endif
+
+  #ifndef USES_P184
+    #define USES_P184   // Output - Triac
   #endif
 
   // Controllers
