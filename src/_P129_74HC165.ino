@@ -52,7 +52,8 @@ String P129_formatValue(uint32_t value, struct EventStruct *event, bool showSepa
 # endif // ifdef P126_SHOW_VALUES
     HEX;
 
-  const uint8_t minNrDigits = (base == BIN) ? 32 : 8;
+  const uint8_t digitsPerByte = (base == BIN) ? 8 : 2;
+  const uint8_t minNrDigits = std::min(static_cast<int>(P129_CONFIG_CHIP_COUNT), 4) * digitsPerByte;
   const char separatorChar = showSeparatorDot ? '.' : '\0';
   constexpr bool toUpperCase = true;
 

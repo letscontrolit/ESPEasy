@@ -573,7 +573,7 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
         auto ip = ESPEasy::net::NetworkLocalIP6();
 
         if (ip != IN6ADDR_ANY) {
-          return KeyValueStruct(F("IPv6 link local"), formatIP(ip, true));
+          return KeyValueStruct(F("IPv6 link local"), formatIP(ip, true), KeyValueStruct::Format::PreFormatted);
         }
       }
       break;
@@ -583,7 +583,7 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
         auto ip = ESPEasy::net::NetworkGlobalIP6();
 
         if (ip != IN6ADDR_ANY) {
-          return KeyValueStruct(F("IPv6 global"), formatIP(ip));
+          return KeyValueStruct(F("IPv6 global"), formatIP(ip), KeyValueStruct::Format::PreFormatted);
         }
       }
       break;
@@ -855,7 +855,7 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
     }
     case LabelType::BUILD_TIME:
     {
-      return KeyValueStruct(F("Build Time"), String(get_build_date()) + ' ' + get_build_time(), KeyValueStruct::Format::PreFormatted);
+      return KeyValueStruct(F("Build Time"), String(get_build_date()) + ' ' + get_build_time());
     }
     case LabelType::BINARY_FILENAME:
     {
@@ -989,9 +989,9 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
         model += F(" (Embedded)");
       }
     # endif // ifdef ESP32
-      return KeyValueStruct(F("Flash Chip Model"), model);
+      return KeyValueStruct(F("Flash Chip Model"), model, KeyValueStruct::Format::PreFormatted);
       #else // ifndef LIMIT_BUILD_SIZE
-      return KeyValueStruct(F("Flash Chip Model"), getFlashChipId());
+      return KeyValueStruct(F("Flash Chip Model"), getFlashChipId(), KeyValueStruct::Format::PreFormatted);
       #endif // ifndef LIMIT_BUILD_SIZE
     }
     case LabelType::FLASH_CHIP_REAL_SIZE:
