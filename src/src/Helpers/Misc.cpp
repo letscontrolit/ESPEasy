@@ -127,7 +127,7 @@ bool setControllerEnableStatus(controllerIndex_t controllerIndex, bool enabled)
       CPluginCall(CPlugin::Function::CPLUGIN_EXIT, &TempEvent, dummy);
     }
 
-    Settings.ControllerEnabled[controllerIndex] = enabled;
+    Settings.ControllerEnabled(controllerIndex, enabled);
     const protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(controllerIndex);
 
     if (validProtocolIndex(ProtocolIndex)) {
@@ -148,7 +148,7 @@ bool setControllerEnableStatus(controllerIndex_t controllerIndex, bool enabled)
 bool setTaskEnableStatus(taskIndex_t taskIndex,
                          bool        enabled)
 {
-  if (Settings.TaskDeviceEnabled[taskIndex] != enabled) {
+  if (Settings.TaskDeviceEnabled(taskIndex) != enabled) {
     struct EventStruct TempEvent(taskIndex);
     return setTaskEnableStatus(&TempEvent, enabled);
   }
@@ -165,7 +165,7 @@ bool setTaskEnableStatus(struct EventStruct *event, bool enabled)
 
   // Only enable task if it has a Plugin configured
   if (validPluginID(Settings.getPluginID_for_task(event->TaskIndex)) || !enabled) {
-    if (enabled != Settings.TaskDeviceEnabled[event->TaskIndex])
+    if (enabled != Settings.TaskDeviceEnabled(event->TaskIndex))
     {
       String dummy;
 
@@ -176,7 +176,7 @@ bool setTaskEnableStatus(struct EventStruct *event, bool enabled)
       // Toggle enable/disable state via command
       // FIXME TD-er: Should this be a 'runtime' change, or actually change the intended state?
       // Settings.TaskDeviceEnabled[event->TaskIndex].enabled = enabled;
-      Settings.TaskDeviceEnabled[event->TaskIndex] = enabled;
+      Settings.TaskDeviceEnabled(event->TaskIndex, enabled);
 
       if (enabled) {
         // Schedule the plugin to be read.

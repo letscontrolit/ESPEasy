@@ -468,7 +468,7 @@ void handle_json()
               const uint8_t valueCount = getValueCountForTask(TaskIndex);
 
               if (valueCount != 0) {
-                if (Settings.TaskDeviceEnabled[TaskIndex]) {
+                if (Settings.TaskDeviceEnabled(TaskIndex)) {
                   if (taskInterval == 0) {
                     ttl_json = 1;
                   } else {
@@ -623,7 +623,7 @@ void handle_json()
                     if (controllerWriter) {
                       controllerWriter->write({ F("Controller"), x + 1 });
                       controllerWriter->write({ F("IDX"),        Settings.TaskDeviceID[x][TaskIndex] });
-                      controllerWriter->write({ F("Enabled"),    !!Settings.TaskDeviceSendData[x][TaskIndex] });
+                      controllerWriter->write({ F("Enabled"),    !!Settings.TaskDeviceSendData(x, TaskIndex) });
                     }
                   }
                 }
@@ -677,7 +677,7 @@ void handle_json()
               }
 
               taskWriter->write({ F("TaskEnabled"),
-                                  Settings.TaskDeviceEnabled[TaskIndex] });
+                                  Settings.TaskDeviceEnabled(TaskIndex) });
               taskWriter->write({ F("TaskNumber"), TaskIndex + 1 });
 
               if (showSpecificTask) {

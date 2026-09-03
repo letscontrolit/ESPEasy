@@ -337,7 +337,7 @@ void schedule_all_MQTTimport_tasks() {
   if (validDeviceIndex(DeviceIndex)) {
     for (taskIndex_t task = 0; task < TASKS_MAX; task++) {
       if ((Settings.getPluginID_for_task(task) == PLUGIN_MQTT_IMPORT) &&
-          (Settings.TaskDeviceEnabled[task])) {
+          (Settings.TaskDeviceEnabled(task))) {
         // Schedule a call to each enabled MQTT import plugin to notify the broker connection state
         EventStruct event(task);
         event.Par1 = MQTTclient_connected ? 1 : 0;

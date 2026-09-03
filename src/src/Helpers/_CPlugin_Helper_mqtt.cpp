@@ -66,16 +66,18 @@ bool MQTT_handle_topic_commands(struct EventStruct *event,
         uint8_t valueNr                   = findDeviceValueIndexByName(valueName, taskIndex);
         const taskVarIndex_t taskVarIndex = static_cast<taskVarIndex_t>(valueNr);
 
-        if (validDeviceIndex(deviceIndex) && validTaskVarIndex(taskVarIndex) && Settings.TaskDeviceEnabled[taskIndex]) {
+        if (validDeviceIndex(deviceIndex) && validTaskVarIndex(taskVarIndex) && Settings.TaskDeviceEnabled(taskIndex)) {
           # if defined(USES_P001) || defined(USES_P009) || defined(USES_P019) || defined(USES_P033) || defined(USES_P086)
           const int pluginID = Device[deviceIndex].Number;
           # endif // if defined(USES_P001) || defined(USES_P009) || defined(USES_P010) || defined(USES_P033) || defined(USES_P086)
+          # if defined(USES_P001) || defined(USES_P009) || defined(USES_P019)
+          const bool inverted = Settings.TaskDevicePin1Inversed(taskIndex);
+          # endif // if defined(USES_P001) || defined(USES_P009) || defined(USES_P019)
           # ifdef USES_P001
 
           if (!handled && (pluginID == 1) && validGpio(Settings.TaskDevicePin[0][taskIndex])) { // Plugin 1 Switch, uses 1st GPIO only
             EventStruct   TempEvent(taskIndex);
             const uint8_t switchtype = P001_data_struct::P001_getSwitchType(&TempEvent);        // 0 = Switch
-            const bool    inverted   = Settings.TaskDevicePin1Inversed[taskIndex];
             uint32_t value{};
             validUIntFromString(event->String2, value);
 
@@ -91,7 +93,6 @@ bool MQTT_handle_topic_commands(struct EventStruct *event,
 
           if (!handled && ((pluginID == 9) || (pluginID == 19))) { // Plugin 9 MCP23017, Plugin 19 PCF8574
             EventStruct TempEvent(taskIndex);
-            const bool  inverted = Settings.TaskDevicePin1Inversed[taskIndex];
             uint32_t    value{};
             validUIntFromString(event->String2, value);
 
@@ -533,8 +534,8 @@ bool MQTT_HomeAssistant_SendAutoDiscovery(controllerIndex_t         ControllerIn
       // Device is enabled so send information
       if (validDeviceIndex(DeviceIndex) &&
           Device[DeviceIndex].SendDataOption &&           // do (can) we send data?
-          Settings.TaskDeviceEnabled[x] &&                // task enabled?
-          Settings.TaskDeviceSendData[ControllerIndex][x] // selected for this controller?
+          Settings.TaskDeviceEnabled(x) &&                // task enabled?
+          Settings.TaskDeviceSendData(ControllerIndex, x) // selected for this controller?
           ) {
         const String taskName   = getTaskDeviceName(x);
         const int    valueCount = getValueCountForTask(x);

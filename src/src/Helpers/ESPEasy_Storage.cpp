@@ -459,7 +459,7 @@ bool BuildFixes()
 
     for (taskIndex_t taskIndex = 0; taskIndex < TASKS_MAX; ++taskIndex) {
       if (Settings.getPluginID_for_task(taskIndex) == PLUGIN_ID_P003_PULSE) {
-        Settings.TaskDevicePin1PullUp[taskIndex] = true;
+        Settings.TaskDevicePin1PullUp(taskIndex, true);
       }
     }
     #endif // ifdef USES_P003
@@ -1078,13 +1078,13 @@ String LoadSettings()
  \*********************************************************************************************/
 uint8_t disablePlugin(uint8_t bootFailedCount) {
   for (taskIndex_t i = 0; i < TASKS_MAX && bootFailedCount > 0; ++i) {
-    if (Settings.TaskDeviceEnabled[i]) {
+    if (Settings.TaskDeviceEnabled(i)) {
       --bootFailedCount;
 
       if (bootFailedCount == 0) {
         // Disable temporarily as unit crashed
         // FIXME TD-er: Should this be stored?
-        Settings.TaskDeviceEnabled[i] = false;
+        Settings.TaskDeviceEnabled(i, false);
       }
     }
   }
@@ -1098,7 +1098,7 @@ uint8_t disableAllPlugins(uint8_t bootFailedCount) {
     for (taskIndex_t i = 0; i < TASKS_MAX; ++i) {
       // Disable temporarily as unit crashed
       // FIXME TD-er: Should this be stored?
-      Settings.TaskDeviceEnabled[i] = false;
+      Settings.TaskDeviceEnabled(i, false);
     }
   }
   return bootFailedCount;
@@ -1109,11 +1109,11 @@ uint8_t disableAllPlugins(uint8_t bootFailedCount) {
  \*********************************************************************************************/
 uint8_t disableController(uint8_t bootFailedCount) {
   for (controllerIndex_t i = 0; i < CONTROLLER_MAX && bootFailedCount > 0; ++i) {
-    if (Settings.ControllerEnabled[i]) {
+    if (Settings.ControllerEnabled(i)) {
       --bootFailedCount;
 
       if (bootFailedCount == 0) {
-        Settings.ControllerEnabled[i] = false;
+        Settings.ControllerEnabled(i, false);
       }
     }
   }
@@ -1125,7 +1125,7 @@ uint8_t disableAllControllers(uint8_t bootFailedCount) {
     --bootFailedCount;
 
     for (controllerIndex_t i = 0; i < CONTROLLER_MAX; ++i) {
-      Settings.ControllerEnabled[i] = false;
+      Settings.ControllerEnabled(i, false);
     }
   }
   return bootFailedCount;
@@ -1137,11 +1137,11 @@ uint8_t disableAllControllers(uint8_t bootFailedCount) {
 #if FEATURE_NOTIFIER
 uint8_t disableNotification(uint8_t bootFailedCount) {
   for (uint8_t i = 0; i < NOTIFICATION_MAX && bootFailedCount > 0; ++i) {
-    if (Settings.NotificationEnabled[i]) {
+    if (Settings.NotificationEnabled(i)) {
       --bootFailedCount;
 
       if (bootFailedCount == 0) {
-        Settings.NotificationEnabled[i] = false;
+        Settings.NotificationEnabled(i, false);
       }
     }
   }
@@ -1153,7 +1153,7 @@ uint8_t disableAllNotifications(uint8_t bootFailedCount) {
     --bootFailedCount;
 
     for (uint8_t i = 0; i < NOTIFICATION_MAX; ++i) {
-      Settings.NotificationEnabled[i] = false;
+      Settings.NotificationEnabled(i, false);
     }
   }
   return bootFailedCount;

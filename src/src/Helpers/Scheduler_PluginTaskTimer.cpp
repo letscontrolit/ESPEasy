@@ -27,7 +27,7 @@ void ESPEasy_Scheduler::setPluginTaskTimer(
   // taskIndex and par1 form a unique key that can be used to restart a timer
   if (!validTaskIndex(taskIndex)) { return; }
 
-  if (!Settings.TaskDeviceEnabled[taskIndex]) { return; }
+  if (!Settings.TaskDeviceEnabled(taskIndex)) { return; }
 
   const PluginTaskTimerID timerID(taskIndex, Par1, function);
 

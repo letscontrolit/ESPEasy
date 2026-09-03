@@ -91,7 +91,7 @@ void handle_controllers() {
 
         // AutoDiscovery enabled?
         if (ControllerSettings->mqtt_autoDiscovery()
-            && Settings.ControllerEnabled[controllerindex]
+            && Settings.ControllerEnabled(controllerindex)
 
             // && (ControllerSettings->MqttAutoDiscoveryTrigger[0] != 0)
             && (ControllerSettings->MqttAutoDiscoveryTopic[0] != 0)
@@ -176,7 +176,7 @@ void handle_controllers_clearLoadDefaults(uint8_t controllerindex, ControllerSet
   safe_strncpy(ControllerSettings.LWTMessageDisconnect, TempEvent.String5.c_str(), sizeof(ControllerSettings.LWTMessageDisconnect));
 
   // NOTE: do not enable controller by default, give user a change to enter sensible values first
-  Settings.ControllerEnabled[controllerindex] = false;
+  Settings.ControllerEnabled(controllerindex, false);
 
   // not resetted to default (for convenience)
   // SecuritySettings.ControllerUser[controllerindex]
@@ -240,7 +240,7 @@ void handle_controllers_ShowAllControllersTable()
 
       if (cplugin_set)
       {
-        addEnabled(Settings.ControllerEnabled[x]);
+        addEnabled(Settings.ControllerEnabled(x));
 
         html_TD();
         addHtml(getCPluginNameFromCPluginID(Settings.Protocol[x]));
@@ -491,7 +491,7 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
     
 # if FEATURE_MQTT
 
-    if (proto.usesMQTT && Settings.ControllerEnabled[controllerindex]) {
+    if (proto.usesMQTT && Settings.ControllerEnabled(controllerindex)) {
       addFormSubHeader(F("Connection Status"));
       addRowLabel(F("MQTT Client Connected"));
       addEnabled(MQTTclient_connected);

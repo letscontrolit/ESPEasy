@@ -41,7 +41,7 @@ void ESPEasy_Scheduler::schedule_task_device_timer(unsigned long task_index, uns
      log += task_index;
      log += F(" @ ");
      log += runAt;
-     if (Settings.TaskDeviceEnabled[task_index]) {
+     if (Settings.TaskDeviceEnabled(task_index)) {
       log += F(" (enabled)");
      }
      addLog(LOG_LEVEL_INFO, log);
@@ -64,7 +64,7 @@ void ESPEasy_Scheduler::schedule_task_device_timer(unsigned long task_index, uns
      }
    */
 
-  if (Settings.TaskDeviceEnabled[task_index]) {
+  if (Settings.TaskDeviceEnabled(task_index)) {
     const TaskDeviceTimerID timerID(task_index);
     setNewTimerAt(timerID, runAt);
   }

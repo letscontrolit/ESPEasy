@@ -651,7 +651,7 @@ template<uint32_t N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::clearNotifications() {
   for (uint8_t i = 0; i < NOTIFICATION_MAX; ++i) {
     Notification[i]        = 0u;// .setInvalid();
-    NotificationEnabled[i] = false;
+    NotificationEnabled(i, false);
   }
 }
 
@@ -659,7 +659,7 @@ template<uint32_t N_TASKS>
 void SettingsStruct_tmpl<N_TASKS>::clearControllers() {
   for (controllerIndex_t i = 0; i < CONTROLLER_MAX; ++i) {
     Protocol[i]          = 0;
-    ControllerEnabled[i] = false;
+    ControllerEnabled(i, false);
   }
 }
 
@@ -790,20 +790,19 @@ void SettingsStruct_tmpl<N_TASKS>::clearTask(taskIndex_t task) {
 
   for (controllerIndex_t i = 0; i < CONTROLLER_MAX; ++i) {
     TaskDeviceID[i][task]       = 0u;
-    TaskDeviceSendData[i][task] = false;
+    TaskDeviceSendData(i, task, false);
   }
   TaskDeviceNumber[task]     = 0u; //.setInvalid();
-  OLD_TaskDeviceID[task]     = 0u; // UNUSED: this can be removed
   TaskDevicePin1[task]       = -1;
   TaskDevicePin2[task]       = -1;
   TaskDevicePin3[task]       = -1;
   TaskDevicePort[task]       = 0u;
-  TaskDevicePin1PullUp[task] = false;
+  TaskDevicePin1PullUp(task, false);
 
   for (uint8_t cv = 0; cv < PLUGIN_CONFIGVAR_MAX; ++cv) {
     TaskDevicePluginConfig[task][cv] = 0;
   }
-  TaskDevicePin1Inversed[task] = false;
+  TaskDevicePin1Inversed(task, false);
 
   for (uint8_t cv = 0; cv < PLUGIN_CONFIGFLOATVAR_MAX; ++cv) {
     TaskDevicePluginConfigFloat[task][cv] = 0.0f;
@@ -817,7 +816,7 @@ void SettingsStruct_tmpl<N_TASKS>::clearTask(taskIndex_t task) {
   TaskDeviceDataFeed[task]      = 0u;
   TaskDeviceTimer[task]         = 0u;
 //  TaskDeviceEnabled[task].value = 0u; // Should also clear any temporary flags.
-  TaskDeviceEnabled[task]       = false;
+  TaskDeviceEnabled(task, false);
   I2C_Multiplexer_Channel[task] = -1;
 }
 

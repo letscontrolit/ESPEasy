@@ -185,7 +185,7 @@ void handle_devices() {
       // May need to call PLUGIN_INIT, however we must make sure it is exited first
       PluginCall(PLUGIN_EXIT, &TempEvent, dummy);
 
-      if (Settings.TaskDeviceEnabled[taskIndex]) {
+      if (Settings.TaskDeviceEnabled(taskIndex)) {
         if (PluginCall(PLUGIN_INIT, &TempEvent, dummy)) {
           PluginCall(PLUGIN_READ, &TempEvent, dummy);
         }
@@ -402,11 +402,11 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
   for (controllerIndex_t controllerNr = 0; controllerNr < CONTROLLER_MAX; controllerNr++)
   {
     Settings.TaskDeviceID[controllerNr][taskIndex]       = getFormItemInt(getPluginCustomArgName(F("TDID"), controllerNr));
-    Settings.TaskDeviceSendData[controllerNr][taskIndex] = isFormItemChecked(getPluginCustomArgName(F("TDSD"), controllerNr));
+    Settings.TaskDeviceSendData(controllerNr, taskIndex, isFormItemChecked(getPluginCustomArgName(F("TDSD"), controllerNr)));
     # if FEATURE_MQTT_DISCOVER
 
     if (isFormItemChecked(getPluginCustomArgName(F("TDDSC"), controllerNr)) &&
-        Settings.TaskDeviceSendData[controllerNr][taskIndex]) {
+        Settings.TaskDeviceSendData(controllerNr, taskIndex)) {
       discoverController = controllerNr;
     }
     # endif // if FEATURE_MQTT_DISCOVER
@@ -422,11 +422,11 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
   }
 
   if (device.PullUpOption) {
-    Settings.TaskDevicePin1PullUp[taskIndex] = isFormItemChecked(F("TDPPU"));
+    Settings.TaskDevicePin1PullUp(taskIndex, isFormItemChecked(F("TDPPU")));
   }
 
   if (device.InverseLogicOption) {
-    Settings.TaskDevicePin1Inversed[taskIndex] = isFormItemChecked(F("TDPI"));
+    Settings.TaskDevicePin1Inversed(taskIndex, isFormItemChecked(F("TDPI")));
   }
 
   if (device.isSerial())
@@ -535,8 +535,8 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
   {
     TempEvent.ControllerIndex = x;
 
-    if (Settings.TaskDeviceSendData[TempEvent.ControllerIndex][TempEvent.TaskIndex] &&
-        Settings.ControllerEnabled[TempEvent.ControllerIndex] && Settings.Protocol[TempEvent.ControllerIndex])
+    if (Settings.TaskDeviceSendData(TempEvent.ControllerIndex, TempEvent.TaskIndex) &&
+        Settings.ControllerEnabled(TempEvent.ControllerIndex) && Settings.Protocol[TempEvent.ControllerIndex])
     {
       String dummy;
       CPluginCall(CPlugin::Function::CPLUGIN_TASK_CHANGE_NOTIFICATION, &TempEvent, dummy);
@@ -619,7 +619,7 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
       int8_t spi_gpios[3] { -1, -1, -1 };
 #endif
       struct EventStruct TempEvent(x);
-      addEnabled(Settings.TaskDeviceEnabled[x]  && validDeviceIndex(DeviceIndex));
+      addEnabled(Settings.TaskDeviceEnabled(x)  && validDeviceIndex(DeviceIndex));
 
       html_TD();
       addHtml(getPluginNameFromPluginID(pid));
@@ -678,7 +678,7 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
 
           for (controllerIndex_t controllerNr = 0; controllerNr < CONTROLLER_MAX; controllerNr++)
           {
-            if (Settings.TaskDeviceSendData[controllerNr][x])
+            if (Settings.TaskDeviceSendData(controllerNr, x))
             {
               if (doBR) {
                 html_BR();
@@ -1136,7 +1136,7 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
     addFormTextBox(F("Name"), F("TDN"), getTaskDeviceName(taskIndex), NAME_FORMULA_LENGTH_MAX); // ="taskdevicename"
 
     addFormCheckBox(F("Enabled"), F("TDE"),
-                    Settings.TaskDeviceEnabled[taskIndex],
+                    Settings.TaskDeviceEnabled(taskIndex),
 
                     //    Settings.TaskDeviceEnabled[taskIndex].enabled,
                     Settings.isTaskEnableReadonly(taskIndex)); // ="taskdeviceenabled"
@@ -1145,7 +1145,7 @@ void handle_devices_TaskSettingsPage(taskIndex_t taskIndex, uint8_t page)
     # if FEATURE_PLUGIN_PRIORITY
 
     if (device.PowerManager) { // Check extra priority device flags when available
-      bool disablePrio = !Settings.TaskDeviceEnabled[taskIndex];
+      bool disablePrio = !Settings.TaskDeviceEnabled(taskIndex);
 
       for (taskIndex_t t = 0; t < TASKS_MAX && !disablePrio; t++) {
         if (t != taskIndex) {   // Ignore current device
@@ -1329,7 +1329,7 @@ void devicePage_show_pin_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
 
   if (device.PullUpOption)
   {
-    addFormCheckBox(F("Internal PullUp"), F("TDPPU"), Settings.TaskDevicePin1PullUp[taskIndex]); // ="taskdevicepin1pullup"
+    addFormCheckBox(F("Internal PullUp"), F("TDPPU"), Settings.TaskDevicePin1PullUp(taskIndex)); // ="taskdevicepin1pullup"
     addFormNote(F("Best to (also) configure pull-up on Hardware tab under \"GPIO boot states\""));
       # if defined(ESP8266)
 
@@ -1342,7 +1342,7 @@ void devicePage_show_pin_config(taskIndex_t taskIndex, deviceIndex_t DeviceIndex
 
   if (device.InverseLogicOption)
   {
-    addFormCheckBox(F("Inversed Logic"), F("TDPI"), Settings.TaskDevicePin1Inversed[taskIndex]); // ="taskdevicepin1inversed"
+    addFormCheckBox(F("Inversed Logic"), F("TDPI"), Settings.TaskDevicePin1Inversed(taskIndex)); // ="taskdevicepin1inversed"
     addFormNote(F("Will go into effect on next input change."));
   }
 
@@ -1704,7 +1704,7 @@ void devicePage_show_controller_config(taskIndex_t taskIndex, deviceIndex_t Devi
         addHtml(F("Send to Controller "));
         addHtml(getControllerSymbol(controllerNr));
         addHtmlDiv(F("note"), wrap_braces(getCPluginNameFromCPluginID(Settings.Protocol[controllerNr]) + F(", ") + // Most compact code...
-                                          (Settings.ControllerEnabled[controllerNr] ? F("enabled") : F("disabled"))
+                                          (Settings.ControllerEnabled(controllerNr) ? F("enabled") : F("disabled"))
                                           #if FEATURE_MQTT_DISCOVER
                                           + (showMqttGroup ? F(", Auto Discovery") : F(""))
                                           #endif // if FEATURE_MQTT_DISCOVER
@@ -1715,7 +1715,7 @@ void devicePage_show_controller_config(taskIndex_t taskIndex, deviceIndex_t Devi
         html_TD(F("width:50px;padding-left:0"));
         addCheckBox(
           getPluginCustomArgName(F("TDSD"), controllerNr), // ="taskdevicesenddata"
-          Settings.TaskDeviceSendData[controllerNr][taskIndex]);
+          Settings.TaskDeviceSendData(controllerNr, taskIndex));
 
         # if FEATURE_STRING_VARIABLES
         const bool allowSendDerived = !device.HideDerivedValues &&

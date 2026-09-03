@@ -149,7 +149,7 @@ boolean Plugin_019(uint8_t function, struct EventStruct *event, String& string)
     # if FEATURE_MQTT_DISCOVER
     case PLUGIN_GET_DISCOVERY_VTYPES:
 
-      success = getDiscoveryVType(event, Settings.TaskDevicePin1Inversed[event->TaskIndex]
+      success = getDiscoveryVType(event, Settings.TaskDevicePin1Inversed(event->TaskIndex)
                                           ? Plugin_QueryVType_BinarySensorInv
                                           : Plugin_QueryVType_BinarySensor, 255, event->Par5);
       #  if FEATURE_MQTT_DEVICECLASS
