@@ -21,10 +21,10 @@ bool P129_data_struct::plugin_init(struct EventStruct *event) {
 
     // Prepare all used GPIO pins
     if (validGpio(_enablePin)) { pinMode(_enablePin, OUTPUT); }
-    pinMode(_loadPin,  OUTPUT);
+    if (validGpio(_loadPin)) pinMode(_loadPin,  OUTPUT);
     pinMode(_clockPin, OUTPUT);
     pinMode(_dataPin,  INPUT);
-    DIRECT_pinWrite(_loadPin, HIGH);
+    if (validGpio(_loadPin)) DIRECT_pinWrite(_loadPin, HIGH);
 
     if (validGpio(_enablePin)) { DIRECT_pinWrite(_enablePin, HIGH); }
 
@@ -184,10 +184,12 @@ bool P129_data_struct::plugin_write(struct EventStruct *event,
 
 bool P129_data_struct::plugin_readData(struct EventStruct *event) {
   if (isInitialized()) {
-    DIRECT_pinWrite(_loadPin, LOW);
-    delayMicroseconds(5);
-    DIRECT_pinWrite(_loadPin, HIGH);
-    delayMicroseconds(5);
+    if (validGpio(_loadPin)) {
+      DIRECT_pinWrite(_loadPin, LOW);
+      delayMicroseconds(5);
+      DIRECT_pinWrite(_loadPin, HIGH);
+      delayMicroseconds(5);
+    }
 
     if (validGpio(_enablePin)) { DIRECT_pinWrite(_enablePin, LOW); }
 

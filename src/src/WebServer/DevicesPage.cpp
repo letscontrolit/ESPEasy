@@ -809,9 +809,9 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
             }
 
             default:
-              showpin1 = true;
-              showpin2 = true;
-              showpin3 = true;
+              showpin1 = !pluginHasGPIODescription;
+              showpin2 = !pluginHasGPIODescription;
+              showpin3 = !pluginHasGPIODescription;
               break;
           }
 

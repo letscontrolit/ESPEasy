@@ -83,6 +83,13 @@ String P126_formatValue(uint32_t value, struct EventStruct *event, bool showSepa
       toUpperCase));
 }
 
+uint8_t P126_getNrTaskValues(struct EventStruct *event)
+{
+  return min(
+    static_cast<uint8_t>(VARS_PER_TASK),
+    static_cast<uint8_t>((P126_CONFIG_CHIP_COUNT + 3) >> 2));
+}
+
 boolean Plugin_126(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
@@ -160,6 +167,49 @@ boolean Plugin_126(uint8_t function, struct EventStruct *event, String& string)
       event->String3 = formatGpioName_output(F("Latch pin (ST_CP)"));
       break;
     }
+
+    case PLUGIN_WEBFORM_SHOW_GPIO_DESCR:
+    {
+      const __FlashStringHelper *labels[] = {
+        F("Data"),
+        F("Clock"),
+        F("Latch")
+      };
+      const int values[] = {
+        CONFIG_PIN1,
+        CONFIG_PIN2,
+        CONFIG_PIN3,
+      };
+      constexpr size_t nrElements = NR_ELEMENTS(values);
+
+      for (size_t i = 0; i < nrElements; ++i) {
+        if (i != 0) { string += event->String1; } // newline or <BR>
+        string += labels[i];
+        string += F(":&nbsp;");
+        string += formatGpioLabel(values[i], true);
+      }
+
+      success = true;
+      break;
+    }
+
+    case PLUGIN_GET_DEVICEVALUECOUNT:
+    {
+      event->Par1 = P126_getNrTaskValues(event);
+      success = true;
+      break;
+    }
+
+    case PLUGIN_GET_DEVICEVTYPE:
+    {
+      if (getBasicSensorTypeFromValueCount(P126_getNrTaskValues(event), event->sensorType)) 
+      {
+        event->idx = 0;
+        success    = true;
+      }
+      break;
+    }
+
     case PLUGIN_WEBFORM_LOAD:
     {
       addFormSubHeader(F("Device configuration"));
@@ -284,9 +334,11 @@ boolean Plugin_126(uint8_t function, struct EventStruct *event, String& string)
     {
       string.clear();
 
+      const auto value = UserVar.getUint32(event->TaskIndex, event->idx);
+
       if ((P126_CONFIG_FLAGS_GET_OUTPUT_SELECTION == P126_OUTPUT_BOTH) ||
           (P126_CONFIG_FLAGS_GET_OUTPUT_SELECTION == P126_OUTPUT_DEC_ONLY)) {
-        string += ull2String(UserVar.getUint32(event->TaskIndex, event->idx));
+        string += ull2String(value);
       }
 
       if (P126_CONFIG_FLAGS_GET_OUTPUT_SELECTION == P126_OUTPUT_BOTH) {
@@ -296,7 +348,7 @@ boolean Plugin_126(uint8_t function, struct EventStruct *event, String& string)
       if ((P126_CONFIG_FLAGS_GET_OUTPUT_SELECTION == P126_OUTPUT_BOTH) ||
           (P126_CONFIG_FLAGS_GET_OUTPUT_SELECTION == P126_OUTPUT_HEXBIN)) {
         string += P126_formatValue(
-          UserVar.getUint32(event->TaskIndex, event->idx),
+          value,
           event,
           (1 == event->ParN[event->idx]));
       }
@@ -307,31 +359,31 @@ boolean Plugin_126(uint8_t function, struct EventStruct *event, String& string)
     # ifdef P126_SHOW_VALUES
     case PLUGIN_WEBFORM_SHOW_VALUES:
       {
-        String state, label;
-        state.reserve(40);
-        const String abcd = F("ABCDEFGH");                                                          // In case anyone dares to extend
-                                                                                                    // VARS_PER_TASK to 8...
         const uint16_t endCheck = P126_CONFIG_CHIP_COUNT + (P126_CONFIG_CHIP_COUNT == 255 ? 3 : 4); // 4(.0) = nr of bytes in an uint32_t.
-        const uint16_t maxVar   = min(static_cast<uint8_t>(VARS_PER_TASK), static_cast<uint8_t>(ceilf(P126_CONFIG_CHIP_COUNT / 4.0f)));
+        const uint16_t maxVar   = P126_getNrTaskValues(event);
 
         for (uint16_t varNr = 0; varNr < maxVar; ++varNr) {
+          String label;
           if (P126_CONFIG_FLAGS_GET_VALUES_DISPLAY) {
             label     = F("Bin");
           } else {
             label     = F("Hex");
           }
-          label += strformat(F(" State_%s "), abcd.substring(varNr, varNr + 1).c_str());
+          const char letter = 'A' + varNr;
+          label += strformat(F(" State_%c "), letter);
 
           label += min(255, P126_CONFIG_SHOW_OFFSET + (4 * varNr) + 4);  // Limited to max 255 chips
           label += '_';
           label += (P126_CONFIG_SHOW_OFFSET + (4 * varNr) + 1);          // 4 = nr of bytes in an uint32_t.
 
           if ((P126_CONFIG_SHOW_OFFSET + (4 * varNr) + 4) <= endCheck) { // Only show if still in range
-            string += P126_formatValue(
+            const String value = P126_formatValue(
               UserVar.getUint32(event->TaskIndex, varNr),
               event,
               true);
-            pluginWebformShowValue(event->TaskIndex, VARS_PER_TASK + varNr, label, state, true);
+            
+            string += value;
+            pluginWebformShowValue(event->TaskIndex, VARS_PER_TASK + varNr, label, value, true);
           }
         }
         success = true; // Don't show the default value data
