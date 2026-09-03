@@ -43,6 +43,7 @@
    ------------------------------------------------------------------------------------------
    Copyleft Nagy Sándor 2018 - https://bitekmindenhol.blog.hu/
    ------------------------------------------------------------------------------------------
+   2026-09-01 tonhuisman: Function PLUGIN_I2C_HAS_ADDRESS doesn't have a valid TaskIndex when called, so don't pass PCONFIG() value
    2025-06-14 tonhuisman: Add support for Custom Value Type per task value
    2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported ThermOLED)
    2022-12-08 tonhuisman: Add Relay invert state option, reorder config option Contrast
@@ -77,7 +78,6 @@
 # define PLUGIN_VALUENAME2_109  "heating"
 # define PLUGIN_VALUENAME3_109  "mode"
 # define PLUGIN_VALUENAME4_109  "timeout"
-
 
 boolean Plugin_109(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -139,7 +139,7 @@ boolean Plugin_109(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      success = OLedI2CAddressCheck(function, event->Par1, F("pi2caddr"), P109_CONFIG_I2CADDRESS);
+      success = OLedI2CAddressCheck(function, event->Par1, F("pi2caddr"), PLUGIN_I2C_HAS_ADDRESS == function ? -1 : P109_CONFIG_I2CADDRESS);
 
       break;
     }

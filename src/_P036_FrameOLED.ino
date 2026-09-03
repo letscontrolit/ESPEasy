@@ -14,6 +14,8 @@
 // Added to the main repository with some optimizations and some limitations.
 // As long as the device is not enabled, no RAM is wasted.
 //
+// @tonhuisman: 2026-09-01
+// CHG: Function PLUGIN_I2C_HAS_ADDRESS doesn't have a valid TaskIndex when called, so don't pass PCONFIG() value
 // @andbad: 2026-07-09
 // ADD: 72x40 OLED size added to the the existing sizes (128x64, 128x32, 64x48)
 // @tonhuisman: 2025-03-03
@@ -269,7 +271,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      success = OLedI2CAddressCheck(function, event->Par1, F("i2c_addr"), P036_ADR);
+      success = OLedI2CAddressCheck(function, event->Par1, F("i2c_addr"), PLUGIN_I2C_HAS_ADDRESS == function ? -1 : P036_ADR);
 
       break;
     }
@@ -753,11 +755,12 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
       P036_CheckHeap(F("_INIT: Before P036_data->init()"));
 # endif // P036_CHECK_HEAP
 
-      #if FEATURE_I2C_MULTIPLE
+      # if FEATURE_I2C_MULTIPLE
       const uint8_t i2cBus = Settings.getI2CInterface(event->TaskIndex);
-      #else
+      # else
       const uint8_t i2cBus = 0;
-      #endif // if FEATURE_I2C_MULTIPLE
+      # endif // if FEATURE_I2C_MULTIPLE
+
       if (!(P036_data->init(event->TaskIndex,
                             get4BitFromUL(P036_FLAGS_0, P036_FLAG_SETTINGS_VERSION), // Bit23-20 Version CustomTaskSettings
                             P036_CONTROLLER,                                         // Type
@@ -1100,6 +1103,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
 }
 
 # ifdef P036_CHECK_HEAP
+
 void P036_CheckHeap(String dbgtxt) {
   addLog(LOG_LEVEL_INFO,
          strformat(F("%s FreeHeap:%d FreeStack:%d"),

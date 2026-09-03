@@ -15,8 +15,9 @@ void OLedFormController(const __FlashStringHelper *id,
   const int controllerValues[] = { 1, 2 };
   const FormSelectorOptions selector(
     NR_ELEMENTS(controllerOptions),
-    controllerOptions, 
+    controllerOptions,
     values == nullptr ? controllerValues : values);
+
   selector.addFormSelector(F("Controller"), id, selectedIndex);
 }
 
@@ -34,6 +35,7 @@ void OLedFormRotation(const __FlashStringHelper *id,
   const FormSelectorOptions selector(
     NR_ELEMENTS(rotationOptions),
     rotationOptions, rotationValues);
+
   selector.addFormSelector(F("Rotation"), id, selectedIndex);
 }
 
@@ -55,8 +57,8 @@ void OLedFormContrast(const __FlashStringHelper *id,
     contrastOptions, contrastValues);
 
   selector.addFormSelector(
-    F("Contrast"), 
-    id, 
+    F("Contrast"),
+    id,
     selectedIndex == 0 ? OLED_CONTRAST_HIGH : selectedIndex);
 }
 
@@ -73,10 +75,11 @@ void OLedFormSizes(const __FlashStringHelper *id,
     F("128x32"),
     F("64x48"),
     F("72x40") };
-  FormSelectorOptions selector(optionsSize, options3, values);  
+  FormSelectorOptions selector(optionsSize, options3, values);
+
   selector.reloadonchange = reloadOnChange;
   selector.addFormSelector(
-    F("Display Size"), 
+    F("Display Size"),
     id,
     selectedIndex);
 }
@@ -93,15 +96,19 @@ void OLedSetContrast(OLEDDisplay   *_display,
   char precharge = 241;
   char comdetect = 64;
 
-  switch (OLED_contrast) {
+  switch (OLED_contrast)
+  {
     case OLED_CONTRAST_OFF:
       _display->displayOff();
       return; // Done
     case OLED_CONTRAST_LOW:
-      contrast = 10; precharge = 5; comdetect = 0;
+      contrast  = 10;
+      precharge = 5;
+      comdetect = 0;
       break;
     case OLED_CONTRAST_MED:
-      contrast = OLED_CONTRAST_MED; precharge = 0x1F;
+      contrast  = OLED_CONTRAST_MED;
+      precharge = 0x1F;
       break;
     case OLED_CONTRAST_HIGH:
     default:
@@ -119,7 +126,7 @@ void OLedSetContrast(OLEDDisplay   *_display,
 bool OLedI2CAddressCheck(uint8_t                    function,
                          int                        checkI2cAddress,
                          const __FlashStringHelper *id,
-                         int8_t                     deviceAddress) {
+                         int16_t                    deviceAddress) {
   bool success                     = false;
   const uint8_t i2cAddressValues[] = { 0x3c, 0x3d };
 
@@ -130,4 +137,5 @@ bool OLedI2CAddressCheck(uint8_t                    function,
   }
   return success;
 }
-#endif
+
+#endif // if defined(USES_P023) || defined(USES_P036) || defined(USES_P109)

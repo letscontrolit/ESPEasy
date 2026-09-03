@@ -172,7 +172,7 @@ String getKnownI2Cdevice(uint8_t address) {
   String result;
 
   #if FEATURE_I2C_DEVICE_SCAN
-  deviceIndex_t x;
+  deviceIndex_t x{};
   bool done = false;
   while (!done) {
     const deviceIndex_t deviceIndex = getDeviceIndex_sorted(x);
