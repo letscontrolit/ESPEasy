@@ -80,12 +80,9 @@ bool P183_data_struct::plugin_read(struct EventStruct *event) {
 
   for (int outputIndex = 0; outputIndex < numberOfOutputs; ++outputIndex)
   {
+    int address = P183_ADDRESS(outputIndex);
     // Queue a read request for each active output value. The result will be processed in the task timer event.
     // Use the output index as the event index to identify which output value the result belongs to.
-
-    int address = P183_ADDRESS(outputIndex);
-    addLogMove(LOG_LEVEL_INFO,
-               strformat(F("P183[%d]: Read address=%d, index=%d, P183_NR_OUTPUTS=%d"), event->idx, address, outputIndex, P183_NR_OUTPUTS));
     _modbusDevice->readHoldingRegister(address, outputIndex);
   }
   return true;
@@ -146,7 +143,7 @@ bool P183_data_struct::plugin_task_timer(EventStruct *event)
   else  {
     int outputIndex = event->idx;
 
-    if ((outputIndex < 0) || (outputIndex >= P183_NR_OUTPUTS)) {
+    if ((outputIndex < 0) || (outputIndex >= getValueCountFromSensorType(static_cast < Sensor_VType > (P183_NR_OUTPUTS)))) {
       # ifndef LIMIT_BUILD_SIZE
       addLogMove(LOG_LEVEL_ERROR, strformat(F("P183[%d]: Invalid output index in task timer event"), _taskIndex));
       # endif // LIMIT_BUILD_SIZE
