@@ -6,6 +6,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2026-09-02 tonhuisman: Disable function PLUGIN_I2C_HAS_ADDRESS as it uses the wrong value, and it can be configured for many addresses
  * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery
  * 2024-08-17 tonhuisman: Show correct I2C address when non-default address is used (by setting a Port nr. 0..15)
  * 2023-11-23 tonhuisman: Add Device flag for I2CMax100kHz as this sensor won't work at 400 kHz
@@ -64,11 +65,11 @@ boolean Plugin_024(uint8_t function, struct EventStruct *event, String& string)
     }
     # endif // if FEATURE_MQTT_DISCOVER
 
-    case PLUGIN_I2C_HAS_ADDRESS:
-    {
-      success = event->Par1 == (0x5a + CONFIG_PORT);
-      break;
-    }
+    // case PLUGIN_I2C_HAS_ADDRESS:
+    // {
+    //   success = event->Par1 == (0x5a + CONFIG_PORT);
+    //   break;
+    // }
 
     # if FEATURE_I2C_GET_ADDRESS
     case PLUGIN_I2C_GET_ADDRESS:

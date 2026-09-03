@@ -25,7 +25,7 @@ boolean Plugin_178(uint8_t function, struct EventStruct *event, String& string)
   int      address = LU9685_ADDRESS;
   uint16_t freq    = LU9685_DEFAULT_FREQUENCY;
 
-  if (event != nullptr) {
+  if ((event != nullptr) && validTaskIndex(event->TaskIndex)) {
     address = P178_I2C_ADDR;
     freq    = P178_FREQ;
   }
