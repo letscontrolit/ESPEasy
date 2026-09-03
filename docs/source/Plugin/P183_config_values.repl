@@ -1,0 +1,10 @@
+.. csv-table::
+    :header: "Config value", "Information"
+    :widths: 20, 30
+
+    "
+    | ``[<taskname>#register,<reg>]``
+    ","
+    | Returns the value of holding register ``<reg>`` of the device. The value is read from the plugin cache. The holding register number ``<reg>`` must be defined within the configured cache range. Note: some custom build versions may allow reading outside the cache range at the cost of serious hiccups in ESPEasy software as it blocks all software while waiting for a response from the Modbus device.
+    "
+

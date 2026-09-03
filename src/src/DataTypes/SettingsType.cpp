@@ -33,7 +33,9 @@ const __FlashStringHelper * SettingsType::getSettingsTypeString(Enum settingsTyp
 #if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE
     case Enum::DeviceSpecificCredentials_type: return F("DeviceSpecificCredentials");
 #endif   
-
+#if FEATURE_MODBUS_FAC
+    case Enum::ModbusInterfaceSettings_Type:   return F("ModbusInterface"); 
+#endif
 
     case Enum::SettingsType_MAX: break;
   }
@@ -161,7 +163,18 @@ bool SettingsType::getSettingsParameters(Enum settingsType, int index, int& max_
     }
     break;
 #endif   
+#if FEATURE_MODBUS_FAC
+    case Enum::ModbusInterfaceSettings_Type:
+    {
+      max_index   = 4; // up to 4 Modbus interfaces TODO: use poroper define for this.
+      offset      =  (DAT_MODBUS_INTERFACE_OFFSET) + (index * (DAT_MODBUS_INTERFACE_SIZE));
+      max_size    = (DAT_MODBUS_INTERFACE_SIZE);
 
+      // struct_size may differ.
+      struct_size = 0;
+    }
+    break;
+#endif //FEATURE_MODBUS_FAC
 
     case Enum::SettingsType_MAX:
     {
@@ -243,6 +256,10 @@ unsigned int SettingsType::getSVGcolor(Enum settingsType) {
     case Enum::CdnSettings_Type:
       return 0xff6600;
 #endif
+# if FEATURE_MODBUS_FAC
+    case Enum::ModbusInterfaceSettings_Type:
+      return 0x0066FF;
+# endif
     case Enum::SettingsType_MAX:
       break;
   }
@@ -265,7 +282,10 @@ SettingsType::SettingsFileEnum SettingsType::getSettingsFile(Enum settingsType)
 #if FEATURE_STORE_NETWORK_INTERFACE_SETTINGS
     case Enum::NetworkInterfaceSettings_Type:
 #endif
+#if FEATURE_MODBUS_FAC
+    case Enum::ModbusInterfaceSettings_Type:
       return SettingsFileEnum::FILE_CONFIG_type;
+#endif //FEATURE_MODBUS_FAC
     case Enum::NotificationSettings_Type:
       return SettingsFileEnum::FILE_NOTIFICATION_type;
     case Enum::SecuritySettings_Type:

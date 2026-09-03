@@ -1730,6 +1730,9 @@ To create/register a plugin, you have to :
     #if !defined(USES_P180) && defined(ESP32)
       #define USES_P180   // Generic - I2C Generic
     #endif
+    #if !defined(USES_P183) && defined(ESP32)
+      #define USES_P183   // Communication - Modbus RTU
+    #endif
     // Remove plugins from 'collection' builds which rely on the neopixel library
     // to make sure those builds will fit again.
     #ifdef USES_P038
@@ -1970,6 +1973,10 @@ To create/register a plugin, you have to :
   #if !defined(USES_P180) && defined(ESP32)
     #define USES_P180   // Generic - I2C Generic
   #endif
+  #if !defined(USES_P183) && defined(ESP32)
+    #define USES_P183   // Communication - Modbus RTU
+  #endif
+
 
 #endif // ifdef PLUGIN_ENERGY_COLLECTION
 
@@ -2085,12 +2092,16 @@ To create/register a plugin, you have to :
   #if !defined(USES_P180) && defined(ESP32)
     #define USES_P180   // Generic - I2C Generic
   #endif
+
 #endif // ifdef PLUGIN_DISPLAY_A_COLLECTION
 
 // Collection of display plugins, set B (AdaGFX_Helper).
 #ifdef PLUGIN_DISPLAY_B_COLLECTION
   #ifndef PLUGIN_DESCR
     #define PLUGIN_DESCR  "Display B"
+  #endif
+  #ifndef BUILD_NO_DEBUG
+    #define BUILD_NO_DEBUG
   #endif
   #if !defined(LIMIT_BUILD_SIZE) && (defined(ESP8266) || !(ESP_IDF_VERSION_MAJOR > 3))
     #ifndef PLUGIN_BUILD_MAX_ESP32
@@ -2380,6 +2391,9 @@ To create/register a plugin, you have to :
   #if !defined(USES_P180) && defined(ESP32)
     #define USES_P180   // Generic - I2C Generic
   #endif
+  #if !defined(USES_P183) && defined(ESP32)
+    #define USES_P183   // Communication - Modbus RTU
+  #endif
 
   
   // Controllers
@@ -2479,6 +2493,9 @@ To create/register a plugin, you have to :
   #if !defined(USES_P180) && defined(ESP32)
     #define USES_P180   // Generic - I2C Generic
   #endif
+  #if !defined(USES_P183) && defined(ESP32)
+    #define USES_P183   // Communication - Modbus RTU
+  #endif
 
   
   // Controllers
@@ -2564,7 +2581,7 @@ To create/register a plugin, you have to :
     #define USES_P165   // Display - NeoPixel (7-Segment)
   #endif
 
-  #ifndef USES_P180
+  #if !defined(USES_P180) && defined(ESP32)
     #define USES_P180   // Generic - I2C Generic
   #endif
 
@@ -3039,6 +3056,9 @@ To create/register a plugin, you have to :
   #ifndef USES_P180
     #define USES_P180   // Generic - I2C Generic
   #endif
+  #ifndef USES_P183
+    #define USES_P183   // Communication - Modbus RTU
+  #endif
 
   // Controllers
   #ifndef USES_C015
@@ -3154,6 +3174,14 @@ To create/register a plugin, you have to :
     #undef FEATURE_MODBUS
   #endif
   #define FEATURE_MODBUS  1
+#endif
+
+#if defined(USES_P183)
+  //P183 uses the Modbus facilities
+  #ifdef FEATURE_MODBUS_FAC
+    #undef FEATURE_MODBUS_FAC
+  #endif
+  #define FEATURE_MODBUS_FAC  1
 #endif
 
 #if defined(USES_C001) || defined (USES_C002) || defined(USES_P029)
@@ -3805,12 +3833,8 @@ To create/register a plugin, you have to :
 #define FEATURE_MODBUS                        0
 #endif
 
-#ifndef FEATURE_MODBUS_INTERFACES_TAB // TODO Temporary, until P183 finished
-#ifdef USES_P183
-#define FEATURE_MODBUS_INTERFACES_TAB         1
-#else
-#define FEATURE_MODBUS_INTERFACES_TAB         0
-#endif
+#ifndef FEATURE_MODBUS_FAC
+#define FEATURE_MODBUS_FAC                    0
 #endif
 
 #ifndef FEATURE_CAN
@@ -4588,7 +4612,7 @@ To create/register a plugin, you have to :
 # endif
 #endif
 
-#if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE || FEATURE_STORE_NETWORK_INTERFACE_SETTINGS
+#if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE || FEATURE_STORE_NETWORK_INTERFACE_SETTINGS || FEATURE_MODBUS_FAC
 # ifdef FEATURE_ESPEASY_KEY_VALUE_STORE
 #  undef FEATURE_ESPEASY_KEY_VALUE_STORE
 # endif

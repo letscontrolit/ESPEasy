@@ -21,11 +21,11 @@ bool save_SPI(String& error);
 void interfaces_show_SPI();
 #endif
 
-#if FEATURE_MODBUS && FEATURE_MODBUS_INTERFACES_TAB
+#if FEATURE_MODBUS_FAC
 void handle_interfaces_modbus();
 bool save_MODBUS(String& error);
 void interfaces_show_MODBUS();
-#endif // if FEATURE_MODBUS
+#endif // if FEATURE_MODBUS_FAC
 
 #if FEATURE_CAN
 void handle_interfaces_can();

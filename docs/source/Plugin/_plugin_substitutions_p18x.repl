@@ -12,3 +12,16 @@
 .. |P180_compileinfo| replace:: `.`
 .. |P180_usedlibraries| replace:: `.`
 
+.. |P183_name| replace:: :cyan:`Modbus RTU`
+.. |P183_type| replace:: :cyan:`Communication`
+.. |P183_typename| replace:: :cyan:`Communication - Modbus RTU`
+.. |P183_porttype| replace:: `Serial`
+.. |P183_status| replace:: :yellow:`COLLECTION` :yellow:`ENERGY` :yellow:`CLIMATE`
+.. |P183_status_lb| replace:: `.`
+.. |P183_github| replace:: P183_modbus.ino
+.. _P183_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P183_modbus.ino
+.. |P183_usedby| replace:: `Modbus RTU over RS485 devices`
+.. |P183_shortinfo| replace:: `Generic Modbus RTU sensor`
+.. |P183_maintainer| replace:: `flashmark`
+.. |P183_compileinfo| replace:: `.`
+.. |P183_usedlibraries| replace:: `ESPEasySerial`

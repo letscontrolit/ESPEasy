@@ -275,6 +275,9 @@ const __FlashStringHelper* getMiscStatsName_F(TimingStatsElements stat) {
 #if FEATURE_MQTT
     case TimingStatsElements::PERIODICAL_MQTT:            return F("Periodical MQTT");
 #endif
+#if FEATURE_MODBUS_FAC
+    case TimingStatsElements::MODBUS_PROCESS_LINKS:       return F("Modbus process links"); 
+#endif // if FEATURE_MODBUS_FAC
     case TimingStatsElements::PARSE_TEMPLATE_PADDED:      return F("parseTemplate_padded()");
     case TimingStatsElements::PARSE_SYSVAR:               return F("parseSystemVariables()");
     case TimingStatsElements::PARSE_SYSVAR_NOCHANGE:      return F("parseSystemVariables() No change");

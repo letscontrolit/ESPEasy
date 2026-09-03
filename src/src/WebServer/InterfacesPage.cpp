@@ -24,6 +24,9 @@
 # if FEATURE_I2C_MULTIPLE
 #  include "../Helpers/Hardware_device_info.h"
 # endif // if FEATURE_I2C_MULTIPLE
+# if FEATURE_MODBUS_FAC
+#  include "../Helpers/Modbus_mgr.h"
+# endif
 
 // ********************************************************************************
 // Web Interface hardware page
@@ -42,12 +45,12 @@ void handle_interfaces_spi() {
 }
 #endif // if FEATURE_SPI
 
-#if FEATURE_MODBUS && FEATURE_MODBUS_INTERFACES_TAB
+#if FEATURE_MODBUS_FAC
 void handle_interfaces_modbus() {
   navMenuIndex = MENU_INDEX_INTERFACES_MODBUS;
   handle_interfaces();
 }
-#endif // if FEATURE_MODBUS
+#endif // if FEATURE_MODBUS_FAC
 
 #if FEATURE_CAN
 void handle_interfaces_can() {
@@ -80,9 +83,9 @@ void handle_interfaces() {
 #if FEATURE_I2C
     newNavIndex = MENU_INDEX_INTERFACES_I2C;
 #elif FEATURE_SPI
-    newNavIndex = MENU_INDEX_INTERFACES_SPI;
-#elif FEATURE_MODBUS && FEATURE_MODBUS_INTERFACES_TAB
-    newNavIndex = MENU_INDEX_INTERFACES_MODBUS;
+    navMenuIndex = MENU_INDEX_INTERFACES_SPI;
+#elif FEATURE_MODBUS_FAC
+    navMenuIndex = MENU_INDEX_INTERFACES_MODBUS;
 #elif FEATURE_CAN
     newNavIndex = MENU_INDEX_INTERFACES_CAN;
 #elif FEATURE_WRMBUS
@@ -117,11 +120,11 @@ void handle_interfaces() {
   }
   #endif
 
-  #if FEATURE_MODBUS && FEATURE_MODBUS_INTERFACES_TAB
+  #if FEATURE_MODBUS_FAC
   if (navMenuIndex == MENU_INDEX_INTERFACES_MODBUS) {
     interfaces_show_MODBUS();
   }
-  #endif // if FEATURE_MODBUS
+  #endif // if FEATURE_MODBUS_FAC
   
   #if FEATURE_CAN
   if (navMenuIndex == MENU_INDEX_INTERFACES_CAN) {
@@ -167,9 +170,9 @@ void save_interfaces() {
   if ((navMenuIndex == MENU_INDEX_INTERFACES_SPI) && save_SPI(error)) { updated = true; }
   #endif
 
-  #if FEATURE_MODBUS && FEATURE_MODBUS_INTERFACES_TAB
+  #if FEATURE_MODBUS_FAC
   if ((navMenuIndex == MENU_INDEX_INTERFACES_MODBUS) && save_MODBUS(error)) { updated = true; }
-  #endif // if FEATURE_MODBUS
+  #endif // if FEATURE_MODBUS_FAC
 
   #if FEATURE_CAN
   if ((navMenuIndex == MENU_INDEX_INTERFACES_CAN) && save_CAN(error)) { updated = true; }
@@ -333,11 +336,11 @@ bool save_SPI(String& error) {
 
 #endif
 
-#if FEATURE_MODBUS && FEATURE_MODBUS_INTERFACES_TAB
+#if FEATURE_MODBUS_FAC
 bool save_MODBUS(String& error) {
-  return false; // TODO
+  return ModbusMGR_singleton.save_modbus_interfaces(error);
 }
-#endif // if FEATURE_MODBUS
+#endif // if FEATURE_MODBUS_FAC
 
 #if FEATURE_CAN
 bool save_CAN(String& error) {
@@ -539,11 +542,11 @@ void interfaces_show_SPI() {
 }
 #endif
 
-#if FEATURE_MODBUS && FEATURE_MODBUS_INTERFACES_TAB
+#if FEATURE_MODBUS_FAC
 void interfaces_show_MODBUS() {
-  addRowLabel(F("TODO")); // TODO
+   ModbusMGR_singleton.show_modbus_interfaces();
 }
-#endif // if FEATURE_MODBUS
+#endif // if FEATURE_MODBUS_FAC
 
 #if FEATURE_CAN
 void interfaces_show_CAN() {

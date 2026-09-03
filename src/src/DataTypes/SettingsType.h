@@ -25,7 +25,9 @@ public:
 #if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE
     DeviceSpecificCredentials_type,
 #endif   
-
+#if FEATURE_MODBUS_FAC
+    ModbusInterfaceSettings_Type,
+#endif //FEATURE_MODBUS_FAC
     SettingsType_MAX
   };
 
