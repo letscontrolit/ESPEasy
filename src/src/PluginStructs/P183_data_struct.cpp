@@ -72,12 +72,21 @@ bool P183_data_struct::plugin_read(struct EventStruct *event) {
   if (_modbusDevice == nullptr) {
     return false;
   }
+  int numberOfOutputs = getValueCountFromSensorType(static_cast<Sensor_VType>(P183_NR_OUTPUTS));
 
-  for (int outputIndex = 0; outputIndex < P183_NR_OUTPUTS; ++outputIndex)
+  if ((numberOfOutputs > 4) || (numberOfOutputs < 0)) {
+    return false;
+  }
+
+  for (int outputIndex = 0; outputIndex < numberOfOutputs; ++outputIndex)
   {
     // Queue a read request for each active output value. The result will be processed in the task timer event.
     // Use the output index as the event index to identify which output value the result belongs to.
-    _modbusDevice->readHoldingRegister(P183_ADDRESS(outputIndex), outputIndex);
+
+    int address = P183_ADDRESS(outputIndex);
+    addLogMove(LOG_LEVEL_INFO,
+               strformat(F("P183[%d]: Read address=%d, index=%d, P183_NR_OUTPUTS=%d"), event->idx, address, outputIndex, P183_NR_OUTPUTS));
+    _modbusDevice->readHoldingRegister(address, outputIndex);
   }
   return true;
 }
@@ -251,7 +260,8 @@ void P183_data_struct::scan_next_module()
   }
 }
 
-#if P183_ALLOW_MODBUS_WAIT
+# if P183_ALLOW_MODBUS_WAIT
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Read a Modbus register from the device. Block until the data is available
 // Warning: this may take time as we wait for the  Modbus message to be exchanged
@@ -278,7 +288,8 @@ uint16_t P183_data_struct::readRegisterWait(uint16_t address) {
 
   return value;
 }
-#endif // ifdef P183_ALLOW_MODBUS_WAIT
+
+# endif // ifdef P183_ALLOW_MODBUS_WAIT
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 uint16_t P183_data_struct::readRegisterCache(uint16_t address)

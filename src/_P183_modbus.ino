@@ -103,12 +103,8 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD_OUTPUT_SELECTOR:
     {
-      //     if ((P183_NR_OUTPUTS < 1) || (P183_NR_OUTPUTS > P183_NR_OUTPUT_VALUES)) {
-      //       P183_NR_OUTPUTS = P183_NR_OUTPUT_VALUES; // Default to max outputs
-      //     }
-      //      addFormNumericBox(F("Number of values to read"), P183_NR_OUTPUTS_LABEL, P183_NR_OUTPUTS);
 
-      for (int outputIndex = 0; outputIndex < P183_NR_OUTPUT_VALUES; ++outputIndex)
+      for (int outputIndex = 0; outputIndex < getValueCountFromSensorType(static_cast < Sensor_VType > (P183_NR_OUTPUTS)); ++outputIndex)
       {
         addFormNumericBox(concat(F("Holding Register for value"), outputIndex + 1), P183_ADDRESS_LABEL(outputIndex),
                           P183_ADDRESS(outputIndex));
@@ -135,7 +131,7 @@ boolean Plugin_183(uint8_t function, struct EventStruct *event, String& string)
       P183_CACHE_START = getFormItemInt(P183_CACHE_START_LABEL);
       P183_CACHE_SIZE  = getFormItemInt(P183_CACHE_SIZE_LABEL);
 
-      for (int outputIndex = 0; outputIndex < P183_NR_OUTPUT_VALUES; ++outputIndex)
+      for (int outputIndex = 0; outputIndex < getValueCountFromSensorType(static_cast < Sensor_VType > (P183_NR_OUTPUTS)); ++outputIndex)
       {
         P183_ADDRESS(outputIndex) = getFormItemInt(P183_ADDRESS_LABEL(outputIndex));
       }
