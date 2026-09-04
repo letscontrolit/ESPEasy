@@ -845,6 +845,9 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
 
       html_TD();
 
+
+      // TODO TD-er: Code duplication with DevicesPage & JSON  Create separate function to generate taskvalue data
+
       if (validDeviceIndex(DeviceIndex)) {
         # if FEATURE_STRING_VARIABLES
         const DeviceStruct& device = Device[DeviceIndex];

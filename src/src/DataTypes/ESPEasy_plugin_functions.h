@@ -18,6 +18,8 @@ enum PluginFunctions_e {
   PLUGIN_WEBFORM_SAVE,                 // Call from web interface to save settings
   PLUGIN_WEBFORM_LOAD,                 // Call from web interface for presenting settings and status of plugin
   PLUGIN_WEBFORM_SHOW_VALUES,          // Call from devices overview page to format values in HTML
+                                       // Return value (success = true/false) indicates whether this call covered all task values.
+                                       // When regular task values should still be shown (thus success = false), make sure their varNr does not conflict with the existing taskvalue varNrs.
   PLUGIN_GET_DEVICENAME,               // Call to get the plugin description (e.g. "Switch input - Switch")
   PLUGIN_GET_DEVICEVALUENAMES,         // Call to let the plugin generate some default value names when not defined.
   PLUGIN_GET_DEVICEVALUECOUNT,         // Optional function call to allow tasks to specify the number of output values (e.g.

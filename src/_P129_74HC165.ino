@@ -476,7 +476,7 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
               true);
             
             string += value;
-            pluginWebformShowValue(event->TaskIndex, VARS_PER_TASK + varNr, label, value, true);
+            pluginWebformShowValue(event->TaskIndex, varNr, label, value, true);
           }
         }
         success = true; // Don't show the default value data

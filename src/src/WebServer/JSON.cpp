@@ -450,6 +450,7 @@ void handle_json()
         sensorsWriter->setWriteWhenEmpty();
         for (taskIndex_t TaskIndex = firstTaskIndex; TaskIndex <= lastActiveTaskIndex && validTaskIndex(TaskIndex); TaskIndex++)
         {
+          // TODO TD-er: Code duplication with DevicesPage & JSON  Create separate function to generate taskvalue data
           const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(TaskIndex);
 
           if (validDeviceIndex(DeviceIndex))
@@ -483,7 +484,7 @@ void handle_json()
 
                 if (taskValueWriter) {
                   struct EventStruct TempEvent(TaskIndex);
-
+                  // FIXME tonhuisman: HasFormatUserVar is not really compatible with Derived Values...
                   for (uint8_t x = 0; x < valueCount; x++)
                   {
                     uint8_t nrDecimals = Cache.getTaskDeviceValueDecimals(TaskIndex, x);
@@ -508,40 +509,18 @@ void handle_json()
                     const String uom;
 #endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
                     handle_json_stream_task_value_data(taskValueWriter.get(),
-                                                       x + 1,
-                                                       Cache.getTaskDeviceValueName(TaskIndex, x),
-                                                       nrDecimals,
-                                                       value,
+                                                      x + 1,
+                                                      Cache.getTaskDeviceValueName(TaskIndex, x),
+                                                      nrDecimals,
+                                                      value,
 #if FEATURE_STRING_VARIABLES
-                                                       presentation,
+                                                      presentation,
 #else // if FEATURE_STRING_VARIABLES
-                                                       EMPTY_STRING,
+                                                      EMPTY_STRING,
 #endif // if FEATURE_STRING_VARIABLES
-                                                       uom);
+                                                      uom);
                   }
 
-                  if (Device[DeviceIndex].HasFormatUserVar) {
-                    struct EventStruct TempEvent(TaskIndex);
-
-                    for (uint8_t x = 0; x < valueCount; x++)
-                    {
-                      String value;
-                      TempEvent.idx     = x;
-                      TempEvent.ParN[x] = 1; // Get formatted version of the value
-                      PluginCall(PLUGIN_FORMAT_USERVAR, &TempEvent, value);
-
-                      if (!value.isEmpty()) {
-                        handle_json_stream_task_value_data(taskValueWriter.get(),
-                                                          VARS_PER_TASK + x + 1,
-                                                          Cache.getTaskDeviceValueName(TaskIndex, x),
-                                                          255,
-                                                          value,
-                                                          EMPTY_STRING,
-                                                          EMPTY_STRING);
-                      }
-                    }
-                    // FIXME tonhuisman: HasFormatUserVar is not really compatible with Derived Values...
-                  }
 #if FEATURE_STRING_VARIABLES
 
                   if (Settings.ShowDerivedTaskValues(TaskIndex)) {
