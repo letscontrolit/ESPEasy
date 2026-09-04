@@ -68,6 +68,7 @@ bool ESPEasy_key_value_store::load(
   const uint8_t version = buffer[0];
 
   // uint8_t[2]: ID to match, if not matched, then stop loading
+  // TODO TD-er: const uint16_t id = getUint16FromLittleEndianByteStream(&buffer[1]);
   const uint16_t id = (buffer[2] << 8) | buffer[1];
 
   if (id != id_to_match) {
@@ -77,6 +78,8 @@ bool ESPEasy_key_value_store::load(
     # endif // ifndef BUILD_NO_DEBUG
     return false;
   }
+
+  // TODO TD-er: const size_t payloadSize      = getUlFromLittleEndianByteStream(&buffer[3], 3);
 
   const size_t payloadSize      = (buffer[5] << 16) | (buffer[4] << 8) | buffer[3];
   const size_t totalSize        = 6 + payloadSize + 16; // header + payload + checksum
@@ -180,6 +183,7 @@ bool ESPEasy_key_value_store::load(
                 loadNextFromFile = true;
               } else {
                 bufPos                += 4;
+                // TODO TD-er: Use getUint16FromBigEndianByteStream
                 bytesLeftPartialString = (buffer[bufPos] << 8) | buffer[bufPos + 1];
                 bufPos                += 2;
 

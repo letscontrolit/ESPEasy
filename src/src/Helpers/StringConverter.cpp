@@ -76,6 +76,28 @@ String concat(const char& str, const String &val)
   return res;
 }
 
+bool remove(String& str, const String& toRemove)
+{
+  const size_t origSize = str.length();
+  str.replace(toRemove, EMPTY_STRING);
+  return origSize > str.length();
+}
+
+bool remove(String& str, const __FlashStringHelper * toRemove)
+{
+  return remove(str, String(toRemove));
+}
+
+bool remove(String& str, const char& toRemove)
+{
+  return remove(str, String(toRemove));
+}
+
+bool removeSpace(String& str)
+{
+  return remove(str, ' ');
+}
+
 bool equals(const String& str, const __FlashStringHelper * f_str) {
   return str.equals(String(f_str));
 }
@@ -276,7 +298,7 @@ void removeExtraNewLine(String& line) {
 }
 
 void removeChar(String& line, char character) {
-  line.replace(String(character), EMPTY_STRING);
+  line.replace(character, ' ');
 }
 
 void addNewLine(String& line) {

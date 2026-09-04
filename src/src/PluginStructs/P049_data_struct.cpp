@@ -253,6 +253,7 @@ bool P049_data_struct::read_ppm(unsigned int& ppm, signed int& temp, unsigned in
 
   if ((mhzResp[0] == 0xFF) && (mhzResp[1] == 0x86)) {
     // calculate CO2 PPM
+    // TODO TD-er: Use getUint16FromBigEndianByteStream
     ppm = (static_cast<unsigned int>(mhzResp[2]) << 8) + mhzResp[3];
 
     // set temperature (offset 40)
@@ -267,6 +268,7 @@ bool P049_data_struct::read_ppm(unsigned int& ppm, signed int& temp, unsigned in
     }
 
     // calculate 'u' value
+    // TODO TD-er: Use getUint16FromBigEndianByteStream
     u = (static_cast<unsigned int>(mhzResp[6]) << 8) + mhzResp[7];
     return true;
   }

@@ -34,6 +34,13 @@
 #define get2BitFromUL(number, bitnr)  getNBitFromUL(number, bitnr, 0x03UL)
 
 
+uint32_t getUlFromBigEndianByteStream(const uint8_t* data, uint8_t nrBytes);
+uint16_t getUint16FromBigEndianByteStream(const uint8_t* data);
+
+uint32_t getUlFromLittleEndianByteStream(const uint8_t* data, uint8_t nrBytes);
+uint16_t getUint16FromLittleEndianByteStream(const uint8_t* data);
+
+
 bool remoteConfig(struct EventStruct *event,
                   const String      & string);
 

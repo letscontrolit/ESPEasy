@@ -425,8 +425,7 @@ String formatToHex_no_prefix(unsigned long value, unsigned int minimal_hex_digit
 String formatHumanReadable(uint64_t value,
                            uint32_t factor) {
   String result = formatHumanReadable(value, factor, 2);
-
-  result.replace(F(".00"), EMPTY_STRING);
+  remove(result, F(".00"));
   return result;
 }
 

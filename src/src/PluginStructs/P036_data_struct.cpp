@@ -310,7 +310,7 @@ void P036_data_struct::CleanEscapeCharacters(String& str, const bool ForHeaderOn
 
   /***** WILL BE DEPRECATED - DO NOT USE *****/
   if (ForHeaderOnly) {
-    str.replace("$", "%"); // Allow system vars to be passed to header in by using $ instead of %
+    str.replace('$', '%'); // Allow system vars to be passed to header in by using $ instead of %
   }
 
   /***** WILL BE DEPRECATED - DO NOT USE *****/

@@ -724,11 +724,11 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
     }
     case LabelType::CONNECTED:
     {
-      return KeyValueStruct(F("Connected"), format_msec_duration(ESPEasy::net::NetworkConnectDuration_ms()), KeyValueStruct::Format::PreFormatted);
+      return KeyValueStruct(F("Connected"), format_msec_duration(ESPEasy::net::NetworkConnectDuration_ms()));
     }
     case LabelType::CONNECTED_MSEC:
     {
-      return KeyValueStruct(F("Connected msec"), ESPEasy::net::NetworkConnectDuration_ms(), KeyValueStruct::Format::PreFormatted);
+      return KeyValueStruct(F("Connected msec"), ESPEasy::net::NetworkConnectDuration_ms());
     }
     case LabelType::LAST_DISCONNECT_REASON:
     {
@@ -1273,7 +1273,7 @@ String getInternalLabel(const KeyValueStruct& kv,
                         char            replaceSpace)
 {
   String res = kv.getID();
-  if (replaceSpace != '\0') res.replace(" ", String(replaceSpace));
+  if (replaceSpace != '\0') res.replace(' ', replaceSpace);
 
   return res;
 }

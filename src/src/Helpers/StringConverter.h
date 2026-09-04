@@ -52,6 +52,11 @@ String concat(const String& str, const T &val) {
   return res;
 }
 
+bool remove(String& str, const String& toRemove);
+bool remove(String& str, const __FlashStringHelper * toRemove);
+bool remove(String& str, const char& toRemove);
+bool removeSpace(String& str);
+
 bool equals(const String& str, const __FlashStringHelper * f_str);
 bool equals(const String& str, const char& c);
 

@@ -210,13 +210,22 @@ bool P129_data_struct::plugin_readData(struct EventStruct *event) {
 
 void P129_data_struct::checkDiff(struct EventStruct *event) {
   for (uint8_t i = 0; i < P129_CONFIG_CHIP_COUNT; i += 4) {
-    if (PCONFIG_ULONG(i / 4) != 0) { // Any input event enabled?
+    const uint32_t mask = PCONFIG_ULONG(i / 4);
+    if (mask != 0) { // Any input event enabled?
       const uint32_t read = readBuffer[i + 3] << 24 | readBuffer[i + 2] << 16 | readBuffer[i + 1] << 8 | readBuffer[i + 0];
       const uint32_t prev = prevBuffer[i + 3] << 24 | prevBuffer[i + 2] << 16 | prevBuffer[i + 1] << 8 | prevBuffer[i + 0];
 
-      for (uint8_t j = 0; j < 32; ++j) {                                                  // Check all 32 bits
-        if (bitRead(PCONFIG_ULONG(i / 4), j) && (bitRead(read, j) != bitRead(prev, j))) { // Event enabled and bit changed?
-          sendInputEvent(event, i, j, bitRead(read, j));                                  // Send out new state
+      //const uint32_t read = getUlFromLittleEndianByteStream(&readBuffer[i], 4);
+      //const uint32_t prev = getUlFromLittleEndianByteStream(&prevBuffer[i], 4);
+
+      // Use XOR here to only get a '1' when bits have changed.
+      const uint32_t bitsChanged = read ^ prev; 
+
+      uint32_t bitsChangedMasked = bitsChanged & mask;
+      for (uint8_t j = 0; j < 32 && bitsChangedMasked; ++j) { // Check all 32 bits
+        if (bitRead(bitsChangedMasked, j)) { // Event enabled and bit changed?
+          sendInputEvent(event, i, j, bitRead(read, j)); // Send out new state
+          bitClear(bitsChangedMasked, j);
         }
       }
     }

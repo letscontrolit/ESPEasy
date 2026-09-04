@@ -21,6 +21,43 @@
 # include <SD.h>
 #endif // if FEATURE_SD
 
+
+// Typical use case: data[i] << 24 | data[i + 1] << 16 | data[i + 2] << 8 | data[i + 3]
+uint32_t getUlFromBigEndianByteStream(const uint8_t* data, uint8_t nrBytes)
+{
+  uint32_t res{};
+  if (nrBytes > 4) nrBytes = 4;
+  for (uint8_t i = 0; i < nrBytes; ++i)
+  {
+    res <<= 8;
+    res |= data[i];
+  }
+  return res;
+}
+
+uint16_t getUint16FromBigEndianByteStream(const uint8_t* data)
+{
+  return (data[0] << 8) | data[1];
+}
+
+// Typical use case: data[i + 3] << 24 | data[i + 2] << 16 | data[i + 1] << 8 | data[i + 0]
+uint32_t getUlFromLittleEndianByteStream(const uint8_t* data, uint8_t nrBytes)
+{
+  uint32_t res{};
+  if (nrBytes > 4) nrBytes = 4;
+  while (nrBytes) {
+    --nrBytes;
+    res <<= 8;
+    res |= data[nrBytes];
+  }
+  return res;
+}
+
+uint16_t getUint16FromLittleEndianByteStream(const uint8_t* data)
+{
+  return (data[1] << 8) | data[0];
+}
+
 bool remoteConfig(struct EventStruct *event, const String& string)
 {
   // FIXME TD-er: Why have an event here as argument? It is not used.
