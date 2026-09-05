@@ -7,16 +7,11 @@
 #include "src/DataStructs/SettingsStruct.h"
 #include "src/DataStructs/TimingStats.h"
 #include "src/Globals/Cache.h"
-# if FEATURE_STRING_VARIABLES
-#include "src/Globals/Device.h"
-# endif // #if FEATURE_STRING_VARIABLES
-#include "src/Globals/Plugins.h"
 #include "src/Globals/Settings.h"
-# if FEATURE_TASKVALUE_UNIT_OF_MEASURE
-#include "src/Helpers/ESPEasy_UnitOfMeasure.h"
-#endif
 #include "src/Helpers/Misc.h"
 #include "src/Helpers/StringParser.h"
+#include "src/Helpers/TaskValuesWriterHelper.h"
+
 
 
 PluginTaskData_base *Plugin_task_data[TASKS_MAX] = {};
@@ -223,92 +218,24 @@ bool pluginTaskData_initialized(taskIndex_t taskIndex) {
          (Plugin_task_data[taskIndex]->_taskdata_pluginID == Settings.getPluginID_for_task(taskIndex));
 }
 
-pluginWebformShowValue_struct::pluginWebformShowValue_struct(struct EventStruct *e)
-: event(e) {
-  if (e) {
-    deviceIndex = getDeviceIndex_from_TaskIndex(event->TaskIndex);
-    valueCount = getValueCountForTask(event->TaskIndex);
-  }
-}
-
-void pluginWebformShowValue_struct::clear()
-{
-  valName.clear();
-  valName_id.clear();
-  value.clear();
-  value_id.clear();
-# if FEATURE_TASKVALUE_UNIT_OF_MEASURE
-  uom.clear();
-#endif
-# if FEATURE_STRING_VARIABLES
-  hasPresentation = false;
-  presentation.clear();
-#endif
-  nrDecimals=0;
-}
-
-bool pluginWebformShowValue_struct::initRegularTaskValue(uint8_t varNr)
-{
-  if (!validDeviceIndex(deviceIndex)) return false;
-
-  if (varNr >= valueCount) return false;
-
-  valueNumber = varNr;
-
-  // Make sure we can re-use the same struct for multiple task values
-  clear();
-
-  // Need to produce the 'regular' task values
-# if FEATURE_TASKVALUE_UNIT_OF_MEASURE
-  if (Settings.ShowUnitOfMeasureOnDevicesPage()) {
-    const uint8_t uomIndex = Cache.getTaskVarUnitOfMeasure(event->TaskIndex, varNr);
-
-    if ((uomIndex != 0)) {
-      uom = toUnitOfMeasureName(uomIndex);
-    }
-  }
-# endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
-
-  nrDecimals = Cache.getTaskDeviceValueDecimals(event->TaskIndex, varNr);
-
-  value = formatUserVarNoCheck(event, varNr);
-
-  # if FEATURE_STRING_VARIABLES
-  const DeviceStruct& device = Device[deviceIndex];
-  bool   hasPresentation = false;
-
-  if (!device.HideDerivedValues) {
-    presentation = formatUserVarForPresentation(event, varNr, hasPresentation, value, deviceIndex);
-  }
-  # endif // if FEATURE_STRING_VARIABLES
-  valName = Cache.getTaskDeviceValueName(event->TaskIndex, varNr);
-  setID(varNr);
-
-  return true;
-}
-
-void pluginWebformShowValue_struct::setID(uint8_t varNr)
-{
-  valueNumber = varNr;
-  const String id_postfix = strformat(F("%u_%u"), event->TaskIndex, varNr);
-  valName_id = concat(F("valuename_"), id_postfix);
-  value_id = concat(F("value_"), id_postfix);
-# if FEATURE_TASKVALUE_UNIT_OF_MEASURE
-  if (!uom.isEmpty())
-    uom_id = concat(F("uom_"), id_postfix);
-#endif
-# if FEATURE_STRING_VARIABLES
-  if (!presentation.isEmpty())
-    presentation_id = concat(F("pres_"), id_postfix);
-#endif
-}
 
 void pluginWebformShowValue(
-        struct EventStruct *event,
-        const String       &label,
-        const String       &value,
-        bool                addTrailingBreak)
+        TaskValuesWriterHelper *data)
 {
+  if (!data || !data->event) return;
+  if (data->valueNumber > 0) {
+    addHtmlDiv(F("div_br"));
+  }
+  String value;
+  value = data->value;
+  if (data->hasPresentation) value = data->presentation;
+  else if (!data->uom.isEmpty())
+   value += concat(' ', data->uom);
+
+  pluginWebformShowValue(
+    data->valName, data->valName_id,
+    data->value, data->value_id,
+    data->addTrailingBreak);
 
 }
 

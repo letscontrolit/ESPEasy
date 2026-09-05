@@ -3,6 +3,7 @@
 #include "../WebServer/JSON.h"
 #include "../WebServer/Markup_Forms.h"
 
+#include "../DataStructs/KeyValueStruct.h"
 #include "../DataStructs/TimingStats.h"
 
 #include "../Globals/Cache.h"
@@ -19,6 +20,7 @@
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringProvider.h"
 #include "../Helpers/StringGenerator_System.h"
+#include "../Helpers/TaskValuesWriterHelper.h"
 
 #include "../../ESPEasy/net/Helpers/NW_info_writer.h"
 
@@ -486,67 +488,12 @@ void handle_json()
 
                   struct EventStruct TempEvent(TaskIndex);
                   TempEvent.kvWriter = taskValueWriter.get();
+                  TaskValuesWriterHelper data(&TempEvent);
                   // FIXME tonhuisman: HasFormatUserVar is not really compatible with Derived Values...
-                  for (uint8_t x = 0; x < valueCount; x++)
-                  {
-                    pluginWebformShowValue_struct data(&TempEvent);
-                    data.initRegularTaskValue(x);
-                    handle_json_stream_task_value_data(&data);
-                  }
-
-#if FEATURE_STRING_VARIABLES
-
-                  if (Settings.ShowDerivedTaskValues(TaskIndex)) {
-                    int varNr       = VARS_PER_TASK;
-                    String taskName = getTaskDeviceName(TaskIndex);
-                    taskName.toLowerCase();
-                    String postfix;
-                    const String search = getDerivedValueSearchAndPostfix(taskName, postfix);
-
-                    auto it = customStringVar.begin();
-
-                    while (it != customStringVar.end()) {
-                      if (it->first.startsWith(search) && it->first.endsWith(postfix)) {
-                        String valueName = it->first.substring(search.length(), it->first.indexOf('-'));
-                        String uom;
-                        String vType;
-                        const String vname2 = getDerivedValueNameUomAndVType(taskName, valueName, uom, vType);
-
-                        if (!vname2.isEmpty()) {
-                          valueName = vname2;
-                        }
-
-                        if (!it->second.isEmpty()) {
-                          String value(it->second);
-                          stripEscapeCharacters(value);
-                          value = parseTemplate(value);
-                          uint8_t nrDecimals = 255; // FIXME Use the minimal number of decimals needed
-                          bool    hasPresentation;
-                          const String presentation =
-                            formatUserVarForPresentation(&TempEvent,
-                                                         INVALID_TASKVAR_INDEX,
-                                                         hasPresentation,
-                                                         value,
-                                                         DeviceIndex,
-                                                         valueName);
-
-                          handle_json_stream_task_value_data(taskValueWriter.get(),
-                                                             varNr + 1,
-                                                             valueName,
-                                                             nrDecimals,
-                                                             value,
-                                                             presentation,
-                                                             uom);
-                          ++varNr;
-                        }
-                      }
-                      else if (it->first.substring(0, search.length()).compareTo(search) > 0) {
-                        break;
-                      }
-                      ++it;
-                    }
-                  }
-#endif // if FEATURE_STRING_VARIABLES
+                  data.writeRegularTaskValues();
+# if FEATURE_STRING_VARIABLES
+                  data.writeDerivedTaskValues();
+#endif
                 }
               }
 
@@ -656,7 +603,7 @@ void handle_json()
   STOP_TIMER(HANDLE_SERVING_WEBPAGE_JSON);
 }
 
-void handle_json_stream_task_value_data(pluginWebformShowValue_struct* data)
+void handle_json_stream_task_value_data(TaskValuesWriterHelper* data)
 {
   if (!data || !data->event || !data->event->kvWriter) return;
 
