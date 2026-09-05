@@ -3110,13 +3110,13 @@ To create/register a plugin, you have to :
   #define DISABLE_SOFTWARE_SERIAL
 #endif
 
-#if defined(USES_P095) || defined(USES_P096) || defined(USES_P116) || defined(USES_P131) || defined(USES_P141) || defined(USES_P123) || defined(USES_P165) // Add any plugin that uses AdafruitGFX_Helper
+#if defined(USES_P095) || defined(USES_P096) || (defined(USES_P099) && defined(ESP32)) || defined(USES_P116) || defined(USES_P131) || defined(USES_P141) || defined(USES_P123) || defined(USES_P165) // Add any plugin that uses AdafruitGFX_Helper
   #ifndef PLUGIN_USES_ADAFRUITGFX
     #define PLUGIN_USES_ADAFRUITGFX // Ensure AdafruitGFX_helper is available for graphics displays (only)
   #endif
 #endif
 
-#if defined(USES_P099) || defined(USES_P123)
+#if (defined(USES_P099) && defined(ESP32)) || defined(USES_P123)
   #ifndef PLUGIN_USES_TOUCHHANDLER
     #define PLUGIN_USES_TOUCHHANDLER
   #endif

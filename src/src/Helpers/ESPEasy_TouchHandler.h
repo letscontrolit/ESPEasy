@@ -9,6 +9,7 @@
 
 /*****
  * Changelog:
+ * 2025-09-27 tonhuisman: Add migration of P099 old config to TouchHandler config (that was originally developed from the P099 config)
  * 2024-03-20 tonhuisman: Change inc/dec* commands to next/prev* commands to more accurately describe their function
  * 2024-03-13 tonhuisman: Change PageUp/PageDown reversed option to Navigation Left/Right/Up/Down menu reversed, to also swap the behavior
  *                        of the left and right navigation buttons, like the Up/Down navigation already had.
@@ -75,6 +76,10 @@
  * pagemode                     : Get the Left/Right/Up/Down menu mode, 0 = normal, 1 = reversed
  * swipedir,directionId         : Get the name for the swipe direction provided in numeric form
  */
+
+# ifdef USES_P099
+#  include "../PluginStructs/P099_data_struct_defs.h"
+# endif // ifdef USES_P099
 
 # define TOUCH_DEBUG                    // Additional debugging information
 
