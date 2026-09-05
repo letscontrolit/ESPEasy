@@ -160,6 +160,10 @@ void KeyValueWriter_JSON::write(const KeyValueStruct& kv)
     getPrint().write('\n');
 #endif
   }
+  if (!kv.__id.isEmpty()) {
+    // Write also ID
+    write({ concat(kv._key.toString(), F("_id")), kv.getID() });
+  }
 }
 
 void KeyValueWriter_JSON::writeValue(const ValueStruct& val, bool forceString)

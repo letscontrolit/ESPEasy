@@ -857,18 +857,18 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
 
         if (!customValues)
         {
-          const uint8_t valueCount = getValueCountForTask(x);
-
-          for (uint8_t varNr = 0; varNr < valueCount; varNr++)
+          if (validPluginID_fullcheck(pid))
           {
-            if (validPluginID_fullcheck(pid))
+            const uint8_t valueCount = getValueCountForTask(x);
+
+            for (uint8_t varNr = 0; varNr < valueCount; varNr++)
             {
               # if FEATURE_TASKVALUE_UNIT_OF_MEASURE
               const uint8_t uomIndex = Cache.getTaskVarUnitOfMeasure(x, varNr);
               String uom;
 
               if ((uomIndex != 0) && Settings.ShowUnitOfMeasureOnDevicesPage()) {
-                uom = concat(F(" "), toUnitOfMeasureName(uomIndex));
+                uom = concat(' ', toUnitOfMeasureName(uomIndex));
               }
               # endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
               const String value = formatUserVarNoCheck(&TempEvent, varNr);

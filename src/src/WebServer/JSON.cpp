@@ -450,7 +450,6 @@ void handle_json()
         sensorsWriter->setWriteWhenEmpty();
         for (taskIndex_t TaskIndex = firstTaskIndex; TaskIndex <= lastActiveTaskIndex && validTaskIndex(TaskIndex); TaskIndex++)
         {
-          // TODO TD-er: Code duplication with DevicesPage & JSON  Create separate function to generate taskvalue data
           const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(TaskIndex);
 
           if (validDeviceIndex(DeviceIndex))
@@ -483,42 +482,16 @@ void handle_json()
                 auto taskValueWriter = taskWriter->createChildArray(F("TaskValues"));
 
                 if (taskValueWriter) {
+                  // TODO TD-er: Code duplication with DevicesPage & JSON  Create separate function to generate taskvalue data
+
                   struct EventStruct TempEvent(TaskIndex);
+                  TempEvent.kvWriter = taskValueWriter.get();
                   // FIXME tonhuisman: HasFormatUserVar is not really compatible with Derived Values...
                   for (uint8_t x = 0; x < valueCount; x++)
                   {
-                    uint8_t nrDecimals = Cache.getTaskDeviceValueDecimals(TaskIndex, x);
-                    String  value      = formatUserVarNoCheck(&TempEvent, x);
-#if FEATURE_STRING_VARIABLES
-                    bool hasPresentation;
-                    const String presentation = formatUserVarForPresentation(&TempEvent, x, hasPresentation, value, DeviceIndex);
-#endif // if FEATURE_STRING_VARIABLES
-
-                    if (mustConsiderAsJSONString(value)) {
-                      // Flag as not to treat as a float
-                      nrDecimals = 255;
-                    }
-#if FEATURE_TASKVALUE_UNIT_OF_MEASURE
-                    String uom;
-                    const uint8_t uomIndex = Cache.getTaskVarUnitOfMeasure(TaskIndex, x);
-
-                    if (uomIndex != 0) {
-                      uom = toUnitOfMeasureName(uomIndex);
-                    }
-#else // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
-                    const String uom;
-#endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
-                    handle_json_stream_task_value_data(taskValueWriter.get(),
-                                                      x + 1,
-                                                      Cache.getTaskDeviceValueName(TaskIndex, x),
-                                                      nrDecimals,
-                                                      value,
-#if FEATURE_STRING_VARIABLES
-                                                      presentation,
-#else // if FEATURE_STRING_VARIABLES
-                                                      EMPTY_STRING,
-#endif // if FEATURE_STRING_VARIABLES
-                                                      uom);
+                    pluginWebformShowValue_struct data(&TempEvent);
+                    data.initRegularTaskValue(x);
+                    handle_json_stream_task_value_data(&data);
                   }
 
 #if FEATURE_STRING_VARIABLES
@@ -681,6 +654,50 @@ void handle_json()
 
   TXBuffer.endStream();
   STOP_TIMER(HANDLE_SERVING_WEBPAGE_JSON);
+}
+
+void handle_json_stream_task_value_data(pluginWebformShowValue_struct* data)
+{
+  if (!data || !data->event || !data->event->kvWriter) return;
+
+  auto writer = data->event->kvWriter->createChild();
+
+  if (writer) {
+    uint8_t nrDecimals = data->nrDecimals;
+
+    if (mustConsiderAsJSONString(data->value)) {
+      // Flag as not to treat as a float
+      nrDecimals = 255;
+    }
+
+    {
+      KeyValueStruct kv(F("Name"), data->valName);
+      kv.setID(data->valName_id);
+      writer->write(kv);
+    }
+    {
+      KeyValueStruct kv(F("Value"), data->value);
+      kv.setID(data->value_id);
+      writer->write(kv);
+    }
+
+    writer->write({ F("ValueNumber"), data->valueNumber + 1 });
+    writer->write({ F("NrDecimals"),  nrDecimals });
+#if FEATURE_STRING_VARIABLES
+
+    if (!data->presentation.isEmpty()) {
+      KeyValueStruct kv(F("Presentation"), data->presentation);
+      kv.setID(data->presentation_id);
+      writer->write(kv);
+    }
+#endif // if FEATURE_STRING_VARIABLES
+
+    if (!data->uom.isEmpty()) {
+      KeyValueStruct kv(F("UoM"), data->uom);
+      kv.setID(data->uom_id);
+      writer->write(kv);
+    }
+  }
 }
 
 void handle_json_stream_task_value_data(KeyValueWriter*parent,

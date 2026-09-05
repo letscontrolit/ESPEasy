@@ -10,6 +10,7 @@
 #include "src/DataStructs/PinMode.h"
 #include "src/DataStructs/PluginTaskData_base.h"
 
+#include "src/DataTypes/DeviceIndex.h"
 #include "src/DataTypes/ESPEasy_plugin_functions.h"
 
 #include "src/ESPEasyCore/Controller.h"
@@ -197,6 +198,47 @@ int                  getFormItemIntCustomArgName(int varNr);
 // if the regular values should also be displayed.
 // The call to PLUGIN_WEBFORM_SHOW_VALUES should only return success = true when no regular values should be displayed
 // Note that the varNr of the custom values should not conflict with the existing variable numbers (e.g. start at VARS_PER_TASK)
+void pluginWebformShowValue(
+        struct EventStruct *event,
+        bool                addTrailingBreak = false);
+
+struct pluginWebformShowValue_struct {
+        pluginWebformShowValue_struct(struct EventStruct *event);
+
+        void clear();
+
+        bool initRegularTaskValue(uint8_t varNr);
+
+        void setID(uint8_t varNr);
+
+        
+
+        EventStruct * const event = nullptr;
+        String valName, valName_id, value, value_id;
+# if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+        String uom, uom_id;
+#endif
+# if FEATURE_STRING_VARIABLES
+        String presentation, presentation_id;
+        bool   hasPresentation = false;
+#endif
+
+        uint8_t nrDecimals{};
+        uint8_t valueCount{};
+        uint8_t valueNumber{};
+        deviceIndex_t deviceIndex = INVALID_DEVICE_INDEX;
+        bool          addTrailingBreak = false;
+};
+
+void pluginWebformShowValue(
+        struct EventStruct *event,
+        const String& valName,
+        const String& valName_id,
+        const String& value,
+        const String& value_id,
+        bool          addTrailingBreak = false);
+
+
 void pluginWebformShowValue(taskIndex_t                taskIndex,
                             uint8_t                    varNr,
                             const __FlashStringHelper *label,

@@ -22,6 +22,27 @@
 #endif // if FEATURE_SD
 
 
+/*
+One 32-bit int       Arranged as     Arranged as     One 32-bit int
+                       4 bytes         4 bytes
+ 0A 0B 0C 0D          in memory       in memory       0A 0B 0C 0D
+  |  |  |  |                                           |  |  |  |
+  |  |  |  -------->    n: 0D           n: 0A  <--------  |  |  |
+  |  |  ----------->  n+1: 0C         n+1: 0B  <-----------  |  |
+  |  -------------->  n+2: 0B         n+2: 0C  <--------------  |
+  ----------------->  n+3: 0A         n+3: 0D  <-----------------
+    Little Endian                                 Big Endian
+
+Source: https://en.wikipedia.org/wiki/Endianness
+
+
+  Big Endian is the more common byte-order.
+  When used to program an ESPEasy plugin, 
+  it is most likely that device will use only one kind of byte-order.
+  It is more likely to be a programming error when both byte-orders 
+  are used for the same device.
+*/
+
 // Typical use case: data[i] << 24 | data[i + 1] << 16 | data[i + 2] << 8 | data[i + 3]
 uint32_t getUlFromBigEndianByteStream(const uint8_t* data, uint8_t nrBytes)
 {
@@ -57,6 +78,39 @@ uint16_t getUint16FromLittleEndianByteStream(const uint8_t* data)
 {
   return (data[1] << 8) | data[0];
 }
+
+int32_t  fromTwosComplement(uint32_t twoComplementValue, uint8_t nrBits)
+{
+  if (nrBits <= 1) return 0;
+  if (nrBits >= 32) nrBits = 32;
+
+  const uint32_t max_signed = std::numeric_limits<int32_t>::max() >> (32 - nrBits);
+  if (twoComplementValue <= max_signed) return twoComplementValue;
+  // Using 64-bit int here to prevent overflows
+  int64_t res = twoComplementValue;
+  res -= (1 << nrBits);
+  return res;
+}
+
+uint32_t toTwosComplement(int32_t value, uint8_t nrBits)
+{
+  if (value >= 0) return value;
+  if (nrBits <= 1) return 0;
+  if (nrBits >= 32) nrBits = 32;
+
+  // See: https://www.geeksforgeeks.org/digital-logic/twos-complement/
+  uint32_t res = ~(uint32_t)value;
+  ++res;
+  if (nrBits < 32) {
+    // Apply bitmask to only keep the nrBits.
+    res &= ((1ul << nrBits) - 1);
+  }
+  // TODO TD-er: Not sure if this will work for < 32 bits. Maybe just 2^nrBits to 64-bit int?
+  //  int64_t res = value;
+  //  res += (1 << nrBits);
+  return res;
+}
+
 
 bool remoteConfig(struct EventStruct *event, const String& string)
 {
