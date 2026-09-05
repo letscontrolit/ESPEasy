@@ -147,6 +147,7 @@ bool P153_data_struct::plugin_read(struct EventStruct *event)           {
 
       // Data valid?
       if (calc_CRC8(data[0], data[1], data[2]) && calc_CRC8(data[3], data[4], data[5])) {
+        // TODO TD-er: Use getUint16FromBigEndianByteStream
         const float temp = static_cast<float>(((uint16_t)data[0] << 8) | (uint16_t)data[1]);
         const float hum  = static_cast<float>(((uint16_t)data[3] << 8) | (uint16_t)data[4]);
         temperature = -45.0f + 175.0f * temp / 65535.0f;

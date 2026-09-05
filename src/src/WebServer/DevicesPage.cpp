@@ -34,6 +34,7 @@
 # include "../Helpers/SPI_Helper.h"
 # include "../Helpers/StringConverter.h"
 # include "../Helpers/StringGenerator_GPIO.h"
+# include "../Helpers/TaskValuesWriterHelper.h"
 
 # include "../../_Plugin_Helper.h"
 
@@ -809,9 +810,9 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
             }
 
             default:
-              showpin1 = true;
-              showpin2 = true;
-              showpin3 = true;
+              showpin1 = !pluginHasGPIODescription;
+              showpin2 = !pluginHasGPIODescription;
+              showpin3 = !pluginHasGPIODescription;
               break;
           }
 
@@ -845,112 +846,8 @@ void handle_devicess_ShowAllTasksTable(uint8_t page)
 
       html_TD();
 
-      if (validDeviceIndex(DeviceIndex)) {
-        # if FEATURE_STRING_VARIABLES
-        const DeviceStruct& device = Device[DeviceIndex];
-        # endif // #if FEATURE_STRING_VARIABLES
-        String customValuesString;
-        const bool customValues = PluginCall(PLUGIN_WEBFORM_SHOW_VALUES, &TempEvent, customValuesString);
-
-        if (!customValues)
-        {
-          const uint8_t valueCount = getValueCountForTask(x);
-
-          for (uint8_t varNr = 0; varNr < valueCount; varNr++)
-          {
-            if (validPluginID_fullcheck(pid))
-            {
-              # if FEATURE_TASKVALUE_UNIT_OF_MEASURE
-              const uint8_t uomIndex = Cache.getTaskVarUnitOfMeasure(x, varNr);
-              String uom;
-
-              if ((uomIndex != 0) && Settings.ShowUnitOfMeasureOnDevicesPage()) {
-                uom = concat(F(" "), toUnitOfMeasureName(uomIndex));
-              }
-              # endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
-              const String value = formatUserVarNoCheck(&TempEvent, varNr);
-              # if FEATURE_STRING_VARIABLES
-              bool   hasPresentation = false;
-              String presentation;
-
-              if (!device.HideDerivedValues) {
-                presentation = formatUserVarForPresentation(&TempEvent, varNr, hasPresentation, value, DeviceIndex);
-              }
-              # endif // if FEATURE_STRING_VARIABLES
-              pluginWebformShowValue(
-                x,
-                varNr,
-                Cache.getTaskDeviceValueName(x, varNr),
-                # if FEATURE_STRING_VARIABLES
-                hasPresentation ? presentation :
-                # endif // if FEATURE_STRING_VARIABLES
-                # if FEATURE_TASKVALUE_UNIT_OF_MEASURE
-                concat(value, uom)
-                # else // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
-                value
-                # endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
-                );
-            }
-          }
-
-          # if FEATURE_STRING_VARIABLES
-
-          if (!device.HideDerivedValues) {
-            int varNr = VARS_PER_TASK;
-
-            if (Settings.ShowDerivedTaskValues(x)) {
-              String taskName = getTaskDeviceName(x);
-              taskName.toLowerCase();
-              String postfix;
-              const String search = getDerivedValueSearchAndPostfix(taskName, postfix);
-
-              auto it = customStringVar.begin();
-
-              while (it != customStringVar.end()) {
-                if (it->first.startsWith(search) && it->first.endsWith(postfix)) {
-                  String valueName = it->first.substring(search.length(), it->first.indexOf('-'));
-                  String uom;
-                  String vType;
-                  const String vname2 = getDerivedValueNameUomAndVType(taskName, valueName, uom, vType);
-
-                  if (!vname2.isEmpty()) {
-                    valueName = vname2;
-                  }
-
-                  if (!it->second.isEmpty()) {
-                    String value(it->second);
-                    value = parseTemplateAndCalculate(value);
-                    String presentation = getCustomStringVar(strformat(F(TASK_VALUE_PRESENTATION_PREFIX_TEMPLATE),
-                                                                       taskName.c_str(),
-                                                                       valueName.c_str()));
-
-                    if (!uom.isEmpty()) {
-                      value = strformat(F("%s %s"), value.c_str(), uom.c_str());
-                    }
-
-                    if (!presentation.isEmpty()) {
-                      stripEscapeCharacters(presentation);
-                      presentation.replace(F("%value%"), value);
-                      value = parseTemplate(presentation);
-                    }
-                    pluginWebformShowValue(
-                      x,
-                      varNr,
-                      valueName,
-                      value);
-                    ++varNr;
-                  }
-                }
-                else if (it->first.substring(0, search.length()).compareTo(search) > 0) {
-                  break;
-                }
-                ++it;
-              }
-            }
-          }
-          # endif // if FEATURE_STRING_VARIABLES
-        }
-      }
+      TaskValuesWriterHelper data(&TempEvent);
+      data.writeTaskValues();
     }
     else {
       html_TD(6);

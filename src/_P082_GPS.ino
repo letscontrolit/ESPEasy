@@ -88,10 +88,11 @@ boolean Plugin_082(uint8_t function, struct EventStruct *event, String& string) 
 
       if ((nullptr != P082_data) && P082_data->isInitialized()) {
         uint8_t varNr = VARS_PER_TASK;
-        pluginWebformShowValue(event->TaskIndex, varNr++, F("Fix"), String(P082_data->hasFix(P082_TIMEOUT) ? 1 : 0));
-        pluginWebformShowValue(event->TaskIndex, varNr++, F("Tracked"),
+        TaskValuesWriterHelper data(event);
+        data.writeCustom(varNr++, F("Fix"), String(P082_data->hasFix(P082_TIMEOUT) ? 1 : 0));
+        data.writeCustom(varNr++, F("Tracked"),
                                String(P082_data->gps->satellitesStats.nrSatsTracked()));
-        pluginWebformShowValue(event->TaskIndex, varNr++, F("Best SNR"), String(P082_data->gps->satellitesStats.getBestSNR()), true);
+        data.writeCustom(varNr++, F("Best SNR"), String(P082_data->gps->satellitesStats.getBestSNR()), true);
 
         // success = true;
       }

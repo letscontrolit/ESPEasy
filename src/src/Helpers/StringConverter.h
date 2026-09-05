@@ -52,6 +52,11 @@ String concat(const String& str, const T &val) {
   return res;
 }
 
+bool remove(String& str, const String& toRemove);
+bool remove(String& str, const __FlashStringHelper * toRemove);
+bool remove(String& str, const char& toRemove);
+bool removeSpace(String& str);
+
 bool equals(const String& str, const __FlashStringHelper * f_str);
 bool equals(const String& str, const char& c);
 
@@ -59,8 +64,13 @@ bool equals(const String& str, const char& c);
 void move_special(String& dest, String&& source);
 String move_special(String&& source);
 
+void move_special(String& dest, String&& source, size_t strLengthThreshold);
+String move_special(String&& source, size_t strLengthThreshold);
+
+
 // Try to reserve on the heap with the most space available
 bool reserve_special(String& str, size_t size);
+bool reserve_special(String& str, size_t size, size_t strLengthThreshold);
 
 // Arduino String does not have a function to de-allocate its internal buffer
 // This is a special trick to de-allocate its internal buffer and thus free up memory.
@@ -113,6 +123,13 @@ void   addNewLine(String& line);
 size_t UTF8_charLength(uint8_t firstByte);
 
 void   replaceUnicodeByChar(String& line, char replChar);
+
+// Pad string with given char to minimum length
+void   padToMinimumLength(String& line, uint32_t minimumLength, char padChar = ' ');
+
+// Prefix string with given char to minimum length
+void   prefixToMinimumLength(String& line, uint32_t minimumLength, char prefixChar = ' ');
+
 
 /*********************************************************************************************\
    Format a value to the set number of decimals
@@ -177,6 +194,8 @@ String wrapWithQuotesIfContainsParameterSeparatorChar(const String& text);
 \*********************************************************************************************/
 String to_json_value(const String& value,
                      bool wrapInQuotes = false);
+
+bool is_json_formatted(const String& value);
 
 /*********************************************************************************************\
    Strip wrapping chars (e.g. quotes)

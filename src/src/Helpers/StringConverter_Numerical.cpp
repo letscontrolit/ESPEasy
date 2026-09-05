@@ -59,18 +59,37 @@ bool toValidString(String& str,
   return doubleToValidString(str, value_d, decimalPlaces, trimTrailingZeros);
 }
 
-
-String ull2String(uint64_t value, uint8_t base) {
+String ull2String(uint64_t value,
+                  uint8_t  base,
+                  uint8_t  minNrDigits,
+                  char     separatorChar,
+                  bool     toUpperCase)
+{
   String res;
-
-  if (value == 0) {
-    res = '0';
-    return res;
-  }
 
   while (value > 0) {
     res   += String(static_cast<uint32_t>(value % base), base);
     value /= base;
+  }
+  // String representation is still reversed, so pad instead of prefix
+  padToMinimumLength(res, minNrDigits, '0');
+
+  if (separatorChar != '\0') {
+    // Need to insert separator chars, starting from the 'right' of the string
+    // However the string is still in reversed order, which makes it rather easy.
+    const uint32_t byteGroupLength = (base == DEC) ? 3 : (base == HEX) ? 2 : 8;
+    const auto length = res.length();
+
+    String tmp;
+    tmp.reserve(res.length() + (minNrDigits / byteGroupLength) - 1);
+   
+    for (uint8_t i = 0; i < length; ++i) {
+      if (i != 0 && i % byteGroupLength == 0) {
+        tmp += separatorChar;
+      }
+      tmp += res[i];
+    }
+    res = std::move(tmp);
   }
 
   int endpos   = res.length() - 1;
@@ -84,52 +103,27 @@ String ull2String(uint64_t value, uint8_t base) {
     --endpos;
   }
 
+  if (toUpperCase && base == HEX) {
+    res.toUpperCase();
+  }
+
   return res;
 }
 
-String ll2String(int64_t value, uint8_t  base) {
-  if (value < 0) {
-    return concat('-', ull2String(value * -1ll, base));
-  } else {
-    return ull2String(value, base);
+String ll2String(int64_t value,
+                 uint8_t base,
+                 uint8_t minNrDigits,
+                 char    separatorChar,
+                 bool    toUpperCase)
+{
+  if (value >= 0) {
+    return ull2String(value, base, minNrDigits, separatorChar, toUpperCase);
   }
+  return concat(
+    '-', 
+    ull2String(value * -1ll, base, minNrDigits, separatorChar, toUpperCase));
 }
 
-/**
- * format an uint32_t with 0-prefixed in the provided base of 2, 16 and insert an optional dot as separator for each byte
- * separator only applied for base 2 and 16
- */
-String ul2stringFixed(uint32_t value, uint8_t base, bool dotSeparator) {
-  // Set bit just left of 32 bits so we will see the leading zeroes
-  const uint64_t val = static_cast<uint64_t>(value) | 0x100000000ull;
-
-  String valStr = ull2String(val, base).substring(1); // Delete leading 1 we added
-
-  if (base == HEX) {
-    valStr.toUpperCase();                             // uppercase hex for readability
-  }
-
-  if (dotSeparator) {
-    uint8_t dotInsert{};
-    uint8_t dotOffset{};
-
-    if (BIN == base) {
-      dotInsert = 10;
-      dotOffset = 9;
-    } else
-    if (HEX == base) {
-      dotInsert += 4;
-      dotOffset  = 3;
-    }
-
-    if (dotInsert) {
-      for (uint8_t i = 0; i < 3; ++i, dotInsert += dotOffset) { // Insert readability separators
-        valStr = valStr.substring(0, dotInsert) + '.' + valStr.substring(dotInsert);
-      }
-    }
-  }
-  return valStr;
-}
 
 String trimTrailingZeros(const String& value) {
   String res(value);
@@ -431,8 +425,7 @@ String formatToHex_no_prefix(unsigned long value, unsigned int minimal_hex_digit
 String formatHumanReadable(uint64_t value,
                            uint32_t factor) {
   String result = formatHumanReadable(value, factor, 2);
-
-  result.replace(F(".00"), EMPTY_STRING);
+  remove(result, F(".00"));
   return result;
 }
 

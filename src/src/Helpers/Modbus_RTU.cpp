@@ -663,6 +663,7 @@ int ModbusRTU_struct::process_16b_register(uint8_t slaveAddress, uint8_t functio
   errorcode = processCommand();
 
   if (errorcode == 0) {
+    // TODO TD-er: Use getUint16FromBigEndianByteStream
     return (_recv_buf[3] << 8) | (_recv_buf[4]);
   }
   logModbusException(errorcode);
@@ -675,6 +676,7 @@ int ModbusRTU_struct::preset_mult16b_register(uint8_t slaveAddress, uint16_t sta
   const uint8_t process_result = processCommand();
 
   if (process_result == 0) {
+    // TODO TD-er: Use getUint16FromBigEndianByteStream
     return (_recv_buf[4] << 8) | (_recv_buf[5]);
   }
   logModbusException(process_result);

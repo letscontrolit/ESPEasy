@@ -45,6 +45,7 @@
 #include "src/Helpers/StringGenerator_GPIO.h"
 #include "src/Helpers/StringGenerator_Plugin.h"
 #include "src/Helpers/StringParser.h"
+#include "src/Helpers/TaskValuesWriterHelper.h"
 #include "src/Helpers/_Plugin_SensorTypeHelper.h"
 #include "src/Helpers/_Plugin_Helper_serial.h"
 
@@ -192,31 +193,6 @@ String               getPluginCustomArgName(const __FlashStringHelper *label,
 
 int                  getFormItemIntCustomArgName(int varNr);
 
-// Helper function to create formatted custom values for display in the devices overview page.
-// When called from PLUGIN_WEBFORM_SHOW_VALUES, the last item should add a traling div_br class
-// if the regular values should also be displayed.
-// The call to PLUGIN_WEBFORM_SHOW_VALUES should only return success = true when no regular values should be displayed
-// Note that the varNr of the custom values should not conflict with the existing variable numbers (e.g. start at VARS_PER_TASK)
-void pluginWebformShowValue(taskIndex_t                taskIndex,
-                            uint8_t                    varNr,
-                            const __FlashStringHelper *label,
-                            const String             & value,
-                            bool                       addTrailingBreak = false);
-
-void pluginWebformShowValue(taskIndex_t   taskIndex,
-                            uint8_t       varNr,
-                            const String& label,
-                            const String& value,
-                            bool          addTrailingBreak = false);
-
-void pluginWebformShowValue(const String& valName,
-                            const String& value,
-                            bool          addBR = true);
-void pluginWebformShowValue(const String& valName,
-                            const String& valName_id,
-                            const String& value,
-                            const String& value_id,
-                            bool          addBR = true);
 
 // Check if given parameter nr matches with given taskIndex.
 // paramNr == 0 -> command, paramNr == 1 -> 1st parameter

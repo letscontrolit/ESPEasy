@@ -266,7 +266,8 @@ boolean Plugin_077(uint8_t function, struct EventStruct *event, String& string) 
         uint8_t varNr            = VARS_PER_TASK;
         const float pulsesPerKwh = P077_data->cf_frequency * 3600;
         const float kWh          = P077_data->cf_pulses / pulsesPerKwh;
-        pluginWebformShowValue(event->TaskIndex, varNr++, F("kWh"), toString(kWh, 3), true);
+        TaskValuesWriterHelper data(event);
+        data.writeCustom(varNr++, F("kWh"), toString(kWh, 3), true);
       }
       break;
     }

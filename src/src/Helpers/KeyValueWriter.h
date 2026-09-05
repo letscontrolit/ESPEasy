@@ -156,5 +156,7 @@ protected:
 
   bool _allowFormatOverrides = true;
 
+  bool _tabularFormat = true;
+
 
 }; // class KeyValueWriter

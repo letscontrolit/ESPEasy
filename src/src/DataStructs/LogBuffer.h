@@ -30,7 +30,7 @@
 #ifdef ESP32
   # define LOG_BUFFER_ACTIVE_READ_TIMEOUT 30000
 #else
-  # define LOG_BUFFER_ACTIVE_READ_TIMEOUT 5000
+  # define LOG_BUFFER_ACTIVE_READ_TIMEOUT LOG_BUFFER_EXPIRE
 #endif // ifdef ESP32
 
 typedef std::list<LogEntry_t> LogEntry_queue;

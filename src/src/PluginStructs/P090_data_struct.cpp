@@ -252,6 +252,7 @@ CCS811Core::status CCS811::readAlgorithmResults(void)
   // Data ordered:
   // co2MSB, co2LSB, tvocMSB, tvocLSB
 
+  // TODO TD-er: Use getUint16FromBigEndianByteStream
   CO2  = ((uint16_t)data[CSS811_ALG_RESULT_DATA + 0] << 8) | data[CSS811_ALG_RESULT_DATA + 1];
   tVOC = ((uint16_t)data[CSS811_ALG_RESULT_DATA + 2] << 8) | data[CSS811_ALG_RESULT_DATA + 3];
   return SENSOR_SUCCESS;
@@ -462,10 +463,12 @@ CCS811Core::status CCS811::readNTC(void)
     return SENSOR_I2C_ERROR;
   }
 
+  // TODO TD-er: Use getUint16FromBigEndianByteStream
   vrefCounts = (static_cast<uint16_t>(data[CSS811_NTC + 0]) << 8) | data[CSS811_NTC + 1];
 
   // ESPEASY_SERIAL_0.print("vrefCounts: ");
   // ESPEASY_SERIAL_0.println(vrefCounts);
+  // TODO TD-er: Use getUint16FromBigEndianByteStream
   ntcCounts = (static_cast<uint16_t>(data[CSS811_NTC + 2]) << 8) | data[CSS811_NTC + 3];
 
   // ESPEASY_SERIAL_0.print("ntcCounts: ");

@@ -281,7 +281,8 @@ boolean Plugin_124(uint8_t function, struct EventStruct *event, String& string)
         val   |= (0x1 << P124_CONFIG_RELAY_COUNT);
         state += ull2String(val, 2);
         state.remove(3, 1); // Delete leading 1 we added
-        pluginWebformShowValue(event->TaskIndex, varNr++, label, state, true);
+        TaskValuesWriterHelper data(event);
+        data.writeCustom(varNr++, label, state, true);
 
         // success = true;
       }

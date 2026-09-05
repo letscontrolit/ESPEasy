@@ -29,15 +29,22 @@ bool toValidString(String& str,
                   bool         trimTrailingZeros = false);
   
 
+// Create a string from given value represented in 'base'
+// For HEX or BIN representation, the separation will be per byte from the right.
+// For base 10 (DEC) the separator char will be placed every 3rd position from the right.
+// When extending the string to contain minNrDigits, zeroes will be prefixed.
 String ull2String(uint64_t value,
-                  uint8_t  base = 10);
+                  uint8_t  base = 10,
+                  uint8_t  minNrDigits = 1,
+                  char     separatorChar = '\0',
+                  bool     toUpperCase = false);
 
-String ll2String(int64_t value,
-                 uint8_t base = 10);
 
-String ul2stringFixed(uint32_t value,
-                      uint8_t  base,
-                      bool     dotSeparator);
+String ll2String(int64_t  value,
+                 uint8_t  base = 10,
+                 uint8_t  minNrDigits = 1,
+                 char     separatorChar = '\0',
+                 bool     toUpperCase = false);
 
 
 String trimTrailingZeros(const String& value);

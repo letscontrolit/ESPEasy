@@ -47,6 +47,7 @@ bool P173_data_struct::plugin_read(struct EventStruct *event)           {
 
     // Read succesful, data valid?
     if (calc_CRC8(data[0], data[1], data[2]) && calc_CRC8(data[3], data[4], data[5])) {
+      // TODO TD-er: Use getUint16FromBigEndianByteStream(&data[0])
       const float temp = static_cast<float>(((uint16_t)data[0] << 8) | (uint16_t)data[1]);
       const float hum  = static_cast<float>(((uint16_t)data[3] << 8) | (uint16_t)data[4]);
       temperature = -45.0f + 175.0f * temp / 65535.0f;
@@ -117,6 +118,7 @@ bool P173_data_struct::checkDeviceID() {
   readValue(P173_SHTC3_READ_DEVICEID, 3, idArray);
 
   if (calc_CRC8(idArray[0], idArray[1], idArray[2])) {
+    // TODO TD-er: Use getUint16FromBigEndianByteStream
     const uint16_t id = (idArray[0] << 8) | idArray[1];
 
     if ((id & 0x807) == 0x807) {

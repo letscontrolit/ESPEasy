@@ -110,7 +110,7 @@ bool C023_data_struct::txHexBytes(const String& data, uint8_t port) {
   if (!isInitialized()) { return false; }
   bool   res      = true;
   String sendData = data;
-  sendData.replace(F(" "), F(""));
+  removeSpace(sendData);
   sendData.trim();
 
   if (_loraModule == C023_AT_commands::LoRaModule_e::Dragino_LA66) {

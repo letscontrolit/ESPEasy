@@ -473,7 +473,7 @@ void NodesHandler::updateThisNode() {
     const NodeStruct *preferred = getPreferredNode_notMatching(thisNode.sta_mac);
 
     if (preferred != nullptr) {
-      if (!preferred->isExpired()) {
+      if (!preferred->hasExpired()) {
         // Only take the distance of another node if it is running a build which does not send out traceroute
         // If it is a build sending traceroute, only consider having a distance if you know how to reach the gateway node
         // This does impose an issue when a gateway node is running an older version, as the next hops never will have a traceroute too.

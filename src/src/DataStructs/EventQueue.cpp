@@ -4,45 +4,39 @@
 #include "../Helpers/Misc.h"
 #include "../Helpers/StringConverter.h"
 
-
 void EventQueueStruct::add(const String& event, bool deduplicate)
 {
   if (!deduplicate || !isDuplicate(event)) {
 #if defined(USE_SECOND_HEAP) || defined(ESP32)
     String tmp;
-    reserve_special(tmp, event.length());
+    reserve_special(tmp, event.length(), 0);
     tmp = event;
 
-#ifdef USE_SECOND_HEAP
+# ifdef USE_SECOND_HEAP
+
     // Do not add to the list while on 2nd heap
     HeapSelectDram ephemeral;
-#endif
+# endif // ifdef USE_SECOND_HEAP
 
 
     _eventQueue.emplace_back(std::move(tmp));
-#else
+#else // if defined(USE_SECOND_HEAP) || defined(ESP32)
     _eventQueue.push_back(event);
-#endif
+#endif // if defined(USE_SECOND_HEAP) || defined(ESP32)
   }
 }
 
 void EventQueueStruct::add(const __FlashStringHelper *event, bool deduplicate)
 {
   String str;
-  move_special(str, String(event));
+
+  move_special(str, String(event), 0);
   add(str, deduplicate);
 }
 
-void EventQueueStruct::addDeDup(const String& event)
-{
-  add(event, true);
-}
+void EventQueueStruct::addDeDup(const String& event)              { add(event, true); }
 
-void EventQueueStruct::addDeDup(const __FlashStringHelper *event)
-{
-  add(event, true);
-}
-
+void EventQueueStruct::addDeDup(const __FlashStringHelper *event) { add(event, true); }
 
 void EventQueueStruct::addMove(String&& event, bool deduplicate)
 {
@@ -51,14 +45,15 @@ void EventQueueStruct::addMove(String&& event, bool deduplicate)
   if (!deduplicate || !isDuplicate(event)) {
     #if defined(USE_SECOND_HEAP) || defined(ESP32)
     String tmp;
-    move_special(tmp, std::move(event));
+    move_special(tmp, std::move(event), 0);
 
-    #ifdef USE_SECOND_HEAP
+    # ifdef USE_SECOND_HEAP
+
     // Do not add to the list while on 2nd heap
     HeapSelectDram ephemeral;
-    #endif
+    # endif // ifdef USE_SECOND_HEAP
     _eventQueue.emplace_back(std::move(tmp));
-    #else
+    #else // if defined(USE_SECOND_HEAP) || defined(ESP32)
     _eventQueue.emplace_back(std::move(event));
     #endif // ifdef USE_SECOND_HEAP
   }
@@ -69,15 +64,15 @@ void EventQueueStruct::add(taskIndex_t TaskIndex, const String& varName, const S
   if (Settings.UseRules) {
     if (eventValue.isEmpty()) {
       addMove(strformat(
-        F("%s#%s"), 
-        getTaskDeviceName(TaskIndex).c_str(), 
-        varName.c_str()));
+                F("%s#%s"),
+                getTaskDeviceName(TaskIndex).c_str(),
+                varName.c_str()));
     } else {
       addMove(strformat(
-        F("%s#%s=%s"), 
-        getTaskDeviceName(TaskIndex).c_str(), 
-        varName.c_str(), 
-        eventValue.c_str()));
+                F("%s#%s=%s"),
+                getTaskDeviceName(TaskIndex).c_str(),
+                varName.c_str(),
+                eventValue.c_str()));
     }
   }
 }
@@ -113,10 +108,7 @@ bool EventQueueStruct::getNext(String& event)
   return true;
 }
 
-void EventQueueStruct::clear()
-{
-  _eventQueue.clear();
-}
+void EventQueueStruct::clear() { _eventQueue.clear(); }
 
 bool EventQueueStruct::isEmpty() const
 {

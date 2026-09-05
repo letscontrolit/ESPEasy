@@ -58,7 +58,7 @@ bool P126_data_struct::plugin_init(struct EventStruct *event) {
   return true;
 }
 
-const uint32_t P126_data_struct::getChannelState(uint8_t offset, uint8_t size) const {
+uint32_t P126_data_struct::getChannelState(uint8_t offset, uint8_t size) const {
   uint32_t result       = 0u;
   const uint8_t *pvalue = shift->getAll();
   const uint8_t  last   = offset + size;
@@ -85,16 +85,20 @@ bool P126_data_struct::plugin_read(struct EventStruct *event) {
   const uint16_t last = P126_CONFIG_SHOW_OFFSET + (VARS_PER_TASK * 4);
   uint8_t varNr       = 0;
 
+  bool changed{};
+
   for (uint16_t index = P126_CONFIG_SHOW_OFFSET; index < _chipCount && index < last && varNr < VARS_PER_TASK; index += 4, ++varNr) {
     const uint32_t result = getChannelState(index, min(VARS_PER_TASK, _chipCount - index));
+    if (UserVar.getUint32(event->TaskIndex, varNr) != result) changed = true;
     UserVar.setUint32(event->TaskIndex, varNr, result);
   }
-  return true;
+  return changed;
 }
 
 bool P126_data_struct::plugin_write(struct EventStruct *event,
                                     const String      & string) {
-  bool   success = false;
+  bool success = false;
+  bool updated = false;
   String command = parseString(string, 1);
 
   if (equals(command, F("shiftout"))) {
@@ -107,6 +111,7 @@ bool P126_data_struct::plugin_write(struct EventStruct *event,
 
       if (validChannel(pin) && ((value == 0) || (value == 1))) {
         shift->set(pin - 1, value, hc_update);
+        if (hc_update) updated = true;
         success = true;
         # ifdef P126_DEBUG_LOG
 
@@ -117,6 +122,7 @@ bool P126_data_struct::plugin_write(struct EventStruct *event,
       }
     } else if (equals(subcommand, F("update"))) {
       shift->updateRegisters();
+      updated = true;
       success = true;
     } else if (equals(subcommand, F("setall")) || equals(subcommand, F("setallnoupdate"))) {
       success = true;
@@ -197,12 +203,15 @@ bool P126_data_struct::plugin_write(struct EventStruct *event,
 
       if (success) {
         shift->setAll(&value[0], hc_update);
+        if (hc_update) updated = true;
       }
     } else if (equals(subcommand, F("setalllow"))) {
       shift->setAllLow();
+      updated = true;
       success = true;
     } else if (equals(subcommand, F("setallhigh"))) {
       shift->setAllHigh();
+      updated = true;
       success = true;
     } else if (equals(subcommand, F("setoffset"))) {
       if ((event->Par2 >= 0) && (event->Par2 <= P126_MAX_SHOW_OFFSET)) {
@@ -255,6 +264,9 @@ bool P126_data_struct::plugin_write(struct EventStruct *event,
     }
     # endif // ifdef P126_DEBUG_LOG
   }
+  // TODO TD-er: Do we need to schedule a taskRun to send out events and/or send data to controller(s), or just a plugin_read(event) ??
+  if (updated) //plugin_read(event);
+  Scheduler.schedule_task_device_timer(event->TaskIndex, 10);
   return success;
 }
 

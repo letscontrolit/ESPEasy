@@ -3,6 +3,7 @@
 #include "../WebServer/JSON.h"
 #include "../WebServer/Markup_Forms.h"
 
+#include "../DataStructs/KeyValueStruct.h"
 #include "../DataStructs/TimingStats.h"
 
 #include "../Globals/Cache.h"
@@ -19,6 +20,7 @@
 #include "../Helpers/StringConverter.h"
 #include "../Helpers/StringProvider.h"
 #include "../Helpers/StringGenerator_System.h"
+#include "../Helpers/TaskValuesWriterHelper.h"
 
 #include "../../ESPEasy/net/Helpers/NW_info_writer.h"
 
@@ -482,119 +484,13 @@ void handle_json()
                 auto taskValueWriter = taskWriter->createChildArray(F("TaskValues"));
 
                 if (taskValueWriter) {
+                  // TODO TD-er: Code duplication with DevicesPage & JSON  Create separate function to generate taskvalue data
+
                   struct EventStruct TempEvent(TaskIndex);
-
-                  for (uint8_t x = 0; x < valueCount; x++)
-                  {
-                    uint8_t nrDecimals = Cache.getTaskDeviceValueDecimals(TaskIndex, x);
-                    String  value      = formatUserVarNoCheck(&TempEvent, x);
-#if FEATURE_STRING_VARIABLES
-                    bool hasPresentation;
-                    const String presentation = formatUserVarForPresentation(&TempEvent, x, hasPresentation, value, DeviceIndex);
-#endif // if FEATURE_STRING_VARIABLES
-
-                    if (mustConsiderAsJSONString(value)) {
-                      // Flag as not to treat as a float
-                      nrDecimals = 255;
-                    }
-#if FEATURE_TASKVALUE_UNIT_OF_MEASURE
-                    String uom;
-                    const uint8_t uomIndex = Cache.getTaskVarUnitOfMeasure(TaskIndex, x);
-
-                    if (uomIndex != 0) {
-                      uom = toUnitOfMeasureName(uomIndex);
-                    }
-#else // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
-                    const String uom;
-#endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
-                    handle_json_stream_task_value_data(taskValueWriter.get(),
-                                                       x + 1,
-                                                       Cache.getTaskDeviceValueName(TaskIndex, x),
-                                                       nrDecimals,
-                                                       value,
-#if FEATURE_STRING_VARIABLES
-                                                       presentation,
-#else // if FEATURE_STRING_VARIABLES
-                                                       EMPTY_STRING,
-#endif // if FEATURE_STRING_VARIABLES
-                                                       uom);
-                  }
-
-                  if (Device[DeviceIndex].HasFormatUserVar) {
-                    struct EventStruct TempEvent(TaskIndex);
-
-                    for (uint8_t x = 0; x < valueCount; x++)
-                    {
-                      String value;
-                      TempEvent.idx     = x;
-                      TempEvent.ParN[x] = 1; // Get formatted version of the value
-                      PluginCall(PLUGIN_FORMAT_USERVAR, &TempEvent, value);
-
-                      if (!value.isEmpty()) {
-                        handle_json_stream_task_value_data(taskValueWriter.get(),
-                                                          VARS_PER_TASK + x + 1,
-                                                          Cache.getTaskDeviceValueName(TaskIndex, x),
-                                                          255,
-                                                          value,
-                                                          EMPTY_STRING,
-                                                          EMPTY_STRING);
-                      }
-                    }
-                    // FIXME tonhuisman: HasFormatUserVar is not really compatible with Derived Values...
-                  }
-#if FEATURE_STRING_VARIABLES
-
-                  if (Settings.ShowDerivedTaskValues(TaskIndex)) {
-                    int varNr       = VARS_PER_TASK;
-                    String taskName = getTaskDeviceName(TaskIndex);
-                    taskName.toLowerCase();
-                    String postfix;
-                    const String search = getDerivedValueSearchAndPostfix(taskName, postfix);
-
-                    auto it = customStringVar.begin();
-
-                    while (it != customStringVar.end()) {
-                      if (it->first.startsWith(search) && it->first.endsWith(postfix)) {
-                        String valueName = it->first.substring(search.length(), it->first.indexOf('-'));
-                        String uom;
-                        String vType;
-                        const String vname2 = getDerivedValueNameUomAndVType(taskName, valueName, uom, vType);
-
-                        if (!vname2.isEmpty()) {
-                          valueName = vname2;
-                        }
-
-                        if (!it->second.isEmpty()) {
-                          String value(it->second);
-                          stripEscapeCharacters(value);
-                          value = parseTemplate(value);
-                          uint8_t nrDecimals = 255; // FIXME Use the minimal number of decimals needed
-                          bool    hasPresentation;
-                          const String presentation =
-                            formatUserVarForPresentation(&TempEvent,
-                                                         INVALID_TASKVAR_INDEX,
-                                                         hasPresentation,
-                                                         value,
-                                                         DeviceIndex,
-                                                         valueName);
-
-                          handle_json_stream_task_value_data(taskValueWriter.get(),
-                                                             varNr + 1,
-                                                             valueName,
-                                                             nrDecimals,
-                                                             value,
-                                                             presentation,
-                                                             uom);
-                          ++varNr;
-                        }
-                      }
-                      else if (it->first.substring(0, search.length()).compareTo(search) > 0) {
-                        break;
-                      }
-                      ++it;
-                    }
-                  }
-#endif // if FEATURE_STRING_VARIABLES
+                  TempEvent.kvWriter = taskValueWriter.get();
+                  TaskValuesWriterHelper data(&TempEvent);
+                  // FIXME tonhuisman: HasFormatUserVar is not really compatible with Derived Values...
+                  data.writeTaskValues();
                 }
               }
 
@@ -702,6 +598,50 @@ void handle_json()
 
   TXBuffer.endStream();
   STOP_TIMER(HANDLE_SERVING_WEBPAGE_JSON);
+}
+
+void handle_json_stream_task_value_data(TaskValuesWriterHelper* data)
+{
+  if (!data || !data->event || !data->event->kvWriter) return;
+
+  auto writer = data->event->kvWriter->createChild();
+
+  if (writer) {
+    uint8_t nrDecimals = data->nrDecimals;
+
+    if (mustConsiderAsJSONString(data->value)) {
+      // Flag as not to treat as a float
+      nrDecimals = 255;
+    }
+
+    {
+      KeyValueStruct kv(F("Name"), data->valName);
+      kv.setID(data->valName_id);
+      writer->write(kv);
+    }
+    {
+      KeyValueStruct kv(F("Value"), data->value);
+      kv.setID(data->value_id);
+      writer->write(kv);
+    }
+
+    writer->write({ F("ValueNumber"), data->valueNumber + 1 });
+    writer->write({ F("NrDecimals"),  nrDecimals });
+#if FEATURE_STRING_VARIABLES
+
+    if (!data->presentation.isEmpty()) {
+      KeyValueStruct kv(F("Presentation"), data->presentation);
+      kv.setID(data->presentation_id);
+      writer->write(kv);
+    }
+#endif // if FEATURE_STRING_VARIABLES
+
+    if (!data->uom.isEmpty()) {
+      KeyValueStruct kv(F("UoM"), data->uom);
+      kv.setID(data->uom_id);
+      writer->write(kv);
+    }
+  }
 }
 
 void handle_json_stream_task_value_data(KeyValueWriter*parent,

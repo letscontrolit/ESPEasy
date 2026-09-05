@@ -5,6 +5,7 @@
 #include "../WebServer/common.h"
 
 class KeyValueWriter;
+struct TaskValuesWriterHelper;
 
 // ********************************************************************************
 // Web Interface get CSV value from task
@@ -18,6 +19,8 @@ void handle_csvval();
 // Web Interface JSON page (no password!)
 // ********************************************************************************
 void handle_json();
+
+void handle_json_stream_task_value_data(TaskValuesWriterHelper* data);
 
 void handle_json_stream_task_value_data(KeyValueWriter* parent,
                                         uint16_t       valueNumber,

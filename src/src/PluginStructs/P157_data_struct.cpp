@@ -360,9 +360,7 @@ void P157_data_struct::fillBufferWithString(const String& textToShow,
     buf = buf.substring(0, buf.length() - 1);
   }
 
-  while (buf.length() < bufLen) {
-    buf += ' ';
-  }
+  padToMinimumLength(buf, bufLen);
   memcpy(showbuffer, buf.c_str(), bufLen);
 
   # ifdef P157_DEBUG
@@ -518,6 +516,8 @@ void P157_data_struct::setTextToScroll(const String& text) {
       const int8_t colonCompensation = P157_is7SegColonDisplay(displayModel) ? (displays - 1) : 0;
       _textToScroll.reserve(text.length() + bufLen + (scrollFull ? bufLen : 0));
 
+      // TODO TD-er: Check if we can use padToMinimumLength and prefixToMinimumLength here
+
       for (uint8_t i = 0; scrollFull && i < (bufLen - colonCompensation); ++i) { // Scroll text in from the right, so start with all spaces
         _textToScroll += ' ';
       }
@@ -628,9 +628,7 @@ void P157_data_struct::printBuffer() {
         buf = buf.substring(0, buf.length() - 1);
       }
 
-      while (buf.length() < bufLen) { // TODO Account for offset?
-        buf += ' ';
-      }
+      padToMinimumLength(buf, bufLen); // TODO Account for offset?
 
       # ifdef P157_DEBUG
 

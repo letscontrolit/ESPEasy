@@ -813,6 +813,8 @@ bool P167_data_struct::readMeasValue() {
   } else {
     for (int xx = 0; xx < 8; ++xx) {
       if ((calc_CRC8(&buffer[xx * 3], 2) == buffer[xx * 3 + 2]) && ((buffer[xx * 3] != 0xFF) || (buffer[xx * 3 + 1] != 0xFF))) {
+        // TODO TD-er: Use getUint16FromBigEndianByteStream
+        // TODO TD-er: Why the same operation twice????
         value      = buffer[xx * 3] << 8;
         value     += buffer[xx * 3 + 1];
         valuesign  = buffer[xx * 3] << 8;
@@ -919,6 +921,8 @@ bool P167_data_struct::readMeasRawValue() {
   } else {
     for (int xx = 0; xx < 4; ++xx) {
       if ((calc_CRC8(&buffer[xx * 3], 2) == buffer[xx * 3 + 2]) && ((buffer[xx * 3] != 0xFF) || (buffer[xx * 3 + 1] != 0xFF))) {
+        // TODO TD-er: Use getUint16FromBigEndianByteStream
+        // TODO TD-er: Why the same operation twice?
         value      = buffer[xx * 3] << 8;
         value     += buffer[xx * 3 + 1];
         valuesign  = buffer[xx * 3] << 8;
@@ -1171,6 +1175,7 @@ bool P167_data_struct::readDeviceStatus() {
   }
 
   if ((calc_CRC8(&bufferstatus[0], 2) == bufferstatus[2]) && (calc_CRC8(&bufferstatus[3], 2) == bufferstatus[5])) {
+    // TODO TD-er: value             = getUlFromBigEndianByteStream(bufferstatus, 4);
     value             = bufferstatus[0] << 24;
     value            += bufferstatus[1] << 16;
     value            += bufferstatus[3] << 8;
