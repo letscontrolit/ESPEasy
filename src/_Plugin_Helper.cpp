@@ -218,76 +218,11 @@ bool pluginTaskData_initialized(taskIndex_t taskIndex) {
          (Plugin_task_data[taskIndex]->_taskdata_pluginID == Settings.getPluginID_for_task(taskIndex));
 }
 
-
-void pluginWebformShowValue(
-        TaskValuesWriterHelper *data)
-{
-  if (!data || !data->event) return;
-  if (data->valueNumber > 0) {
-    addHtmlDiv(F("div_br"));
-  }
-  String value;
-  value = data->value;
-  if (data->hasPresentation) value = data->presentation;
-  else if (!data->uom.isEmpty())
-   value += concat(' ', data->uom);
-
-  pluginWebformShowValue(
-    data->valName, data->valName_id,
-    data->value, data->value_id,
-    data->addTrailingBreak);
-
-}
-
 String getPluginCustomArgName(int varNr)                                   { return getPluginCustomArgName(F("pc_arg"), varNr); }
 
 String getPluginCustomArgName(const __FlashStringHelper *label, int varNr) { return concat(label, varNr + 1); }
 
 int    getFormItemIntCustomArgName(int varNr)                              { return getFormItemInt(getPluginCustomArgName(varNr)); }
-
-// Helper function to create formatted custom values for display in the devices overview page.
-// When called from PLUGIN_WEBFORM_SHOW_VALUES, the last item should add a traling div_br class
-// if the regular values should also be displayed.
-// The call to PLUGIN_WEBFORM_SHOW_VALUES should only return success = true when no regular values should be displayed
-// Note that the varNr of the custom values should not conflict with the existing variable numbers (e.g. start at VARS_PER_TASK)
-void pluginWebformShowValue(taskIndex_t taskIndex, uint8_t varNr, const __FlashStringHelper *label, const String& value,
-                            bool addTrailingBreak) { pluginWebformShowValue(taskIndex, varNr, String(label), value, addTrailingBreak); }
-
-void pluginWebformShowValue(taskIndex_t   taskIndex,
-                            uint8_t       varNr,
-                            const String& label,
-                            const String& value,
-                            bool          addTrailingBreak) {
-  if (varNr > 0) {
-    addHtmlDiv(F("div_br"));
-  }
-  String postfix(taskIndex);
-  postfix += '_';
-  postfix += varNr;
-
-  pluginWebformShowValue(
-    label, concat(F("valuename_"), postfix),
-    value, concat(F("value_"), postfix),
-    addTrailingBreak);
-}
-
-void pluginWebformShowValue(const String& valName, const String& value, bool addBR) {
-  pluginWebformShowValue(valName, EMPTY_STRING, value, EMPTY_STRING, addBR);
-}
-
-void pluginWebformShowValue(const String& valName, const String& valName_id, const String& value, const String& value_id, bool addBR) {
-  String valName_tmp(valName);
-
-  if (!valName_tmp.endsWith(F(":"))) {
-    valName_tmp += ':';
-  }
-  addHtmlDiv(F("div_l"), valName_tmp, valName_id);
-  addHtmlDiv(F("div_r"), value,       value_id);
-
-  if (addBR) {
-    addHtmlDiv(F("div_br"));
-  }
-}
 
 bool pluginOptionalTaskIndexArgumentMatch(taskIndex_t taskIndex, const String& string, uint8_t paramNr) {
   if (!validTaskIndex(taskIndex)) {

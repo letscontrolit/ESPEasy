@@ -476,7 +476,8 @@ boolean Plugin_129(uint8_t function, struct EventStruct *event, String& string)
               true);
             
             string += value;
-            pluginWebformShowValue(event->TaskIndex, varNr, label, value, true);
+            TaskValuesWriterHelper data(event);
+            data.writeCustom(varNr, label, value, true);
           }
         }
         success = true; // Don't show the default value data

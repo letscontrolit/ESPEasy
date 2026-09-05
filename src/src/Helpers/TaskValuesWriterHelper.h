@@ -14,17 +14,27 @@ struct TaskValuesWriterHelper {
 
   void clear();
 
+  void setID(uint8_t varNr);
+
+  void write();
+
+  void writeTaskValues();
+
+  void writeCustom(uint8_t varNr, const __FlashStringHelper * label, const String& val, bool addTrailing_Break = false);
+  void writeCustom(uint8_t varNr, const String& label, const String& val, bool addTrailing_Break = false);
+
+private:
+
   void writeRegularTaskValues();
 #if FEATURE_STRING_VARIABLES
   void writeDerivedTaskValues();
 #endif
 
+void pluginWebformShowValue();
+
   bool initRegularTaskValue(uint8_t varNr);
 
-  void setID(uint8_t varNr);
-
-  void write();
-
+public:
 
   EventStruct * const event = nullptr;
   String              valName, valName_id, value, value_id;

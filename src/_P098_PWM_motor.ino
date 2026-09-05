@@ -140,8 +140,9 @@ boolean Plugin_098(uint8_t function, struct EventStruct *event, String& string)
             int limitApos, limitBpos;
             P098_data->getLimitSwitchPositions(limitApos, limitBpos);
 
-            pluginWebformShowValue(event->TaskIndex, varNr++, F("LimitBpos"), String(limitBpos));
-            pluginWebformShowValue(event->TaskIndex, varNr++, F("State"),  String(static_cast<int>(P098_data->state)), true);
+            TaskValuesWriterHelper data(event);
+            data.writeCustom(varNr++, F("LimitBpos"), String(limitBpos));
+            data.writeCustom(varNr++, F("State"),  String(static_cast<int>(P098_data->state)), true);
 
             // success = true;
           }

@@ -45,6 +45,7 @@
 #include "src/Helpers/StringGenerator_GPIO.h"
 #include "src/Helpers/StringGenerator_Plugin.h"
 #include "src/Helpers/StringParser.h"
+#include "src/Helpers/TaskValuesWriterHelper.h"
 #include "src/Helpers/_Plugin_SensorTypeHelper.h"
 #include "src/Helpers/_Plugin_Helper_serial.h"
 
@@ -161,8 +162,6 @@ int8_t  & do_PIN(DEBUG_PCONFIG_RANGE_CHECK_args_decl);
 # define CONFIG_PORT (Settings.TaskDevicePort[event->TaskIndex])
 #endif // ifndef CONFIG_PORT
 
-// Forward declaration to prevent cyclical dependencies
-struct TaskValuesWriterHelper;
 
 extern PluginTaskData_base *Plugin_task_data[TASKS_MAX];
 
@@ -194,41 +193,6 @@ String               getPluginCustomArgName(const __FlashStringHelper *label,
 
 int                  getFormItemIntCustomArgName(int varNr);
 
-
-
-void pluginWebformShowValue(
-        TaskValuesWriterHelper *data);
-
-
-void pluginWebformShowValue(
-        struct EventStruct *event,
-        const String& valName,
-        const String& valName_id,
-        const String& value,
-        const String& value_id,
-        bool          addTrailingBreak = false);
-
-
-void pluginWebformShowValue(taskIndex_t                taskIndex,
-                            uint8_t                    varNr,
-                            const __FlashStringHelper *label,
-                            const String             & value,
-                            bool                       addTrailingBreak = false);
-
-void pluginWebformShowValue(taskIndex_t   taskIndex,
-                            uint8_t       varNr,
-                            const String& label,
-                            const String& value,
-                            bool          addTrailingBreak = false);
-
-void pluginWebformShowValue(const String& valName,
-                            const String& value,
-                            bool          addBR = true);
-void pluginWebformShowValue(const String& valName,
-                            const String& valName_id,
-                            const String& value,
-                            const String& value_id,
-                            bool          addBR = true);
 
 // Check if given parameter nr matches with given taskIndex.
 // paramNr == 0 -> command, paramNr == 1 -> 1st parameter

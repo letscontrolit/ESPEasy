@@ -490,10 +490,7 @@ void handle_json()
                   TempEvent.kvWriter = taskValueWriter.get();
                   TaskValuesWriterHelper data(&TempEvent);
                   // FIXME tonhuisman: HasFormatUserVar is not really compatible with Derived Values...
-                  data.writeRegularTaskValues();
-# if FEATURE_STRING_VARIABLES
-                  data.writeDerivedTaskValues();
-#endif
+                  data.writeTaskValues();
                 }
               }
 

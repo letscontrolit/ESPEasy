@@ -117,9 +117,10 @@ boolean Plugin_087(uint8_t function, struct EventStruct *event, String& string) 
         uint32_t success, error, length_last;
         P087_data->getSentencesReceived(success, error, length_last);
         uint8_t varNr = VARS_PER_TASK;
-        pluginWebformShowValue(event->TaskIndex, varNr++, F("Success"),     String(success));
-        pluginWebformShowValue(event->TaskIndex, varNr++, F("Error"),       String(error));
-        pluginWebformShowValue(event->TaskIndex, varNr++, F("Length Last"), String(length_last), true);
+        TaskValuesWriterHelper data(event);
+        data.writeCustom(varNr++, F("Success"),     String(success));
+        data.writeCustom(varNr++, F("Error"),       String(error));
+        data.writeCustom(varNr++, F("Length Last"), String(length_last), true);
 
         // success = true;
       }
