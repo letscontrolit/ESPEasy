@@ -18,7 +18,8 @@ inline uint64_t getMicros64() {
  \*********************************************************************************************/
 
 // Return the time difference as a signed value, taking into account the timers may overflow.
-// Returned timediff is between -24.9 days and +24.9 days.
+// Returned timediff for millis() is between -24.9 days and +24.9 days.
+//          for micros() is between -35.79 and +35.79 minutes
 // Returned value is positive when "next" is after "prev"
 inline int32_t timeDiff(const unsigned long prev, const unsigned long next) {
   return ((int32_t) (next - prev));

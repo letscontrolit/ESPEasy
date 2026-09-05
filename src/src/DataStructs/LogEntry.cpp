@@ -108,7 +108,8 @@ void LogEntry_t::clear()
   if (!_isFlashString && (_message != nullptr)) {
     free(_message);
   }
-  _message = nullptr;
+  _message               = nullptr;
+  _subscriberPendingRead = 0; // TODO TD-er: Maybe better to do _flags = 0 ???
 
   //  _strLength = 0;
 }
@@ -130,13 +131,14 @@ void LogEntry_t::setSubscribers()
 void LogEntry_t::updateSubscribers()
 {
   if (isValid()) {
-    for (uint32_t i = 0; i < NR_LOG_TO_DESTINATIONS; ++i) {
+    for (uint32_t i = 0; _subscriberPendingRead && i < NR_LOG_TO_DESTINATIONS; ++i) {
       if (bitRead(_subscriberPendingRead, i)) {
         if (!loglevelActiveFor(static_cast<LogDestination>(i), _logLevel)) {
           bitClear(_subscriberPendingRead, i);
         }
       }
     }
+
     if (_subscriberPendingRead == 0) {
       clear();
     }

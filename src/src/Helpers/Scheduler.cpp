@@ -97,10 +97,11 @@ void ESPEasy_Scheduler::handle_schedule() {
   }
   STOP_TIMER(HANDLE_SCHEDULER_TASK);
 }
-
+#ifndef BUILD_NO_DEBUG
 String ESPEasy_Scheduler::getQueueStats() {
   return msecTimerHandler.getQueueStats();
 }
+#endif
 
 void ESPEasy_Scheduler::updateIdleTimeStats() {
   msecTimerHandler.updateIdleTimeStats();
