@@ -556,9 +556,11 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                 jsonAttribute.trim();
 
                 if (!jsonAttribute.isEmpty()) {
-                  key = jsonAttribute;
                   #  if FEATURE_STRING_VARIABLES
-                  key = parseTemplate_padded(key, 21 * 2); // Process variables to allow for longer JSON attribute names
+                  key = parseTemplate(jsonAttribute); // Process variables to allow for longer JSON attribute names
+                  key.trim();                         // The JSON parser is quite picky about extra spaces...
+                  #  else // if FEATURE_STRING_VARIABLES
+                  key = jsonAttribute;
                   #  endif // if FEATURE_STRING_VARIABLES
 
                   #  if FEATURE_JSON_PARSE
