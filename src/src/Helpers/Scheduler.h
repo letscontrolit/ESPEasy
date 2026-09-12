@@ -316,7 +316,7 @@ void                 setPluginTaskTimer(unsigned long msecFromNow,
 
   void   updateIdleTimeStats();
 
-  float  getIdleTimePct() const;
+  float  getIdleTimePct() ;
 
   void   setEcoMode(bool enabled);
 

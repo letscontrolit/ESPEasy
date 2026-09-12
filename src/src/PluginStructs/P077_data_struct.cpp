@@ -97,6 +97,7 @@ uint32_t P077_data_struct::get_24bit_value(uint8_t offset) const {
   constexpr size_t bufsize = NR_ELEMENTS(serial_in_buffer);
 
   if ((offset + 2u) < bufsize) {
+    // TODO TD-er: res = getUlFromBigEndianByteStream(&serial_in_buffer[offset], 3);
     res = serial_in_buffer[offset] << 16 |
           serial_in_buffer[offset + 1] << 8 |
           serial_in_buffer[offset + 2];
@@ -190,6 +191,7 @@ bool P077_data_struct::processCseReceived(struct EventStruct *event) {
     const uint32_t cur_millis = millis();
 
     // Only use CF pulses when a power cycle has completed
+    // TODO TD-er: Use getUint16FromBigEndianByteStream
     const uint32_t cur_cf_pulses = serial_in_buffer[21] << 8 | serial_in_buffer[22];
 
     if (last_cf_pulses == 0) {

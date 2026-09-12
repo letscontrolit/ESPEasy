@@ -55,8 +55,9 @@ bool LogBuffer::getNext(LogDestination logDestination, uint32_t& timestamp, Stri
 bool LogBuffer::hasMessages(LogDestination logDestination)
 {
   if (logDestination >= NR_LOG_TO_DESTINATIONS) { return false; }
+  lastReadTimeStamp[logDestination] = millis(); // Reset if we aren't going to fetch a next message
 
-  clearExpiredEntries(); // Cleanup the old stuff first
+  clearExpiredEntries();                        // Cleanup the old stuff first
 
   auto pos = cache_iterator_pos[logDestination];
 
@@ -67,7 +68,6 @@ bool LogBuffer::hasMessages(LogDestination logDestination)
     }
   }
 
-  lastReadTimeStamp[logDestination] = millis(); // Reset if we aren't going to fetch a next message
   return false;
 }
 
@@ -92,11 +92,13 @@ void LogBuffer::clearExpiredEntries() {
   if (clearExpiredEntriesRunning) { return; }
   clearExpiredEntriesRunning = true;
 
+  const auto freeMem = FreeMem();
+
   for (auto it = LogEntries.begin(); it != LogEntries.end();)
   {
-    it->updateSubscribers();
+    it->setSubscribers();
 
-    if (it->isExpired()) {
+    if (it->hasExpired(freeMem)) {
       auto next = LogEntries.erase(it);
 
       for (size_t i = 0; i < NR_LOG_TO_DESTINATIONS; ++i) {

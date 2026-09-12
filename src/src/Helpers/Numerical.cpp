@@ -15,10 +15,11 @@ bool isValidFloat(float f) {
   return !isnan(f) && !isinf(f);
 #endif
 }
-
+#if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
 bool isValidDouble(ESPEASY_RULES_FLOAT_TYPE f) {
   return !isnan(f) && !isinf(f);
 }
+#endif
 
 bool validIntFromString(const String& tBuf, int32_t& result) {
   NumericalType detectedType;
@@ -144,6 +145,7 @@ bool validDoubleFromString(const String& tBuf, ESPEASY_RULES_FLOAT_TYPE& result)
 }
 
 bool validDoubleFromString(const String& tBuf, ESPEASY_RULES_FLOAT_TYPE& result, int& nrDecimals) {
+#if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
   nrDecimals = -1;
   #if defined(CORE_POST_2_5_0) || defined(ESP32)
 
@@ -180,6 +182,9 @@ bool validDoubleFromString(const String& tBuf, ESPEASY_RULES_FLOAT_TYPE& result,
 
   return res;
   #endif // if defined(CORE_POST_2_5_0) || defined(ESP32)
+#else
+  return validFloatFromString(tBuf, result);
+#endif
 }
 
 bool mustConsiderAsString(NumericalType detectedType) {
@@ -383,5 +388,5 @@ bool isNumerical(const String& tBuf, NumericalType& detectedType) {
     return result.length() >= tmp.length();
   }
 
-  return result.length() > 0;
+  return false;
 }

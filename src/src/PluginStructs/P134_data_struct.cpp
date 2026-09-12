@@ -83,6 +83,7 @@ bool P134_data_struct::plugin_read(struct EventStruct *event)           {
       if (!(((data[0] + data[1] + data[2]) & 0xFF) == data[3])) {
         measurementStatus = A02YYUW_status_e::STATUS_ERROR_CHECK_SUM;
       } else {
+        // TODO TD-er: Use getUint16FromBigEndianByteStream
         measuredDistance = ((data[1] << 8) + data[2]);
 
         if (measuredDistance < P134_MIN_DISTANCE) {

@@ -162,8 +162,8 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, St
     }
 
     // Clean up receiver address.
-    tmp_ato.replace(";", ",");
-    tmp_ato.replace(" ", "");
+    tmp_ato.replace(';', ',');
+    removeSpace(tmp_ato);
 
 
     String mailheader;

@@ -322,6 +322,7 @@ bool P005_data_struct::readDHT(struct EventStruct *event) {
       // https://github.com/arendst/Tasmota/blob/0ea36d996c2b8b519ae5aa127f1a5fea354706af/tasmota/tasmota_xsns_sensor/xsns_06_dht_v7.ino#L297
 
 
+      // TODO TD-er: Use getUint16FromBigEndianByteStream
       const int16_t voltage = ((dht_dat[0] << 8) | dht_dat[1]);
 
       // Rough approximate of soil moisture % (based on values observed in the eWeLink app)

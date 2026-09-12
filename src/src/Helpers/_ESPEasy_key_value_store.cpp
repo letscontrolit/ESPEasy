@@ -68,6 +68,7 @@ bool ESPEasy_key_value_store::load(
   const uint8_t version = buffer[0];
 
   // uint8_t[2]: ID to match, if not matched, then stop loading
+  // TODO TD-er: const uint16_t id = getUint16FromLittleEndianByteStream(&buffer[1]);
   const uint16_t id = (buffer[2] << 8) | buffer[1];
 
   if (id != id_to_match) {
@@ -77,6 +78,8 @@ bool ESPEasy_key_value_store::load(
     # endif // ifndef BUILD_NO_DEBUG
     return false;
   }
+
+  // TODO TD-er: const size_t payloadSize      = getUlFromLittleEndianByteStream(&buffer[3], 3);
 
   const size_t payloadSize      = (buffer[5] << 16) | (buffer[4] << 8) | buffer[3];
   const size_t totalSize        = 6 + payloadSize + 16; // header + payload + checksum
@@ -179,7 +182,9 @@ bool ESPEasy_key_value_store::load(
                 // Read next block
                 loadNextFromFile = true;
               } else {
-                bufPos                += 4;
+                bufPos += 4;
+
+                // TODO TD-er: Use getUint16FromBigEndianByteStream
                 bytesLeftPartialString = (buffer[bufPos] << 8) | buffer[bufPos + 1];
                 bufPos                += 2;
 
@@ -1025,8 +1030,17 @@ void ESPEasy_key_value_store::setValue(const KVS_StorageType::Enum& storageType,
       GET_4BYTE_INT_TYPE_FROM_STRING(int32_type,  int32_t)
       GET_4BYTE_INT_TYPE_FROM_STRING(uint32_type, uint32_t)
     case KVS_StorageType::Enum::double_type:
+# if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
       setValue(key, value.toDouble());
+# else
+      {
+        // Don't use the String::toDouble() function, but we still need to store it as double in the KVS
+        const double value_d(value.toFloat());
+        setValue(key, value_d);
+      }
+# endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
       break;
+
     case KVS_StorageType::Enum::float_type:
       setValue(key, value.toFloat());
       break;

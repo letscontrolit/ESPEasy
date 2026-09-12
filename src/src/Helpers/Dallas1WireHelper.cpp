@@ -512,6 +512,7 @@ Dallas_read_result Dallas_readTemp(const uint8_t ROM[8], float *value, int8_t gp
       || (ROM[0] == 0x22)  // DS1822
       || (ROM[0] == 0x42)) // DS28EA00
   {
+    // TODO TD-er: Use getUint16FromLittleEndianByteStream
     DSTemp = (ScratchPad[1] << 8) + ScratchPad[0];
 
     if (DSTemp == 0x550) { // power-on reset value

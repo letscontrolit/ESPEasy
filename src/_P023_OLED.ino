@@ -249,7 +249,7 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
       P023_data_struct *P023_data =
         static_cast<P023_data_struct *>(getPluginTaskData(event->TaskIndex));
 
-      success = nullptr != P023_data && P023_data->web_show_values();
+      success = nullptr != P023_data && P023_data->web_show_values(event);
       break;
     }
     # endif // if P023_FEATURE_DISPLAY_PREVIEW

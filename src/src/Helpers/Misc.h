@@ -34,6 +34,24 @@
 #define get2BitFromUL(number, bitnr)  getNBitFromUL(number, bitnr, 0x03UL)
 
 
+// Convert byte array into multi-byte (unsigned) integer with most significant bits/bytes first
+// Typical use case: data[i] << 24 | data[i + 1] << 16 | data[i + 2] << 8 | data[i + 3]
+uint32_t getUlFromBigEndianByteStream(const uint8_t* data, uint8_t nrBytes);
+uint16_t getUint16FromBigEndianByteStream(const uint8_t* data);
+
+
+// Convert byte array into multi-byte (unsigned) integer with least significant bits/bytes first
+// Typical use case: data[i + 3] << 24 | data[i + 2] << 16 | data[i + 1] << 8 | data[i + 0]
+uint32_t getUlFromLittleEndianByteStream(const uint8_t* data, uint8_t nrBytes);
+uint16_t getUint16FromLittleEndianByteStream(const uint8_t* data);
+
+
+// Convert to and from Two's complement bit-order.
+// See: https://en.wikipedia.org/wiki/Two%27s_complement
+int32_t  fromTwosComplement(uint32_t twoComplementValue, uint8_t nrBits);
+uint32_t toTwosComplement(int32_t value, uint8_t nrBits);
+
+
 bool remoteConfig(struct EventStruct *event,
                   const String      & string);
 

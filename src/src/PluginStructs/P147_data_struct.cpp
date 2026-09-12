@@ -399,6 +399,7 @@ uint16_t P147_data_struct::readCheckedWord(bool& is_ok, long extraDelay) {
     }
 
     if (calc_CRC8(data, 2) == data[2]) { // valid checksum?
+      // TODO TD-er: Use getUint16FromBigEndianByteStream
       result = (data[0] << 8) | data[1];
       is_ok  = true;
     }

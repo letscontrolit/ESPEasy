@@ -114,14 +114,15 @@ boolean Plugin_087(uint8_t function, struct EventStruct *event, String& string) 
         static_cast<P087_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if ((nullptr != P087_data) && P087_data->isInitialized()) {
-        uint32_t success, error, length_last;
-        P087_data->getSentencesReceived(success, error, length_last);
+        uint32_t success_count, error, length_last;
+        P087_data->getSentencesReceived(success_count, error, length_last);
         uint8_t varNr = VARS_PER_TASK;
-        pluginWebformShowValue(event->TaskIndex, varNr++, F("Success"),     String(success));
-        pluginWebformShowValue(event->TaskIndex, varNr++, F("Error"),       String(error));
-        pluginWebformShowValue(event->TaskIndex, varNr++, F("Length Last"), String(length_last), true);
-
-        // success = true;
+        TaskValuesWriterHelper data(event);
+        data.setWriteRegularTaskValuesFirst();
+        data.writeCustom(varNr++, F("Success"),     String(success_count));
+        data.writeCustom(varNr++, F("Error"),       String(error));
+        data.writeCustom(varNr++, F("Length Last"), String(length_last));
+        success = true; // Do not write other taskvalues
       }
       break;
     }

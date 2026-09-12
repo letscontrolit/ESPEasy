@@ -112,6 +112,7 @@ void P045_data_struct::getRaw6AxisMotion(int16_t *ax, int16_t *ay, int16_t *az, 
   for (; Wire.available(); ++count) {
     buffer[count] = Wire.read();
   }
+  // TODO TD-er: Use getUint16FromBigEndianByteStream
   *ax = (((int16_t)buffer[0]) << 8) | buffer[1];
   *ay = (((int16_t)buffer[2]) << 8) | buffer[3];
   *az = (((int16_t)buffer[4]) << 8) | buffer[5];

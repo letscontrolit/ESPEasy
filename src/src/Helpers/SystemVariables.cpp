@@ -231,18 +231,20 @@ String SystemVariables::getSystemVariable(SystemVariables::Enum enumval) {
     #ifndef LIMIT_BUILD_SIZE
     case S_PI:              {
                               constexpr ESPEASY_RULES_FLOAT_TYPE _pi = M_PI;
+                              constexpr int maxNrDecimals = maxNrDecimals_fpType_constexpr(_pi);
                               #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
-                              return doubleToString(_pi, maxNrDecimals_fpType(_pi));
+                              return doubleToString(_pi, maxNrDecimals);
                               #else // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
-                              return toString(_pi, maxNrDecimals_fpType(_pi));
+                              return floatToString(_pi, maxNrDecimals);
                               #endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
                             }
     case S_E:               {
                               constexpr ESPEASY_RULES_FLOAT_TYPE _e = M_E;
+                              constexpr int maxNrDecimals = maxNrDecimals_fpType_constexpr(_e);
                               #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
-                              return doubleToString(_e, maxNrDecimals_fpType(_e));
+                              return doubleToString(_e, maxNrDecimals);
                               #else // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
-                              return toString(_e, maxNrDecimals_fpType(_e));
+                              return floatToString(_e, maxNrDecimals);
                               #endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
                             }
     #endif // ifndef LIMIT_BUILD_SIZE

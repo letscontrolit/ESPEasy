@@ -1078,7 +1078,7 @@ boolean Plugin_036(uint8_t function, struct EventStruct *event, String& string)
         static_cast<P036_data_struct *>(getPluginTaskData(event->TaskIndex));
 
       if (nullptr != P036_data) {
-        success = P036_data->web_show_values();
+        success = P036_data->web_show_values(event);
       }
       break;
     }

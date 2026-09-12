@@ -462,9 +462,9 @@ void P020_Task::rulesEngine(const String& message, struct EventStruct *event) {
 
         if (_P1EventData) {
           eventString += '=';
-          eventString += message;               // Include entire message, may cause memory overflow!
-          eventString.replace(F("\n"), F(",")); // Make it a single line, comma-separated, as much as possible
-          eventString.replace(F("\r"), F(""));  // We don't need no st*n carriage returns :)
+          eventString += message;         // Include entire message, may cause memory overflow!
+          eventString.replace('\n', ','); // Make it a single line, comma-separated, as much as possible
+          remove(eventString, '\r');      // We don't need no st*n carriage returns :)
         }
         break;
     } // switch

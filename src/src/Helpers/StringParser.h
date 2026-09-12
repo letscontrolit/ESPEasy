@@ -3,6 +3,7 @@
 
 #include "../../ESPEasy_common.h"
 
+#include "../DataStructs/KeyValueStruct.h"
 #include "../Globals/Plugins.h"
 
 /********************************************************************************************\

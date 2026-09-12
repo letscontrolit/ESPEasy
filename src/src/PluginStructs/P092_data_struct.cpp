@@ -782,6 +782,7 @@ boolean P092_data_struct::P092_fetch_sensor(int number, sP092_ReadData *ReadData
 
   ReadData->mode = -1;
   number         = ReadData->Idx + (number - 1) * 2;
+  // TODO TD-er: Use getUint16FromLittleEndianByteStream
   int32_t sensorvalue = (DLbus_Data->ByteStream[number + 1] << 8) | DLbus_Data->ByteStream[number];
 
   if (sensorvalue == 0) {
@@ -847,6 +848,7 @@ boolean P092_data_struct::P092_fetch_output(int number, sP092_ReadData *ReadData
   int32_t outputs;
 
   if (P092_DataSettings.OutputBytes > 1) {
+    // TODO TD-er: Use getUint16FromLittleEndianByteStream
     outputs = (DLbus_Data->ByteStream[P092_DataSettings.IdxOutput + 1] << 8) | DLbus_Data->ByteStream[P092_DataSettings.IdxOutput];
   }
   else {
@@ -981,6 +983,7 @@ boolean P092_data_struct::P092_fetch_heatmeter(int number, sP092_ReadData *ReadD
   if (HMindex.IndexIsValid == 0) {
     return false;
   }
+  // TODO TD-er: Use getUint16FromLittleEndianByteStream
   heat_meter     = (DLbus_Data->ByteStream[HMindex.kwh_index + 1] << 8) | DLbus_Data->ByteStream[HMindex.kwh_index];
   heat_meter_mwh = (heat_meter * 0.1f) / 1000.0f; // in MWh
 
@@ -991,6 +994,7 @@ boolean P092_data_struct::P092_fetch_heatmeter(int number, sP092_ReadData *ReadD
   }
 
   // MWh
+  // TODO TD-er: Use getUint16FromLittleEndianByteStream
   heat_meter      = (DLbus_Data->ByteStream[HMindex.mwh_index + 1] << 8) | DLbus_Data->ByteStream[HMindex.mwh_index];
   ReadData->value = heat_meter_mwh + heat_meter;
   return true;

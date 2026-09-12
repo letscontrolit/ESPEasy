@@ -239,15 +239,15 @@ void NW003_data_struct_ETH_RMII::webform_load(EventStruct *event)
     };
     const FormSelectorOptions selector(NR_ELEMENTS(ids), options, ids);
     auto params = NW003_makeWebFormItemParams(NW003_KEY_ETH_PHY_TYPE);
-    params._defaultIntValue = static_cast<int>(EthPhyType_t::notSet);
-    showFormSelector(*_kvs, selector, params);
+    params._defaultValue.setInt(static_cast<int>(EthPhyType_t::notSet));
+    showFormSelector(*_kvs, selector, std::move(params));
   }
   {
     auto params = NW003_makeWebFormItemParams(NW003_KEY_ETH_PHY_ADDR);
     params._min             = -1;
     params._max             = 127;
-    params._defaultIntValue = 1;
-    showWebformItem(*_kvs, params);
+    params._defaultValue.setInt(1);
+    showWebformItem(*_kvs, std::move(params));
     addFormNote(F("I&sup2;C-address of Ethernet PHY"
                   " (0 or 1 for LAN8720, 31 for TLK110, -1 autodetect)"
                   ));
@@ -317,13 +317,13 @@ void NW003_data_struct_ETH_RMII::webform_load(EventStruct *event)
       indices);
     auto params = NW003_makeWebFormItemParams(NW003_KEY_CLOCK_MODE);
 # if CONFIG_IDF_TARGET_ESP32
-    params._defaultIntValue = static_cast<int>(EthClockMode_t::Ext_crystal_osc);
+    params._defaultValue.setInt(static_cast<int>(EthClockMode_t::Ext_crystal_osc));
 # endif
 # if CONFIG_IDF_TARGET_ESP32P4
-    params._defaultIntValue = static_cast<int>(EthClockMode_t::Ext_crystal);
+    params._defaultValue.setInt(static_cast<int>(EthClockMode_t::Ext_crystal));
 # endif
 
-    showFormSelector(*_kvs, selector, params);
+    showFormSelector(*_kvs, selector, std::move(params));
 
   }
 }

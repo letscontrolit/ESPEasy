@@ -114,6 +114,8 @@ enum class Output_Data_type_t : uint8_t {
 uint8_t getValueCountFromSensorType(Sensor_VType sensorType);
 uint8_t getValueCountFromSensorType(Sensor_VType sensorType, bool log);
 
+bool getBasicSensorTypeFromValueCount(uint8_t valueCount, Sensor_VType& sensorType);
+
 const __FlashStringHelper * getSensorTypeLabel(Sensor_VType sensorType);
 
 bool isSimpleOutputDataType(Sensor_VType sensorType);

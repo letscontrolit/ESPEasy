@@ -107,7 +107,7 @@ void ESPEasy_Scheduler::updateIdleTimeStats() {
   msecTimerHandler.updateIdleTimeStats();
 }
 
-float ESPEasy_Scheduler::getIdleTimePct() const {
+float ESPEasy_Scheduler::getIdleTimePct()  {
   return msecTimerHandler.getIdleTimePct();
 }
 

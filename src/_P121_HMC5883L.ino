@@ -151,22 +151,22 @@ boolean Plugin_121(uint8_t function, struct EventStruct *event, String& string)
         UserVar.setFloat(event->TaskIndex, 1, s_event.magnetic.y);
         UserVar.setFloat(event->TaskIndex, 2, s_event.magnetic.z);
 
-        double heading = atan2(s_event.magnetic.y, s_event.magnetic.x);
+        ESPEASY_RULES_FLOAT_TYPE heading = atan2(s_event.magnetic.y, s_event.magnetic.x);
 
-        const double decl = PCONFIG_FLOAT(1);
+        const ESPEASY_RULES_FLOAT_TYPE decl = PCONFIG_FLOAT(1);
 
         if (!essentiallyZero(decl)) {
           heading += decl;
         }
 
         if (definitelyLessThan(heading, 0)) {
-          heading += TWO_PI;
+          heading += (ESPEASY_RULES_FLOAT_TYPE)TWO_PI;
         } else
-        if (definitelyGreaterThan(heading, TWO_PI)) {
-          heading -= TWO_PI;
+        if (definitelyGreaterThan(heading, (ESPEASY_RULES_FLOAT_TYPE)TWO_PI)) {
+          heading -= (ESPEASY_RULES_FLOAT_TYPE)TWO_PI;
         }
 
-        UserVar.setFloat(event->TaskIndex, 3, heading * M_PI_180);
+        UserVar.setFloat(event->TaskIndex, 3, heading * (ESPEASY_RULES_FLOAT_TYPE)M_PI_180);
 
         success = true; // Assume we want to send out values to controllers
       }

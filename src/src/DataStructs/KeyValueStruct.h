@@ -26,44 +26,44 @@ struct KeyValueStruct
   KeyValueStruct(const String& key,
                  Format        format = Format::Default);
 
-  KeyValueStruct(const String         & key,
-                 const bool           & val,
-                 Format                 format = Format::Default);
+  KeyValueStruct(const String& key,
+                 const bool  & val,
+                 Format        format = Format::Default);
 
-  KeyValueStruct(const String         & key,
-                 int                    val,
-                 Format                 format = Format::Default);
+  KeyValueStruct(const String& key,
+                 int           val,
+                 Format        format = Format::Default);
 #if defined(ESP32) && !defined(__riscv)
-  KeyValueStruct(const String         & key,
-                 int32_t                val,
-                 Format                 format = Format::Default);
-#endif
-  KeyValueStruct(const String         & key,
-                 uint32_t               val,
-                 Format                 format = Format::Default);
+  KeyValueStruct(const String& key,
+                 int32_t       val,
+                 Format        format = Format::Default);
+#endif // if defined(ESP32) && !defined(__riscv)
+  KeyValueStruct(const String& key,
+                 uint32_t      val,
+                 Format        format = Format::Default);
 #if defined(ESP32) && !defined(__riscv)
-  KeyValueStruct(const String         & key,
-                 size_t                 val,
-                 Format                 format = Format::Default);
-#endif
-  KeyValueStruct(const String         & key,
-                 const uint64_t       & val,
-                 Format                 format = Format::Default);
+  KeyValueStruct(const String& key,
+                 size_t        val,
+                 Format        format = Format::Default);
+#endif // if defined(ESP32) && !defined(__riscv)
+  KeyValueStruct(const String  & key,
+                 const uint64_t& val,
+                 Format          format = Format::Default);
 
-  KeyValueStruct(const String         & key,
-                 const int64_t        & val,
-                 Format                 format = Format::Default);
+  KeyValueStruct(const String & key,
+                 const int64_t& val,
+                 Format         format = Format::Default);
 
 
-  KeyValueStruct(const String         & key,
-                 const float          & val,
-                 uint8_t                    nrDecimals = 4,
-                 Format                 format     = Format::Default);
+  KeyValueStruct(const String& key,
+                 const float & val,
+                 uint8_t       nrDecimals = 4,
+                 Format        format     = Format::Default);
 
-  KeyValueStruct(const String         & key,
-                 const double         & val,
-                 uint8_t                    nrDecimals = 4,
-                 Format                 format     = Format::Default);
+  KeyValueStruct(const String& key,
+                 const double& val,
+                 uint8_t       nrDecimals = 4,
+                 Format        format     = Format::Default);
 
 
   KeyValueStruct(const __FlashStringHelper *key,
@@ -82,18 +82,18 @@ struct KeyValueStruct
                  const char                *val,
                  Format                     format = Format::Default);
 
-  KeyValueStruct(const String         & key,
-                 const String         & val,
-                 Format                 format = Format::Default);
+  KeyValueStruct(const String& key,
+                 const String& val,
+                 Format        format = Format::Default);
 
   KeyValueStruct(const __FlashStringHelper *key,
                  String                  && val,
                  Format                     format = Format::Default);
 
 
-  KeyValueStruct(const String         & key,
-                 String              && val,
-                 Format                 format = Format::Default);
+  KeyValueStruct(const String& key,
+                 String     && val,
+                 Format        format = Format::Default);
 
   /*
      // TD-er: Do not use template types as it may 'explode' in binary size.
@@ -109,24 +109,43 @@ struct KeyValueStruct
      }
    */
 
+  void                  clear();
+
+  static KeyValueStruct makeHexFormatted(const __FlashStringHelper *key,
+                                         uint64_t                   val,
+                                         uint8_t                    minNrDigits = 0);
+
 #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
-  void setUnit(uint8_t uomIndex) { _uomIndex = uomIndex; }
+
+  void   setUnit(uint8_t uomIndex) { _uomIndex = uomIndex; }
+
   String getUnit() const;
-#endif
+#endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 
-  void setID(const String& id);
-  void setID(const __FlashStringHelper *id);
+  void   setID(const String& id);
+  void   setID(const __FlashStringHelper *id);
 
-  void appendValue(ValueStruct&& value);
-  void appendValue(const String& value);
-  void appendValue(const __FlashStringHelper * value);
-  void appendValue(String&& value);
+  // Need to have a separate function to set the value using a ValueStruct
+  // If used as an argument in the constructor, the compiler doesn't know which
+  // to use since the ValueStruct constructor also has the same argument types.
+  // Also indirect construction of a class does add to the build size per call.
+  void   setValue(ValueStruct&& value);
+
+  void   appendValue(ValueStruct&& value);
+  void   appendValue(const String& value);
+  void   appendValue(const __FlashStringHelper *value);
+  void   appendValue(String&& value);
 
   String getID() const;
 
+  operator bool() const {
+    return getNrValues() || _key.operator bool();
+  }
 
-  ValueStruct _key;
-  ValueStruct __id;
+  size_t getNrValues() const { return _values.size(); }
+
+  ValueStruct             _key;
+  ValueStruct             __id;
   std::vector<ValueStruct>_values;
 
   Format _format = Format::Default;

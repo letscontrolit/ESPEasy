@@ -439,6 +439,7 @@ bool P122_data_struct::readValue(uint16_t& value)
 
   if (crc8(buffer, 2) == buffer[2])
   {
+    // TODO TD-er: Use getUint16FromBigEndianByteStream
     value  = buffer[0] << 8;
     value += buffer[1];
     value &= 0xFFFC;

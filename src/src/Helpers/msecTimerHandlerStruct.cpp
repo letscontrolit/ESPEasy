@@ -99,15 +99,20 @@
 
   void msecTimerHandlerStruct::updateIdleTimeStats() {
     const long duration = timePassedSince(last_log_start_time) * 10;
-    if (duration == 0) return;
-    recordRunning();
+    if (duration <= 1000) {
+      // No need to recompute it over a small interval
+      // Also makes sure duration != 0 as it is used in division
+      return;
+    }
+    recordRunning(); // Make sure currently active 'idle' time is included
     last_log_start_time  = millis();
     idle_time_pct = static_cast<float>(total_idle_time_usec);
     idle_time_pct /= static_cast<float>(duration);
     total_idle_time_usec = 0;
   }
 
-  float msecTimerHandlerStruct::getIdleTimePct() const {
+  float msecTimerHandlerStruct::getIdleTimePct()  {
+    updateIdleTimeStats();
     return idle_time_pct;
   }
 

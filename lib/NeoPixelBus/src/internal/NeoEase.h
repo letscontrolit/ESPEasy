@@ -218,12 +218,12 @@ public:
 
     static float ExponentialIn(float unitValue)
     {
-        return (pow(2, 10.0f * (unitValue - 1.0f)));
+        return (powf(2, 10.0f * (unitValue - 1.0f)));
     }
 
     static float ExponentialOut(float unitValue)
     {
-        return (-pow(2, -10.0f * unitValue) + 1.0f);
+        return (-powf(2, -10.0f * unitValue) + 1.0f);
     }
 
     static float ExponentialInOut(float unitValue)
@@ -231,12 +231,12 @@ public:
         unitValue *= 2.0f;
         if (unitValue < 1.0f)
         {
-            return (0.5f * pow(2, 10.0f * (unitValue - 1.0f)));
+            return (0.5f * powf(2, 10.0f * (unitValue - 1.0f)));
         }
         else
         {
             unitValue -= 1.0f;
-            return (0.5f * (-pow(2, -10.0f * unitValue) + 2.0f));
+            return (0.5f * (-powf(2, -10.0f * unitValue) + 2.0f));
         }
     }
 
@@ -245,12 +245,12 @@ public:
         unitValue *= 2.0f;
         if (unitValue < 1.0f)
         {
-            return (0.5f * (-pow(2, -10.0f * unitValue) + 1.0f));
+            return (0.5f * (-powf(2, -10.0f * unitValue) + 1.0f));
         }
         else
         {
             unitValue -= 2.0f;
-            return (0.5f * (pow(2, 10.0f * unitValue) + 1.0f));
+            return (0.5f * (powf(2, 10.0f * unitValue) + 1.0f));
         }
     }
 
@@ -308,6 +308,6 @@ public:
 
     static float Gamma(float unitValue)
     {
-        return pow(unitValue, 1.0f / 0.45f);
+        return powf(unitValue, 1.0f / 0.45f);
     }
 };

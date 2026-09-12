@@ -5,6 +5,7 @@
 #include "../WebServer/common.h"
 
 class KeyValueWriter;
+struct TaskValuesWriterHelper;
 
 // ********************************************************************************
 // Web Interface get CSV value from task
@@ -19,13 +20,8 @@ void handle_csvval();
 // ********************************************************************************
 void handle_json();
 
-void handle_json_stream_task_value_data(KeyValueWriter* parent,
-                                        uint16_t       valueNumber,
-                                        const String & valueName,
-                                        uint8_t        nrDecimals,
-                                        const String & value,
-                                        const String & presentation,
-                                        const String & uom);
+void handle_json_stream_task_value_data(TaskValuesWriterHelper* data);
+
 #endif
 // ********************************************************************************
 // JSON formatted timing statistics
