@@ -2,9 +2,9 @@
 
 #if USES_HWCDC
 
-#if !ARDUINO_USB_CDC_ON_BOOT
- #include <USB.h>
-#endif
+# if !ARDUINO_USB_CDC_ON_BOOT
+ #  include <USB.h>
+# endif
 
 volatile bool usbActive = false;
 
@@ -15,7 +15,8 @@ static void hwcdcEventCallback(void *arg, esp_event_base_t event_base, int32_t e
 
   eventidTriggered = event_id;
 
-  switch (event_id) {
+  switch (event_id)
+  {
     case ARDUINO_HW_CDC_CONNECTED_EVENT:
 
       usbActive = true;
@@ -52,18 +53,41 @@ bool Port_ESPEasySerial_USB_HWCDC_t::isConnected() const
 {
   static bool connected_cache{};
   static uint32_t lastChecked{};
+
   if (!connected_cache) {
-    const int32_t timePassedSince = (int32_t) (millis() - lastChecked);
-    if (timePassedSince < 1000) return false;
+    const int32_t timePassedSince = (int32_t)(millis() - lastChecked);
+
+    if (timePassedSince < 1000) { return false; }
     lastChecked = millis();
   }
-  connected_cache = _hwcdc_serial != nullptr && _hwcdc_serial->isConnected();
-  return connected_cache;  
+  const uint32_t start_check = millis();
+  const bool curr_connected = 
+    _hwcdc_serial != nullptr && 
+    _hwcdc_serial->isPlugged() && 
+    _hwcdc_serial->isConnected();
+
+  const int32_t check_duration = (int32_t)(millis() - start_check);
+  if (check_duration > 1000) {
+    // Issue when terminal was connected, but no longer is connected.
+    connected_cache = false;
+    lastChecked = millis() + 2000;
+//    _hwcdc_serial->flush();
+  } else if (connected_cache !=  curr_connected) {
+    connected_cache =  curr_connected;
+/*
+    if (_hwcdc_serial->isPlugged()) {
+      if (curr_connected) {
+        // Should trigger the connection to be re-established
+        _hwcdc_serial->flush();
+      }
+    }
+*/
+  }
+  return connected_cache;
 }
 
-
 Port_ESPEasySerial_USB_HWCDC_t::Port_ESPEasySerial_USB_HWCDC_t(const ESPEasySerialConfig& config)
-  
+
 # if ARDUINO_USB_CDC_ON_BOOT // Serial used for USB CDC
   : _hwcdc_serial(&Serial)
 # else // if ARDUINO_USB_CDC_ON_BOOT
@@ -71,11 +95,13 @@ Port_ESPEasySerial_USB_HWCDC_t::Port_ESPEasySerial_USB_HWCDC_t(const ESPEasySeri
 # endif // if ARDUINO_USB_CDC_ON_BOOT
 {
   _config.port = ESPEasySerialPort::usb_hw_cdc;
-  #if !ARDUINO_USB_CDC_ON_BOOT
-//    USB.begin();
-  #endif
+  # if !ARDUINO_USB_CDC_ON_BOOT
+
+  //    USB.begin();
+  # endif // if !ARDUINO_USB_CDC_ON_BOOT
+
   if (_hwcdc_serial != nullptr) {
-//     _hwcdc_serial->end();
+    //     _hwcdc_serial->end();
 
     //    _config.rxBuffSize = _hwcdc_serial->setRxBufferSize(_config.rxBuffSize);
     //    _config.txBuffSize = _hwcdc_serial->setTxBufferSize(_config.txBuffSize);
@@ -121,7 +147,7 @@ void Port_ESPEasySerial_USB_HWCDC_t::end() {
 int Port_ESPEasySerial_USB_HWCDC_t::available(void)
 {
   if (isConnected()) {
-      return _hwcdc_serial->available();
+    return _hwcdc_serial->available();
   }
   return 0;
 }
@@ -129,7 +155,7 @@ int Port_ESPEasySerial_USB_HWCDC_t::available(void)
 int Port_ESPEasySerial_USB_HWCDC_t::availableForWrite(void)
 {
   if (isConnected()) {
-      return _hwcdc_serial->availableForWrite();
+    return _hwcdc_serial->availableForWrite();
   }
   return 0;
 }
@@ -166,10 +192,7 @@ void Port_ESPEasySerial_USB_HWCDC_t::flush(void)
   }
 }
 
-void Port_ESPEasySerial_USB_HWCDC_t::flush(bool txOnly)
-{
-  flush();
-}
+void   Port_ESPEasySerial_USB_HWCDC_t::flush(bool txOnly) { flush(); }
 
 size_t Port_ESPEasySerial_USB_HWCDC_t::write(uint8_t value)
 {
@@ -217,10 +240,7 @@ size_t Port_ESPEasySerial_USB_HWCDC_t::setTxBufferSize(size_t new_size)
   return 0;
 }
 
-bool Port_ESPEasySerial_USB_HWCDC_t::setRS485Mode(int8_t rtsPin, bool enableCollisionDetection)
-{
-  return false;
-}
+bool Port_ESPEasySerial_USB_HWCDC_t::setRS485Mode(int8_t rtsPin, bool enableCollisionDetection) { return false; }
 
 
 #endif // if USES_HWCDC
