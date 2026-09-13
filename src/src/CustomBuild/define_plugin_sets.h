@@ -2725,6 +2725,10 @@ To create/register a plugin, you have to :
   #ifndef USES_ESPEASY_NOW
 //    #define USES_ESPEASY_NOW
   #endif
+  #ifndef FEATURE_MDNS
+    #define FEATURE_MDNS 1
+  #endif
+
   #ifndef FEATURE_SERVO
     #define FEATURE_SERVO 1
   #endif
