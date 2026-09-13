@@ -704,7 +704,7 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
                                 url.c_str(),
                                 url.c_str()));
       }
-      return make_kv(F("mDNS"), url);
+      return make_kv(F("mDNS"), std::move(url));
     }
     case LabelType::USE_MDNS:
     {
@@ -897,7 +897,7 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
     }
     case LabelType::BUILD_TIME:
     {
-      return make_kv(F("Build Time"), concat(concat(get_build_date(), ' '), get_build_time()));
+      return make_kv(F("Build Time"), concat(get_build_date(), concat(' ', get_build_time())));
     }
     case LabelType::BINARY_FILENAME:
     {

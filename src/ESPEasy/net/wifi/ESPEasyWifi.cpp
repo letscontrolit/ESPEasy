@@ -472,7 +472,7 @@ void WiFiScan_log_to_serial()
     setWifiMode(cur_wifimode);
   }
 
-  const int8_t scanCompleteStatus = WiFi_AP_Candidates.scanComplete();
+  const int scanCompleteStatus = WiFi_AP_Candidates.scanComplete();
 
   if (scanCompleteStatus <= 0) {
     serialPrintln(concat(F("WIFI : No networks found. Status: "), scanCompleteStatus));
