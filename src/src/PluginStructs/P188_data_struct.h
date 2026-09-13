@@ -87,6 +87,9 @@
 
 # define TLA2528_REG_AUTO_SEQ_CH_SEL   0x12
 
+# define TLA2528_BIT_GC_TIMEOUT        0x09  // timeout in 500ms increments
+
+
 # if P188_FEATURE_RESISTOR_MEASUREMENT
   #  define P188_OUTPUT_OPTION_CNT 16
 # else
@@ -159,6 +162,10 @@ public:
                                           uint8_t reg,
                                           uint8_t data);
 
+  static bool    TLA2528_wait_until_reg_bit_is_low(uint8_t addr, 
+                                                   uint8_t reg, 
+                                                   uint8_t bit);
+
   bool init(struct EventStruct *event);
   bool read_raw(struct EventStruct *event,
                 float             & value,
@@ -178,7 +185,7 @@ public:
 
 private:
 
-  uint8_t _sample_cnt;
+  uint8_t _sample_cnt = 0;
   bool    initialized = false;
 
 };

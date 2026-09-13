@@ -122,10 +122,24 @@ Output Configuration
 ^^^^^^^^^^^^^^^^^^^^
 
 * **Number Output Values**: 
-    The number of output values to be generated (Single, Dual, Triple or Quad). Depending on the selected number of output values, the corresponding number of output sections will be available for configuration.
+    The number of output values to be generated (Single, Dual, Triple or Quad). Depending on the selected number of output values, the corresponding number of output sections will be available for configuration. If more than 4 output values are needed, two instances of the plugin, both configued to the same I\ :sup:`2`\C address, can be added in the devices page.
 
 * **Value x**: 
     Select the ADC input channels (0 to 7) and mode to be used for each of the output values. The selection can be configured in detail in the corresponding output section as described above.
+
+
+.. include:: DataAcquisition.repl
+
+* **Interval** By default, Interval will be set to 60 sec. The data will be collected and optionally sent to any configured controllers using this interval.
+
+Values
+^^^^^^
+
+Depending on the selection in the Output Configuration section above, the plugin provides the configured measurements as output values. Detailled information  about this section is given :ref:`here<Task Values>`.
+
+Per channel scaling, which depends on the hardware configuration of the individual channel, can be done either by using the two point calibration as described above or by using a :ref:`formula<Task Values Formula>`.
+
+For each value there is a **Stats** checkbox available that, when checked, gathers the data and presents recent data in a graph as described here: :ref:`Task Value Statistics<Task Value Statistics>`.
 
 Change log
 ----------

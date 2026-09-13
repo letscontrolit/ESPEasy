@@ -72,11 +72,11 @@ GPS is one of those, which can collect values like:
 
 These can then be selected to be output as task value.
 
+.. _Task Value Statistics:
 
 Statistics
 ----------
 
-.. _Task Value Statistics:
 
 (Added: 2022/07/11)
 
@@ -151,6 +151,8 @@ This can be useful to trigger a read based on an event.
 A nice use case can be to take samples on a number of sensors as soon as the GPS task sends new coordinates.
 Since a GPS task can be configured to send updates each N meters travelled, this allows for collecting samples at an equal distance spaced, regardless the driving speed.
 
+.. _Task Values:
+
 Values
 ------
 
@@ -165,6 +167,8 @@ Each task value has to have an unique name within that task.
 It does not have to be unique on the entire ESPEasy system, as long as the combination of task name and task value name is unique.
 
 For example ``bme#temp`` and ``bme2#temp`` are perfectly fine as each can be addressed.
+
+.. _Task Values Formula:
 
 Formula
 ^^^^^^^

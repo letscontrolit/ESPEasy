@@ -55,6 +55,21 @@ bool P188_data_struct::TLA2528_write_single_reg(uint8_t i2caddr, uint8_t reg, ui
   return I2C_write8_reg16(i2caddr, (TLA2528_OPC_SINGLE_WRITE << 8) + reg, data);
 }
 
+bool P188_data_struct::TLA2528_wait_until_reg_bit_is_low(uint8_t addr, uint8_t reg, uint8_t bit)
+{
+  uint8_t tmp = 0;
+
+  while (bit & P188_data_struct::TLA2528_read_single_reg(addr, reg))  { // repeat until bit returns low
+    delayMicroseconds(500);
+
+    if (tmp > TLA2528_BIT_GC_TIMEOUT) {
+      return true; // break loop and return true if bit is still high after TLA2528_BIT_GC_TIMEOUT iterations
+    }
+    tmp++;
+  }
+  return false; // return false on success (bit is low)
+}
+
 bool P188_data_struct::init(struct EventStruct *event) {
   if (event != nullptr) {
     LoadCustomTaskSettings(event->TaskIndex, (uint8_t *)&(P188_config), sizeof(P188_config)); // load configuration from flash
@@ -65,35 +80,20 @@ bool P188_data_struct::init(struct EventStruct *event) {
 
       initialized = initialized && P188_data_struct::TLA2528_write_single_reg(P188_config.i2cAddress, TLA2528_REG_GENERAL_CFG, 0x01); // reset IC
 
-      _sample_cnt = 0;
-
-      while (TLA2528_BIT_GC_RST & P188_data_struct::TLA2528_read_single_reg(P188_config.i2cAddress, TLA2528_REG_GENERAL_CFG))  { // wait for reset to complete
-        delayMicroseconds(500);
-
-        if (_sample_cnt > 9) {
-          return false;
-        }
-        _sample_cnt++;
+      if (P188_data_struct::TLA2528_wait_until_reg_bit_is_low(P188_config.i2cAddress, TLA2528_REG_GENERAL_CFG, TLA2528_BIT_GC_RST)) {
+        return false;
       }
 
       initialized = initialized && P188_data_struct::TLA2528_write_single_reg(P188_config.i2cAddress, TLA2528_REG_GENERAL_CFG, 0x02); // start calibration
 
-      _sample_cnt = 0;
-
-      while (TLA2528_BIT_GC_CAL & P188_data_struct::TLA2528_read_single_reg(P188_config.i2cAddress, TLA2528_REG_GENERAL_CFG)) { // wait for calibration to complete
-        delayMicroseconds(500);
-
-        if (_sample_cnt > 9) {
-          return false;
-        }
-        _sample_cnt++;
+      if (P188_data_struct::TLA2528_wait_until_reg_bit_is_low(P188_config.i2cAddress, TLA2528_REG_GENERAL_CFG, TLA2528_BIT_GC_CAL)) {
+        return false;
       }
 
       initialized = initialized && P188_data_struct::TLA2528_write_single_reg(P188_config.i2cAddress,
                                                                               TLA2528_REG_DATA_CFG,
-                                                                              TLA2528_BIT_DC_APPEND_STATUS); // automaticall append channel ID
+                                                                              TLA2528_BIT_DC_APPEND_STATUS); // automatically append channel ID
     }
-    _sample_cnt = 0;
   }
   return initialized;
 }
