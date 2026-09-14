@@ -272,7 +272,7 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
         Plugin_091_cmddbl   = PCONFIG(3);
         Plugin_091_ipd      = PCONFIG(4);
         const int bauds[]              = { 9600, 19200, 115200, 1200, 2400, 4800, 38400, 57600 };
-        unsigned long Plugin_091_speed = bauds[PCONFIG(2)];
+        uint32_t Plugin_091_speed = bauds[PCONFIG(2)];
         ESPEASY_SERIAL_0.begin(Plugin_091_speed, SERIAL_8N1);
         log += strformat(F(" LCTech %d baud %d btn"), Plugin_091_speed, Plugin_091_numrelay);
       } else
@@ -692,7 +692,7 @@ boolean Plugin_091(uint8_t function, struct EventStruct *event, String& string)
           if (Plugin_091_globalpar0 < SER_SWITCH_LCTECH) {
             par3 = Plugin_091_globalpar1;
           }
-          unsigned long timer = event->Par3 * 1000;
+          uint32_t timer = event->Par3 * 1000;
 
           sendmcucommand(rnum, rcmd, Plugin_091_globalpar0, par3); // init state
           // Scheduler.setPluginTimer(timer, PLUGIN_ID_091, rnum, !rcmd);

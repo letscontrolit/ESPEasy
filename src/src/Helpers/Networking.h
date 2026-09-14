@@ -136,8 +136,8 @@ extern uint16_t  _respondToPort;
 
 extern bool _pending;
 extern unsigned short _delay;
-extern unsigned long  _process_time;
-extern unsigned long  _notify_time;
+extern uint32_t  _process_time;
+extern uint32_t  _notify_time;
 
 #  define SSDP_INTERVAL     1200
 #  define SSDP_PORT         1900

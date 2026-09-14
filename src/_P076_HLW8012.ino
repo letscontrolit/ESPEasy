@@ -106,7 +106,7 @@ HLW8012 *Plugin_076_hlw = nullptr;
 OversamplingHelper<float>p076_values[P076_NR_OUTPUT_OPTIONS]{};
 int StoredTaskIndex = -1;
 uint8_t p076_read_stage{};
-unsigned long p076_timer{};
+uint32_t p076_timer{};
 
 // Forward declaration helper function
 const __FlashStringHelper* p076_getQueryString(uint8_t value_nr,

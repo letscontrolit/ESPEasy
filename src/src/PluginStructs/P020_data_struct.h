@@ -117,7 +117,7 @@ struct P020_Task : public PluginTaskData_base {
   void               serialBegin(const ESPEasySerialPort port,
                                  int16_t                 rxPin,
                                  int16_t                 txPin,
-                                 unsigned long           baud,
+                                 uint32_t           baud,
                                  uint8_t                 config);
   void                serialEnd();
 
@@ -176,7 +176,7 @@ struct P020_Task : public PluginTaskData_base {
   taskIndex_t    _taskIndex        = INVALID_TASK_INDEX;
   bool           handleMultiLine   = false;
 
-  unsigned long _blinkLEDStartTime = 0;
+  uint32_t _blinkLEDStartTime = 0;
   int8_t        _ledPin            = -1;
   bool          _ledInverted       = false;
   bool          _ledEnabled        = false;

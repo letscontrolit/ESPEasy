@@ -24,7 +24,7 @@
 // For example running the PLUGIN_FIFTY_PER_SECOND calls probably need to run as fast as possible as they need to fetch data before a buffer
 // overflow happens.
 // For those it is more important to actually run it than keeping pace.
-void ESPEasy_Scheduler::setNextTimeInterval(unsigned long& timer, const unsigned long step) {
+void ESPEasy_Scheduler::setNextTimeInterval(uint32_t& timer, const uint32_t step) {
   timer += step;
   const long passed = timePassedSince(timer);
 
@@ -33,7 +33,7 @@ void ESPEasy_Scheduler::setNextTimeInterval(unsigned long& timer, const unsigned
     return;
   }
 
-  if (static_cast<unsigned long>(passed) > step) {
+  if (static_cast<uint32_t>(passed) > step) {
     // No need to keep running behind, start again.
     timer = millis() + step;
     return;
@@ -45,8 +45,8 @@ void ESPEasy_Scheduler::setNextTimeInterval(unsigned long& timer, const unsigned
 
 // More strict interval where no time drift is more important than missing a scheduled interval.
 // For example timing for repeating longPulse where 2 scheduled intervals need to be at constant 'distance' from each other.
-void ESPEasy_Scheduler::setNextStrictTimeInterval(unsigned long     & timer,
-                                                  const unsigned long step) {
+void ESPEasy_Scheduler::setNextStrictTimeInterval(uint32_t     & timer,
+                                                  const uint32_t step) {
   timer += step;
   const long passed = timePassedSince(timer);
 
@@ -56,7 +56,7 @@ void ESPEasy_Scheduler::setNextStrictTimeInterval(unsigned long     & timer,
   }
 
   // Try to get in sync again.
-  const unsigned long stepsMissed = static_cast<unsigned long>(passed) / step;
+  const uint32_t stepsMissed = static_cast<uint32_t>(passed) / step;
 
   timer += (stepsMissed + 1) * step;
 }
@@ -65,14 +65,14 @@ void ESPEasy_Scheduler::setIntervalTimer(SchedulerIntervalTimer_e intervalTimer)
   setIntervalTimer(intervalTimer, millis());
 }
 
-void ESPEasy_Scheduler::setIntervalTimerAt(SchedulerIntervalTimer_e intervalTimer, unsigned long newtimer) {
+void ESPEasy_Scheduler::setIntervalTimerAt(SchedulerIntervalTimer_e intervalTimer, uint32_t newtimer) {
   const ConstIntervalTimerID timerID(intervalTimer);
 
   setNewTimerAt(timerID, newtimer);
 }
 
-void ESPEasy_Scheduler::setIntervalTimerOverride(SchedulerIntervalTimer_e intervalTimer, unsigned long msecFromNow) {
-  unsigned long timer = millis();
+void ESPEasy_Scheduler::setIntervalTimerOverride(SchedulerIntervalTimer_e intervalTimer, uint32_t msecFromNow) {
+  uint32_t timer = millis();
 
   setNextTimeInterval(timer, msecFromNow);
   const ConstIntervalTimerID timerID(intervalTimer);
@@ -80,16 +80,16 @@ void ESPEasy_Scheduler::setIntervalTimerOverride(SchedulerIntervalTimer_e interv
   setNewTimerAt(timerID, timer);
 }
 
-void ESPEasy_Scheduler::scheduleNextDelayQueue(SchedulerIntervalTimer_e intervalTimer, unsigned long nextTime) {
+void ESPEasy_Scheduler::scheduleNextDelayQueue(SchedulerIntervalTimer_e intervalTimer, uint32_t nextTime) {
   if (nextTime != 0) {
     // Schedule for next process run.
     setIntervalTimerAt(intervalTimer, nextTime);
   }
 }
 
-void ESPEasy_Scheduler::setIntervalTimer(SchedulerIntervalTimer_e intervalTimer, unsigned long lasttimer) {
+void ESPEasy_Scheduler::setIntervalTimer(SchedulerIntervalTimer_e intervalTimer, uint32_t lasttimer) {
   // Set the initial timers for the regular runs
-  unsigned long interval = 0;
+  uint32_t interval = 0;
 
   switch (intervalTimer) {
     case SchedulerIntervalTimer_e::TIMER_20MSEC:         interval = 20; break;
@@ -132,7 +132,7 @@ void ESPEasy_Scheduler::setIntervalTimer(SchedulerIntervalTimer_e intervalTimer,
       // in the code to find all places that need to be updated too.
       interval = 1000; break;
   }
-  unsigned long timer = lasttimer;
+  uint32_t timer = lasttimer;
 
   setNextTimeInterval(timer, interval);
   const ConstIntervalTimerID timerID(intervalTimer);
@@ -149,7 +149,7 @@ void ESPEasy_Scheduler::sendGratuitousARP_now() {
   }
 }
 
-void ESPEasy_Scheduler::process_interval_timer(SchedulerTimerID timerID, unsigned long lasttimer) {
+void ESPEasy_Scheduler::process_interval_timer(SchedulerTimerID timerID, uint32_t lasttimer) {
   // Set the interval timer now, it may be altered by the commands below.
   // This is the default next-run-time.
 

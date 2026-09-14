@@ -60,7 +60,7 @@ bool remoteConfig(struct EventStruct *event,
 /********************************************************************************************\
    delay in milliseconds with background processing
  \*********************************************************************************************/
-void delayBackground(unsigned long dsdelay);
+void delayBackground(uint32_t dsdelay);
 
 /********************************************************************************************\
    Toggle network enabled state

@@ -101,7 +101,7 @@ void rulesProcessing(const String& event) {
   checkRAM(F("rulesProcessing"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
 #ifndef BUILD_NO_DEBUG
-  const unsigned long timer = millis();
+  const uint32_t timer = millis();
 #endif // ifndef BUILD_NO_DEBUG
 // #ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {

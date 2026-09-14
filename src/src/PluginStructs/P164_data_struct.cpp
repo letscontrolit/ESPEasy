@@ -716,7 +716,7 @@ bool P164_data_struct::set_envdata210(uint16_t t, uint16_t h) {
 bool P164_data_struct::getFirmware() {
   bool result = false;  // Build return value for function
   bool is_ok;           // Temporary flag to track status
-  unsigned long ts;     // Timestamp to limit polling time
+  uint32_t ts;     // Timestamp to limit polling time
 
   result = I2C_write8_reg(i2cAddress, ENS160_REG_COMMAND, ENS160_COMMAND_GET_APPVER);
   

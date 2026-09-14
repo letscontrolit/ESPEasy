@@ -55,7 +55,7 @@ ESPEasy_time::ESPEasy_time() {
 }
 
 struct tm ESPEasy_time::addSeconds(const struct tm& ts, int seconds, bool toLocalTime, bool fromLocalTime) const {
-  unsigned long time = makeTime(ts);
+  uint32_t time = makeTime(ts);
 
   if (fromLocalTime) {
     time = time_zone.fromLocal(time);
@@ -227,17 +227,17 @@ void ESPEasy_time::initTime()
   now_();
 }
 
-unsigned long ESPEasy_time::getLocalUnixTime() const
+uint32_t ESPEasy_time::getLocalUnixTime() const
 {
   return time_zone.toLocal(getUnixTime());
 }
 
-unsigned long ESPEasy_time::getLocalUnixTime(uint32_t& unix_time_frac) const
+uint32_t ESPEasy_time::getLocalUnixTime(uint32_t& unix_time_frac) const
 {
   return time_zone.toLocal(getUnixTime(unix_time_frac));
 }
 
-unsigned long ESPEasy_time::now_() {
+uint32_t ESPEasy_time::now_() {
   bool timeSynced = false;
 
   if (nextSyncTime <= getUptime_in_sec()) {
@@ -378,7 +378,7 @@ unsigned long ESPEasy_time::now_() {
       ExtRTC_set(static_cast<uint32_t>(unixTime_d + 0.5));
       #endif // if FEATURE_EXT_RTC
       {
-        const unsigned long abs_time_offset_ms = std::abs(externalUnixTime_offset_usec) / 1000ll;
+        const uint32_t abs_time_offset_ms = std::abs(externalUnixTime_offset_usec) / 1000ll;
 
         if (_timeSource == timeSource_t::NTP_time_source) {
           // May need to lessen the load on the NTP servers, randomize the sync interval
@@ -466,7 +466,7 @@ unsigned long ESPEasy_time::now_() {
     }
     statusNTPInitialized = true; // @giig1967g: setting system variable %isntp%
   }
-  return (unsigned long)localSystime;
+  return (uint32_t)localSystime;
 }
 
 bool ESPEasy_time::reportNewMinute()
@@ -773,7 +773,7 @@ String ESPEasy_time::getDateTimeString_ampm(char dateDelimiter, char timeDelimit
 /********************************************************************************************\
    Get current time/date
  \*********************************************************************************************/
-int ESPEasy_time::year(unsigned long t)
+int ESPEasy_time::year(uint32_t t)
 {
   struct tm tmp;
 
@@ -781,7 +781,7 @@ int ESPEasy_time::year(unsigned long t)
   return 1900 + tmp.tm_year;
 }
 
-int ESPEasy_time::weekday(unsigned long t)
+int ESPEasy_time::weekday(uint32_t t)
 {
   struct tm tmp;
 

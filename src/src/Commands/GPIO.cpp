@@ -365,7 +365,7 @@ const __FlashStringHelper * Command_GPIO_PWM(struct EventStruct *event, const ch
 const __FlashStringHelper * Command_GPIO_Tone(struct EventStruct *event, const char *Line)
 {
   // play a tone on pin par1, with frequency par2 and duration in msec par3.
-  unsigned long duration   = event->Par3;
+  uint32_t duration   = event->Par3;
   bool mustScheduleToneOff = false;
 
   if (duration > 50) {

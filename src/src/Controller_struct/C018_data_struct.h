@@ -28,7 +28,7 @@ public:
   bool init(const uint8_t port,
             const int8_t  serial_rx,
             const int8_t  serial_tx,
-            unsigned long baudrate,
+            uint32_t baudrate,
             bool          joinIsOTAA,
             taskIndex_t   sampleSet_Initiator,
             int8_t        reset_pin);
@@ -117,7 +117,7 @@ private:
   String         cacheDevAddr;
   String         cacheHWEUI;
   String         cacheSysVer;
-  unsigned long  _baudrate          = 57600;
+  uint32_t  _baudrate          = 57600;
   uint8_t        sampleSetCounter   = 0;
   taskIndex_t    sampleSetInitiator = INVALID_TASK_INDEX;
   int8_t         _resetPin          = -1;

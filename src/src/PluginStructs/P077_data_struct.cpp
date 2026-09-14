@@ -73,7 +73,7 @@ bool P077_data_struct::isInitialized() const {
   return easySerial != nullptr;
 }
 
-bool P077_data_struct::init(ESPEasySerialPort port, const int16_t serial_rx, const int16_t serial_tx, unsigned long baudrate,
+bool P077_data_struct::init(ESPEasySerialPort port, const int16_t serial_rx, const int16_t serial_tx, uint32_t baudrate,
                             uint8_t config) {
   if (serial_rx < 0) {
     return false;

@@ -70,7 +70,7 @@ public:
   bool     init(ESPEasySerialPort port,
                 const int16_t     serial_rx,
                 const int16_t     serial_tx,
-                unsigned long     baudrate,
+                uint32_t     baudrate,
                 uint8_t           config);
 
   bool plugin_read(struct EventStruct *event);

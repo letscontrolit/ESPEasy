@@ -134,7 +134,7 @@ bool P025_data_struct::read(float& value, taskVarIndex_t index) const {
     return false;
   }
 
-  const long sds = waitReady025(_i2cAddress);
+  const int sds = waitReady025(_i2cAddress);
 
   if (sds == 0) {
 # ifndef BUILD_NO_DEBUG
@@ -234,7 +234,7 @@ bool P025_data_struct::startMeasurement(uint8_t i2cAddress, uint16_t configRegis
 long P025_data_struct::waitReady025(uint8_t i2cAddress)
 {
   const uint32_t start   = micros();
-  unsigned long  timeout = millis();
+  uint32_t  timeout = millis();
 
   bool is_ok = false;
 

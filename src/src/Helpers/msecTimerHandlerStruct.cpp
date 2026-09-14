@@ -15,20 +15,20 @@
     eco_mode = enabled;
   }
 
-  void msecTimerHandlerStruct::registerAt(unsigned long id, unsigned long timer) {
+  void msecTimerHandlerStruct::registerAt(uint32_t id, uint32_t timer) {
     timer_id_couple item(id, timer);
 
     insert(item);
   }
 
-  void msecTimerHandlerStruct::remove(unsigned long id) {
+  void msecTimerHandlerStruct::remove(uint32_t id) {
     timer_id_couple item(id, 0);
     remove(item);
   }
 
   // Check if timeout has been reached and also return its set timer.
   // Return 0 if no item has reached timeout moment.
-  unsigned long msecTimerHandlerStruct::getNextId(unsigned long& timer) {
+  uint32_t msecTimerHandlerStruct::getNextId(uint32_t& timer) {
 #ifndef BUILD_NO_DEBUG
     ++get_called;
 #endif
@@ -69,7 +69,7 @@
   }
 
 
-  bool msecTimerHandlerStruct::getTimerForId(unsigned long id, unsigned long& timer) const {
+  bool msecTimerHandlerStruct::getTimerForId(uint32_t id, uint32_t& timer) const {
     for (auto it = _timer_ids.begin(); it != _timer_ids.end(); ++it) {
       if (it->_id == id) {
         timer = it->_timer;

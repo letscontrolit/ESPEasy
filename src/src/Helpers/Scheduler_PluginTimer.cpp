@@ -12,7 +12,7 @@
 * Essentially calling PLUGIN_DEVICETIMER_IN
 * Similar to PLUGIN_TASKTIMER_IN, addressed to a plugin instead of a task.
 \*********************************************************************************************/
-void ESPEasy_Scheduler::setPluginTimer(unsigned long msecFromNow, pluginID_t pluginID, int Par1, int Par2, int Par3, int Par4, int Par5)
+void ESPEasy_Scheduler::setPluginTimer(uint32_t msecFromNow, pluginID_t pluginID, int Par1, int Par2, int Par3, int Par4, int Par5)
 {
   // plugin number and par1 form a unique key that can be used to restart a timer
   // Use deviceIndex instead of pluginID, since the deviceIndex uses less bits.

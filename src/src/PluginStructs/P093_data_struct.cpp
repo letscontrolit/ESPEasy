@@ -407,7 +407,7 @@ void P093_data_struct::applySettings() {
 }
 
 void P093_data_struct::connect() {
-  const unsigned long baud = getBaudRate();
+  const uint32_t baud = getBaudRate();
 
   # ifdef PLUGIN_093_DEBUG
   addLog(LOG_LEVEL_DEBUG, concat(F("M-AC: Connect "), baud));
@@ -419,7 +419,7 @@ void P093_data_struct::connect() {
   sendPacket(buffer, sizeof(buffer));
 }
 
-unsigned long P093_data_struct::getBaudRate() const {
+uint32_t P093_data_struct::getBaudRate() const {
   return _fastBaudRate ? 9600ul : 2400ul;
 }
 

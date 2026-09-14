@@ -276,7 +276,7 @@ void handle_devices_CopySubmittedSettings(taskIndex_t taskIndex, pluginID_t task
   controllerIndex_t discoverController = INVALID_CONTROLLER_INDEX;
   # endif // if FEATURE_MQTT_DISCOVER
 
-  unsigned long taskdevicetimer = getFormItemInt(F("TDT"), 0);
+  uint32_t taskdevicetimer = getFormItemInt(F("TDT"), 0);
 
   Settings.TaskDeviceNumber[taskIndex] = taskdevicenumber.value;
 
@@ -1689,7 +1689,7 @@ void devicePage_show_interval_config(taskIndex_t taskIndex, deviceIndex_t Device
 
   if (device.TimerOption)
   {
-    // FIXME: shoudn't the max be ULONG_MAX because Settings.TaskDeviceTimer is an unsigned long? addFormNumericBox only supports ints
+    // FIXME: shoudn't the max be ULONG_MAX because Settings.TaskDeviceTimer is an uint32_t? addFormNumericBox only supports ints
     // for min and max specification
     addFormNumericBox(F("Interval"), F("TDT"), Settings.TaskDeviceTimer[taskIndex], 0, 65535); // ="taskdevicetimer"
     addUnit(F("sec"));

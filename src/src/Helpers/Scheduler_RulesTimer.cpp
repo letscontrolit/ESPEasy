@@ -25,7 +25,7 @@ static bool checkRulesTimerIndex(unsigned int timerIndex) {
   return true;
 }
 
-bool ESPEasy_Scheduler::setRulesTimer(unsigned long msecFromNow, unsigned int timerIndex, int recurringCount, bool startImmediately) {
+bool ESPEasy_Scheduler::setRulesTimer(uint32_t msecFromNow, unsigned int timerIndex, int recurringCount, bool startImmediately) {
   if (!checkRulesTimerIndex(timerIndex)) { return false; }
 
   const RulesTimerID timerID(timerIndex);
@@ -37,7 +37,7 @@ bool ESPEasy_Scheduler::setRulesTimer(unsigned long msecFromNow, unsigned int ti
   return true;
 }
 
-void ESPEasy_Scheduler::process_rules_timer(SchedulerTimerID id, unsigned long lasttimer) {
+void ESPEasy_Scheduler::process_rules_timer(SchedulerTimerID id, uint32_t lasttimer) {
   auto it = systemTimers.find(id.mixed_id);
 
   if (it == systemTimers.end()) { return; }
@@ -58,7 +58,7 @@ void ESPEasy_Scheduler::process_rules_timer(SchedulerTimerID id, unsigned long l
   // Reschedule before sending the event, as it may get rescheduled in handling the timer event.
   if (it->second.isRecurring()) {
     // Recurring timer
-    unsigned long newTimer = lasttimer;
+    uint32_t newTimer = lasttimer;
     setNextTimeInterval(newTimer, it->second.getInterval());
     setNewTimerAt(id, newTimer);
     it->second.markNextRecurring();
@@ -80,7 +80,7 @@ void ESPEasy_Scheduler::process_rules_timer(SchedulerTimerID id, unsigned long l
   }
 }
 
-bool ESPEasy_Scheduler::pause_rules_timer(unsigned long timerIndex) {
+bool ESPEasy_Scheduler::pause_rules_timer(uint32_t timerIndex) {
   if (!checkRulesTimerIndex(timerIndex)) { return false; }
   const RulesTimerID timerID(timerIndex);
   auto it = systemTimers.find(timerID.mixed_id);
@@ -92,7 +92,7 @@ bool ESPEasy_Scheduler::pause_rules_timer(unsigned long timerIndex) {
     return false;
   }
 
-  unsigned long timer;
+  uint32_t timer;
 
   if (msecTimerHandler.getTimerForId(timerID.mixed_id, timer)) {
     if (it->second.isPaused()) {
@@ -112,14 +112,14 @@ bool ESPEasy_Scheduler::pause_rules_timer(unsigned long timerIndex) {
   return false;
 }
 
-bool ESPEasy_Scheduler::resume_rules_timer(unsigned long timerIndex) {
+bool ESPEasy_Scheduler::resume_rules_timer(uint32_t timerIndex) {
   if (!checkRulesTimerIndex(timerIndex)) { return false; }
   const RulesTimerID timerID(timerIndex);
   auto it = systemTimers.find(timerID.mixed_id);
 
   if (it == systemTimers.end()) { return false; }
 
-  unsigned long timer;
+  uint32_t timer;
 
   if (msecTimerHandler.getTimerForId(timerID.mixed_id, timer)) {
     if (it->second.isPaused()) {

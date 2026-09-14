@@ -200,7 +200,7 @@ private:
   bme280_uncomp_data uncompensated;
   bme280_calib_data  calib;
 
-  unsigned long last_measurement = 0;
+  uint32_t last_measurement = 0;
 
 public:
 

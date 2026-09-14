@@ -999,7 +999,7 @@ void setTaskDevice_to_TaskIndex(pluginID_t taskdevicenumber, taskIndex_t taskInd
 // ********************************************************************************
 // Initialize task with some default values applicable for almost all tasks
 // ********************************************************************************
-void setBasicTaskValues(taskIndex_t taskIndex, unsigned long taskdevicetimer,
+void setBasicTaskValues(taskIndex_t taskIndex, uint32_t taskdevicetimer,
                         bool enabled, const String& name, const int pins[3]) {
   if (!validTaskIndex(taskIndex)) { return; }
   const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(taskIndex);

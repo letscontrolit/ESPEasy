@@ -2009,7 +2009,7 @@ String doSaveToFile(const char *fname, int index, const uint8_t *memAddress, int
   }
   #endif // ifndef BUILD_NO_DEBUG
   delay(1);
-  unsigned long timer = millis() + 50;
+  uint32_t timer = millis() + 50;
   fs::File f          = tryOpenFile(fname, mode);
 
   if (f) {
@@ -2790,7 +2790,7 @@ void deleteBakFiles()
 bool validateUploadConfigDat(const uint8_t *buf) {
   bool result = false;
   struct TempStruct {
-    unsigned long PID;
+    uint32_t PID;
     int           Version;
   } Temp;
 

@@ -243,7 +243,7 @@ public:
   ESPEASY_RULES_FLOAT_TYPE _distance{};
 
 
-  unsigned long _last_measurement = 0;
+  uint32_t _last_measurement = 0;
   uint32_t      _last_time        = 0;
   uint32_t      _last_date        = 0;
 

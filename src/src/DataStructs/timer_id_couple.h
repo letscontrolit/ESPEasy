@@ -9,9 +9,9 @@
 \*********************************************************************************************/
 
 struct timer_id_couple {
-  timer_id_couple(unsigned long id, unsigned long newtimer) : _id(id), _timer(newtimer) {}
+  timer_id_couple(uint32_t id, uint32_t newtimer) : _id(id), _timer(newtimer) {}
 
-  timer_id_couple(unsigned long id) : _id(id) {
+  timer_id_couple(uint32_t id) : _id(id) {
     _timer = millis();
   }
 
@@ -21,8 +21,8 @@ struct timer_id_couple {
   bool operator()(const timer_id_couple& item) const;
 
 
-  unsigned long _id{};
-  unsigned long _timer{};
+  uint32_t _id{};
+  uint32_t _timer{};
 };
 
 

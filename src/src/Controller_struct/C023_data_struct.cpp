@@ -35,7 +35,7 @@ bool C023_data_struct::init(
   const uint8_t port      = config.serialPort;
   const int8_t  serial_rx = config.rxpin;
   const int8_t  serial_tx = config.txpin;
-  unsigned long baudrate  = config.baudrate;
+  uint32_t baudrate  = config.baudrate;
   bool   joinIsOTAA       = (config.getJoinMethod() == LoRa_Helper::LoRaWAN_JoinMethod::OTAA);
   int8_t reset_pin        = config.resetpin;
 

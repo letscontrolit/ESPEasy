@@ -545,7 +545,7 @@ String formatScanResult(int i, const String& separator, int32_t& rssi) {
 }
 
 void logConnectionStatus() {
-  static unsigned long lastLog = 0;
+  static uint32_t lastLog = 0;
 
   if ((lastLog != 0) && (timePassedSince(lastLog) < 1000)) {
     return;

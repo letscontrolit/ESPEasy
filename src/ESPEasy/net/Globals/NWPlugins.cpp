@@ -535,7 +535,8 @@ bool NWPluginCall(NWPlugin::Function Function, EventStruct *event, String& str)
       }
       return success;
     }
-
+    case NWPlugin::Function::NWPLUGIN_MAX_FUNCTION:
+      break;
   }
   return false;
 }
