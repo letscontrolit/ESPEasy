@@ -118,7 +118,7 @@ public:
   void                   setInt(size_t val);
 #endif
 
-  void                   setIPAddress(const IPAddress& ip);
+  void                   setIPAddress(const IPAddress& ip, bool includeZone = false);
 
   ValueStruct::ValueType getValueType() const
   {

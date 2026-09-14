@@ -91,7 +91,7 @@ void IRAM_ATTR DLBus::ISR(void)
 
 void IRAM_ATTR DLBus::ISR_PinChanged(void)
 {
-  //  long TimeDiff = usecPassedSince(ISR_TimeLastBitChange); // time difference to previous pulse in Âµs
+  //  int32_t TimeDiff = usecPassedSince(ISR_TimeLastBitChange); // time difference to previous pulse in Âµs
   uint32_t _now     = micros();
   int32_t  TimeDiff = (int32_t)(_now - ISR_TimeLastBitChange);
 

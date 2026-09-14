@@ -37,8 +37,8 @@ bool ruleMatch(String event, String rule) {
       if (event.substring(0, pos1).equalsIgnoreCase(rule.substring(0, pos2))) // if this is a clock rule
       {
 //        addLog(LOG_LEVEL_INFO, concat(F("Clock#Time="), rule.substring(pos2 + 1)));
-        unsigned long clockEvent = string2TimeLong(event.substring(pos1 + 1));
-        unsigned long clockSet   = string2TimeLong(rule.substring(pos2 + 1));
+        uint32_t clockEvent = string2TimeLong(event.substring(pos1 + 1));
+        uint32_t clockSet   = string2TimeLong(rule.substring(pos2 + 1));
 
         return matchClockEvent(clockEvent, clockSet);
       }

@@ -21,49 +21,55 @@ inline uint64_t getMicros64() {
 // Returned timediff for millis() is between -24.9 days and +24.9 days.
 //          for micros() is between -35.79 and +35.79 minutes
 // Returned value is positive when "next" is after "prev"
-inline int32_t timeDiff(const unsigned long prev, const unsigned long next) {
+inline int32_t timeDiff(const uint32_t& prev, const uint32_t& next) {
   return ((int32_t) (next - prev));
 }
 
-inline int64_t timeDiff64(uint64_t prev, uint64_t next) {
+inline int64_t timeDiff64(const uint64_t& prev, const uint64_t& next) {
   return ((int64_t) (next - prev));
 }
 
 // Compute the number of milliSeconds passed since timestamp given.
 // N.B. value can be negative if the timestamp has not yet been reached.
-inline long timePassedSince(const uint32_t& timestamp) {
+inline int32_t timePassedSince(const uint32_t& timestamp) {
   return timeDiff(timestamp, millis());
 }
 
 // Long term usec calculations
-inline int64_t usecPassedSince(ESPEASY_VOLATILE(uint64_t)& timestamp) {
-  return timeDiff64(timestamp, getMicros64());
+inline int64_t usecPassedSince_volatile(ESPEASY_VOLATILE(uint64_t)& timestamp) {
+  const uint64_t timestamp_tmp(timestamp);
+  return timeDiff64(timestamp_tmp, getMicros64());
 }
 
 inline int64_t usecPassedSince(const uint64_t& timestamp) {
   return timeDiff64(timestamp, getMicros64());
 }
 
+/*
 inline int64_t usecPassedSince(uint64_t& timestamp) { //-V669
   return timeDiff64(timestamp, getMicros64());
 }
+  */
 
 // Fast short-term usec calculations
-inline int32_t usecPassedSince_fast(ESPEASY_VOLATILE(uint32_t)& timestamp) {
-  return timeDiff(timestamp, micros());
+
+inline int32_t usecPassedSince_fast_volatile(ESPEASY_VOLATILE(uint32_t)& timestamp) {
+  const uint32_t timestamp_tmp(timestamp);
+  return timeDiff(timestamp_tmp, micros());
 }
 
 inline int32_t usecPassedSince_fast(const uint32_t& timestamp) {
   return timeDiff(timestamp, micros());
 }
-
+/*
 inline int32_t usecPassedSince_fast(uint32_t& timestamp) { //-V669
   return timeDiff(timestamp, micros());
 }
+  */
 
 
 // Check if a certain timeout has been reached.
-inline bool timeOutReached(unsigned long timer) {
+inline bool timeOutReached(const uint32_t& timer) {
   return timePassedSince(timer) >= 0;
 }
 
@@ -96,7 +102,7 @@ uint8_t getMonthDays(const struct tm& tm);
 
 uint32_t makeTime(const struct tm& tm);
 
-void breakTime(unsigned long timeInput, struct tm& tm);
+void breakTime(uint32_t timeInput, struct tm& tm);
 
 /********************************************************************************************\
    Unix Time formatting
@@ -127,16 +133,16 @@ String formatDateTimeString(const struct tm& ts, char dateDelimiter = '-', char 
 // WWWW=weekday, AAAA=hours tens digit, BBBB=hours, CCCC=minutes tens digit DDDD=minutes
 
 // Convert a 32 bit integer into a string like "Sun,12:30"
-String timeLong2String(unsigned long lngTime);
+String timeLong2String(uint32_t lngTime);
 
 // Convert a string like "Sun,12:30" into a 32 bit integer
-unsigned long string2TimeLong(const String& str);
+uint32_t string2TimeLong(const String& str);
 
 
 /********************************************************************************************\
    Match clock event
  \*********************************************************************************************/
-bool matchClockEvent(unsigned long clockEvent, unsigned long clockSet);
+bool matchClockEvent(uint32_t clockEvent, uint32_t clockSet);
 
 
 #endif // HELPERS_ESPEASY_TIME_CALC_H

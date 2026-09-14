@@ -26,18 +26,33 @@ struct KeyValueStruct
   KeyValueStruct(const String& key,
                  Format        format = Format::Default);
 
+  KeyValueStruct(const __FlashStringHelper *key,
+                 const bool               & val,
+                 Format                     format = Format::Default);
+
   KeyValueStruct(const String& key,
                  const bool  & val,
                  Format        format = Format::Default);
+
+  KeyValueStruct(const __FlashStringHelper *key,
+                 int                        val,
+                 Format                     format = Format::Default);
 
   KeyValueStruct(const String& key,
                  int           val,
                  Format        format = Format::Default);
 #if defined(ESP32) && !defined(__riscv)
+  KeyValueStruct(const __FlashStringHelper *key,
+                 int32_t                    val,
+                 Format                     format = Format::Default);
   KeyValueStruct(const String& key,
                  int32_t       val,
                  Format        format = Format::Default);
 #endif // if defined(ESP32) && !defined(__riscv)
+  KeyValueStruct(const __FlashStringHelper *key,
+                 uint32_t                   val,
+                 Format                     format = Format::Default);
+
   KeyValueStruct(const String& key,
                  uint32_t      val,
                  Format        format = Format::Default);
@@ -46,19 +61,37 @@ struct KeyValueStruct
                  size_t        val,
                  Format        format = Format::Default);
 #endif // if defined(ESP32) && !defined(__riscv)
+  KeyValueStruct(const __FlashStringHelper *key,
+                 const uint64_t           & val,
+                 Format                     format = Format::Default);
+
   KeyValueStruct(const String  & key,
                  const uint64_t& val,
                  Format          format = Format::Default);
+
+  KeyValueStruct(const __FlashStringHelper *key,
+                 const int64_t            & val,
+                 Format                     format = Format::Default);
 
   KeyValueStruct(const String & key,
                  const int64_t& val,
                  Format         format = Format::Default);
 
 
+  KeyValueStruct(const __FlashStringHelper *key,
+                 const float              & val,
+                 uint8_t                    nrDecimals = 4,
+                 Format                     format     = Format::Default);
+
   KeyValueStruct(const String& key,
                  const float & val,
                  uint8_t       nrDecimals = 4,
                  Format        format     = Format::Default);
+
+  KeyValueStruct(const __FlashStringHelper *key,
+                 const double             & val,
+                 uint8_t                    nrDecimals = 4,
+                 Format                     format     = Format::Default);
 
   KeyValueStruct(const String& key,
                  const double& val,

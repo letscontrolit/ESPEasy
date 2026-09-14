@@ -70,13 +70,13 @@ void ValueStruct::setInt(size_t val) { this->operator=(ValueStruct(val)); }
 
 #endif // if defined(ESP32) && !defined(__riscv)
 
-void ValueStruct::setIPAddress(const IPAddress& ip)
+void ValueStruct::setIPAddress(const IPAddress& ip, bool includeZone)
 {
   #ifdef ESP8266
   this->operator=(ValueStruct(ip.toString()));
   #endif
   #ifdef ESP32
-  this->operator=(ValueStruct(ip.toString(true)));
+  this->operator=(ValueStruct(ip.toString(includeZone)));
   #endif
   _valueType = (uint64_t)ValueStruct::ValueType::IP;
 }

@@ -112,7 +112,7 @@ void P105_data_struct::setUninitialized() {
 
 // Perform the measurements with interval
 bool P105_data_struct::updateMeasurements(taskIndex_t task_index) {
-  const unsigned long current_time = millis();
+  const uint32_t current_time = millis();
 
   if (!initialized()) {
     if (!device.initialize()) {

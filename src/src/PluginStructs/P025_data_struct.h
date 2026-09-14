@@ -91,7 +91,7 @@ private:
 
   // Check to see if the sensor is ready for new values
   // @retval detected SPS, 0 if timeout
-  static long waitReady025(uint8_t i2cAddress);
+  static int32_t waitReady025(uint8_t i2cAddress);
 
   float    _fullScaleFactor{};
   uint16_t _configRegisterValue{};

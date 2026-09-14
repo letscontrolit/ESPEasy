@@ -114,7 +114,7 @@ bool Blynk_get(const String& command, controllerIndex_t controllerIndex, float *
   bool success = !MustCheckReply;
 
   if (MustCheckReply || data) {
-    unsigned long timer = millis() + ClientTimeout;
+    uint32_t timer = millis() + ClientTimeout;
 
     while (!client_available(client) && !timeOutReached(timer)) {
       delay(1);
@@ -180,7 +180,7 @@ bool Blynk_get(const String& command, controllerIndex_t controllerIndex, float *
   client.stop();
 
   // important - backgroundtasks - free mem
-  unsigned long timer = millis() + 10;
+  uint32_t timer = millis() + 10;
 
   while (!timeOutReached(timer)) {
     backgroundtasks();

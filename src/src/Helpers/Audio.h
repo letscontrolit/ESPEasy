@@ -9,7 +9,7 @@
  \*********************************************************************************************/
 bool tone_espEasy(int8_t        _pin,
                   unsigned int  frequency,
-                  unsigned long duration);
+                  uint32_t duration);
 
 /********************************************************************************************\
    Play RTTTL string on specified pin

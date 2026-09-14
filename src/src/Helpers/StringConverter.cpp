@@ -46,12 +46,6 @@ String concat(const __FlashStringHelper * str, const String &val) {
   reserve_special(res, strlen_P((PGM_P)str) + val.length());
   res.concat(str);
   res.concat(val);
-
-  /*
-  String res(str);
-  reserve_special(res, res.length() + val.length());
-  res.concat(val);
-  */
   return res;
 }
 
@@ -60,12 +54,122 @@ String concat(const __FlashStringHelper * str, const __FlashStringHelper *val) {
 }
 
 String concat(const __FlashStringHelper * str, const char* val) {
-  return concat(String(str), String(val));
+  String res;
+  res = str;
+  res += val;
+  return res;
+}
+
+String concat(const __FlashStringHelper * str, int val)
+{
+  return concat(str, String(val));
+}
+
+String concat(const __FlashStringHelper * str, const char& c)
+{
+  return concat(String(str), c);
+}
+
+String concat(const __FlashStringHelper * str, const float& val)
+{
+  return concat(str, toString(val));
+}
+
+String concat(const __FlashStringHelper * str, const double& val)
+{
+  return concat(str, doubleToString(val));
+}
+
+#if defined(ESP32) && !defined(__riscv)
+String concat(const __FlashStringHelper * str, const int32_t& val)
+{
+  return concat(str, String(val));
+}
+#endif
+
+String concat(const __FlashStringHelper * str, const uint32_t& val)
+{
+  return concat(str, String(val));
+}
+
+#if defined(ESP32) && !defined(__riscv)
+String concat(const __FlashStringHelper * str, const size_t& val)
+{
+  return concat(str, String(val));
+}
+#endif
+
+String concat(const char& c, const __FlashStringHelper *val)
+{
+  return concat(String(c), val);
+}
+
+String concat(int i, const __FlashStringHelper *val)
+{
+  return concat(String(i), val);
+}
+
+String concat(uint32_t i, const __FlashStringHelper *val)
+{
+  return concat(String(i), val);
+}
+
+String concat(const String & str, const __FlashStringHelper *val)
+{
+  String res;
+  reserve_special(res, str.length() + strlen_P((PGM_P)val));
+  res.concat(str);
+  res.concat(val);
+  return res;
+}
+
+String concat(const String & str, const String & val)
+{
+  String res;
+  reserve_special(res, str.length() + val.length());
+  res.concat(str);
+  res.concat(val);
+
+  return res;
 }
 
 String concat(const String & str, const char* val)
 {
-  return concat(str, String(val));
+  String res;
+  reserve_special(res, str.length() + strlen_P((PGM_P)val));
+  res.concat(str);
+  res.concat(val);
+  return res;
+}
+
+String concat(const String &val, const char& c)
+{
+  String res;
+  res = val;
+  res += c;
+  return res;
+}
+
+String concat(String &&val, const char& c)
+{
+  String res(std::move(val));
+  res += c;
+  return res;
+}
+
+String concat(String &&str, const __FlashStringHelper * val)
+{
+  String res(std::move(str));
+  res += val;
+  return res;
+}
+
+String concat(const __FlashStringHelper *str, String && val)
+{
+  String res;
+  res += str;
+  res += std::move(val);
+  return res;
 }
 
 String concat(const char& str, const String &val)

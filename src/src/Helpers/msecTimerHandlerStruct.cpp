@@ -15,20 +15,20 @@
     eco_mode = enabled;
   }
 
-  void msecTimerHandlerStruct::registerAt(unsigned long id, unsigned long timer) {
+  void msecTimerHandlerStruct::registerAt(uint32_t id, uint32_t timer) {
     timer_id_couple item(id, timer);
 
     insert(item);
   }
 
-  void msecTimerHandlerStruct::remove(unsigned long id) {
+  void msecTimerHandlerStruct::remove(uint32_t id) {
     timer_id_couple item(id, 0);
     remove(item);
   }
 
   // Check if timeout has been reached and also return its set timer.
   // Return 0 if no item has reached timeout moment.
-  unsigned long msecTimerHandlerStruct::getNextId(unsigned long& timer) {
+  uint32_t msecTimerHandlerStruct::getNextId(uint32_t& timer) {
 #ifndef BUILD_NO_DEBUG
     ++get_called;
 #endif
@@ -39,14 +39,14 @@
       return 0;
     }
     const timer_id_couple item = _timer_ids.front();
-    const long passed    = timePassedSince(item._timer);
+    const int32_t passed    = timePassedSince(item._timer);
 
     if (passed < 0) {
       // No timeOutReached
       recordIdle();
 
       if (eco_mode) {
-        long waitTime = (-1 * passed) - 1; // will be non negative
+        int32_t waitTime = (-1 * passed) - 1; // will be non negative
 
         if (waitTime > MAX_SCHEDULER_WAIT_TIME) {
           waitTime = MAX_SCHEDULER_WAIT_TIME;
@@ -69,7 +69,7 @@
   }
 
 
-  bool msecTimerHandlerStruct::getTimerForId(unsigned long id, unsigned long& timer) const {
+  bool msecTimerHandlerStruct::getTimerForId(uint32_t id, uint32_t& timer) const {
     for (auto it = _timer_ids.begin(); it != _timer_ids.end(); ++it) {
       if (it->_id == id) {
         timer = it->_timer;
@@ -98,7 +98,7 @@
   #endif
 
   void msecTimerHandlerStruct::updateIdleTimeStats() {
-    const long duration = timePassedSince(last_log_start_time) * 10;
+    const int32_t duration = timePassedSince(last_log_start_time) * 10;
     if (duration <= 1000) {
       // No need to recompute it over a small interval
       // Also makes sure duration != 0 as it is used in division
@@ -149,7 +149,7 @@
     // Stats are just some indication, don't need to be that exact.
     // std::forward_list doesn't have size()
 //    for (; stats_it != _timer_ids.end(); ++stats_it, ++size) {}
-    if (size > max_queue_length) { max_queue_length = size; }    
+    if (static_cast<uint32_t>(size) > max_queue_length) { max_queue_length = size; }    
 #endif
   }
 

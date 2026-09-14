@@ -50,7 +50,7 @@ void P032_data_struct::read_prom() {
 // **************************************************************************/
 // Read analog/digital converter
 // **************************************************************************/
-unsigned long P032_data_struct::read_adc(unsigned char aCMD)
+uint32_t P032_data_struct::read_adc(unsigned char aCMD)
 {
   I2C_write8(i2cAddress, MS5xxx_CMD_ADC_CONV + aCMD); // start DAQ and conversion of ADC data
 
@@ -76,7 +76,7 @@ unsigned long P032_data_struct::read_adc(unsigned char aCMD)
 // Readout
 // **************************************************************************/
 void P032_data_struct::readout() {
-  unsigned long D1 = 0, D2 = 0;
+  uint32_t D1 = 0, D2 = 0;
 
   ESPEASY_RULES_FLOAT_TYPE dT;
   ESPEASY_RULES_FLOAT_TYPE Offset;

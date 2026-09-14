@@ -57,7 +57,7 @@ struct P094_filter {
   bool          matches(const mBusPacket_header_t& other) const;
 
   // Compute expiration UnixTime
-  unsigned long computeUnixTimeExpiration() const;
+  uint32_t computeUnixTimeExpiration() const;
 
   void          WebformLoad(uint8_t filterIndex) const;
   bool          WebformSave(uint8_t filterIndex);

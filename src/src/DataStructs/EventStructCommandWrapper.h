@@ -8,9 +8,9 @@
 struct EventStructCommandWrapper {
   EventStructCommandWrapper() : id(0) {}
 
-  EventStructCommandWrapper(unsigned long i, EventStruct&& e) : id(i), event(std::move(e)) {}
+  EventStructCommandWrapper(uint32_t i, EventStruct&& e) : id(i), event(std::move(e)) {}
 
-  unsigned long      id;
+  uint32_t      id;
   String             cmd;
   String             line;
   EventStruct event;

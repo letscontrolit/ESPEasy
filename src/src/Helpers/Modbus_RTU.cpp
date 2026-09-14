@@ -450,7 +450,7 @@ uint8_t ModbusRTU_struct::processCommand() {
 
     // Read answer from sensor
     _recv_buf_used = 0;
-    unsigned long timeout    = millis() + _modbus_timeout;
+    uint32_t timeout    = millis() + _modbus_timeout;
     bool validPacket         = false;
     bool invalidDueToTimeout = false;
 

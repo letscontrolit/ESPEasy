@@ -12,13 +12,13 @@
  \*********************************************************************************************/
 
 // FIXME: change original code so it uses String and String.toInt()
-unsigned long str2int(const char *string)
+uint32_t str2int(const char *string)
 {
   uint32_t temp = 0;
 
   validUIntFromString(string, temp);
 
-  return static_cast<unsigned long>(temp);
+  return temp;
 }
 
 /*********************************************************************************************\
@@ -297,22 +297,22 @@ bool string2float(const String& string, float& floatvalue) {
    Handling HEX strings
  \*********************************************************************************************/
 
-// Convert max. 8 hex decimals to unsigned long
-unsigned long hexToUL(const String& input_c, size_t nrHexDecimals) {
-  const unsigned long long resULL = hexToULL(input_c, nrHexDecimals);
-  return static_cast<unsigned long>(resULL & 0xFFFFFFFFull);
+// Convert max. 8 hex decimals to uint32_t
+uint32_t hexToUL(const String& input_c, size_t nrHexDecimals) {
+  const uint64_t resULL = hexToULL(input_c, nrHexDecimals);
+  return static_cast<uint32_t>(resULL & 0xFFFFFFFFull);
 }
 
-unsigned long hexToUL(const String& input_c) {
+uint32_t hexToUL(const String& input_c) {
   return hexToUL(input_c, input_c.length());
 }
 
-unsigned long hexToUL(const String& input_c, size_t startpos, size_t nrHexDecimals) {
+uint32_t hexToUL(const String& input_c, size_t startpos, size_t nrHexDecimals) {
   return hexToUL(input_c.substring(startpos, startpos + nrHexDecimals), nrHexDecimals);
 }
 
-// Convert max. 16 hex decimals to unsigned long long (aka uint64_t)
-unsigned long long hexToULL(const String& input_c, size_t nrHexDecimals) {
+// Convert max. 16 hex decimals to uint64_t (aka uint64_t)
+uint64_t hexToULL(const String& input_c, size_t nrHexDecimals) {
   size_t nr_decimals = nrHexDecimals;
 
   if (nr_decimals > 16) {
@@ -328,11 +328,11 @@ unsigned long long hexToULL(const String& input_c, size_t nrHexDecimals) {
   return strtoull(input_c.substring(0, nr_decimals).c_str(), 0, 16);
 }
 
-unsigned long long hexToULL(const String& input_c) {
+uint64_t hexToULL(const String& input_c) {
   return hexToULL(input_c, input_c.length());
 }
 
-unsigned long long hexToULL(const String& input_c, size_t startpos, size_t nrHexDecimals) {
+uint64_t hexToULL(const String& input_c, size_t startpos, size_t nrHexDecimals) {
   return hexToULL(input_c.substring(startpos, startpos + nrHexDecimals), nrHexDecimals);
 }
 
@@ -404,22 +404,22 @@ String formatToHex_wordarray(const uint16_t* data, size_t size)
   return res;
 }
 
-String formatToHex(unsigned long value, 
+String formatToHex(uint32_t value, 
                    const __FlashStringHelper * prefix,
                    unsigned int minimal_hex_digits) {
   return concat(prefix, formatToHex_no_prefix(value, minimal_hex_digits));
 }
 
-String formatToHex(unsigned long value,
+String formatToHex(uint32_t value,
                    const __FlashStringHelper * prefix) {
   return formatToHex(value, prefix, 0);
 }
 
-String formatToHex(unsigned long value, unsigned int minimal_hex_digits) {
+String formatToHex(uint32_t value, unsigned int minimal_hex_digits) {
   return formatToHex(value, F("0x"), minimal_hex_digits);
 }
 
-String formatToHex_no_prefix(unsigned long value, unsigned int minimal_hex_digits) {
+String formatToHex_no_prefix(uint32_t value, unsigned int minimal_hex_digits) {
   const String fmt = strformat(F("%%0%dX"), minimal_hex_digits);
   return strformat(fmt, value);
 }
@@ -462,11 +462,11 @@ String formatHumanReadable(uint64_t value,
   return result;
 }
 
-String formatToHex_decimal(unsigned long value) {
+String formatToHex_decimal(uint32_t value) {
   return formatToHex_decimal(value, 1);
 }
 
-String formatToHex_decimal(unsigned long value, unsigned long factor) {
+String formatToHex_decimal(uint32_t value, uint32_t factor) {
   String result = formatToHex(value);
 
   result += F(" (");

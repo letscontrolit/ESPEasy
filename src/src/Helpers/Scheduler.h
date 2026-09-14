@@ -93,7 +93,7 @@ public:
   * Generic Timer functions.
   \*********************************************************************************************/
   void          setNewTimerAt(SchedulerTimerID timerID,
-                              unsigned long timer);
+                              uint32_t timer);
 
   static String        decodeSchedulerId(SchedulerTimerID timerID);
 
@@ -107,34 +107,34 @@ public:
   * These timers set a new scheduled timer, based on the old value.
   * This will make their interval as constant as possible.
   \*********************************************************************************************/
-  void                 setNextTimeInterval(unsigned long     & timer,
-                                           const unsigned long step);
+  void                 setNextTimeInterval(uint32_t     & timer,
+                                           const uint32_t step);
 
-  void                 setNextStrictTimeInterval(unsigned long     & timer,
-                                                 const unsigned long step);
+  void                 setNextStrictTimeInterval(uint32_t     & timer,
+                                                 const uint32_t step);
 
   void                 setIntervalTimer(SchedulerIntervalTimer_e id);
   void                 setIntervalTimerAt(SchedulerIntervalTimer_e id,
-                                          unsigned long   newtimer);
+                                          uint32_t   newtimer);
   void                 setIntervalTimerOverride(SchedulerIntervalTimer_e id,
-                                                unsigned long   msecFromNow);
+                                                uint32_t   msecFromNow);
 
   void                 scheduleNextDelayQueue(SchedulerIntervalTimer_e id,
-                                              unsigned long   nextTime);
+                                              uint32_t   nextTime);
 
   void                 setIntervalTimer(SchedulerIntervalTimer_e id,
-                                        unsigned long   lasttimer);
+                                        uint32_t   lasttimer);
 
   void                 sendGratuitousARP_now();
 
   void                 process_interval_timer(SchedulerTimerID timerID,
-                                              unsigned long   lasttimer);
+                                              uint32_t   lasttimer);
 
   /*********************************************************************************************\
   * Plugin Task Timer  (PLUGIN_TASKTIMER_IN)
   * Can be scheduled per combo taskIndex & Par1 (20 least significant bits)
   \*********************************************************************************************/
-  void                 setPluginTaskTimer(unsigned long msecFromNow,
+  void                 setPluginTaskTimer(uint32_t msecFromNow,
                                           taskIndex_t   taskIndex,
                                           int           Par1,
                                           int           Par2 = 0,
@@ -142,7 +142,7 @@ public:
                                           int           Par4 = 0,
                                           int           Par5 = 0);
 
-void                 setPluginTaskTimer(unsigned long msecFromNow,
+void                 setPluginTaskTimer(uint32_t msecFromNow,
                                           taskIndex_t   taskIndex,
                                           const PluginFunctions_e& function,
                                           int           Par1,
@@ -157,12 +157,12 @@ void                 setPluginTaskTimer(unsigned long msecFromNow,
   * Network Adapter Timer  (NWPLUGIN_TASKTIMER_IN)
   * Can be scheduled per combo networkIndex & Par1 (20 least significant bits)
   \*********************************************************************************************/
-  void setNetworkInitTimer(unsigned long msecFromNow,
+  void setNetworkInitTimer(uint32_t msecFromNow,
                            ESPEasy::net::networkIndex_t   networkIndex);
-  void setNetworkExitTimer(unsigned long msecFromNow,
+  void setNetworkExitTimer(uint32_t msecFromNow,
                            ESPEasy::net::networkIndex_t   networkIndex);
 
-  void setNetworkTimer(unsigned long msecFromNow,
+  void setNetworkTimer(uint32_t msecFromNow,
                       ESPEasy::net::networkIndex_t   networkIndex,
                       NWPlugin::Function function,
                       int           Par1 = 0,
@@ -183,17 +183,17 @@ void                 setPluginTaskTimer(unsigned long msecFromNow,
   // @param timerIndex    The index of the timer used. (1 ... max)
   // @param recurringCount  Number of times needed to run (-1 for always)
   // @param startImmediately  Run immediately
-  bool setRulesTimer(unsigned long msecFromNow,
+  bool setRulesTimer(uint32_t msecFromNow,
                      unsigned int  timerIndex,
                      int           recurringCount = 0,
                      bool          startImmediately = false);
 
   void process_rules_timer(SchedulerTimerID timerID,
-                           unsigned long lasttimer);
+                           uint32_t lasttimer);
 
-  bool pause_rules_timer(unsigned long timerIndex);
+  bool pause_rules_timer(uint32_t timerIndex);
 
-  bool resume_rules_timer(unsigned long timerIndex);
+  bool resume_rules_timer(uint32_t timerIndex);
 
 
   /*********************************************************************************************\
@@ -201,7 +201,7 @@ void                 setPluginTaskTimer(unsigned long msecFromNow,
   * Does not reflect a specific task, but rather a plugin.
   * Can be scheduled per combo deviceIndex & Par1 (20 least significant bits)
   \*********************************************************************************************/
-  void                 setPluginTimer(unsigned long msecFromNow,
+  void                 setPluginTimer(uint32_t msecFromNow,
                                       pluginID_t    pluginID,
                                       int           Par1,
                                       int           Par2 = 0,
@@ -216,7 +216,7 @@ void                 setPluginTaskTimer(unsigned long msecFromNow,
   * GPIO Timer
   * Special timer to handle timed GPIO actions
   \*********************************************************************************************/
-  void setGPIOTimer(unsigned long msecFromNow,
+  void setGPIOTimer(uint32_t msecFromNow,
                     pluginID_t    pluginID,
                     int           pinnr,
                     int           state = 0,
@@ -226,7 +226,7 @@ void                 setPluginTaskTimer(unsigned long msecFromNow,
 
   void clearGPIOTimer(pluginID_t pluginID, int pinnr);
 
-  void process_gpio_timer(SchedulerTimerID timerID, unsigned long lasttimer);
+  void process_gpio_timer(SchedulerTimerID timerID, uint32_t lasttimer);
 
   /*********************************************************************************************\
   * Task Device Timer
@@ -235,21 +235,21 @@ void                 setPluginTaskTimer(unsigned long msecFromNow,
   * When the plugin task is initialized, a call to schedule_task_device_timer_at_init
   * will bootstrap this sequence.
   \*********************************************************************************************/
-  void schedule_task_device_timer_at_init(unsigned long task_index);
+  void schedule_task_device_timer_at_init(uint32_t task_index);
 
   // Typical use case is to run this when all needed connections are made.
   void schedule_all_task_device_timers();
 
   // Schedule a call to SensorSendTask, which calls PLUGIN_READ
-  void schedule_task_device_timer(unsigned long task_index,
-                                  unsigned long runAt);
+  void schedule_task_device_timer(uint32_t task_index,
+                                  uint32_t runAt);
 
   // Reschedule task device timer based on the set task interval.
-  void reschedule_task_device_timer(unsigned long task_index,
-                                    unsigned long lasttimer);
+  void reschedule_task_device_timer(uint32_t task_index,
+                                    uint32_t lasttimer);
 
   void process_task_device_timer(SchedulerTimerID timerID,
-                                 unsigned long lasttimer);
+                                 uint32_t lasttimer);
 
   /*********************************************************************************************\
   * System Event Timer
@@ -324,14 +324,14 @@ private:
 
   // Map mixed timer ID to system timer struct.
   // N.B. Must use Mixed timer ID, similar to how it is handled in the scheduler.
-  std::map<unsigned long, systemTimerStruct>systemTimers;
+  std::map<uint32_t, systemTimerStruct>systemTimers;
 
   msecTimerHandlerStruct msecTimerHandler;
 
   std::list<EventStructCommandWrapper>ScheduledEventQueue;
 
-  unsigned long last_system_event_run         = 0;
-  unsigned long timer_gratuitous_arp_interval = 5000;
+  uint32_t last_system_event_run         = 0;
+  uint32_t timer_gratuitous_arp_interval = 5000;
 };
 
 #endif // HELPERS_SCHEDULER_H

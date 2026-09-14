@@ -63,11 +63,11 @@ struct P004_data_struct : public PluginTaskData_base {
 
   String        get_formatted_address(uint8_t index) const;
 
-  unsigned long get_timer() const {
+  uint32_t get_timer() const {
     return _timer;
   }
 
-  unsigned long get_measurement_start() const {
+  uint32_t get_measurement_start() const {
     return _measurementStart;
   }
 
@@ -92,8 +92,8 @@ private:
   // Do not set the _timer to 0, since it may cause issues
   // if this object is created (settings edited or task enabled)
   // while the node is up some time between 24.9 and 49.7 days.
-  unsigned long     _timer;
-  unsigned long     _measurementStart;
+  uint32_t     _timer;
+  uint32_t     _measurementStart;
   Dallas_SensorData _sensors[VARS_PER_TASK];
   taskIndex_t       _taskIndex;
   int8_t            _gpio_rx;

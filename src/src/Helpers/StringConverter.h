@@ -26,10 +26,32 @@ String concat(const __FlashStringHelper * str, const String &val);
 String concat(const __FlashStringHelper * str, const __FlashStringHelper *val);
 
 String concat(const __FlashStringHelper * str, const char* val);
+String concat(const __FlashStringHelper * str, int val);
+String concat(const __FlashStringHelper * str, const char& c);
+
+#if defined(ESP32) && !defined(__riscv)
+String concat(const __FlashStringHelper * str, const int32_t& val);
+#endif
+String concat(const __FlashStringHelper * str, const float& val);
+String concat(const __FlashStringHelper * str, const double& val);
+String concat(const __FlashStringHelper * str, const uint32_t& val);
+#if defined(ESP32) && !defined(__riscv)
+String concat(const __FlashStringHelper * str, const size_t& val);
+#endif
+String concat(const char& c, const __FlashStringHelper *val);
+String concat(int i, const __FlashStringHelper *val);
+String concat(uint32_t i, const __FlashStringHelper *val);
+String concat(const String & str, const __FlashStringHelper *val);
+String concat(const String & str, const String & val);
 String concat(const String & str, const char* val);
+String concat(const String & val, const char& c);
+String concat(String &&val, const char& c);
+String concat(String &&str, const __FlashStringHelper * val);
+String concat(const __FlashStringHelper *str, String && val);
+
 
 String concat(const char& str, const String &val);
-
+/*
 template <typename T>
 String concat(const __FlashStringHelper * str, const T &val) {
   # ifdef USE_SECOND_HEAP
@@ -40,7 +62,8 @@ String concat(const __FlashStringHelper * str, const T &val) {
   res.concat(val);
   return res;
 }
-
+*/
+/*
 template <typename T>
 String concat(const String& str, const T &val) {
   # ifdef USE_SECOND_HEAP
@@ -51,6 +74,7 @@ String concat(const String& str, const T &val) {
   res.concat(val);
   return res;
 }
+  */
 
 bool remove(String& str, const String& toRemove);
 bool remove(String& str, const __FlashStringHelper * toRemove);

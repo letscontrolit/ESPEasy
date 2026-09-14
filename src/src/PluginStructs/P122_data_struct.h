@@ -126,8 +126,8 @@ protected:
                     uint8_t *val,
                     uint8_t  maxDuration);
 
-  unsigned long getTempDuration();
-  unsigned long getHumDuration();
+  uint32_t getTempDuration();
+  uint32_t getHumDuration();
   bool          requestTemperature();
   bool          requestHumidity();
   bool          readValue(uint16_t& value);
@@ -141,7 +141,7 @@ protected:
   uint16_t      _rawTemperature      = 0; // Temperature as fetched from the device [bits]
   uint8_t       _resolution          = 0; // Programmed resolution
   uint8_t       _i2caddr             = 0; // Programmed I2C address
-  unsigned long _last_action_started = 0; // Timestamp for last action that takes processing time
+  uint32_t _last_action_started = 0; // Timestamp for last action that takes processing time
   uint16_t      _errCount            = 0; // Number of errors since last successful access
   uint32_t      _eida                = 0; // Electronic Device ID part EIDA, read at initialization
   uint32_t      _eidb                = 0; // Electronic Device ID part EIDB, read at initialization

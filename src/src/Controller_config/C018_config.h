@@ -35,7 +35,7 @@ struct C018_ConfigStruct
   char          DeviceAddr[C018_DEVICE_ADDR_LEN]                = { 0 };
   char          NetworkSessionKey[C018_NETWORK_SESSION_KEY_LEN] = { 0 };
   char          AppSessionKey[C018_APP_SESSION_KEY_LEN]         = { 0 };
-  unsigned long baudrate                                        = 57600;
+  uint32_t baudrate                                        = 57600;
   int8_t        rxpin                                           = -1;
   int8_t        txpin                                           = -1;
   int8_t        resetpin                                        = -1;

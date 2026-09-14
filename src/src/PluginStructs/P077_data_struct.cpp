@@ -4,7 +4,6 @@
 
 # include <ESPeasySerial.h>
 
-
 const __FlashStringHelper* Plugin_077_valuename(P077_query value_nr, bool displayString)
 {
   const __FlashStringHelper *strings[] = {
@@ -27,6 +26,7 @@ const __FlashStringHelper* Plugin_077_valuename(P077_query value_nr, bool displa
 }
 
 # if FEATURE_MQTT_DISCOVER
+
 int Plugin_077_QueryVType(uint8_t value_nr) {
   const Sensor_VType vtypes[] = {
     Sensor_VType::SENSOR_TYPE_VOLTAGE_ONLY,
@@ -73,7 +73,7 @@ bool P077_data_struct::isInitialized() const {
   return easySerial != nullptr;
 }
 
-bool P077_data_struct::init(ESPEasySerialPort port, const int16_t serial_rx, const int16_t serial_tx, unsigned long baudrate,
+bool P077_data_struct::init(ESPEasySerialPort port, const int16_t serial_rx, const int16_t serial_tx, uint32_t baudrate,
                             uint8_t config) {
   if (serial_rx < 0) {
     return false;
@@ -126,9 +126,9 @@ bool P077_data_struct::processCseReceived(struct EventStruct *event) {
   }
 
   // Get chip calibration data (coefficients) and use as initial defaults
-  long voltage_coefficient = 191200;  // uSec
-  long current_coefficient = 16140;   // uSec
-  long power_coefficient   = 5364000; // uSec
+  int32_t voltage_coefficient = 191200;  // uSec
+  int32_t current_coefficient = 16140;   // uSec
+  int32_t power_coefficient   = 5364000; // uSec
 
   // V1R = shunt resistor
   // V2R = Voltage resistor
@@ -214,7 +214,7 @@ bool P077_data_struct::processCseReceived(struct EventStruct *event) {
     float activePower{};
 
     if (!power_cycle_exceeds_range) {
-      const long power_cycle = get_24bit_value(17);
+      const int32_t power_cycle = get_24bit_value(17);
 
       if (0 == power_cycle_first) {
         power_cycle_first = power_cycle; // Skip first incomplete power_cycle
@@ -286,8 +286,8 @@ bool P077_data_struct::processCseReceived(struct EventStruct *event) {
 }
 
 bool P077_data_struct::processSerialData() {
-  long t_start = millis();
-  bool found   = false;
+  const uint32_t t_start = millis();
+  bool found             = false;
 
   if (isInitialized()) {
     int available = easySerial->available();
@@ -306,7 +306,7 @@ bool P077_data_struct::processSerialData() {
         found = true;
       }
     }
-    long t_diff = timePassedSince(t_start);
+    int32_t t_diff = timePassedSince(t_start);
 
     t_all += t_diff;
 
@@ -316,7 +316,7 @@ bool P077_data_struct::processSerialData() {
 
     if (found) {
       count_max = max(count_max, count_bytes);
-      t_pkt     = t_start - t_pkt_tmp;
+      t_pkt     = timeDiff(t_pkt_tmp, t_start);
       t_pkt_tmp = t_start;
     }
   }
@@ -435,6 +435,7 @@ bool P077_data_struct::plugin_write(struct EventStruct *event,
 }
 
 # ifndef BUILD_NO_DEBUG
+
 int P077_data_struct::serial_Available() {
   if (isInitialized()) {
     return easySerial->available();

@@ -19,9 +19,9 @@ bool NTP_candidate_struct::set(const NodeStruct& node)
   if (timeSource == timeSource_t::No_time_source) { return false; }
 
   // Only allow time from p2p nodes who only got it via p2p themselves as "last resource"
-  const unsigned long p2p_source_penalty =
+  const uint32_t p2p_source_penalty =
     isExternalTimeSource(timeSource)  ? 0 : 10000;
-  const unsigned long time_wander_other =
+  const uint32_t time_wander_other =
     p2p_source_penalty + 
     computeExpectedWander(timeSource, node.lastUpdated); // node.lastUpdated is already set to "time passed since" when sent
 
@@ -33,7 +33,7 @@ bool NTP_candidate_struct::set(const NodeStruct& node)
     clear(); 
   }
 
-  if ((_time_wander < 0) || (time_wander_other < static_cast<unsigned long>(_time_wander))) {
+  if ((_time_wander < 0) || (time_wander_other < static_cast<uint32_t>(_time_wander))) {
     _time_wander     = time_wander_other;
     _unix_time_sec   = node.unix_time_sec;
     _unix_time_frac  = node.unix_time_frac;

@@ -16,7 +16,7 @@ String rn2xx3_handler::sendRawCommand(const __FlashStringHelper* command)
 
 String rn2xx3_handler::sendRawCommand(const String& command)
 {
-  unsigned long timer = millis();
+  uint32_t timer = millis();
 
   if (!prepare_raw_command(command)) {
     setLastError(F("sendRawCommand: Prepare fail"));
@@ -199,10 +199,10 @@ rn2xx3_handler::RN_state rn2xx3_handler::async_loop()
   return get_state();
 }
 
-rn2xx3_handler::RN_state rn2xx3_handler::wait_command_finished(unsigned long timeout)
+rn2xx3_handler::RN_state rn2xx3_handler::wait_command_finished(uint32_t timeout)
 {
   // Still use a timeout to prevent endless loops, although the state machine should always obey the set timeouts.
-  unsigned long start_timer = millis();
+  uint32_t start_timer = millis();
 
   while ((millis() - start_timer) < timeout) {
     async_loop();
@@ -213,10 +213,10 @@ rn2xx3_handler::RN_state rn2xx3_handler::wait_command_finished(unsigned long tim
   return get_state();
 }
 
-rn2xx3_handler::RN_state rn2xx3_handler::wait_command_accepted(unsigned long timeout)
+rn2xx3_handler::RN_state rn2xx3_handler::wait_command_accepted(uint32_t timeout)
 {
   // Still use a timeout to prevent endless loops, although the state machine should always obey the set timeouts.
-  unsigned long start_timer = millis();
+  uint32_t start_timer = millis();
 
   while ((millis() - start_timer) < timeout) {
     async_loop();
@@ -709,7 +709,7 @@ const String& rn2xx3_handler::get_received_data() const {
   return _receivedData;
 }
 
-const String& rn2xx3_handler::get_received_data(unsigned long& duration) const {
+const String& rn2xx3_handler::get_received_data(uint32_t& duration) const {
   duration = millis() - _start_prep;
   return _receivedData;
 }
@@ -960,7 +960,7 @@ bool rn2xx3_handler::read_line()
   return false;
 }
 
-void rn2xx3_handler::set_timeout(unsigned long timeout)
+void rn2xx3_handler::set_timeout(uint32_t timeout)
 {
   _timeout = timeout;
   _start   = millis();

@@ -203,10 +203,10 @@ void runOncePerSecond()
     }
   }
 
-//  unsigned long start = micros();
+//  uint32_t start = micros();
   String dummy;
   PluginCall(PLUGIN_ONCE_A_SECOND, 0, dummy);
-//  unsigned long elapsed = micros() - start;
+//  uint32_t elapsed = micros() - start;
 
 #if FEATURE_NETWORK_STATS
   for (ESPEasy::net::networkIndex_t x = 0; x < NETWORK_MAX; x++) {
@@ -531,7 +531,7 @@ void flushAndDisconnectAllClients() {
 #if FEATURE_MQTT
     bool mqttControllerEnabled = validControllerIndex(firstEnabledMQTT_ControllerIndex());
 #endif //if FEATURE_MQTT
-    unsigned long timer = millis() + 1000;
+    uint32_t timer = millis() + 1000;
     while (!timeOutReached(timer)) {
       // call to all controllers (delay queue) to flush all data.
       CPluginCall(CPlugin::Function::CPLUGIN_FLUSH, 0);

@@ -13,10 +13,23 @@ KeyValueStruct::KeyValueStruct(const __FlashStringHelper *key, Format format) : 
 
 KeyValueStruct::KeyValueStruct(const String& key, Format format) : _key(key), _format(format) {}
 
+KeyValueStruct::KeyValueStruct(const __FlashStringHelper *key,
+                               const bool               & val,
+                               Format                     format)
+  : _key(key), _format(format) {
+  _values.emplace_back(ValueStruct(val));
+}
 
 KeyValueStruct::KeyValueStruct(const String& key,
                                const bool  & val,
                                Format        format)
+  : _key(key), _format(format) {
+  _values.emplace_back(ValueStruct(val));
+}
+
+KeyValueStruct::KeyValueStruct(const __FlashStringHelper *key,
+                               int                        val,
+                               Format                     format)
   : _key(key), _format(format) {
   _values.emplace_back(ValueStruct(val));
 }
@@ -29,6 +42,13 @@ KeyValueStruct::KeyValueStruct(const String& key,
 }
 
 #if defined(ESP32) && !defined(__riscv)
+KeyValueStruct::KeyValueStruct(const __FlashStringHelper *key,
+                               int32_t                    val,
+                               Format                     format)
+  : _key(key), _format(format) {
+  _values.emplace_back(ValueStruct(val));
+}
+
 KeyValueStruct::KeyValueStruct(const String& key,
                                int32_t       val,
                                Format        format)
@@ -37,6 +57,14 @@ KeyValueStruct::KeyValueStruct(const String& key,
 }
 
 #endif // if defined(ESP32) && !defined(__riscv)
+
+KeyValueStruct::KeyValueStruct(const __FlashStringHelper *key,
+                               uint32_t                   val,
+                               Format                     format)
+  : _key(key), _format(format) {
+  _values.emplace_back(ValueStruct(val));
+}
+
 KeyValueStruct::KeyValueStruct(const String& key,
                                uint32_t      val,
                                Format        format)
@@ -53,9 +81,23 @@ KeyValueStruct::KeyValueStruct(const String& key,
 }
 
 #endif // if defined(ESP32) && !defined(__riscv)
+KeyValueStruct::KeyValueStruct(const __FlashStringHelper *key,
+                               const uint64_t           & val,
+                               Format                     format)
+  : _key(key), _format(format) {
+  _values.emplace_back(ValueStruct(val));
+}
+
 KeyValueStruct::KeyValueStruct(const String  & key,
                                const uint64_t& val,
                                Format          format)
+  : _key(key), _format(format) {
+  _values.emplace_back(ValueStruct(val));
+}
+
+KeyValueStruct::KeyValueStruct(const __FlashStringHelper *key,
+                               const int64_t            & val,
+                               Format                     format)
   : _key(key), _format(format) {
   _values.emplace_back(ValueStruct(val));
 }
@@ -67,10 +109,26 @@ KeyValueStruct::KeyValueStruct(const String & key,
   _values.emplace_back(ValueStruct(val));
 }
 
+KeyValueStruct::KeyValueStruct(const __FlashStringHelper *key,
+                               const float              & val,
+                               uint8_t                    nrDecimals,
+                               Format                     format)
+  : _key(key), _format(format) {
+  _values.emplace_back(ValueStruct(val, nrDecimals));
+}
+
 KeyValueStruct::KeyValueStruct(const String& key,
                                const float & val,
                                uint8_t       nrDecimals,
                                Format        format)
+  : _key(key), _format(format) {
+  _values.emplace_back(ValueStruct(val, nrDecimals));
+}
+
+KeyValueStruct::KeyValueStruct(const __FlashStringHelper *key,
+                               const double             & val,
+                               uint8_t                    nrDecimals,
+                               Format                     format)
   : _key(key), _format(format) {
   _values.emplace_back(ValueStruct(val, nrDecimals));
 }

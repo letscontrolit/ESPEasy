@@ -11,7 +11,7 @@
 /********************************************************************************************\
    Generate a tone of specified frequency on pin
  \*********************************************************************************************/
-bool tone_espEasy(int8_t _pin, unsigned int frequency, unsigned long duration) {
+bool tone_espEasy(int8_t _pin, unsigned int frequency, uint32_t duration) {
   if (!validGpio(_pin)) { return false; }
 
   // Duty cycle can be used as some kind of volume.

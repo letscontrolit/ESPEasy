@@ -152,9 +152,9 @@ bool remoteConfig(struct EventStruct *event, const String& string)
 /********************************************************************************************\
    delay in milliseconds with background processing
  \*********************************************************************************************/
-void delayBackground(unsigned long dsdelay)
+void delayBackground(uint32_t dsdelay)
 {
-  unsigned long timer = millis() + dsdelay;
+  uint32_t timer = millis() + dsdelay;
 
   while (!timeOutReached(timer)) {
     backgroundtasks();

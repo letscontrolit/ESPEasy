@@ -103,7 +103,7 @@ bool ESPEasy_key_value_store::load(
   size_t   sizePerType{};
   uint32_t key{};
 
-  const unsigned long start = millis();
+  const uint32_t start = millis();
 
   while (readPos < startChecksumPos && timePassedSince(start) < 1000) {
     // This loop always starts at the beginning of a key/value type,

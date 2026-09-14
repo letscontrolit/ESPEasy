@@ -348,7 +348,7 @@ C023_AT_commands::AT_cmd C023_AT_commands::decode(const String& receivedData, St
 KeyValueStruct C023_AT_commands::getKeyValue(
   C023_AT_commands::AT_cmd at_cmd,
   LoRaModule_e             module,
-  const String           & value,
+  String                && value,
   bool                     extendedValue)
 {
   if ((at_cmd != C023_AT_commands::AT_cmd::Unknown) && !value.isEmpty()) {

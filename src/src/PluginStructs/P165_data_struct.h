@@ -191,7 +191,7 @@ private:
     uint32_t cclkw  : 1;  // number-plan counter-clockwise (tbd)
     uint32_t gstrt  : 1;  // start numbering at g-segment
     uint32_t unused : 2;
-    uint32_t aoffs  : 16; // Add-on pixels offset (use uin32_t for better memory alignment)
+    uint32_t aoffs  : 16; // Add-on pixels offset (use uint32_t for better memory alignment)
     uint32_t boffs  : 16; // Before pixels offset
   };
 

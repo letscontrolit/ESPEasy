@@ -29,7 +29,7 @@ public:
   // Rules Timer use
   // ***************
   systemTimerStruct(int           recurringCount,
-                    unsigned long msecFromNow,
+                    uint32_t msecFromNow,
                     unsigned int  timerIndex,
                     int           alternateInterval = 0);
 
@@ -50,7 +50,7 @@ public:
 
   void          markNextRecurring();
 
-  unsigned long getInterval() const {
+  uint32_t getInterval() const {
     return _alternateState ? _alternateInterval : _interval;
   }
 

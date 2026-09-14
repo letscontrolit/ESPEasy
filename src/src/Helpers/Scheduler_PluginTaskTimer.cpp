@@ -8,7 +8,7 @@
 * Plugin Task Timer
 \*********************************************************************************************/
 void ESPEasy_Scheduler::setPluginTaskTimer(
-  unsigned long msecFromNow,
+  uint32_t msecFromNow,
   taskIndex_t taskIndex,
   int Par1, int Par2, int Par3, int Par4, int Par5)
 {
@@ -19,7 +19,7 @@ void ESPEasy_Scheduler::setPluginTaskTimer(
 }
 
 void ESPEasy_Scheduler::setPluginTaskTimer(
-  unsigned long msecFromNow,
+  uint32_t msecFromNow,
   taskIndex_t taskIndex,
   const PluginFunctions_e& function,
   int Par1, int Par2, int Par3, int Par4, int Par5)

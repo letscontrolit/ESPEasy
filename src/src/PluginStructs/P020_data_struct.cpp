@@ -192,7 +192,7 @@ void P020_Task::clearBuffer() {
   serial_buffer.reserve(_maxDataGramSize);
 }
 
-void P020_Task::serialBegin(const ESPEasySerialPort port, int16_t rxPin, int16_t txPin, unsigned long baud, uint8_t config) {
+void P020_Task::serialBegin(const ESPEasySerialPort port, int16_t rxPin, int16_t txPin, uint32_t baud, uint8_t config) {
   serialEnd();
 
   if (ESPEasySerialPort::not_set != port) {

@@ -58,7 +58,7 @@ bool P118_data_struct::plugin_init(struct EventStruct *event) {
     _rf->setDeviceID(P118_CONFIG_DEVID1, P118_CONFIG_DEVID2, P118_CONFIG_DEVID3);
     _rf->init();
 
-    const long duration = timePassedSince(startInit);
+    const int32_t duration = timePassedSince(startInit);
 
     if (duration > P118_TIMEOUT_LIMIT) {
       if (loglevelActiveFor(LOG_LEVEL_ERROR)) {

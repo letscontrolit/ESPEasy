@@ -149,7 +149,7 @@ boolean Plugin_178(uint8_t function, struct EventStruct *event, String& string)
       const uint8_t servoPin = allPins ? LU9685_ALL_PINS : event->Par2;
 
       if (!allPins && (servoPin > LU9685_MAX_PINS)) {
-        addLog(LOG_LEVEL_ERROR, concat(P178_data->logPrefix(F("Incorrect pin: ")), servoPin));
+        addLog(LOG_LEVEL_ERROR, concat(P178_data->logPrefix(F("Incorrect pin: ")), static_cast<uint32_t>(servoPin)));
         break;
       }
 

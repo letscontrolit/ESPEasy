@@ -23,7 +23,7 @@ void ESPEasy_Scheduler::markIntendedReboot(IntendedRebootReason_e reason) {
 /*********************************************************************************************\
 * Generic Timer functions.
 \*********************************************************************************************/
-void ESPEasy_Scheduler::setNewTimerAt(SchedulerTimerID id, unsigned long timer) {
+void ESPEasy_Scheduler::setNewTimerAt(SchedulerTimerID id, uint32_t timer) {
   START_TIMER;
   msecTimerHandler.registerAt(id.mixed_id, timer);
   STOP_TIMER(SET_NEW_TIMER);
@@ -34,8 +34,8 @@ void ESPEasy_Scheduler::setNewTimerAt(SchedulerTimerID id, unsigned long timer) 
 \*********************************************************************************************/
 void ESPEasy_Scheduler::handle_schedule() {
   START_TIMER
-  unsigned long timer    = 0;
-  unsigned long mixed_id = 0;
+  uint32_t timer    = 0;
+  uint32_t mixed_id = 0;
 
   if (timePassedSince(last_system_event_run) < 500) {
     // Make sure system event queue will be looked at every now and then.
