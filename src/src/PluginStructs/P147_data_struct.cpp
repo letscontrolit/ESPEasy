@@ -381,7 +381,7 @@ bool P147_data_struct::plugin_get_config_value(struct EventStruct *event,
 /*****************************************************
  * readCheckedWord : Read 2 data bytes from I2C and validate checksum (3rd byte)
  ****************************************************/
-uint16_t P147_data_struct::readCheckedWord(bool& is_ok, long extraDelay) {
+uint16_t P147_data_struct::readCheckedWord(bool& is_ok, int32_t extraDelay) {
   uint16_t result        = 0;
   uint8_t  data[3]       = { 0 };
   const uint32_t timeOut = millis();

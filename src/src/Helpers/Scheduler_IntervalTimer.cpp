@@ -26,7 +26,7 @@
 // For those it is more important to actually run it than keeping pace.
 void ESPEasy_Scheduler::setNextTimeInterval(uint32_t& timer, const uint32_t step) {
   timer += step;
-  const long passed = timePassedSince(timer);
+  const int32_t passed = timePassedSince(timer);
 
   if (passed < 0) {
     // Event has not yet happened, which is fine.
@@ -48,7 +48,7 @@ void ESPEasy_Scheduler::setNextTimeInterval(uint32_t& timer, const uint32_t step
 void ESPEasy_Scheduler::setNextStrictTimeInterval(uint32_t     & timer,
                                                   const uint32_t step) {
   timer += step;
-  const long passed = timePassedSince(timer);
+  const int32_t passed = timePassedSince(timer);
 
   if (passed <= 0) {
     // Event has not yet happened, which is fine.
@@ -101,7 +101,7 @@ void ESPEasy_Scheduler::setIntervalTimer(SchedulerIntervalTimer_e intervalTimer,
     case SchedulerIntervalTimer_e::TIMER_GRATUITOUS_ARP: interval = timer_gratuitous_arp_interval; break;
 
     // Fall-through for all DelayQueue, which are just the fall-back timers.
-    // The timers for all delay queues will be set according to their own settings as long as there is something to process.
+    // The timers for all delay queues will be set according to their own settings as int32_t as there is something to process.
     case SchedulerIntervalTimer_e::TIMER_MQTT_DELAY_QUEUE:
     case SchedulerIntervalTimer_e::TIMER_C001_DELAY_QUEUE:
     case SchedulerIntervalTimer_e::TIMER_C002_DELAY_QUEUE:

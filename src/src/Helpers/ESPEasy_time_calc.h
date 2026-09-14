@@ -21,49 +21,55 @@ inline uint64_t getMicros64() {
 // Returned timediff for millis() is between -24.9 days and +24.9 days.
 //          for micros() is between -35.79 and +35.79 minutes
 // Returned value is positive when "next" is after "prev"
-inline int32_t timeDiff(const uint32_t prev, const uint32_t next) {
+inline int32_t timeDiff(const uint32_t& prev, const uint32_t& next) {
   return ((int32_t) (next - prev));
 }
 
-inline int64_t timeDiff64(uint64_t prev, uint64_t next) {
+inline int64_t timeDiff64(const uint64_t& prev, const uint64_t& next) {
   return ((int64_t) (next - prev));
 }
 
 // Compute the number of milliSeconds passed since timestamp given.
 // N.B. value can be negative if the timestamp has not yet been reached.
-inline long timePassedSince(const uint32_t& timestamp) {
+inline int32_t timePassedSince(const uint32_t& timestamp) {
   return timeDiff(timestamp, millis());
 }
 
 // Long term usec calculations
-inline int64_t usecPassedSince(ESPEASY_VOLATILE(uint64_t)& timestamp) {
-  return timeDiff64(timestamp, getMicros64());
+inline int64_t usecPassedSince_volatile(ESPEASY_VOLATILE(uint64_t)& timestamp) {
+  const uint64_t timestamp_tmp(timestamp);
+  return timeDiff64(timestamp_tmp, getMicros64());
 }
 
 inline int64_t usecPassedSince(const uint64_t& timestamp) {
   return timeDiff64(timestamp, getMicros64());
 }
 
+/*
 inline int64_t usecPassedSince(uint64_t& timestamp) { //-V669
   return timeDiff64(timestamp, getMicros64());
 }
+  */
 
 // Fast short-term usec calculations
-inline int32_t usecPassedSince_fast(ESPEASY_VOLATILE(uint32_t)& timestamp) {
-  return timeDiff(timestamp, micros());
+
+inline int32_t usecPassedSince_fast_volatile(ESPEASY_VOLATILE(uint32_t)& timestamp) {
+  const uint32_t timestamp_tmp(timestamp);
+  return timeDiff(timestamp_tmp, micros());
 }
 
 inline int32_t usecPassedSince_fast(const uint32_t& timestamp) {
   return timeDiff(timestamp, micros());
 }
-
+/*
 inline int32_t usecPassedSince_fast(uint32_t& timestamp) { //-V669
   return timeDiff(timestamp, micros());
 }
+  */
 
 
 // Check if a certain timeout has been reached.
-inline bool timeOutReached(uint32_t timer) {
+inline bool timeOutReached(const uint32_t& timer) {
   return timePassedSince(timer) >= 0;
 }
 

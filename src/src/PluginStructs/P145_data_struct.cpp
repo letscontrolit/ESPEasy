@@ -829,7 +829,7 @@ int P145_data_struct::getNbrOfTypes()
 void P145_data_struct::calibrate(float currentRcal)
 {
   uint32_t now = millis();
-  long  time        = timePassedSince(last_cal);
+  int32_t  time        = timePassedSince(last_cal);
   float lastRcal    = cal_data; // Last calculated Rcal this calibration sequence
 
   if (currentRcal > lastRcal)
@@ -874,7 +874,7 @@ void P145_data_struct::calibrate(float currentRcal)
 void P145_data_struct::heaterControl(void)
 {
   uint32_t now = millis();
-  long time         = timePassedSince(heaterChangeTime); // Time a state is active
+  int32_t time = timePassedSince(heaterChangeTime); // Time a state is active
 
   #  ifdef P145_DEBUG
   P145_heaterState lastState = heaterState;              // To detect a state change

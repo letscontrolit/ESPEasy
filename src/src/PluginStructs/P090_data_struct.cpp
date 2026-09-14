@@ -479,7 +479,7 @@ CCS811Core::status CCS811::readNTC(void)
 
   // Code from Milan Malesevic and Zoran Stupic, 2011,
   // Modified by Max Mayfield,
-  _temperature = log(static_cast<long>(resistance));
+  _temperature = log(static_cast<int32_t>(resistance));
   _temperature = 1  / (0.001129148f + (0.000234125f * _temperature) + (0.0000000876741f * _temperature * _temperature * _temperature));
   _temperature = _temperature - 273.15f; // Convert Kelvin to Celsius
 

@@ -39,14 +39,14 @@
       return 0;
     }
     const timer_id_couple item = _timer_ids.front();
-    const long passed    = timePassedSince(item._timer);
+    const int32_t passed    = timePassedSince(item._timer);
 
     if (passed < 0) {
       // No timeOutReached
       recordIdle();
 
       if (eco_mode) {
-        long waitTime = (-1 * passed) - 1; // will be non negative
+        int32_t waitTime = (-1 * passed) - 1; // will be non negative
 
         if (waitTime > MAX_SCHEDULER_WAIT_TIME) {
           waitTime = MAX_SCHEDULER_WAIT_TIME;
@@ -98,7 +98,7 @@
   #endif
 
   void msecTimerHandlerStruct::updateIdleTimeStats() {
-    const long duration = timePassedSince(last_log_start_time) * 10;
+    const int32_t duration = timePassedSince(last_log_start_time) * 10;
     if (duration <= 1000) {
       // No need to recompute it over a small interval
       // Also makes sure duration != 0 as it is used in division
@@ -149,7 +149,7 @@
     // Stats are just some indication, don't need to be that exact.
     // std::forward_list doesn't have size()
 //    for (; stats_it != _timer_ids.end(); ++stats_it, ++size) {}
-    if (size > max_queue_length) { max_queue_length = size; }    
+    if (static_cast<uint32_t>(size) > max_queue_length) { max_queue_length = size; }    
 #endif
   }
 

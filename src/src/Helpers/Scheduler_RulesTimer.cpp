@@ -101,7 +101,7 @@ bool ESPEasy_Scheduler::pause_rules_timer(uint32_t timerIndex) {
       #endif
     } else {
       // Store remainder of interval
-      const long timeLeft = timePassedSince(timer) * -1;
+      const int32_t timeLeft = timePassedSince(timer) * -1;
 
       if (timeLeft > 0) {
         it->second.setRemainder(timeLeft);

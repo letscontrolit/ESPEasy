@@ -225,7 +225,7 @@ bool P049_data_struct::read_ppm(unsigned int& ppm, signed int& temp, unsigned in
   // get response
   memset(mhzResp, 0, sizeof(mhzResp));
 
-  long timer   = millis() + PLUGIN_READ_TIMEOUT;
+  uint32_t timer   = millis() + PLUGIN_READ_TIMEOUT;
   int  counter = 0;
 
   while (!timeOutReached(timer) && (counter < 9)) {
