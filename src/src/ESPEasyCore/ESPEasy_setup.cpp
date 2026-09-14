@@ -487,7 +487,7 @@ void ESPEasy_setup()
   #endif // ifndef BUILD_NO_RAM_TRACKER
 #ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    addLogMove(LOG_LEVEL_INFO, concat(F("INIT : Free RAM: "), FreeMem()));
+    addLog(LOG_LEVEL_INFO, concat(F("INIT : Free RAM: "), FreeMem()));
 
     #ifndef LIMIT_BUILD_SIZE
     const uint32_t realSize = getFlashRealSizeInBytes();
