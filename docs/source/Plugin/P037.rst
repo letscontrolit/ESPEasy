@@ -69,6 +69,8 @@ When JSON is enabled, regular MQTT Topics will be processed normally.
 
 The JSON Attribute column, when used, can be used to specify what data element to retrieve from a received JSON payload. If the resulting value is numeric it will be stored to the corresponding variable, and the regular event for that will be generated.
 
+With the extended JSON processing, available in most ESP32 builds, the ``attribute`` to retrieve from the JSON can be longer than the input has space for (20 characters). To allow for longer JSON attributes, the requested JSON attribute can be stored in a String variable, using the ``LetStr`` command, like ``LetStr,timeLeft,printer_data.progress.printTimeLeft``, in f.e. the ``On System#Boot Do`` event handler rule, and then use in this input field like ``[str#timeLeft]``.
+
 When receiving multiple-value attributes, like ``"svalue":"28.1;17.8;2;1010.3;0"``, an index can be appended to the attribute like ``svalue;4`` to get the 4th value, in this example ``1010.3`` (1-based index).
 
 When receiving a JSON payload, an event can (in addition to the standard event when receiving a numeric value) be generated for the received Attribute, or for all attributes if no specific attribute is configured.
