@@ -304,9 +304,7 @@ void ESPEasy_setup()
     log += getSystemLibraryString();
     log += ')';
     addLogMove(LOG_LEVEL_INFO, log);
-    log  = F("INIT : Free RAM:");
-    log += FreeMem();
-    addLogMove(LOG_LEVEL_INFO, log);
+    addLog(LOG_LEVEL_INFO, concat(F("INIT : Free RAM: "), FreeMem()));
   }
 
   readBootCause();
@@ -489,7 +487,20 @@ void ESPEasy_setup()
   #endif // ifndef BUILD_NO_RAM_TRACKER
 #ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    addLogMove(LOG_LEVEL_INFO, concat(F("INIT : Free RAM:"), FreeMem()));
+    addLog(LOG_LEVEL_INFO, concat(F("INIT : Free RAM: "), FreeMem()));
+
+    #ifndef LIMIT_BUILD_SIZE
+    const uint32_t realSize = getFlashRealSizeInBytes();
+    const uint32_t usedSize = ESP.getFlashChipSize();
+    String log = strformat(F("INIT : Flash size: %uMB, Flash used: %uMB"), realSize >> 20, usedSize >> 20);
+    #ifdef ESP32
+    if ((usedSize < realSize) && (realSize >= (8 << 20))) { // >= 8MB ?
+      log += F(", a MAX build can be installed!");
+    }
+    #endif // ifdef ESP32
+    addLogMove(LOG_LEVEL_INFO, log);
+    #endif // ifndef LIMIT_BUILD_SIZE
+
   }
 #endif
 #ifndef BUILD_NO_DEBUG
