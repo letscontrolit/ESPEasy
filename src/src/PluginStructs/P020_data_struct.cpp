@@ -192,7 +192,7 @@ void P020_Task::clearBuffer() {
   serial_buffer.reserve(_maxDataGramSize);
 }
 
-void P020_Task::serialBegin(const ESPEasySerialPort port, int16_t rxPin, int16_t txPin, unsigned long baud, uint8_t config) {
+void P020_Task::serialBegin(const ESPEasySerialPort port, int16_t rxPin, int16_t txPin, uint32_t baud, uint8_t config) {
   serialEnd();
 
   if (ESPEasySerialPort::not_set != port) {
@@ -462,9 +462,9 @@ void P020_Task::rulesEngine(const String& message, struct EventStruct *event) {
 
         if (_P1EventData) {
           eventString += '=';
-          eventString += message;               // Include entire message, may cause memory overflow!
-          eventString.replace(F("\n"), F(",")); // Make it a single line, comma-separated, as much as possible
-          eventString.replace(F("\r"), F(""));  // We don't need no st*n carriage returns :)
+          eventString += message;         // Include entire message, may cause memory overflow!
+          eventString.replace('\n', ','); // Make it a single line, comma-separated, as much as possible
+          remove(eventString, '\r');      // We don't need no st*n carriage returns :)
         }
         break;
     } // switch

@@ -64,9 +64,12 @@ public:
   virtual ~P129_data_struct() = default;
 
   const bool isInitialized() const { // All GPIO's defined
+    // See for an example where PL is not use, but OE is
+    // https://templates.blakadder.com/dingtian_DT-R008.html
+    
     return _dataPin != -1 &&
            _clockPin != -1 &&
-           _loadPin != -1;
+           (_loadPin != -1 || _enablePin != -1);
   }
 
   bool plugin_init(struct EventStruct *event);

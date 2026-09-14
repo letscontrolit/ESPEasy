@@ -40,15 +40,11 @@ struct WebFormItemParams {
   bool                                 _password{};
   String                               _pattern;
 
-  int64_t _defaultIntValue{};
-  double  _defaultFloatValue{};
-  String  _defaultStringValue;
-
-
+  ValueStruct _defaultValue;
 };
 
 bool showWebformItem(const ESPEasy_key_value_store& store,
-                     WebFormItemParams              params);
+                     WebFormItemParams&&              params);
 
 void showFormSelector(const ESPEasy_key_value_store& store,
                       const FormSelectorOptions          & selector,

@@ -37,9 +37,9 @@ bool safeReadStringUntil(Stream     & input,
                          unsigned int timeout)
 {
   int c;
-  const unsigned long start           = millis();
-  const unsigned long timer           = start + timeout;
-  unsigned long backgroundtasks_timer = start + 10;
+  const uint32_t start           = millis();
+  const uint32_t timer           = start + timeout;
+  uint32_t backgroundtasks_timer = start + 10;
 
   // FIXME TD-er: Should this also de-allocate internal buffer?
   str.clear();

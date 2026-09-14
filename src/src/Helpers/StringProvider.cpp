@@ -57,38 +57,86 @@
 # define KV_SETID(S)
 #endif // ifndef LIMIT_BUILD_SIZE
 
+KeyValueStruct make_kv(const __FlashStringHelper *key, int val)
+{
+  return KeyValueStruct(key, val, KeyValueStruct::Format::Default);
+}
+
+KeyValueStruct make_kv(const __FlashStringHelper *key, uint32_t val)
+{
+  return KeyValueStruct(key, val, KeyValueStruct::Format::Default);
+}
+
+KeyValueStruct make_kv(const __FlashStringHelper *key, uint64_t val)
+{
+  return KeyValueStruct(key, val, KeyValueStruct::Format::Default);
+}
+
+KeyValueStruct make_kv(const __FlashStringHelper *key, const float & val,
+                 uint8_t       nrDecimals)
+{
+  KeyValueStruct kv(key, KeyValueStruct::Format::Default);
+  kv.setValue(ValueStruct(val, nrDecimals));
+  return kv;
+}
+
+KeyValueStruct make_kv(const __FlashStringHelper *key, const __FlashStringHelper *val)
+{
+  return KeyValueStruct(key, val, KeyValueStruct::Format::Default);
+}
+
+KeyValueStruct make_kv(const __FlashStringHelper *key, String &&val)
+{
+  return KeyValueStruct(key, val, KeyValueStruct::Format::Default);
+}
+
+KeyValueStruct make_kv(const __FlashStringHelper *key, String &&val, KeyValueStruct::Format format)
+{
+  return KeyValueStruct(key, val, format);
+}
+
+KeyValueStruct make_kv(const __FlashStringHelper *key, const IPAddress& val, bool includeZone = false)
+{
+  ValueStruct v;
+  v.setIPAddress(val, includeZone);
+  KeyValueStruct kv(key, KeyValueStruct::Format::PreFormatted);
+  kv.setValue(std::move(v));
+  return kv;
+}
+
+
 KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
 {
   switch (label)
   {
     case LabelType::UNIT_NR:
     {
-      return KeyValueStruct(F("Unit Number"), Settings.Unit);
+      return make_kv(F("Unit Number"), Settings.Unit);
     }
     #if FEATURE_ZEROFILLED_UNITNUMBER
     case LabelType::UNIT_NR_0:
     {
       // Fixed 3-digit unitnumber
-      return KeyValueStruct(F("Unit Number 0-filled"), formatIntLeadingZeroes(Settings.Unit, 3));
+      return make_kv(F("Unit Number 0-filled"), formatIntLeadingZeroes(Settings.Unit, 3));
     }
     #endif // FEATURE_ZEROFILLED_UNITNUMBER
     case LabelType::UNIT_NAME:
     {
       // Only return the set name, no appended unit.
-      return KeyValueStruct(F("Unit Name"), Settings.getName());
+      return make_kv(F("Unit Name"), Settings.getName());
     }
     case LabelType::HOST_NAME:
     {
-      return KeyValueStruct(F("Hostname"), ESPEasy::net::NetworkGetHostname());
+      return make_kv(F("Hostname"), ESPEasy::net::NetworkGetHostname());
     }
 
     case LabelType::LOCAL_TIME:
 
       if (node_time.systemTimePresent())
       {
-        return KeyValueStruct(F("Local Time"), node_time.getDateTimeString('-', ':', ' '));
+        return make_kv(F("Local Time"), node_time.getDateTimeString('-', ':', ' '));
       } else if (extendedValue) {
-        return KeyValueStruct(F("Local Time"), F("<font color='red'>No system time source</font>"));
+        return make_kv(F("Local Time"), F("<font color='red'>No system time source</font>"));
       }
       break;
     case LabelType::TIME_SOURCE:
@@ -104,14 +152,14 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
           timeSource_str = strformat(F("%s (%u)"), timeSource_str.c_str(), node_time.timeSource_p2p_unit);
         }
 
-        return KeyValueStruct(F("Time Source"), timeSource_str);
+        return make_kv(F("Time Source"), std::move(timeSource_str));
       }
       break;
     case LabelType::TIME_WANDER:
 
       if (node_time.systemTimePresent())
       {
-        KeyValueStruct kv(F("Time Wander"), node_time.timeWander, 3);
+        KeyValueStruct kv = make_kv(F("Time Wander"), node_time.timeWander, 3);
 #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
         KV_SETUNIT(UOM_ppm);
 #endif
@@ -132,16 +180,16 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
         breakTime(unixtime, RTC_time);
         rtcTime = formatDateTimeString(RTC_time);
       }
-      return KeyValueStruct(F("UTC time stored in RTC chip"), rtcTime);
+      return make_kv(F("UTC time stored in RTC chip"), std::move(rtcTime));
     }
     #endif // if FEATURE_EXT_RTC
     case LabelType::UPTIME:
     {
       if (extendedValue) {
-        return KeyValueStruct(F("Uptime"), minutesToDayHourMinute(getUptimeMinutes()));
+        return make_kv(F("Uptime"), minutesToDayHourMinute(getUptimeMinutes()));
 
       } else {
-        return KeyValueStruct(F("Uptime"), getUptimeMinutes());
+        return make_kv(F("Uptime"), getUptimeMinutes());
 
       }
     }
@@ -150,12 +198,12 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
       if (wdcounter > 0)
       {
         if (extendedValue) {
-          return KeyValueStruct(F("Load"), strformat(
+          return make_kv(F("Load"), strformat(
                                   F("%.2f [%%] (LC=%d)"),
                                   getCPUload(),
                                   getLoopCountPerSec()));
         }
-        KeyValueStruct kv(F("Load"), getCPUload(), 2);
+        KeyValueStruct kv = make_kv(F("Load"), getCPUload(), 2);
 #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
         KV_SETUNIT(UOM_percent);
 #endif
@@ -165,17 +213,17 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
     case LabelType::LOOP_COUNT:
     {
       if (extendedValue) { break; }
-      return KeyValueStruct(F("Load LC"), getLoopCountPerSec());
+      return make_kv(F("Load LC"), getLoopCountPerSec());
     }
     case LabelType::CPU_ECO_MODE:
     {
-      return KeyValueStruct(F("CPU Eco Mode"), Settings.EcoPowerMode());
+      return make_kv(F("CPU Eco Mode"), Settings.EcoPowerMode());
     }
 
 #if FEATURE_SET_WIFI_TX_PWR
     case LabelType::WIFI_TX_MAX_PWR:
     {
-      KeyValueStruct kv(F("Max WiFi TX Power"), Settings.getWiFi_TX_power(), 2);
+      KeyValueStruct kv = make_kv(F("Max WiFi TX Power"), Settings.getWiFi_TX_power(), 2);
 # if FEATURE_TASKVALUE_UNIT_OF_MEASURE
       KV_SETUNIT(UOM_dBm);
 # endif
@@ -184,7 +232,7 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
     case LabelType::WIFI_CUR_TX_PWR:
     if (ESPEasy::net::wifi::WiFiConnected())
     {
-      KeyValueStruct kv(F("Current WiFi TX Power"), ESPEasy::net::wifi::GetWiFiTXpower(), 2);
+      KeyValueStruct kv = make_kv(F("Current WiFi TX Power"), ESPEasy::net::wifi::GetWiFiTXpower(), 2);
 # if FEATURE_TASKVALUE_UNIT_OF_MEASURE
       KV_SETUNIT(UOM_dBm);
 # endif
@@ -193,7 +241,7 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
     break;
     case LabelType::WIFI_SENS_MARGIN:
     {
-      KeyValueStruct kv(F("WiFi Sensitivity Margin"), Settings.WiFi_sensitivity_margin);
+      KeyValueStruct kv = make_kv(F("WiFi Sensitivity Margin"), Settings.WiFi_sensitivity_margin);
 # if FEATURE_TASKVALUE_UNIT_OF_MEASURE
       KV_SETUNIT(UOM_dB);
 # endif
@@ -201,32 +249,32 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
     }
     case LabelType::WIFI_SEND_AT_MAX_TX_PWR:
     {
-      return KeyValueStruct(F("Send With Max TX Power"), Settings.UseMaxTXpowerForSending());
+      return make_kv(F("Send With Max TX Power"), Settings.UseMaxTXpowerForSending());
     }
 #endif // if FEATURE_SET_WIFI_TX_PWR
     case LabelType::WIFI_AP_CHANNEL:
     {
-      return KeyValueStruct(F("Wifi AP channel"), Settings.WiFiAP_channel);
+      return make_kv(F("Wifi AP channel"), Settings.WiFiAP_channel);
     }
     case LabelType::WIFI_ENABLE_CAPTIVE_PORTAL:
     {
-      return KeyValueStruct(F("Force /setup in AP-Mode"), Settings.ApCaptivePortal());
+      return make_kv(F("Force /setup in AP-Mode"), Settings.ApCaptivePortal());
     }
     case LabelType::WIFI_START_AP_NO_CREDENTIALS:
     {
-      return KeyValueStruct(F("Start AP on No Credentials"), Settings.StartAPfallback_NoCredentials());
+      return make_kv(F("Start AP on No Credentials"), Settings.StartAPfallback_NoCredentials());
     }
     case LabelType::WIFI_START_AP_ON_CONNECT_FAIL:
     {
-      return KeyValueStruct(F("Start AP on Connect Fail"), !Settings.DoNotStartAPfallback_ConnectFail());
+      return make_kv(F("Start AP on Connect Fail"), !Settings.DoNotStartAPfallback_ConnectFail());
     }
     case LabelType::WIFI_NR_RECONNECT_ATTEMPTS:
     {
-      return KeyValueStruct(F("Connect Retry Attempts"), Settings.ConnectFailRetryCount);
+      return make_kv(F("Connect Retry Attempts"), Settings.ConnectFailRetryCount);
     }
     case LabelType::WIFI_MAX_UPTIME_AUTO_START_AP:
     {
-      KeyValueStruct kv(F("Max. Uptime to Start AP"), Settings.APfallback_autostart_max_uptime_m());
+      KeyValueStruct kv = make_kv(F("Max. Uptime to Start AP"), Settings.APfallback_autostart_max_uptime_m());
 # if FEATURE_TASKVALUE_UNIT_OF_MEASURE
       KV_SETUNIT(UOM_min);
 # endif
@@ -234,7 +282,7 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
     }
     case LabelType::WIFI_AP_MINIMAL_ON_TIME:
     {
-      KeyValueStruct kv(F("AP Minimal 'on' Time"), Settings.APfallback_minimal_on_time_sec());
+      KeyValueStruct kv = make_kv(F("AP Minimal 'on' Time"), Settings.APfallback_minimal_on_time_sec());
 # if FEATURE_TASKVALUE_UNIT_OF_MEASURE
       KV_SETUNIT(UOM_sec);
 # endif
@@ -243,13 +291,13 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
 #ifdef ESP32
     case LabelType::WIFI_AP_ENABLE_NAPT:
     {
-      return KeyValueStruct(F("Enable NAPT"), Settings.WiFi_AP_enable_NAPT());
+      return make_kv(F("Enable NAPT"), Settings.WiFi_AP_enable_NAPT());
     }
 #endif
 
     case LabelType::WIFI_USE_LAST_CONN_FROM_RTC:
     {
-      return KeyValueStruct(F("Use Last Connected AP from RTC"), Settings.UseLastWiFiFromRTC());
+      return make_kv(F("Use Last Connected AP from RTC"), Settings.UseLastWiFiFromRTC());
     }
 
     case LabelType::FREE_MEM:
@@ -257,7 +305,7 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
 #ifndef BUILD_NO_RAM_TRACKER
 
       if (extendedValue) {
-        return KeyValueStruct(F("Free RAM"),
+        return make_kv(F("Free RAM"),
                               strformat(
                                 F("%d [B] (%d - %s)"),
                                 FreeMem(),
@@ -266,7 +314,7 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
       }
 #endif // ifndef BUILD_NO_RAM_TRACKER
 
-      KeyValueStruct kv(F("Free RAM"), FreeMem());
+      KeyValueStruct kv = make_kv(F("Free RAM"), FreeMem());
 #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
       KV_SETUNIT(UOM_Byte);
 #endif
@@ -277,7 +325,7 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
 #ifndef BUILD_NO_RAM_TRACKER
 
       if (extendedValue) {
-        return KeyValueStruct(F("Free Stack"),
+        return make_kv(F("Free Stack"),
                               strformat(
                                 F("%d [B] (%d - %s)"),
                                 getCurrentFreeStack(),
@@ -285,7 +333,7 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
                                 lowestFreeStackfunction.c_str()));
       }
 #endif // ifndef BUILD_NO_RAM_TRACKER
-      KeyValueStruct kv(F("Free Stack"), getCurrentFreeStack());
+      KeyValueStruct kv = make_kv(F("Free Stack"), getCurrentFreeStack());
 #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
       KV_SETUNIT(UOM_Byte);
 #endif
@@ -295,7 +343,7 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
 #ifdef USE_SECOND_HEAP
     case LabelType::FREE_HEAP_IRAM:
     {
-      KeyValueStruct kv(F("Free 2nd Heap"), FreeMem2ndHeap());
+      KeyValueStruct kv = make_kv(F("Free 2nd Heap"), FreeMem2ndHeap());
 # if FEATURE_TASKVALUE_UNIT_OF_MEASURE
       KV_SETUNIT(UOM_Byte);
 # endif
@@ -307,7 +355,7 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
   # ifndef LIMIT_BUILD_SIZE
     case LabelType::HEAP_MAX_FREE_BLOCK:
     {
-      KeyValueStruct kv(F("Heap Max Free Block"),
+      KeyValueStruct kv = make_kv(F("Heap Max Free Block"),
 #  ifdef ESP32
                         ESP.getMaxAllocHeap()
 #  else
@@ -325,7 +373,7 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
   # ifndef LIMIT_BUILD_SIZE
     case LabelType::HEAP_FRAGMENTATION:
     {
-      KeyValueStruct kv(F("Heap Fragmentation"), ESP.getHeapFragmentation());
+      KeyValueStruct kv = make_kv(F("Heap Fragmentation"), ESP.getHeapFragmentation());
 #  if FEATURE_TASKVALUE_UNIT_OF_MEASURE
       KV_SETUNIT(UOM_percent);
 #  endif
@@ -337,7 +385,7 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
 #ifdef ESP32
     case LabelType::HEAP_SIZE:
     {
-      KeyValueStruct kv(F("Heap Size"), ESP.getHeapSize());
+      KeyValueStruct kv = make_kv(F("Heap Size"), ESP.getHeapSize());
 # if FEATURE_TASKVALUE_UNIT_OF_MEASURE
       KV_SETUNIT(UOM_Byte);
 # endif
@@ -345,7 +393,7 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
     }
     case LabelType::HEAP_MIN_FREE:
     {
-      KeyValueStruct kv(F("Heap Min Free"), ESP.getMinFreeHeap());
+      KeyValueStruct kv = make_kv(F("Heap Min Free"), ESP.getMinFreeHeap());
 # if FEATURE_TASKVALUE_UNIT_OF_MEASURE
       KV_SETUNIT(UOM_Byte);
 # endif
@@ -355,7 +403,7 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
     case LabelType::PSRAM_SIZE:
     {
       if (!UsePSRAM()) { break; }
-      KeyValueStruct kv(F("PSRAM Size"), ESP.getPsramSize());
+      KeyValueStruct kv = make_kv(F("PSRAM Size"), ESP.getPsramSize());
 #  if FEATURE_TASKVALUE_UNIT_OF_MEASURE
       KV_SETUNIT(UOM_Byte);
 #  endif
@@ -364,7 +412,7 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
     case LabelType::PSRAM_FREE:
     {
       if (!UsePSRAM()) { break; }
-      KeyValueStruct kv(F("PSRAM Free"), ESP.getFreePsram());
+      KeyValueStruct kv = make_kv(F("PSRAM Free"), ESP.getFreePsram());
 #  if FEATURE_TASKVALUE_UNIT_OF_MEASURE
       KV_SETUNIT(UOM_Byte);
 #  endif
@@ -373,7 +421,7 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
     case LabelType::PSRAM_MIN_FREE:
     {
       if (!UsePSRAM()) { break; }
-      KeyValueStruct kv(F("PSRAM Min Free"), ESP.getMinFreePsram());
+      KeyValueStruct kv = make_kv(F("PSRAM Min Free"), ESP.getMinFreePsram());
 #  if FEATURE_TASKVALUE_UNIT_OF_MEASURE
       KV_SETUNIT(UOM_Byte);
 #  endif
@@ -382,7 +430,7 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
     case LabelType::PSRAM_MAX_FREE_BLOCK:
     {
       if (!UsePSRAM()) { break; }
-      KeyValueStruct kv(F("PSRAM Max Free Block"), ESP.getMaxAllocPsram());
+      KeyValueStruct kv = make_kv(F("PSRAM Max Free Block"), ESP.getMaxAllocPsram());
 #  if FEATURE_TASKVALUE_UNIT_OF_MEASURE
       KV_SETUNIT(UOM_Byte);
 #  endif
@@ -393,34 +441,34 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
 
     case LabelType::JSON_BOOL_QUOTES:
     {
-      return KeyValueStruct(F("JSON bool output without quotes"), Settings.JSONBoolWithoutQuotes());
+      return make_kv(F("JSON bool output without quotes"), Settings.JSONBoolWithoutQuotes());
     }
 #if FEATURE_TIMING_STATS
     case LabelType::ENABLE_TIMING_STATISTICS:
     {
-      return KeyValueStruct(F("Collect Timing Statistics"), Settings.EnableTimingStats());
+      return make_kv(F("Collect Timing Statistics"), Settings.EnableTimingStats());
     }
 #endif // if FEATURE_TIMING_STATS
     case LabelType::ENABLE_RULES_CACHING:
     {
-      return KeyValueStruct(F("Enable Rules Cache"), Settings.EnableRulesCaching());
+      return make_kv(F("Enable Rules Cache"), Settings.EnableRulesCaching());
     }
     case LabelType::ENABLE_SERIAL_PORT_CONSOLE:
     {
-      return KeyValueStruct(F("Enable Serial Port Console"), !!Settings.UseSerial); // Cast to bool to make sure it is shown as a checkmark
+      return make_kv(F("Enable Serial Port Console"), !!Settings.UseSerial); // Cast to bool to make sure it is shown as a checkmark
     }
     case LabelType::CONSOLE_SERIAL_PORT:
     {
-      return KeyValueStruct(F("Console Serial Port"), ESPEasy_Console.getPortDescription());
+      return make_kv(F("Console Serial Port"), ESPEasy_Console.getPortDescription());
     }
 #if USES_ESPEASY_CONSOLE_FALLBACK_PORT
     case LabelType::CONSOLE_FALLBACK_TO_SERIAL0:
     {
-      return KeyValueStruct(F("Fallback to Serial 0"), !!Settings.console_serial0_fallback); // Cast to bool to make sure it is shown as a checkmark
+      return make_kv(F("Fallback to Serial 0"), !!Settings.console_serial0_fallback); // Cast to bool to make sure it is shown as a checkmark
     }
     case LabelType::CONSOLE_FALLBACK_PORT:
     {
-      return KeyValueStruct(F("Console Fallback Port"), ESPEasy_Console.getFallbackPortDescription());
+      return make_kv(F("Console Fallback Port"), ESPEasy_Console.getFallbackPortDescription());
     }
 #endif // if USES_ESPEASY_CONSOLE_FALLBACK_PORT
 
@@ -429,70 +477,70 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
     // } // TD-er: Disabled for now
     case LabelType::TASKVALUESET_ALL_PLUGINS:
     {
-      return KeyValueStruct(F("Allow TaskValueSet on all plugins"), Settings.AllowTaskValueSetAllPlugins());
+      return make_kv(F("Allow TaskValueSet on all plugins"), Settings.AllowTaskValueSetAllPlugins());
     }
     case LabelType::ALLOW_OTA_UNLIMITED:
     {
-      return KeyValueStruct(F("Allow OTA without size-check"), Settings.AllowOTAUnlimited());
+      return make_kv(F("Allow OTA without size-check"), Settings.AllowOTAUnlimited());
     }
 #if FEATURE_CLEAR_I2C_STUCK
     case LabelType::ENABLE_CLEAR_HUNG_I2C_BUS:
     {
-      return KeyValueStruct(F("Try clear I2C bus when stuck"), Settings.EnableClearHangingI2Cbus());
+      return make_kv(F("Try clear I2C bus when stuck"), Settings.EnableClearHangingI2Cbus());
     }
 #endif // if FEATURE_CLEAR_I2C_STUCK
     #if FEATURE_I2C_DEVICE_CHECK
     case LabelType::ENABLE_I2C_DEVICE_CHECK:
     {
-      return KeyValueStruct(F("Check I2C devices when enabled"), Settings.CheckI2Cdevice());
+      return make_kv(F("Check I2C devices when enabled"), Settings.CheckI2Cdevice());
     }
     #endif // if FEATURE_I2C_DEVICE_CHECK
 #ifndef BUILD_NO_RAM_TRACKER
     case LabelType::ENABLE_RAM_TRACKING:
     {
-      return KeyValueStruct(F("Enable RAM Tracker"), Settings.EnableRAMTracking());
+      return make_kv(F("Enable RAM Tracker"), Settings.EnableRAMTracking());
     }
 #endif // ifndef BUILD_NO_RAM_TRACKER
 #if FEATURE_AUTO_DARK_MODE
     case LabelType::ENABLE_AUTO_DARK_MODE:
     {
-      return KeyValueStruct(F("Web light/dark mode"), Settings.getCssMode());
+      return make_kv(F("Web light/dark mode"), Settings.getCssMode());
     }
 #endif // FEATURE_AUTO_DARK_MODE
 #if FEATURE_RULES_EASY_COLOR_CODE
     case LabelType::DISABLE_RULES_AUTOCOMPLETE:
     {
-      return KeyValueStruct(F("Disable Rules auto-completion"), Settings.DisableRulesCodeCompletion());
+      return make_kv(F("Disable Rules auto-completion"), Settings.DisableRulesCodeCompletion());
     }
 #endif // if FEATURE_RULES_EASY_COLOR_CODE
 #if FEATURE_TARSTREAM_SUPPORT
     case LabelType::DISABLE_SAVE_CONFIG_AS_TAR:
     {
-      return KeyValueStruct(F("Disable Save Config as .tar"), Settings.DisableSaveConfigAsTar());
+      return make_kv(F("Disable Save Config as .tar"), Settings.DisableSaveConfigAsTar());
     }
 #endif // if FEATURE_TARSTREAM_SUPPORT
 #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
     case LabelType::SHOW_UOM_ON_DEVICES_PAGE:
     {
-      return KeyValueStruct(F("Show Unit of Measure"), Settings.ShowUnitOfMeasureOnDevicesPage());
+      return make_kv(F("Show Unit of Measure"), Settings.ShowUnitOfMeasureOnDevicesPage());
     }
 #endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
 #if FEATURE_MQTT_CONNECT_BACKGROUND
     case LabelType::MQTT_CONNECT_IN_BACKGROUND:
     {
-      return KeyValueStruct(F("MQTT Connect in background"), Settings.MQTTConnectInBackground());
+      return make_kv(F("MQTT Connect in background"), Settings.MQTTConnectInBackground());
     }
 #endif // if FEATURE_MQTT_CONNECT_BACKGROUND
     #if FEATURE_MQTT_DISCOVER
     case LabelType::MQTT_DISCOVER_GROUP_INCL_TASKNAME:
     {
-      return KeyValueStruct(F("MQTT Discover, Group incl. Taskname"), Settings.MQTTDiscoverGroupInclTaskname());
+      return make_kv(F("MQTT Discover, Group incl. Taskname"), Settings.MQTTDiscoverGroupInclTaskname());
     }
     #endif // if FEATURE_MQTT_DISCOVER
 #if FEATURE_COLORIZE_CONSOLE_LOGS
     case LabelType::COLORIZE_CONSOLE_LOGS:
     {
-      return KeyValueStruct(F("Colorize Console Logs"), Settings.ColorizeSerialLog());
+      return make_kv(F("Colorize Console Logs"), Settings.ColorizeSerialLog());
     }
 #endif
 
@@ -500,41 +548,40 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
 #if CONFIG_SOC_WIFI_SUPPORT_5G
     case LabelType::WIFI_BAND_MODE:
     {
-      return KeyValueStruct(F("WiFi Band Mode"), ESPEasy::net::wifi::getWifiBandModeString(Settings.WiFi_band_mode()));
+      return make_kv(F("WiFi Band Mode"), ESPEasy::net::wifi::getWifiBandModeString(Settings.WiFi_band_mode()));
     }
 #endif // if CONFIG_SOC_WIFI_SUPPORT_5G
 
     case LabelType::BOOT_TYPE:
     {
       if (extendedValue) {
-        KeyValueStruct kv(
+        return make_kv(
           F("Boot"),
           concat(
             getLastBootCauseString(),
             strformat(F(" (%d)"), RTC.bootCounter)));
-        return kv;
       }
-      return KeyValueStruct(F("Last Boot Cause"), getLastBootCauseString());
+      return make_kv(F("Last Boot Cause"), getLastBootCauseString());
     }
     case LabelType::BOOT_COUNT:
     {
-      return KeyValueStruct(F("Boot Count"), RTC.bootCounter);
+      return make_kv(F("Boot Count"), RTC.bootCounter);
     }
     case LabelType::DEEP_SLEEP_ALTERNATIVE_CALL:
     {
-      return KeyValueStruct(F("Deep Sleep Alternative"), Settings.UseAlternativeDeepSleep());
+      return make_kv(F("Deep Sleep Alternative"), Settings.UseAlternativeDeepSleep());
     }
     case LabelType::RESET_REASON:
     {
-      return KeyValueStruct(F("Reset Reason"), getResetReasonString());
+      return make_kv(F("Reset Reason"), getResetReasonString());
     }
     case LabelType::LAST_TASK_BEFORE_REBOOT:
     {
-      return KeyValueStruct(F("Last Action before Reboot"), ESPEasy_Scheduler::decodeSchedulerId(lastMixedSchedulerId_beforereboot));
+      return make_kv(F("Last Action before Reboot"), ESPEasy_Scheduler::decodeSchedulerId(lastMixedSchedulerId_beforereboot));
     }
     case LabelType::SW_WD_COUNT:
     {
-      return KeyValueStruct(F("SW WD count"), sw_watchdog_callback_count);
+      return make_kv(F("SW WD count"), sw_watchdog_callback_count);
     }
 
     case LabelType::WIFI_CONNECTION:
@@ -546,12 +593,12 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
       if (ESPEasy::net::wifi::WiFiConnected())
       {
         if (extendedValue) {
-          return KeyValueStruct(F("RSSI"), strformat(
+          return make_kv(F("RSSI"), strformat(
                                   F("%d [dBm] (%s)"),
                                   WiFi.RSSI(),
                                   WiFi.SSID().c_str()));
         }
-        KeyValueStruct kv(F("RSSI"), WiFi.RSSI());
+        KeyValueStruct kv = make_kv(F("RSSI"), WiFi.RSSI());
 #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
         if (!extendedValue) {
           KV_SETUNIT(UOM_dBm);
@@ -562,7 +609,7 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
       break;
     case LabelType::IP_CONFIG:
     {
-      KeyValueStruct kv(F("IP Config"), useStaticIP() ? F("static") : F("DHCP"));
+      KeyValueStruct kv = make_kv(F("IP Config"), useStaticIP() ? F("static") : F("DHCP"));
       KV_SETID(F("dhcp"));
       return kv;
     }
@@ -573,7 +620,7 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
         auto ip = ESPEasy::net::NetworkLocalIP6();
 
         if (ip != IN6ADDR_ANY) {
-          return KeyValueStruct(F("IPv6 link local"), formatIP(ip, true));
+          return make_kv(F("IPv6 link local"), ip, true);
         }
       }
       break;
@@ -583,13 +630,13 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
         auto ip = ESPEasy::net::NetworkGlobalIP6();
 
         if (ip != IN6ADDR_ANY) {
-          return KeyValueStruct(F("IPv6 global"), formatIP(ip));
+          return make_kv(F("IPv6 global"), ip);
         }
       }
       break;
 
       // case LabelType::IP6_ALL_ADDRESSES:      {
-      // KeyValueStruct kv(F("IPv6 all addresses"));
+      // KeyValueStruct kv = make_kv(F("IPv6 all addresses"));
       // IP6Addresses_t addresses = NetworkAllIPv6();
       // for (auto it = addresses.begin(); it != addresses.end(); ++it)
       // {
@@ -600,13 +647,13 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
 #endif // if FEATURE_USE_IPV6
     case LabelType::IP_ADDRESS:
     {
-      KeyValueStruct kv(F("IP Address"), formatIP(ESPEasy::net::NetworkLocalIP()));
+      KeyValueStruct kv = make_kv(F("IP Address"), ESPEasy::net::NetworkLocalIP());
       KV_SETID(F("ip"));
       return kv;
     }
     case LabelType::IP_SUBNET:
     {
-      KeyValueStruct kv(F("IP Subnet"), formatIP(ESPEasy::net::NetworkSubnetMask()));
+      KeyValueStruct kv = make_kv(F("IP Subnet"), ESPEasy::net::NetworkSubnetMask());
       KV_SETID(F("subnet"));
       return kv;
     }
@@ -619,13 +666,13 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
     }
     case LabelType::GATEWAY:
     {
-      KeyValueStruct kv(F("Gateway"), formatIP(ESPEasy::net::NetworkGatewayIP()));
+      KeyValueStruct kv = make_kv(F("Gateway"), ESPEasy::net::NetworkGatewayIP());
       KV_SETID(F("gw"));
       return kv;
     }
     case LabelType::CLIENT_IP:
     {
-      return KeyValueStruct(F("Client IP"), formatIP(web_server.client().remoteIP(), true));
+      return make_kv(F("Client IP"), web_server.client().remoteIP(), true);
     }
     #if FEATURE_MDNS
     case LabelType::M_DNS:
@@ -651,17 +698,17 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
       url.toLowerCase();
 
       if (extendedValue) {
-        return KeyValueStruct(F("mDNS"),
+        return make_kv(F("mDNS"),
                               strformat(
                                 F("<a href='http://%s'>%s</a>"),
                                 url.c_str(),
                                 url.c_str()));
       }
-      return KeyValueStruct(F("mDNS"), url);
+      return make_kv(F("mDNS"), std::move(url));
     }
     case LabelType::USE_MDNS:
     {
-      return KeyValueStruct(F("Enable mDNS"), Settings.Use_mDNS());
+      return make_kv(F("Enable mDNS"), Settings.Use_mDNS());
     }    
     #endif // if FEATURE_MDNS
     case LabelType::DNS:
@@ -677,132 +724,127 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
       return kv;
     }
     case LabelType::DNS_1:
-    {
-      if (extendedValue) { break; }
-      KeyValueStruct kv(F("DNS 1"), formatIP(ESPEasy::net::NetworkDnsIP(0)));
-      KV_SETID(F("dns1"));
-      return kv;
-    }
     case LabelType::DNS_2:
     {
       if (extendedValue) { break; }
-      KeyValueStruct kv(F("DNS 2"), formatIP(ESPEasy::net::NetworkDnsIP(1)));
-      KV_SETID(F("dns2"));
+      const bool dns1 = label == LabelType::DNS_1;
+      KeyValueStruct kv = make_kv(dns1 ? F("DNS 1"):F("DNS 2") , ESPEasy::net::NetworkDnsIP(dns1 ? 0 : 1));
+      KV_SETID(dns1 ? F("dns1") : F("dns2"));
       return kv;
     }
     case LabelType::ALLOWED_IP_RANGE:
     {
-      KeyValueStruct kv(F("Allowed IP Range"), ESPEasy::net::describeAllowedIPrange());
+      KeyValueStruct kv = make_kv(F("Allowed IP Range"), ESPEasy::net::describeAllowedIPrange(), KeyValueStruct::Format::PreFormatted);
       KV_SETID(F("allowed_range"));
       return kv;
     }
     case LabelType::STA_MAC:
     {
-      return KeyValueStruct(F("STA MAC"), ESPEasy::net::WifiSTAmacAddress().toString());
+      return make_kv(F("STA MAC"), ESPEasy::net::WifiSTAmacAddress().toString(), KeyValueStruct::Format::PreFormatted);
     }
     case LabelType::AP_MAC:
     {
-      return KeyValueStruct(F("AP MAC"), ESPEasy::net::WifiSoftAPmacAddress().toString());
+      return make_kv(F("AP MAC"), ESPEasy::net::WifiSoftAPmacAddress().toString(), KeyValueStruct::Format::PreFormatted);
     }
     case LabelType::SSID:
     {
-      return KeyValueStruct(F("SSID"), WiFi.SSID());
+      return make_kv(F("SSID"), WiFi.SSID(), KeyValueStruct::Format::PreFormatted);
     }
     case LabelType::BSSID:
     {
-      return KeyValueStruct(F("BSSID"), WiFi.BSSIDstr());
+      return make_kv(F("BSSID"), WiFi.BSSIDstr(), KeyValueStruct::Format::PreFormatted);
     }
     case LabelType::CHANNEL:
     {
-      return KeyValueStruct(F("Channel"), WiFi.channel());
+      return make_kv(F("Channel"), (int)WiFi.channel());
     }
     case LabelType::ENCRYPTION_TYPE_STA:
     {
-      KeyValueStruct kv(F("Encryption Type"), getWiFi_encryptionType());
+      KeyValueStruct kv = make_kv(F("Encryption Type"), getWiFi_encryptionType());
       KV_SETID(F("encryption"));
       return kv;
     }
     case LabelType::CONNECTED:
     {
-      return KeyValueStruct(F("Connected"), format_msec_duration(ESPEasy::net::NetworkConnectDuration_ms()));
+      return make_kv(F("Connected"), format_msec_duration(ESPEasy::net::NetworkConnectDuration_ms()));
     }
     case LabelType::CONNECTED_MSEC:
     {
-      return KeyValueStruct(F("Connected msec"), ESPEasy::net::NetworkConnectDuration_ms());
+      return make_kv(F("Connected msec"), ESPEasy::net::NetworkConnectDuration_ms());
     }
     case LabelType::LAST_DISCONNECT_REASON:
     {
-      return KeyValueStruct(F("Last Disconnect Reason"), getWiFi_disconnectReason());
+      return make_kv(F("Last Disconnect Reason"), getWiFi_disconnectReason());
     }
     case LabelType::LAST_DISC_REASON_STR:
     {
-      return KeyValueStruct(F("Last Disconnect Reason str"), getWiFi_disconnectReason_str());
+      return make_kv(F("Last Disconnect Reason str"), getWiFi_disconnectReason_str());
     }
     case LabelType::NUMBER_RECONNECTS:
     {
-      return KeyValueStruct(F("Number Reconnects"), ESPEasy::net::NetworkConnectCount());
+      return make_kv(F("Number Reconnects"), ESPEasy::net::NetworkConnectCount());
     }
     case LabelType::WIFI_STORED_SSID1:
     {
-      return KeyValueStruct(F("Configured SSID1"), SecuritySettings.WifiSSID);
+      return make_kv(F("Configured SSID1"), SecuritySettings.WifiSSID, KeyValueStruct::Format::PreFormatted);
     }
     case LabelType::WIFI_STORED_SSID2:
     {
-      return KeyValueStruct(F("Configured SSID2"), SecuritySettings.WifiSSID2);
+      return make_kv(F("Configured SSID2"), SecuritySettings.WifiSSID2, KeyValueStruct::Format::PreFormatted);
     }
 
 
     case LabelType::FORCE_WIFI_BG:
     {
-      return KeyValueStruct(F("Force WiFi B/G"), Settings.ForceWiFi_bg_mode());
+      return make_kv(F("Force WiFi B/G"), Settings.ForceWiFi_bg_mode());
     }
     case LabelType::RESTART_WIFI_LOST_CONN:
     {
       #ifndef BOARD_HAS_SDIO_ESP_HOSTED
       // Disable option for ESP-hosted WiFi as this always needs to restart when forcing disconnect.
-      return KeyValueStruct(F("Restart WiFi Lost Conn"), Settings.WiFiRestart_connection_lost());
+      return make_kv(F("Restart WiFi Lost Conn"), Settings.WiFiRestart_connection_lost());
       #endif
     }
     case LabelType::FORCE_WIFI_NOSLEEP:
     {
-      return KeyValueStruct(F("Force WiFi No Sleep"), Settings.WifiNoneSleep());
+      return make_kv(F("Force WiFi No Sleep"), Settings.WifiNoneSleep());
     }
     case LabelType::PERIODICAL_GRAT_ARP:
     {
-      return KeyValueStruct(F("Periodical send Gratuitous ARP"), Settings.gratuitousARP());
+      return make_kv(F("Periodical send Gratuitous ARP"), Settings.gratuitousARP());
     }
     case LabelType::CONNECTION_FAIL_THRESH:
     {
-      return KeyValueStruct(F("Connection Failure Threshold"), Settings.ConnectionFailuresThreshold);
+      return make_kv(F("Connection Failure Threshold"), Settings.ConnectionFailuresThreshold);
     }
 #ifndef ESP32
     case LabelType::WAIT_WIFI_CONNECT:
     {
-      return KeyValueStruct(F("Extra Wait WiFi Connect"), Settings.WaitWiFiConnect());
+      return make_kv(F("Extra Wait WiFi Connect"), Settings.WaitWiFiConnect());
     }
 #endif // ifndef ESP32
     case LabelType::CONNECT_HIDDEN_SSID:
     {
-      return KeyValueStruct(F("Include Hidden SSID"), Settings.IncludeHiddenSSID());
+      return make_kv(F("Include Hidden SSID"), Settings.IncludeHiddenSSID());
     }
 #ifdef ESP32
     case LabelType::WIFI_PASSIVE_SCAN:
     {
-      return KeyValueStruct(F("Passive WiFi Scan"), Settings.PassiveWiFiScan());
+      return make_kv(F("Passive WiFi Scan"), Settings.PassiveWiFiScan());
     }
 #endif // ifdef ESP32
     case LabelType::HIDDEN_SSID_SLOW_CONNECT:
     {
-      return KeyValueStruct(F("Hidden SSID Slow Connect"), Settings.HiddenSSID_SlowConnectPerBSSID());
+      return make_kv(F("Hidden SSID Slow Connect"), Settings.HiddenSSID_SlowConnectPerBSSID());
     }
     case LabelType::SDK_WIFI_AUTORECONNECT:
     {
-      return KeyValueStruct(F("Enable SDK WiFi Auto Reconnect"), Settings.SDK_WiFi_autoreconnect());
+      return make_kv(F("Enable SDK WiFi Auto Reconnect"), Settings.SDK_WiFi_autoreconnect());
     }
 #if FEATURE_USE_IPV6
     case LabelType::ENABLE_IPV6:
     {
-      return KeyValueStruct(F("Enable IPv6"), Settings.EnableIPv6());
+      return make_kv(F("Enable IPv6"), Settings.EnableIPv6());
     }
 #endif // if FEATURE_USE_IPV6
 
@@ -815,103 +857,106 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
         descr += ' ';
         descr += F(BUILD_NOTES);
       }
-      return KeyValueStruct(F("Build"), descr);
+      return make_kv(F("Build"), std::move(descr), KeyValueStruct::Format::PreFormatted);
     }
     case LabelType::BUILD_ORIGIN:
     {
-      return KeyValueStruct(F("Build Origin"), get_build_origin());
+      return make_kv(F("Build Origin"), get_build_origin());
     }
     case LabelType::GIT_BUILD:
     {
       String res(F(BUILD_GIT));
 
       if (res.isEmpty()) { res = get_git_head(); }
-      return KeyValueStruct(F("Git Build"), res);
+      return make_kv(F("Git Build"), std::move(res), KeyValueStruct::Format::PreFormatted);
     }
     case LabelType::SYSTEM_LIBRARIES:
     {
-      return KeyValueStruct(F("System Libraries"), getSystemLibraryString());
+      return make_kv(F("System Libraries"), getSystemLibraryString(), KeyValueStruct::Format::PreFormatted);
     }
 #ifdef ESP32
     case LabelType::ESP_IDF_SDK_VERSION:
     {
-      return KeyValueStruct(F("ESP-IDF Version"), strformat(
-                              F("%d.%d.%d"),
-                              ESP_IDF_VERSION_MAJOR,
-                              ESP_IDF_VERSION_MINOR,
-                              ESP_IDF_VERSION_PATCH));
+      return make_kv(
+        F("ESP-IDF Version"), 
+        strformat(
+          F("%d.%d.%d"),
+          ESP_IDF_VERSION_MAJOR,
+          ESP_IDF_VERSION_MINOR,
+          ESP_IDF_VERSION_PATCH), 
+        KeyValueStruct::Format::PreFormatted);
     }
 #endif // ifdef ESP32
     case LabelType::PLUGIN_COUNT:
     {
-      return KeyValueStruct(F("Plugin Count"), getDeviceCount() + 1);
+      return make_kv(F("Plugin Count"), getDeviceCount() + 1);
     }
     case LabelType::PLUGIN_DESCRIPTION:
     {
-      return KeyValueStruct(F("Plugin Description"), getPluginDescriptionString());
+      return make_kv(F("Plugin Description"), getPluginDescriptionString(), KeyValueStruct::Format::PreFormatted);
     }
     case LabelType::BUILD_TIME:
     {
-      return KeyValueStruct(F("Build Time"), String(get_build_date()) + ' ' + get_build_time());
+      return make_kv(F("Build Time"), concat(get_build_date(), concat(' ', get_build_time())));
     }
     case LabelType::BINARY_FILENAME:
     {
-      return KeyValueStruct(F("Binary Filename"), get_binary_filename());
+      return make_kv(F("Binary Filename"), get_binary_filename(), KeyValueStruct::Format::PreFormatted);
     }
     case LabelType::BUILD_PLATFORM:
     {
-      return KeyValueStruct(F("Build Platform"), get_build_platform());
+      return make_kv(F("Build Platform"), get_build_platform(), KeyValueStruct::Format::PreFormatted);
     }
     case LabelType::GIT_HEAD:
     {
-      return KeyValueStruct(F("Git HEAD"), get_git_head());
+      return make_kv(F("Git HEAD"), get_git_head(), KeyValueStruct::Format::PreFormatted);
     }
     #ifdef CONFIGURATION_CODE
     case LabelType::CONFIGURATION_CODE_LBL:
     {
-      return KeyValueStruct(F("Configuration code"), getConfigurationCode());
+      return make_kv(F("Configuration code"), getConfigurationCode(), KeyValueStruct::Format::PreFormatted);
     }
     #endif // ifdef CONFIGURATION_CODE
 #if FEATURE_CLEAR_I2C_STUCK
     case LabelType::I2C_BUS_STATE:
     {
-      return KeyValueStruct(F("I2C Bus State"), toString(I2C_state));
+      return make_kv(F("I2C Bus State"), toString(I2C_state));
     }
     case LabelType::I2C_BUS_CLEARED_COUNT:
     {
-      return KeyValueStruct(F("I2C bus cleared count"), I2C_bus_cleared_count);
+      return make_kv(F("I2C bus cleared count"), I2C_bus_cleared_count);
     }
 #endif // if FEATURE_CLEAR_I2C_STUCK
 #if FEATURE_SYSLOG
     case LabelType::SYSLOG_LOG_LEVEL:
     {
-      return KeyValueStruct(F("Syslog Log Level"), getLogLevelDisplayString(Settings.SyslogLevel));
+      return make_kv(F("Syslog Log Level"), getLogLevelDisplayString(Settings.SyslogLevel));
     }
 #endif
     case LabelType::SERIAL_LOG_LEVEL:
     {
-      return KeyValueStruct(F("Serial Log Level"), getLogLevelDisplayString(getSerialLogLevel()));
+      return make_kv(F("Serial Log Level"), getLogLevelDisplayString(getSerialLogLevel()));
     }
 # ifdef WEBSERVER_LOG
     case LabelType::WEB_LOG_LEVEL:
     {
-      return KeyValueStruct(F("Web Log Level"), getLogLevelDisplayString(getWebLogLevel()));
+      return make_kv(F("Web Log Level"), getLogLevelDisplayString(getWebLogLevel()));
     }
 #endif
   #if FEATURE_SD
     case LabelType::SD_LOG_LEVEL:
     {
-      return KeyValueStruct(F("SD Log Level"), getLogLevelDisplayString(Settings.SDLogLevel));
+      return make_kv(F("SD Log Level"), getLogLevelDisplayString(Settings.SDLogLevel));
     }
   #endif // if FEATURE_SD
 
     case LabelType::ESP_CHIP_ID:
     {
-      return KeyValueStruct(F("ESP Chip ID"), formatToHex(getChipId(), 6));
+      return KeyValueStruct::makeHexFormatted(F("ESP Chip ID"), getChipId(), 6);
     }
     case LabelType::ESP_CHIP_FREQ:
     {
-      KeyValueStruct kv(F("ESP Chip Frequency"), ESP.getCpuFreqMHz());
+      KeyValueStruct kv = make_kv(F("ESP Chip Frequency"), ESP.getCpuFreqMHz());
 #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
       KV_SETUNIT(UOM_MHz);
 #endif
@@ -920,7 +965,7 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
 #ifdef ESP32
     case LabelType::ESP_CHIP_XTAL_FREQ:
     {
-      KeyValueStruct kv(F("ESP Crystal Frequency"), getXtalFrequencyMHz());
+      KeyValueStruct kv = make_kv(F("ESP Crystal Frequency"), getXtalFrequencyMHz());
 # if FEATURE_TASKVALUE_UNIT_OF_MEASURE
       KV_SETUNIT(UOM_MHz);
 # endif
@@ -928,7 +973,7 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
     }
     case LabelType::ESP_CHIP_APB_FREQ:
     {
-      KeyValueStruct kv(F("ESP APB Frequency"), rtc_clk_apb_freq_get() / 1000000);
+      KeyValueStruct kv = make_kv(F("ESP APB Frequency"), rtc_clk_apb_freq_get() / 1000000);
 # if FEATURE_TASKVALUE_UNIT_OF_MEASURE
       KV_SETUNIT(UOM_MHz);
 # endif
@@ -937,20 +982,20 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
 #endif // ifdef ESP32
     case LabelType::ESP_CHIP_MODEL:
     {
-      return KeyValueStruct(F("ESP Chip Model"), getChipModel());
+      return make_kv(F("ESP Chip Model"), getChipModel(), KeyValueStruct::Format::PreFormatted);
     }
     case LabelType::ESP_CHIP_REVISION:
     {
-      return KeyValueStruct(F("ESP Chip Revision"), getChipRevision());
+      return make_kv(F("ESP Chip Revision"), getChipRevision());
     }
     case LabelType::ESP_CHIP_CORES:
     {
-      return KeyValueStruct(F("ESP Chip Cores"), getChipCores());
+      return make_kv(F("ESP Chip Cores"), getChipCores());
     }
 
     case LabelType::BOARD_NAME:
     {
-      return KeyValueStruct(F("ESP Board Name"), get_board_name());
+      return make_kv(F("ESP Board Name"), get_board_name());
     }
 
     case LabelType::FLASH_CHIP_ID:
@@ -958,7 +1003,8 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
       auto flashChipId = getFlashChipId();
 
       if (flashChipId == 0) { break; }
-      return KeyValueStruct(F("Flash Chip ID"), formatToHex(flashChipId, 6));
+
+      return KeyValueStruct::makeHexFormatted(F("Flash Chip ID"), flashChipId, 6);
     }
     case LabelType::FLASH_CHIP_VENDOR:
     {
@@ -971,7 +1017,7 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
         id += concat(F(" (PUYA"), puyaSupport() ? F(", supported") : F(HTML_SYMBOL_WARNING)) + ')';
       }
 
-      return KeyValueStruct(F("Flash Chip Vendor"), id);
+      return make_kv(F("Flash Chip Vendor"), std::move(id), KeyValueStruct::Format::PreFormatted);
     }
     case LabelType::FLASH_CHIP_MODEL:
     {
@@ -986,14 +1032,14 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
         model += F(" (Embedded)");
       }
     # endif // ifdef ESP32
-      return KeyValueStruct(F("Flash Chip Model"), model);
+      return make_kv(F("Flash Chip Model"), std::move(model), KeyValueStruct::Format::PreFormatted);
       #else // ifndef LIMIT_BUILD_SIZE
-      return KeyValueStruct(F("Flash Chip Model"), getFlashChipId());
+      return KeyValueStruct(F("Flash Chip Model"), getFlashChipId(), KeyValueStruct::Format::PreFormatted);
       #endif // ifndef LIMIT_BUILD_SIZE
     }
     case LabelType::FLASH_CHIP_REAL_SIZE:
     {
-      KeyValueStruct kv(F("Flash Chip Real Size"), getFlashRealSizeInBytes() >> 10);
+      KeyValueStruct kv = make_kv(F("Flash Chip Real Size"), getFlashRealSizeInBytes() >> 10);
 #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
       KV_SETUNIT(UOM_kB);
 #endif
@@ -1001,7 +1047,7 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
     }
     case LabelType::FLASH_CHIP_SPEED:
     {
-      KeyValueStruct kv(F("Flash Chip Speed"), getFlashChipSpeed() / 1000000);
+      KeyValueStruct kv = make_kv(F("Flash Chip Speed"), getFlashChipSpeed() / 1000000);
 #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
       KV_SETUNIT(UOM_MHz);
 #endif
@@ -1009,7 +1055,7 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
     }
     case LabelType::FLASH_IDE_SIZE:
     {
-      KeyValueStruct kv(F("Flash IDE Size"), ESP.getFlashChipSize() >> 10);
+      KeyValueStruct kv = make_kv(F("Flash IDE Size"), ESP.getFlashChipSize() >> 10);
 #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
       KV_SETUNIT(UOM_kB);
 #endif
@@ -1017,7 +1063,7 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
     }
     case LabelType::FLASH_IDE_SPEED:
     {
-      KeyValueStruct kv(F("Flash IDE Speed"), getFlashChipSpeed() / 1000000);
+      KeyValueStruct kv = make_kv(F("Flash IDE Speed"), getFlashChipSpeed() / 1000000);
 #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
       KV_SETUNIT(UOM_MHz);
 #endif
@@ -1025,22 +1071,21 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
     }
     case LabelType::FLASH_IDE_MODE:
     {
-      KeyValueStruct kv(F("Flash IDE Mode"), getFlashChipMode());
+      KeyValueStruct kv = make_kv(F("Flash IDE Mode"), getFlashChipMode(), KeyValueStruct::Format::PreFormatted);
       KV_SETID(F("mode"));
       return kv;
     }
     case LabelType::FLASH_WRITE_COUNT:
     {
       if (extendedValue) {
-        KeyValueStruct kv(
+        return make_kv(
           F("Flash Writes"),
           strformat(
             F("%d daily / %d cold boot"),
             RTC.flashDayCounter,
             static_cast<int>(RTC.flashCounter)));
-        return kv;
       }
-      return KeyValueStruct(F("Flash Writes"), RTC.flashCounter);
+      return make_kv(F("Flash Writes"), RTC.flashCounter);
     }
     case LabelType::SKETCH_SIZE:
     {
@@ -1067,7 +1112,7 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
         str = (getSketchSize() >> 10);
       }
 
-      KeyValueStruct kv(F("Sketch Size"), str);
+      KeyValueStruct kv = make_kv(F("Sketch Size"), std::move(str));
       KV_SETID(F("sketch_size"));
 
 #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
@@ -1079,7 +1124,7 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
     }
     case LabelType::SKETCH_FREE:
     {
-      KeyValueStruct kv(F("Sketch Free"), getFreeSketchSpace() >> 10);
+      KeyValueStruct kv = make_kv(F("Sketch Free"), getFreeSketchSpace() >> 10);
       KV_SETID(F("sketch_free"));
 #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
       KV_SETUNIT(UOM_kB);
@@ -1088,13 +1133,13 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
     }
     case LabelType::FS_SIZE:
     {
-      KeyValueStruct kv(
+      KeyValueStruct kv = make_kv(
         #ifdef USE_LITTLEFS
         F("Little FS Size"),
         #else
         F("SPIFFS Size"),
         #endif // ifdef USE_LITTLEFS
-        SpiffsTotalBytes() >> 10);
+        static_cast<uint32_t>(SpiffsTotalBytes() >> 10));
       KV_SETID(F("fs_size"));
 
 #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
@@ -1104,13 +1149,13 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
     }
     case LabelType::FS_FREE:
     {
-      KeyValueStruct kv(
+      KeyValueStruct kv = make_kv(
         #ifdef USE_LITTLEFS
         F("Little FS Free"),
         #else
         F("SPIFFS Free"),
         #endif // ifdef USE_LITTLEFS
-        SpiffsFreeSpace() >> 10);
+        static_cast<uint32_t>(SpiffsFreeSpace() >> 10));
       KV_SETID(F("fs_free"));
 #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
       KV_SETUNIT(UOM_kB);
@@ -1123,7 +1168,7 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
       bool     use2step;
       OTA_possible(maxSketchSize, use2step);
 
-      return KeyValueStruct(F("Max. OTA Sketch Size"), strformat(
+      return make_kv(F("Max. OTA Sketch Size"), strformat(
                               F("%d [kB] (%d bytes)"),
                               maxSketchSize / 1024,
                               maxSketchSize));
@@ -1135,7 +1180,7 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
       bool     use2step;
       OTA_possible(maxSketchSize, use2step);
 
-      return KeyValueStruct(F("OTA 2-step Needed"), use2step);
+      return make_kv(F("OTA 2-step Needed"), use2step);
     }
     case LabelType::OTA_POSSIBLE:
     {
@@ -1145,13 +1190,13 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
       bool otaEnabled =
     # endif // if defined(ESP8266)
       OTA_possible(maxSketchSize, use2step);
-      return KeyValueStruct(F("OTA possible"), otaEnabled);
+      return make_kv(F("OTA possible"), otaEnabled);
     }
 #endif // ifdef ESP8266
     #if FEATURE_INTERNAL_TEMPERATURE
     case LabelType::INTERNAL_TEMPERATURE:
     {
-      KeyValueStruct kv(F("Internal Temperature"), getInternalTemperature(), 1);
+      KeyValueStruct kv = make_kv(F("Internal Temperature"), getInternalTemperature(), 1);
 # if FEATURE_TASKVALUE_UNIT_OF_MEASURE
       KV_SETUNIT(UOM_degC);
 # endif
@@ -1161,18 +1206,18 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
 #if FEATURE_ETHERNET
     case LabelType::ETH_MAC:
     {
-      return KeyValueStruct(F("Eth MAC"), ESPEasy::net::NetworkMacAddress().toString());
+      return make_kv(F("Eth MAC"), ESPEasy::net::NetworkMacAddress().toString());
     }
     case LabelType::ETH_DUPLEX:
     {
-      KeyValueStruct kv(F("Eth Mode"), ESPEasy::net::EthLinkUp() ?
+      KeyValueStruct kv = make_kv(F("Eth Mode"), ESPEasy::net::EthLinkUp() ?
                         (ESPEasy::net::EthFullDuplex() ? F("Full Duplex") : F("Half Duplex")) : F("Link Down"));
       KV_SETID(F("ethduplex"));
       return kv;
     }
     case LabelType::ETH_SPEED:
     {
-      KeyValueStruct kv(F("Eth Speed"), getEthSpeed());
+      KeyValueStruct kv = make_kv(F("Eth Speed"), getEthSpeed());
       KV_SETID(F("ethspeed"));
 # if FEATURE_TASKVALUE_UNIT_OF_MEASURE
       KV_SETUNIT(UOM_Mbps);
@@ -1181,27 +1226,27 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
     }
     case LabelType::ETH_STATE:
     {
-      KeyValueStruct kv(F("Eth State"), ESPEasy::net::EthLinkUp() ? F("Link Up") : F("Link Down"));
+      KeyValueStruct kv = make_kv(F("Eth State"), ESPEasy::net::EthLinkUp() ? F("Link Up") : F("Link Down"));
       KV_SETID(F("ethstate"));
       return kv;
     }
     case LabelType::ETH_SPEED_STATE:
     {
       if (active_network_medium != ESPEasy::net::NetworkMedium_t::Ethernet) { break; }
-      KeyValueStruct kv(F("Eth Speed State"), getEthLinkSpeedState());
+      KeyValueStruct kv = make_kv(F("Eth Speed State"), getEthLinkSpeedState());
       KV_SETID(F("ethspeedstate"));
       return kv;
     }
     case LabelType::ETH_CONNECTED:
     {
-      KeyValueStruct kv(F("Eth connected"), ESPEasy::net::eth::ETHConnected() ? F("CONNECTED") : F("DISCONNECTED"));
+      KeyValueStruct kv = make_kv(F("Eth connected"), ESPEasy::net::eth::ETHConnected() ? F("CONNECTED") : F("DISCONNECTED"));
       KV_SETID(F("ethconnected"));
       return kv;
     }
     case LabelType::ETH_CHIP:
     {
       // FIXME TD-er: Might no longer be needed? Otherwise need to query ETH Network interface, not settings.
-      KeyValueStruct kv(F("Eth chip"), toString(Settings.ETH_Phy_Type));
+      KeyValueStruct kv = make_kv(F("Eth chip"), toString(Settings.ETH_Phy_Type));
       KV_SETID(F("ethchip"));
       return kv;
     }
@@ -1209,55 +1254,55 @@ KeyValueStruct getKeyValue(LabelType::Enum label, bool extendedValue)
 #if FEATURE_ETHERNET || defined(USES_ESPEASY_NOW)
     case LabelType::ETH_WIFI_MODE:
     {
-      KeyValueStruct kv(F("Network Type"), toString(active_network_medium));
+      KeyValueStruct kv = make_kv(F("Network Type"), toString(active_network_medium));
       KV_SETID(F("ethwifimode"));
       return kv;
     }
 #endif // if FEATURE_ETHERNET || defined(USES_ESPEASY_NOW)
     case LabelType::SUNRISE:
     {
-      return KeyValueStruct(F("Sunrise"), node_time.getSunriseTimeString(':'));
+      return make_kv(F("Sunrise"), node_time.getSunriseTimeString(':'));
     }
     case LabelType::SUNSET:
     {
-      return KeyValueStruct(F("Sunset"), node_time.getSunsetTimeString(':'));
+      return make_kv(F("Sunset"), node_time.getSunsetTimeString(':'));
     }
     case LabelType::SUNRISE_S:
     {
-      return KeyValueStruct(F("Sunrise sec."), node_time.sunRise.tm_hour * 3600 + node_time.sunRise.tm_min * 60 +
+      return make_kv(F("Sunrise sec."), node_time.sunRise.tm_hour * 3600 + node_time.sunRise.tm_min * 60 +
                             node_time.sunRise.tm_sec);
     }
     case LabelType::SUNSET_S:
     {
-      return KeyValueStruct(F("Sunset sec."), node_time.sunSet.tm_hour * 3600 + node_time.sunSet.tm_min * 60 + node_time.sunSet.tm_sec);
+      return make_kv(F("Sunset sec."), node_time.sunSet.tm_hour * 3600 + node_time.sunSet.tm_min * 60 + node_time.sunSet.tm_sec);
     }
     case LabelType::SUNRISE_M:
     {
-      return KeyValueStruct(F("Sunrise min."), node_time.sunRise.tm_hour * 60 + node_time.sunRise.tm_min);
+      return make_kv(F("Sunrise min."), node_time.sunRise.tm_hour * 60 + node_time.sunRise.tm_min);
     }
     case LabelType::SUNSET_M:
     {
-      return KeyValueStruct(F("Sunset min."), node_time.sunSet.tm_hour * 60 + node_time.sunSet.tm_min);
+      return make_kv(F("Sunset min."), node_time.sunSet.tm_hour * 60 + node_time.sunSet.tm_min);
     }
     case LabelType::ISNTP:
     {
-      return KeyValueStruct(F("Use NTP"), Settings.UseNTP());
+      return make_kv(F("Use NTP"), Settings.UseNTP());
     }
     case LabelType::UPTIME_MS:
     {
-      return KeyValueStruct(F("Uptime (ms)"), getMicros64() / 1000);
+      return make_kv(F("Uptime (ms)"), getMicros64() / 1000);
     }
     case LabelType::TIMEZONE_OFFSET:
     {
-      return KeyValueStruct(F("Timezone Offset"), Settings.TimeZone);
+      return make_kv(F("Timezone Offset"), Settings.TimeZone);
     }
     case LabelType::LATITUDE:
     {
-      return KeyValueStruct(F("Latitude"), Settings.Latitude, 6);
+      return make_kv(F("Latitude"), Settings.Latitude, 6);
     }
     case LabelType::LONGITUDE:
     {
-      return KeyValueStruct(F("Longitude"), Settings.Longitude, 6);
+      return make_kv(F("Longitude"), Settings.Longitude, 6);
     }
 
     case LabelType::MAX_LABEL:
@@ -1270,7 +1315,7 @@ String getInternalLabel(const KeyValueStruct& kv,
                         char            replaceSpace)
 {
   String res = kv.getID();
-  if (replaceSpace != '\0') res.replace(" ", String(replaceSpace));
+  if (replaceSpace != '\0') res.replace(' ', replaceSpace);
 
   return res;
 }

@@ -540,8 +540,8 @@ void NW005_data_struct_PPP_modem::webform_load(EventStruct *event)
   {
     auto params = NW005_makeWebFormItemParams(NW005_KEY_PIN_RESET_DELAY);
     params._max             = 2000;
-    params._defaultIntValue = 200;
-    showWebformItem(*_kvs, params);
+    params._defaultValue.setInt(200);
+    showWebformItem(*_kvs, std::move(params));
     addUnit(F("ms"));
 
   }
@@ -564,21 +564,21 @@ void NW005_data_struct_PPP_modem::webform_load(EventStruct *event)
   {
     auto params = NW005_makeWebFormItemParams(NW005_KEY_BAUDRATE);
     params._max             = 10000000;
-    params._defaultIntValue = 115200;
-    showWebformItem(*_kvs, params);
+    params._defaultValue.setInt(115200);
+    showWebformItem(*_kvs, std::move(params));
   }
 
   addFormSubHeader(F("Connection Settings"));
   {
     auto params = NW005_makeWebFormItemParams(NW005_KEY_APN);
     params._maxLength = 64;
-    showWebformItem(*_kvs, params);
+    showWebformItem(*_kvs, std::move(params));
     addFormNote(F("Optional, can be left empty"));
   }
   {
     auto params = NW005_makeWebFormItemParams(NW005_KEY_SIM_PIN);
     params._maxLength = 4;
-    showWebformItem(*_kvs, params);
+    showWebformItem(*_kvs, std::move(params));
     addFormNote(F("Only numerical digits"));
   }
 

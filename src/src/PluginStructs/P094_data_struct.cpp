@@ -38,7 +38,7 @@ void P094_data_struct::reset() {
 bool P094_data_struct::init(ESPEasySerialPort port,
                             const int16_t     serial_rx,
                             const int16_t     serial_tx,
-                            unsigned long     baudrate) {
+                            uint32_t     baudrate) {
   if ((serial_rx < 0) && (serial_tx < 0)) {
     return false;
   }
@@ -52,7 +52,7 @@ bool P094_data_struct::init(ESPEasySerialPort port,
   return true;
 }
 
-void  P094_data_struct::setFlags(unsigned long filterOffWindowTime_ms,
+void  P094_data_struct::setFlags(uint32_t filterOffWindowTime_ms,
                 bool          intervalFilterEnabled,
                 bool          mute,
                 bool          collectStats)
@@ -572,7 +572,7 @@ bool P094_data_struct::loop() {
   if (easySerial != nullptr) {
     int available = easySerial->available();
 
-    unsigned long timeout = millis() + 10;
+    uint32_t timeout = millis() + 10;
 
     while (available > 0 && !fullSentenceReceived) {
       // Look for end marker

@@ -310,7 +310,7 @@ void P036_data_struct::CleanEscapeCharacters(String& str, const bool ForHeaderOn
 
   /***** WILL BE DEPRECATED - DO NOT USE *****/
   if (ForHeaderOnly) {
-    str.replace("$", "%"); // Allow system vars to be passed to header in by using $ instead of %
+    str.replace('$', '%'); // Allow system vars to be passed to header in by using $ instead of %
   }
 
   /***** WILL BE DEPRECATED - DO NOT USE *****/
@@ -2183,6 +2183,7 @@ void P036_data_struct::P036_DisplayPage(struct EventStruct *event)
               }
 
               if (addSpaces > 0) {
+                // TODO TD-er: Check if we can use prefixToMinimumLength here
                 currentLines[i].reserve(currentLines[i].length() + addSpaces);
 
                 while (addSpaces > 0) {
@@ -2288,10 +2289,13 @@ String P036_data_struct::P36_parseTemplate(String& tmpString, uint8_t lineIdx) {
   }
   # endif // if P036_ENABLE_TICKER
 
+  // FIXME TD-er: It looks like the "Align left" and "Align right" are used here as the exact opposite
+  // Might be functionally correct, but the enum names are then confusing to say the least.
   switch (iTextAlignment) {
     case TEXT_ALIGN_LEFT:
 
       // add leading spaces from tmpString to the result
+      // TODO TD-er: Check if we can use prefixToMinimumLength here
       for (uint16_t l = 0; l < tmpString.length(); ++l) {
         if (tmpString[l] != ' ') {
           break;
@@ -2302,6 +2306,7 @@ String P036_data_struct::P36_parseTemplate(String& tmpString, uint8_t lineIdx) {
     case TEXT_ALIGN_RIGHT:
 
       // add trailing spaces from tmpString to the result
+      // TODO TD-er: Check if we can use padToMinimumLength here
       for (int16_t l = tmpString.length() - 1; l >= 0; --l) {
         if (tmpString[l] != ' ') {
           break;
@@ -2543,18 +2548,16 @@ void P036_data_struct::CreateScrollingPageLine(tScrollingPageLines *ScrollingPag
 }
 
 # if P036_FEATURE_DISPLAY_PREVIEW
-bool P036_data_struct::web_show_values() {
-  addHtml(F("<pre>")); // To keep spaces etc. in the shown output
-
-  for (uint8_t i = 0; i < ScrollingPages.linesPerFrameDef; ++i) {
-    addHtmlDiv(F("div_l"), currentLines[i], EMPTY_STRING, F("style='font-size:75%;'"));
-
-    if (i != ScrollingPages.linesPerFrameDef - 1) {
-      addHtmlDiv(F("div_br"));
-    }
+bool P036_data_struct::web_show_values(struct EventStruct *event) {
+  TaskValuesWriterHelper data(event);
+  // Iterate over all lines so we can be sure the divs are added.
+  const uint8_t nrLines = ScrollingPages.linesPerFrameDef;
+  for (uint8_t i = 0; i < nrLines; ++i) {
+    const bool isLast = i == (nrLines - 1);
+    data.setPreformatted();
+    data.writeCustom(i, currentLines[i], EMPTY_STRING, F("style='font-size:75%;'"), isLast);
   }
-  addHtml(F("</pre>"));
-  return true;
+  return true; // Don't show anything else
 }
 
 # endif // if P036_FEATURE_DISPLAY_PREVIEW

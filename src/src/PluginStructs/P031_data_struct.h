@@ -68,7 +68,7 @@ public:
 
   float tempC                   = 0.0f;
   float rhTrue                  = 0.0f;
-  unsigned long sendCommandTime = 0;
+  uint32_t sendCommandTime = 0;
 
   int input_mode      = 0;
   uint8_t _dataPin    = 0;

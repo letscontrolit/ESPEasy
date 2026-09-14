@@ -12,13 +12,13 @@
  \*********************************************************************************************/
 
 // FIXME: change original code so it uses String and String.toInt()
-unsigned long str2int(const char *string)
+uint32_t str2int(const char *string)
 {
   uint32_t temp = 0;
 
   validUIntFromString(string, temp);
 
-  return static_cast<unsigned long>(temp);
+  return temp;
 }
 
 /*********************************************************************************************\
@@ -59,18 +59,37 @@ bool toValidString(String& str,
   return doubleToValidString(str, value_d, decimalPlaces, trimTrailingZeros);
 }
 
-
-String ull2String(uint64_t value, uint8_t base) {
+String ull2String(uint64_t value,
+                  uint8_t  base,
+                  uint8_t  minNrDigits,
+                  char     separatorChar,
+                  bool     toUpperCase)
+{
   String res;
-
-  if (value == 0) {
-    res = '0';
-    return res;
-  }
 
   while (value > 0) {
     res   += String(static_cast<uint32_t>(value % base), base);
     value /= base;
+  }
+  // String representation is still reversed, so pad instead of prefix
+  padToMinimumLength(res, minNrDigits, '0');
+
+  if (separatorChar != '\0') {
+    // Need to insert separator chars, starting from the 'right' of the string
+    // However the string is still in reversed order, which makes it rather easy.
+    const uint32_t byteGroupLength = (base == DEC) ? 3 : (base == HEX) ? 2 : 8;
+    const auto length = res.length();
+
+    String tmp;
+    tmp.reserve(res.length() + (minNrDigits / byteGroupLength) - 1);
+   
+    for (uint8_t i = 0; i < length; ++i) {
+      if (i != 0 && i % byteGroupLength == 0) {
+        tmp += separatorChar;
+      }
+      tmp += res[i];
+    }
+    res = std::move(tmp);
   }
 
   int endpos   = res.length() - 1;
@@ -84,52 +103,27 @@ String ull2String(uint64_t value, uint8_t base) {
     --endpos;
   }
 
+  if (toUpperCase && base == HEX) {
+    res.toUpperCase();
+  }
+
   return res;
 }
 
-String ll2String(int64_t value, uint8_t  base) {
-  if (value < 0) {
-    return concat('-', ull2String(value * -1ll, base));
-  } else {
-    return ull2String(value, base);
+String ll2String(int64_t value,
+                 uint8_t base,
+                 uint8_t minNrDigits,
+                 char    separatorChar,
+                 bool    toUpperCase)
+{
+  if (value >= 0) {
+    return ull2String(value, base, minNrDigits, separatorChar, toUpperCase);
   }
+  return concat(
+    '-', 
+    ull2String(value * -1ll, base, minNrDigits, separatorChar, toUpperCase));
 }
 
-/**
- * format an uint32_t with 0-prefixed in the provided base of 2, 16 and insert an optional dot as separator for each byte
- * separator only applied for base 2 and 16
- */
-String ul2stringFixed(uint32_t value, uint8_t base, bool dotSeparator) {
-  // Set bit just left of 32 bits so we will see the leading zeroes
-  const uint64_t val = static_cast<uint64_t>(value) | 0x100000000ull;
-
-  String valStr = ull2String(val, base).substring(1); // Delete leading 1 we added
-
-  if (base == HEX) {
-    valStr.toUpperCase();                             // uppercase hex for readability
-  }
-
-  if (dotSeparator) {
-    uint8_t dotInsert{};
-    uint8_t dotOffset{};
-
-    if (BIN == base) {
-      dotInsert = 10;
-      dotOffset = 9;
-    } else
-    if (HEX == base) {
-      dotInsert += 4;
-      dotOffset  = 3;
-    }
-
-    if (dotInsert) {
-      for (uint8_t i = 0; i < 3; ++i, dotInsert += dotOffset) { // Insert readability separators
-        valStr = valStr.substring(0, dotInsert) + '.' + valStr.substring(dotInsert);
-      }
-    }
-  }
-  return valStr;
-}
 
 String trimTrailingZeros(const String& value) {
   String res(value);
@@ -187,6 +181,8 @@ bool  doubleToValidString(String& str,
     str = F("Inf");
     return false;
   }
+  
+  if (decimalPlaces == 255) decimalPlaces = 0;
 #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
 
   // We use some trick here to prevent rounding errors 
@@ -301,22 +297,22 @@ bool string2float(const String& string, float& floatvalue) {
    Handling HEX strings
  \*********************************************************************************************/
 
-// Convert max. 8 hex decimals to unsigned long
-unsigned long hexToUL(const String& input_c, size_t nrHexDecimals) {
-  const unsigned long long resULL = hexToULL(input_c, nrHexDecimals);
-  return static_cast<unsigned long>(resULL & 0xFFFFFFFFull);
+// Convert max. 8 hex decimals to uint32_t
+uint32_t hexToUL(const String& input_c, size_t nrHexDecimals) {
+  const uint64_t resULL = hexToULL(input_c, nrHexDecimals);
+  return static_cast<uint32_t>(resULL & 0xFFFFFFFFull);
 }
 
-unsigned long hexToUL(const String& input_c) {
+uint32_t hexToUL(const String& input_c) {
   return hexToUL(input_c, input_c.length());
 }
 
-unsigned long hexToUL(const String& input_c, size_t startpos, size_t nrHexDecimals) {
+uint32_t hexToUL(const String& input_c, size_t startpos, size_t nrHexDecimals) {
   return hexToUL(input_c.substring(startpos, startpos + nrHexDecimals), nrHexDecimals);
 }
 
-// Convert max. 16 hex decimals to unsigned long long (aka uint64_t)
-unsigned long long hexToULL(const String& input_c, size_t nrHexDecimals) {
+// Convert max. 16 hex decimals to uint64_t (aka uint64_t)
+uint64_t hexToULL(const String& input_c, size_t nrHexDecimals) {
   size_t nr_decimals = nrHexDecimals;
 
   if (nr_decimals > 16) {
@@ -332,11 +328,11 @@ unsigned long long hexToULL(const String& input_c, size_t nrHexDecimals) {
   return strtoull(input_c.substring(0, nr_decimals).c_str(), 0, 16);
 }
 
-unsigned long long hexToULL(const String& input_c) {
+uint64_t hexToULL(const String& input_c) {
   return hexToULL(input_c, input_c.length());
 }
 
-unsigned long long hexToULL(const String& input_c, size_t startpos, size_t nrHexDecimals) {
+uint64_t hexToULL(const String& input_c, size_t startpos, size_t nrHexDecimals) {
   return hexToULL(input_c.substring(startpos, startpos + nrHexDecimals), nrHexDecimals);
 }
 
@@ -408,22 +404,22 @@ String formatToHex_wordarray(const uint16_t* data, size_t size)
   return res;
 }
 
-String formatToHex(unsigned long value, 
+String formatToHex(uint32_t value, 
                    const __FlashStringHelper * prefix,
                    unsigned int minimal_hex_digits) {
   return concat(prefix, formatToHex_no_prefix(value, minimal_hex_digits));
 }
 
-String formatToHex(unsigned long value,
+String formatToHex(uint32_t value,
                    const __FlashStringHelper * prefix) {
   return formatToHex(value, prefix, 0);
 }
 
-String formatToHex(unsigned long value, unsigned int minimal_hex_digits) {
+String formatToHex(uint32_t value, unsigned int minimal_hex_digits) {
   return formatToHex(value, F("0x"), minimal_hex_digits);
 }
 
-String formatToHex_no_prefix(unsigned long value, unsigned int minimal_hex_digits) {
+String formatToHex_no_prefix(uint32_t value, unsigned int minimal_hex_digits) {
   const String fmt = strformat(F("%%0%dX"), minimal_hex_digits);
   return strformat(fmt, value);
 }
@@ -431,8 +427,7 @@ String formatToHex_no_prefix(unsigned long value, unsigned int minimal_hex_digit
 String formatHumanReadable(uint64_t value,
                            uint32_t factor) {
   String result = formatHumanReadable(value, factor, 2);
-
-  result.replace(F(".00"), EMPTY_STRING);
+  remove(result, F(".00"));
   return result;
 }
 
@@ -467,11 +462,11 @@ String formatHumanReadable(uint64_t value,
   return result;
 }
 
-String formatToHex_decimal(unsigned long value) {
+String formatToHex_decimal(uint32_t value) {
   return formatToHex_decimal(value, 1);
 }
 
-String formatToHex_decimal(unsigned long value, unsigned long factor) {
+String formatToHex_decimal(uint32_t value, uint32_t factor) {
   String result = formatToHex(value);
 
   result += F(" (");

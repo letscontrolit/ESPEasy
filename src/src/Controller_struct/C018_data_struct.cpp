@@ -31,7 +31,7 @@ void C018_data_struct::reset() {
   autobaud_success = false;
 }
 
-bool C018_data_struct::init(const uint8_t port, const int8_t serial_rx, const int8_t serial_tx, unsigned long baudrate,
+bool C018_data_struct::init(const uint8_t port, const int8_t serial_rx, const int8_t serial_tx, uint32_t baudrate,
                             bool joinIsOTAA, taskIndex_t sampleSet_Initiator, int8_t reset_pin) {
   if ((serial_rx < 0) || (serial_tx < 0)) {
     // Both pins are needed, or else no serial possible

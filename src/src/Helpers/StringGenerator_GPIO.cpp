@@ -103,14 +103,10 @@ String formatGpioName_ADC(int gpio_pin) {
     if (adc == 0) {
       return F("Hall Effect");
     }
-    String res = F("ADC# ch?");
-    res.replace(F("#"), String(adc));
-    res.replace(F("?"), String(ch));
+    String res = strformat(F("ADC%d ch%d"), adc, ch);
 
     if (t >= 0) {
-      res += F(" (T");
-      res += t;
-      res += ')';
+      res += strformat(F(" (T%d)"), t);
     }
     return res;
   }

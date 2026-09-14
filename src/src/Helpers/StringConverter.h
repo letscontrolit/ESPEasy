@@ -26,10 +26,32 @@ String concat(const __FlashStringHelper * str, const String &val);
 String concat(const __FlashStringHelper * str, const __FlashStringHelper *val);
 
 String concat(const __FlashStringHelper * str, const char* val);
+String concat(const __FlashStringHelper * str, int val);
+String concat(const __FlashStringHelper * str, const char& c);
+
+#if defined(ESP32) && !defined(__riscv)
+String concat(const __FlashStringHelper * str, const int32_t& val);
+#endif
+String concat(const __FlashStringHelper * str, const float& val);
+String concat(const __FlashStringHelper * str, const double& val);
+String concat(const __FlashStringHelper * str, const uint32_t& val);
+#if defined(ESP32) && !defined(__riscv)
+String concat(const __FlashStringHelper * str, const size_t& val);
+#endif
+String concat(const char& c, const __FlashStringHelper *val);
+String concat(int i, const __FlashStringHelper *val);
+String concat(uint32_t i, const __FlashStringHelper *val);
+String concat(const String & str, const __FlashStringHelper *val);
+String concat(const String & str, const String & val);
 String concat(const String & str, const char* val);
+String concat(const String & val, const char& c);
+String concat(String &&val, const char& c);
+String concat(String &&str, const __FlashStringHelper * val);
+String concat(const __FlashStringHelper *str, String && val);
+
 
 String concat(const char& str, const String &val);
-
+/*
 template <typename T>
 String concat(const __FlashStringHelper * str, const T &val) {
   # ifdef USE_SECOND_HEAP
@@ -40,7 +62,8 @@ String concat(const __FlashStringHelper * str, const T &val) {
   res.concat(val);
   return res;
 }
-
+*/
+/*
 template <typename T>
 String concat(const String& str, const T &val) {
   # ifdef USE_SECOND_HEAP
@@ -51,6 +74,12 @@ String concat(const String& str, const T &val) {
   res.concat(val);
   return res;
 }
+  */
+
+bool remove(String& str, const String& toRemove);
+bool remove(String& str, const __FlashStringHelper * toRemove);
+bool remove(String& str, const char& toRemove);
+bool removeSpace(String& str);
 
 bool equals(const String& str, const __FlashStringHelper * f_str);
 bool equals(const String& str, const char& c);
@@ -59,8 +88,13 @@ bool equals(const String& str, const char& c);
 void move_special(String& dest, String&& source);
 String move_special(String&& source);
 
+void move_special(String& dest, String&& source, size_t strLengthThreshold);
+String move_special(String&& source, size_t strLengthThreshold);
+
+
 // Try to reserve on the heap with the most space available
 bool reserve_special(String& str, size_t size);
+bool reserve_special(String& str, size_t size, size_t strLengthThreshold);
 
 // Arduino String does not have a function to de-allocate its internal buffer
 // This is a special trick to de-allocate its internal buffer and thus free up memory.
@@ -113,6 +147,13 @@ void   addNewLine(String& line);
 size_t UTF8_charLength(uint8_t firstByte);
 
 void   replaceUnicodeByChar(String& line, char replChar);
+
+// Pad string with given char to minimum length
+void   padToMinimumLength(String& line, uint32_t minimumLength, char padChar = ' ');
+
+// Prefix string with given char to minimum length
+void   prefixToMinimumLength(String& line, uint32_t minimumLength, char prefixChar = ' ');
+
 
 /*********************************************************************************************\
    Format a value to the set number of decimals
@@ -177,6 +218,8 @@ String wrapWithQuotesIfContainsParameterSeparatorChar(const String& text);
 \*********************************************************************************************/
 String to_json_value(const String& value,
                      bool wrapInQuotes = false);
+
+bool is_json_formatted(const String& value);
 
 /*********************************************************************************************\
    Strip wrapping chars (e.g. quotes)
@@ -424,11 +467,30 @@ bool GetArgv(const char  *string,
              unsigned int argc,
              char         separator = ',');
 
+bool GetArgv(const char    *string,
+             const size_t & string_len,
+             String       & argvString,
+             unsigned int   argc,
+             unsigned int & string_pos, 
+             unsigned int & argc_pos,
+             char           separator = ',');
+/*
 bool GetArgvBeginEnd(const char        *string,
                      const unsigned int argc,
                      int              & pos_begin,
                      int              & pos_end,
                      char               separator = ',');
+*/
+bool GetArgvBeginEnd(const char        *string,
+                     const size_t     & string_len,
+                     const unsigned int argc,
+                     int              & pos_begin,
+                     int              & pos_end,
+                     unsigned int     & string_pos, 
+                     unsigned int     & argc_pos,
+                     char               separator = ',');
 
+bool ContainsAny(const String& str, const char * charsToFind, size_t nrCharsToFind);
+bool ContainsAny(const String& str, const String& charsToFind);
 
 #endif // HELPERS_STRINGCONVERTER_H

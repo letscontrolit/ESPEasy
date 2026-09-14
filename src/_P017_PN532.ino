@@ -229,7 +229,7 @@ bool P017_handle_timer_in(struct EventStruct *event)
 {
   bool success = false;
 
-  static unsigned long tempcounter = 0;
+  static uint32_t tempcounter = 0;
   static uint8_t errorCount        = 0;
 
   switch (event->Par1) {
@@ -341,13 +341,13 @@ bool P017_handle_timer_in(struct EventStruct *event)
         DIRECT_pinWrite(P017_DEBUG_LOGIC_ANALYZER_PIN_INIT, 1);
 # endif // ifdef P017_DEBUG_LOGIC_ANALYZER_PIN_INIT
 
-        unsigned long key = uid[0];
+        uint32_t key = uid[0];
 
         for (uint8_t i = 1; i < 4; ++i) {
           key <<= 8;
           key  += uid[i];
         }
-        const unsigned long old_key = UserVar.getSensorTypeLong(event->TaskIndex);
+        const uint32_t old_key = UserVar.getSensorTypeLong(event->TaskIndex);
         bool new_key                = false;
 
         if (old_key != key) {

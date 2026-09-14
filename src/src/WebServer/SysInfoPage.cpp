@@ -207,8 +207,8 @@ void handle_sysinfo_json() {
           writer->write({ F("vendor"), LabelType::FLASH_CHIP_VENDOR });
         }
         writer->write({ F("device"),      LabelType::FLASH_CHIP_MODEL });
-        writer->write({ F("real_size"),  getFlashRealSizeInBytes() / 1024 });
-        writer->write({ F("ide_size"),   ESP.getFlashChipSize() / 1024 });
+        writer->write({ F("real_size"),  static_cast<uint32_t>(getFlashRealSizeInBytes() >> 10) });
+        writer->write({ F("ide_size"),   static_cast<uint32_t>(ESP.getFlashChipSize() >> 10) });
 
         // Please check what is supported for the ESP32
         writer->write({ F("flash_speed"), LabelType::FLASH_CHIP_SPEED });
@@ -217,11 +217,11 @@ void handle_sysinfo_json() {
 
         writer->write({ F("writes"),        RTC.flashDayCounter });
         writer->write({ F("flash_counter"), RTC.flashCounter });
-        writer->write({ F("sketch_size"),   getSketchSize() / 1024 });
-        writer->write({ F("sketch_free"),   getFreeSketchSpace() / 1024 });
+        writer->write({ F("sketch_size"),   static_cast<uint32_t>(getSketchSize() >> 10) });
+        writer->write({ F("sketch_free"),   static_cast<uint32_t>(getFreeSketchSpace() >> 10) });
 
-        writer->write({ F("spiffs_size"),   SpiffsTotalBytes() / 1024 });
-        writer->write({ F("spiffs_free"),   SpiffsFreeSpace() / 1024 });
+        writer->write({ F("spiffs_size"),   static_cast<uint32_t>(SpiffsTotalBytes() >> 10) });
+        writer->write({ F("spiffs_free"),   static_cast<uint32_t>(SpiffsFreeSpace() >> 10) });
       }
     }
 

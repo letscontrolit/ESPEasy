@@ -129,10 +129,10 @@ P046_data_struct*P046_data = nullptr;
 // TODO TD-er:  Not sure what to do with these, since interrupt driven data + callback functions should be fast and small
 // Not sure if it is possible to share it with other instances.
 // Vars used for interpreting the data:
-volatile unsigned long Plugin_046_lastrainctr;     // Keep track of wdcounter (1/2 min tick)
+volatile uint32_t Plugin_046_lastrainctr;     // Keep track of wdcounter (1/2 min tick)
 volatile int   Plugin_046_lastraincount;           // Last rain count
 volatile float Plugin_046_rainmmph = 0;
-volatile unsigned long Plugin_046_laststrikectr;   // Keep track of wdcounter (1/2 min tick)
+volatile uint32_t Plugin_046_laststrikectr;   // Keep track of wdcounter (1/2 min tick)
 volatile unsigned int  Plugin_046_laststrikecount; // Last number of strikes
 volatile int Plugin_046_strikesph = 0;
 

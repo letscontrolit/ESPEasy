@@ -11,7 +11,7 @@ std::map<int, TimingStats> pluginStats;
 std::map<int, TimingStats> controllerStats;
 std::map<int, TimingStats> networkStats;
 std::map<TimingStatsElements, TimingStats> miscStats;
-unsigned long timingstats_last_reset(0);
+uint32_t timingstats_last_reset(0);
 
 
 void TimingStats::add(int32_t duration_usec) {

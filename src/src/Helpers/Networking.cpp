@@ -469,8 +469,8 @@ String getTypeStringForUnit(uint8_t unit) {
 \*********************************************************************************************/
 void refreshNodeList()
 {
-  unsigned long max_age;
-  const unsigned long max_age_allowed = 10 * 60 * 1000; // 10 minutes
+  uint32_t max_age;
+  const uint32_t max_age_allowed = 10 * 60 * 1000; // 10 minutes
 
   Nodes.refreshNodeList(max_age_allowed, max_age);
 
@@ -623,8 +623,8 @@ uint16_t  _respondToPort;
 
 bool _pending;
 unsigned short _delay;
-unsigned long  _process_time;
-unsigned long  _notify_time;
+uint32_t  _process_time;
+uint32_t  _notify_time;
 
 #  define SSDP_INTERVAL     1200
 #  define SSDP_PORT         1900
@@ -1984,7 +1984,7 @@ bool downloadFile(const String& url, String file_save, const String& user, const
     const size_t downloadBuffSize = 256;
     uint8_t buff[downloadBuffSize];
     size_t  bytesWritten  = 0;
-    unsigned long timeout = millis() + DOWNLOAD_FILE_TIMEOUT;
+    uint32_t timeout = millis() + DOWNLOAD_FILE_TIMEOUT;
 
     // get tcp stream
     WiFiClient *stream = &client;
@@ -2083,7 +2083,7 @@ bool downloadFirmware(const String& url, String& file_save, String& user, String
     const size_t downloadBuffSize = 256;
     uint8_t buff[downloadBuffSize];
     size_t  bytesWritten  = 0;
-    unsigned long timeout = millis() + DOWNLOAD_FILE_TIMEOUT;
+    uint32_t timeout = millis() + DOWNLOAD_FILE_TIMEOUT;
 
     // get tcp stream
     WiFiClient *stream = &client;

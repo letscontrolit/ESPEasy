@@ -126,7 +126,7 @@ const __FlashStringHelper * Command_MemInfo_detail(struct EventStruct *event, co
 
 const __FlashStringHelper * Command_Background(struct EventStruct *event, const char *Line)
 {
-  unsigned long timer = millis() + parseCommandArgumentInt(Line, 1);
+  uint32_t timer = millis() + parseCommandArgumentInt(Line, 1);
 
   serialPrintln(F("start"));
 

@@ -61,7 +61,7 @@ boolean Blynk_keep_connection_c015(int                       controllerIndex,
                                    ControllerSettingsStruct& ControllerSettings);
 
 
-static unsigned long _C015_LastConnectAttempt[CONTROLLER_MAX] = { 0, 0, 0 };
+static uint32_t _C015_LastConnectAttempt[CONTROLLER_MAX] = { 0, 0, 0 };
 
 void CPlugin_015_handleInterrupt() {
   // This cplugin uses modified blynk library.
@@ -447,7 +447,7 @@ boolean Blynk_send_c015(const String& value, int vPin, unsigned int clientTimeou
 {
   Blynk.virtualWrite(vPin, value);
 
-  unsigned long timer = millis() + clientTimeout;
+  uint32_t timer = millis() + clientTimeout;
 
   while (!timeOutReached(timer)) {
     backgroundtasks();

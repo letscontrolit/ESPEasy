@@ -101,7 +101,7 @@ void rulesProcessing(const String& event) {
   checkRAM(F("rulesProcessing"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
 #ifndef BUILD_NO_DEBUG
-  const unsigned long timer = millis();
+  const uint32_t timer = millis();
 #endif // ifndef BUILD_NO_DEBUG
 // #ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
@@ -974,7 +974,7 @@ void substitute_eventvalue(String& line, const String& event) {
             log += percent_pos;
             addLog(LOG_LEVEL_ERROR, log);
           }
-          line.replace(F("%eventvalue"), F(""));
+          remove(line, F("%eventvalue"));
         } else {
           // Find the optional part for a default value when the asked for eventvalue does not exist.
           // Syntax: %eventvalueX|Y%
@@ -1010,7 +1010,7 @@ void substitute_eventvalue(String& line, const String& event) {
               if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
                 addLog(LOG_LEVEL_ERROR, concat(F("Rules : Syntax error, invalid variable: "), eventvalue));
               }
-              line.replace(eventvalue, EMPTY_STRING);
+              remove(line, eventvalue);
             }
           }
         }

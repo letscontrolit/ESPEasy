@@ -11,6 +11,7 @@
 # include "../DataStructs/Scheduler_RulesTimerID.h"
 # include "../DataStructs/Scheduler_SystemEventQueueTimerID.h"
 # include "../DataStructs/Scheduler_TaskDeviceTimerID.h"
+# include "../DataStructs/Scheduler_NWPluginTimerID.h"
 #endif // ifndef BUILD_NO_DEBUG
 
 String ESPEasy_Scheduler::decodeSchedulerId(SchedulerTimerID timerID) {
@@ -50,6 +51,9 @@ String ESPEasy_Scheduler::decodeSchedulerId(SchedulerTimerID timerID) {
       break;
     case SchedulerTimerType_e::TaskDeviceTimer:
       decoded = reinterpret_cast<const TaskDeviceTimerID *>(&timerID)->decode();
+      break;
+    case SchedulerTimerType_e::NWPLUGIN_TIMER_IN_e:
+      decoded = reinterpret_cast<const NWPluginTimerID *>(&timerID)->decode();
       break;
 
       // TD-er: Do not add a default: case here, so the compiler will warn us when we're missing one later.

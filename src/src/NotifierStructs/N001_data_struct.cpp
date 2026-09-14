@@ -162,8 +162,8 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, St
     }
 
     // Clean up receiver address.
-    tmp_ato.replace(";", ",");
-    tmp_ato.replace(" ", "");
+    tmp_ato.replace(';', ',');
+    removeSpace(tmp_ato);
 
 
     String mailheader;
@@ -250,7 +250,7 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, St
 
         // Must retrieve SMTP Reply Packet. Data not used, ignored.
         if (!failFlag) {
-          const unsigned long timer = millis() + clientTimeout;
+          const uint32_t timer = millis() + clientTimeout;
           String replyStr;
           String catStr;
 
@@ -425,7 +425,7 @@ bool NPlugin_001_MTA(WiFiClient& client, const String& aStr, uint16_t aWaitForPa
   }
 
   // Wait For Response
-  const unsigned long timer = millis() + timeout;
+  const uint32_t timer = millis() + timeout;
   backgroundtasks();
 
   do { // FIXME TD-er: Why this while loop??? makes no sense as it will only be run once

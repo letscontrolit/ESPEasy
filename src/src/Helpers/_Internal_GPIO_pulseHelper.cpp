@@ -88,19 +88,19 @@ bool Internal_GPIO_pulseHelper::init()
   return false;
 }
 
-void Internal_GPIO_pulseHelper::getPulseCounters(unsigned long& pulseCounter, unsigned long& pulseTotalCounter, float& pulseTime_msec)
+void Internal_GPIO_pulseHelper::getPulseCounters(uint32_t& pulseCounter, uint32_t& pulseTotalCounter, float& pulseTime_msec)
 {
   pulseCounter      = ISRdata.pulseCounter;
   pulseTotalCounter = ISRdata.pulseTotalCounter;
   pulseTime_msec    = static_cast<float>(ISRdata.pulseTime) / 1000.0f;
 }
 
-void Internal_GPIO_pulseHelper::setPulseCountTotal(unsigned long pulseTotalCounter)
+void Internal_GPIO_pulseHelper::setPulseCountTotal(uint32_t pulseTotalCounter)
 {
   ISRdata.pulseTotalCounter = pulseTotalCounter;
 }
 
-void Internal_GPIO_pulseHelper::setPulseCounter(unsigned long pulseCounter, float pulseTime_msec)
+void Internal_GPIO_pulseHelper::setPulseCounter(uint32_t pulseCounter, float pulseTime_msec)
 {
   ISRdata.pulseCounter = pulseCounter;
   ISRdata.pulseTime    = static_cast<uint64_t>(pulseTime_msec * 1000.0f);

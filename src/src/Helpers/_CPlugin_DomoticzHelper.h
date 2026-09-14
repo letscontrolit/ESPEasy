@@ -26,7 +26,7 @@ String formatDomoticzSensorType(struct EventStruct *event);
 bool   deserializeDomoticzJson(const String& json,
                                unsigned int& idx,
                                float       & nvalue,
-                               long        & nvaluealt,
+                               int32_t        & nvaluealt,
                                String      & svalue1,
                                String      & switchtype);
 

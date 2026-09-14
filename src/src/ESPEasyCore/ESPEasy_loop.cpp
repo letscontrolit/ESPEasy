@@ -46,12 +46,12 @@ void updateLoopStats() {
     return; // No loop should take > 10 sec.
   }
 
-  if (shortestLoop > static_cast<unsigned long>(usecSince)) {
+  if (shortestLoop > static_cast<uint32_t>(usecSince)) {
     shortestLoop   = usecSince;
     loopCounterMax = 30 * 1000000 / usecSince;
   }
 
-  if (longestLoop < static_cast<unsigned long>(usecSince)) {
+  if (longestLoop < static_cast<uint32_t>(usecSince)) {
     longestLoop = usecSince;
   }
 }

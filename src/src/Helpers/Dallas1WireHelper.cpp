@@ -382,7 +382,7 @@ void Dallas_plugin_set_addr(uint8_t addr[], taskIndex_t TaskIndex, uint8_t var_i
     uint32_t value = (uint32_t)ExtraTaskSettings.TaskDevicePluginConfigLong[x];
     value                                          &= mask;
     value                                          += (static_cast<uint32_t>(addr[x]) << (var_index * 8));
-    ExtraTaskSettings.TaskDevicePluginConfigLong[x] = (long)value;
+    ExtraTaskSettings.TaskDevicePluginConfigLong[x] = (int32_t)value;
   }
   Cache.updateExtraTaskSettingsCache();
 }
@@ -512,6 +512,7 @@ Dallas_read_result Dallas_readTemp(const uint8_t ROM[8], float *value, int8_t gp
       || (ROM[0] == 0x22)  // DS1822
       || (ROM[0] == 0x42)) // DS28EA00
   {
+    // TODO TD-er: Use getUint16FromLittleEndianByteStream
     DSTemp = (ScratchPad[1] << 8) + ScratchPad[0];
 
     if (DSTemp == 0x550) { // power-on reset value
@@ -770,7 +771,7 @@ bool Dallas_setResolution(const uint8_t ROM[8], uint8_t res, int8_t gpio_pin_rx,
 
     // save the newly written values to eeprom
     Dallas_write(0x48, gpio_pin_rx, gpio_pin_tx);
-    delay(100);  // <--- added 20ms delay to allow 10ms long EEPROM write operation (as specified by datasheet)
+    delay(100);  // <--- added 20ms delay to allow 10ms int32_t EEPROM write operation (as specified by datasheet)
     Dallas_reset(gpio_pin_rx, gpio_pin_tx);
 
     return true; // new value set
@@ -859,7 +860,7 @@ uint8_t Dallas_reset(int8_t gpio_pin_rx, int8_t gpio_pin_tx)
         // t_PDL 60 ... 240 usec
 
         // Signal will rise only due to pull-up resistor
-        // Meaning measured duration may be off by usec_release (too long)
+        // Meaning measured duration may be off by usec_release (too int32_t)
         presence_end = Dallas_measureWaitForPinHigh(gpio_pin_rx, start, 60 + 240);
 
         // Set the pin high, just in case we have a (single) parasitic powered sensor
@@ -1173,8 +1174,8 @@ void Dallas_write_bit(uint8_t v, int8_t gpio_pin_rx, int8_t gpio_pin_tx)
   // write 1: low 6 usec, high 64 usec  (no less than 6 usec low, or else scanning will no longer work)
   // write 0: low 60 usec, high 20 usec
   // High time is based on the recovery time, which is detected during reset
-  const long low_time  = (v & 1) ? 7 : 60;
-  const long high_time = (v & 1) ? (40 + usec_release) : (2 * usec_release + 20); // Recovery time
+  const int32_t low_time  = (v & 1) ? 7 : 60;
+  const int32_t high_time = (v & 1) ? (40 + usec_release) : (2 * usec_release + 20); // Recovery time
   uint32_t   start     = 0;
 
   Dallas_write_bit_ISR(v, gpio_pin_rx, gpio_pin_tx, low_time, high_time, start);
@@ -1190,8 +1191,8 @@ void Dallas_write_bit(uint8_t v, int8_t gpio_pin_rx, int8_t gpio_pin_tx)
 void DALLAS_IRAM_ATTR Dallas_write_bit_ISR(uint8_t   v,
                                            int8_t    gpio_pin_rx,
                                            int8_t    gpio_pin_tx,
-                                           long      low_time,
-                                           long      high_time,
+                                           int32_t      low_time,
+                                           int32_t      high_time,
                                            uint32_t& start)
 {
   ISR_noInterrupts();

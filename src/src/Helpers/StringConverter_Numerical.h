@@ -8,7 +8,7 @@
  \*********************************************************************************************/
 
 // FIXME: change original code so it uses String and String.toInt()
-unsigned long str2int(const char *string);
+uint32_t str2int(const char *string);
 
 /********************************************************************************************\
    Check if valid float and convert string to float.
@@ -29,15 +29,22 @@ bool toValidString(String& str,
                   bool         trimTrailingZeros = false);
   
 
+// Create a string from given value represented in 'base'
+// For HEX or BIN representation, the separation will be per byte from the right.
+// For base 10 (DEC) the separator char will be placed every 3rd position from the right.
+// When extending the string to contain minNrDigits, zeroes will be prefixed.
 String ull2String(uint64_t value,
-                  uint8_t  base = 10);
+                  uint8_t  base = 10,
+                  uint8_t  minNrDigits = 1,
+                  char     separatorChar = '\0',
+                  bool     toUpperCase = false);
 
-String ll2String(int64_t value,
-                 uint8_t base = 10);
 
-String ul2stringFixed(uint32_t value,
-                      uint8_t  base,
-                      bool     dotSeparator);
+String ll2String(int64_t  value,
+                 uint8_t  base = 10,
+                 uint8_t  minNrDigits = 1,
+                 char     separatorChar = '\0',
+                 bool     toUpperCase = false);
 
 
 String trimTrailingZeros(const String& value);
@@ -62,23 +69,23 @@ String floatToString(const float& value,
    Handling HEX strings
  \*********************************************************************************************/
 
-// Convert max. 8 hex decimals to unsigned long
-unsigned long hexToUL(const String& input_c,
+// Convert max. 8 hex decimals to uint32_t
+uint32_t hexToUL(const String& input_c,
                       size_t        nrHexDecimals);
 
-unsigned long hexToUL(const String& input_c);
+uint32_t hexToUL(const String& input_c);
 
-unsigned long hexToUL(const String& input_c,
+uint32_t hexToUL(const String& input_c,
                       size_t        startpos,
                       size_t        nrHexDecimals);
 
-// Convert max. 16 hex decimals to unsigned long long
-unsigned long long hexToULL(const String& input_c,
+// Convert max. 16 hex decimals to uint64_t
+uint64_t hexToULL(const String& input_c,
                             size_t        nrHexDecimals); 
 
-unsigned long long hexToULL(const String& input_c);
+uint64_t hexToULL(const String& input_c);
 
-unsigned long long hexToULL(const String& input_c,
+uint64_t hexToULL(const String& input_c,
                             size_t        startpos,
                             size_t        nrHexDecimals);
 
@@ -103,16 +110,16 @@ String formatULLtoHex_no_prefix(const uint64_t& value, unsigned int minimal_hex_
 String formatULLtoHex_decimal(const uint64_t& value);
 
 
-String formatToHex(unsigned long value,
+String formatToHex(uint32_t value,
                    const __FlashStringHelper * prefix,
                    unsigned int minimal_hex_digits);
 
-String formatToHex(unsigned long value,
+String formatToHex(uint32_t value,
                    const __FlashStringHelper * prefix);
 
-String formatToHex(unsigned long value, unsigned int minimal_hex_digits = 0);
+String formatToHex(uint32_t value, unsigned int minimal_hex_digits = 0);
 
-String formatToHex_no_prefix(unsigned long value, unsigned int minimal_hex_digits = 0);
+String formatToHex_no_prefix(uint32_t value, unsigned int minimal_hex_digits = 0);
 
 String formatHumanReadable(uint64_t value,
                            uint32_t factor);
@@ -121,10 +128,10 @@ String formatHumanReadable(uint64_t value,
                            uint32_t factor,
                            int           NrDecimals);
 
-String formatToHex_decimal(unsigned long value);
+String formatToHex_decimal(uint32_t value);
 
-String formatToHex_decimal(unsigned long value,
-                           unsigned long factor);
+String formatToHex_decimal(uint32_t value,
+                           uint32_t factor);
 
 int intFromHexChar(char a);
 

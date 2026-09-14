@@ -156,7 +156,7 @@ public:
 
   static KeyValueStruct             getKeyValue(AT_cmd        at_cmd,
                                                 LoRaModule_e  module,
-                                                const String& value,
+                                                String&& value,
                                                 bool          extendedValue);
 
 

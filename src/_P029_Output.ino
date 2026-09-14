@@ -51,7 +51,7 @@ boolean Plugin_029(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_LOAD:
     {
       // We need the index of the controller we are: 0-CONTROLLER_MAX
-      uint8_t controllerNr = 0;
+      uint32_t controllerNr = 0;
 
       for (controllerIndex_t i = 0; i < CONTROLLER_MAX; i++)
       {
