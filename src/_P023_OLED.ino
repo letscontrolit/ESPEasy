@@ -7,6 +7,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2026-09-01 tonhuisman: Function PLUGIN_I2C_HAS_ADDRESS doesn't have a valid TaskIndex when called, so don't pass PCONFIG() value
  * 2024-08-17 tonhuisman: Disable preview of on-display content for LIMIT_BUILD_SIZE builds.
  * 2023-10-16 tonhuisman: Bugfix: Template parsing stopped after initial display since previous updates :-(
  * 2023-03-18 tonhuisman: Show current on-display content on Devices page (75% size, omits trailing empty lines)
@@ -64,7 +65,7 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_I2C_HAS_ADDRESS:
     case PLUGIN_WEBFORM_SHOW_I2C_PARAMS:
     {
-      success = OLedI2CAddressCheck(function, event->Par1, F("i2c_addr"), PCONFIG(0));
+      success = OLedI2CAddressCheck(function, event->Par1, F("i2c_addr"), PLUGIN_I2C_HAS_ADDRESS == function ? -1 : PCONFIG(0));
 
       break;
     }
@@ -105,9 +106,9 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
       {
         const __FlashStringHelper *options4[] = { F("Normal"), F("Optimized") };
         const int optionValues4[]             = { 1, 2 };
-        constexpr size_t optionCount = NR_ELEMENTS(optionValues4);
+        constexpr size_t optionCount          = NR_ELEMENTS(optionValues4);
         const FormSelectorOptions selector(optionCount, options4, optionValues4);
-        selector.addFormSelector(F("Font Width"), F("font_spacing"),  PCONFIG(4));
+        selector.addFormSelector(F("Font Width"), F("font_spacing"), PCONFIG(4));
       }
       {
         String strings[P23_Nlines];
@@ -162,7 +163,8 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
       P023_data_struct::Spacing font_spacing = P023_data_struct::Spacing::normal;
 
 
-      switch (PCONFIG(3)) {
+      switch (PCONFIG(3))
+      {
         case 1:
           // 128x64
           type = P023_data_struct::OLED_128x64;
@@ -183,7 +185,8 @@ boolean Plugin_023(uint8_t function, struct EventStruct *event, String& string)
         font_spacing = static_cast<P023_data_struct::Spacing>(PCONFIG(4));
       }
 
-      void * ptr = special_calloc(1, sizeof(P023_data_struct));
+      void *ptr = special_calloc(1, sizeof(P023_data_struct));
+
       if (ptr) {
         initPluginTaskData(event->TaskIndex, new (ptr) P023_data_struct(PCONFIG(0), type, font_spacing, PCONFIG(2), PCONFIG(5)));
       }
