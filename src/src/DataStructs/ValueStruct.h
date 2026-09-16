@@ -46,7 +46,8 @@ public:
   enum class PreferredFormat : uint8_t {
     Default = 0,
     Bin,
-    Hex
+    Hex,
+    Hex_Dec // for example: "0x1234 (4660)"
 
   };
 
@@ -103,6 +104,8 @@ public:
 
   static ValueStruct     makeHexFormatted(uint64_t val,
                                           uint8_t  minNrDigits);
+  static ValueStruct     makeHexDecimalFormatted(uint64_t val,
+                                                 uint8_t  minNrDigits);
   static ValueStruct     makeBinFormatted(uint64_t val,
                                           uint8_t  minNrDigits);
 
@@ -118,7 +121,8 @@ public:
   void                   setInt(size_t val);
 #endif
 
-  void                   setIPAddress(const IPAddress& ip, bool includeZone = false);
+  void                   setIPAddress(const IPAddress& ip,
+                                      bool             includeZone = false);
 
   ValueStruct::ValueType getValueType() const
   {
