@@ -100,7 +100,7 @@ jobs:
           # FIXME Workaround to (temporarily) not use # in the artifact name, see https://github.com/actions/upload-artifact/issues/473
           name: Bin-${{ steps.string.outputs.uppercase }}-${{ matrix.env }}-${{ steps.date.outputs.builddate }}_PR_${{ github.event.number }}_${{ github.run_id }} # Sort by ESP type
           path: |
-            bin
+            ./build_output/bin
           if-no-files-found: ignore
 
   # Package all ESP82xx and ESP32 into a single ESPEasy-all-Binaries-<date>_PR#<pr_nr>_<runnr>.zip
