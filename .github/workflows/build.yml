@@ -79,6 +79,9 @@ jobs:
         with:
           version: "latest"
           enable-cache: false
+      - name: Install dependencies
+        run: |
+          uv pip install --system pioarduino
       - name: Get current date
         id: date
         run: |
