@@ -41,6 +41,20 @@ ValueStruct ValueStruct::makeHexFormatted(uint64_t val, uint8_t minNrDigits)
   return res;
 }
 
+ValueStruct ValueStruct::makeHexDecimalFormatted(uint64_t val,
+                                                 uint8_t  minNrDigits)
+{
+  ValueStruct res(val);
+
+  // TODO TD-er: Add factor option for decimal formatted, like in String formatToHex_decimal(uint32_t value, uint32_t factor)
+  // Or maybe just a flag to make it 'human readable' and maybe whether the factor should be 1000 or 1024.
+
+  res.setPreferredFormat(PreferredFormat::Hex_Dec);
+  res.setMinNrDigits(minNrDigits);
+  res.setCaseFormat(CaseFormat::ToUpper);
+  return res;
+}
+
 ValueStruct ValueStruct::makeBinFormatted(uint64_t val, uint8_t minNrDigits)
 {
   ValueStruct res(val);
@@ -685,8 +699,14 @@ size_t ValueStruct::print(Print& out, ValueType& valueType, bool unformatted) co
         return out.print(concat(F("0b"), ull2String(u64_val, BIN, _minNrDigits)));
       }
 
-      if (format == PreferredFormat::Hex) {
-        return out.print(concat(F("0x"), ull2String(u64_val, HEX, _minNrDigits, '\0', getCaseFormat(unformatted) == CaseFormat::ToUpper)));
+      if ((format == PreferredFormat::Hex) || (format == PreferredFormat::Hex_Dec)) {
+        String str = concat(F("0x"), ull2String(u64_val, HEX, _minNrDigits, '\0', getCaseFormat(unformatted) == CaseFormat::ToUpper));
+
+        if (format == PreferredFormat::Hex_Dec) {
+          // Old implementation: formatToHex_decimal
+          str += strformat(F(" (%s)"), ull2String(u64_val, DEC /*, _minNrDigits*/).c_str());
+        }
+        return out.print(std::move(str));
       }
 
       if ((_size > 32) || _minNrDigits) {
