@@ -27,11 +27,15 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: '3.13'
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          version: "latest"
+          enable-cache: false
       - name: Build documentation
         run: |
           cd docs
           sudo apt install imagemagick zip
-          pip install uv
           uv pip install --system -r requirements.txt
           python ./builds_overview.py
           make html
@@ -50,9 +54,13 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: '3.13'
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          version: "latest"
+          enable-cache: false
       - id: set-matrix
         run: |
-          pip install uv
           uv pip install --system pioarduino
           python tools/ci/generate-matrix.py
 
@@ -66,13 +74,11 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: '3.13'
-      - name: Dependencies
-        run: |
-          sudo apt-get update
-          sudo apt install binutils build-essential libffi-dev libgit2-dev
-          pip install uv
-          uv pip install --system -r requirements.txt
-          pio pkg update -e ${{ matrix.env }}
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          version: "latest"
+          enable-cache: false
       - name: Get current date
         id: date
         run: |
