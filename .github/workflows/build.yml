@@ -90,7 +90,7 @@ jobs:
         env:
           PYTHONIOENCODING: utf-8
           PYTHONUTF8: '1'
-        run: platformio run -e ${{ matrix.variant }}
+        run: platformio run -e ${{ matrix.env }}
       - id: string
         uses: Entepotenz/change-string-case-action-min-dependencies@v1
         with:
