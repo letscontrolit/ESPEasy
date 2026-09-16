@@ -83,13 +83,11 @@ jobs:
         id: date
         run: |
           echo "builddate=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
-      - name: Build and archive
-        id: build-and-archive
+      - name: Run PlatformIO
         env:
-          CHIP: ${{ matrix.chip }}
-          ENV: ${{ matrix.env }}
-        run: |
-          python tools/ci/build-and-archive.py
+          PYTHONIOENCODING: utf-8
+          PYTHONUTF8: '1'
+        run: platformio run -e ${{ matrix.variant }}
       - id: string
         uses: Entepotenz/change-string-case-action-min-dependencies@v1
         with:
