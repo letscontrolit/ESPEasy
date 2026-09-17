@@ -1480,17 +1480,14 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
   START_TIMER
 
   ExtraTaskSettings.clear();
+  Cache.clearTaskCache(TaskIndex);
+
   const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(TaskIndex);
 
   if (!validDeviceIndex(DeviceIndex)) {
     // No need to load from storage, as there is no plugin assigned to this task.
     ExtraTaskSettings.TaskIndex = TaskIndex; // Needed when an empty task was requested
 
-    // FIXME TD-er: Do we need to keep a cache of an empty task?
-    // Maybe better to do this?
-    Cache.clearTaskCache(TaskIndex);
-
-    //    Cache.updateExtraTaskSettingsCache_afterLoad_Save();
     return EMPTY_STRING;
   }
   #ifndef BUILD_NO_RAM_TRACKER
