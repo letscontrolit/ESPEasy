@@ -1211,7 +1211,7 @@ bool setDNS(int index, const IPAddress& dns) {
 bool resolveHostByName(const char *aHostname, IPAddress& aResult, uint32_t timeout_ms) {
   START_TIMER;
 
-  if (!ESPEasy::net::NetworkConnected(true)) {
+  if (!ESPEasy::net::NetworkConnected()) {
     return false;
   }
 
@@ -1220,16 +1220,32 @@ bool resolveHostByName(const char *aHostname, IPAddress& aResult, uint32_t timeo
   // FIXME TD-er: Must try to restore DNS server entries.
   scrubDNS();
 
-#if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ESP32)
-  bool resolvedIP = WiFi.hostByName(aHostname, aResult) == 1;
-#else // if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ESP32)
-  bool resolvedIP = WiFi.hostByName(aHostname, aResult, timeout_ms) == 1;
-#endif // if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ESP32)
-  delay(0);
-  FeedSW_watchdog();
+  bool resolvedIP{};
+  String host(aHostname);
+  host.trim();
 
-  if (!resolvedIP) {
-    Scheduler.sendGratuitousARP_now();
+  uint32_t start = millis();
+
+  for (int attempt = 0; 
+       attempt < 2 && !resolvedIP && timePassedSince(start) < timeout_ms;
+       ++attempt) {
+
+#if defined(ARDUINO_ESP8266_RELEASE_2_3_0)
+    resolvedIP = WiFi.hostByName(host.c_str(), aResult) == 1;
+#elif defined(ESP32)
+    resolvedIP = Network.hostByName(host.c_str(), aResult) == 1;
+#else // if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ESP32)
+    resolvedIP = WiFi.hostByName(host.c_str(), aResult, timeout_ms) == 1;
+#endif // if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ESP32)
+    delay(0);
+    FeedSW_watchdog();
+
+    if (!resolvedIP && attempt == 0) {
+      #ifdef ESP32
+      dns_clear_cache();
+      #endif
+      Scheduler.sendGratuitousARP_now();
+    }
   }
   STOP_TIMER(HOST_BY_NAME_STATS);
   return resolvedIP;
