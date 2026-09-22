@@ -13,7 +13,6 @@
 #include "../Helpers/Networking.h"
 #include "../Helpers/PeriodicalActions.h"
 
-
 /*********************************************************************************************\
 * Interval Timer
 * These timers set a new scheduled timer, based on the old value.

@@ -1,0 +1,47 @@
+@startuml
+
+class plugin {
+
+}
+
+class plugin_struct {
+
+}
+
+package "modbusFacility" {
+  class Modbus_mgr <<singleton>> {
+  }
+
+  class Modbus_link {
+  }
+
+  class Modbus_device {
+  }
+
+  class Queue {
+  }
+
+  struct Transaction {
+  }
+}
+
+class Serial_port {
+}
+
+class interface_gui {
+}
+
+class kvs {
+}
+
+plugin *-- plugin_struct
+plugin_struct *-right- Modbus_device
+Modbus_link "1" -right-> "1" Serial_port
+Modbus_mgr "1" *--- "*" Modbus_link
+Modbus_mgr "1" <-- "*" Modbus_device
+Modbus_link *-- "1" Queue
+Queue *-left- "*" Transaction
+Modbus_device "1" --> "*" Transaction
+interface_gui -left-> Modbus_mgr
+Modbus_mgr --> kvs
+@enduml

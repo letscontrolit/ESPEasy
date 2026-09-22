@@ -63,7 +63,7 @@
 #else
 # define DAT_BASIC_SETTINGS_SIZE          3072 // Current Settings Struct size is ~1.3k, leave some room to extend
 #endif
-#endif
+#endif 
 #ifdef ESP32
 # define DAT_BASIC_SETTINGS_SIZE          6144 // Current Settings Struct size is ~3k, leave some room to extend
 #endif
@@ -132,9 +132,11 @@
 
 #ifndef DAT_NETWORK_INTERFACE_SIZE
 # define DAT_NETWORK_INTERFACE_SIZE        1024
-#endif 
+#endif
 
-
+#ifndef DAT_MODBUS_INTERFACE_SIZE
+# define DAT_MODBUS_INTERFACE_SIZE         256 // Reserved size for Modbus link settings
+#endif
 
 /*
 
@@ -169,11 +171,11 @@
   #   define DAT_OFFSET_CONTROLLER            (DAT_OFFSET_TASKS + (DAT_TASKS_DISTANCE * TASKS_MAX))  // each controller = 1k, 3 max, DAT_OFFSET_CDN is at position of any 4th controller.
   #  endif // ifndef DAT_OFFSET_CONTROLLER
   #  ifndef DAT_OFFSET_CUSTOM_CONTROLLER
-  #   define DAT_OFFSET_CUSTOM_CONTROLLER     (DAT_OFFSET_CONTROLLER + (DAT_CONTROLLER_SIZE * CONTROLLER_MAX))  // each custom controller config = 1k, 3 max
+  #   define DAT_OFFSET_CUSTOM_CONTROLLER     (DAT_OFFSET_CONTROLLER + (DAT_CONTROLLER_SIZE * CONTROLLER_MAX)) // each custom controllerconfig = 1k, 3 max
   #  endif // ifndef DAT_OFFSET_CUSTOM_CONTROLLER
   # ifndef DAT_OFFSET_CDN
   #  define DAT_OFFSET_CDN                    (DAT_OFFSET_CUSTOM_CONTROLLER - DAT_CDN_SIZE)  // single CDN settings block of 1k
-  # endif 
+  # endif
 
   #  ifndef CONFIG_FILE_SIZE
   #   define CONFIG_FILE_SIZE                65536
@@ -191,8 +193,8 @@
   #   define DAT_OFFSET_CUSTOM_CONTROLLER    32768 // each custom controller config = 1k, 4 max.
   #  endif // ifndef DAT_OFFSET_CUSTOM_CONTROLLER
   # ifndef DAT_OFFSET_CDN
-  #  define DAT_OFFSET_CDN                   (DAT_OFFSET_TASKS - DAT_CDN_SIZE)  // single CDN settings block of 1k
-  # endif 
+  #  define DAT_OFFSET_CDN                   (DAT_OFFSET_TASKS - DAT_CDN_SIZE) // single CDN settings block of 1k
+  # endif
   #  ifdef LIMIT_BUILD_SIZE
 
 // Limit the config size for 1M builds, since their file system is also quite small
@@ -218,21 +220,21 @@
   #  define DAT_OFFSET_CUSTOM_CONTROLLER    12288  // each custom controller config = 1k, 4 max.
   # endif // ifndef DAT_OFFSET_CUSTOM_CONTROLLER
   # ifndef DAT_OFFSET_CDN
-  #  define DAT_OFFSET_CDN                   (DAT_OFFSET_CONTROLLER - DAT_CDN_SIZE)  // single CDN settings block of 1k
-  # endif 
+  #  define DAT_OFFSET_CDN                   (DAT_OFFSET_CONTROLLER - DAT_CDN_SIZE) // single CDN settings block of 1k
+  # endif
   # ifndef CONFIG_FILE_SIZE
   #  define CONFIG_FILE_SIZE               (DAT_OFFSET_TASKS + ((DAT_TASKS_SIZE + DAT_TASKS_CUSTOM_SIZE) * TASKS_MAX))
   # endif // ifndef CONFIG_FILE_SIZE
 
-  // On ESP8266 we will not store Network Interface settings
-  // The only 2 interfaces supported on ESP8266 are:
-  // - WiFi STA
-  // - WiFi AP
-  // Both do not need extra settings for basic functionality
-  // All other network interface plugins will be ESP32-only.
+// On ESP8266 we will not store Network Interface settings
+// The only 2 interfaces supported on ESP8266 are:
+// - WiFi STA
+// - WiFi AP
+// Both do not need extra settings for basic functionality
+// All other network interface plugins will be ESP32-only.
   # ifndef DAT_NETWORK_INTERFACES_OFFSET
   #  define DAT_NETWORK_INTERFACES_OFFSET    16384
-  # endif // ifndef DAT_OFFSET_CUSTOM_CONTROLLER
+  # endif
   # ifndef DAT_OFFSET_DEV_CREDENTIALS
   #  define DAT_OFFSET_DEV_CREDENTIALS       0
   # endif
@@ -241,5 +243,18 @@
   # endif
 #endif    // if defined(ESP32)
 
+ #ifndef DAT_MODBUS_INTERFACE_OFFSET
+  # if FEATURE_NON_STANDARD_24_TASKS && defined(ESP8266)
+  #  if defined(FEATURE_MODBUS_FAC) && FEATURE_MODBUS_FAC
+  #   error  "Not yet defined where to store modbus data, see https: // github.com/letscontrolit/ESPEasy/pull/5390#pullrequestreview-4124760094"
+                                                                     // "
+  #  endif
+  # else // ifdef FEATURE_NON_STANDARD_24_TASKS
+  # if defined(FEATURE_MODBUS_FAC) && FEATURE_MODBUS_FAC
+  #  define DAT_MODBUS_INTERFACE_OFFSET     DAT_BASIC_SETTINGS_SIZE  // Stored in the 1k right after the basic settings, each Modbus link
+                                                                     // config = 256 bytes, 4 max
+  # endif
+  # endif // ifdef FEATURE_NON_STANDARD_24_TASKS
+  #endif // ifndef DAT_MODBUS_INTERFACE_OFFSET
 
 #endif    // CUSTOMBUILD_STORAGE_LAYOUT_H

@@ -1,0 +1,28 @@
+.. csv-table::
+        :header: "Command", "Extra information"
+        :widths: 20, 30
+
+        "
+        ``modbus,write,<address>,<value>``
+
+        ","
+        Write value ``<value>`` into the holding register ``<address>``.
+        "
+        "
+        ``modbus,read,<address>``
+
+        ","
+        Read the value from the holding register ``<address>``. The ``<address>`` shall be within the configured cache. Note that the value is read from the Modbus device but it will not be returned as part of the command. The value is printed in the logging.
+        "
+        "
+        ``modbus,scan``
+
+        ","
+        Scans the modbus address range for responding units. It will do a read function for holding register 1. Note this will take some time. Ouput is in the logging.
+        "
+              "
+        ``modbus,dump,<start>,<end>``
+
+        ","
+        Dumps the holding registers in the  address range ``<start>`` until ``<end>``. The output can be found in the logging.
+        "
