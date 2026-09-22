@@ -317,6 +317,8 @@ void ESPEasy_setup()
       RTC.bootFailedCount++;
       RTC.bootCounter++;
       lastMixedSchedulerId_beforereboot.mixed_id = RTC.lastMixedSchedulerId;
+
+      node_time.restoreFromRTC();
       readUserVarFromRTC();
       log = concat(F("INIT : "), getLastBootCauseString()) + 
             concat(F(" #"), RTC.bootCounter);
@@ -359,6 +361,9 @@ void ESPEasy_setup()
 
   //  progMemMD5check();
   LoadSettings();
+#if FEATURE_EXT_RTC
+  node_time.restoreFromRTC();
+#endif
 #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
   ESPEasy_Console.reInit();
 #endif // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
@@ -397,8 +402,6 @@ void ESPEasy_setup()
   #ifndef BUILD_NO_RAM_TRACKER
   logMemUsageAfter(F("hardwareInit()"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
-
-  node_time.restoreFromRTC();
 
   Settings.UseRTOSMultitasking = false; // For now, disable it, we experience heap corruption.
 

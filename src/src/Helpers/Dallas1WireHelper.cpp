@@ -34,18 +34,18 @@
 # endif // ifdef ESP32
 
 
-# ifndef DALLAS_RESET_RETRIES
+# ifndef DALLAS_RETRIES
 
 // Reset may fail if a
-#  define DALLAS_RESET_RETRIES 3
-# endif // ifndef DALLAS_RESET_RETRIES
+#  define DALLAS_RETRIES 3
+# endif // ifndef DALLAS_RETRIES
 
 # include <vector>
 
 unsigned char ROM_NO[8]{ 0 };
 uint8_t LastDiscrepancy{};
 uint8_t LastFamilyDiscrepancy{};
-uint8_t LastDeviceFlag{};
+bool    LastDeviceFlag{};
 
 int32_t usec_release{};
 int32_t presence_start{};
@@ -199,6 +199,28 @@ void Dallas_addr_selector_webform_load(taskIndex_t TaskIndex, int8_t gpio_pin_rx
     nrVariables = VARS_PER_TASK;
   }
 
+  // find all suitable devices
+  std::vector<uint64_t> scan_res;
+  std::vector<bool> fixed_res;
+
+  for (uint8_t attempt = 0; attempt < DALLAS_RETRIES && scan_res.size() == 0; ++attempt)
+  {
+    Dallas_reset_search();
+    uint8_t tmpAddress[8]{};
+
+    while (Dallas_search(tmpAddress, gpio_pin_rx, gpio_pin_tx))
+    {
+      scan_res.push_back(Dallas_addr_to_uint64(tmpAddress));
+      bool hasFixedResolution = false;
+      Dallas_getResolution(tmpAddress, gpio_pin_rx, gpio_pin_tx, hasFixedResolution);
+      fixed_res.push_back(hasFixedResolution);
+    }
+
+    if (scan_res.size() == 0) {
+      delay(5);
+    }
+  }
+
   std::map<uint64_t, String> addr_task_map;
 
   for (taskIndex_t task = 0; validTaskIndex(task); ++task) {
@@ -226,20 +248,6 @@ void Dallas_addr_selector_webform_load(taskIndex_t TaskIndex, int8_t gpio_pin_rx
     }
   }
 
-  // find all suitable devices
-  std::vector<uint64_t> scan_res;
-  std::vector<bool> fixed_res;
-
-  Dallas_reset_search();
-  uint8_t tmpAddress[8]{};
-
-  while (Dallas_search(tmpAddress, gpio_pin_rx, gpio_pin_tx))
-  {
-    scan_res.push_back(Dallas_addr_to_uint64(tmpAddress));
-    bool hasFixedResolution = false;
-    Dallas_getResolution(tmpAddress, gpio_pin_rx, gpio_pin_tx, hasFixedResolution);
-    fixed_res.push_back(hasFixedResolution);
-  }
 
   for (uint8_t var_index = 0; var_index < nrVariables; ++var_index) {
     String rowLabel = F("Device Address");
@@ -250,15 +258,21 @@ void Dallas_addr_selector_webform_load(taskIndex_t TaskIndex, int8_t gpio_pin_rx
     }
     addRowLabel(rowLabel);
     addSelector_Head(concat(F("dallas_addr"), static_cast<int>(var_index)));
-    addSelector_Item(F("- None -"), -1, false); // Empty choice
+    addSelector_Item(F("- None -"), 0, false); // Empty choice
+
 
     // get currently saved address
-    uint8_t savedAddress[8];
-    Dallas_plugin_get_addr(savedAddress, TaskIndex, var_index); // Need to fetch only once?
+    uint64_t saved_addr64{};
+    {
+      uint8_t savedAddress[8];
+      Dallas_plugin_get_addr(savedAddress, TaskIndex, var_index); // Need to fetch only once?
+      saved_addr64 = Dallas_addr_to_uint64(savedAddress);
+    }
 
     for (uint8_t index = 0; index < scan_res.size(); ++index) {
+      const uint64_t scan_addr = scan_res[index];
       uint8_t tmpAddress[8]{};
-      Dallas_uint64_to_addr(scan_res[index], tmpAddress);
+      Dallas_uint64_to_addr(scan_addr, tmpAddress);
 
       String option;
 # ifndef LIMIT_BUILD_SIZE
@@ -270,14 +284,14 @@ void Dallas_addr_selector_webform_load(taskIndex_t TaskIndex, int8_t gpio_pin_rx
       }
 # endif // ifndef LIMIT_BUILD_SIZE
       option += Dallas_format_address(tmpAddress, fixed_res[index]);
-      auto it = addr_task_map.find(scan_res[index]);
+      auto it = addr_task_map.find(scan_addr);
 
       if (it != addr_task_map.end()) {
         option += it->second;
       }
 
-      const bool selected = (memcmp(tmpAddress, savedAddress, 8) == 0);
-      addSelector_Item_index64(option, scan_res[index], selected);
+      const bool selected = scan_addr == saved_addr64;
+      addSelector_Item_index64(option, scan_addr, selected);
     }
     addSelector_Foot();
   }
@@ -793,7 +807,7 @@ bool Dallas_setResolution(const uint8_t ROM[8], uint8_t res, int8_t gpio_pin_rx,
 \*********************************************************************************************/
 uint8_t Dallas_reset(int8_t gpio_pin_rx, int8_t gpio_pin_tx)
 {
-  for (uint8_t attempt = 0; attempt < DALLAS_RESET_RETRIES; ++attempt) {
+  for (uint8_t attempt = 0; attempt < DALLAS_RETRIES; ++attempt) {
     presence_start = 0;
     presence_end   = 0;
 
@@ -902,13 +916,11 @@ uint8_t Dallas_reset(int8_t gpio_pin_rx, int8_t gpio_pin_tx)
 
       ISR_interrupts();
     }
+    delay(1);
   }
 
   return 0;
 }
-
-# define FALSE 0
-# define TRUE  1
 
 /*********************************************************************************************\
 *  Dallas Reset Search
@@ -917,7 +929,7 @@ void Dallas_reset_search()
 {
   // reset the search state
   LastDiscrepancy       = 0;
-  LastDeviceFlag        = FALSE;
+  LastDeviceFlag        = false;
   LastFamilyDiscrepancy = 0;
 
   for (uint8_t i = 0; i < 8; i++) {
@@ -930,16 +942,14 @@ void Dallas_reset_search()
 \*********************************************************************************************/
 uint8_t Dallas_search(uint8_t *newAddr, int8_t gpio_pin_rx, int8_t gpio_pin_tx)
 {
-  uint8_t id_bit_number;
-  uint8_t last_zero, rom_byte_number, search_result;
-  unsigned char rom_byte_mask, search_direction;
+  unsigned char search_direction;
 
   // initialize for search
-  id_bit_number   = 1;
-  last_zero       = 0;
-  rom_byte_number = 0;
-  rom_byte_mask   = 1;
-  search_result   = 0;
+  uint8_t id_bit_number       = 1;
+  uint8_t last_zero           = 0;
+  uint8_t rom_byte_number     = 0;
+  unsigned char rom_byte_mask = 1;
+  bool search_result          = false;
 
   // if the last call was not the last one
   if (!LastDeviceFlag)
@@ -949,9 +959,9 @@ uint8_t Dallas_search(uint8_t *newAddr, int8_t gpio_pin_rx, int8_t gpio_pin_tx)
     {
       // reset the search
       LastDiscrepancy       = 0;
-      LastDeviceFlag        = FALSE;
+      LastDeviceFlag        = false;
       LastFamilyDiscrepancy = 0;
-      return FALSE;
+      return false;
     }
 
     // issue the search command
@@ -1035,10 +1045,10 @@ uint8_t Dallas_search(uint8_t *newAddr, int8_t gpio_pin_rx, int8_t gpio_pin_tx)
 
       // check for last device
       if (LastDiscrepancy == 0) {
-        LastDeviceFlag = TRUE;
+        LastDeviceFlag = true;
       }
 
-      search_result = TRUE;
+      search_result = true;
     }
   }
 
@@ -1046,9 +1056,9 @@ uint8_t Dallas_search(uint8_t *newAddr, int8_t gpio_pin_rx, int8_t gpio_pin_tx)
   if (!search_result || !ROM_NO[0])
   {
     LastDiscrepancy       = 0;
-    LastDeviceFlag        = FALSE;
+    LastDeviceFlag        = false;
     LastFamilyDiscrepancy = 0;
-    search_result         = FALSE;
+    search_result         = false;
   }
 
   for (int i = 0; i < 8; i++) {
@@ -1057,9 +1067,6 @@ uint8_t Dallas_search(uint8_t *newAddr, int8_t gpio_pin_rx, int8_t gpio_pin_tx)
 
   return search_result;
 }
-
-# undef FALSE
-# undef TRUE
 
 /*********************************************************************************************\
 *  Dallas Read byte

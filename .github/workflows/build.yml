@@ -82,7 +82,7 @@ jobs:
       - name: Install dependencies
         run: |
           uv pip install --system pioarduino
-          uv pip install --system pygit2>=1.10.1
+          uv pip install --system -r requirements.txt
       - name: Get current date
         id: date
         run: |
