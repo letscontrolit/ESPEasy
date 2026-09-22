@@ -627,6 +627,9 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 
 // #define USES_P180   // I2C Generic
 
+// #define USES_P188   // TLA2528
+//  #define P188_FEATURE_RESISTOR_MEASUREMENT 0 // Disable resistor measurement feature
+
 /*
  #######################################################################################################
  ###########     Controllers
