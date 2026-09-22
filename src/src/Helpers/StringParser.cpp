@@ -933,6 +933,7 @@ void transformValue(
 // Return INVALID_TASK_INDEX when not found, else return taskIndex
 taskIndex_t findTaskIndexByName(String deviceName, bool allowDisabled)
 {
+  deviceName.trim();
   deviceName.toLowerCase();
   // cache this, since LoadTaskSettings does take some time.
   auto result = Cache.taskIndexName.find(deviceName);

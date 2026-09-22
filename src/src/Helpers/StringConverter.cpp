@@ -402,7 +402,7 @@ void removeExtraNewLine(String& line) {
 }
 
 void removeChar(String& line, char character) {
-  line.replace(character, ' ');
+  line.replace(String(character), EMPTY_STRING);
 }
 
 void addNewLine(String& line) {
