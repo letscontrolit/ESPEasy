@@ -28,9 +28,10 @@ bool P123_data_struct::plugin_i2c_has_address(const int Par1) {
 }
 
 uint8_t P123_data_struct::plugin_i2c_address(P123_TouchType_e touchType) {
-  const int tType = static_cast<int>(touchType);
+  const int tType       = static_cast<int>(touchType);
+  constexpr int i2csize = NR_ELEMENTS(P123_i2cAddressValues);
 
-  if ((tType >= 0) && (tType < NR_ELEMENTS(P123_i2cAddressValues))) {
+  if ((tType >= 0) && (tType < i2csize)) {
     return P123_i2cAddressValues[tType];
   }
   return 0u;
@@ -214,12 +215,9 @@ bool P123_data_struct::plugin_webform_save(struct EventStruct *event) {
  */
 bool P123_data_struct::plugin_write(struct EventStruct *event,
                                     const String      & string) {
-  bool   success = false;
-  String command;
-  String subcommand;
-
-  command    = parseString(string, 1);
-  subcommand = parseString(string, 2);
+  bool success            = false;
+  const String command    = parseString(string, 1);
+  const String subcommand = parseString(string, 2);
 
   if (isInitialized() && equals(command, F("touch"))) {
     # ifdef PLUGIN_123_DEBUG
