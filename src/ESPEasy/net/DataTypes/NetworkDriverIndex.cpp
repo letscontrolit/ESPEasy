@@ -5,7 +5,7 @@
 namespace ESPEasy {
 namespace net {
 
-networkDriverIndex_t INVALID_NETWORKDRIVER_INDEX = networkDriverIndex_t::toNetworkDriverIndex(NETWORKDRIVER_INDEX_MAX);
+const networkDriverIndex_t INVALID_NETWORKDRIVER_INDEX = networkDriverIndex_t::toNetworkDriverIndex(NETWORKDRIVER_INDEX_MAX + 1);
 
 } // namespace net
 } // namespace ESPEasy

@@ -5,7 +5,7 @@
 
 typedef uint8_t    protocolIndex_t;
 
-extern protocolIndex_t   INVALID_PROTOCOL_INDEX;
+extern const protocolIndex_t   INVALID_PROTOCOL_INDEX;
 
 
 #endif

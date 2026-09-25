@@ -93,10 +93,10 @@
   #define PLUGIN_MAX                         255
 #endif
 #ifndef CPLUGIN_MAX
-  #define CPLUGIN_MAX                        255
+  #define CPLUGIN_MAX                        254 // Don't set to 255, as CPLUGIN_MAX + 1 is used
 #endif
 #ifndef NETWORKDRIVER_INDEX_MAX
-  #define NETWORKDRIVER_INDEX_MAX            255
+  #define NETWORKDRIVER_INDEX_MAX            254 // Don't set to 255, as NETWORKDRIVER_INDEX_MAX + 1 is used
 #endif
 #ifndef NWPLUGIN_MAX
   #define NWPLUGIN_MAX                       255

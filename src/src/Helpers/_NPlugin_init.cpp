@@ -23,6 +23,793 @@
 // Uncrustify must not be used on macros, but we're now done, so turn Uncrustify on again.
 // *INDENT-ON*
 
+
+#if FEATURE_BUILD_DESCRIPTION
+const uint16_t notifierBitmaps[] = {
+ 0u // n=1 : m=0
+#ifdef USES_N001
+  | 1 << 15
+#endif
+#ifdef USES_N002
+  | 1 << 14
+#endif
+#ifdef USES_N003
+  | 1 << 13
+#endif
+#ifdef USES_N004
+  | 1 << 12
+#endif
+#ifdef USES_N005
+  | 1 << 11
+#endif
+#ifdef USES_N006
+  | 1 << 10
+#endif
+#ifdef USES_N007
+  | 1 << 9
+#endif
+#ifdef USES_N008
+  | 1 << 8
+#endif
+#ifdef USES_N009
+  | 1 << 7
+#endif
+#ifdef USES_N010
+  | 1 << 6
+#endif
+#ifdef USES_N011
+  | 1 << 5
+#endif
+#ifdef USES_N012
+  | 1 << 4
+#endif
+#ifdef USES_N013
+  | 1 << 3
+#endif
+#ifdef USES_N014
+  | 1 << 2
+#endif
+#ifdef USES_N015
+  | 1 << 1
+#endif
+#ifdef USES_N016
+  | 1 << 0
+#endif
+, 0u // n=17 : m=0
+#ifdef USES_N017
+  | 1 << 15
+#endif
+#ifdef USES_N018
+  | 1 << 14
+#endif
+#ifdef USES_N019
+  | 1 << 13
+#endif
+#ifdef USES_N020
+  | 1 << 12
+#endif
+#ifdef USES_N021
+  | 1 << 11
+#endif
+#ifdef USES_N022
+  | 1 << 10
+#endif
+#ifdef USES_N023
+  | 1 << 9
+#endif
+#ifdef USES_N024
+  | 1 << 8
+#endif
+#ifdef USES_N025
+  | 1 << 7
+#endif
+#ifdef USES_N026
+  | 1 << 6
+#endif
+#ifdef USES_N027
+  | 1 << 5
+#endif
+#ifdef USES_N028
+  | 1 << 4
+#endif
+#ifdef USES_N029
+  | 1 << 3
+#endif
+#ifdef USES_N030
+  | 1 << 2
+#endif
+#ifdef USES_N031
+  | 1 << 1
+#endif
+#ifdef USES_N032
+  | 1 << 0
+#endif
+, 0u // n=33 : m=0
+#ifdef USES_N033
+  | 1 << 15
+#endif
+#ifdef USES_N034
+  | 1 << 14
+#endif
+#ifdef USES_N035
+  | 1 << 13
+#endif
+#ifdef USES_N036
+  | 1 << 12
+#endif
+#ifdef USES_N037
+  | 1 << 11
+#endif
+#ifdef USES_N038
+  | 1 << 10
+#endif
+#ifdef USES_N039
+  | 1 << 9
+#endif
+#ifdef USES_N040
+  | 1 << 8
+#endif
+#ifdef USES_N041
+  | 1 << 7
+#endif
+#ifdef USES_N042
+  | 1 << 6
+#endif
+#ifdef USES_N043
+  | 1 << 5
+#endif
+#ifdef USES_N044
+  | 1 << 4
+#endif
+#ifdef USES_N045
+  | 1 << 3
+#endif
+#ifdef USES_N046
+  | 1 << 2
+#endif
+#ifdef USES_N047
+  | 1 << 1
+#endif
+#ifdef USES_N048
+  | 1 << 0
+#endif
+, 0u // n=49 : m=0
+#ifdef USES_N049
+  | 1 << 15
+#endif
+#ifdef USES_N050
+  | 1 << 14
+#endif
+#ifdef USES_N051
+  | 1 << 13
+#endif
+#ifdef USES_N052
+  | 1 << 12
+#endif
+#ifdef USES_N053
+  | 1 << 11
+#endif
+#ifdef USES_N054
+  | 1 << 10
+#endif
+#ifdef USES_N055
+  | 1 << 9
+#endif
+#ifdef USES_N056
+  | 1 << 8
+#endif
+#ifdef USES_N057
+  | 1 << 7
+#endif
+#ifdef USES_N058
+  | 1 << 6
+#endif
+#ifdef USES_N059
+  | 1 << 5
+#endif
+#ifdef USES_N060
+  | 1 << 4
+#endif
+#ifdef USES_N061
+  | 1 << 3
+#endif
+#ifdef USES_N062
+  | 1 << 2
+#endif
+#ifdef USES_N063
+  | 1 << 1
+#endif
+#ifdef USES_N064
+  | 1 << 0
+#endif
+, 0u // n=65 : m=0
+#ifdef USES_N065
+  | 1 << 15
+#endif
+#ifdef USES_N066
+  | 1 << 14
+#endif
+#ifdef USES_N067
+  | 1 << 13
+#endif
+#ifdef USES_N068
+  | 1 << 12
+#endif
+#ifdef USES_N069
+  | 1 << 11
+#endif
+#ifdef USES_N070
+  | 1 << 10
+#endif
+#ifdef USES_N071
+  | 1 << 9
+#endif
+#ifdef USES_N072
+  | 1 << 8
+#endif
+#ifdef USES_N073
+  | 1 << 7
+#endif
+#ifdef USES_N074
+  | 1 << 6
+#endif
+#ifdef USES_N075
+  | 1 << 5
+#endif
+#ifdef USES_N076
+  | 1 << 4
+#endif
+#ifdef USES_N077
+  | 1 << 3
+#endif
+#ifdef USES_N078
+  | 1 << 2
+#endif
+#ifdef USES_N079
+  | 1 << 1
+#endif
+#ifdef USES_N080
+  | 1 << 0
+#endif
+, 0u // n=81 : m=0
+#ifdef USES_N081
+  | 1 << 15
+#endif
+#ifdef USES_N082
+  | 1 << 14
+#endif
+#ifdef USES_N083
+  | 1 << 13
+#endif
+#ifdef USES_N084
+  | 1 << 12
+#endif
+#ifdef USES_N085
+  | 1 << 11
+#endif
+#ifdef USES_N086
+  | 1 << 10
+#endif
+#ifdef USES_N087
+  | 1 << 9
+#endif
+#ifdef USES_N088
+  | 1 << 8
+#endif
+#ifdef USES_N089
+  | 1 << 7
+#endif
+#ifdef USES_N090
+  | 1 << 6
+#endif
+#ifdef USES_N091
+  | 1 << 5
+#endif
+#ifdef USES_N092
+  | 1 << 4
+#endif
+#ifdef USES_N093
+  | 1 << 3
+#endif
+#ifdef USES_N094
+  | 1 << 2
+#endif
+#ifdef USES_N095
+  | 1 << 1
+#endif
+#ifdef USES_N096
+  | 1 << 0
+#endif
+, 0u // n=97 : m=0
+#ifdef USES_N097
+  | 1 << 15
+#endif
+#ifdef USES_N098
+  | 1 << 14
+#endif
+#ifdef USES_N099
+  | 1 << 13
+#endif
+#ifdef USES_N100
+  | 1 << 12
+#endif
+#ifdef USES_N101
+  | 1 << 11
+#endif
+#ifdef USES_N102
+  | 1 << 10
+#endif
+#ifdef USES_N103
+  | 1 << 9
+#endif
+#ifdef USES_N104
+  | 1 << 8
+#endif
+#ifdef USES_N105
+  | 1 << 7
+#endif
+#ifdef USES_N106
+  | 1 << 6
+#endif
+#ifdef USES_N107
+  | 1 << 5
+#endif
+#ifdef USES_N108
+  | 1 << 4
+#endif
+#ifdef USES_N109
+  | 1 << 3
+#endif
+#ifdef USES_N110
+  | 1 << 2
+#endif
+#ifdef USES_N111
+  | 1 << 1
+#endif
+#ifdef USES_N112
+  | 1 << 0
+#endif
+, 0u // n=113 : m=0
+#ifdef USES_N113
+  | 1 << 15
+#endif
+#ifdef USES_N114
+  | 1 << 14
+#endif
+#ifdef USES_N115
+  | 1 << 13
+#endif
+#ifdef USES_N116
+  | 1 << 12
+#endif
+#ifdef USES_N117
+  | 1 << 11
+#endif
+#ifdef USES_N118
+  | 1 << 10
+#endif
+#ifdef USES_N119
+  | 1 << 9
+#endif
+#ifdef USES_N120
+  | 1 << 8
+#endif
+#ifdef USES_N121
+  | 1 << 7
+#endif
+#ifdef USES_N122
+  | 1 << 6
+#endif
+#ifdef USES_N123
+  | 1 << 5
+#endif
+#ifdef USES_N124
+  | 1 << 4
+#endif
+#ifdef USES_N125
+  | 1 << 3
+#endif
+#ifdef USES_N126
+  | 1 << 2
+#endif
+#ifdef USES_N127
+  | 1 << 1
+#endif
+#ifdef USES_N128
+  | 1 << 0
+#endif
+, 0u // n=129 : m=0
+#ifdef USES_N129
+  | 1 << 15
+#endif
+#ifdef USES_N130
+  | 1 << 14
+#endif
+#ifdef USES_N131
+  | 1 << 13
+#endif
+#ifdef USES_N132
+  | 1 << 12
+#endif
+#ifdef USES_N133
+  | 1 << 11
+#endif
+#ifdef USES_N134
+  | 1 << 10
+#endif
+#ifdef USES_N135
+  | 1 << 9
+#endif
+#ifdef USES_N136
+  | 1 << 8
+#endif
+#ifdef USES_N137
+  | 1 << 7
+#endif
+#ifdef USES_N138
+  | 1 << 6
+#endif
+#ifdef USES_N139
+  | 1 << 5
+#endif
+#ifdef USES_N140
+  | 1 << 4
+#endif
+#ifdef USES_N141
+  | 1 << 3
+#endif
+#ifdef USES_N142
+  | 1 << 2
+#endif
+#ifdef USES_N143
+  | 1 << 1
+#endif
+#ifdef USES_N144
+  | 1 << 0
+#endif
+, 0u // n=145 : m=0
+#ifdef USES_N145
+  | 1 << 15
+#endif
+#ifdef USES_N146
+  | 1 << 14
+#endif
+#ifdef USES_N147
+  | 1 << 13
+#endif
+#ifdef USES_N148
+  | 1 << 12
+#endif
+#ifdef USES_N149
+  | 1 << 11
+#endif
+#ifdef USES_N150
+  | 1 << 10
+#endif
+#ifdef USES_N151
+  | 1 << 9
+#endif
+#ifdef USES_N152
+  | 1 << 8
+#endif
+#ifdef USES_N153
+  | 1 << 7
+#endif
+#ifdef USES_N154
+  | 1 << 6
+#endif
+#ifdef USES_N155
+  | 1 << 5
+#endif
+#ifdef USES_N156
+  | 1 << 4
+#endif
+#ifdef USES_N157
+  | 1 << 3
+#endif
+#ifdef USES_N158
+  | 1 << 2
+#endif
+#ifdef USES_N159
+  | 1 << 1
+#endif
+#ifdef USES_N160
+  | 1 << 0
+#endif
+, 0u // n=161 : m=0
+#ifdef USES_N161
+  | 1 << 15
+#endif
+#ifdef USES_N162
+  | 1 << 14
+#endif
+#ifdef USES_N163
+  | 1 << 13
+#endif
+#ifdef USES_N164
+  | 1 << 12
+#endif
+#ifdef USES_N165
+  | 1 << 11
+#endif
+#ifdef USES_N166
+  | 1 << 10
+#endif
+#ifdef USES_N167
+  | 1 << 9
+#endif
+#ifdef USES_N168
+  | 1 << 8
+#endif
+#ifdef USES_N169
+  | 1 << 7
+#endif
+#ifdef USES_N170
+  | 1 << 6
+#endif
+#ifdef USES_N171
+  | 1 << 5
+#endif
+#ifdef USES_N172
+  | 1 << 4
+#endif
+#ifdef USES_N173
+  | 1 << 3
+#endif
+#ifdef USES_N174
+  | 1 << 2
+#endif
+#ifdef USES_N175
+  | 1 << 1
+#endif
+#ifdef USES_N176
+  | 1 << 0
+#endif
+, 0u // n=177 : m=0
+#ifdef USES_N177
+  | 1 << 15
+#endif
+#ifdef USES_N178
+  | 1 << 14
+#endif
+#ifdef USES_N179
+  | 1 << 13
+#endif
+#ifdef USES_N180
+  | 1 << 12
+#endif
+#ifdef USES_N181
+  | 1 << 11
+#endif
+#ifdef USES_N182
+  | 1 << 10
+#endif
+#ifdef USES_N183
+  | 1 << 9
+#endif
+#ifdef USES_N184
+  | 1 << 8
+#endif
+#ifdef USES_N185
+  | 1 << 7
+#endif
+#ifdef USES_N186
+  | 1 << 6
+#endif
+#ifdef USES_N187
+  | 1 << 5
+#endif
+#ifdef USES_N188
+  | 1 << 4
+#endif
+#ifdef USES_N189
+  | 1 << 3
+#endif
+#ifdef USES_N190
+  | 1 << 2
+#endif
+#ifdef USES_N191
+  | 1 << 1
+#endif
+#ifdef USES_N192
+  | 1 << 0
+#endif
+, 0u // n=193 : m=0
+#ifdef USES_N193
+  | 1 << 15
+#endif
+#ifdef USES_N194
+  | 1 << 14
+#endif
+#ifdef USES_N195
+  | 1 << 13
+#endif
+#ifdef USES_N196
+  | 1 << 12
+#endif
+#ifdef USES_N197
+  | 1 << 11
+#endif
+#ifdef USES_N198
+  | 1 << 10
+#endif
+#ifdef USES_N199
+  | 1 << 9
+#endif
+#ifdef USES_N200
+  | 1 << 8
+#endif
+#ifdef USES_N201
+  | 1 << 7
+#endif
+#ifdef USES_N202
+  | 1 << 6
+#endif
+#ifdef USES_N203
+  | 1 << 5
+#endif
+#ifdef USES_N204
+  | 1 << 4
+#endif
+#ifdef USES_N205
+  | 1 << 3
+#endif
+#ifdef USES_N206
+  | 1 << 2
+#endif
+#ifdef USES_N207
+  | 1 << 1
+#endif
+#ifdef USES_N208
+  | 1 << 0
+#endif
+, 0u // n=209 : m=0
+#ifdef USES_N209
+  | 1 << 15
+#endif
+#ifdef USES_N210
+  | 1 << 14
+#endif
+#ifdef USES_N211
+  | 1 << 13
+#endif
+#ifdef USES_N212
+  | 1 << 12
+#endif
+#ifdef USES_N213
+  | 1 << 11
+#endif
+#ifdef USES_N214
+  | 1 << 10
+#endif
+#ifdef USES_N215
+  | 1 << 9
+#endif
+#ifdef USES_N216
+  | 1 << 8
+#endif
+#ifdef USES_N217
+  | 1 << 7
+#endif
+#ifdef USES_N218
+  | 1 << 6
+#endif
+#ifdef USES_N219
+  | 1 << 5
+#endif
+#ifdef USES_N220
+  | 1 << 4
+#endif
+#ifdef USES_N221
+  | 1 << 3
+#endif
+#ifdef USES_N222
+  | 1 << 2
+#endif
+#ifdef USES_N223
+  | 1 << 1
+#endif
+#ifdef USES_N224
+  | 1 << 0
+#endif
+, 0u // n=225 : m=0
+#ifdef USES_N225
+  | 1 << 15
+#endif
+#ifdef USES_N226
+  | 1 << 14
+#endif
+#ifdef USES_N227
+  | 1 << 13
+#endif
+#ifdef USES_N228
+  | 1 << 12
+#endif
+#ifdef USES_N229
+  | 1 << 11
+#endif
+#ifdef USES_N230
+  | 1 << 10
+#endif
+#ifdef USES_N231
+  | 1 << 9
+#endif
+#ifdef USES_N232
+  | 1 << 8
+#endif
+#ifdef USES_N233
+  | 1 << 7
+#endif
+#ifdef USES_N234
+  | 1 << 6
+#endif
+#ifdef USES_N235
+  | 1 << 5
+#endif
+#ifdef USES_N236
+  | 1 << 4
+#endif
+#ifdef USES_N237
+  | 1 << 3
+#endif
+#ifdef USES_N238
+  | 1 << 2
+#endif
+#ifdef USES_N239
+  | 1 << 1
+#endif
+#ifdef USES_N240
+  | 1 << 0
+#endif
+, 0u // n=241 : m=0
+#ifdef USES_N241
+  | 1 << 15
+#endif
+#ifdef USES_N242
+  | 1 << 14
+#endif
+#ifdef USES_N243
+  | 1 << 13
+#endif
+#ifdef USES_N244
+  | 1 << 12
+#endif
+#ifdef USES_N245
+  | 1 << 11
+#endif
+#ifdef USES_N246
+  | 1 << 10
+#endif
+#ifdef USES_N247
+  | 1 << 9
+#endif
+#ifdef USES_N248
+  | 1 << 8
+#endif
+#ifdef USES_N249
+  | 1 << 7
+#endif
+#ifdef USES_N250
+  | 1 << 6
+#endif
+#ifdef USES_N251
+  | 1 << 5
+#endif
+#ifdef USES_N252
+  | 1 << 4
+#endif
+#ifdef USES_N253
+  | 1 << 3
+#endif
+#ifdef USES_N254
+  | 1 << 2
+#endif
+#ifdef USES_N255
+  | 1 << 1
+#endif
+};
+#endif // if FEATURE_BUILD_DESCRIPTION
+
 void NPluginInit()
 {
   #ifdef USE_SECOND_HEAP
