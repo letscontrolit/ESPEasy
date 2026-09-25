@@ -274,7 +274,7 @@ Some tips:
 
 The sensor chip does have an internal voltage regulator.
 
-On some boards, this regulator can be enabled by pulling the ``EN-V`` or ``EN_VREG`` pin high (if made availabe on the board).
+On some boards, this regulator can be enabled by pulling the ``EN-V`` or ``EN_VREG`` pin high (if made available on the board).
 
 Onboard voltage regulator:
 

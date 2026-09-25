@@ -106,7 +106,7 @@ Also, the number of checksum errors is shown, this counter is automatically rese
 Get Config values
 -----------------
 
-All data values received can be retrieved by using the ``[<taskname>#<data_name>]`` syntax. To get the success count and error count, varables ``[<taskname>#successcount]`` and ``[<taskname>#errorcount]`` are available, and also the ``[<taskname>#updated]`` value, to see if data was updated since the last call for this variable (returns 0/1). So this should only be called once for evaluation. The ``errorcount`` value is reset after 50 succesful received packets, so after receiving 50 successful packets it will return 0.
+All data values received can be retrieved by using the ``[<taskname>#<data_name>]`` syntax. To get the success count and error count, varables ``[<taskname>#successcount]`` and ``[<taskname>#errorcount]`` are available, and also the ``[<taskname>#updated]`` value, to see if data was updated since the last call for this variable (returns 0/1). So this should only be called once for evaluation. The ``errorcount`` value is reset after 50 successful received packets, so after receiving 50 successful packets it will return 0.
 
 Change log
 ----------
