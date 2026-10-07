@@ -30,6 +30,7 @@
 
 
 #include "../Helpers/Convert.h"
+#include "../Helpers/ESPEasyRTC.h"
 #include "../Helpers/Hardware.h"
 #include "../Helpers/Hardware_I2C.h"
 #include "../Helpers/Misc.h"
@@ -45,6 +46,14 @@
 # include <RTClib.h>
 #endif // if FEATURE_EXT_RTC
 
+#ifndef BUILD_NO_DEBUG
+#define ESPEASY_NTP_DEBUG  1
+#else 
+#define ESPEASY_NTP_DEBUG  0
+#endif
+
+
+#define ESPEASY_NTP_TIMEOUT   1000
 
 ESPEasy_time::ESPEasy_time() {
   memset(&local_tm, 0, sizeof(tm));
@@ -258,6 +267,7 @@ uint32_t ESPEasy_time::now_() {
       _timeSource  = extTimeSource;
     } else {
       if (!isExternalTimeSource(_timeSource)
+          || lastSyncTime_ms == 0 
           || (timePassedSince(lastSyncTime_ms) > static_cast<long>(1000 * syncInterval)))
       {
         externalUnixTime_offset_usec = 0;
@@ -439,6 +449,7 @@ uint32_t ESPEasy_time::now_() {
   }
   RTC.lastSysTime = getUnixTime();
   uint32_t localSystime = time_zone.toLocal(RTC.lastSysTime);
+  saveToRTC();
   breakTime(localSystime, local_tm);
 
   calcSunRiseAndSet(timeSynced);
@@ -509,7 +520,7 @@ bool ESPEasy_time::systemTimePresent() const {
 
 bool ESPEasy_time::getNtpTime(double& unixTime_d)
 {
-  if (!Settings.UseNTP() || !ESPEasy::net::NetworkConnected(true)) {
+  if (!Settings.UseNTP() || !ESPEasy::net::NetworkConnected()) {
     return false;
   }
 
@@ -549,7 +560,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
 
   if (!hostReachable(timeServerIP)) {
     log += F(" unreachable");
-    addLogMove(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_ERROR, log);
     STOP_TIMER(NTP_FAIL);
     return false;
   }
@@ -557,6 +568,10 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
   WiFiUDP udp;
 
   if (!beginWiFiUDP_randomPort(udp)) {
+#if ESPEASY_NTP_DEBUG
+    log += F(" failed beginWiFiUDP_randomPort");
+    addLogMove(LOG_LEVEL_ERROR, log);
+#endif
     return false;
   }
 
@@ -567,8 +582,8 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
   addLog(LOG_LEVEL_DEBUG_MORE, log);
 #endif // ifndef BUILD_NO_DEBUG
 
-  while (udp.parsePacket() > 0) { // discard any previously received packets
-  }
+//  while (udp.parsePacket() > 0) { // discard any previously received packets
+//  }
 
   FeedSW_watchdog();
 
@@ -576,6 +591,10 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
     FeedSW_watchdog();
     udp.stop();
     STOP_TIMER(NTP_FAIL);
+#if ESPEASY_NTP_DEBUG
+    log += F(" failed beginPacket");
+    addLogMove(LOG_LEVEL_ERROR, log);
+#endif
     return false;
   }
   constexpr int  NTP_packet_size = sizeof(NTP_packet);
@@ -590,7 +609,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
   addLog(LOG_LEVEL_DEBUG, concat(F("NTP  : before\n"), ntp_packet.toDebugString()));
 #endif // ifndef BUILD_NO_DEBUG
 
-  while (!timeOutReached(beginWait + 1000)) {
+  while (!timeOutReached(beginWait + ESPEASY_NTP_TIMEOUT)) {
     const int size       = udp.parsePacket();
     const int remotePort = udp.remotePort();
 
@@ -601,6 +620,10 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
 #endif // ifndef BUILD_NO_DEBUG
         udp.stop();
         STOP_TIMER(NTP_FAIL);
+#if ESPEASY_NTP_DEBUG
+        log += concat(F(" Reply from wrong port: "), remotePort);
+        addLogMove(LOG_LEVEL_ERROR, log);
+#endif
         return false;
       }
       udp.read(ntp_packet.data, NTP_packet_size); // read packet into the buffer
@@ -626,6 +649,10 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
           nextSyncTime = getUptime_in_sec() + 120;
         }
         STOP_TIMER(NTP_FAIL);
+#if ESPEASY_NTP_DEBUG
+        log += F(" isUnsynchronized");
+        addLogMove(LOG_LEVEL_ERROR, log);
+#endif
         return false;
       }
 
@@ -664,6 +691,10 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
         // or no valid timestamps from the NTP server.
         nextSyncTime = getUptime_in_sec() + 60;
         STOP_TIMER(NTP_FAIL);
+#if ESPEASY_NTP_DEBUG
+        log += F(" failed compute_usec");
+        addLogMove(LOG_LEVEL_ERROR, log);
+#endif
         return false;
       }
 
@@ -707,10 +738,15 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
   // Timeout.
   if (!useNTPpool) {
     // Retry again in a minute.
-    nextSyncTime = getUptime_in_sec() + 60;
+    nextSyncTime = getUptime_in_sec() + 10;
   }
 
 #ifndef BUILD_NO_DEBUG
+#if ESPEASY_NTP_DEBUG
+  log += strformat(F(" No reply, duration: %d ms"), timePassedSince(beginWait));
+  addLogMove(LOG_LEVEL_ERROR, log);
+#endif
+
   addLog(LOG_LEVEL_DEBUG_MORE, F("NTP  : No reply"));
 #endif // ifndef BUILD_NO_DEBUG
   udp.stop();

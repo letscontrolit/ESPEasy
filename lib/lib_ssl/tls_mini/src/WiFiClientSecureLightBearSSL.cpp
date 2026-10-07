@@ -335,7 +335,7 @@ int WiFiClientSecure_light::connect(const char* name, uint16_t port, int32_t tim
   DEBUG_BSSL("connect(%s,%d)\n", name, port);
   IPAddress remote_addr;
   clearLastError();
-  if (!WiFi.hostByName(name, remote_addr)) {
+  if (Network.hostByName(name, remote_addr) != 1) {
     DEBUG_BSSL("connect: Name loopup failure\n");
     setLastError(ERR_CANT_RESOLVE_IP);
     return 0;

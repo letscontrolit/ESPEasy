@@ -141,6 +141,7 @@ void ESPEasy_Scheduler::setIntervalTimer(SchedulerIntervalTimer_e intervalTimer,
 }
 
 void ESPEasy_Scheduler::sendGratuitousARP_now() {
+  if (!ESPEasy::net::NetworkConnected(true)) return;
   sendGratuitousARP();
 
   if (Settings.gratuitousARP()) {
