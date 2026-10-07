@@ -403,8 +403,6 @@ WiFiConnectionProtocol doGetConnectionProtocol()
 void doSetWiFiTXpower(float& dBm)
 {
   if (WiFi.STA.started() || WiFi.AP.started()) {
-    int8_t power = std::min(static_cast<int>(dBm * 4), static_cast<int>(WIFI_POWER_21dBm));
-
     constexpr wifi_power_t options[] = {
       WIFI_POWER_21dBm,
       WIFI_POWER_20_5dBm,
@@ -423,8 +421,10 @@ void doSetWiFiTXpower(float& dBm)
       WIFI_POWER_MINUS_1dBm
     };
 
+    int8_t power = std::min(static_cast<int>(dBm * 4), static_cast<int>(options[0]));
+
     for (size_t i = 0; i < NR_ELEMENTS(options); ++i) {
-      if (power <= options[i]) {
+      if (power >= options[i]) {
         power = options[i];
         esp_wifi_set_max_tx_power(power);
 
