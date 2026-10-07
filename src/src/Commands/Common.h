@@ -62,11 +62,11 @@ String Command_GetORSetETH(struct EventStruct *event,
                             int                 arg);
 #endif
 
-String Command_GetORSetInt8_t(struct EventStruct *event,
-                            const __FlashStringHelper * targetDescription,
-                            const char         *Line,
-                            int8_t             *value,
-                            int                 arg);
+String Command_GetORSetUInt32_t(struct EventStruct *event,
+                                const __FlashStringHelper * targetDescription,
+                                const char         *Line,
+                                uint32_t           *value,
+                                int                 arg);
 
 String Command_GetORSetFloatMinMax(struct EventStruct *event,
                                    const __FlashStringHelper * targetDescription,
