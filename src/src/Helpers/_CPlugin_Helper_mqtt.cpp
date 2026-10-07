@@ -1019,7 +1019,10 @@ bool MQTT_DiscoveryGetDeviceVType(taskIndex_t                 TaskIndex,
 
 String MQTT_TaskValueUniqueName(const String& taskName,
                                 const String& valueName) {
-  String uniqueId = strformat(F("%s_%s_%s"), Settings.getHostname().c_str(), taskName.c_str(), valueName.c_str());
+  String uniqueId = strformat(F("%s_%s_%s"),
+                              makeHomeAssistantCompliantName(Settings.getHostname()).c_str(),
+                              taskName.c_str(),
+                              valueName.c_str());
 
   uniqueId.toLowerCase();
   return uniqueId;
