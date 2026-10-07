@@ -47,11 +47,11 @@ bool WiFi_pre_STA_setup()
 void doWiFiDisconnect() {
   uint8_t retry = 3;
 
-  #ifdef BOARD_HAS_SDIO_ESP_HOSTED
+  #  ifdef BOARD_HAS_SDIO_ESP_HOSTED
   bool wifioff = true;
-  #else
+  #  else
   bool wifioff = Settings.WiFiRestart_connection_lost();
-  #endif
+  #  endif // ifdef BOARD_HAS_SDIO_ESP_HOSTED
 
   while (!WiFi.disconnect(wifioff) && retry) {
     --retry;
@@ -402,13 +402,40 @@ WiFiConnectionProtocol doGetConnectionProtocol()
 
 void doSetWiFiTXpower(float& dBm)
 {
-  int8_t power = dBm * 4;
+  if (WiFi.STA.started() || WiFi.AP.started()) {
+    int8_t power = std::min(static_cast<int>(dBm * 4), static_cast<int>(WIFI_POWER_21dBm));
 
-  esp_wifi_set_max_tx_power(power);
+    constexpr wifi_power_t options[] = {
+      WIFI_POWER_21dBm,
+      WIFI_POWER_20_5dBm,
+      WIFI_POWER_20dBm,
+      WIFI_POWER_19_5dBm,
+      WIFI_POWER_19dBm,
+      WIFI_POWER_18_5dBm,
+      WIFI_POWER_17dBm,
+      WIFI_POWER_15dBm,
+      WIFI_POWER_13dBm,
+      WIFI_POWER_11dBm,
+      WIFI_POWER_8_5dBm,
+      WIFI_POWER_7dBm,
+      WIFI_POWER_5dBm,
+      WIFI_POWER_2dBm,
+      WIFI_POWER_MINUS_1dBm
+    };
 
-  if (esp_wifi_get_max_tx_power(&power) == ESP_OK)  {
-    dBm = static_cast<float>(power) / 4.0f;
+    for (size_t i = 0; i < NR_ELEMENTS(options); ++i) {
+      if (power <= options[i]) {
+        power = options[i];
+        esp_wifi_set_max_tx_power(power);
+
+        if (esp_wifi_get_max_tx_power(&power) == ESP_OK)  {
+          dBm = static_cast<float>(power) / 4.0f;
+        }
+        return;
+      }
+    }
   }
+  dBm = 0;
 }
 
 float doGetWiFiTXpower()
