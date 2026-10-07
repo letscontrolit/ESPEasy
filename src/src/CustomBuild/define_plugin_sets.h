@@ -39,6 +39,16 @@ To create/register a plugin, you have to :
 \******************************************************************************/
 // FIXME TD-er: Make useful selections for these pages to be included. (e.g. view only)
 
+
+// FIXME TD-er: Disable Arduino OTA for now, seems to cause crashes/bootloop on some ESP32-variants (C3/C6, maybe more)
+// No idea why, disabled on 2026/09/22
+#ifdef FEATURE_ARDUINO_OTA
+  #undef FEATURE_ARDUINO_OTA
+#endif
+#define FEATURE_ARDUINO_OTA 0
+
+
+
 #ifndef WEBSERVER_CUSTOM_BUILD_DEFINED
     #ifndef WEBSERVER_TIMINGSTATS
         #define WEBSERVER_TIMINGSTATS

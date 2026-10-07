@@ -63,7 +63,7 @@ struct Dallas_SensorData {
 extern unsigned char ROM_NO[8];
 extern uint8_t LastDiscrepancy;
 extern uint8_t LastFamilyDiscrepancy;
-extern uint8_t LastDeviceFlag;
+extern bool LastDeviceFlag;
 
 
 /*********************************************************************************************\
