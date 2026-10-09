@@ -6,7 +6,7 @@
 // ######################################################################################################
 
 /** Changelog:
- * 2026-10-09: Reject failed or short I2C reads instead of reporting maximum sensor values
+ * 2026-10-09 Firat17aze: Reject failed or short I2C reads instead of reporting maximum sensor values
  * 2025-01-04 tonhuisman: Send initialization (resolution setting) only once during INIT, small code optimizations
  * 2023-02-09 tonhuisman: Fix typo in temperature calculation (was 65526.0f instead of 65536.0f (2^16))
  * 2023-02-08 tonhuisman: Add PLUGIN_I2C_GET_ADDRESS support
@@ -90,22 +90,25 @@ boolean Plugin_072(uint8_t function, struct EventStruct *event, String& string)
       uint16_t hdc1080_rawtemp, hdc1080_rawhum;
       float    hdc1080_temp, hdc1080_hum;
 
-      UserVar.setFloat(event->TaskIndex, 0, NAN);
-      UserVar.setFloat(event->TaskIndex, 1, NAN);
+      const auto readError = [event]() {
+        UserVar.setFloat(event->TaskIndex, 0, NAN);
+        UserVar.setFloat(event->TaskIndex, 1, NAN);
+        return false;
+      };
 
       Wire.beginTransmission(HDC1080_I2C_ADDRESS); // start transmission to device
       Wire.write(0x00);                            // sends HDC1080_TEMPERATURE
-      if (Wire.endTransmission() != 0) { break; }   // end transmission
+      if (Wire.endTransmission() != 0) { return readError(); } // end transmission
       delay(9);
-      if (Wire.requestFrom(HDC1080_I2C_ADDRESS, 2) != 2) { break; } // read 2 bytes for temperature
+      if (Wire.requestFrom(HDC1080_I2C_ADDRESS, 2) != 2) { return readError(); } // read 2 bytes for temperature
       hdc1080_rawtemp = Wire.read() << 8 | Wire.read();
       hdc1080_temp    = (static_cast<float>(hdc1080_rawtemp) / 65536.0f) * 165.0f - 40.0f;
 
       Wire.beginTransmission(HDC1080_I2C_ADDRESS); // start transmission to device
       Wire.write(0x01);                            // sends HDC1080_HUMIDITY
-      if (Wire.endTransmission() != 0) { break; }   // end transmission
+      if (Wire.endTransmission() != 0) { return readError(); } // end transmission
       delay(9);
-      if (Wire.requestFrom(HDC1080_I2C_ADDRESS, 2) != 2) { break; } // read 2 bytes for humidity
+      if (Wire.requestFrom(HDC1080_I2C_ADDRESS, 2) != 2) { return readError(); } // read 2 bytes for humidity
       hdc1080_rawhum = Wire.read() << 8 | Wire.read();
       hdc1080_hum    = (static_cast<float>(hdc1080_rawhum) / 65536.0f) * 100.0f;
 
