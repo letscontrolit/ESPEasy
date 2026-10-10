@@ -38,6 +38,14 @@ Supported hardware
 
 .. .. include:: P072_events.repl
 
+Reading errors
+--------------
+
+If selecting a sensor register fails, or the sensor returns fewer than two bytes
+for temperature or humidity, both values are set to ``nan``. The failed reading
+is not sent to controllers such as MQTT. The next scheduled reading retries the
+sensor.
+
 Datasheets
 ----------
 
