@@ -1,3 +1,5 @@
+#include "_Plugin_Helper.h"
+
 #ifdef USES_P099
 
 // #######################################################################################################
@@ -6,6 +8,9 @@
 
 /**
  * Changelog:
+ * 2025-11-19 tonhuisman: Use Rotation flipped setting from ESPEasy_TouchHandler
+ * 2025-09-28 tonhuisman: Keep previous code for ESP8266, to match the limited binary space available
+ * 2025-09-27 tonhuisman: Implement ESPEasy_TouchHandler
  * 2025-08-13 tonhuisman: Enable use of secondary SPI bus
  * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported for Touch)
  * 2020-11-01 tonhuisman: Solved previous strange rotation settings to be compatible with TFT ILI9341
@@ -29,20 +34,21 @@
  * -------------------
  * touch,rot,<0..3>             : Set rotation to 0(0), 90(1), 180(2), 270(3) degrees
  * touch,flip,<0|1>             : Set rotation normal(0) or flipped by 180 degrees(1)
- * touch,enable,<objectName>    : Enables a disabled objectname (removes a leading underscore)
- * touch,disable,<objectName>   : Disables an enabled objectname (adds a leading underscore)
+ * touch,enable,<objectName>    : Enables a disabled objectname
+ * touch,disable,<objectName>   : Disables an enabled objectname
  */
 
-#define PLUGIN_099
-#define PLUGIN_ID_099         99
-#define PLUGIN_NAME_099       "Touch - XPT2046 on a TFT display"
-#define PLUGIN_VALUENAME1_099 "X"
-#define PLUGIN_VALUENAME2_099 "Y"
-#define PLUGIN_VALUENAME3_099 "Z"
+# define PLUGIN_099
+# define PLUGIN_ID_099         99
+# define PLUGIN_NAME_099       "Touch - XPT2046 on a TFT display"
+# define PLUGIN_VALUENAME1_099 "X"
+# define PLUGIN_VALUENAME2_099 "Y"
+# define PLUGIN_VALUENAME3_099 "Z"
 
-#include "_Plugin_Helper.h"
-#include "src/PluginStructs/P099_data_struct.h"
+# include "src/PluginStructs/P099_data_struct.h"
 
+
+# ifdef ESP32
 
 boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -83,21 +89,277 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-    #if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DEVICEVALUECOUNT:
+    {
+      event->Par1 = P099_GET_CONFIG_VTYPE;
+      success     = true;
+      break;
+    }
+
+    #  if FEATURE_MQTT_DISCOVER
     case PLUGIN_GET_DISCOVERY_VTYPES:
     {
       event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_NONE); // Not yet supported
       success     = true;
       break;
     }
-    #endif // if FEATURE_MQTT_DISCOVER
+    #  endif // if FEATURE_MQTT_DISCOVER
+
+    case PLUGIN_SET_DEFAULTS:
+    {
+      P099_CONFIG_CS_PIN    = -1;
+      P099_CONFIG_THRESHOLD = P099_TS_TRESHOLD;
+      P099_CONFIG_ROTATION  = P099_TS_ROTATION;
+      P099_CONFIG_X_RES     = P099_TS_X_RES;
+      P099_CONFIG_Y_RES     = P099_TS_Y_RES;
+      #  if P099_ENABLE_OLD_CONFIG
+      P099_CONFIG_OBJECTCOUNT = P099_INIT_OBJECTCOUNT;
+      P099_CONFIG_DEBOUNCE_MS = P099_DEBOUNCE_MILLIS;
+      #  endif // if P099_ENABLE_OLD_CONFIG
+
+      constexpr uint32_t lSettings = 0
+                                     + (P099_TS_SEND_XY          ? (1 << P099_FLAGS_SEND_XY) : 0)
+                                     + (P099_TS_SEND_Z           ? (1 << P099_FLAGS_SEND_Z) : 0)
+                                     + (P099_TS_SEND_OBJECTNAME  ? (1 << P099_FLAGS_SEND_OBJECTNAME) : 0)
+                                     + (P099_TS_USE_CALIBRATION  ? (1 << P099_FLAGS_USE_CALIBRATION) : 0)
+                                     + (P099_TS_LOG_CALIBRATION  ? (1 << P099_FLAGS_LOG_CALIBRATION) : 0);
+      P099_CONFIG_FLAGS = lSettings;
+      P099_SET_CONFIG_DISPLAY(TASKS_MAX); // Preselect Not Set value
+
+      success = true;
+      break;
+    }
+
+    case PLUGIN_WEBFORM_LOAD:
+    {
+      addFormSubHeader(F("Screen"));
+
+      {
+        addRowLabel(F("Display task"));
+        addTaskSelect(F("dsptask"), P099_GET_CONFIG_DISPLAY);
+        #  ifndef P099_LIMIT_BUILD_SIZE
+        addFormNote(F("Screen Width, Heigth, Rotation &amp; Color-depth will be fetched from the Display task if possible."));
+        #  endif // ifndef P099_LIMIT_BUILD_SIZE
+      }
+
+      uint16_t width_      = P099_CONFIG_X_RES;
+      uint16_t height_     = P099_CONFIG_Y_RES;
+      uint16_t rotation_   = P099_CONFIG_ROTATION;
+      uint16_t colorDepth_ = P099_COLOR_DEPTH;
+
+      if (P099_GET_CONFIG_DISPLAY != static_cast<uint8_t>(P099_CONFIG_DISPLAY_PREV)) { // Changed since last saved?
+        getPluginDisplayParametersFromTaskIndex(P099_GET_CONFIG_DISPLAY, width_, height_, rotation_, colorDepth_);
+      }
+      P099_COLOR_DEPTH = colorDepth_;
+
+      if (width_ == 0) {
+        width_ = P099_TS_X_RES; // default value
+      }
+      addFormNumericBox(F("Screen Width (px) (x)"), F("pwidth"), width_, 1, 65535);
+
+      if (height_ == 0) {
+        height_ = P099_TS_Y_RES; // default value
+      }
+      addFormNumericBox(F("Screen Height (px) (y)"), F("pheight"), height_, 1, 65535);
+
+      AdaGFXFormRotation(F("protate"), rotation_);
+
+      AdaGFXFormColorDepth(F("colordepth"), P099_COLOR_DEPTH, (colorDepth_ == 0));
+
+      addFormSubHeader(F("Touch panel"));
+
+      addFormNumericBox(F("Touch minimum pressure"), F("ptreshold"), P099_CONFIG_THRESHOLD, 0, 255);
+
+      {
+        P099_data_struct *P099_data = static_cast<P099_data_struct *>(getPluginTaskData(event->TaskIndex));
+        bool deleteP099_data        = false;
+
+        if (nullptr == P099_data) {
+          P099_data       = new (std::nothrow) P099_data_struct();
+          deleteP099_data = true;
+        }
+
+        if (nullptr == P099_data) {
+          return success;
+        }
+
+        // P099_data->loadTouchObjects(event);
+
+        success = P099_data->plugin_webform_load(event);
+
+        if (deleteP099_data) {
+          delete P099_data;
+        }
+      }
+
+      // success = true;
+      break;
+    }
+
+    case PLUGIN_WEBFORM_SAVE:
+    {
+      P099_CONFIG_VERSION      = 2; // Storage layout changed to use ESPEasy_TouchHandler
+      P099_CONFIG_DISPLAY_PREV = P099_GET_CONFIG_DISPLAY;
+      P099_CONFIG_THRESHOLD    = getFormItemInt(F("ptreshold"));
+      P099_CONFIG_ROTATION     = getFormItemInt(F("protate"));
+      P099_CONFIG_X_RES        = getFormItemInt(F("pwidth"));
+      P099_CONFIG_Y_RES        = getFormItemInt(F("pheight"));
+      #  if P099_ENABLE_OLD_CONFIG
+      P099_CONFIG_OBJECTCOUNT = getFormItemInt(F("pobjectcount"));
+
+      if (P099_CONFIG_OBJECTCOUNT > P099_MaxObjectCount) { P099_CONFIG_OBJECTCOUNT = P099_MaxObjectCount; }
+      #  endif // if P099_ENABLE_OLD_CONFIG
+
+      uint32_t lSettings = 0;
+
+      bitWrite(lSettings, P099_FLAGS_USE_CALIBRATION, getFormItemInt(F("puse_calibration")) == 1);
+      bitWrite(lSettings, P099_FLAGS_LOG_CALIBRATION, isFormItemChecked(F("plog_calibration")));
+      P099_CONFIG_FLAGS = lSettings;
+      P099_SET_CONFIG_DISPLAY(getFormItemInt(F("dsptask")));
+
+      {
+        P099_data_struct *P099_data = nullptr; // static_cast<P099_data_struct *>(getPluginTaskData(event->TaskIndex));
+        bool deleteP099_data        = false;
+
+        if (nullptr == P099_data) {
+          P099_data       = new (std::nothrow) P099_data_struct();
+          deleteP099_data = true;
+        }
+
+        if (nullptr != P099_data) {
+          success = P099_data->plugin_webform_save(event);
+
+          if (deleteP099_data) {
+            delete P099_data;
+          }
+        }
+      }
+
+      success = true;
+      break;
+    }
+
+    case PLUGIN_INIT:
+    {
+      initPluginTaskData(event->TaskIndex, new (std::nothrow) P099_data_struct());
+      P099_data_struct *P099_data = static_cast<P099_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      success = (nullptr != P099_data) && P099_data->init(event,
+                                                          P099_CONFIG_CS_PIN,
+                                                          P099_CONFIG_ROTATION,
+                                                          false,
+                                                          P099_CONFIG_THRESHOLD,
+                                                          P099_CONFIG_X_RES,
+                                                          P099_CONFIG_Y_RES);
+
+      break;
+    }
+
+    case PLUGIN_EXIT:
+    {
+      success = true;
+      break;
+    }
+
+    // case PLUGIN_READ: // Not implemented on purpose, *only* send out events/values when device is touched, and configured to send events
+
+    case PLUGIN_WRITE:
+    {
+      P099_data_struct *P099_data = static_cast<P099_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr != P099_data) {
+        success = P099_data->plugin_write(event, string);
+      }
+
+      break;
+    }
+
+    case PLUGIN_FIFTY_PER_SECOND:
+    {
+      P099_data_struct *P099_data = static_cast<P099_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr != P099_data) {
+        success = P099_data->plugin_fifty_per_second(event);
+      }
+
+      break;
+    }
+
+    case PLUGIN_GET_CONFIG_VALUE:
+    {
+      P099_data_struct *P099_data = static_cast<P099_data_struct *>(getPluginTaskData(event->TaskIndex));
+
+      if (nullptr != P099_data) {
+        success = P099_data->plugin_get_config_value(event, string);
+      }
+      break;
+    }
+  } // switch(function)
+  return success;
+}   // Plugin_099
+
+# endif // ifdef ESP32
+
+/********************************************************************************************************************************
+* Below code is using the old but smaller implementation for ESP8266, and should only get bugfixes, if needed
+********************************************************************************************************************************/
+
+# ifdef ESP8266
+
+boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
+{
+  boolean success = false;
+
+  switch (function)
+  {
+    case PLUGIN_DEVICE_ADD:
+    {
+      auto& dev = Device[++deviceCount];
+      dev.Number       = PLUGIN_ID_099;
+      dev.Type         = DEVICE_TYPE_SPI;
+      dev.VType        = Sensor_VType::SENSOR_TYPE_TRIPLE;
+      dev.ValueCount   = 3;
+      dev.SpiBusSelect = true;
+      break;
+    }
+
+    case PLUGIN_GET_DEVICENAME:
+    {
+      string  = F(PLUGIN_NAME_099);
+      success = true;
+      break;
+    }
+
+    case PLUGIN_GET_DEVICEVALUENAMES:
+    {
+      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_099));
+      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_099));
+      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[2], PSTR(PLUGIN_VALUENAME3_099));
+      success = true;
+      break;
+    }
+
+    case PLUGIN_GET_DEVICEGPIONAMES:
+    {
+      event->String1 = formatGpioName_output(F("TS CS"));
+      break;
+    }
+
+    #  if FEATURE_MQTT_DISCOVER
+    case PLUGIN_GET_DISCOVERY_VTYPES:
+    {
+      event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_NONE); // Not yet supported
+      success     = true;
+      break;
+    }
+    #  endif // if FEATURE_MQTT_DISCOVER
 
     case PLUGIN_SET_DEFAULTS:
     {
       // if already configured take it from settings, else use default values
       if (P099_CONFIG_STATE != 1) {
         P099_CONFIG_CS_PIN      = P099_TS_CS;
-        P099_CONFIG_TRESHOLD    = P099_TS_TRESHOLD;
+        P099_CONFIG_THRESHOLD   = P099_TS_TRESHOLD;
         P099_CONFIG_ROTATION    = P099_TS_ROTATION;
         P099_CONFIG_X_RES       = P099_TS_X_RES;
         P099_CONFIG_Y_RES       = P099_TS_Y_RES;
@@ -150,7 +412,7 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
 
       addFormSubHeader(F("Touch configuration"));
 
-      addFormNumericBox(F("Touch minimum pressure"), F("ptreshold"), P099_CONFIG_TRESHOLD, 0, 255);
+      addFormNumericBox(F("Touch minimum pressure"), F("ptreshold"), P099_CONFIG_THRESHOLD, 0, 255);
 
       uint8_t choice3 = 0;
       bitWrite(choice3, P099_FLAGS_SEND_XY,         bitRead(P099_CONFIG_FLAGS, P099_FLAGS_SEND_XY));
@@ -287,7 +549,7 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SAVE:
     {
       P099_CONFIG_STATE       = 1; // mark config as already saved (next time, will not use default values)
-      P099_CONFIG_TRESHOLD    = getFormItemInt(F("ptreshold"));
+      P099_CONFIG_THRESHOLD   = getFormItemInt(F("ptreshold"));
       P099_CONFIG_ROTATION    = getFormItemInt(F("protate"));
       P099_CONFIG_X_RES       = getFormItemInt(F("pwidth"));
       P099_CONFIG_Y_RES       = getFormItemInt(F("pheight"));
@@ -348,12 +610,12 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
       if (error.length() > 0) {
         addHtmlError(error);
       }
-      #ifdef PLUGIN_099_DEBUG
+      #  ifdef PLUGIN_099_DEBUG
 
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         addLogMove(LOG_LEVEL_INFO, concat(F("P099 data save size: "), sizeof(P099_data->StoredSettings)));
       }
-      #endif // PLUGIN_099_DEBUG
+      #  endif // PLUGIN_099_DEBUG
       SaveCustomTaskSettings(event->TaskIndex, reinterpret_cast<const uint8_t *>(&(P099_data->StoredSettings)),
                              sizeof(P099_data->StoredSettings));
       delete P099_data;
@@ -371,7 +633,7 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
                                                           P099_CONFIG_CS_PIN,
                                                           P099_CONFIG_ROTATION,
                                                           bitRead(P099_CONFIG_FLAGS, P099_FLAGS_ROTATION_FLIPPED),
-                                                          P099_CONFIG_TRESHOLD,
+                                                          P099_CONFIG_THRESHOLD,
                                                           bitRead(P099_CONFIG_FLAGS, P099_FLAGS_SEND_XY),
                                                           bitRead(P099_CONFIG_FLAGS, P099_FLAGS_SEND_Z),
                                                           bitRead(P099_CONFIG_FLAGS, P099_FLAGS_USE_CALIBRATION),
@@ -414,7 +676,7 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
           uint8_t  z;
           P099_data->readData(&x, &y, &z);
 
-          if (!((x >= P099_TOUCH_X_INVALID) || (y >= P099_TOUCH_Y_INVALID) || (z == P099_TOUCH_Z_INVALID) || (z <= P099_CONFIG_TRESHOLD))) {
+          if (!((x >= P099_TOUCH_X_INVALID) || (y >= P099_TOUCH_Y_INVALID) || (z == P099_TOUCH_Z_INVALID) || (z <= P099_CONFIG_THRESHOLD))) {
             rx = x;
             ry = y;
             P099_data->scaleRawToCalibrated(x, y); // Map to screen coordinates if so configured
@@ -446,25 +708,25 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
                 if (!bitRead(P099_CONFIG_FLAGS, P099_FLAGS_SEND_Z) && validDeviceIndex(DeviceIndex)) { // Do NOT send a Z event for each
                                                                                                        // touch?
                   // FIXME TD-er: Should not change anything in the Device vector.
-                  #ifdef ESP8266
+                  #  ifdef ESP8266
                   Device[DeviceIndex].VType      = Sensor_VType::SENSOR_TYPE_DUAL;
                   Device[DeviceIndex].ValueCount = 2;
-                  #else // ifdef ESP8266
+                  #  else // ifdef ESP8266
                   Device.getDeviceStructForEdit(DeviceIndex).VType      = Sensor_VType::SENSOR_TYPE_DUAL;
                   Device.getDeviceStructForEdit(DeviceIndex).ValueCount = 2;
-                  #endif // ifdef ESP8266
+                  #  endif // ifdef ESP8266
                 }
                 sendData(event);                                                                       // Send X/Y(/Z) event
 
                 if (!bitRead(P099_CONFIG_FLAGS, P099_FLAGS_SEND_Z) && validDeviceIndex(DeviceIndex)) { // Reset device configuration
                   // FIXME TD-er: Should not change anything in the Device vector.
-                  #ifdef ESP8266
+                  #  ifdef ESP8266
                   Device[DeviceIndex].VType      = Sensor_VType::SENSOR_TYPE_TRIPLE;
                   Device[DeviceIndex].ValueCount = 3;
-                  #else // ifdef ESP8266
+                  #  else // ifdef ESP8266
                   Device.getDeviceStructForEdit(DeviceIndex).VType      = Sensor_VType::SENSOR_TYPE_TRIPLE;
                   Device.getDeviceStructForEdit(DeviceIndex).ValueCount = 3;
-                  #endif // ifdef ESP8266
+                  #  endif // ifdef ESP8266
                 }
               }
 
@@ -513,5 +775,7 @@ boolean Plugin_099(uint8_t function, struct EventStruct *event, String& string)
   } // switch(function)
   return success;
 }   // Plugin_099
+
+# endif // ifdef ESP8266
 
 #endif // USES_P099
