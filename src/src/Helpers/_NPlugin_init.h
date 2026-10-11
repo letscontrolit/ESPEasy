@@ -7,6 +7,9 @@
 
 #include "../DataTypes/ESPEasy_plugin_functions.h"
 
+#if FEATURE_BUILD_DESCRIPTION
+extern const uint16_t notifierBitmaps[];
+#endif // if FEATURE_BUILD_DESCRIPTION
 
 struct EventStruct;
 

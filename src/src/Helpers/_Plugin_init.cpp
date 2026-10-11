@@ -15,6 +15,1032 @@
 // ********************************************************************************
 
 
+#if FEATURE_BUILD_DESCRIPTION
+const uint16_t pluginsBitmap[] = {
+  0u // n=1 : m=0
+#ifdef USES_P001
+  | 1 << 15
+#endif // ifdef USES_P001
+
+#ifdef USES_P002
+  | 1 << 14
+#endif // ifdef USES_P002
+
+#ifdef USES_P003
+  | 1 << 13
+#endif // ifdef USES_P003
+
+#ifdef USES_P004
+  | 1 << 12
+#endif // ifdef USES_P004
+
+#ifdef USES_P005
+  | 1 << 11
+#endif // ifdef USES_P005
+
+#ifdef USES_P006
+  | 1 << 10
+#endif // ifdef USES_P006
+
+#ifdef USES_P007
+  | 1 << 9
+#endif // ifdef USES_P007
+
+#ifdef USES_P008
+  | 1 << 8
+#endif // ifdef USES_P008
+
+#ifdef USES_P009
+  | 1 << 7
+#endif // ifdef USES_P009
+
+#ifdef USES_P010
+  | 1 << 6
+#endif // ifdef USES_P010
+
+#ifdef USES_P011
+  | 1 << 5
+#endif // ifdef USES_P011
+
+#ifdef USES_P012
+  | 1 << 4
+#endif // ifdef USES_P012
+
+#ifdef USES_P013
+  | 1 << 3
+#endif // ifdef USES_P013
+
+#ifdef USES_P014
+  | 1 << 2
+#endif // ifdef USES_P014
+
+#ifdef USES_P015
+  | 1 << 1
+#endif // ifdef USES_P015
+
+#ifdef USES_P016
+  | 1 << 0
+#endif // ifdef USES_P016
+  , 0u // n=17 : m=0
+#ifdef USES_P017
+  | 1 << 15
+#endif // ifdef USES_P017
+
+#ifdef USES_P018
+  | 1 << 14
+#endif // ifdef USES_P018
+
+#ifdef USES_P019
+  | 1 << 13
+#endif // ifdef USES_P019
+
+#ifdef USES_P020
+  | 1 << 12
+#endif // ifdef USES_P020
+
+#ifdef USES_P021
+  | 1 << 11
+#endif // ifdef USES_P021
+
+#ifdef USES_P022
+  | 1 << 10
+#endif // ifdef USES_P022
+
+#ifdef USES_P023
+  | 1 << 9
+#endif // ifdef USES_P023
+
+#ifdef USES_P024
+  | 1 << 8
+#endif // ifdef USES_P024
+
+#ifdef USES_P025
+  | 1 << 7
+#endif // ifdef USES_P025
+
+#ifdef USES_P026
+  | 1 << 6
+#endif // ifdef USES_P026
+
+#ifdef USES_P027
+  | 1 << 5
+#endif // ifdef USES_P027
+
+#ifdef USES_P028
+  | 1 << 4
+#endif // ifdef USES_P028
+
+#ifdef USES_P029
+  | 1 << 3
+#endif // ifdef USES_P029
+
+#ifdef USES_P030
+  | 1 << 2
+#endif // ifdef USES_P030
+
+#ifdef USES_P031
+  | 1 << 1
+#endif // ifdef USES_P031
+
+#ifdef USES_P032
+  | 1 << 0
+#endif // ifdef USES_P032
+  , 0u // n=33 : m=0
+#ifdef USES_P033
+  | 1 << 15
+#endif // ifdef USES_P033
+
+#ifdef USES_P034
+  | 1 << 14
+#endif // ifdef USES_P034
+
+#ifdef USES_P035
+  | 1 << 13
+#endif // ifdef USES_P035
+
+#ifdef USES_P036
+  | 1 << 12
+#endif // ifdef USES_P036
+
+#ifdef USES_P037
+  | 1 << 11
+#endif // ifdef USES_P037
+
+#ifdef USES_P038
+  | 1 << 10
+#endif // ifdef USES_P038
+
+#ifdef USES_P039
+  | 1 << 9
+#endif // ifdef USES_P039
+
+#ifdef USES_P040
+  | 1 << 8
+#endif // ifdef USES_P040
+
+#ifdef USES_P041
+  | 1 << 7
+#endif // ifdef USES_P041
+
+#ifdef USES_P042
+  | 1 << 6
+#endif // ifdef USES_P042
+
+#ifdef USES_P043
+  | 1 << 5
+#endif // ifdef USES_P043
+
+#ifdef USES_P044
+  | 1 << 4
+#endif // ifdef USES_P044
+
+#ifdef USES_P045
+  | 1 << 3
+#endif // ifdef USES_P045
+
+#ifdef USES_P046
+  | 1 << 2
+#endif // ifdef USES_P046
+
+#ifdef USES_P047
+  | 1 << 1
+#endif // ifdef USES_P047
+
+#ifdef USES_P048
+  | 1 << 0
+#endif // ifdef USES_P048
+  , 0u // n=49 : m=0
+#ifdef USES_P049
+  | 1 << 15
+#endif // ifdef USES_P049
+
+#ifdef USES_P050
+  | 1 << 14
+#endif // ifdef USES_P050
+
+#ifdef USES_P051
+  | 1 << 13
+#endif // ifdef USES_P051
+
+#ifdef USES_P052
+  | 1 << 12
+#endif // ifdef USES_P052
+
+#ifdef USES_P053
+  | 1 << 11
+#endif // ifdef USES_P053
+
+#ifdef USES_P054
+  | 1 << 10
+#endif // ifdef USES_P054
+
+#ifdef USES_P055
+  | 1 << 9
+#endif // ifdef USES_P055
+
+#ifdef USES_P056
+  | 1 << 8
+#endif // ifdef USES_P056
+
+#ifdef USES_P057
+  | 1 << 7
+#endif // ifdef USES_P057
+
+#ifdef USES_P058
+  | 1 << 6
+#endif // ifdef USES_P058
+
+#ifdef USES_P059
+  | 1 << 5
+#endif // ifdef USES_P059
+
+#ifdef USES_P060
+  | 1 << 4
+#endif // ifdef USES_P060
+
+#ifdef USES_P061
+  | 1 << 3
+#endif // ifdef USES_P061
+
+#ifdef USES_P062
+  | 1 << 2
+#endif // ifdef USES_P062
+
+#ifdef USES_P063
+  | 1 << 1
+#endif // ifdef USES_P063
+
+#ifdef USES_P064
+  | 1 << 0
+#endif // ifdef USES_P064
+  , 0u // n=65 : m=0
+#ifdef USES_P065
+  | 1 << 15
+#endif // ifdef USES_P065
+
+#ifdef USES_P066
+  | 1 << 14
+#endif // ifdef USES_P066
+
+#ifdef USES_P067
+  | 1 << 13
+#endif // ifdef USES_P067
+
+#ifdef USES_P068
+  | 1 << 12
+#endif // ifdef USES_P068
+
+#ifdef USES_P069
+  | 1 << 11
+#endif // ifdef USES_P069
+
+#ifdef USES_P070
+  | 1 << 10
+#endif // ifdef USES_P070
+
+#ifdef USES_P071
+  | 1 << 9
+#endif // ifdef USES_P071
+
+#ifdef USES_P072
+  | 1 << 8
+#endif // ifdef USES_P072
+
+#ifdef USES_P073
+  | 1 << 7
+#endif // ifdef USES_P073
+
+#ifdef USES_P074
+  | 1 << 6
+#endif // ifdef USES_P074
+
+#ifdef USES_P075
+  | 1 << 5
+#endif // ifdef USES_P075
+
+#ifdef USES_P076
+  | 1 << 4
+#endif // ifdef USES_P076
+
+#ifdef USES_P077
+  | 1 << 3
+#endif // ifdef USES_P077
+
+#ifdef USES_P078
+  | 1 << 2
+#endif // ifdef USES_P078
+
+#ifdef USES_P079
+  | 1 << 1
+#endif // ifdef USES_P079
+
+#ifdef USES_P080
+  | 1 << 0
+#endif // ifdef USES_P080
+  , 0u // n=81 : m=0
+#ifdef USES_P081
+  | 1 << 15
+#endif // ifdef USES_P081
+
+#ifdef USES_P082
+  | 1 << 14
+#endif // ifdef USES_P082
+
+#ifdef USES_P083
+  | 1 << 13
+#endif // ifdef USES_P083
+
+#ifdef USES_P084
+  | 1 << 12
+#endif // ifdef USES_P084
+
+#ifdef USES_P085
+  | 1 << 11
+#endif // ifdef USES_P085
+
+#ifdef USES_P086
+  | 1 << 10
+#endif // ifdef USES_P086
+
+#ifdef USES_P087
+  | 1 << 9
+#endif // ifdef USES_P087
+
+#ifdef USES_P088
+  | 1 << 8
+#endif // ifdef USES_P088
+
+#ifdef USES_P089
+  | 1 << 7
+#endif // ifdef USES_P089
+
+#ifdef USES_P090
+  | 1 << 6
+#endif // ifdef USES_P090
+
+#ifdef USES_P091
+  | 1 << 5
+#endif // ifdef USES_P091
+
+#ifdef USES_P092
+  | 1 << 4
+#endif // ifdef USES_P092
+
+#ifdef USES_P093
+  | 1 << 3
+#endif // ifdef USES_P093
+
+#ifdef USES_P094
+  | 1 << 2
+#endif // ifdef USES_P094
+
+#ifdef USES_P095
+  | 1 << 1
+#endif // ifdef USES_P095
+
+#ifdef USES_P096
+  | 1 << 0
+#endif // ifdef USES_P096
+  , 0u // n=97 : m=0
+#ifdef USES_P097
+  // Touch (ESP32)
+  | 1 << 15
+#endif // ifdef USES_P097
+
+#ifdef USES_P098
+  | 1 << 14
+#endif // ifdef USES_P098
+
+#ifdef USES_P099
+  | 1 << 13
+#endif // ifdef USES_P099
+
+#ifdef USES_P100
+  | 1 << 12
+#endif // ifdef USES_P100
+
+#ifdef USES_P101
+  | 1 << 11
+#endif // ifdef USES_P101
+
+#ifdef USES_P102
+  | 1 << 10
+#endif // ifdef USES_P102
+
+#ifdef USES_P103
+  | 1 << 9
+#endif // ifdef USES_P103
+
+#ifdef USES_P104
+  | 1 << 8
+#endif // ifdef USES_P104
+
+#ifdef USES_P105
+  | 1 << 7
+#endif // ifdef USES_P105
+
+#ifdef USES_P106
+  | 1 << 6
+#endif // ifdef USES_P106
+
+#ifdef USES_P107
+  | 1 << 5
+#endif // ifdef USES_P107
+
+#ifdef USES_P108
+  | 1 << 4
+#endif // ifdef USES_P108
+
+#ifdef USES_P109
+  | 1 << 3
+#endif // ifdef USES_P109
+
+#ifdef USES_P110
+  | 1 << 2
+#endif // ifdef USES_P110
+
+#ifdef USES_P111
+  | 1 << 1
+#endif // ifdef USES_P111
+
+#ifdef USES_P112
+  | 1 << 0
+#endif // ifdef USES_P112
+  , 0u // n=113 : m=0
+#ifdef USES_P113
+  | 1 << 15
+#endif // ifdef USES_P113
+
+#ifdef USES_P114
+  | 1 << 14
+#endif // ifdef USES_P114
+
+#ifdef USES_P115
+  | 1 << 13
+#endif // ifdef USES_P115
+
+#ifdef USES_P116
+  | 1 << 12
+#endif // ifdef USES_P116
+
+#ifdef USES_P117
+  | 1 << 11
+#endif // ifdef USES_P117
+
+#ifdef USES_P118
+  | 1 << 10
+#endif // ifdef USES_P118
+
+#ifdef USES_P119
+  | 1 << 9
+#endif // ifdef USES_P119
+
+#ifdef USES_P120
+  | 1 << 8
+#endif // ifdef USES_P120
+
+#ifdef USES_P121
+  | 1 << 7
+#endif // ifdef USES_P121
+
+#ifdef USES_P122
+  | 1 << 6
+#endif // ifdef USES_P122
+
+#ifdef USES_P123
+  | 1 << 5
+#endif // ifdef USES_P123
+
+#ifdef USES_P124
+  | 1 << 4
+#endif // ifdef USES_P124
+
+#ifdef USES_P125
+  | 1 << 3
+#endif // ifdef USES_P125
+
+#ifdef USES_P126
+  | 1 << 2
+#endif // ifdef USES_P126
+
+#ifdef USES_P127
+  | 1 << 1
+#endif // ifdef USES_P127
+
+#ifdef USES_P128
+  | 1 << 0
+#endif // ifdef USES_P128
+  , 0u // n=129 : m=0
+#ifdef USES_P129
+  | 1 << 15
+#endif // ifdef USES_P129
+
+#ifdef USES_P130
+  | 1 << 14
+#endif // ifdef USES_P130
+
+#ifdef USES_P131
+  | 1 << 13
+#endif // ifdef USES_P131
+
+#ifdef USES_P132
+  | 1 << 12
+#endif // ifdef USES_P132
+
+#ifdef USES_P133
+  | 1 << 11
+#endif // ifdef USES_P133
+
+#ifdef USES_P134
+  | 1 << 10
+#endif // ifdef USES_P134
+
+#ifdef USES_P135
+  | 1 << 9
+#endif // ifdef USES_P135
+
+#ifdef USES_P136
+  | 1 << 8
+#endif // ifdef USES_P136
+
+#ifdef USES_P137
+  | 1 << 7
+#endif // ifdef USES_P137
+
+#ifdef USES_P138
+  | 1 << 6
+#endif // ifdef USES_P138
+
+#ifdef USES_P139
+  | 1 << 5
+#endif // ifdef USES_P139
+
+#ifdef USES_P140
+  | 1 << 4
+#endif // ifdef USES_P140
+
+#ifdef USES_P141
+  | 1 << 3
+#endif // ifdef USES_P141
+
+#ifdef USES_P142
+  | 1 << 2
+#endif // ifdef USES_P142
+
+#ifdef USES_P143
+  | 1 << 1
+#endif // ifdef USES_P143
+
+#ifdef USES_P144
+  | 1 << 0
+#endif // ifdef USES_P144
+  , 0u // n=145 : m=0
+#ifdef USES_P145
+  | 1 << 15
+#endif // ifdef USES_P145
+
+#ifdef USES_P146
+  | 1 << 14
+#endif // ifdef USES_P146
+
+#ifdef USES_P147
+  | 1 << 13
+#endif // ifdef USES_P147
+
+#ifdef USES_P148
+  | 1 << 12
+#endif // ifdef USES_P148
+
+#ifdef USES_P149
+  | 1 << 11
+#endif // ifdef USES_P149
+
+#ifdef USES_P150
+  | 1 << 10
+#endif // ifdef USES_P150
+
+#ifdef USES_P151
+  | 1 << 9
+#endif // ifdef USES_P151
+
+#ifdef USES_P152
+  | 1 << 8
+#endif // ifdef USES_P152
+
+#ifdef USES_P153
+  | 1 << 7
+#endif // ifdef USES_P153
+
+#ifdef USES_P154
+  | 1 << 6
+#endif // ifdef USES_P154
+
+#ifdef USES_P155
+  | 1 << 5
+#endif // ifdef USES_P155
+
+#ifdef USES_P156
+  | 1 << 4
+#endif // ifdef USES_P156
+
+#ifdef USES_P157
+  | 1 << 3
+#endif // ifdef USES_P157
+
+#ifdef USES_P158
+  | 1 << 2
+#endif // ifdef USES_P158
+
+#ifdef USES_P159
+  | 1 << 1
+#endif // ifdef USES_P159
+
+#ifdef USES_P160
+  | 1 << 0
+#endif // ifdef USES_P160
+  , 0u // n=161 : m=0
+#ifdef USES_P161
+  | 1 << 15
+#endif // ifdef USES_P161
+
+#ifdef USES_P162
+  | 1 << 14
+#endif // ifdef USES_P162
+
+#ifdef USES_P163
+  | 1 << 13
+#endif // ifdef USES_P163
+
+#ifdef USES_P164
+  | 1 << 12
+#endif // ifdef USES_P164
+
+#ifdef USES_P165
+  | 1 << 11
+#endif // ifdef USES_P165
+
+#ifdef USES_P166
+  | 1 << 10
+#endif // ifdef USES_P166
+
+#ifdef USES_P167
+  | 1 << 9
+#endif // ifdef USES_P167
+
+#ifdef USES_P168
+  | 1 << 8
+#endif // ifdef USES_P168
+
+#ifdef USES_P169
+  | 1 << 7
+#endif // ifdef USES_P169
+
+#ifdef USES_P170
+  | 1 << 6
+#endif // ifdef USES_P170
+
+#ifdef USES_P171
+  | 1 << 5
+#endif // ifdef USES_P171
+
+#ifdef USES_P172
+  | 1 << 4
+#endif // ifdef USES_P172
+
+#ifdef USES_P173
+  | 1 << 3
+#endif // ifdef USES_P173
+
+#ifdef USES_P174
+  | 1 << 2
+#endif // ifdef USES_P174
+
+#ifdef USES_P175
+  | 1 << 1
+#endif // ifdef USES_P175
+
+#ifdef USES_P176
+  | 1 << 0
+#endif // ifdef USES_P176
+  , 0u // n=177 : m=0
+#ifdef USES_P177
+  | 1 << 15
+#endif // ifdef USES_P177
+
+#ifdef USES_P178
+  | 1 << 14
+#endif // ifdef USES_P178
+
+#ifdef USES_P179
+  | 1 << 13
+#endif // ifdef USES_P179
+
+#ifdef USES_P180
+  | 1 << 12
+#endif // ifdef USES_P180
+
+#ifdef USES_P181
+  | 1 << 11
+#endif // ifdef USES_P181
+
+#ifdef USES_P182
+  | 1 << 10
+#endif // ifdef USES_P182
+
+#ifdef USES_P183
+  | 1 << 9
+#endif // ifdef USES_P183
+
+#ifdef USES_P184
+  | 1 << 8
+#endif // ifdef USES_P184
+
+#ifdef USES_P185
+  | 1 << 7
+#endif // ifdef USES_P185
+
+#ifdef USES_P186
+  | 1 << 6
+#endif // ifdef USES_P186
+
+#ifdef USES_P187
+  | 1 << 5
+#endif // ifdef USES_P187
+
+#ifdef USES_P188
+  | 1 << 4
+#endif // ifdef USES_P188
+
+#ifdef USES_P189
+  | 1 << 3
+#endif // ifdef USES_P189
+
+#ifdef USES_P190
+  | 1 << 2
+#endif // ifdef USES_P190
+
+#ifdef USES_P191
+  | 1 << 1
+#endif // ifdef USES_P191
+
+#ifdef USES_P192
+  | 1 << 0
+#endif // ifdef USES_P192
+  , 0u // n=193 : m=0
+#ifdef USES_P193
+  | 1 << 15
+#endif // ifdef USES_P193
+
+#ifdef USES_P194
+  | 1 << 14
+#endif // ifdef USES_P194
+
+#ifdef USES_P195
+  | 1 << 13
+#endif // ifdef USES_P195
+
+#ifdef USES_P196
+  | 1 << 12
+#endif // ifdef USES_P196
+
+#ifdef USES_P197
+  | 1 << 11
+#endif // ifdef USES_P197
+
+#ifdef USES_P198
+  | 1 << 10
+#endif // ifdef USES_P198
+
+#ifdef USES_P199
+  | 1 << 9
+#endif // ifdef USES_P199
+
+#ifdef USES_P200
+  | 1 << 8
+#endif // ifdef USES_P200
+
+#ifdef USES_P201
+  | 1 << 7
+#endif // ifdef USES_P201
+
+#ifdef USES_P202
+  | 1 << 6
+#endif // ifdef USES_P202
+
+#ifdef USES_P203
+  | 1 << 5
+#endif // ifdef USES_P203
+
+#ifdef USES_P204
+  | 1 << 4
+#endif // ifdef USES_P204
+
+#ifdef USES_P205
+  | 1 << 3
+#endif // ifdef USES_P205
+
+#ifdef USES_P206
+  | 1 << 2
+#endif // ifdef USES_P206
+
+#ifdef USES_P207
+  | 1 << 1
+#endif // ifdef USES_P207
+
+#ifdef USES_P208
+  | 1 << 0
+#endif // ifdef USES_P208
+  , 0u // n=209 : m=0
+#ifdef USES_P209
+  | 1 << 15
+#endif // ifdef USES_P209
+
+#ifdef USES_P210
+  | 1 << 14
+#endif // ifdef USES_P210
+
+#ifdef USES_P211
+  | 1 << 13
+#endif // ifdef USES_P211
+
+#ifdef USES_P212
+  | 1 << 12
+#endif // ifdef USES_P212
+
+#ifdef USES_P213
+  | 1 << 11
+#endif // ifdef USES_P213
+
+#ifdef USES_P214
+  | 1 << 10
+#endif // ifdef USES_P214
+
+#ifdef USES_P215
+  | 1 << 9
+#endif // ifdef USES_P215
+
+#ifdef USES_P216
+  | 1 << 8
+#endif // ifdef USES_P216
+
+#ifdef USES_P217
+  | 1 << 7
+#endif // ifdef USES_P217
+
+#ifdef USES_P218
+  | 1 << 6
+#endif // ifdef USES_P218
+
+#ifdef USES_P219
+  | 1 << 5
+#endif // ifdef USES_P219
+
+#ifdef USES_P220
+  | 1 << 4
+#endif // ifdef USES_P220
+
+#ifdef USES_P221
+  | 1 << 3
+#endif // ifdef USES_P221
+
+#ifdef USES_P222
+  | 1 << 2
+#endif // ifdef USES_P222
+
+#ifdef USES_P223
+  | 1 << 1
+#endif // ifdef USES_P223
+
+#ifdef USES_P224
+  | 1 << 0
+#endif // ifdef USES_P224
+  , 0u // n=225 : m=0
+#ifdef USES_P225
+  | 1 << 15
+#endif // ifdef USES_P225
+
+#ifdef USES_P226
+  | 1 << 14
+#endif // ifdef USES_P226
+
+#ifdef USES_P227
+  | 1 << 13
+#endif // ifdef USES_P227
+
+#ifdef USES_P228
+  | 1 << 12
+#endif // ifdef USES_P228
+
+#ifdef USES_P229
+  | 1 << 11
+#endif // ifdef USES_P229
+
+#ifdef USES_P230
+  | 1 << 10
+#endif // ifdef USES_P230
+
+#ifdef USES_P231
+  | 1 << 9
+#endif // ifdef USES_P231
+
+#ifdef USES_P232
+  | 1 << 8
+#endif // ifdef USES_P232
+
+#ifdef USES_P233
+  | 1 << 7
+#endif // ifdef USES_P233
+
+#ifdef USES_P234
+  | 1 << 6
+#endif // ifdef USES_P234
+
+#ifdef USES_P235
+  | 1 << 5
+#endif // ifdef USES_P235
+
+#ifdef USES_P236
+  | 1 << 4
+#endif // ifdef USES_P236
+
+#ifdef USES_P237
+  | 1 << 3
+#endif // ifdef USES_P237
+
+#ifdef USES_P238
+  | 1 << 2
+#endif // ifdef USES_P238
+
+#ifdef USES_P239
+  | 1 << 1
+#endif // ifdef USES_P239
+
+#ifdef USES_P240
+  | 1 << 0
+#endif // ifdef USES_P240
+  , 0u // n=241 : m=0
+#ifdef USES_P241
+  | 1 << 15
+#endif // ifdef USES_P241
+
+#ifdef USES_P242
+  | 1 << 14
+#endif // ifdef USES_P242
+
+#ifdef USES_P243
+  | 1 << 13
+#endif // ifdef USES_P243
+
+#ifdef USES_P244
+  | 1 << 12
+#endif // ifdef USES_P244
+
+#ifdef USES_P245
+  | 1 << 11
+#endif // ifdef USES_P245
+
+#ifdef USES_P246
+  | 1 << 10
+#endif // ifdef USES_P246
+
+#ifdef USES_P247
+  | 1 << 9
+#endif // ifdef USES_P247
+
+#ifdef USES_P248
+  | 1 << 8
+#endif // ifdef USES_P248
+
+#ifdef USES_P249
+  | 1 << 7
+#endif // ifdef USES_P249
+
+#ifdef USES_P250
+  | 1 << 6
+#endif // ifdef USES_P250
+
+#ifdef USES_P251
+  | 1 << 5
+#endif // ifdef USES_P251
+
+#ifdef USES_P252
+  | 1 << 4
+#endif // ifdef USES_P252
+
+#ifdef USES_P253
+  | 1 << 3
+#endif // ifdef USES_P253
+
+#ifdef USES_P254
+  | 1 << 2
+#endif // ifdef USES_P254
+
+#ifdef USES_P255
+  | 1 << 1
+#endif // ifdef USES_P255
+};
+
+#else // if FEATURE_BUILD_DESCRIPTION
 
 // Vector to match a "DeviceIndex" to a plugin ID.
 constexpr /*pluginID_t*/ uint8_t DeviceIndex_to_Plugin_id[] PROGMEM =
@@ -1040,6 +2066,7 @@ constexpr /*pluginID_t*/ uint8_t DeviceIndex_to_Plugin_id[] PROGMEM =
   255,
 #endif // ifdef USES_P255
 };
+#endif // if FEATURE_BUILD_DESCRIPTION
 
 typedef boolean (*Plugin_ptr_t)(uint8_t,
                         struct EventStruct *,
@@ -2072,6 +3099,18 @@ constexpr const Plugin_ptr_t PROGMEM Plugin_ptr[] =
 
 bool _Plugin_init_setupDone = false;
 
+#if FEATURE_BUILD_DESCRIPTION
+#ifdef ESP8266
+deviceIndex_t* DeviceIndex_sorted;
+#else
+std::vector<deviceIndex_t> DeviceIndex_sorted;
+#endif
+
+size_t DeviceIndex_to_Plugin_id_size{};
+
+size_t Plugin_id_to_DeviceIndex_size{};
+
+#else // if FEATURE_BUILD_DESCRIPTION
 
 constexpr size_t DeviceIndex_to_Plugin_id_size = NR_ELEMENTS(DeviceIndex_to_Plugin_id);
 
@@ -2106,6 +3145,8 @@ size_t get_Plugin_id_to_DeviceIndex_arrayIndex(pluginID_t pluginID)
   }
   return Plugin_id_to_DeviceIndex_size;
 }
+
+#endif // if FEATURE_BUILD_DESCRIPTION
 
 
 /*
@@ -2142,7 +3183,11 @@ constexpr auto x = get_DevId_from_PId_array(std::make_integer_sequence<unsigned,
 unsigned getNrBitsDeviceIndex()
 {
   // FIXME TD-er: Must somehow make this a constexpr function
+  #if FEATURE_BUILD_DESCRIPTION
+  const unsigned nrBits = NR_BITS(DeviceIndex_to_Plugin_id_size);
+  #else // if FEATURE_BUILD_DESCRIPTION
   constexpr unsigned nrBits = NR_BITS(DeviceIndex_to_Plugin_id_size);
+  #endif // if FEATURE_BUILD_DESCRIPTION
   return nrBits;
 }
 
@@ -2151,6 +3196,30 @@ unsigned getNrBuiltInDeviceIndex()
   return DeviceIndex_to_Plugin_id_size;
 }
 
+#if FEATURE_BUILD_DESCRIPTION
+bool isPluginIncluded(pluginID_t pluginID) {
+  if (pluginID.value == 0) { return false; }
+  const uint16_t wordIndex = (pluginID.value - 1) / 16;
+  const uint16_t bitIndex  = 15 - ((pluginID.value - 1) % 16);
+
+  // Plugin available? (shortcut)
+  return bitRead(pluginsBitmap[wordIndex], bitIndex);
+}
+
+deviceIndex_t getDeviceIndex_from_PluginID(pluginID_t pluginID) {
+  if (!isPluginIncluded(pluginID)) { return INVALID_DEVICE_INDEX; }
+
+  size_t _highest;
+  const uint8_t result =  getIndexFromBitmap(pluginsBitmap, pluginID.value, pluginID.value, _highest);
+
+  return deviceIndex_t::toDeviceIndex(result);
+}
+
+pluginID_t getPluginID_from_DeviceIndex(deviceIndex_t deviceIndex) {
+  return pluginID_t::toPluginID(getIdFromBitmap(pluginsBitmap, deviceIndex.value + 1, PLUGIN_MAX, INVALID_PLUGIN_ID.value));
+}
+
+#else // if FEATURE_BUILD_DESCRIPTION
 deviceIndex_t getDeviceIndex_from_PluginID(pluginID_t pluginID)
 {
   if (validPluginID(pluginID)) {
@@ -2171,6 +3240,7 @@ pluginID_t getPluginID_from_DeviceIndex(deviceIndex_t deviceIndex)
   }
   return INVALID_PLUGIN_ID;
 }
+#endif // if FEATURE_BUILD_DESCRIPTION
 
 bool do_check_validDeviceIndex(deviceIndex_t deviceIndex)
 {
@@ -2217,6 +3287,82 @@ boolean do_PluginCall(deviceIndex_t deviceIndex, uint8_t function, struct EventS
   }
   return false;
 }
+
+#if FEATURE_BUILD_DESCRIPTION
+
+void PluginSetup()
+{
+  if (_Plugin_init_setupDone) return;
+
+  _Plugin_init_setupDone = true;
+
+  if (DeviceIndex_to_Plugin_id_size == 0) {
+    // Get highest PluginID
+    // The last usable index of the Plugin_id_to_DeviceIndex array
+    // must be usable to store the highest plugin ID.
+    // Thus size of array must be highest pluginID + 1.
+    // Get ID for the highest available index
+    DeviceIndex_to_Plugin_id_size = getIndexFromBitmap(pluginsBitmap, PLUGIN_MAX, PLUGIN_MAX, Plugin_id_to_DeviceIndex_size);
+  }
+
+  #ifdef ESP8266
+  Device = new (std::nothrow) DeviceStruct[DeviceIndex_to_Plugin_id_size];
+  #else
+  Device.resize(DeviceIndex_to_Plugin_id_size);
+  #endif
+
+  for (deviceIndex_t deviceIndex; deviceIndex < DeviceIndex_to_Plugin_id_size; ++deviceIndex)
+  {
+    #ifdef ESP32
+    Device.getDeviceStructForEdit(deviceIndex).clear();
+    #elif defined(ESP8266)
+    Device[deviceIndex].clear();
+    #endif
+    const pluginID_t pluginID = getPluginID_from_DeviceIndex(deviceIndex);
+
+    if (validPluginID(pluginID)) {
+      struct EventStruct TempEvent;
+      String dummy;
+      do_PluginCall(deviceIndex, PLUGIN_DEVICE_ADD, &TempEvent, dummy);
+    }
+  }
+#ifndef BUILD_NO_RAM_TRACKER
+  logMemUsageAfter(F("PLUGIN_DEVICE_ADD"));
+#endif
+
+  // ********************************************************************************
+  // Device Sort routine, actual sorting alfabetically by plugin name.
+  // Sorting does happen case sensitive.
+  // Used in device selector dropdown.
+  // ********************************************************************************
+
+  // First fill the existing number of the DeviceIndex.
+  #ifdef ESP8266
+  DeviceIndex_sorted = new (std::nothrow) deviceIndex_t[DeviceIndex_to_Plugin_id_size + 1];
+  #else
+  DeviceIndex_sorted.resize(DeviceIndex_to_Plugin_id_size + 1);
+  #endif
+
+  for (deviceIndex_t x; x < DeviceIndex_to_Plugin_id_size; ++x) {
+    DeviceIndex_sorted[x.value] = x;
+  }
+
+  struct
+  {
+    bool operator()(deviceIndex_t a, deviceIndex_t b) const {
+      return getPluginNameFromDeviceIndex(a) <
+             getPluginNameFromDeviceIndex(b);
+    }
+  }
+  customLess;
+  #ifdef ESP8266
+  std::sort(DeviceIndex_sorted, DeviceIndex_sorted + DeviceIndex_to_Plugin_id_size, customLess);
+  #else
+  std::sort(DeviceIndex_sorted.begin(), DeviceIndex_sorted.end(), customLess);
+  #endif
+}
+
+#else // if FEATURE_BUILD_DESCRIPTION
 
 void PluginSetup()
 {
@@ -2280,6 +3426,7 @@ void PluginSetup()
   customLess;
   std::sort(DeviceIndex_sorted, DeviceIndex_sorted + DeviceIndex_to_Plugin_id_size, customLess);
 }
+#endif // if FEATURE_BUILD_DESCRIPTION
 
 void PluginInit(bool priorityOnly)
 {

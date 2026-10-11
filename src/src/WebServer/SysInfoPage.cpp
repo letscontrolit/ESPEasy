@@ -169,6 +169,9 @@ void handle_sysinfo_json() {
         writer->write({ F("build_time"),    get_build_time() });
         writer->write({ F("filename"),      LabelType::BINARY_FILENAME });
         writer->write({ F("build_platform"), LabelType::BUILD_PLATFORM });
+        #if FEATURE_BUILD_DESCRIPTION
+        writer->write({ F("build_description"), LabelType::BUILD_DESCRIPTION });
+        #endif // if FEATURE_BUILD_DESCRIPTION
         writer->write({ F("git_head"),      LabelType::GIT_HEAD });
 #  ifdef CONFIGURATION_CODE
         writer->write({ F("configuration_code"), LabelType::CONFIGURATION_CODE_LBL });
@@ -503,6 +506,9 @@ void handle_sysinfo_Firmware() {
     LabelType::BUILD_TIME,
     LabelType::BINARY_FILENAME,
     LabelType::BUILD_PLATFORM,
+    #if FEATURE_BUILD_DESCRIPTION
+    LabelType::BUILD_DESCRIPTION,
+    #endif // if FEATURE_BUILD_DESCRIPTION
     LabelType::GIT_HEAD,
   #  ifdef CONFIGURATION_CODE
     LabelType::CONFIGURATION_CODE_LBL,

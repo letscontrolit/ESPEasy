@@ -28,7 +28,7 @@ struct networkDriverIndex_t {
 
   networkDriverIndex_t& operator=(unsigned other)
   {
-    value = (other < NETWORKDRIVER_INDEX_MAX) ? other : NETWORKDRIVER_INDEX_MAX;
+    value = (other < (NETWORKDRIVER_INDEX_MAX + 1)) ? other : (NETWORKDRIVER_INDEX_MAX + 1);
     return *this;
   }
 
@@ -67,7 +67,7 @@ struct networkDriverIndex_t {
 };
 
 
-extern networkDriverIndex_t INVALID_NETWORKDRIVER_INDEX;
+extern const networkDriverIndex_t INVALID_NETWORKDRIVER_INDEX;
 
 } // namespace net
 } // namespace ESPEasy

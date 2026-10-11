@@ -2,6 +2,9 @@
 #define HELPERS__CPLUGIN_INIT_H
 
 #include "../../ESPEasy_common.h"
+#if FEATURE_BUILD_DESCRIPTION
+#include "../Helpers/_BitmapArray_Helper.h"
+#endif // if FEATURE_BUILD_DESCRIPTION
 
 #include "../DataTypes/ESPEasy_plugin_functions.h"
 
@@ -9,6 +12,10 @@
 #include "../DataTypes/CPluginID.h"
 #include "../DataTypes/ProtocolIndex.h"
 #include "../DataStructs/ProtocolStruct.h"
+
+#if FEATURE_BUILD_DESCRIPTION
+extern const uint16_t controllersBitmap[];
+#endif // if FEATURE_BUILD_DESCRIPTION
 
 struct EventStruct;
 
