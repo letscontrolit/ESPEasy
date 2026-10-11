@@ -7,11 +7,19 @@
 
 # define PLUGIN_096
 # define PLUGIN_ID_096         96
-# define PLUGIN_NAME_096       "Display - eInk with Lolin ePaper screen"
+# define PLUGIN_NAME_096       "Display - eInk/ePaper screens"
 # define PLUGIN_VALUENAME1_096 "CursorX"
 # define PLUGIN_VALUENAME2_096 "CursorY"
 
-// #define PLUGIN_096_MAX_DISPLAY 1 // Unused
+/** Changelog
+ * 2022-08-19 tonhuisman: Add support for MH-IT Live 1.54"200x200pc white/black/red display (untested)
+ * 2022-03 tonhuisman:    Add support for Waveshare 2.7" 264x176px monochrome display
+ *                        Add support for Waveshare 1.54" 200x200px monochrome display (untested)
+ * Pre-2022-03: No changelog registered
+ * Plugin uses AdafruitGFX_Helper write command handling for drawing shapes and text on the display.
+ * Uses an extended version of LOLIN_EPD library, that has support for IL3897, UC8151D and SSD1680, and is extended for
+ * Waveshare 2.7" 264x176px monochrome, Waveshare 1.54" (B) 200x200px white/black/red and MH-IT Live 200x200px white/black/red displays
+ */
 
 /** Changelog:
  * 2025-08-13 tonhuisman: Enable use of secondary SPI bus
@@ -20,10 +28,9 @@
 
 /* README.MD
 
-
  ## INTRO
 
-   This plugin allow to control a eInk screen (ILI3897) through HTTP API
+   This plugin allow to control a eInk screen (IL3897) through HTTP API
 
  ## Environment
    Tested with Lolin d32 pro and Wemos ePaper 2.13 shield
@@ -111,67 +118,6 @@
 // plugin dependency
 # include "src/PluginStructs/P096_data_struct.h"
 
-// #include <LOLIN_EPD.h>
-// #include <Adafruit_GFX.h>
-// #ifdef P096_USE_ADA_GRAPHICS
-// #include "src/Helpers/AdafruitGFX_helper.h"
-// #endif
-
-# ifndef P096_USE_ADA_GRAPHICS
-
-// // declare functions for using default value parameters
-// void Plugin_096_printText(const char    *string,
-//                           int            X,
-//                           int            Y,
-//                           unsigned int   textSize = 1,
-//                           unsigned short color    = EPD_WHITE,
-//                           unsigned short bkcolor  = EPD_BLACK);
-# endif // ifndef P096_USE_ADA_GRAPHICS
-
-// Define the default values for both ESP32/lolin32 and D1 Mini
-# ifdef ESP32
-
-// for D32 Pro with EPD connector
-  #  define EPD_CS 14
-  #  define EPD_CS_HSPI 26 // when connected to Hardware-SPI GPIO-14 is already used
-  #  define EPD_DC 27
-  #  define EPD_RST 33     // can set to -1 and share with microcontroller Reset!
-  #  define EPD_BUSY -1    // can set to -1 to not use a pin (will wait a fixed delay)
-# else // ifdef ESP32
-
-// for D1 Mini with shield connection
-  #  define EPD_CS  16  // D0
-  #  define EPD_DC  15  // D8
-  #  define EPD_RST -1  // can set to -1 and share with microcontroller Reset!
-  #  define EPD_BUSY -1 // can set to -1 to not use a pin (will wait a fixed delay)
-# endif // ifdef ESP32
-
-
-// // The setting structure
-// struct Plugin_096_EPD_SettingStruct
-// {
-//   Plugin_096_EPD_SettingStruct()
-//     : address_epd_cs(EPD_CS), address_epd_dc(EPD_DC), address_epd_rst(EPD_RST), address_epd_busy(EPD_BUSY), rotation(0), width(250),
-// height(
-//       122)
-//   {}
-
-//   uint8_t address_epd_cs;
-//   uint8_t address_epd_dc;
-//   uint8_t address_epd_rst;
-//   uint8_t address_epd_busy;
-//   uint8_t rotation;
-//   int     width;
-//   int     height;
-// } EPD_Settings;
-
-// // The display pointer
-// LOLIN_IL3897 *eInkScreen                = nullptr;
-// uint8_t plugin_096_sequence_in_progress = false;
-// # ifdef P096_USE_ADA_GRAPHICS
-// AdafruitGFX_helper *gfxHelper = nullptr;
-// # endif // ifdef P096_USE_ADA_GRAPHICS
-
 boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
@@ -218,16 +164,16 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_SET_DEFAULTS:
     {
-      PIN(0) = EPD_CS;
+      PIN(0) = P096_EPD_CS;
       # ifdef ESP32
 
       if (Settings.InitSPI == 2) { // When using ESP32 H(ardware-)SPI
-        PIN(0) = EPD_CS_HSPI;
+        PIN(0) = P096_EPD_CS_HSPI;
       }
       # endif // ifdef ESP32
-      PIN(1) = EPD_DC;
-      PIN(2) = EPD_RST;
-      PIN(3) = EPD_BUSY;
+      PIN(1) = P096_EPD_DC;
+      PIN(2) = P096_EPD_RST;
+      PIN(3) = P096_EPD_BUSY;
       # if P096_USE_EXTENDED_SETTINGS
 
       P096_CONFIG_COLORS = static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_BLACK) | // Default to dark on white (paper) colors
@@ -263,20 +209,32 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
 
       {
         const __FlashStringHelper *options4[] = {
-          EPD_type_toString(EPD_type_e::EPD_IL3897),
-          EPD_type_toString(EPD_type_e::EPD_UC8151D),
-          EPD_type_toString(EPD_type_e::EPD_SSD1680),
+          toString(EPD_type_e::EPD_IL3897),
+          toString(EPD_type_e::EPD_UC8151D),
+          toString(EPD_type_e::EPD_SSD1680),
           #  if P096_USE_WAVESHARE_2IN7
-          EPD_type_toString(EPD_type_e::EPD_WS2IN7)
+          toString(EPD_type_e::EPD_WS2IN7),
           #  endif // if P096_USE_WAVESHARE_2IN7
+          #  if P096_USE_WAVESHARE_1IN54B
+          toString(EPD_type_e::EPD_WS1IN54B),
+          #  endif // if P096_USE_WAVESHARE_1IN54B
+          #  if P096_USE_MH_ET_LIVE_1IN54
+          toString(EPD_type_e::EPD_MHET1IN54),
+          #  endif // if P096_USE_MH_ET_LIVE_1IN54
         };
         const int optionValues4[] = {
           static_cast<int>(EPD_type_e::EPD_IL3897),
           static_cast<int>(EPD_type_e::EPD_UC8151D),
           static_cast<int>(EPD_type_e::EPD_SSD1680),
           #  if P096_USE_WAVESHARE_2IN7
-          static_cast<int>(EPD_type_e::EPD_WS2IN7)
+          static_cast<int>(EPD_type_e::EPD_WS2IN7),
           #  endif // if P096_USE_WAVESHARE_2IN7
+          #  if P096_USE_WAVESHARE_1IN54B
+          static_cast<int>(EPD_type_e::EPD_WS1IN54B),
+          #  endif // if P096_USE_WAVESHARE_1IN54B
+          #  if P096_USE_MH_ET_LIVE_1IN54
+          static_cast<int>(EPD_type_e::EPD_MHET1IN54),
+          #  endif // if P096_USE_MH_ET_LIVE_1IN54
         };
         constexpr size_t optionCount = NR_ELEMENTS(optionValues4);
         const FormSelectorOptions selector(
@@ -361,15 +319,21 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
 
       {
         const __FlashStringHelper *commandTriggers[] = { // Be sure to use all options available in the enum (except MAX)!
-          P096_CommandTrigger_toString(P096_CommandTrigger::epd),
-          P096_CommandTrigger_toString(P096_CommandTrigger::eInk),
-          P096_CommandTrigger_toString(P096_CommandTrigger::ePaper),
-          P096_CommandTrigger_toString(P096_CommandTrigger::il3897),
-          P096_CommandTrigger_toString(P096_CommandTrigger::uc8151d),
-          P096_CommandTrigger_toString(P096_CommandTrigger::ssd1680),
+          toString(P096_CommandTrigger::epd),
+          toString(P096_CommandTrigger::eInk),
+          toString(P096_CommandTrigger::ePaper),
+          toString(P096_CommandTrigger::il3897),
+          toString(P096_CommandTrigger::uc8151d),
+          toString(P096_CommandTrigger::ssd1680),
           #  if P096_USE_WAVESHARE_2IN7
-          P096_CommandTrigger_toString(P096_CommandTrigger::ws2in7)
+          toString(P096_CommandTrigger::ws2in7),
           #  endif // if P096_USE_WAVESHARE_2IN7
+          #  if P096_USE_WAVESHARE_1IN54B
+          toString(P096_CommandTrigger::ws1in54b),
+          #  endif // if P096_USE_WAVESHARE_1IN54B
+          #  if P096_USE_MH_ET_LIVE_1IN54
+          toString(P096_CommandTrigger::mhet1in54),
+          #  endif // if P096_USE_MH_ET_LIVE_1IN54
         };
         const int commandTriggerOptions[] = {
           static_cast<int>(P096_CommandTrigger::epd),
@@ -379,8 +343,14 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(P096_CommandTrigger::uc8151d),
           static_cast<int>(P096_CommandTrigger::ssd1680),
           #  if P096_USE_WAVESHARE_2IN7
-          static_cast<int>(P096_CommandTrigger::ws2in7)
+          static_cast<int>(P096_CommandTrigger::ws2in7),
           #  endif // if P096_USE_WAVESHARE_2IN7
+          #  if P096_USE_WAVESHARE_1IN54B
+          static_cast<int>(P096_CommandTrigger::ws1in54b),
+          #  endif // if P096_USE_WAVESHARE_1IN54B
+          #  if P096_USE_MH_ET_LIVE_1IN54
+          static_cast<int>(P096_CommandTrigger::mhet1in54),
+          #  endif // if P096_USE_MH_ET_LIVE_1IN54
         };
         constexpr size_t optionCount = NR_ELEMENTS(commandTriggerOptions);
         const FormSelectorOptions selector(optionCount, commandTriggers, commandTriggerOptions);
@@ -515,8 +485,8 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
                                                                P096_CONFIG_ROTATION,
                                                                P096_CONFIG_FLAG_GET_FONTSCALE,
                                                                static_cast<AdaGFXTextPrintMode>(P096_CONFIG_FLAG_GET_MODE),
-                                                               P096_CommandTrigger_toString(static_cast<P096_CommandTrigger>(
-                                                                                              P096_CONFIG_FLAG_GET_CMD_TRIGGER)),
+                                                               toString(static_cast<P096_CommandTrigger>(
+                                                                          P096_CONFIG_FLAG_GET_CMD_TRIGGER)),
                                                                P096_CONFIG_GET_COLOR_FOREGROUND,
                                                                P096_CONFIG_GET_COLOR_BACKGROUND,
                                                                static_cast<AdaGFXColorDepth>(P096_CONFIG_FLAG_GET_COLORDEPTH),
@@ -577,7 +547,7 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
   return success;
 }
 
-# ifndef P096_USE_ADA_GRAPHICS
+// # ifndef P096_USE_ADA_GRAPHICS
 
 // // Print some text
 // // param [in] string : The text to display
@@ -600,111 +570,111 @@ boolean Plugin_096(uint8_t function, struct EventStruct *event, String& string)
 //   eInkScreen->display();
 // }
 
-# endif // ifndef P096_USE_ADA_GRAPHICS
+// # endif // ifndef P096_USE_ADA_GRAPHICS
 
 // Parse color string to color
 // param [in] colorString : The color string (white, red, ...)
 // return : color (default EPD_WHITE)
-unsigned short Plugin_096_ParseColor(const String& colorString)
-{
-  // copy to local var and ensure lowercase
-  // this optimise the next equlaity checks
-  String s = colorString;
+// unsigned short Plugin_096_ParseColor(const String& colorString)
+// {
+//   // copy to local var and ensure lowercase
+//   // this optimise the next equlaity checks
+//   String s = colorString;
 
-  s.toLowerCase();
+//   s.toLowerCase();
 
-  if (equals(s, F("black"))) {
-    return EPD_BLACK;
-  }
+//   if (equals(s, F("black"))) {
+//     return EPD_BLACK;
+//   }
 
-  if (equals(s, F("white"))) {
-    return EPD_WHITE;
-  }
+//   if (equals(s, F("white"))) {
+//     return EPD_WHITE;
+//   }
 
-  if (equals(s, F("inverse"))) {
-    return EPD_INVERSE;
-  }
+//   if (equals(s, F("inverse"))) {
+//     return EPD_INVERSE;
+//   }
 
-  if (equals(s, F("red"))) {
-    return EPD_RED;
-  }
+//   if (equals(s, F("red"))) {
+//     return EPD_RED;
+//   }
 
-  if (equals(s, F("dark"))) {
-    return EPD_DARK;
-  }
+//   if (equals(s, F("dark"))) {
+//     return EPD_DARK;
+//   }
 
-  if (equals(s, F("light"))) {
-    return EPD_LIGHT;
-  }
-  return EPD_WHITE;
-}
+//   if (equals(s, F("light"))) {
+//     return EPD_LIGHT;
+//   }
+//   return EPD_WHITE;
+// }
 
-# ifndef P096_USE_ADA_GRAPHICS
+// # ifndef P096_USE_ADA_GRAPHICS
 
-// Fix text with handling special characters (degrees and main monetary symbols)
-// This is specific case for current AdafruitGfx standard fontused for eink screen
-// param [in/out] s : The string to fix
-void Plugin_096_FixText(String& s)
-{
-  const char degree[3]      = { 0xc2, 0xb0, 0 }; // Unicode degree symbol
-  const char degree_eink[2] = { 0xf7, 0 };       // eink degree symbol
+// // Fix text with handling special characters (degrees and main monetary symbols)
+// // This is specific case for current AdafruitGfx standard fontused for eink screen
+// // param [in/out] s : The string to fix
+// void Plugin_096_FixText(String& s)
+// {
+//   const char degree[3]      = { 0xc2, 0xb0, 0 }; // Unicode degree symbol
+//   const char degree_eink[2] = { 0xf7, 0 };       // eink degree symbol
 
-  s.replace(degree,     degree_eink);
-  s.replace(F("{D}"),   degree_eink);
-  s.replace(F("&deg;"), degree_eink);
+//   s.replace(degree,     degree_eink);
+//   s.replace(F("{D}"),   degree_eink);
+//   s.replace(F("&deg;"), degree_eink);
 
-  const char euro[4]      = { 0xe2, 0x82, 0xac, 0 }; // Unicode euro symbol
-  const char euro_eink[2] = { 0xED, 0 };             // eink degree symbol
+//   const char euro[4]      = { 0xe2, 0x82, 0xac, 0 }; // Unicode euro symbol
+//   const char euro_eink[2] = { 0xED, 0 };             // eink degree symbol
 
-  s.replace(euro,        euro_eink);
-  s.replace(F("{E}"),    euro_eink);
-  s.replace(F("&euro;"), euro_eink);
+//   s.replace(euro,        euro_eink);
+//   s.replace(F("{E}"),    euro_eink);
+//   s.replace(F("&euro;"), euro_eink);
 
-  const char pound[3]      = { 0xc2, 0xa3, 0 }; // Unicode pound symbol
-  const char pound_eink[2] = { 0x9C, 0 };       // eink pound symbol
+//   const char pound[3]      = { 0xc2, 0xa3, 0 }; // Unicode pound symbol
+//   const char pound_eink[2] = { 0x9C, 0 };       // eink pound symbol
 
-  s.replace(pound,        pound_eink);
-  s.replace(F("{P}"),     pound_eink);
-  s.replace(F("&pound;"), pound_eink);
+//   s.replace(pound,        pound_eink);
+//   s.replace(F("{P}"),     pound_eink);
+//   s.replace(F("&pound;"), pound_eink);
 
-  const char yen[3]      = { 0xc2, 0xa5, 0 }; // Unicode yen symbol
-  const char yen_eink[2] = { 0x9D, 0 };       // eink yen symbol
+//   const char yen[3]      = { 0xc2, 0xa5, 0 }; // Unicode yen symbol
+//   const char yen_eink[2] = { 0x9D, 0 };       // eink yen symbol
 
-  s.replace(yen,        yen_eink);
-  s.replace(F("{Y}"),   yen_eink);
-  s.replace(F("&yen;"), yen_eink);
+//   s.replace(yen,        yen_eink);
+//   s.replace(F("{Y}"),   yen_eink);
+//   s.replace(F("&yen;"), yen_eink);
 
-  const char cent[3]      = { 0xc2, 0xa2, 0 }; // Unicode yen symbol
-  const char cent_eink[2] = { 0x9B, 0 };       // eink cent symbol
+//   const char cent[3]      = { 0xc2, 0xa2, 0 }; // Unicode yen symbol
+//   const char cent_eink[2] = { 0x9B, 0 };       // eink cent symbol
 
-  s.replace(cent,        cent_eink);
-  s.replace(F("{c}"),    cent_eink);
-  s.replace(F("&cent;"), cent_eink);
-}
+//   s.replace(cent,        cent_eink);
+//   s.replace(F("{c}"),    cent_eink);
+//   s.replace(F("&cent;"), cent_eink);
+// }
 
-// Split a string by delimiter
-// param [in] s : The input string
-// param [in] c : The delimiter
-// param [out] op : The resulting string array
-// param [in] limit : The maximum strings to find
-// return : The string count
-int Plugin_096_StringSplit(const String& s, char c, String op[], int limit)
-{
-  int    count = 0;
-  char  *pch;
-  String d = String(c);
+// // Split a string by delimiter
+// // param [in] s : The input string
+// // param [in] c : The delimiter
+// // param [out] op : The resulting string array
+// // param [in] limit : The maximum strings to find
+// // return : The string count
+// int Plugin_096_StringSplit(const String& s, char c, String op[], int limit)
+// {
+//   int    count = 0;
+//   char  *pch;
+//   String d = String(c);
 
-  pch = strtok((char *)(s.c_str()), d.c_str());
+//   pch = strtok((char *)(s.c_str()), d.c_str());
 
-  while (pch != NULL && count < limit)
-  {
-    op[count] = String(pch);
-    count++;
-    pch = strtok(NULL, ",");
-  }
-  return count;
-}
+//   while (pch != NULL && count < limit)
+//   {
+//     op[count] = String(pch);
+//     count++;
+//     pch = strtok(NULL, ",");
+//   }
+//   return count;
+// }
 
-# endif // ifndef P096_USE_ADA_GRAPHICS
+// # endif // ifndef P096_USE_ADA_GRAPHICS
 
 #endif  // USES_P096
