@@ -94,6 +94,15 @@ int32_t  fromTwosComplement(uint32_t twoComplementValue, uint8_t nrBits)
 
 uint32_t toTwosComplement(int32_t value, uint8_t nrBits)
 {
+  if (nrBits == 0) return 0;
+  if (nrBits >= 32) return static_cast<uint32_t>(value);
+
+  // Safely generate a mask for nrBits < 32
+  const uint32_t mask = (1ul << nrBits) - 1;
+  
+  // Casting to unsigned handles negative values automatically
+  return static_cast<uint32_t>(value) & mask;
+/*
   if (value >= 0) return value;
   if (nrBits <= 1) return 0;
   if (nrBits >= 32) nrBits = 32;
@@ -109,6 +118,7 @@ uint32_t toTwosComplement(int32_t value, uint8_t nrBits)
   //  int64_t res = value;
   //  res += (1 << nrBits);
   return res;
+*/
 }
 
 
