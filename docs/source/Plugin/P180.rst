@@ -343,11 +343,11 @@ This configures these parameters:
 
 The I2C Command sequence for reading the Temperature:
 
-``read.u24le.0x1D;eval;calc.%value%/65536``
+``read.24le.0x1D;eval;calc.%value%/65536``
 
 Command sequence explanation:
 
-* ``read.u24le.0x1D``: Read an uint24 little endian value (3 bytes) value from register 0x1D
+* ``read.24le.0x1D``: Read an int24 little endian value (3 bytes) from register 0x1D
 * ``eval``: Use the previous command result for evaluation
 * ``calc.%value%/65536``: Divide the read value by 65536 as the right-most 16 bits are the fraction part
 
