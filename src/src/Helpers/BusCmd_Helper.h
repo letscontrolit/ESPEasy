@@ -2,6 +2,7 @@
 #define _HELPERS_BUSCMD_HELPER_H
 
 /** Changelog:
+ * 2026-10-15 tonhuisman: Fix 2's complement value usages
  * 2026-04-19 tonhuisman: Allow also variables to be used for register in write commands
  * 2026-04-18 tonhuisman: Limit variable expansion to read (register) and put/write (value) commands
  * 2026-04-12 tonhuisman: Allow rules-variables to be used for get/read and put/write commands
