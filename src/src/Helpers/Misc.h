@@ -51,6 +51,11 @@ uint16_t getUint16FromLittleEndianByteStream(const uint8_t* data);
 int32_t  fromTwosComplement(uint32_t twoComplementValue, uint8_t nrBits);
 uint32_t toTwosComplement(int32_t value, uint8_t nrBits);
 
+// swap the bytes to/from Little Endian byte order
+// only supported bits are 16, 24, 32 and 64 (uint64_t only), other bits values return the input value!
+uint16_t swapLEbyteOrder(uint16_t value, uint8_t bits);
+uint32_t swapLEbyteOrder(uint32_t value, uint8_t bits);
+uint64_t swapLEbyteOrder(uint64_t value, uint8_t bits);
 
 bool remoteConfig(struct EventStruct *event,
                   const String      & string);

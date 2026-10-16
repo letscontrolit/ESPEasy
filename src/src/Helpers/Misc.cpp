@@ -121,6 +121,38 @@ uint32_t toTwosComplement(int32_t value, uint8_t nrBits)
 */
 }
 
+uint16_t swapLEbyteOrder(uint16_t value, uint8_t bits) {
+  if (bits==  16) {
+    return __builtin_bswap16(value); // GCC internal
+    // return ((value & 0xFF) << 8) | ((value & 0xFF00) >> 8);
+  }
+  return value;
+}
+
+uint32_t swapLEbyteOrder(uint32_t value, uint8_t bits) {
+  switch (bits) {
+    case 16:
+      return __builtin_bswap16(static_cast<uint16_t>(value)); // GCC internal
+      // return ((value & 0xFF) << 8) | ((value & 0xFF00) >> 8);
+    case 24:
+      return __builtin_bswap32(value & 0x00FFFFFF) >> 8; // GCC internal
+      // return ((value & 0xFF0000) >> 16) | (value & 0xFF00) | ((value & 0xFF) << 16);
+    case 32:
+      return __builtin_bswap32(value); // GCC internal
+      // return ((value & 0xFF000000) >> 24) | ((value & 0xFF0000) >> 16) | ((value & 0xFF00) << 8) | ((value & 0xFF) << 24);
+  }
+  return value;
+}
+
+uint64_t swapLEbyteOrder(uint64_t value, uint8_t bits) {
+  if (bits == 64) {
+    return __builtin_bswap64(value); // GCC internal
+    // value = ((value << 8) & 0xFF00FF00FF00FF00ull) | ((value >> 8) & 0x00FF00FF00FF00FFull);
+    // value = ((value << 16) & 0xFFFF0000FFFF0000ull) | ((value >> 16) & 0x0000FFFF0000FFFFull);
+    // return (value << 32) | (value >> 32);
+  }
+  return value;
+}
 
 bool remoteConfig(struct EventStruct *event, const String& string)
 {
