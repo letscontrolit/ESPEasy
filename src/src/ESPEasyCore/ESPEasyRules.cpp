@@ -507,7 +507,7 @@ enum class string_commands_e {
 };
 
 
-void hideEscaped(String &line, bool &mustReplaceEscapedBracket, bool &mustReplaceEscapedCurlyBracket, bool &mustReplaceEscapedColon) {
+static void hideEscaped(String &line, bool &mustReplaceEscapedBracket, bool &mustReplaceEscapedCurlyBracket, bool &mustReplaceEscapedColon) {
   String MaskEscapedBracket;
 
   if (hasEscapedCharacter(line,'(') || hasEscapedCharacter(line,')')) {
@@ -541,14 +541,14 @@ void hideEscaped(String &line, bool &mustReplaceEscapedBracket, bool &mustReplac
   #endif // if FEATURE_EXTENDED_STRING_FUNCTIONS
 }
 
-void hideMasked(String &line, bool mustReplaceMaskedChars) {
+static void hideMasked(String &line, bool mustReplaceMaskedChars) {
   if (mustReplaceMaskedChars) {
     line.replace('{', static_cast<char>(0x02));
     line.replace('}', static_cast<char>(0x03));
   }
 }
 
-void restoreMaskedAndEscaped(String &line, bool mustReplaceMaskedChars, bool mustReplaceEscapedBracket, bool mustReplaceEscapedCurlyBracket, bool mustReplaceEscapedColon) {
+static void restoreMaskedAndEscaped(String &line, bool mustReplaceMaskedChars, bool mustReplaceEscapedBracket, bool mustReplaceEscapedCurlyBracket, bool mustReplaceEscapedColon) {
   String MaskEscapedBracket;
 
   if (mustReplaceMaskedChars) {
