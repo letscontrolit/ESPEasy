@@ -884,8 +884,8 @@ void parse_string_commands(String& line) {
         #if FEATURE_EXTENDED_STRING_FUNCTIONS
         hideMasked(replacement, mustReplaceMaskedChars); // apply
         #else // if FEATURE_EXTENDED_STRING_FUNCTIONS
-        line.replace('{', static_cast<char>(0x02));
-        line.replace('}', static_cast<char>(0x03));
+        replacement.replace('{', static_cast<char>(0x02));
+        replacement.replace('}', static_cast<char>(0x03));
         #endif // if FEATURE_EXTENDED_STRING_FUNCTIONS
       }
 
