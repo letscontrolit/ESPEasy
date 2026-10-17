@@ -44,7 +44,7 @@ Change log
 .. versionchanged:: 2.0
   ...
 
-  |changed| 2026-10-17: Receive controls that send their data frames without a pause (e.g. UVR61-3 up to v8.2), pulse width tolerance 40% (was 10%), fixed the shared data being deleted when saving a task, MQTT AutoDiscovery of digital outputs (device class 'running') and selectable state class.
+  |changed| 2026-10-17: Receive controls that send their data frames without a pause (e.g. UVR61-3 up to v8.2), pulse width tolerance 40% (was 10%), fixed the shared data being deleted when saving a task, MQTT AutoDiscovery of digital outputs with selectable device class (default 'running') and selectable state class.
 
 .. versionadded:: 1.0
   ...

@@ -34,8 +34,8 @@
                                  the shared struct is deleted with the task data of the last P092 task. init() can run
                                  again, the pin change is checked against the pin in use. Value decimals were written
                                  out of bounds.
-                            ADD: MQTT AutoDiscovery: device class 'running' for values set to Switch (digital outputs),
-                                 state class selectable per value.
+                            ADD: MQTT AutoDiscovery: device class selectable (like P001) for values set to Switch
+                                 (digital outputs), default 'running'. State class selectable per value.
     * 2025-06-14 tonhuisman: Add support for Custom Value Type per task value
     @tonhuisman 2025-01-12 Add support for MQTT AutoDiscovery (not supported yet for DL-bus)
 
@@ -94,6 +94,8 @@
 # define PLUGIN_NAME_092       "Heating - DL-Bus (Technische Alternative)"
 # define PLUGIN_VALUENAME1_092 "Value"
 
+# define P092_MQTT_DEVICECLASS PCONFIG(3) // binary_sensor device class, 0 = not set yet: 'running'
+
 boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
@@ -137,9 +139,18 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
         event->ParN[i] = ExtraTaskSettings.getTaskVarCustomVType(i);  // Custom/User selection
       }
 
-      // binary_sensor device class when Switch is selected (the outputs drive pumps and valves),
-      // the default 'switch' is rejected by Home Assistant for a binary_sensor
-      string = F("running");
+      // binary_sensor device class when Switch is selected, user selected like P001.
+      // Not set yet: 'running' (the outputs drive pumps and valves), as the controller default
+      // 'switch' is rejected by Home Assistant for a binary_sensor
+      #   if FEATURE_MQTT_DEVICECLASS
+
+      if (P092_MQTT_DEVICECLASS > 0) {
+        string = MQTT_binary_deviceClassName(P092_MQTT_DEVICECLASS);
+      } else
+      #   endif // if FEATURE_MQTT_DEVICECLASS
+      {
+        string = F("running");
+      }
       #  else // if FEATURE_CUSTOM_TASKVAR_VTYPE
       event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_NONE); // Not yet supported
       #  endif // if FEATURE_CUSTOM_TASKVAR_VTYPE
@@ -291,6 +302,14 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
         }
       }
 
+      # if FEATURE_MQTT_DISCOVER && FEATURE_MQTT_DEVICECLASS
+      addFormSelector_binarySensorDeviceClass(F("MQTT Device class"),
+                                              F("devcls"),
+                                              P092_MQTT_DEVICECLASS > 0
+                                              ? P092_MQTT_DEVICECLASS
+                                              : MQTT_binary_deviceClassIndex(F("running")));
+      # endif // if FEATURE_MQTT_DISCOVER && FEATURE_MQTT_DEVICECLASS
+
       UserVar.setFloat(event->TaskIndex, 0, NAN);
 
       success = true;
@@ -327,6 +346,10 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
       ExtraTaskSettings.TaskDeviceValueDecimals[0] = P092_OptionValueDecimals[OptionIdx];
 
       PCONFIG(2) = getFormItemInt(F("ppinmode"));
+
+      # if FEATURE_MQTT_DISCOVER && FEATURE_MQTT_DEVICECLASS
+      P092_MQTT_DEVICECLASS = getFormItemInt(F("devcls"));
+      # endif // if FEATURE_MQTT_DISCOVER && FEATURE_MQTT_DEVICECLASS
 
       if (!((nullptr != P092_data) && P092_data->isInitialized())) {
         // No receiver running, e.g. this is the only P092 task and its PLUGIN_EXIT released it:
