@@ -104,7 +104,9 @@ private:
 # define P092_pulse_width_50         10000 // µs
 
 // % tolerance for variances at the pulse width
-# define P092_percentage_variance    10
+// 40% (was 10%): a 12V bus read through a series resistor gives asymmetric pulses (high ~100us longer, low ~100us shorter)
+// and a delayed interrupt makes one pulse longer and the next one shorter, both were rejected as wrong timings
+# define P092_percentage_variance    40
 
 // 1001 or 0110 are two sequential pulses without transition
 # define P092_double_pulse_width_488 (P092_pulse_width_488 * 2)

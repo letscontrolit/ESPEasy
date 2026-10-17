@@ -27,6 +27,7 @@
                                  frames are recorded, the SYNC is found in the decoded bit stream.
                             FIX: Receiving no longer hangs ('Still receiving DL-Bus bits!') when the pulses stop.
                             FIX: CheckTimings() read one pulse past the recorded ones, now logs too many wrong timings.
+                            CHG: Pulse width tolerance 40% (was 10%).
     * 2025-06-14 tonhuisman: Add support for Custom Value Type per task value
     @tonhuisman 2025-01-12 Add support for MQTT AutoDiscovery (not supported yet for DL-bus)
 
