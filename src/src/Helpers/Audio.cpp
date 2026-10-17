@@ -39,7 +39,7 @@ static bool rtttlPlaying = false;
 #  if FEATURE_ANYRTTTL_ASYNC
 static String rtttlMelody;
 
-void clear_rtttl_melody() {
+static void clear_rtttl_melody() {
   // The non-blocking play will read from a char pointer.
   // So we must stop the playing before changing the string as it could otherwise lead to a crash.
   if (anyrtttl::nonblocking::isPlaying()) { // If currently playing, cancel that

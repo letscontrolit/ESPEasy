@@ -26,23 +26,14 @@ void handle_rules();
 // ********************************************************************************
 void handle_rules_new();
 
+# ifdef WEBSERVER_NEW_RULES
 void handle_rules_backup();
-
 void handle_rules_delete();
+#endif
 
 bool handle_rules_edit(const String& originalUri);
 
-bool handle_rules_edit(String originalUri, bool isAddNew);
-
-void Rule_showRuleTextArea(const String& fileName);
-
-bool Rule_Download(const String& path);
-
 void Goto_Rules_Root();
-
-bool EnumerateFileAndDirectory(String          & rootPath
-                               , int             skip
-                               , HandlerFileInfo handler);
 
 
 #endif

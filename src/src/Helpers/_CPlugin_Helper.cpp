@@ -84,7 +84,7 @@ bool safeReadStringUntil(Stream     & input,
 
 #ifndef BUILD_NO_DEBUG
 
-void log_connecting_to(const __FlashStringHelper *prefix, cpluginID_t cpluginID, ControllerSettingsStruct& ControllerSettings) {
+static void log_connecting_to(const __FlashStringHelper *prefix, cpluginID_t cpluginID, ControllerSettingsStruct& ControllerSettings) {
   if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
     addLogMove(LOG_LEVEL_DEBUG,
                strformat(F("%s%s connecting to %s"),

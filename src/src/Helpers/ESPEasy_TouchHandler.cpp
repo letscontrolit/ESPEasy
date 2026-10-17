@@ -34,7 +34,7 @@ tTouchObjects::tTouchObjects() :
  * toString: Display-value for the touch action
  ***************************************************************************/
 # if TOUCH_FEATURE_EXTENDED_TOUCH
-const __FlashStringHelper* toString(Touch_action_e action) {
+static const __FlashStringHelper* toString(Touch_action_e action) {
   switch (action) {
     case Touch_action_e::Default: return F("Default");
     case Touch_action_e::ActivateGroup: return F("Activate Group");
@@ -52,7 +52,7 @@ const __FlashStringHelper* toString(Touch_action_e action) {
  * toString: Display-value for the swipe action
  ***************************************************************************/
 # if TOUCH_FEATURE_EXTENDED_TOUCH && TOUCH_FEATURE_SWIPE
-const __FlashStringHelper* toString(Swipe_action_e action) {
+static const __FlashStringHelper* toString(Swipe_action_e action) {
   switch (action) {
     case Swipe_action_e::Up: return F("Up");
     case Swipe_action_e::UpRight: return F("Up-Right");

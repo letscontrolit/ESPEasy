@@ -15,7 +15,7 @@
 
 #if FEATURE_SD
 
-void addToSDLog(uint8_t logLevel, const String& str)
+static void addToSDLog(uint8_t logLevel, const String& str)
 {
   if (!str.isEmpty() && loglevelActiveFor(LOG_TO_SDCARD, logLevel)) {
     String   logName = patch_fname(F("log.txt"));
