@@ -30,8 +30,10 @@
                             FIX: CheckTimings() read one pulse past the recorded ones, now logs too many wrong timings.
                             CHG: Pulse width tolerance 40% (was 10%).
                             FIX: The P092_data_struct shared by all tasks was stored as task data of the first task, so
-                                 saving that task deleted it while in use. init() can run again, the pin change is
-                                 checked against the pin in use. Value decimals were written out of bounds.
+                                 saving that task deleted it while in use. Now every task has its own task data and
+                                 the shared struct is deleted with the task data of the last P092 task. init() can run
+                                 again, the pin change is checked against the pin in use. Value decimals were written
+                                 out of bounds.
                             ADD: MQTT AutoDiscovery: device class 'running' for values set to Switch (digital outputs),
                                  state class selectable per value.
     * 2025-06-14 tonhuisman: Add support for Custom Value Type per task value
@@ -91,10 +93,6 @@
 // #define PLUGIN_092_DEBUG    // additional debug messages in the log
 # define PLUGIN_NAME_092       "Heating - DL-Bus (Technische Alternative)"
 # define PLUGIN_VALUENAME1_092 "Value"
-
-// global values needed for all tasks
-boolean P092_init           = false;   // P092_data_struct can be initialized only once, even if several tasks running
-P092_data_struct *P092_data = nullptr; // pointer to P092_data_struct, must be the same for all tasks
 
 boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -331,8 +329,10 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
       PCONFIG(2) = getFormItemInt(F("ppinmode"));
 
       if (!((nullptr != P092_data) && P092_data->isInitialized())) {
-        addLog(LOG_LEVEL_ERROR, F("## P092_save: Error DL-Bus: Class not initialized!"));
-        return false;
+        // No receiver running, e.g. this is the only P092 task and its PLUGIN_EXIT released it:
+        // PLUGIN_INIT starts a new one with these settings.
+        success = true;
+        break;
       }
 
       if (P092_data->DLbus_Data->ISR_DLB_Pin != CONFIG_PIN1) {
@@ -435,6 +435,12 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
       }
 # endif // ifndef P092_LIMIT_BUILD_SIZE
 
+      // Every P092 task has its task data, which keeps the receiver shared by all P092 tasks alive
+      if (!initPluginTaskData(event->TaskIndex, new (std::nothrow) P092_task_data_struct())) {
+        addLog(LOG_LEVEL_ERROR, F("## P092_init: Create P092_task_data_struct failed!"));
+        return false;
+      }
+
       if (P092_init) {
 # ifndef P092_LIMIT_BUILD_SIZE
         addLog(LOG_LEVEL_INFO, F("INIT -> Already done!"));
@@ -446,8 +452,9 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
           addLog(LOG_LEVEL_INFO, F("Create P092_data_struct ..."));
 # endif // ifndef P092_LIMIT_BUILD_SIZE
 
-          // Shared by all P092 tasks, so it is not stored as task data: the PLUGIN_EXIT/PLUGIN_INIT of the task owning
-          // the task data (e.g. when saving its settings) would delete it while the other tasks still use it.
+          // Shared by all P092 tasks, so it is not the task data of one task: the PLUGIN_EXIT/PLUGIN_INIT of that task
+          // (e.g. when saving its settings) would delete it while the other tasks still use it. It is deleted with the
+          // task data of the last P092 task, see P092_task_data_struct.
           P092_data = new (std::nothrow) P092_data_struct();
 
           if (P092_data == nullptr) {

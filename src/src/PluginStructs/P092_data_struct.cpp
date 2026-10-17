@@ -497,6 +497,25 @@ boolean DLBus::CheckCRC(uint8_t IdxCRC) {
 # define DLbus_RSM_STANDBY         0b11
 
 
+boolean P092_init           = false;
+P092_data_struct *P092_data = nullptr;
+
+// Number of P092_task_data_struct objects, i.e. of the P092 tasks using P092_data
+static uint8_t P092_task_data_count = 0;
+
+P092_task_data_struct::P092_task_data_struct() {
+  ++P092_task_data_count;
+}
+
+P092_task_data_struct::~P092_task_data_struct() {
+  if ((P092_task_data_count > 0) && (--P092_task_data_count == 0)) {
+    // the last P092 task stopped: release the DL-Bus receiver and its interrupt
+    delete P092_data;
+    P092_data = nullptr;
+    P092_init = false;
+  }
+}
+
 P092_data_struct::~P092_data_struct() {
   if (DLbus_Data != nullptr) {
     if (DLbus_Data->ISR_DLB_Pin != 0xFF) {

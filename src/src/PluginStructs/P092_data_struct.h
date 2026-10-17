@@ -226,6 +226,20 @@ public:
   DLBus *DLbus_Data = nullptr;
 };
 
+// Task data of every P092 task. All P092 tasks share one P092_data_struct (P092_data, one DL-Bus receiver):
+// each P092_task_data_struct counts as a user of it, and when the last one is deleted (PLUGIN_EXIT of the
+// last P092 task, e.g. when it is disabled) the shared P092_data_struct is deleted too.
+struct P092_task_data_struct : public PluginTaskData_base {
+public:
+
+  P092_task_data_struct();
+  virtual ~P092_task_data_struct();
+};
+
+// global values needed for all tasks
+extern boolean P092_init;           // P092_data_struct can be initialized only once, even if several tasks running
+extern P092_data_struct *P092_data; // pointer to P092_data_struct, must be the same for all tasks
+
 
 #endif // ifdef USES_P092
 #endif // ifndef PLUGINSTRUCTS_P092_DATA_STRUCT_H
