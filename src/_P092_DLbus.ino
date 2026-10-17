@@ -330,7 +330,7 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
 
       PCONFIG(2) = getFormItemInt(F("ppinmode"));
 
-      if ((nullptr == P092_data) || (nullptr == P092_data->DLbus_Data)) {
+      if (!((nullptr != P092_data) && P092_data->isInitialized())) {
         addLog(LOG_LEVEL_ERROR, F("## P092_save: Error DL-Bus: Class not initialized!"));
         return false;
       }
@@ -484,7 +484,7 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
     {
       if (!ESPEasy::net::NetworkConnected()
           || !P092_init
-          || (nullptr == P092_data)) {
+          || !((nullptr != P092_data) && P092_data->isInitialized())) {
         return false;
       }
 
@@ -561,7 +561,7 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
         return false;
       }
 
-      if (nullptr == P092_data) {
+      if (!((nullptr != P092_data) && P092_data->isInitialized())) {
         addLog(LOG_LEVEL_ERROR, F("## P092_read: Error DL-Bus: Class not initialized!"));
         return false;
       }

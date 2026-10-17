@@ -134,6 +134,11 @@ public:
 
   bool init(int8_t pin1, int P092DeviceIndex, eP092pinmode P092pinmode);
 
+  // The receiver (DLbus_Data) is created by init()
+  bool isInitialized() const {
+    return nullptr != DLbus_Data;
+  }
+
   typedef struct {
     uint8_t Idx = 0u;
     uint8_t mode = 0u;
