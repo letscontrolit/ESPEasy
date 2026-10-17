@@ -182,7 +182,7 @@ boolean DLBus::CheckTimings(void) {
 
   ISR_PulseCount = 0;
 
-  for (i = 0; i <= ISR_PulseNumber; ++i) {
+  for (i = 0; i < ISR_PulseNumber; ++i) {
     // store DLbus_ChangeBitStream into ByteStream
     rawval = *(ISR_PtrChangeBitStream + i);
 
@@ -214,7 +214,7 @@ boolean DLBus::CheckTimings(void) {
         WrongTimeCnt++;
 
         if (WrongTimeCnt >= 5) {
-          return false;
+          break; // too many wrong timings
         }
       }
     }
@@ -243,7 +243,7 @@ boolean DLBus::CheckTimings(void) {
       AddToInfoLog(log);
 
       for (i = 0; i < WrongTimeCnt; ++i) {
-        log  = i + 1;
+        log  = String(i + 1);
         log += F(": PulseCount:");
         log += WrongTimingArray[i][1];
         log += F(": BitCount:");
@@ -269,6 +269,11 @@ boolean DLBus::CheckTimings(void) {
     }
   }
 # endif // DLbus_DEBUG
+
+  if (WrongTimeCnt >= 5) {
+    AddToErrorLog(F("Error: Too many wrong timings!"));
+    return false;
+  }
   return true;
 }
 
