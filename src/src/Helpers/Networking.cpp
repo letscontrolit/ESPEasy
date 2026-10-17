@@ -1227,7 +1227,7 @@ bool resolveHostByName(const char *aHostname, IPAddress& aResult, uint32_t timeo
   uint32_t start = millis();
 
   for (int attempt = 0; 
-       attempt < 2 && !resolvedIP && timePassedSince(start) < timeout_ms;
+       attempt < 2 && !resolvedIP && timePassedSince(start) < static_cast<int32_t>(timeout_ms);
        ++attempt) {
 
 #if defined(ARDUINO_ESP8266_RELEASE_2_3_0)

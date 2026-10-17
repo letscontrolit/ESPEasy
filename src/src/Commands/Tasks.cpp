@@ -22,7 +22,7 @@
 #include "../Helpers/StringParser.h"
 
 // taskIndex = (event->Par1 - 1);   Par1 is here for 1 ... TASKS_MAX
-bool validTaskIndexVar(struct EventStruct *event, taskIndex_t& taskIndex)
+static bool validTaskIndexVar(struct EventStruct *event, taskIndex_t& taskIndex)
 {
   if (event == nullptr) { return false; }
 
@@ -38,7 +38,7 @@ bool validTaskIndexVar(struct EventStruct *event, taskIndex_t& taskIndex)
 
 // taskIndex = (event->Par1 - 1);   Par1 is here for 1 ... TASKS_MAX
 // varNr = event->Par2 - 1;
-bool validTaskVars(struct EventStruct *event, taskIndex_t& taskIndex, unsigned int& varNr)
+static bool validTaskVars(struct EventStruct *event, taskIndex_t& taskIndex, unsigned int& varNr)
 {
   if (event == nullptr) { return false; }
 
@@ -56,7 +56,7 @@ bool validTaskVars(struct EventStruct *event, taskIndex_t& taskIndex, unsigned i
   return false;
 }
 
-bool validateAndParseTaskIndexArguments(struct EventStruct * event, const char *Line, taskIndex_t &taskIndex)
+static bool validateAndParseTaskIndexArguments(struct EventStruct * event, const char *Line, taskIndex_t &taskIndex)
 {
   if (!validTaskIndexVar(event, taskIndex)) {
     String taskName;
@@ -75,7 +75,7 @@ bool validateAndParseTaskIndexArguments(struct EventStruct * event, const char *
 /**
  * parse TaskName/TaskValue when not numeric for task name and value name and validate values
  */
-bool validateAndParseTaskValueArguments(struct EventStruct * event, const char *Line, taskIndex_t &taskIndex, unsigned int &varNr)
+static bool validateAndParseTaskValueArguments(struct EventStruct * event, const char *Line, taskIndex_t &taskIndex, unsigned int &varNr)
 {
   if (!validTaskVars(event, taskIndex, varNr) || (event->Par2 <= 0 || event->Par2 >= VARS_PER_TASK))  // Extra check required because of shortcutting in validTaskVars()
   { 
@@ -101,7 +101,7 @@ bool validateAndParseTaskValueArguments(struct EventStruct * event, const char *
   return true;
 }
 
-const __FlashStringHelper * taskValueSet(struct EventStruct *event, const char *Line, taskIndex_t& taskIndex, bool& success)
+static const __FlashStringHelper * taskValueSet(struct EventStruct *event, const char *Line, taskIndex_t& taskIndex, bool& success)
 {
   String TmpStr1;
   unsigned int varNr;
@@ -198,7 +198,7 @@ const __FlashStringHelper * Command_Task_ClearAll(struct EventStruct *event, con
   return return_command_success_flashstr();
 }
 
-const __FlashStringHelper * Command_Task_EnableDisable(struct EventStruct *event, bool enable, const char *Line)
+static const __FlashStringHelper * Command_Task_EnableDisable(struct EventStruct *event, bool enable, const char *Line)
 {
   taskIndex_t  taskIndex;
   if (validateAndParseTaskIndexArguments(event, Line, taskIndex)) {
@@ -216,7 +216,7 @@ const __FlashStringHelper * Command_Task_EnableDisable(struct EventStruct *event
 }
 
 #if FEATURE_PLUGIN_PRIORITY
-const __FlashStringHelper * Command_PriorityTask_DisableTask(struct EventStruct *event, const char *Line)
+static const __FlashStringHelper * Command_PriorityTask_DisableTask(struct EventStruct *event, const char *Line)
 {
   taskIndex_t  taskIndex;
 
@@ -272,7 +272,7 @@ const __FlashStringHelper * Command_Task_ValueSetPresentation(struct EventStruct
   return taskValueSetString(event, Line, F(TASK_VALUE_PRESENTATION_PREFIX_TEMPLATE));
 }
 
-const __FlashStringHelper * taskValueSetString(struct EventStruct *event, const char *Line, const __FlashStringHelper * storageTemplate, const __FlashStringHelper * uomTemplate, const __FlashStringHelper * vTypeTemplate)
+static const __FlashStringHelper * taskValueSetString(struct EventStruct *event, const char *Line, const __FlashStringHelper * storageTemplate, const __FlashStringHelper * uomTemplate, const __FlashStringHelper * vTypeTemplate)
 {
   String taskName;
   taskIndex_t tmpTaskIndex = INVALID_TASK_INDEX;

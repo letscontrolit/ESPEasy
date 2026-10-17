@@ -117,11 +117,13 @@ void RTOS_HandleSchedule(void *parameter)
 /*********************************************************************************************\
 * ISR call back function for handling the watchdog.
 \*********************************************************************************************/
-void sw_watchdog_callback(void *arg)
+/*
+static void sw_watchdog_callback(void *arg)
 {
   yield(); // feed the WD
   ++sw_watchdog_callback_count;
 }
+*/
 
 /*********************************************************************************************\
 * SETUP
