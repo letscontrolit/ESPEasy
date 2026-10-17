@@ -30,7 +30,11 @@
 #  define DALLAS_IRAM_ATTR
 # endif // ifdef ESP8266
 # ifdef ESP32
-#  define DALLAS_IRAM_ATTR IRAM_ATTR
+
+// noinline: GCC inlines a function with a single caller into that caller.
+// (e.g. Dallas_read_bit_ISR, as LTO is enabled for ESP32 builds)
+// The timing critical code would then run from flash, as the caller is not in IRAM.
+#  define DALLAS_IRAM_ATTR IRAM_ATTR __attribute__((noinline))
 # endif // ifdef ESP32
 
 
