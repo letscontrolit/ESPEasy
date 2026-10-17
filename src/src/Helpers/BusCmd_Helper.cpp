@@ -663,7 +663,7 @@ bool BusCmd_Helper_struct::executeBusCmdCommands() {
             break;
           case BusCmd_DataFormat_e::uint16_t_LE:
             du16             = _iBusCmd_Handler->read16u();
-            _it->d0_uint16_t = swapLEbyteOrder(du16, 16);
+            _it->d0_uint16_t = swapLEbyteOrder16(du16);
             break;
           case BusCmd_DataFormat_e::uint24_t_LE:
             du32             = _iBusCmd_Handler->read24u();
@@ -676,7 +676,7 @@ bool BusCmd_Helper_struct::executeBusCmdCommands() {
           case BusCmd_DataFormat_e::int16_t_LE:
           {
             du16            = _iBusCmd_Handler->read16u();
-            du16            = swapLEbyteOrder(du16, 16);
+            du16            = swapLEbyteOrder16(du16);
             _it->d0_int16_t = fromTwosComplement(du16, 16);
             break;
           }
@@ -735,7 +735,7 @@ bool BusCmd_Helper_struct::executeBusCmdCommands() {
             result = _iBusCmd_Handler->write32u(_it->d0_uint32_t);
             break;
           case BusCmd_DataFormat_e::uint16_t_LE:
-            result = _iBusCmd_Handler->write16u(swapLEbyteOrder(_it->d0_uint16_t, 16));
+            result = _iBusCmd_Handler->write16u(swapLEbyteOrder16(_it->d0_uint16_t));
             break;
           case BusCmd_DataFormat_e::uint24_t_LE:
             du32   = swapLEbyteOrder(_it->d0_uint32_t, 24);
@@ -748,7 +748,7 @@ bool BusCmd_Helper_struct::executeBusCmdCommands() {
           case BusCmd_DataFormat_e::int16_t_LE:
           {
             du16   = toTwosComplement(_it->d0_int16_t, 16);
-            du16   = swapLEbyteOrder(du16, 16);
+            du16   = swapLEbyteOrder16(du16);
             result = _iBusCmd_Handler->write16u(du16);
             break;
           }
@@ -806,7 +806,7 @@ bool BusCmd_Helper_struct::executeBusCmdCommands() {
             break;
           case BusCmd_DataFormat_e::uint16_t_LE:
             du16             = _iBusCmd_Handler->read16uREG(_it->reg, wideReg);
-            _it->d0_uint16_t = swapLEbyteOrder(du16, 8);
+            _it->d0_uint16_t = swapLEbyteOrder16(du16);
             break;
           case BusCmd_DataFormat_e::uint24_t_LE:
             du32             = _iBusCmd_Handler->read24uREG(_it->reg, wideReg);
@@ -819,7 +819,7 @@ bool BusCmd_Helper_struct::executeBusCmdCommands() {
           case BusCmd_DataFormat_e::int16_t_LE:
           {
             du16            = _iBusCmd_Handler->read16uREG(_it->reg, wideReg);
-            du16            = swapLEbyteOrder(du16, 16);
+            du16            = swapLEbyteOrder16(du16);
             _it->d0_int16_t = fromTwosComplement(du16, 16);
             break;
           }
@@ -880,7 +880,7 @@ bool BusCmd_Helper_struct::executeBusCmdCommands() {
             result = _iBusCmd_Handler->write32uREG(_it->reg, _it->d0_uint32_t, wideReg);
             break;
           case BusCmd_DataFormat_e::uint16_t_LE:
-            result = _iBusCmd_Handler->write16uREG(_it->reg, swapLEbyteOrder(_it->d0_uint16_t, 8), wideReg);
+            result = _iBusCmd_Handler->write16uREG(_it->reg, swapLEbyteOrder16(_it->d0_uint16_t), wideReg);
             break;
           case BusCmd_DataFormat_e::uint24_t_LE:
             du32   = swapLEbyteOrder(_it->d0_uint32_t, 24);
@@ -893,7 +893,7 @@ bool BusCmd_Helper_struct::executeBusCmdCommands() {
           case BusCmd_DataFormat_e::int16_t_LE:
           {
             du16   = toTwosComplement(_it->d0_uint16_t, 16);
-            du16   = swapLEbyteOrder(du16, 16);
+            du16   = swapLEbyteOrder16(du16);
             result = _iBusCmd_Handler->write16uREG(_it->reg, du16, wideReg);
             break;
           }
