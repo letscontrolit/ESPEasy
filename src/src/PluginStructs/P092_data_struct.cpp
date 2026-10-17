@@ -508,6 +508,14 @@ P092_data_struct::~P092_data_struct() {
 }
 
 bool P092_data_struct::init(int8_t pin1, int P092DeviceIndex, eP092pinmode P092pinmode) {
+  if (DLbus_Data != nullptr) {
+    // init again (pin changed): release the interrupt and the old receiver, so the new one becomes the ISR instance
+    if (DLbus_Data->IsISRset) {
+      detachInterrupt(digitalPinToInterrupt(DLbus_Data->ISR_DLB_Pin));
+    }
+    delete DLbus_Data;
+    DLbus_Data = nullptr;
+  }
   DLbus_Data = new (std::nothrow) DLBus;
 
   if (DLbus_Data == nullptr) {

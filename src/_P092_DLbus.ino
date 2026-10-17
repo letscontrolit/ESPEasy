@@ -28,6 +28,9 @@
                             FIX: Receiving no longer hangs ('Still receiving DL-Bus bits!') when the pulses stop.
                             FIX: CheckTimings() read one pulse past the recorded ones, now logs too many wrong timings.
                             CHG: Pulse width tolerance 40% (was 10%).
+                            FIX: The P092_data_struct shared by all tasks was stored as task data of the first task, so
+                                 saving that task deleted it while in use. init() can run again, the pin change is
+                                 checked against the pin in use. Value decimals were written out of bounds.
     * 2025-06-14 tonhuisman: Add support for Custom Value Type per task value
     @tonhuisman 2025-01-12 Add support for MQTT AutoDiscovery (not supported yet for DL-bus)
 
@@ -87,7 +90,6 @@
 # define PLUGIN_VALUENAME1_092 "Value"
 
 // global values needed for all tasks
-uint8_t P092_Last_DLB_Pin   = 0xFF;    // check if DL bus pin has been changed by one task -> change requires new init because of interrupt
 boolean P092_init           = false;   // P092_data_struct can be initialized only once, even if several tasks running
 P092_data_struct *P092_data = nullptr; // pointer to P092_data_struct, must be the same for all tasks
 
@@ -184,7 +186,6 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
       }
       {
         int P092_ValueType, P092_ValueIdx;
-        P092_Last_DLB_Pin = CONFIG_PIN1;
         const String plugin_092_DefValueName = F(PLUGIN_VALUENAME1_092);
         const int    P092_OptionTypes[]      = {
           // Index der Variablen
@@ -317,16 +318,16 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
         CurIdx = 1;
       }
       PCONFIG(1)                                                     = (OptionIdx << 8) + CurIdx;
-      ExtraTaskSettings.TaskDeviceValueDecimals[event->BaseVarIndex] = P092_OptionValueDecimals[OptionIdx];
+      ExtraTaskSettings.TaskDeviceValueDecimals[0] = P092_OptionValueDecimals[OptionIdx];
 
       PCONFIG(2) = getFormItemInt(F("ppinmode"));
 
-      if (nullptr == P092_data) {
+      if ((nullptr == P092_data) || (nullptr == P092_data->DLbus_Data)) {
         addLog(LOG_LEVEL_ERROR, F("## P092_save: Error DL-Bus: Class not initialized!"));
         return false;
       }
 
-      if (P092_Last_DLB_Pin != CONFIG_PIN1) {
+      if (P092_data->DLbus_Data->ISR_DLB_Pin != CONFIG_PIN1) {
         // pin number is changed -> run a new init
         P092_init = false;
 
@@ -437,10 +438,9 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
           addLog(LOG_LEVEL_INFO, F("Create P092_data_struct ..."));
 # endif // ifndef P092_LIMIT_BUILD_SIZE
 
-          // FIXME TD-er: This is a really odd and overly complex way to handle this.
-
+          // Shared by all P092 tasks, so it is not stored as task data: the PLUGIN_EXIT/PLUGIN_INIT of the task owning
+          // the task data (e.g. when saving its settings) would delete it while the other tasks still use it.
           P092_data = new (std::nothrow) P092_data_struct();
-          initPluginTaskData(event->TaskIndex, P092_data);
 
           if (P092_data == nullptr) {
             addLog(LOG_LEVEL_ERROR, F("## P092_init: Create P092_data_struct failed!"));
@@ -452,7 +452,6 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
           addLog(LOG_LEVEL_INFO, F("P092_data_struct -> Already created"));
 # endif // ifndef P092_LIMIT_BUILD_SIZE
         }
-        P092_data_struct *P092_data = static_cast<P092_data_struct *>(getPluginTaskData(event->TaskIndex));
 
 # ifndef P092_LIMIT_BUILD_SIZE
         addLog(LOG_LEVEL_INFO, F("Init P092_data_struct ..."));
@@ -460,7 +459,8 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
 
         if (!P092_data->init(CONFIG_PIN1, PCONFIG(0), static_cast<eP092pinmode>(PCONFIG(2)))) {
           addLog(LOG_LEVEL_ERROR, F("## P092_init: Error DL-Bus: Class not initialized!"));
-          clearPluginTaskData(event->TaskIndex);
+          delete P092_data;
+          P092_data = nullptr;
           return false;
         }
 
