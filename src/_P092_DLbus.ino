@@ -20,7 +20,8 @@
    DLbus@12V - 8k6 - input@3.3V - 3k3 - ground
 
    For following devices just a pull up resistor is needed if the device is used stand alone:
-         UVR1611, UVR61-3 and ESR21
+         UVR1611 and ESR21
+   The UVR61-3 up to v8.2 runs the DL-Bus at 12 volts (measured, see also the documentation): use the voltage divider.
 
     @virtualst01 2026-10-17 ADD: Devices sending their frames back-to-back, without a pause before the SYNC (e.g. UVR61-3
                                  up to v8.2), are detected by a receive timeout. Then receiving starts at any pulse and two
