@@ -38,7 +38,7 @@ uint8_t temprature_sens_read();
 #  if defined(ESP32_CLASSIC)
 
 
-esp_err_t do_read_internal_temperature(float& celsius) {
+static esp_err_t do_read_internal_temperature(float& celsius) {
   esp_err_t result  = ESP_FAIL;
   uint8_t   raw     = 128u;
   int8_t    retries = 2;
@@ -64,7 +64,7 @@ esp_err_t do_read_internal_temperature(float& celsius) {
 
 #  elif defined(ESP32C2) || defined(ESP32C3) || defined(ESP32C5) || defined(ESP32C6) || defined(ESP32C61) || defined(ESP32S2) || defined(ESP32S3) || defined(ESP32P4)
 
-esp_err_t do_read_internal_temperature(float& celsius) {
+static esp_err_t do_read_internal_temperature(float& celsius) {
   esp_err_t result = ESP_FAIL;
 
   celsius = 0.0f; // Make sure it is initialized and within the default range.

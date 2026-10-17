@@ -16,22 +16,13 @@
 #include "../Globals/CPlugins.h"
 
 
-/********************************************************************************************\
-   file system error handling
-   Look here for error # reference: https://github.com/pellepl/spiffs/blob/master/src/spiffs.h
- \*********************************************************************************************/
-String FileError(int line, const char *fname);
 
 /********************************************************************************************\
    Keep track of number of flash writes.
  \*********************************************************************************************/
 void flashCount();
 
-String flashGuard();
-
 String appendLineToFile(const String& fname, const String& line);
-
-String appendToFile(const String& fname, const uint8_t *data, unsigned int size);
 
 enum class FileDestination_e : uint8_t {
   ANY   = 0,
@@ -48,15 +39,8 @@ int fileSize(const String& fname);
 
 fs::File tryOpenFile(const String& fname, const String& mode, FileDestination_e destination = FileDestination_e::ANY);
 
-bool tryRenameFile(const String& fname_old, const String& fname_new, FileDestination_e destination = FileDestination_e::ANY);
-
 bool tryDeleteFile(const String& fname, FileDestination_e destination = FileDestination_e::ANY);
 
-/********************************************************************************************\
-   Fix stuff to clear out differences between releases
-   Return true when settings were changed/patched
- \*********************************************************************************************/
-bool BuildFixes();
 
 /********************************************************************************************\
    Mount FS and check config.dat
@@ -121,43 +105,10 @@ String SaveSettings(bool forFactoryReset = false);
 
 String SaveSecuritySettings(bool forFactoryReset = false);
 
-void afterloadSettings();
-
 /********************************************************************************************\
    Load settings from file system
  \*********************************************************************************************/
 String LoadSettings();
-
-/********************************************************************************************\
-   Disable Plugin, based on bootFailedCount
- \*********************************************************************************************/
-uint8_t disablePlugin(uint8_t bootFailedCount);
-uint8_t disableAllPlugins(uint8_t bootFailedCount);
-
-/********************************************************************************************\
-   Disable Controller, based on bootFailedCount
- \*********************************************************************************************/
-uint8_t disableController(uint8_t bootFailedCount);
-uint8_t disableAllControllers(uint8_t bootFailedCount);
-
-/********************************************************************************************\
-   Disable Notification, based on bootFailedCount
- \*********************************************************************************************/
-#if FEATURE_NOTIFIER
-uint8_t disableNotification(uint8_t bootFailedCount);
-uint8_t disableAllNotifications(uint8_t bootFailedCount);
-#endif
-
-/********************************************************************************************\
-   Disable Rules, based on bootFailedCount
- \*********************************************************************************************/
-uint8_t disableRules(uint8_t bootFailedCount);
-
-/********************************************************************************************\
-   Disable Network Interfaces, based on bootFailedCount
- \*********************************************************************************************/
-uint8_t disableNetwork(uint8_t bootFailedCount);
-uint8_t disableAllNetworkss(uint8_t bootFailedCount);
 
 
 bool getAndLogSettingsParameters(bool read, SettingsType::Enum settingsType, int index, int& offset, int& max_size);

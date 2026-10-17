@@ -262,22 +262,11 @@ const __FlashStringHelper * Command_Task_ValueSet(struct EventStruct *event, con
 }
 
 #if FEATURE_STRING_VARIABLES
-const __FlashStringHelper * Command_Task_ValueSetDerived(struct EventStruct *event, const char *Line)
-{
-  return taskValueSetString(event, Line, F(TASK_VALUE_DERIVED_PREFIX_TEMPLATE), F(TASK_VALUE_UOM_PREFIX_TEMPLATE), F(TASK_VALUE_VTYPE_PREFIX_TEMPLATE));
-}
-
-const __FlashStringHelper * Command_Task_ValueSetPresentation(struct EventStruct *event, const char *Line)
-{
-  return taskValueSetString(event, Line, F(TASK_VALUE_PRESENTATION_PREFIX_TEMPLATE));
-}
-
 static const __FlashStringHelper * taskValueSetString(struct EventStruct *event, const char *Line, const __FlashStringHelper * storageTemplate, const __FlashStringHelper * uomTemplate, const __FlashStringHelper * vTypeTemplate)
 {
   String taskName;
-  taskIndex_t tmpTaskIndex = INVALID_TASK_INDEX;
   if ((event->Par1 <= 0 || event->Par1 >= INVALID_TASK_INDEX) && GetArgv(Line, taskName, 2)) {
-    tmpTaskIndex = findTaskIndexByName(taskName, true);
+    const taskIndex_t tmpTaskIndex = findTaskIndexByName(taskName, true);
     if (tmpTaskIndex != INVALID_TASK_INDEX) {
       event->Par1 = tmpTaskIndex + 1;
     }
@@ -364,6 +353,17 @@ static const __FlashStringHelper * taskValueSetString(struct EventStruct *event,
   }
   return return_command_failed_flashstr(); // taskValueSet(event, Line, taskIndex, success);
 }
+
+const __FlashStringHelper * Command_Task_ValueSetDerived(struct EventStruct *event, const char *Line)
+{
+  return taskValueSetString(event, Line, F(TASK_VALUE_DERIVED_PREFIX_TEMPLATE), F(TASK_VALUE_UOM_PREFIX_TEMPLATE), F(TASK_VALUE_VTYPE_PREFIX_TEMPLATE));
+}
+
+const __FlashStringHelper * Command_Task_ValueSetPresentation(struct EventStruct *event, const char *Line)
+{
+  return taskValueSetString(event, Line, F(TASK_VALUE_PRESENTATION_PREFIX_TEMPLATE), nullptr, nullptr);
+}
+
 #endif
 
 const __FlashStringHelper * Command_Task_ValueToggle(struct EventStruct *event, const char *Line)
