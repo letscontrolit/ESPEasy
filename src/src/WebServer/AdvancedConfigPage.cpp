@@ -82,7 +82,7 @@ static void addFormDstSelect(bool isStart, uint16_t choice) {
 }
 
 
-
+#if FEATURE_EXT_RTC
 static void addFormExtTimeSourceSelect(const __FlashStringHelper * label, const __FlashStringHelper * id, ExtTimeSource_e choice)
 {
   addRowLabel(label);
@@ -114,7 +114,7 @@ static void addFormExtTimeSourceSelect(const __FlashStringHelper * label, const 
   const FormSelectorOptions selector(NR_ELEMENTS(optionValues), options, optionValues);
   selector.addSelector(id, static_cast<int>(choice));
 }
-
+#endif
 
 static void addFormLogLevelSelect(LabelType::Enum label, int choice)
 {
