@@ -20,6 +20,7 @@ static const __FlashStringHelper* toNodeType_ESP32_suffix(uint8_t nodeType) {
   const __FlashStringHelper* suffix = F("");
   switch (nodeType)
   {
+    case NODE_TYPE_ID_ESP_EASY32_STD:      break;
     case NODE_TYPE_ID_ESP_EASY32S2_STD:    suffix = F("-S2"); break;
     case NODE_TYPE_ID_ESP_EASY32S3_STD:    suffix = F("-S3"); break;
     case NODE_TYPE_ID_ESP_EASY32S31_STD:   suffix = F("-S31"); break;
@@ -35,7 +36,7 @@ static const __FlashStringHelper* toNodeType_ESP32_suffix(uint8_t nodeType) {
     case NODE_TYPE_ID_ESP_EASY32P4r3_STD:  suffix = F("-P4r3"); break;
 
     default:
-    break;
+    return nullptr; // Not an ESP32 node type
   }
   return suffix;
 }
@@ -45,5 +46,6 @@ String toNodeTypeDisplayString(uint8_t nodeType) {
   if (!res.isEmpty()) return res;
 
   const __FlashStringHelper* suffix = toNodeType_ESP32_suffix(nodeType);
+  if (suffix == nullptr) return EMPTY_STRING;
   return concat(F("ESP Easy 32"), suffix);  
 }
