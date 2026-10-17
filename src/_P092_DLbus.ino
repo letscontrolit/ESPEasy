@@ -20,8 +20,22 @@
    DLbus@12V - 8k6 - input@3.3V - 3k3 - ground
 
    For following devices just a pull up resistor is needed if the device is used stand alone:
-         UVR1611, UVR61-3 and ESR21
+         UVR1611 and ESR21
+   The UVR61-3 up to v8.2 runs the DL-Bus at 12 volts (measured, see also the documentation): use the voltage divider.
 
+    @virtualst01 2026-10-17 ADD: Devices sending their frames back-to-back, without a pause before the SYNC (e.g. UVR61-3
+                                 up to v8.2), are detected by a receive timeout. Then receiving starts at any pulse and two
+                                 frames are recorded, the SYNC is found in the decoded bit stream.
+                            FIX: Receiving no longer hangs ('Still receiving DL-Bus bits!') when the pulses stop.
+                            FIX: CheckTimings() read one pulse past the recorded ones, now logs too many wrong timings.
+                            CHG: Pulse width tolerance 40% (was 10%).
+                            FIX: The P092_data_struct shared by all tasks was stored as task data of the first task, so
+                                 saving that task deleted it while in use. Now every task has its own task data and
+                                 the shared struct is deleted with the task data of the last P092 task. init() can run
+                                 again, the pin change is checked against the pin in use. Value decimals were written
+                                 out of bounds.
+                            ADD: MQTT AutoDiscovery: device class selectable (like P001) for values set to Switch
+                                 (digital outputs), default 'running'. State class selectable per value.
     * 2025-06-14 tonhuisman: Add support for Custom Value Type per task value
     @tonhuisman 2025-01-12 Add support for MQTT AutoDiscovery (not supported yet for DL-bus)
 
@@ -80,10 +94,7 @@
 # define PLUGIN_NAME_092       "Heating - DL-Bus (Technische Alternative)"
 # define PLUGIN_VALUENAME1_092 "Value"
 
-// global values needed for all tasks
-uint8_t P092_Last_DLB_Pin   = 0xFF;    // check if DL bus pin has been changed by one task -> change requires new init because of interrupt
-boolean P092_init           = false;   // P092_data_struct can be initialized only once, even if several tasks running
-P092_data_struct *P092_data = nullptr; // pointer to P092_data_struct, must be the same for all tasks
+# define P092_MQTT_DEVICECLASS PCONFIG(3) // binary_sensor device class, 0 = not set yet: 'running'
 
 boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -103,6 +114,7 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
       dev.DecimalsOnly   = true;
       dev.PluginStats    = true;
       dev.CustomVTypeVar = true;
+      dev.MqttStateClass = true;
       break;
     }
 
@@ -125,6 +137,19 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
 
       for (uint8_t i = 0; i < event->Par5; ++i) {
         event->ParN[i] = ExtraTaskSettings.getTaskVarCustomVType(i);  // Custom/User selection
+      }
+
+      // binary_sensor device class when Switch is selected, user selected like P001.
+      // Not set yet: 'running' (the outputs drive pumps and valves), as the controller default
+      // 'switch' is rejected by Home Assistant for a binary_sensor
+      #   if FEATURE_MQTT_DEVICECLASS
+
+      if (P092_MQTT_DEVICECLASS > 0) {
+        string = MQTT_binary_deviceClassName(P092_MQTT_DEVICECLASS);
+      } else
+      #   endif // if FEATURE_MQTT_DEVICECLASS
+      {
+        string = F("running");
       }
       #  else // if FEATURE_CUSTOM_TASKVAR_VTYPE
       event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_NONE); // Not yet supported
@@ -178,7 +203,6 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
       }
       {
         int P092_ValueType, P092_ValueIdx;
-        P092_Last_DLB_Pin = CONFIG_PIN1;
         const String plugin_092_DefValueName = F(PLUGIN_VALUENAME1_092);
         const int    P092_OptionTypes[]      = {
           // Index der Variablen
@@ -278,6 +302,14 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
         }
       }
 
+      # if FEATURE_MQTT_DISCOVER && FEATURE_MQTT_DEVICECLASS
+      addFormSelector_binarySensorDeviceClass(F("MQTT Device class"),
+                                              F("devcls"),
+                                              P092_MQTT_DEVICECLASS > 0
+                                              ? P092_MQTT_DEVICECLASS
+                                              : MQTT_binary_deviceClassIndex(F("running")));
+      # endif // if FEATURE_MQTT_DISCOVER && FEATURE_MQTT_DEVICECLASS
+
       UserVar.setFloat(event->TaskIndex, 0, NAN);
 
       success = true;
@@ -311,16 +343,22 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
         CurIdx = 1;
       }
       PCONFIG(1)                                                     = (OptionIdx << 8) + CurIdx;
-      ExtraTaskSettings.TaskDeviceValueDecimals[event->BaseVarIndex] = P092_OptionValueDecimals[OptionIdx];
+      ExtraTaskSettings.TaskDeviceValueDecimals[0] = P092_OptionValueDecimals[OptionIdx];
 
       PCONFIG(2) = getFormItemInt(F("ppinmode"));
 
-      if (nullptr == P092_data) {
-        addLog(LOG_LEVEL_ERROR, F("## P092_save: Error DL-Bus: Class not initialized!"));
-        return false;
+      # if FEATURE_MQTT_DISCOVER && FEATURE_MQTT_DEVICECLASS
+      P092_MQTT_DEVICECLASS = getFormItemInt(F("devcls"));
+      # endif // if FEATURE_MQTT_DISCOVER && FEATURE_MQTT_DEVICECLASS
+
+      if (!((nullptr != P092_data) && P092_data->isInitialized())) {
+        // No receiver running, e.g. this is the only P092 task and its PLUGIN_EXIT released it:
+        // PLUGIN_INIT starts a new one with these settings.
+        success = true;
+        break;
       }
 
-      if (P092_Last_DLB_Pin != CONFIG_PIN1) {
+      if (P092_data->DLbus_Data->ISR_DLB_Pin != CONFIG_PIN1) {
         // pin number is changed -> run a new init
         P092_init = false;
 
@@ -420,6 +458,12 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
       }
 # endif // ifndef P092_LIMIT_BUILD_SIZE
 
+      // Every P092 task has its task data, which keeps the receiver shared by all P092 tasks alive
+      if (!initPluginTaskData(event->TaskIndex, new (std::nothrow) P092_task_data_struct())) {
+        addLog(LOG_LEVEL_ERROR, F("## P092_init: Create P092_task_data_struct failed!"));
+        return false;
+      }
+
       if (P092_init) {
 # ifndef P092_LIMIT_BUILD_SIZE
         addLog(LOG_LEVEL_INFO, F("INIT -> Already done!"));
@@ -431,10 +475,10 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
           addLog(LOG_LEVEL_INFO, F("Create P092_data_struct ..."));
 # endif // ifndef P092_LIMIT_BUILD_SIZE
 
-          // FIXME TD-er: This is a really odd and overly complex way to handle this.
-
+          // Shared by all P092 tasks, so it is not the task data of one task: the PLUGIN_EXIT/PLUGIN_INIT of that task
+          // (e.g. when saving its settings) would delete it while the other tasks still use it. It is deleted with the
+          // task data of the last P092 task, see P092_task_data_struct.
           P092_data = new (std::nothrow) P092_data_struct();
-          initPluginTaskData(event->TaskIndex, P092_data);
 
           if (P092_data == nullptr) {
             addLog(LOG_LEVEL_ERROR, F("## P092_init: Create P092_data_struct failed!"));
@@ -446,7 +490,6 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
           addLog(LOG_LEVEL_INFO, F("P092_data_struct -> Already created"));
 # endif // ifndef P092_LIMIT_BUILD_SIZE
         }
-        P092_data_struct *P092_data = static_cast<P092_data_struct *>(getPluginTaskData(event->TaskIndex));
 
 # ifndef P092_LIMIT_BUILD_SIZE
         addLog(LOG_LEVEL_INFO, F("Init P092_data_struct ..."));
@@ -454,7 +497,8 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
 
         if (!P092_data->init(CONFIG_PIN1, PCONFIG(0), static_cast<eP092pinmode>(PCONFIG(2)))) {
           addLog(LOG_LEVEL_ERROR, F("## P092_init: Error DL-Bus: Class not initialized!"));
-          clearPluginTaskData(event->TaskIndex);
+          delete P092_data;
+          P092_data = nullptr;
           return false;
         }
 
@@ -470,7 +514,7 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
     {
       if (!ESPEasy::net::NetworkConnected()
           || !P092_init
-          || (nullptr == P092_data)) {
+          || !((nullptr != P092_data) && P092_data->isInitialized())) {
         return false;
       }
 
@@ -483,7 +527,10 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
       }
 
       if (P092_data->DLbus_Data->ISR_Receiving) {
-        return false;
+        if (!P092_data->DLbus_Data->ReceivingTimedOut()) {
+          return false;
+        }
+        P092_data->P092_ReceivedOK = false; // receiving got stuck, start a new one below
       }
 
       P092_data->Plugin_092_SetIndices(PCONFIG(0));
@@ -544,7 +591,7 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
         return false;
       }
 
-      if (nullptr == P092_data) {
+      if (!((nullptr != P092_data) && P092_data->isInitialized())) {
         addLog(LOG_LEVEL_ERROR, F("## P092_read: Error DL-Bus: Class not initialized!"));
         return false;
       }
