@@ -31,6 +31,8 @@
                             FIX: The P092_data_struct shared by all tasks was stored as task data of the first task, so
                                  saving that task deleted it while in use. init() can run again, the pin change is
                                  checked against the pin in use. Value decimals were written out of bounds.
+                            ADD: MQTT AutoDiscovery: device class 'running' for values set to Switch (digital outputs),
+                                 state class selectable per value.
     * 2025-06-14 tonhuisman: Add support for Custom Value Type per task value
     @tonhuisman 2025-01-12 Add support for MQTT AutoDiscovery (not supported yet for DL-bus)
 
@@ -111,6 +113,7 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
       dev.DecimalsOnly   = true;
       dev.PluginStats    = true;
       dev.CustomVTypeVar = true;
+      dev.MqttStateClass = true;
       break;
     }
 
@@ -134,6 +137,10 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
       for (uint8_t i = 0; i < event->Par5; ++i) {
         event->ParN[i] = ExtraTaskSettings.getTaskVarCustomVType(i);  // Custom/User selection
       }
+
+      // binary_sensor device class when Switch is selected (the outputs drive pumps and valves),
+      // the default 'switch' is rejected by Home Assistant for a binary_sensor
+      string = F("running");
       #  else // if FEATURE_CUSTOM_TASKVAR_VTYPE
       event->Par1 = static_cast<int>(Sensor_VType::SENSOR_TYPE_NONE); // Not yet supported
       #  endif // if FEATURE_CUSTOM_TASKVAR_VTYPE
