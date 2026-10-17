@@ -22,6 +22,10 @@
    For following devices just a pull up resistor is needed if the device is used stand alone:
          UVR1611, UVR61-3 and ESR21
 
+    @virtualst01 2026-10-17 ADD: Devices sending their frames back-to-back, without a pause before the SYNC (e.g. UVR61-3
+                                 up to v8.2), are detected by a receive timeout. Then receiving starts at any pulse and two
+                                 frames are recorded, the SYNC is found in the decoded bit stream.
+                            FIX: Receiving no longer hangs ('Still receiving DL-Bus bits!') when the pulses stop.
     * 2025-06-14 tonhuisman: Add support for Custom Value Type per task value
     @tonhuisman 2025-01-12 Add support for MQTT AutoDiscovery (not supported yet for DL-bus)
 
@@ -483,7 +487,10 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
       }
 
       if (P092_data->DLbus_Data->ISR_Receiving) {
-        return false;
+        if (!P092_data->DLbus_Data->ReceivingTimedOut()) {
+          return false;
+        }
+        P092_data->P092_ReceivedOK = false; // receiving got stuck, start a new one below
       }
 
       P092_data->Plugin_092_SetIndices(PCONFIG(0));

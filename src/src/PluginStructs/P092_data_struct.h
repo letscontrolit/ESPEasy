@@ -44,6 +44,7 @@ public:
   volatile uint8_t ISR_DLB_Pin = 0xFF;
   volatile boolean ISR_Receiving = false; // receiving flag
   volatile boolean ISR_AllBitsReceived = false;
+  volatile boolean ISR_NoSyncPause = false; // device sends its frames back-to-back (e.g. UVR61-3 up to v8.2): don't wait for the sync pause
   ESPEASY_VOLATILE(uint16_t) ISR_PulseCount = 0;   // number of received pulses
   volatile uint16_t ISR_PulseNumber = 0;  // max naumber of the received pulses
   volatile uint16_t ISR_MinPulseWidth = 0;
@@ -59,8 +60,10 @@ public:
   boolean IsISRset = false;           // ISR set flag, used for setting the ISR after network connected
   uint8_t LogLevelInfo   = 0xff;
   uint8_t LogLevelError  = 0xFF;
+  uint16_t RequiredBits  = 0;         // bits of a complete data frame after the SYNC
   void    attachDLBusInterrupt(void);
   void    StartReceiving(void);
+  boolean ReceivingTimedOut(void);
   boolean CheckTimings(void);
   boolean Processing(void);
   boolean CheckCRC(uint8_t IdxCRC);
@@ -68,6 +71,7 @@ public:
 private:
 
   volatile uint32_t ISR_TimeLastBitChange = 0;      // remember time of last transition
+  uint32_t ReceivingStart = 0;                      // time of StartReceiving()
   uint8_t DLbus_ChangeBitStream[DLbus_MaxDataBits] = { 0 }; // received bit change stream (each bit change is extended to uint8_t, containing the
                                                     // timing flags)
   uint16_t BitNumber = 0;                           // bit number of the received DLbus_ChangeBitStream
