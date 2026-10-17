@@ -507,8 +507,7 @@ enum class string_commands_e {
 };
 
 
-  #if FEATURE_EXTENDED_STRING_FUNCTIONS
-void hideEscaped(String &line, bool &mustReplaceEscapedBracket, bool &mustReplaceEscapedCurlyBracket, bool &mustReplaceEscapedColon) {
+static void hideEscaped(String &line, bool &mustReplaceEscapedBracket, bool &mustReplaceEscapedCurlyBracket, bool &mustReplaceEscapedColon) {
   String MaskEscapedBracket;
 
   if (hasEscapedCharacter(line,'(') || hasEscapedCharacter(line,')')) {
@@ -531,6 +530,7 @@ void hideEscaped(String &line, bool &mustReplaceEscapedBracket, bool &mustReplac
     mustReplaceEscapedCurlyBracket = true;
   }
 
+  #if FEATURE_EXTENDED_STRING_FUNCTIONS
   if (hasEscapedCharacter(line, ':')) {
     // replace the \: with another character to mask the escaped colon so we can continue parsing.
     // We have to unmask then after we're finished.
@@ -538,16 +538,17 @@ void hideEscaped(String &line, bool &mustReplaceEscapedBracket, bool &mustReplac
     line.replace(F("\\:"), MaskEscapedBracket);
     mustReplaceEscapedColon = true;
   }
+  #endif // if FEATURE_EXTENDED_STRING_FUNCTIONS
 }
 
-void hideMasked(String &line, bool mustReplaceMaskedChars) {
+static void hideMasked(String &line, bool mustReplaceMaskedChars) {
   if (mustReplaceMaskedChars) {
     line.replace('{', static_cast<char>(0x02));
     line.replace('}', static_cast<char>(0x03));
   }
 }
 
-void restoreMaskedAndEscaped(String &line, bool mustReplaceMaskedChars, bool mustReplaceEscapedBracket, bool mustReplaceEscapedCurlyBracket, bool mustReplaceEscapedColon) {
+static void restoreMaskedAndEscaped(String &line, bool mustReplaceMaskedChars, bool mustReplaceEscapedBracket, bool mustReplaceEscapedCurlyBracket, bool mustReplaceEscapedColon) {
   String MaskEscapedBracket;
 
   if (mustReplaceMaskedChars) {
@@ -575,14 +576,15 @@ void restoreMaskedAndEscaped(String &line, bool mustReplaceMaskedChars, bool mus
     line.replace(MaskEscapedBracket, F("\\}"));
   }
 
+  #if FEATURE_EXTENDED_STRING_FUNCTIONS
   if (mustReplaceEscapedColon) {
     // We now have to check if we did mask some escaped colon and unmask them.
     // Let's hope we don't mess up any Unicode here.
     MaskEscapedBracket = static_cast<char>(0x15); // ASCII 0x15 = NAK
     line.replace(MaskEscapedBracket, F("\\:"));
   }
+  #endif // if FEATURE_EXTENDED_STRING_FUNCTIONS
 }
-#endif // if FEATURE_EXTENDED_STRING_FUNCTIONS
 
 void parse_string_commands(String& line) {
   unsigned int startIndex = 0;
@@ -604,33 +606,9 @@ void parse_string_commands(String& line) {
   bool mustReplaceMaskedChars = false;
   bool mustReplaceEscapedBracket = false;
   bool mustReplaceEscapedCurlyBracket = false;
-  String MaskEscapedBracket;
-  
-  #if FEATURE_EXTENDED_STRING_FUNCTIONS
   bool mustReplaceEscapedColon = false;
 
   hideEscaped(line, mustReplaceEscapedBracket, mustReplaceEscapedCurlyBracket, mustReplaceEscapedColon);
-  #else // if FEATURE_EXTENDED_STRING_FUNCTIONS
-  if (hasEscapedCharacter(line,'(') || hasEscapedCharacter(line,')')) {
-    // replace the \( and \) with other characters to mask the escaped brackets so we can continue parsing.
-    // We have to unmask then after we're finished.
-    MaskEscapedBracket = static_cast<char>(0x11); // ASCII 0x11 = Device control 1
-    line.replace(F("\\("), MaskEscapedBracket);
-    MaskEscapedBracket = static_cast<char>(0x12); // ASCII 0x12 = Device control 2
-    line.replace(F("\\)"), MaskEscapedBracket);
-    mustReplaceEscapedBracket = true;
-  }
-
-  if (hasEscapedCharacter(line,'{') || hasEscapedCharacter(line,'}')) {
-    // replace the \{ and \} with other characters to mask the escaped curly brackets so we can continue parsing.
-    // We have to unmask then after we're finished.
-    MaskEscapedBracket = static_cast<char>(0x13); // ASCII 0x13 = Device control 3
-    line.replace(F("\\{"), MaskEscapedBracket);
-    MaskEscapedBracket = static_cast<char>(0x14); // ASCII 0x14 = Device control 4
-    line.replace(F("\\}"), MaskEscapedBracket);
-    mustReplaceEscapedCurlyBracket = true;
-  }
-  #endif // if FEATURE_EXTENDED_STRING_FUNCTIONS
 
   while (get_next_inner_bracket(line, startIndex, closingIndex, '}')) {
     // Command without opening and closing brackets.
@@ -881,12 +859,7 @@ void parse_string_commands(String& line) {
         // See: https://github.com/letscontrolit/ESPEasy/issues/2932#issuecomment-596139096
         replacement = line.substring(startIndex, closingIndex + 1);
         mustReplaceMaskedChars = true;
-        #if FEATURE_EXTENDED_STRING_FUNCTIONS
         hideMasked(replacement, mustReplaceMaskedChars); // apply
-        #else // if FEATURE_EXTENDED_STRING_FUNCTIONS
-        line.replace('{', static_cast<char>(0x02));
-        line.replace('}', static_cast<char>(0x03));
-        #endif // if FEATURE_EXTENDED_STRING_FUNCTIONS
       }
 
       // Replace the full command including opening and closing brackets.
@@ -907,34 +880,7 @@ void parse_string_commands(String& line) {
   }
   #endif // if FEATURE_JSON_PARSE && FEATURE_EXTENDED_STRING_FUNCTIONS
 
-  #if FEATURE_EXTENDED_STRING_FUNCTIONS
   restoreMaskedAndEscaped(line, mustReplaceMaskedChars, mustReplaceEscapedBracket, mustReplaceEscapedCurlyBracket, mustReplaceEscapedColon);
-  #else // if FEATURE_EXTENDED_STRING_FUNCTIONS
-  if (mustReplaceMaskedChars) {
-    // We now have to check if we did mask some parts and unmask them.
-    // Let's hope we don't mess up any Unicode here.
-    line.replace(static_cast<char>(0x02), '{');
-    line.replace(static_cast<char>(0x03), '}');
-  }
-
-  if (mustReplaceEscapedBracket) {
-    // We now have to check if we did mask some escaped bracket and unmask them.
-    // Let's hope we don't mess up any Unicode here.
-    MaskEscapedBracket = static_cast<char>(0x11); // ASCII 0x11 = Device control 1
-    line.replace(MaskEscapedBracket, F("\\("));
-    MaskEscapedBracket = static_cast<char>(0x12); // ASCII 0x12 = Device control 2
-    line.replace(MaskEscapedBracket, F("\\)"));
-  }
-
-  if (mustReplaceEscapedCurlyBracket) {
-    // We now have to check if we did mask some escaped curly bracket and unmask them.
-    // Let's hope we don't mess up any Unicode here.
-    MaskEscapedBracket = static_cast<char>(0x13); // ASCII 0x13 = Device control 3
-    line.replace(MaskEscapedBracket, F("\\{"));
-    MaskEscapedBracket = static_cast<char>(0x14); // ASCII 0x14 = Device control 4
-    line.replace(MaskEscapedBracket, F("\\}"));
-  }
-  #endif // if FEATURE_EXTENDED_STRING_FUNCTIONS
 }
 
 void substitute_eventvalue(String& line, const String& event) {
