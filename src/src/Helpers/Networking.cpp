@@ -2014,7 +2014,12 @@ bool downloadFile(const String& url, String file_save, const String& user, const
     uint32_t timeout = millis() + DOWNLOAD_FILE_TIMEOUT;
 
     // get tcp stream
-    WiFiClient *stream = &client;
+    WiFiClient *stream = http.getStreamPtr();
+
+    if (stream == nullptr) {
+      stream = &client;
+    }
+
 
     // read all data from server
     while (http.connected() && (len > 0 || len == -1)) {
@@ -2034,6 +2039,8 @@ bool downloadFile(const String& url, String file_save, const String& user, const
           addLog(LOG_LEVEL_ERROR, error);
           http.end();
           client.stop();
+          f.close();
+          tryDeleteFile(file_save);
           return false;
         }
         bytesWritten += c;
@@ -2047,6 +2054,8 @@ bool downloadFile(const String& url, String file_save, const String& user, const
         delay(0);
         http.end();
         client.stop();
+        f.close();
+        tryDeleteFile(file_save);
         return false;
       }
       delay(0);
@@ -2113,7 +2122,11 @@ bool downloadFirmware(const String& url, String& file_save, String& user, String
     uint32_t timeout = millis() + DOWNLOAD_FILE_TIMEOUT;
 
     // get tcp stream
-    WiFiClient *stream = &client;
+    WiFiClient *stream = http.getStreamPtr();
+
+    if (stream == nullptr) {
+      stream = &client;
+    }
 
     while (error.isEmpty() && http.connected() && (len > 0 || len == -1)) {
       // read up to downloadBuffSize at a time.
