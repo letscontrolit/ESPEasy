@@ -17,7 +17,7 @@
 #endif // if FEATURE_JSON_EVENT
 
 #if FEATURE_SEND_TO_HTTP || FEATURE_POST_TO_HTTP || FEATURE_PUT_TO_HTTP
-const __FlashStringHelper* httpEmitToHTTP(struct EventStruct        *event,
+static const __FlashStringHelper* httpEmitToHTTP(struct EventStruct        *event,
                                           const __FlashStringHelper *logIdentifier,
                                           const __FlashStringHelper *HttpMethod,
                                           const char                *Line,

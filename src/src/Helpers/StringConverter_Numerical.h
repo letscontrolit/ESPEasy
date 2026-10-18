@@ -105,8 +105,6 @@ String formatULLtoHex(const uint64_t& value,
 
 String formatULLtoHex(const uint64_t& value, unsigned int minimal_hex_digits = 0);
 
-String formatULLtoHex_no_prefix(const uint64_t& value, unsigned int minimal_hex_digits = 0);
-
 String formatULLtoHex_decimal(const uint64_t& value);
 
 
@@ -132,8 +130,6 @@ String formatToHex_decimal(uint32_t value);
 
 String formatToHex_decimal(uint32_t value,
                            uint32_t factor);
-
-int intFromHexChar(char a);
 
 String stringFromHexArray(const String& arr);
 

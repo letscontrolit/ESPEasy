@@ -13,7 +13,7 @@
 
 #include <Wire.h>
 
-void i2c_scanI2Cbus(bool dbg, int8_t channel, uint8_t i2cBus) {
+static void i2c_scanI2Cbus(bool dbg, int8_t channel, uint8_t i2cBus) {
   uint8_t error, address;
 
   #if FEATURE_I2CMULTIPLEXER

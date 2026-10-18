@@ -16,24 +16,8 @@
 // ********************************************************************************
 // Web Interface download page
 // ********************************************************************************
-void handle_download() {
-# if FEATURE_TARSTREAM_SUPPORT
-  handle_config_download(false, false);
-}
-
-void handle_full_backup() {
-  handle_config_download(true, false);
-}
-
-void handle_full_backup_no_usr_pwd() {
-  handle_config_download(true, true);
-}
-
-void handle_config_download(bool fullBackup,
-                            bool noCreds) {
-# else // if FEATURE_TARSTREAM_SUPPORT
-  const bool noCreds = false;
-# endif // if FEATURE_TARSTREAM_SUPPORT
+static void handle_config_download(bool fullBackup,
+                                   bool noCreds) {
   # ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_download"));
   # endif // ifndef BUILD_NO_RAM_TRACKER
@@ -84,9 +68,9 @@ void handle_config_download(bool fullBackup,
 
   if (fullBackup && (nullptr != tarStream)) {
     const String security_dat = getFileName(FileType::SECURITY_DAT);
-#if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE
+#  if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE
     const String device_security_dat = getFileName(FileType::DEV_SECURITY_DAT);
-#endif
+#  endif
     #  if defined(ESP8266)
 
     fs::Dir dir = ESPEASY_FS.openDir("");
@@ -95,12 +79,12 @@ void handle_config_download(bool fullBackup,
       fs::File file = dir.openFile("r");
 
       if (file) {
-        if (!noCreds || 
-            (noCreds 
-              && (0 != strncasecmp(file.name(), security_dat.c_str(), security_dat.length()))
-#if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE
-              && (0 != strncasecmp(file.name(), device_security_dat.c_str(), device_security_dat.length()))
-#endif
+        if (!noCreds ||
+            (noCreds
+             && (0 != strncasecmp(file.name(), security_dat.c_str(), security_dat.length()))
+#   if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE
+             && (0 != strncasecmp(file.name(), device_security_dat.c_str(), device_security_dat.length()))
+#   endif
             )) {
           tarStream->addFile(file.name(), file.size());
         }
@@ -114,12 +98,12 @@ void handle_config_download(bool fullBackup,
 
     while (file) {
       if (!file.isDirectory()) {
-        if (!noCreds || 
-            (noCreds 
-              && (0 != strncasecmp(file.name(), security_dat.c_str(), security_dat.length()))
-#if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE
-              && (0 != strncasecmp(file.name(), device_security_dat.c_str(), device_security_dat.length()))
-#endif
+        if (!noCreds ||
+            (noCreds
+             && (0 != strncasecmp(file.name(), security_dat.c_str(), security_dat.length()))
+#   if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE
+             && (0 != strncasecmp(file.name(), device_security_dat.c_str(), device_security_dat.length()))
+#   endif
             )) {
           tarStream->addFileIfExists(file.name());
         }
@@ -145,10 +129,11 @@ void handle_config_download(bool fullBackup,
 
       if (!noCreds) {
         tarStream->addFileIfExists(getFileName(FileType::SECURITY_DAT));
-#if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE
+#  if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE
+
         // TODO TD-er: Must add separate flag for this
-//        tarStream->addFileIfExists(getFileName(FileType::DEV_SECURITY_DAT));
-#endif
+        //        tarStream->addFileIfExists(getFileName(FileType::DEV_SECURITY_DAT));
+#  endif // if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE
       }
 
       // rules<n>.txt files
@@ -194,5 +179,16 @@ void handle_config_download(bool fullBackup,
   # endif // if FEATURE_TARSTREAM_SUPPORT
   dataFile.close();
 }
+
+void handle_download() { handle_config_download(false, false); }
+
+# if FEATURE_TARSTREAM_SUPPORT
+
+void handle_full_backup()            { handle_config_download(true, false); }
+
+void handle_full_backup_no_usr_pwd() { handle_config_download(true, true); }
+
+# endif // if FEATURE_TARSTREAM_SUPPORT
+
 
 #endif // ifdef WEBSERVER_DOWNLOAD

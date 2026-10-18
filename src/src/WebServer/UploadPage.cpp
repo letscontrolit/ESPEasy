@@ -107,24 +107,8 @@ fs::File uploadFile;
 # if FEATURE_TARSTREAM_SUPPORT
 TarStream *tarStream = nullptr;
 # endif // if FEATURE_TARSTREAM_SUPPORT
-void handleFileUpload() {
-  # ifndef BUILD_NO_RAM_TRACKER
-  checkRAM(F("handleFileUpload"));
-  # endif // ifndef BUILD_NO_RAM_TRACKER
-  handleFileUploadBase(false);
-}
 
-# if FEATURE_SD
-void handleSDFileUpload() {
-  #  ifndef BUILD_NO_RAM_TRACKER
-  checkRAM(F("handleSDFileUpload"));
-  #  endif // ifndef BUILD_NO_RAM_TRACKER
-  handleFileUploadBase(true);
-}
-
-# endif // if FEATURE_SD
-
-void handleFileUploadBase(bool toSDcard) {
+static void handleFileUploadBase(bool toSDcard) {
   if (!isLoggedIn()) { return; }
 
   static boolean valid                = false;
@@ -253,5 +237,24 @@ void handleFileUploadBase(bool toSDcard) {
     uploadResult = uploadResult_e::InvalidFile;
   }
 }
+
+void handleFileUpload() {
+  # ifndef BUILD_NO_RAM_TRACKER
+  checkRAM(F("handleFileUpload"));
+  # endif // ifndef BUILD_NO_RAM_TRACKER
+  handleFileUploadBase(false);
+}
+
+# if FEATURE_SD
+void handleSDFileUpload() {
+  #  ifndef BUILD_NO_RAM_TRACKER
+  checkRAM(F("handleSDFileUpload"));
+  #  endif // ifndef BUILD_NO_RAM_TRACKER
+  handleFileUploadBase(true);
+}
+
+# endif // if FEATURE_SD
+
+
 
 #endif // ifdef WEBSERVER_UPLOAD
