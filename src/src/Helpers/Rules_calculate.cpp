@@ -495,7 +495,15 @@ CalculateReturnCode RulesCalculate_t::RPNCalculate(char *token)
 // 1            + -               left to right
 int RulesCalculate_t::op_preced(const char c)
 {
-  if (is_unary_operator(c)) { return 4; // right to left
+  // All function tokens (unary, binary and quinary) must have the highest precedence,
+  // or a pending operator in front of a function call is applied before the function is evaluated.
+  if (is_unary_operator(c) ||
+#if !defined(LIMIT_BUILD_SIZE) && FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
+      is_binary_operator(c) ||
+#endif // if !defined(LIMIT_BUILD_SIZE) && FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
+      is_quinary_operator(c)) 
+  { 
+    return 4; // right to left
   }
 
   switch (c)
@@ -653,7 +661,22 @@ CalculateReturnCode RulesCalculate_t::doCalculate(const char *input, ESPEASY_RUL
         *(TokenPos) = 0; // Mark end of token string
         error       = RPNCalculate(token);
         TokenPos    = token;
-        c           = 0; // reset
+        if (isError(error)) { return error; }
+
+        // Finish the previous argument: pop all operators off the stack onto the token queue
+        // until the left parenthesis of the function call (which stays on the stack).
+        while (sl > 0 && stack[sl - 1] != '(')
+        {
+          *TokenPos = stack[sl - 1];
+          ++TokenPos;
+          *(TokenPos) = 0; // Mark end of token string
+          error       = RPNCalculate(token);
+          TokenPos    = token;
+
+          if (isError(error)) { return error; }
+          sl--;
+        }
+        c = 0; // reset
       }
 
       // If the token is a left parenthesis, then push it onto the stack.
@@ -747,6 +770,12 @@ CalculateReturnCode RulesCalculate_t::doCalculate(const char *input, ESPEASY_RUL
 
         // Pop the left parenthesis from the stack, but not onto the token queue.
         if (sl > 0) {
+          sl--;
+        }
+
+        // Also remove the function token that has just been processed (marked '\0' above),
+        // otherwise it blocks the operators below it and operator precedence is lost.
+        if ((sl > 0) && (stack[sl - 1] == '\0')) {
           sl--;
         }
 
