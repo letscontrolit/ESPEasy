@@ -27,6 +27,7 @@ void handle_rules();
 void handle_rules_new();
 
 # ifdef WEBSERVER_NEW_RULES
+void handle_rules_add();
 void handle_rules_backup();
 void handle_rules_delete();
 #endif

@@ -16,6 +16,7 @@
 
 #include "../Globals/Settings.h"
 #include "../Helpers/ESPEasy_Storage.h"
+#include "../Helpers/Numerical.h"
 #include "../Helpers/StringConverter.h"
 
 #include <FS.h>
@@ -643,6 +644,14 @@ bool handle_rules_edit(const String& originalUri)
 {
   return handle_rules_edit(originalUri, false);
 }
+
+# ifdef WEBSERVER_NEW_RULES
+void handle_rules_add()
+{
+  handle_rules_edit(web_server.uri(), true);
+}
+
+# endif // ifdef WEBSERVER_NEW_RULES
 
 void Goto_Rules_Root() {
   sendHeader(F("Location"), F("/rules"), true);

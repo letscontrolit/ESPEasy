@@ -304,10 +304,7 @@ static void WebServerInit()
   web_server.on(F("/rules"),         handle_rules_new);
   web_server.on(F("/rules/"),        Goto_Rules_Root);
   # ifdef WEBSERVER_NEW_RULES
-  web_server.on(F("/rules/add"),     []()
-  {
-    handle_rules_edit(web_server.uri(), true);
-  });
+  web_server.on(F("/rules/add"),    handle_rules_add);
   web_server.on(F("/rules/backup"), handle_rules_backup);
   web_server.on(F("/rules/delete"), handle_rules_delete);
   # endif // WEBSERVER_NEW_RULES
