@@ -57,6 +57,11 @@
 # define KV_SETID(S)
 #endif // ifndef LIMIT_BUILD_SIZE
 
+static KeyValueStruct make_kv(const __FlashStringHelper *key, bool val)
+{
+  return KeyValueStruct(key, val, KeyValueStruct::Format::Default);
+}
+
 static KeyValueStruct make_kv(const __FlashStringHelper *key, int val)
 {
   return KeyValueStruct(key, val, KeyValueStruct::Format::Default);
