@@ -22,13 +22,14 @@ uint32_t unix_time_frac_to_micros(uint32_t unix_time_frac)
 {
   return static_cast<float>(unix_time_frac) / 4294.967f;
 }
-
-uint32_t millis_to_unix_time_frac(uint32_t millis)
+/*
+static uint32_t millis_to_unix_time_frac(uint32_t millis)
 {
   return static_cast<float>(millis) * 4294967.0f;
 }
+  */
 
-uint32_t micros_to_unix_time_frac(uint32_t micros)
+static uint32_t micros_to_unix_time_frac(uint32_t micros)
 {
   return static_cast<float>(micros) * 4294.967f;
 }
@@ -58,7 +59,8 @@ uint32_t micros_to_sec_usec(int64_t micros, uint32_t& usec)
   return static_cast<uint32_t>(seconds);
 }
 
-uint64_t sec_time_frac_to_uptime_offset_usec(const uint32_t& seconds,
+/*
+static uint64_t sec_time_frac_to_uptime_offset_usec(const uint32_t& seconds,
                                    uint32_t        time_frac)
 {
   const uint64_t unix_time_usec = sec_time_frac_to_Micros(seconds, time_frac);
@@ -67,13 +69,14 @@ uint64_t sec_time_frac_to_uptime_offset_usec(const uint32_t& seconds,
     return unix_time_usec;
   return unix_time_usec - cur_usec;
 }
+*/
 
 
-bool isLeapYear(int year) {
+static bool isLeapYear(int year) {
   return (year > 0) && !(year % 4) && ((year % 100) || !(year % 400));
 }
 
-uint8_t getMonthDays(int year, uint8_t month) {
+static uint8_t getMonthDays(int year, uint8_t month) {
   const uint8_t monthDays[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 
   if ((month == 1) && isLeapYear(year)) {
@@ -129,7 +132,7 @@ uint32_t makeTime(const struct tm& tm) {
   return seconds;
 }
 
-void breakTime(unsigned long timeInput, struct tm& tm) {
+void breakTime(uint32_t timeInput, struct tm& tm) {
   uint32_t time = (uint32_t)timeInput;
 
   tm.tm_sec  = time % 60;
@@ -141,7 +144,7 @@ void breakTime(unsigned long timeInput, struct tm& tm) {
   tm.tm_wday = ((time + 4) % 7) + 1; // Sunday is day 1
 
   int year           = 1970;
-  unsigned long days = 0;
+  uint32_t days = 0;
   #ifndef LIMIT_BUILD_SIZE
   if (time > 20089) {
     // Skip checking 55 years for being leap year.
@@ -270,9 +273,9 @@ String formatDateTimeString(const struct tm& ts, char dateDelimiter, char timeDe
 /********************************************************************************************\
    Time computations for rules.
  \*********************************************************************************************/
-String timeLong2String(unsigned long lngTime)
+String timeLong2String(uint32_t lngTime)
 {
-  unsigned long x = 0;
+  uint32_t x = 0;
   String time;
 
   x = (lngTime >> 16) & 0xf;
@@ -355,7 +358,7 @@ String timeLong2String(unsigned long lngTime)
   return time;
 }
 
-unsigned long string2TimeLong(const String& str)
+uint32_t string2TimeLong(const String& str)
 {
   // format 0NRSHM000000WWWWAAAABBBBCCCCDDDD
   // WWWW=weekday, AAAA=hours tens digit, BBBB=hours, CCCC=minutes tens digit DDDD=minutes
@@ -364,14 +367,14 @@ unsigned long string2TimeLong(const String& str)
 
   char command[20];
   int  w, x, y;
-  unsigned long a;
+  uint32_t a;
   {
     // Within a scope so the tmpString is only used for copy.
     String tmpString(str);
     tmpString.toLowerCase();
     tmpString.toCharArray(command, 20);
   }
-  unsigned long lngTime = 0;
+  uint32_t lngTime = 0;
   String TmpStr1;
 
   if (GetArgv(command, TmpStr1, 1))
@@ -384,7 +387,7 @@ unsigned long string2TimeLong(const String& str)
     if (y == 0) {
       y = 0xf; // wildcard is 0xf
     }
-    lngTime |= (unsigned long)y << 16;
+    lngTime |= (uint32_t)y << 16;
   }
 
   if (GetArgv(command, TmpStr1, 2))
@@ -458,9 +461,9 @@ unsigned long string2TimeLong(const String& str)
 /********************************************************************************************\
    Match clock event
  \*********************************************************************************************/
-bool matchClockEvent(unsigned long clockEvent, unsigned long clockSet)
+bool matchClockEvent(uint32_t clockEvent, uint32_t clockSet)
 {
-  unsigned long Mask;
+  uint32_t Mask;
 
   for (uint8_t y = 0; y < 8; y++)
   {

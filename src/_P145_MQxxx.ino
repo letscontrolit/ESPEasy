@@ -91,7 +91,7 @@
 // PCONFIG(n)    : stores an integer (8)
 // PCONFIG_FLOAT : stors a float (4)
 // PCONFIG_LONG  : stores a long (4, shared with PCONFIG_ULONG)
-// PCONFIG_ULONG : stores an unsigned long (4, shared with PCONFIG_LONG)
+// PCONFIG_ULONG : stores an uint32_t (4, shared with PCONFIG_LONG)
 # define P145_PCONFIG_RLOAD       PCONFIG_FLOAT(0)
 # define P145_PCONFIG_RZERO       PCONFIG_FLOAT(1)
 # define P145_PCONFIG_REF         PCONFIG_FLOAT(2)

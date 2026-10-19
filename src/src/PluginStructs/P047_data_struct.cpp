@@ -181,6 +181,7 @@ float P047_data_struct::readTemperature() {
         buf[b] = Wire.read();
       }
     }
+    // TODO TD-er: const int32_t rTemp = getUlFromBigEndianByteStream(buf, 4);
     const int32_t rTemp = ((uint32_t)buf[0] << 24) | ((uint32_t)buf[1] << 16) |
                           ((uint32_t)buf[2] << 8) | (uint32_t)buf[3];
 
@@ -254,6 +255,7 @@ uint32_t P047_data_struct::getVersion() {
         buf[b] = Wire.read();
       }
     }
+    // TODO TD-er: uint32_t ret = getUlFromBigEndianByteStream(buf, 4);
     uint32_t ret = ((uint32_t)buf[0] << 24) | ((uint32_t)buf[1] << 16) |
                    ((uint32_t)buf[2] << 8) | (uint32_t)buf[3];
     return ret;

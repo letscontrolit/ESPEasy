@@ -54,7 +54,7 @@ public:
 
 private:
 
-  unsigned long _timer = 0; // Timer to check values each 5 seconds
+  uint32_t _timer = 0; // Timer to check values each 5 seconds
   uint8_t       i2cAddress;
 };
 #endif // ifdef USES_P045

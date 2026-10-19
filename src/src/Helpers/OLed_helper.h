@@ -13,13 +13,13 @@
  */
 
 #if defined(USES_P023) || defined(USES_P036) || defined(USES_P109)
-#include "SSD1306.h"
-#include "SH1106Wire.h"
+# include "SSD1306.h"
+# include "SH1106Wire.h"
 
-#define OLED_CONTRAST_OFF  0x01
-#define OLED_CONTRAST_LOW  0x40
-#define OLED_CONTRAST_MED  0xCF
-#define OLED_CONTRAST_HIGH 0xFF
+# define OLED_CONTRAST_OFF  0x01
+# define OLED_CONTRAST_LOW  0x40
+# define OLED_CONTRAST_MED  0xCF
+# define OLED_CONTRAST_HIGH 0xFF
 
 void OLedFormController(const __FlashStringHelper *id,
                         const int                 *values,
@@ -31,14 +31,14 @@ void OLedFormContrast(const __FlashStringHelper *id,
 void OLedFormSizes(const __FlashStringHelper *id,
                    const int                 *values,
                    uint8_t                    selectedIndex,
-                   uint8_t                    optionsSize = 3,
+                   uint8_t                    optionsSize    = 3,
                    bool                       reloadOnChange = false);
 void OLedSetContrast(OLEDDisplay   *_display,
                      const uint8_t& OLED_contrast);
 bool OLedI2CAddressCheck(uint8_t                    function,
                          int                        checkI2cAddress,
                          const __FlashStringHelper *id,
-                         int8_t                     deviceAddress);
+                         int16_t                    deviceAddress);
 
-#endif
+#endif // if defined(USES_P023) || defined(USES_P036) || defined(USES_P109)
 #endif // ifndef HELPERS_OLED_HELPER_H

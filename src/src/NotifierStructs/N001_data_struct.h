@@ -20,17 +20,6 @@
 bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings,
                       String                          & subject,
                       String                          & body);
-bool NPlugin_001_Auth(WiFiClient  & client,
-                      const String& user,
-                      const String& pass,
-                      uint16_t      timeout);
-bool NPlugin_001_MTA(WiFiClient  & client,
-                     const String& aStr,
-                     uint16_t      aWaitForPattern,
-                     uint16_t      timeout);
-bool getNextMailAddress(const String& data,
-                        String      & address,
-                        int           index);
 
 
 #endif // ifdef USES_N001

@@ -10,12 +10,12 @@
 # include "../Helpers/StringConverter.h"
 
 
-CUL_time_filter_struct::CUL_time_filter_struct(uint32_t checksum, unsigned long UnixTimeExpiration)
+CUL_time_filter_struct::CUL_time_filter_struct(uint32_t checksum, uint32_t UnixTimeExpiration)
   : _checksum(checksum), _UnixTimeExpiration(UnixTimeExpiration) {}
 
 String CUL_interval_filter_getExpiration_log_str(const P094_filter& filter)
 {
-  const unsigned long expiration = filter.computeUnixTimeExpiration();
+  const uint32_t expiration = filter.computeUnixTimeExpiration();
 
   if ((expiration != 0) && (expiration != 0xFFFFFFFF)) {
     struct tm exp_tm;
@@ -67,7 +67,7 @@ bool CUL_interval_filter::filter(const mBusPacket_t& packet, const P094_filter& 
     _mBusFilterMap.erase(it);
   }
 
-  const unsigned long expiration = filter.computeUnixTimeExpiration();
+  const uint32_t expiration = filter.computeUnixTimeExpiration();
 
   CUL_time_filter_struct item(packet._checksum, expiration);
 
@@ -87,7 +87,7 @@ void CUL_interval_filter::purgeExpired()
 {
   auto it = _mBusFilterMap.begin();
 
-  const unsigned long currentTime = node_time.getUnixTime();
+  const uint32_t currentTime = node_time.getUnixTime();
 
   for (; it != _mBusFilterMap.end();) {
     if (currentTime > it->second._UnixTimeExpiration) {

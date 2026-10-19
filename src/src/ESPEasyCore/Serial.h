@@ -26,11 +26,11 @@ void serialPrintln();
 /*
    void serialPrint(char c);
 
-   void serialPrint(unsigned long value);
+   void serialPrint(uint32_t value);
 
    void serialPrint(long value);
 
-   void serialPrintln(unsigned long value);
+   void serialPrintln(uint32_t value);
  */
 
 

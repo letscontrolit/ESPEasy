@@ -213,9 +213,8 @@ boolean Plugin_075(uint8_t function, struct EventStruct *event, String& string)
             }
 
             if (RssiIndex >= 0) {
-              newString = concat(
-                P075_data->displayLines[x].substring(0, RssiIndex),
-                ESPEasy::net::wifi::GetRSSI_quality() * 10);
+              newString = P075_data->displayLines[x].substring(0, RssiIndex);
+              newString += ESPEasy::net::wifi::GetRSSI_quality() * 10;
             }
             else {
               String tmpString(P075_data->displayLines[x]);

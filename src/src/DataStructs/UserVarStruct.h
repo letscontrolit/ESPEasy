@@ -40,10 +40,10 @@ struct UserVarStruct {
   float         operator[](unsigned int index) const;
 
   // Legacy "long" type, which was spread over several floats.
-  unsigned long getSensorTypeLong(taskIndex_t taskIndex,
+  uint32_t getSensorTypeLong(taskIndex_t taskIndex,
                                   bool        raw = false) const;
   void          setSensorTypeLong(taskIndex_t   taskIndex,
-                                  unsigned long value);
+                                  uint32_t value);
 
 #if FEATURE_EXTENDED_TASK_VALUE_TYPES
 

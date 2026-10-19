@@ -6,7 +6,7 @@
 
 // Rules Timer use
 // ***************
-systemTimerStruct::systemTimerStruct(int recurringCount, unsigned long msecFromNow, unsigned int timerIndex, int alternateInterval) :
+systemTimerStruct::systemTimerStruct(int recurringCount, uint32_t msecFromNow, unsigned int timerIndex, int alternateInterval) :
   _recurringCount(recurringCount), _interval(msecFromNow), _timerIndex(timerIndex), _remainder(0), _loopCount(1), _alternateInterval(
     alternateInterval)
 {

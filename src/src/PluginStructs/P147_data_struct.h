@@ -106,7 +106,7 @@ private:
   # endif // if P147_FEATURE_GASINDEXALGORITHM
 
   uint16_t readCheckedWord(bool& is_ok,
-                           long  extraDelay = 5);
+                           int32_t  extraDelay = 5);
   bool     startSensorRead(uint16_t compensationRh,
                            uint16_t compensationT);
 

@@ -185,19 +185,19 @@ String BusCmd_Command_struct::toString() {
                             cmd, cmdS, fmt, reg, static_cast<int32_t>(val), formatToHex(static_cast<uint32_t>(val)).c_str(), len);
 
   if (!data.isEmpty()) {
-    result = concat(result, strformat(F(", data_b/w: %s"), data.c_str()));
+    result += strformat(F(", data_b/w: %s"), data.c_str());
   }
 
   if (!variable.isEmpty()) {
-    result = concat(result, strformat(
+    result += strformat(
                       #  if FEATURE_BUSCMD_STRING
                       BusCmd_DataFormat_e::string == format ? F(", string: %s") :
                       #  endif // if FEATURE_BUSCMD_STRING
-                      F(", variable: %s"), variable.c_str()));
+                      F(", variable: %s"), variable.c_str());
   }
 
   if (!calculation.isEmpty()) {
-    result = concat(result, strformat(F(", calculation: %s"), calculation.c_str()));
+    result += strformat(F(", calculation: %s"), calculation.c_str());
   }
   return result;
 }
@@ -536,7 +536,7 @@ std::vector<BusCmd_Command_struct>BusCmd_Helper_struct::parseBusCmdCommands(cons
         # endif // ifndef LIMIT_BUILD_SIZE
 
         if (!key.isEmpty()) {
-          _commandCache[concat(key, keyPostfix)] = commands;
+          _commandCache[key + keyPostfix] = commands;
 # ifndef BUILD_NO_DEBUG
 
           if (loglevelActiveFor(LOG_LEVEL_INFO) && _showLog) {

@@ -22,7 +22,7 @@ void P087_data_struct::reset() {
   easySerial = nullptr;
 }
 
-bool P087_data_struct::init(ESPEasySerialPort port, const int16_t serial_rx, const int16_t serial_tx, unsigned long baudrate,
+bool P087_data_struct::init(ESPEasySerialPort port, const int16_t serial_rx, const int16_t serial_tx, uint32_t baudrate,
                             uint8_t config) {
   if ((serial_rx < 0) && (serial_tx < 0)) {
     return false;

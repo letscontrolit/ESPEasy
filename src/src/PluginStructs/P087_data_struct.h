@@ -74,7 +74,7 @@ public:
   bool init(ESPEasySerialPort port,
             const int16_t     serial_rx,
             const int16_t     serial_tx,
-            unsigned long     baudrate,
+            uint32_t     baudrate,
             uint8_t           config);
 
   // Called after loading the config from the settings.
@@ -170,7 +170,7 @@ private:
   uint32_t       sentences_received       = 0;
   uint32_t       sentences_received_error = 0;
   uint32_t       length_last_received     = 0;
-  unsigned long  disable_filter_window    = 0;
+  uint32_t  disable_filter_window    = 0;
 
   uint8_t capture_index[P87_MAX_CAPTURE_INDEX] = { 0 };
 

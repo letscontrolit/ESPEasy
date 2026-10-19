@@ -55,6 +55,7 @@ NTP_packet::NTP_packet()
 
 uint32_t NTP_packet::readWord(uint8_t startIndex) const
 {
+  // TODO TD-er: return getUlFromBigEndianByteStream(&data[startIndex], 4);
   uint32_t res{};
 
   res  = (uint32_t)data[startIndex] << 24;

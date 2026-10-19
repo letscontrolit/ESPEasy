@@ -12,6 +12,7 @@
 //
 
 /** Changelog:
+ * 2026-09-01 tonhuisman: Disable function PLUGIN_I2C_HAS_ADDRESS as it uses the wrong value, and it can be configured for any address
  * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery
  * 2024-05-09 tonhuisman: Add support for BeFlE v3.x (low power) Moisture sensor
  *                        Code improvements
@@ -37,7 +38,6 @@
 # define PLUGIN_VALUENAME3_047  "Light"
 
 # include "src/PluginStructs/P047_data_struct.h"
-
 
 boolean Plugin_047(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -127,11 +127,11 @@ boolean Plugin_047(uint8_t function, struct EventStruct *event, String& string)
       break;
     }
 
-    case PLUGIN_I2C_HAS_ADDRESS:
-    {
-      success = event->Par1 == P047_I2C_ADDR; // Show for currently configured address
-      break;
-    }
+      // case PLUGIN_I2C_HAS_ADDRESS:
+      // {
+      //   success = event->Par1 == P047_I2C_ADDR; // Show for currently configured address
+      //   break;
+      // }
 
     # if FEATURE_I2C_GET_ADDRESS
     case PLUGIN_I2C_GET_ADDRESS:
@@ -166,11 +166,10 @@ boolean Plugin_047(uint8_t function, struct EventStruct *event, String& string)
           # endif // if P047_FEATURE_ADAFRUIT
         };
         constexpr size_t P047_MODEL_OPTIONS = NR_ELEMENTS(SensorModelIds);
-        FormSelectorOptions selector( P047_MODEL_OPTIONS, SensorModels, SensorModelIds);
-        selector.default_index = static_cast<int>(P047_MODEL_CATNIP);
+        FormSelectorOptions selector(P047_MODEL_OPTIONS, SensorModels, SensorModelIds);
+        selector.default_index  = static_cast<int>(P047_MODEL_CATNIP);
         selector.reloadonchange = true;
         selector.addFormSelector(F("Sensor model"), F("model"), P047_MODEL);
-        // addFormNote(F("Changing the Sensor model will reload the page."));
       }
 
       if ((P047_MODEL_CATNIP == static_cast<P047_SensorModels>(P047_MODEL))

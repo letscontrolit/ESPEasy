@@ -278,7 +278,7 @@ float Adafruit_BME680::readAltitude(float seaLevel) {
   //  http://forums.adafruit.com/viewtopic.php?f=22&t=58064
 
   float atmospheric = readPressure() / 100.0F;
-  return 44330.0 * (1.0 - pow(atmospheric / seaLevel, 0.1903));
+  return 44330.0f * (1.0f - powf(atmospheric / seaLevel, 0.1903f));
 }
 
 /*!

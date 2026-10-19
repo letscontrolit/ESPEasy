@@ -45,13 +45,16 @@ Configuration
 Actuator
 ^^^^^^^^
 
-* **GPIO -> Data (Q7)**: Select the GPIO pin that is connected to the Data out pin of the (first) shift register. Any daisy chained register has its ``DS`` pin connected to the ``Q7`` pin of the previous shift register.
+* **GPIO -> Data (Q7)**: (74HC165 pin 9) Select the GPIO pin that is connected to the Data out pin of the (first) shift register. Any daisy chained register has its ``DS`` pin connected to the ``Q7`` pin of the previous shift register.
 
-* **GPIO -> Clock (CP)**: Select the Clock pin of all shift registers.
+* **GPIO -> Clock (CP)**: (74HC165 pin 2) Select the Clock pin of all shift registers.
 
-* **GPIO -> Enable (EN) (optional)**: Select the Enable pin of all shift registers, or set to None if not used or not available.
+* **GPIO -> Enable (CE) (optional)**: (74HC165 pin 15) Select the Enable pin of all shift registers, or set to None if not used or not available.
 
-* **GPIO -> Load (PL)**: Select the Load pin of all shift registers.
+* **GPIO -> Load (PL)**: (74HC165 pin 1) Select the Load pin of all shift registers.
+
+.. note::  The pin names like "Q7", "CP", "CE" and "PL" are used in this datasheet: https://assets.nexperia.com/documents/data-sheet/74HC_HCT165.pdf  Other vendors like Ti, OnSemi, SG Micro (and others) may use different pin names.
+
 
 NB: At least **Data**, **Clock** and **Load** GPIO pins need to be configured for the plugin to be able to function as intended.
 

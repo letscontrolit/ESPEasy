@@ -46,12 +46,12 @@ public:
   RN_state async_loop();
 
   // Wait for the command to be handled completely (including reply in RX2 window)
-  RN_state wait_command_finished(unsigned long timeout = 10000);
+  RN_state wait_command_finished(uint32_t timeout = 10000);
 
   // Shorter wait, to be used in async mode.
   // This will return early when the message cannot be sent (e.g. due to duty cycle exceeded)
   // It will return when the state waiting for reply_received_rx2 has been reached, or the command has finished (due to error)
-  RN_state wait_command_accepted(unsigned long timeout = 10000);
+  RN_state wait_command_accepted(uint32_t timeout = 10000);
 
   // Check whether a command has finished.
   bool     command_finished() const;
@@ -175,7 +175,7 @@ public:
   // Get the received data
   const String& get_received_data() const;
 
-  const String& get_received_data(unsigned long& duration) const;
+  const String& get_received_data(uint32_t& duration) const;
 
   // Get the downlink message, received during RX2 after TX command.
   const String& get_rx_message() const;
@@ -221,7 +221,7 @@ private:
   // read all available data from serial until '\n'
   bool                    read_line();
 
-  void                    set_timeout(unsigned long timeout);
+  void                    set_timeout(uint32_t timeout);
 
   bool                    time_out_reached() const;
 
@@ -259,9 +259,9 @@ private:
   String _sendData;                  // Complete command to send to the module
   String _rxMessenge;                // Message received (during RX2 window) after a TX
   String _lastError;                 // Last error message received from module (or set by user)
-  unsigned long _start_prep  = 0;    // timestamp of preparing command
-  unsigned long _start       = 0;    // timestamp of last set timeout
-  unsigned long _timeout     = 100;  // timeout duration
+  uint32_t _start_prep  = 0;    // timestamp of preparing command
+  uint32_t _start       = 0;    // timestamp of last set timeout
+  uint32_t _timeout     = 100;  // timeout duration
   uint32_t _rxdelay1         = 5000; // delay from last moment of sending to receive RX1 window
   uint32_t _rxdelay2         = 6000; // delay from last moment of sending to receive RX2 window
   uint8_t _busy_count        = 0;    // Number of times the module replied with "busy"

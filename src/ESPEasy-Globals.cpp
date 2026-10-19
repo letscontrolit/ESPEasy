@@ -11,12 +11,12 @@ boolean printToWebJSON = false;
 
 
 
-unsigned long timermqtt_interval = 100;
-unsigned long lastSend = 0;
-unsigned long lastWeb = 0;
+uint32_t timermqtt_interval = 100;
+uint32_t lastSend = 0;
+uint32_t lastWeb = 0;
 
-unsigned long wdcounter = 0;
-unsigned long timerAwakeFromDeepSleep = 0;
+uint32_t wdcounter = 0;
+uint32_t timerAwakeFromDeepSleep = 0;
 
 
 #if FEATURE_ADC_VCC

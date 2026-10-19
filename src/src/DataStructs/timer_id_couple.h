@@ -9,16 +9,20 @@
 \*********************************************************************************************/
 
 struct timer_id_couple {
-  timer_id_couple(unsigned long id, unsigned long newtimer) : _id(id), _timer(newtimer) {}
+  timer_id_couple(uint32_t id, uint32_t newtimer) : _id(id), _timer(newtimer) {}
 
-  timer_id_couple(unsigned long id) : _id(id) {
+  timer_id_couple(uint32_t id) : _id(id) {
     _timer = millis();
   }
 
   bool operator<(const timer_id_couple& other) const;
 
-  unsigned long _id;
-  unsigned long _timer;
+  // Returns true when _id matches.
+  bool operator()(const timer_id_couple& item) const;
+
+
+  uint32_t _id{};
+  uint32_t _timer{};
 };
 
 

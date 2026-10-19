@@ -178,7 +178,7 @@ private:
 
 
   ESPeasySerial          *_easySerial        = nullptr;
-  unsigned long           _baudrate          = 9600;
+  uint32_t           _baudrate          = 9600;
   uint8_t                 sampleSetCounter   = 0;
   taskIndex_t             sampleSetInitiator = INVALID_TASK_INDEX;
   int8_t                  _resetPin          = -1;

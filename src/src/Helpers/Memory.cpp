@@ -31,17 +31,15 @@ extern "C" {
 
 // FIXME TD-er: For ESP32 you need to provide the task number, or nullptr to get from the calling task.
 uint32_t getCurrentFreeStack() {
-  return ((uint8_t *)esp_cpu_get_sp()) - 
-  #if ESP_IDF_VERSION_MAJOR <= 5
-  pxTaskGetStackStart(nullptr);
-  #else
-  xTaskGetStackStart(nullptr);
-  #endif
+  return ((uint8_t *)esp_cpu_get_sp()) -
+  # if ESP_IDF_VERSION_MAJOR <= 5
+         pxTaskGetStackStart(nullptr);
+  # else
+         xTaskGetStackStart(nullptr);
+  # endif // if ESP_IDF_VERSION_MAJOR <= 5
 }
 
-uint32_t getFreeStackWatermark() {
-  return uxTaskGetStackHighWaterMark(nullptr);
-}
+uint32_t getFreeStackWatermark() { return uxTaskGetStackHighWaterMark(nullptr); }
 
 #else // ifdef ESP32
 
@@ -52,11 +50,9 @@ uint32_t getCurrentFreeStack() {
   return 4 * (sp - g_pcont->stack);
 }
 
-uint32_t getFreeStackWatermark() {
-  return cont_get_free_stack(g_pcont);
-}
+uint32_t getFreeStackWatermark() { return cont_get_free_stack(g_pcont); }
 
-bool allocatedOnStack(const void *address) {
+bool     allocatedOnStack(const void *address) {
   register uint32_t *sp asm ("a1");
 
   if (sp < address) { return false; }
@@ -64,7 +60,6 @@ bool allocatedOnStack(const void *address) {
 }
 
 #endif // ESP32
-
 
 /********************************************************************************************\
    Get free system mem
@@ -80,6 +75,7 @@ uint32_t FreeMem()
 }
 
 #ifdef USE_SECOND_HEAP
+
 uint32_t FreeMem2ndHeap()
 {
   HeapSelectIram ephemeral;
@@ -88,7 +84,6 @@ uint32_t FreeMem2ndHeap()
 }
 
 #endif // ifdef USE_SECOND_HEAP
-
 
 uint32_t getMaxFreeBlock()
 {
@@ -172,7 +167,9 @@ void* special_realloc(void *ptr, size_t size) {
   return res;
 }
 
-void* special_calloc(size_t num, size_t size) {
+void* special_calloc(size_t num, size_t size) { return special_calloc(num, size, true); }
+
+void* special_calloc(size_t num, size_t size, bool preferHeap) {
   void *res = nullptr;
 
 #ifdef ESP32
@@ -182,7 +179,8 @@ void* special_calloc(size_t num, size_t size) {
   }
 #else // ifdef ESP32
 # ifdef USE_SECOND_HEAP
-  if (size > 64 || FreeMem() < 5000) {
+
+  if (!preferHeap || (size > 64) || (FreeMem() < 5000)) {
 
     // Try allocating on ESP8266 2nd heap, only when sufficiently large data is needed
     HeapSelectIram ephemeral;
@@ -200,52 +198,62 @@ void* special_calloc(size_t num, size_t size) {
     res = calloc(num, size);
   }
 #if defined(ESP8266) && defined(USE_SECOND_HEAP)
+
   if (res == nullptr) {
     // Not successful, try allocating on (ESP8266) 2nd heap
     HeapSelectIram ephemeral;
     res = calloc(num, size);
   }
-#endif  
+#endif // if defined(ESP8266) && defined(USE_SECOND_HEAP)
   return res;
 }
 
-
 #ifdef ESP8266
-bool String_reserve_special(String& str, size_t size) {
+
+bool String_reserve_special(String& str, size_t size) { return String_reserve_special(str, size, 48); }
+
+bool String_reserve_special(String& str, size_t size, size_t strLengthThreshold) {
+
   if (str.length() >= size) {
     // Nothing needs to be done
     return true;
   }
-  #ifdef USE_SECOND_HEAP
-  if (size >= 48 || FreeMem() < 5000) {
+  # ifdef USE_SECOND_HEAP
+
+  if ((size >= strLengthThreshold) || (FreeMem() < 5000)) {
     // Only try to store larger strings here as those tend to be kept for a longer period.
     HeapSelectIram ephemeral;
+
     // String does round up to nearest multiple of 16 bytes, so no need to round up to multiples of 32 bit here
     if (str.reserve(size)) {
       return true;
     }
   }
-  #endif
+  # endif // ifdef USE_SECOND_HEAP
   return str.reserve(size);
 }
-#endif
+
+#endif // ifdef ESP8266
 
 #ifdef ESP32
 
 // Special class to get access to the protected String functions
-// This class only has a constructor which will perform 
+// This class only has a constructor which will perform
 // the requested allocation in PSRAM when possible
-class PSRAM_String : public String {
-  public:
-  PSRAM_String(size_t size) : String() {
-    sso.isSSO = 0;      // setSSO(false);
-    ptr.buff = nullptr; // setBuffer(nullptr);
-    ptr.cap = 0;        // setCapacity(0);
-    ptr.len = 0;        // setLen(0);
+class PSRAM_String : public String
+{
+public:
 
-    if (size != 0 && size > capacity() && UsePSRAM()) {
+  PSRAM_String(size_t size) : String() {
+    sso.isSSO = 0;       // setSSO(false);
+    ptr.buff  = nullptr; // setBuffer(nullptr);
+    ptr.cap   = 0;       // setCapacity(0);
+    ptr.len   = 0;       // setLen(0);
+
+    if ((size != 0) && (size > capacity()) && UsePSRAM()) {
       size_t newSize = (size + 16) & (~0xf);
-      void *ptr = special_calloc(1, newSize);
+      void  *ptr     = special_calloc(1, newSize);
+
       if (ptr != nullptr) {
         setSSO(false);
         setBuffer((char *)ptr);
@@ -254,18 +262,22 @@ class PSRAM_String : public String {
       }
     }
   }
-};
 
+}; // class PSRAM_String
 
-bool String_reserve_special(String& str, size_t size) {
+bool String_reserve_special(String& str, size_t size) { return String_reserve_special(str, size, 48); }
+
+bool String_reserve_special(String& str, size_t size, size_t strLengthThreshold) {
   if (size == 0) {
     return true;
   }
+
   if (!UsePSRAM()) {
     return str.reserve(size);
   }
+
   if (str.length() <= size) {
-    // As we like to move this to PSRAM, it also makes sense 
+    // As we like to move this to PSRAM, it also makes sense
     // to do this when the length equals size
     PSRAM_String psram_str(size);
 
@@ -280,7 +292,7 @@ bool String_reserve_special(String& str, size_t size) {
     // Needs to be empty, so the buffer is moved.
     // N.B. String::clear() = String::setlen(0))
     str = std::move(psram_str);
-    str.clear();  
+    str.clear();
 
     if (tmp.length()) {
       str = tmp;
@@ -288,4 +300,5 @@ bool String_reserve_special(String& str, size_t size) {
   }
   return true;
 }
-#endif
+
+#endif // ifdef ESP32

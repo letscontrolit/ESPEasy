@@ -29,6 +29,7 @@ boolean Plugin_031(uint8_t function, struct EventStruct *event, String& string)
       dev.PullUpOption  = true;
       dev.FormulaOption = true;
       dev.ValueCount    = 2;
+      dev.SendDataOption= true;
       dev.TimerOption   = true;
       dev.PluginStats   = true;
       dev.setPin2Direction(gpio_direction::gpio_output);

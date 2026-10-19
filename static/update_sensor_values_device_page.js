@@ -49,7 +49,7 @@ function loopDeLoop(timeForNext = 1000) {
 
                         const nameEl = elId('valuename_' + baseId);
                         if (nameEl) {
-                            nameEl.innerHTML = taskValue.Name + ':';
+                            nameEl.innerHTML = taskValue.Name;
                         }
                     }
                 }

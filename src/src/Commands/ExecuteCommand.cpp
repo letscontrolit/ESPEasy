@@ -206,19 +206,6 @@ bool ExecuteCommand(ExecuteCommandArgs&& args, bool addToQueue)
   // Maybe ExecuteCommand can be scheduled?
   delay(0);
 
-#ifndef BUILD_NO_DEBUG
-
-  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    addLogMove(LOG_LEVEL_DEBUG, strformat(
-                 F("Par1: %d Par2: %d Par3: %d Par4: %d Par5: %d"),
-                 TempEvent.Par1,
-                 TempEvent.Par2,
-                 TempEvent.Par3,
-                 TempEvent.Par4,
-                 TempEvent.Par5));
-  }
-#endif // ifndef BUILD_NO_DEBUG
-
 
   if (args._tryInternal) {
     InternalCommands internalCommands(cmd.c_str(), &TempEvent, args._Line.c_str());

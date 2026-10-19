@@ -43,18 +43,18 @@ void TaskValues_Data_t::copyValue(const TaskValues_Data_t& other, uint8_t varNr,
   }
 }
 
-unsigned long TaskValues_Data_t::getSensorTypeLong() const
+uint32_t TaskValues_Data_t::getSensorTypeLong() const
 {
   const uint16_t low   = getFloat(0);
   const uint16_t high  = getFloat(1);
-  unsigned long  value = high;
+  uint32_t  value = high;
 
   value <<= 16;
   value  |= low;
   return value;
 }
 
-void TaskValues_Data_t::setSensorTypeLong(unsigned long value)
+void TaskValues_Data_t::setSensorTypeLong(uint32_t value)
 {
   setFloat(0, value & 0xFFFF);
   setFloat(1, (value >> 16) & 0xFFFF);

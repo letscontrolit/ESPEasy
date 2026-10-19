@@ -405,7 +405,7 @@ bool do_process_c018_delay_queue(cpluginID_t cpluginID, const Queue_element_base
 
     if (success) {
       if (airtime_ms > 0.0f) {
-        ADD_TIMER_STAT(C018_AIR_TIME, static_cast<unsigned long>(airtime_ms * 1000));
+        ADD_TIMER_STAT(C018_AIR_TIME, static_cast<uint32_t>(airtime_ms * 1000));
 
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           String log = F("LoRaWAN : Payload Length: ");

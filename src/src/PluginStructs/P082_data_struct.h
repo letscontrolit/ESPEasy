@@ -243,7 +243,7 @@ public:
   ESPEASY_RULES_FLOAT_TYPE _distance{};
 
 
-  unsigned long _last_measurement = 0;
+  uint32_t _last_measurement = 0;
   uint32_t      _last_time        = 0;
   uint32_t      _last_date        = 0;
 
@@ -265,7 +265,7 @@ public:
   // So we keep only track of the micros() % 1000000 so we have some offset from the system micros counter.
   // This will also be used to keep track of when the first sentence is received as the GPS will send those out in a burst at the start of a
   // new second.
-  ESPEASY_VOLATILE(int64_t) _pps_time_micros = -1;
+  ESPEASY_VOLATILE(uint64_t) _pps_time_micros = 0;
 
   int8_t _ppsPin = -1;
 };

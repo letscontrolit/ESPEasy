@@ -45,7 +45,7 @@ void WebFormItemParams::checkRanges()
 }
 
 bool showWebformItem(const ESPEasy_key_value_store& store,
-                     WebFormItemParams              params)
+                     WebFormItemParams&&              params)
 {
   params.checkRanges();
   String id = params._id.isEmpty() ? concat(F("KVS_ID_"), params._key) : params._id;
@@ -56,9 +56,9 @@ bool showWebformItem(const ESPEasy_key_value_store& store,
     {
       IPAddress value;
 
-      if (!store.getValue(params._key, value) && !params._defaultStringValue.isEmpty())
+      if (!store.getValue(params._key, value) && !params._defaultValue.isEmpty())
       {
-        value.fromString(params._defaultStringValue);
+        params._defaultValue.toIPAddress(value);
       }
       addFormIPBox(
         params._label,
@@ -73,7 +73,7 @@ bool showWebformItem(const ESPEasy_key_value_store& store,
 
       if (!store.getValueAsString(params._key, value))
       {
-        value = params._defaultStringValue;
+        value = params._defaultValue.toString();
       }
 
       if (params._password) {
@@ -111,7 +111,7 @@ bool showWebformItem(const ESPEasy_key_value_store& store,
     {
       int64_t value;
 
-      if (!store.getValueAsInt(params._key, value)) { value = params._defaultIntValue; }
+      if (!store.getValueAsInt(params._key, value)) { value = params._defaultValue.toInt(); }
       addFormNumericBox(
         params._label,
         id,
@@ -142,7 +142,7 @@ bool showWebformItem(const ESPEasy_key_value_store& store,
     {
       float value{};
 
-      if (!store.getValue(params._key, value)) { value = params._defaultFloatValue; }
+      if (!store.getValue(params._key, value)) { value = params._defaultValue.toFloat(); }
       addFormFloatNumberBox(
         params._label,
         id,
@@ -165,7 +165,7 @@ bool showWebformItem(const ESPEasy_key_value_store& store,
     {
       bool value{};
 
-      if (!store.getValue(params._key, value)) { value = params._defaultIntValue != 0; }
+      if (!store.getValue(params._key, value)) { value = params._defaultValue.toInt() != 0; }
       addFormCheckBox(
         params._label,
         id,
@@ -185,7 +185,7 @@ void showFormSelector(const ESPEasy_key_value_store& store,
 {
   int64_t value{};
 
-  if (!store.getValueAsInt(params._key, value)) { value = params._defaultIntValue; }
+  if (!store.getValueAsInt(params._key, value)) { value = params._defaultValue.toInt(); }
 
   selector.addFormSelector(params._label, params._id, value);
 }

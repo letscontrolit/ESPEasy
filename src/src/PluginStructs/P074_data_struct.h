@@ -26,8 +26,8 @@ struct P074_data_struct : public PluginTaskData_base {
   bool getFullLuminosity(uint32_t& value);
 
   Adafruit_TSL2591 tsl;
-  unsigned long    integrationStart       = 0;
-  unsigned long    duration               = 0;
+  uint32_t    integrationStart       = 0;
+  uint32_t    duration               = 0;
   bool             integrationActive      = false;
   bool             newValuePresent        = false;
   bool             startIntegrationNeeded = false;

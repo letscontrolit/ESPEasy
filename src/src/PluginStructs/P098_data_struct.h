@@ -45,7 +45,7 @@ struct P098_config_struct {
   P098_GPIO_config limitA;
   P098_GPIO_config limitB;
   P098_GPIO_config encoder;
-  unsigned long    pwm_freq = 1000;
+  uint32_t    pwm_freq = 1000;
 
   int gpio_analogIn = -1;
 

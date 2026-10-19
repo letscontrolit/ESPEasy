@@ -96,7 +96,7 @@ private:
   P042_ColorType Candle_color  = P042_ColorType::ColorDefault;
 
   // global variables
-  unsigned long Candle_Update  = 0;
+  uint32_t Candle_Update  = 0;
   word          Candle_Temp[3] = { 0 }; // Temp variables
   bool          GPIO_Set       = false;
 

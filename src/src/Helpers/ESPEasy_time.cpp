@@ -30,6 +30,7 @@
 
 
 #include "../Helpers/Convert.h"
+#include "../Helpers/ESPEasyRTC.h"
 #include "../Helpers/Hardware.h"
 #include "../Helpers/Hardware_I2C.h"
 #include "../Helpers/Misc.h"
@@ -45,6 +46,14 @@
 # include <RTClib.h>
 #endif // if FEATURE_EXT_RTC
 
+#ifndef BUILD_NO_DEBUG
+#define ESPEASY_NTP_DEBUG  1
+#else 
+#define ESPEASY_NTP_DEBUG  0
+#endif
+
+
+#define ESPEASY_NTP_TIMEOUT   1000
 
 ESPEasy_time::ESPEasy_time() {
   memset(&local_tm, 0, sizeof(tm));
@@ -55,7 +64,7 @@ ESPEasy_time::ESPEasy_time() {
 }
 
 struct tm ESPEasy_time::addSeconds(const struct tm& ts, int seconds, bool toLocalTime, bool fromLocalTime) const {
-  unsigned long time = makeTime(ts);
+  uint32_t time = makeTime(ts);
 
   if (fromLocalTime) {
     time = time_zone.fromLocal(time);
@@ -227,17 +236,17 @@ void ESPEasy_time::initTime()
   now_();
 }
 
-unsigned long ESPEasy_time::getLocalUnixTime() const
+uint32_t ESPEasy_time::getLocalUnixTime() const
 {
   return time_zone.toLocal(getUnixTime());
 }
 
-unsigned long ESPEasy_time::getLocalUnixTime(uint32_t& unix_time_frac) const
+uint32_t ESPEasy_time::getLocalUnixTime(uint32_t& unix_time_frac) const
 {
   return time_zone.toLocal(getUnixTime(unix_time_frac));
 }
 
-unsigned long ESPEasy_time::now_() {
+uint32_t ESPEasy_time::now_() {
   bool timeSynced = false;
 
   if (nextSyncTime <= getUptime_in_sec()) {
@@ -258,6 +267,7 @@ unsigned long ESPEasy_time::now_() {
       _timeSource  = extTimeSource;
     } else {
       if (!isExternalTimeSource(_timeSource)
+          || lastSyncTime_ms == 0 
           || (timePassedSince(lastSyncTime_ms) > static_cast<long>(1000 * syncInterval)))
       {
         externalUnixTime_offset_usec = 0;
@@ -378,7 +388,7 @@ unsigned long ESPEasy_time::now_() {
       ExtRTC_set(static_cast<uint32_t>(unixTime_d + 0.5));
       #endif // if FEATURE_EXT_RTC
       {
-        const unsigned long abs_time_offset_ms = std::abs(externalUnixTime_offset_usec) / 1000ll;
+        const uint32_t abs_time_offset_ms = std::abs(externalUnixTime_offset_usec) / 1000ll;
 
         if (_timeSource == timeSource_t::NTP_time_source) {
           // May need to lessen the load on the NTP servers, randomize the sync interval
@@ -439,6 +449,7 @@ unsigned long ESPEasy_time::now_() {
   }
   RTC.lastSysTime = getUnixTime();
   uint32_t localSystime = time_zone.toLocal(RTC.lastSysTime);
+  saveToRTC();
   breakTime(localSystime, local_tm);
 
   calcSunRiseAndSet(timeSynced);
@@ -466,7 +477,7 @@ unsigned long ESPEasy_time::now_() {
     }
     statusNTPInitialized = true; // @giig1967g: setting system variable %isntp%
   }
-  return (unsigned long)localSystime;
+  return (uint32_t)localSystime;
 }
 
 bool ESPEasy_time::reportNewMinute()
@@ -509,7 +520,7 @@ bool ESPEasy_time::systemTimePresent() const {
 
 bool ESPEasy_time::getNtpTime(double& unixTime_d)
 {
-  if (!Settings.UseNTP() || !ESPEasy::net::NetworkConnected(true)) {
+  if (!Settings.UseNTP() || !ESPEasy::net::NetworkConnected()) {
     return false;
   }
 
@@ -549,7 +560,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
 
   if (!hostReachable(timeServerIP)) {
     log += F(" unreachable");
-    addLogMove(LOG_LEVEL_INFO, log);
+    addLogMove(LOG_LEVEL_ERROR, log);
     STOP_TIMER(NTP_FAIL);
     return false;
   }
@@ -557,6 +568,10 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
   WiFiUDP udp;
 
   if (!beginWiFiUDP_randomPort(udp)) {
+#if ESPEASY_NTP_DEBUG
+    log += F(" failed beginWiFiUDP_randomPort");
+    addLogMove(LOG_LEVEL_ERROR, log);
+#endif
     return false;
   }
 
@@ -567,8 +582,8 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
   addLog(LOG_LEVEL_DEBUG_MORE, log);
 #endif // ifndef BUILD_NO_DEBUG
 
-  while (udp.parsePacket() > 0) { // discard any previously received packets
-  }
+//  while (udp.parsePacket() > 0) { // discard any previously received packets
+//  }
 
   FeedSW_watchdog();
 
@@ -576,6 +591,10 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
     FeedSW_watchdog();
     udp.stop();
     STOP_TIMER(NTP_FAIL);
+#if ESPEASY_NTP_DEBUG
+    log += F(" failed beginPacket");
+    addLogMove(LOG_LEVEL_ERROR, log);
+#endif
     return false;
   }
   constexpr int  NTP_packet_size = sizeof(NTP_packet);
@@ -590,7 +609,7 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
   addLog(LOG_LEVEL_DEBUG, concat(F("NTP  : before\n"), ntp_packet.toDebugString()));
 #endif // ifndef BUILD_NO_DEBUG
 
-  while (!timeOutReached(beginWait + 1000)) {
+  while (!timeOutReached(beginWait + ESPEASY_NTP_TIMEOUT)) {
     const int size       = udp.parsePacket();
     const int remotePort = udp.remotePort();
 
@@ -601,6 +620,10 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
 #endif // ifndef BUILD_NO_DEBUG
         udp.stop();
         STOP_TIMER(NTP_FAIL);
+#if ESPEASY_NTP_DEBUG
+        log += concat(F(" Reply from wrong port: "), remotePort);
+        addLogMove(LOG_LEVEL_ERROR, log);
+#endif
         return false;
       }
       udp.read(ntp_packet.data, NTP_packet_size); // read packet into the buffer
@@ -626,6 +649,10 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
           nextSyncTime = getUptime_in_sec() + 120;
         }
         STOP_TIMER(NTP_FAIL);
+#if ESPEASY_NTP_DEBUG
+        log += F(" isUnsynchronized");
+        addLogMove(LOG_LEVEL_ERROR, log);
+#endif
         return false;
       }
 
@@ -664,6 +691,10 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
         // or no valid timestamps from the NTP server.
         nextSyncTime = getUptime_in_sec() + 60;
         STOP_TIMER(NTP_FAIL);
+#if ESPEASY_NTP_DEBUG
+        log += F(" failed compute_usec");
+        addLogMove(LOG_LEVEL_ERROR, log);
+#endif
         return false;
       }
 
@@ -707,10 +738,15 @@ bool ESPEasy_time::getNtpTime(double& unixTime_d)
   // Timeout.
   if (!useNTPpool) {
     // Retry again in a minute.
-    nextSyncTime = getUptime_in_sec() + 60;
+    nextSyncTime = getUptime_in_sec() + 10;
   }
 
 #ifndef BUILD_NO_DEBUG
+#if ESPEASY_NTP_DEBUG
+  log += strformat(F(" No reply, duration: %d ms"), timePassedSince(beginWait));
+  addLogMove(LOG_LEVEL_ERROR, log);
+#endif
+
   addLog(LOG_LEVEL_DEBUG_MORE, F("NTP  : No reply"));
 #endif // ifndef BUILD_NO_DEBUG
   udp.stop();
@@ -773,7 +809,7 @@ String ESPEasy_time::getDateTimeString_ampm(char dateDelimiter, char timeDelimit
 /********************************************************************************************\
    Get current time/date
  \*********************************************************************************************/
-int ESPEasy_time::year(unsigned long t)
+int ESPEasy_time::year(uint32_t t)
 {
   struct tm tmp;
 
@@ -781,7 +817,7 @@ int ESPEasy_time::year(unsigned long t)
   return 1900 + tmp.tm_year;
 }
 
-int ESPEasy_time::weekday(unsigned long t)
+int ESPEasy_time::weekday(uint32_t t)
 {
   struct tm tmp;
 

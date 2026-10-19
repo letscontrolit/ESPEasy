@@ -163,10 +163,10 @@ boolean Plugin_040(uint8_t function, struct EventStruct *event, String& string)
 
             // endof workaround
 
-            unsigned long key = 0, old_key = 0;
+            uint32_t key = 0, old_key = 0;
             old_key = UserVar.getSensorTypeLong(event->TaskIndex);
 
-            for (uint8_t i = 1; i < 5; ++i) { key = key | (((unsigned long)code[i] << ((4 - i) * 8))); }
+            for (uint8_t i = 1; i < 5; ++i) { key = key | (((uint32_t)code[i] << ((4 - i) * 8))); }
             bool new_key = false;
 
             if (old_key != key) {

@@ -62,8 +62,8 @@ struct pulseCounterISRdata_t {
 
 // internal variables for PULSE mode, not used by ISR functions
 struct pulseModeData_t {
-  unsigned long pulseLowTime       = 0; // indicates the length of the most recent stable low pulse (in ms)
-  unsigned long pulseHighTime      = 0; // indicates the length of the most recent stable high pulse (in ms)
+  uint32_t pulseLowTime       = 0; // indicates the length of the most recent stable low pulse (in ms)
+  uint32_t pulseHighTime      = 0; // indicates the length of the most recent stable high pulse (in ms)
   int           currentStableState = 0; // stores current stable pin state. Set in Step 3 when new stable pulse started
   int           lastCheckState     = 0; // most recent pin state, that was read. Set in Step1,2,3
 
@@ -135,13 +135,13 @@ struct Internal_GPIO_pulseHelper {
 
   bool                              init();
 
-  void                              getPulseCounters(unsigned long& pulseCounter,
-                                                     unsigned long& pulseTotalCounter,
+  void                              getPulseCounters(uint32_t& pulseCounter,
+                                                     uint32_t& pulseTotalCounter,
                                                      float        & pulseTime_msec);
 
-  void setPulseCountTotal(unsigned long pulseTotalCounter);
+  void setPulseCountTotal(uint32_t pulseTotalCounter);
 
-  void setPulseCounter(unsigned long pulseCounter,
+  void setPulseCounter(uint32_t pulseCounter,
                        float         pulseTime_msec = 0.0f);
 
   void resetPulseCounter();

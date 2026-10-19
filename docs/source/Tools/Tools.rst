@@ -755,7 +755,7 @@ Given enough time, their count value will be high, or even overflow since they a
 When this happens, the values for calls/sec or avg will be no longer useful.
 
 A really busy node (CPU load > 75%) may drop a few scheduled calls in order to keep up.
-This will be noticable in low values for calls/sec of the most frequently called functions like ``FIFTY_PER_SECOND`` or ``TEN_PER_SECOND``.
+This will be noticeable in low values for calls/sec of the most frequently called functions like ``FIFTY_PER_SECOND`` or ``TEN_PER_SECOND``.
 
 
 Tweaking Timeout using Timing Stats

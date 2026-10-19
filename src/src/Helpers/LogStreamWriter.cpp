@@ -24,7 +24,8 @@ bool LogStreamWriter::process() { return false; }
 
 bool LogStreamWriter::hasMessages() const
 {
-  return Logging.hasMessages(_log_destination);
+  // _timestamp != 0 means there is still a logentry not finished.
+  return Logging.hasMessages(_log_destination) || _timestamp != 0;
 }
 
 size_t LogStreamWriter::write(Print& stream, size_t nrBytesToWrite)
@@ -117,7 +118,8 @@ size_t LogStreamWriter::write_part(String& str, Print& stream, size_t  nrBytesTo
 
   if (_readpos < str.length()) {
     const size_t bytesLeft = str.length() - _readpos;
-    bytesWritten = stream.write(&str[_readpos], bytesLeft);
+
+    bytesWritten = stream.write(&str[_readpos], std::min(bytesLeft, nrBytesToWrite));
     _readpos    += bytesWritten;
   }
 

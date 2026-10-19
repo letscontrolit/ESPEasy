@@ -343,6 +343,7 @@ float P039_data_struct::readMax6675(struct EventStruct *event)
   transfer_n_ByteSPI(CS_pin_no, 2, &messageBuffer[0]);
 
   // merge 16Bit return value from messageBuffer
+  // TODO TD-er: Use getUint16FromBigEndianByteStream
   rawvalue = ((messageBuffer[0] << 8) | messageBuffer[1]);
 
   # ifndef BUILD_NO_DEBUG
@@ -390,6 +391,7 @@ float P039_data_struct::readMax31855(struct EventStruct *event)
   transfer_n_ByteSPI(CS_pin_no, 4, &messageBuffer[0]);
 
   // merge rawvalue from 4 bytes of messageBuffer
+  // TODO TD-er: Use getUlFromBigEndianByteStream
   uint32_t rawvalue =
     ((static_cast<uint32_t>(messageBuffer[0]) <<
       24) |
@@ -1137,9 +1139,11 @@ uint16_t P039_data_struct::readLM7xRegisters(int8_t l_CS_pin_no, uint8_t l_LM7xs
     transfer_n_ByteSPI(l_CS_pin_no, 8, &messageBuffer[4]);
 
     // read temperature value (16 Bit)
+    // TODO TD-er: Use getUint16FromBigEndianByteStream
     l_returnValue = ((messageBuffer[4] << 8) | messageBuffer[5]);
 
     // read Manufatures/Device ID (16 Bit)
+    // TODO TD-er: Use getUint16FromBigEndianByteStream
     *(l_device_id) = ((messageBuffer[8] << 8) | messageBuffer[9]);
   }
   else
@@ -1150,9 +1154,11 @@ uint16_t P039_data_struct::readLM7xRegisters(int8_t l_CS_pin_no, uint8_t l_LM7xs
     transfer_n_ByteSPI(l_CS_pin_no, 8, &messageBuffer[0]);
 
     // read temperature value (16 Bit)
+    // TODO TD-er: Use getUint16FromBigEndianByteStream
     l_returnValue = ((messageBuffer[0] << 8) | messageBuffer[1]);
 
     // read Manufatures/Device ID (16 Bit)
+    // TODO TD-er: Use getUint16FromBigEndianByteStream
     *(l_device_id) = ((messageBuffer[4] << 8) | messageBuffer[5]);
   }
 
@@ -1358,6 +1364,7 @@ uint16_t P039_data_struct::read16BitRegister(int8_t l_CS_pin_no, uint8_t l_addre
   uint16_t l_returnValue;
 
   transfer_n_ByteSPI(l_CS_pin_no, 3, l_messageBuffer);
+  // TODO TD-er: Use getUint16FromBigEndianByteStream
   l_returnValue = ((l_messageBuffer[1] << 8) | l_messageBuffer[2]);
 
   # ifndef BUILD_NO_DEBUG

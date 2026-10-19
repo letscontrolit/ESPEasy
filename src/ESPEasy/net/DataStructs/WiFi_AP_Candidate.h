@@ -90,7 +90,7 @@ struct WiFi_AP_Candidate {
   #  endif // if ESP_IDF_VERSION_MAJOR >= 5
   # endif // ifdef ESP32
 
-  unsigned long last_seen = 0u;
+  uint32_t last_seen = 0u;
   MAC_address   bssid;
   int8_t        rssi{};
   uint8_t       channel{};

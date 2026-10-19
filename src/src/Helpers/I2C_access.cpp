@@ -28,7 +28,7 @@ enum class I2C_clear_bus_state {
 // Changed into a state machine for use in a non blocking way to be used in ESPEasy.
 I2C_bus_state I2C_check_bus(int8_t scl, int8_t sda) {
   static I2C_clear_bus_state clearing_state = I2C_clear_bus_state::Start;
-  static unsigned long last_state_change    = 0;
+  static uint32_t last_state_change    = 0;
   static int clockCount                     = 20; // > 2x9 clock
 
 

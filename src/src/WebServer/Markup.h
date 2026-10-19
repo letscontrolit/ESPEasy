@@ -101,6 +101,18 @@ void addSelector_Item(const String& option,
                       bool          disabled = false,
                       const String& attr     = EMPTY_STRING);
 
+void addSelector_Item(const String& option,
+                      const String& index,
+                      bool          selected,
+                      bool          disabled = false,
+                      const String& attr     = EMPTY_STRING);
+
+void addSelector_Item_index64(const String& option,
+                      uint64_t              index,
+                      bool                  selected,
+                      bool                  disabled = false,
+                      const String&         attr     = EMPTY_STRING);
+
 void   addSelector_Foot(bool reloadonchange = false);
 
 void addSelector_OptGroup(const String& label);

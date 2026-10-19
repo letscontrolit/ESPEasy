@@ -249,7 +249,7 @@ private:
   P167_model    _model               = P167_model::Vindstyrka; // Selected sensor model
   uint8_t       _i2caddr             = 0;                      // Programmed I2C address
   uint8_t       _monpin              = 0;                      // Pin to monitor I2C SCL to find when VindStyrka finish i2c communication
-  unsigned long _last_action_started = 0;                      // Timestamp for last action that takes processing time
+  uint32_t _last_action_started = 0;                      // Timestamp for last action that takes processing time
   uint16_t      _errCount            = 0;                      // Number of errors since last successful access
   String        _eid_productname;                              // Electronic Device ID - Product Name, read at initialization
   String        _eid_serialnumber;                             // Electronic Device ID - Serial Number, read at initialization
@@ -267,7 +267,7 @@ private:
   bool          startMonitoringFlag                = false; // flag to START/STOP Monitoring algorithm
   bool          statusMonitoring                   = false; // flag for status return from Monitoring algorithm
   bool          _enableLogging                     = false; // flag for enabling some technical logging
-  unsigned long lastSCLLowTransitionMonitoringTime = 0;     // last time when SCL i2c pin rising
+  uint32_t lastSCLLowTransitionMonitoringTime = 0;     // last time when SCL i2c pin rising
 
   volatile uint32_t monpinValue              = 0;
   volatile uint32_t monpinValuelast          = 0;

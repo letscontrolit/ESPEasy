@@ -72,7 +72,7 @@ bool PingClass::ping(IPAddress dest, int16_t count) {
 bool PingClass::ping(const char* host, int16_t count) {
     IPAddress remote_addr;
 
-    if (WiFi.hostByName(host, remote_addr))
+    if (WiFi.hostByName(host, remote_addr) == 1)
         return ping(remote_addr, count);
 
     return false;

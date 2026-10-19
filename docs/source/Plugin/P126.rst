@@ -47,11 +47,13 @@ Configuration
 Sensor
 ^^^^^^
 
-* **GPIO -> Data pin (DS)**: Select the GPIO pin that is connected to the Data in pin ``DS`` of the (first) shift register. Any daisy chained register has its ``DS`` pin connected to the ``Q7'`` pin of the previous shift register.
+* **GPIO -> Data pin (DS)**: (74HC595 pin 14, "SER") Select the GPIO pin that is connected to the Data in pin ``DS`` of the (first) shift register. Any daisy chained register has its ``DS`` pin connected to the ``Q7'`` pin of the previous shift register.
 
-* **GPIO -> Clock pin (SH_CP)**: Select the Clock pin of all shift registers.
+* **GPIO -> Clock pin (SH_CP)**: (74HC595 pin 11, "SRCLK") Select the Clock pin of all shift registers.
 
-* **GPIO -> Latch pin (ST_CP)**: Select the Latch pin of all shift registers.
+* **GPIO -> Latch pin (ST_CP)**: (74HC595 pin 12, "RCLK") Select the Latch pin of all shift registers.
+
+.. note::  The pin names like "DS", "SH_CP" and "ST_CP" are used in this datasheet: https://www.diodes.com/datasheet/download/74HC595.pdf  Other vendors like Ti may use different pin names.
 
 Device configuration
 ^^^^^^^^^^^^^^^^^^^^

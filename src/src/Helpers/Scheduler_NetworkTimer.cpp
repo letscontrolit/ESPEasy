@@ -10,7 +10,7 @@
 * Network Adapter Timer  (NWPLUGIN_TASKTIMER_IN)
 * Can be scheduled per combo networkIndex & Par1 (20 least significant bits)
 \*********************************************************************************************/
-void ESPEasy_Scheduler::setNetworkInitTimer(unsigned long                msecFromNow,
+void ESPEasy_Scheduler::setNetworkInitTimer(uint32_t                msecFromNow,
                                             ESPEasy::net::networkIndex_t networkIndex)
 {
   if (ESPEasy::net::getNWPluginData(networkIndex) == nullptr) {
@@ -19,7 +19,7 @@ void ESPEasy_Scheduler::setNetworkInitTimer(unsigned long                msecFro
   }
 }
 
-void ESPEasy_Scheduler::setNetworkExitTimer(unsigned long                msecFromNow,
+void ESPEasy_Scheduler::setNetworkExitTimer(uint32_t                msecFromNow,
                                             ESPEasy::net::networkIndex_t networkIndex)
 {
   // First check if there are any pending INIT timers
@@ -32,7 +32,7 @@ void ESPEasy_Scheduler::setNetworkExitTimer(unsigned long                msecFro
   setNetworkTimer(msecFromNow, networkIndex, NWPlugin::Function::NWPLUGIN_EXIT);
 }
 
-void ESPEasy_Scheduler::setNetworkTimer(unsigned long                msecFromNow,
+void ESPEasy_Scheduler::setNetworkTimer(uint32_t                msecFromNow,
                                         ESPEasy::net::networkIndex_t networkIndex,
                                         NWPlugin::Function           function,
                                         int                          Par1,

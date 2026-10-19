@@ -43,6 +43,7 @@ enum class P077_query : uint8_t {
 
 
   P077_QUERY_NR_OUTPUT_OPTIONS
+
 };
 
 const __FlashStringHelper* Plugin_077_valuename(P077_query value_nr,
@@ -70,7 +71,7 @@ public:
   bool     init(ESPEasySerialPort port,
                 const int16_t     serial_rx,
                 const int16_t     serial_tx,
-                unsigned long     baudrate,
+                uint32_t          baudrate,
                 uint8_t           config);
 
   bool plugin_read(struct EventStruct *event);
@@ -94,7 +95,7 @@ public:
 
 
   uint8_t  serial_in_buffer[24] = { 0 };
-  long     power_cycle_first    = 0;
+  int32_t  power_cycle_first    = 0;
   uint32_t last_cf_pulses       = 0;
   uint32_t cf_pulses            = 0;
   float    cf_frequency         = (1e9f / 5364000);
@@ -107,10 +108,10 @@ private:
 public:
 
   // stats
-  long     t_max       = 0;
-  long     t_all       = 0;
-  long     t_pkt       = 0;
-  long     t_pkt_tmp   = 0;
+  int32_t  t_max       = 0;
+  int32_t  t_all       = 0;
+  int32_t  t_pkt       = 0;
+  uint32_t t_pkt_tmp   = 0;
   uint16_t count_bytes = 0;
   uint16_t count_max   = 0;
   uint16_t count_pkt   = 0;
@@ -121,6 +122,7 @@ public:
 private:
 
   ESPeasySerial *easySerial = nullptr;
+
 };
 
 #endif // ifdef USES_P077

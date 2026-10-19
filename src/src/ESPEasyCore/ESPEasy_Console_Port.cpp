@@ -255,8 +255,8 @@ bool EspEasy_Console_Port::process_serialWriteBuffer()
     }
 
     const size_t chunkSize = availableForWrite > CONSOLE_MAX_WRITE_CHUNKSIZE
-? CONSOLE_MAX_WRITE_CHUNKSIZE
-: availableForWrite;
+      ? CONSOLE_MAX_WRITE_CHUNKSIZE
+      : availableForWrite;
 
     availableForWrite -= chunkSize;
 
