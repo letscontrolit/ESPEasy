@@ -44,6 +44,7 @@ public:
   volatile uint8_t ISR_DLB_Pin = 0xFF;
   volatile boolean ISR_Receiving = false; // receiving flag
   volatile boolean ISR_AllBitsReceived = false;
+  volatile boolean ISR_NoSyncPause = false; // device sends its frames back-to-back (e.g. UVR61-3 up to v8.2): don't wait for the sync pause
   ESPEASY_VOLATILE(uint16_t) ISR_PulseCount = 0;   // number of received pulses
   volatile uint16_t ISR_PulseNumber = 0;  // max naumber of the received pulses
   volatile uint16_t ISR_MinPulseWidth = 0;
@@ -59,8 +60,10 @@ public:
   boolean IsISRset = false;           // ISR set flag, used for setting the ISR after network connected
   uint8_t LogLevelInfo   = 0xff;
   uint8_t LogLevelError  = 0xFF;
+  uint16_t RequiredBits  = 0;         // bits of a complete data frame after the SYNC
   void    attachDLBusInterrupt(void);
   void    StartReceiving(void);
+  boolean ReceivingTimedOut(void);
   boolean CheckTimings(void);
   boolean Processing(void);
   boolean CheckCRC(uint8_t IdxCRC);
@@ -68,6 +71,7 @@ public:
 private:
 
   volatile uint32_t ISR_TimeLastBitChange = 0;      // remember time of last transition
+  uint32_t ReceivingStart = 0;                      // time of StartReceiving()
   uint8_t DLbus_ChangeBitStream[DLbus_MaxDataBits] = { 0 }; // received bit change stream (each bit change is extended to uint8_t, containing the
                                                     // timing flags)
   uint16_t BitNumber = 0;                           // bit number of the received DLbus_ChangeBitStream
@@ -100,7 +104,9 @@ private:
 # define P092_pulse_width_50         10000 // µs
 
 // % tolerance for variances at the pulse width
-# define P092_percentage_variance    10
+// 40% (was 10%): a 12V bus read through a series resistor gives asymmetric pulses (high ~100us longer, low ~100us shorter)
+// and a delayed interrupt makes one pulse longer and the next one shorter, both were rejected as wrong timings
+# define P092_percentage_variance    40
 
 // 1001 or 0110 are two sequential pulses without transition
 # define P092_double_pulse_width_488 (P092_pulse_width_488 * 2)
@@ -127,6 +133,11 @@ public:
   virtual ~P092_data_struct();
 
   bool init(int8_t pin1, int P092DeviceIndex, eP092pinmode P092pinmode);
+
+  // The receiver (DLbus_Data) is created by init()
+  bool isInitialized() const {
+    return nullptr != DLbus_Data;
+  }
 
   typedef struct {
     uint8_t Idx = 0u;
@@ -214,6 +225,20 @@ public:
 
   DLBus *DLbus_Data = nullptr;
 };
+
+// Task data of every P092 task. All P092 tasks share one P092_data_struct (P092_data, one DL-Bus receiver):
+// each P092_task_data_struct counts as a user of it, and when the last one is deleted (PLUGIN_EXIT of the
+// last P092 task, e.g. when it is disabled) the shared P092_data_struct is deleted too.
+struct P092_task_data_struct : public PluginTaskData_base {
+public:
+
+  P092_task_data_struct();
+  virtual ~P092_task_data_struct();
+};
+
+// global values needed for all tasks
+extern boolean P092_init;           // P092_data_struct can be initialized only once, even if several tasks running
+extern P092_data_struct *P092_data; // pointer to P092_data_struct, must be the same for all tasks
 
 
 #endif // ifdef USES_P092
