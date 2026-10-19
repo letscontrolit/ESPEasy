@@ -108,7 +108,7 @@ if (!try_connect_host(cpluginID, client, ControllerSettings, F("TELNT: ")))
 // addLog(LOG_LEVEL_ERROR, log);
 client.print(" \n");
 
-unsigned long timer = millis() + 200;
+uint32_t timer = millis() + 200;
 
 while (!client_available(client) && !timeOutReached(timer)) {
   delay(1);

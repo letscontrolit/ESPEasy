@@ -81,7 +81,7 @@ struct P049_data_struct : public PluginTaskData_base {
   uint32_t      checksumFailed     = 0;
   uint32_t      sensorResets       = 0;
   uint32_t      nrUnknownResponses = 0;
-  unsigned long lastInitTimestamp  = 0;
+  uint32_t lastInitTimestamp  = 0;
 
   ESPeasySerial *easySerial = nullptr;
   uint8_t        mhzResp[9] = { 0 }; // 9 uint8_t response buffer

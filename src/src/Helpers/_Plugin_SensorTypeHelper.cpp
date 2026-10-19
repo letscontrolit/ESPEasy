@@ -60,7 +60,7 @@ void sensorTypeHelper_webformLoad_simple(struct EventStruct *event, int pconfigI
   sensorTypeHelper_webformLoad(event, pconfigIndex, optionCount, optionValues);
 }
 
-void sensorTypeHelper_Selector(const String& id, int optionCount, const uint8_t options[], Sensor_VType choice) {
+static void sensorTypeHelper_Selector(const String& id, int optionCount, const uint8_t options[], Sensor_VType choice) {
   addSelector_Head(id);
 
   for (uint8_t x = 0; x < optionCount; x++)
@@ -85,7 +85,7 @@ const char value_type_categories[] PROGMEM =
   "Other|"       // 1031
 ;
 
-String toValueTypeCategory(const uint32_t valueType) {
+static String toValueTypeCategory(const uint32_t valueType) {
   char   tmp[12]{};
   String result;
 

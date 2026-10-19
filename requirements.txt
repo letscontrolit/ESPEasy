@@ -1,4 +1,4 @@
-pioarduino==6.1.19
+pioarduino==6.2.0
 pygit2>=1.10.1
 cryptography==50.0.0
 setuptools>=75.8

@@ -16,8 +16,8 @@ struct alignas(uint32_t) TaskValues_Data_t {
 
   void copyValue(const TaskValues_Data_t& other, uint8_t varNr, Sensor_VType  sensorType);
 
-  unsigned long getSensorTypeLong() const;
-  void          setSensorTypeLong(unsigned long value);
+  uint32_t getSensorTypeLong() const;
+  void          setSensorTypeLong(uint32_t value);
 
 #if FEATURE_EXTENDED_TASK_VALUE_TYPES
   int32_t       getInt32(uint8_t varNr) const;

@@ -12,10 +12,6 @@
 // ********************************************************************************
 void handle_factoryreset();
 
-// ********************************************************************************
-// Create pre-defined config selector
-// ********************************************************************************
-void addPreDefinedConfigSelector();
 
 #ifdef WEBSERVER_NEW_UI
 void handle_factoryreset_json();

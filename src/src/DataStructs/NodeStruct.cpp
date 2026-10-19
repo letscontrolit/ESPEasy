@@ -84,8 +84,8 @@ bool NodeStruct::validate(const IPAddress& remoteIP) {
 }
 
 bool NodeStruct::operator<(const NodeStruct &other) const {
-  const bool thisExpired = isExpired();
-  if (thisExpired != other.isExpired()) {
+  const bool thisExpired = hasExpired();
+  if (thisExpired != other.hasExpired()) {
     return !thisExpired;
   }
 
@@ -106,7 +106,7 @@ bool NodeStruct::operator<(const NodeStruct &other) const {
   int score_other = other.getLoad();
 
   if (distance != other.distance) {
-    if (!isExpired() && !other.isExpired()) {
+    if (!hasExpired() && !other.hasExpired()) {
       // Distance is not the same, so take distance into account.
       return distance < other.distance;
 /*
@@ -207,7 +207,7 @@ uint32_t NodeStruct::getAge() const {
   return timePassedSince(lastUpdated);
 }
 
-bool  NodeStruct::isExpired() const {
+bool  NodeStruct::hasExpired() const {
   return getAge() > NODE_STRUCT_AGE_TIMEOUT;
 }
 

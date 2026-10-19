@@ -73,9 +73,9 @@ void handle_root() {
     return;
   }
 */
-  if (!MAIN_PAGE_SHOW_BASIC_INFO_NOT_LOGGED_IN) {
+  #if !MAIN_PAGE_SHOW_BASIC_INFO_NOT_LOGGED_IN
     if (!isLoggedIn()) { return; }
-  }
+  #endif
 
   const bool loggedIn = isLoggedIn(false);
 
@@ -228,13 +228,13 @@ void handle_root() {
     html_table_header(F("Node List"));
     html_table_header(F("Name"));
 
-    if (MAIN_PAGE_SHOW_NODE_LIST_BUILD) {
+    #if MAIN_PAGE_SHOW_NODE_LIST_BUILD
       html_table_header(getLabel(LabelType::BUILD_DESC));
-    }
+    #endif
 
-    if (MAIN_PAGE_SHOW_NODE_LIST_TYPE) {
+    #if MAIN_PAGE_SHOW_NODE_LIST_TYPE
       html_table_header(F("Type"));
-    }
+    #endif
     html_table_header(F("IP"), 160); // Should fit "255.255.255.255"
     html_table_header(F("Load (%)"));
     html_table_header(F("Age (s)"));
@@ -271,17 +271,17 @@ void handle_root() {
         }
         html_TD();
 
-        if (MAIN_PAGE_SHOW_NODE_LIST_BUILD) {
+        #if MAIN_PAGE_SHOW_NODE_LIST_BUILD
           if (it->second.build) {
             addHtml(formatSystemBuildNr(it->second.build));
           }
           html_TD();
-        }
+        #endif
 
-        if (MAIN_PAGE_SHOW_NODE_LIST_TYPE) {
+        #if MAIN_PAGE_SHOW_NODE_LIST_TYPE
           addHtml(it->second.getNodeTypeDisplayString());
           html_TD();
-        }
+        #endif
 
         if (it->second.ip[0] != 0
 #  if FEATURE_USE_IPV6

@@ -1,10 +1,9 @@
 #include "../DataStructs/KeyValueStruct.h"
 
 #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
-#include "../Helpers/ESPEasy_UnitOfMeasure.h"
+# include "../Helpers/ESPEasy_UnitOfMeasure.h"
 #endif
 #include "../Helpers/StringConverter.h"
-
 
 // ********************************************************************************
 // KeyValueStruct
@@ -14,10 +13,23 @@ KeyValueStruct::KeyValueStruct(const __FlashStringHelper *key, Format format) : 
 
 KeyValueStruct::KeyValueStruct(const String& key, Format format) : _key(key), _format(format) {}
 
+KeyValueStruct::KeyValueStruct(const __FlashStringHelper *key,
+                               const bool               & val,
+                               Format                     format)
+  : _key(key), _format(format) {
+  _values.emplace_back(ValueStruct(val));
+}
 
 KeyValueStruct::KeyValueStruct(const String& key,
                                const bool  & val,
                                Format        format)
+  : _key(key), _format(format) {
+  _values.emplace_back(ValueStruct(val));
+}
+
+KeyValueStruct::KeyValueStruct(const __FlashStringHelper *key,
+                               int                        val,
+                               Format                     format)
   : _key(key), _format(format) {
   _values.emplace_back(ValueStruct(val));
 }
@@ -30,6 +42,13 @@ KeyValueStruct::KeyValueStruct(const String& key,
 }
 
 #if defined(ESP32) && !defined(__riscv)
+KeyValueStruct::KeyValueStruct(const __FlashStringHelper *key,
+                               int32_t                    val,
+                               Format                     format)
+  : _key(key), _format(format) {
+  _values.emplace_back(ValueStruct(val));
+}
+
 KeyValueStruct::KeyValueStruct(const String& key,
                                int32_t       val,
                                Format        format)
@@ -38,6 +57,14 @@ KeyValueStruct::KeyValueStruct(const String& key,
 }
 
 #endif // if defined(ESP32) && !defined(__riscv)
+
+KeyValueStruct::KeyValueStruct(const __FlashStringHelper *key,
+                               uint32_t                   val,
+                               Format                     format)
+  : _key(key), _format(format) {
+  _values.emplace_back(ValueStruct(val));
+}
+
 KeyValueStruct::KeyValueStruct(const String& key,
                                uint32_t      val,
                                Format        format)
@@ -54,9 +81,23 @@ KeyValueStruct::KeyValueStruct(const String& key,
 }
 
 #endif // if defined(ESP32) && !defined(__riscv)
+KeyValueStruct::KeyValueStruct(const __FlashStringHelper *key,
+                               const uint64_t           & val,
+                               Format                     format)
+  : _key(key), _format(format) {
+  _values.emplace_back(ValueStruct(val));
+}
+
 KeyValueStruct::KeyValueStruct(const String  & key,
                                const uint64_t& val,
                                Format          format)
+  : _key(key), _format(format) {
+  _values.emplace_back(ValueStruct(val));
+}
+
+KeyValueStruct::KeyValueStruct(const __FlashStringHelper *key,
+                               const int64_t            & val,
+                               Format                     format)
   : _key(key), _format(format) {
   _values.emplace_back(ValueStruct(val));
 }
@@ -68,10 +109,26 @@ KeyValueStruct::KeyValueStruct(const String & key,
   _values.emplace_back(ValueStruct(val));
 }
 
+KeyValueStruct::KeyValueStruct(const __FlashStringHelper *key,
+                               const float              & val,
+                               uint8_t                    nrDecimals,
+                               Format                     format)
+  : _key(key), _format(format) {
+  _values.emplace_back(ValueStruct(val, nrDecimals));
+}
+
 KeyValueStruct::KeyValueStruct(const String& key,
                                const float & val,
                                uint8_t       nrDecimals,
                                Format        format)
+  : _key(key), _format(format) {
+  _values.emplace_back(ValueStruct(val, nrDecimals));
+}
+
+KeyValueStruct::KeyValueStruct(const __FlashStringHelper *key,
+                               const double             & val,
+                               uint8_t                    nrDecimals,
+                               Format                     format)
   : _key(key), _format(format) {
   _values.emplace_back(ValueStruct(val, nrDecimals));
 }
@@ -133,16 +190,46 @@ KeyValueStruct::KeyValueStruct(const String& key,
   _values.emplace_back(ValueStruct(std::move(val)));
 }
 
+void KeyValueStruct::clear()
+{
+  _key.clear();
+  _values.clear();
+  _format = Format::Default;
 #if FEATURE_TASKVALUE_UNIT_OF_MEASURE
-  String KeyValueStruct::getUnit() const
-  {
-    return toUnitOfMeasureName(_uomIndex);
-  }
+  _uomIndex = 0;
 #endif
+  _isArray = false;
+}
 
-void KeyValueStruct::setID(const String& id)                  { __id = id; }
+KeyValueStruct KeyValueStruct::makeHexFormatted(const __FlashStringHelper *key, uint64_t val, uint8_t minNrDigits)
+{
+  KeyValueStruct kv(
+    key,
+    KeyValueStruct::Format::PreFormatted);
 
-void KeyValueStruct::setID(const __FlashStringHelper *id)     { __id = id; }
+  kv.setValue(ValueStruct::makeHexFormatted(val, minNrDigits));
+  return kv;
+}
+
+#if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+
+String KeyValueStruct::getUnit() const
+{
+  return toUnitOfMeasureName(_uomIndex);
+}
+
+#endif // if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+
+void KeyValueStruct::setID(const String& id)              { __id = id; }
+
+void KeyValueStruct::setID(const __FlashStringHelper *id) { __id = id; }
+
+void KeyValueStruct::setValue(ValueStruct&& value)
+{
+  _values.clear();
+  _isArray = false;
+  _values.emplace_back(std::move(value));
+}
 
 void KeyValueStruct::appendValue(ValueStruct&& value)
 {
@@ -156,7 +243,7 @@ void KeyValueStruct::appendValue(const String& value)
   _isArray = true;
 }
 
-void KeyValueStruct::appendValue(const __FlashStringHelper * value)
+void KeyValueStruct::appendValue(const __FlashStringHelper *value)
 {
   _values.emplace_back(ValueStruct(value));
   _isArray = true;

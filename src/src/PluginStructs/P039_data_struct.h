@@ -243,7 +243,7 @@ private:
 
   uint16_t      conversionResult = 0x0000u;
   uint8_t       deviceFaults     = 0x00u;
-  unsigned long timer            = 0;
+  uint32_t timer            = 0;
   bool          sensorFault      = false;
   bool          convReady        = false;
 

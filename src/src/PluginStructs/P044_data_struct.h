@@ -84,7 +84,7 @@ struct P044_Task : public PluginTaskData_base {
   void        serialBegin(const ESPEasySerialPort port,
                           int16_t                 rxPin,
                           int16_t                 txPin,
-                          unsigned long           baud,
+                          uint32_t           baud,
                           uint8_t                 config);
 
   void serialEnd();
@@ -106,7 +106,7 @@ struct P044_Task : public PluginTaskData_base {
   int            checkI            = 0;
   boolean        CRCcheck          = false;
   ESPeasySerial *P1EasySerial      = nullptr;
-  unsigned long  blinkLEDStartTime = 0;
+  uint32_t  blinkLEDStartTime = 0;
   size_t         maxMessageSize    = P044_DATAGRAM_MAX_SIZE / 4;
 
   int8_t _ledPin      = P044_STATUS_LED; // Former default

@@ -877,7 +877,7 @@ boolean Plugin_016(uint8_t function, struct EventStruct *event, String& string)
 
         # if !P016_SEND_IR_TO_CONTROLLER
         {
-          unsigned long IRcode = results.value;
+          uint32_t IRcode = results.value;
           UserVar.setSensorTypeLong(event->TaskIndex, IRcode);
         }
         # endif // if !P016_SEND_IR_TO_CONTROLLER

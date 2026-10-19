@@ -2668,7 +2668,7 @@ The next script should be placed at the top of ``Rules Set 1`` as they are calle
         // So we have not found the key
         // No need to continue searching
       Else
-        // When refering to an index, make sure to use the [int#<n>] notation, not the floating point version.
+        // When referring to an index, make sure to use the [int#<n>] notation, not the floating point version.
         If %eventvalue1% > [int#%v997%]
           // Check upper half
           if [int#998] < %eventvalue3%

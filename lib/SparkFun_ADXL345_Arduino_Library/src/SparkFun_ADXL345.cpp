@@ -703,7 +703,8 @@ double ADXL345::getRate() {
 
   readFrom(ADXL345_BW_RATE, 1, &_b);
   _b &= 0b00001111;
-  return (pow(2, ((int)_b) - 6)) * 6.25;
+  return (2 << (int)_b) * 0.09765625;
+//  return (pow(2, ((int)_b) - 6)) * 6.25;
 }
 
 void ADXL345::setRate(double rate) {

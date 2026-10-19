@@ -29,7 +29,7 @@ bool   C016_deleteAllCacheBlocks();
 bool   C016_getTaskSample(C016_binary_element& element);
 
 struct EventStruct C016_getTaskSample(
-  unsigned long& timestamp,
+  uint32_t& timestamp,
   uint8_t      & valueCount,
   float        & val1,
   float        & val2,

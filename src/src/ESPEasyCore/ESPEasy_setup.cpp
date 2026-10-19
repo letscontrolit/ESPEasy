@@ -26,6 +26,7 @@
 #include "../Helpers/_Plugin_init.h"
 #include "../Helpers/DeepSleep.h"
 #include "../Helpers/ESPEasyRTC.h"
+#include "../Helpers/ESPEasy_CrashHandler.h"
 #include "../Helpers/ESPEasy_FactoryDefault.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/ESPEasy_checks.h"
@@ -117,11 +118,13 @@ void RTOS_HandleSchedule(void *parameter)
 /*********************************************************************************************\
 * ISR call back function for handling the watchdog.
 \*********************************************************************************************/
-void sw_watchdog_callback(void *arg)
+/*
+static void sw_watchdog_callback(void *arg)
 {
   yield(); // feed the WD
   ++sw_watchdog_callback_count;
 }
+*/
 
 /*********************************************************************************************\
 * SETUP
@@ -304,9 +307,7 @@ void ESPEasy_setup()
     log += getSystemLibraryString();
     log += ')';
     addLogMove(LOG_LEVEL_INFO, log);
-    log  = F("INIT : Free RAM:");
-    log += FreeMem();
-    addLogMove(LOG_LEVEL_INFO, log);
+    addLog(LOG_LEVEL_INFO, concat(F("INIT : Free RAM: "), FreeMem()));
   }
 
   readBootCause();
@@ -319,6 +320,8 @@ void ESPEasy_setup()
       RTC.bootFailedCount++;
       RTC.bootCounter++;
       lastMixedSchedulerId_beforereboot.mixed_id = RTC.lastMixedSchedulerId;
+
+      node_time.restoreFromRTC();
       readUserVarFromRTC();
       log = concat(F("INIT : "), getLastBootCauseString()) + 
             concat(F(" #"), RTC.bootCounter);
@@ -361,6 +364,9 @@ void ESPEasy_setup()
 
   //  progMemMD5check();
   LoadSettings();
+#if FEATURE_EXT_RTC
+  node_time.restoreFromRTC();
+#endif
 #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
   ESPEasy_Console.reInit();
 #endif // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
@@ -400,48 +406,10 @@ void ESPEasy_setup()
   logMemUsageAfter(F("hardwareInit()"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
 
-  node_time.restoreFromRTC();
-
   Settings.UseRTOSMultitasking = false; // For now, disable it, we experience heap corruption.
 
-  if ((RTC.bootFailedCount > 10) && (RTC.bootCounter > 10)) {
-    uint8_t toDisable = RTC.bootFailedCount - 10;
-    toDisable = disablePlugin(toDisable);
+  disableFailingComponent();
 
-    if (toDisable != 0) {
-      toDisable = disableController(toDisable);
-    }
-    #if FEATURE_NOTIFIER
-
-    if (toDisable != 0) {
-      toDisable = disableNotification(toDisable);
-    }
-    #endif // if FEATURE_NOTIFIER
-    if (toDisable != 0) {
-      toDisable = disableNetwork(toDisable);
-    }
-
-    if (toDisable != 0) {
-      toDisable = disableRules(toDisable);
-    }
-
-    if (toDisable != 0) {
-      toDisable = disableAllPlugins(toDisable);
-    }
-
-    if (toDisable != 0) {
-      toDisable = disableAllControllers(toDisable);
-    }
-#if FEATURE_NOTIFIER
-
-    if (toDisable != 0) {
-      toDisable = disableAllNotifications(toDisable);
-    }
-#endif // if FEATURE_NOTIFIER
-    if (toDisable != 0) {
-      toDisable = disableAllNetworkss(toDisable);
-    }
-  }
   #if FEATURE_ETHERNET
 
   // This ensures, that changing WIFI OR ETHERNET MODE happens properly only after reboot. Changing without reboot would not be a good idea.
@@ -489,7 +457,20 @@ void ESPEasy_setup()
   #endif // ifndef BUILD_NO_RAM_TRACKER
 #ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    addLogMove(LOG_LEVEL_INFO, concat(F("INIT : Free RAM:"), FreeMem()));
+    addLog(LOG_LEVEL_INFO, concat(F("INIT : Free RAM: "), FreeMem()));
+
+    #ifndef LIMIT_BUILD_SIZE
+    const uint32_t realSize = getFlashRealSizeInBytes();
+    const uint32_t usedSize = ESP.getFlashChipSize();
+    String log = strformat(F("INIT : Flash size: %uMB, Flash used: %uMB"), realSize >> 20, usedSize >> 20);
+    #ifdef ESP32
+    if ((usedSize < realSize) && (realSize >= (8 << 20))) { // >= 8MB ?
+      log += F(", a MAX build can be installed!");
+    }
+    #endif // ifdef ESP32
+    addLogMove(LOG_LEVEL_INFO, log);
+    #endif // ifndef LIMIT_BUILD_SIZE
+
   }
 #endif
 #ifndef BUILD_NO_DEBUG

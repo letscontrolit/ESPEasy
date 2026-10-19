@@ -80,13 +80,17 @@ String patch_fname(const String& fname) {
    file system error handling
    Look here for error # reference: https://github.com/pellepl/spiffs/blob/master/src/spiffs.h
  \*********************************************************************************************/
-String FileError(int line, const char *fname)
+static String FileError(int line, const char *fname)
 {
   String log = strformat(F("FS   : Error while reading/writing %s in %d"), fname, line);
 
   addLog(LOG_LEVEL_ERROR, log);
   return log;
 }
+
+// Macro used to make file system operations a bit more readable.
+#define SPIFFS_CHECK(result, fname) if (!(result)) { return(FileError(__LINE__, fname)); }
+
 
 /********************************************************************************************\
    Keep track of number of flash writes.
@@ -100,7 +104,7 @@ void flashCount()
   saveToRTC();
 }
 
-String flashGuard()
+static String flashGuard()
 {
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("flashGuard"));
@@ -121,17 +125,17 @@ String flashGuard()
                         if (flashErr.length()) return flashErr; }
 
 
-String appendLineToFile(const String& fname, const String& line) {
-  return appendToFile(fname, reinterpret_cast<const uint8_t *>(line.c_str()), line.length());
-}
-
-String appendToFile(const String& fname, const uint8_t *data, unsigned int size) {
+static String appendToFile(const String& fname, const uint8_t *data, unsigned int size) {
   fs::File f = tryOpenFile(fname, "a+");
 
   SPIFFS_CHECK(f,                   fname.c_str());
   SPIFFS_CHECK(f.write(data, size), fname.c_str());
   f.close();
   return EMPTY_STRING;
+}
+
+String appendLineToFile(const String& fname, const String& line) {
+  return appendToFile(fname, reinterpret_cast<const uint8_t *>(line.c_str()), line.length());
 }
 
 bool fileExists(const __FlashStringHelper *fname)
@@ -234,13 +238,14 @@ fs::File tryOpenFile(const String& fname, const String& mode, FileDestination_e 
   return f;
 }
 
-bool fileMatchesTaskSettingsType(const String& fname) {
+static bool fileMatchesTaskSettingsType(const String& fname) {
   const String config_dat_file = patch_fname(getFileName(FileType::CONFIG_DAT));
 
   return config_dat_file.equalsIgnoreCase(patch_fname(fname));
 }
 
-bool tryRenameFile(const String& fname_old, const String& fname_new, FileDestination_e destination) {
+#if FEATURE_DOWNLOAD
+static bool tryRenameFile(const String& fname_old, const String& fname_new, FileDestination_e destination) {
   clearFileCaches();
 
   if (fileExists(fname_old) && !fileExists(fname_new)) {
@@ -264,6 +269,7 @@ bool tryRenameFile(const String& fname_old, const String& fname_new, FileDestina
   }
   return false;
 }
+#endif
 
 bool tryDeleteFile(const String& fname, FileDestination_e destination) {
   if (fname.length() > 0)
@@ -321,7 +327,7 @@ bool tryDeleteFile(const String& fname, FileDestination_e destination) {
 /********************************************************************************************\
    Fix stuff to clear out differences between releases
  \*********************************************************************************************/
-bool BuildFixes()
+static bool BuildFixes()
 {
   if (Settings.Build == get_build_nr()) {
     // Not changed
@@ -664,7 +670,7 @@ uint32_t getWiFi_CalibrationVersion()
   return 0;
 }
 
-bool setWiFi_CalibrationVersion() {
+static bool setWiFi_CalibrationVersion() {
   // Store used IDF version in NVS
   const uint32_t idfVersion = ESP_IDF_VERSION;
   ESPEasy_NVS_Helper preferences;
@@ -675,7 +681,7 @@ bool setWiFi_CalibrationVersion() {
   return false;
 }
 
-String formatIdfVersion(uint32_t idfVer) {
+static String formatIdfVersion(uint32_t idfVer) {
   return strformat(
     F("%u.%u.%u"),
     (idfVer >> 16) & 0xFF,
@@ -761,7 +767,7 @@ int getPartionCount(uint8_t pType, uint8_t pSubType) {
 #endif // ifdef ESP32
 
  #ifdef ESP8266
-bool clearPartition(ESP8266_partition_type ptype) {
+static bool clearPartition(ESP8266_partition_type ptype) {
   uint32_t address;
   int32_t  size;
   int32_t  sector = getPartitionInfo(ESP8266_partition_type::rf_cal, address, size);
@@ -871,63 +877,7 @@ String SaveSettings(bool forFactoryReset)
   return err;
 }
 
-String SaveSecuritySettings(bool forFactoryReset) {
-  String err;
-
-  SecuritySettings.validate();
-  memcpy(SecuritySettings.ProgmemMd5, CRCValues.runTimeMD5, 16);
-
-  if (forFactoryReset) {
-    SecuritySettings.forceSave();
-  }
-
-  if (SecuritySettings.updateChecksum()) {
-    // Settings have changed, save to file.
-    err = SaveToFile(SettingsType::getSettingsFileName(SettingsType::Enum::SecuritySettings_Type).c_str(),
-                     0,
-                     reinterpret_cast<const uint8_t *>(&SecuritySettings),
-                     sizeof(SecuritySettings));
-
-    // Security settings are saved, may be update of WiFi settings or hostname.
-    if (!forFactoryReset) {
-      if (SecuritySettings.hasWiFiCredentials() && (active_network_medium == ESPEasy::net::NetworkMedium_t::WIFI)) {
-        ESPEasy::net::wifi::WiFi_AP_Candidates.force_reload(); // Force reload of the credentials and found APs from the last scan
-        if (!ESPEasy::net::NetworkConnected()) {
-//          WiFiEventData.wifiConnectAttemptNeeded = true;
-          ESPEasy::net::wifi::initWiFi();//  resetWiFi();
-          String dummy;
-          ESPEasy::net::NWPluginCall(
-            NWPlugin::Function::NWPLUGIN_CREDENTIALS_CHANGED, 0, dummy);
-        }
-      }
-    }
-  }
-#ifndef BUILD_NO_DEBUG
-  else {
-    addLog(LOG_LEVEL_INFO, F("Skip saving SecuritySettings, not changed"));
-  }
-#endif // ifndef BUILD_NO_DEBUG
-
-  // FIXME TD-er: How to check if these have changed?
-  if (forFactoryReset) {
-    ExtendedControllerCredentials.clear();
-#if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE
-    SecuritySettings_deviceSpecific.clear();
-#endif
-  }
-
-  ExtendedControllerCredentials.save();
-#if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE
-  SecuritySettings_deviceSpecific.save();
-#endif
-
-  if (!forFactoryReset) {
-    afterloadSettings();
-  }
-  return err;
-}
-
-void afterloadSettings() {
+static void afterloadSettings() {
   ExtraTaskSettings.clear(); // make sure these will not contain old settings.
 
   if ((Settings.Version != VERSION) || (Settings.PID != ESP_PROJECT_PID)) {
@@ -996,6 +946,64 @@ void afterloadSettings() {
   #endif
   ESPEasy::net::CheckRunningServices(true); // To update changes in hostname.
 }
+
+String SaveSecuritySettings(bool forFactoryReset) {
+  String err;
+
+  SecuritySettings.validate();
+  memcpy(SecuritySettings.ProgmemMd5, CRCValues.runTimeMD5, 16);
+
+  if (forFactoryReset) {
+    SecuritySettings.forceSave();
+  }
+
+  if (SecuritySettings.updateChecksum()) {
+    // Settings have changed, save to file.
+    err = SaveToFile(SettingsType::getSettingsFileName(SettingsType::Enum::SecuritySettings_Type).c_str(),
+                     0,
+                     reinterpret_cast<const uint8_t *>(&SecuritySettings),
+                     sizeof(SecuritySettings));
+
+    // Security settings are saved, may be update of WiFi settings or hostname.
+    if (!forFactoryReset) {
+      if (SecuritySettings.hasWiFiCredentials() && (active_network_medium == ESPEasy::net::NetworkMedium_t::WIFI)) {
+        ESPEasy::net::wifi::WiFi_AP_Candidates.force_reload(); // Force reload of the credentials and found APs from the last scan
+        if (!ESPEasy::net::NetworkConnected()) {
+//          WiFiEventData.wifiConnectAttemptNeeded = true;
+          ESPEasy::net::wifi::initWiFi();//  resetWiFi();
+          String dummy;
+          ESPEasy::net::NWPluginCall(
+            NWPlugin::Function::NWPLUGIN_CREDENTIALS_CHANGED, 0, dummy);
+        }
+      }
+    }
+  }
+#ifndef BUILD_NO_DEBUG
+  else {
+    addLog(LOG_LEVEL_INFO, F("Skip saving SecuritySettings, not changed"));
+  }
+#endif // ifndef BUILD_NO_DEBUG
+
+  // FIXME TD-er: How to check if these have changed?
+  if (forFactoryReset) {
+    ExtendedControllerCredentials.clear();
+#if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE
+    SecuritySettings_deviceSpecific.clear();
+#endif
+  }
+
+  ExtendedControllerCredentials.save();
+#if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE
+  SecuritySettings_deviceSpecific.save();
+#endif
+
+  if (!forFactoryReset) {
+    afterloadSettings();
+  }
+  return err;
+}
+
+
 
 /********************************************************************************************\
    Load settings from file system
@@ -1073,134 +1081,6 @@ String LoadSettings()
   return err;
 }
 
-/********************************************************************************************\
-   Disable Plugin, based on bootFailedCount
- \*********************************************************************************************/
-uint8_t disablePlugin(uint8_t bootFailedCount) {
-  for (taskIndex_t i = 0; i < TASKS_MAX && bootFailedCount > 0; ++i) {
-    if (Settings.TaskDeviceEnabled(i)) {
-      --bootFailedCount;
-
-      if (bootFailedCount == 0) {
-        // Disable temporarily as unit crashed
-        // FIXME TD-er: Should this be stored?
-        Settings.TaskDeviceEnabled(i, false);
-      }
-    }
-  }
-  return bootFailedCount;
-}
-
-uint8_t disableAllPlugins(uint8_t bootFailedCount) {
-  if (bootFailedCount > 0) {
-    --bootFailedCount;
-
-    for (taskIndex_t i = 0; i < TASKS_MAX; ++i) {
-      // Disable temporarily as unit crashed
-      // FIXME TD-er: Should this be stored?
-      Settings.TaskDeviceEnabled(i, false);
-    }
-  }
-  return bootFailedCount;
-}
-
-/********************************************************************************************\
-   Disable Controller, based on bootFailedCount
- \*********************************************************************************************/
-uint8_t disableController(uint8_t bootFailedCount) {
-  for (controllerIndex_t i = 0; i < CONTROLLER_MAX && bootFailedCount > 0; ++i) {
-    if (Settings.ControllerEnabled(i)) {
-      --bootFailedCount;
-
-      if (bootFailedCount == 0) {
-        Settings.ControllerEnabled(i, false);
-      }
-    }
-  }
-  return bootFailedCount;
-}
-
-uint8_t disableAllControllers(uint8_t bootFailedCount) {
-  if (bootFailedCount > 0) {
-    --bootFailedCount;
-
-    for (controllerIndex_t i = 0; i < CONTROLLER_MAX; ++i) {
-      Settings.ControllerEnabled(i, false);
-    }
-  }
-  return bootFailedCount;
-}
-
-/********************************************************************************************\
-   Disable Notification, based on bootFailedCount
- \*********************************************************************************************/
-#if FEATURE_NOTIFIER
-uint8_t disableNotification(uint8_t bootFailedCount) {
-  for (uint8_t i = 0; i < NOTIFICATION_MAX && bootFailedCount > 0; ++i) {
-    if (Settings.NotificationEnabled(i)) {
-      --bootFailedCount;
-
-      if (bootFailedCount == 0) {
-        Settings.NotificationEnabled(i, false);
-      }
-    }
-  }
-  return bootFailedCount;
-}
-
-uint8_t disableAllNotifications(uint8_t bootFailedCount) {
-  if (bootFailedCount > 0) {
-    --bootFailedCount;
-
-    for (uint8_t i = 0; i < NOTIFICATION_MAX; ++i) {
-      Settings.NotificationEnabled(i, false);
-    }
-  }
-  return bootFailedCount;
-}
-
-#endif // if FEATURE_NOTIFIER
-
-/********************************************************************************************\
-   Disable Network Interfaces, based on bootFailedCount
- \*********************************************************************************************/
-uint8_t disableNetwork(uint8_t bootFailedCount)
-{
-  for (ESPEasy::net::networkIndex_t i = 0; i < NETWORK_MAX && bootFailedCount > 0; ++i) {
-    if (Settings.getNetworkEnabled(i)) {
-      --bootFailedCount;
-
-      if (bootFailedCount == 0) {
-        Settings.setNetworkEnabled(i, false);
-      }
-    }
-  }
-  return bootFailedCount;
-}
-
-uint8_t disableAllNetworkss(uint8_t bootFailedCount)
-{
-    if (bootFailedCount > 0) {
-    --bootFailedCount;
-
-    for (ESPEasy::net::networkIndex_t i = 0; i < NETWORK_MAX; ++i) {
-      Settings.setNetworkEnabled(i, false);
-    }
-  }
-  return bootFailedCount;
-}
-
-
-/********************************************************************************************\
-   Disable Rules, based on bootFailedCount
- \*********************************************************************************************/
-uint8_t disableRules(uint8_t bootFailedCount) {
-  if (bootFailedCount > 0) {
-    --bootFailedCount;
-    Settings.UseRules = false;
-  }
-  return bootFailedCount;
-}
 
 bool getAndLogSettingsParameters(bool read, SettingsType::Enum settingsType, int index, int& offset, int& max_size) {
 #ifndef BUILD_NO_DEBUG
@@ -1480,17 +1360,14 @@ String LoadTaskSettings(taskIndex_t TaskIndex)
   START_TIMER
 
   ExtraTaskSettings.clear();
+  Cache.clearTaskCache(TaskIndex);
+
   const deviceIndex_t DeviceIndex = getDeviceIndex_from_TaskIndex(TaskIndex);
 
   if (!validDeviceIndex(DeviceIndex)) {
     // No need to load from storage, as there is no plugin assigned to this task.
     ExtraTaskSettings.TaskIndex = TaskIndex; // Needed when an empty task was requested
 
-    // FIXME TD-er: Do we need to keep a cache of an empty task?
-    // Maybe better to do this?
-    Cache.clearTaskCache(TaskIndex);
-
-    //    Cache.updateExtraTaskSettingsCache_afterLoad_Save();
     return EMPTY_STRING;
   }
   #ifndef BUILD_NO_RAM_TRACKER
@@ -2009,7 +1886,7 @@ String doSaveToFile(const char *fname, int index, const uint8_t *memAddress, int
   }
   #endif // ifndef BUILD_NO_DEBUG
   delay(1);
-  unsigned long timer = millis() + 50;
+  uint32_t timer = millis() + 50;
   fs::File f          = tryOpenFile(fname, mode);
 
   if (f) {
@@ -2719,14 +2596,14 @@ String downloadFileType(const String& url, const String& user, const String& pas
         return error;
       }
 
-      if (fileExists(filename) && !tryRenameFile(filename, filename_bak)) {
+      if (fileExists(filename) && !tryRenameFile(filename, filename_bak, FileDestination_e::ANY)) {
         return F("Could not rename to _bak");
       } else {
         // File does not exist (anymore)
-        if (!tryRenameFile(tmpfile, filename)) {
+        if (!tryRenameFile(tmpfile, filename, FileDestination_e::ANY)) {
           error = F("Could not rename tmp file");
 
-          if (tryRenameFile(filename_bak, filename)) {
+          if (tryRenameFile(filename_bak, filename, FileDestination_e::ANY)) {
             error += F("... reverted");
           } else {
             error += F(" Not reverted!");
@@ -2790,7 +2667,7 @@ void deleteBakFiles()
 bool validateUploadConfigDat(const uint8_t *buf) {
   bool result = false;
   struct TempStruct {
-    unsigned long PID;
+    uint32_t PID;
     int           Version;
   } Temp;
 

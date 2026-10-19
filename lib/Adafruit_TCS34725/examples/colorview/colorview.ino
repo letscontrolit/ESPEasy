@@ -39,7 +39,7 @@ void setup() {
   for (int i=0; i<256; i++) {
     float x = i;
     x /= 255;
-    x = pow(x, 2.5);
+    x = powf(x, 2.5f);
     x *= 255;
       
     if (commonAnode) {

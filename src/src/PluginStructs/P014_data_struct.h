@@ -122,7 +122,7 @@ public:
    bool update(uint8_t i2caddr, uint8_t resolution, uint8_t filter_power);
 
 
-  unsigned long last_measurement_time  = 0; // Timestamp when started reading sensor
+  uint32_t last_measurement_time  = 0; // Timestamp when started reading sensor
   uint16_t      humidity               = 0; // latest humidity value read
   int16_t       temperature            = 0; // latest temperature value read (*100)
   int32_t       adc                    = 0; // latest adc value read as a moving average sum 

@@ -55,7 +55,7 @@ String rn2xx3_helper::base16decode(const String& input_c)
     toDo[0] = input[i * 2];
     toDo[1] = input[i * 2 + 1];
     toDo[2] = '\0';
-    unsigned long out = strtoul(toDo, 0, 16);
+    uint32_t out = strtoul(toDo, 0, 16);
 
     if (out <= 0xFF)
     {

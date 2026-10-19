@@ -276,7 +276,7 @@ bool P082_data_struct::loop() {
 
   if (easySerial != nullptr) {
     int available           = easySerial->available();
-    unsigned long startLoop = millis();
+    uint32_t startLoop = millis();
 
     while (available > 0 && timePassedSince(startLoop) < 10) {
       --available;
@@ -295,7 +295,7 @@ bool P082_data_struct::loop() {
 
         if (c == 0x85) {
           // Found possible start of u-blox message
-          unsigned long timeout   = millis() + 200;
+          uint32_t timeout   = millis() + 200;
           unsigned int  bytesRead = 0;
           bool done               = false;
           bool ack_nak_read       = false;
@@ -537,7 +537,7 @@ bool P082_data_struct::tryUpdateSystemTime() {
           if (hasFix(P082_TIMESTAMP_AGE)) {
             // Using PPS sync should be extremely stable without any significant time wander.
             // When we only can rely on keeping track of the timestamp at the start of a sentence, the fluctuation is significant.
-            if (usecPassedSince(_pps_time_micros) < 1000000ll) {
+            if (usecPassedSince_volatile(_pps_time_micros) < 1000000ll) {
               timeSource = timeSource_t::GPS_PPS_time_source;
             } else {
               timeSource = timeSource_t::GPS_time_source;

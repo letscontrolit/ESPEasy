@@ -75,9 +75,9 @@ public:
   bool init(ESPEasySerialPort port,
             const int16_t     serial_rx,
             const int16_t     serial_tx,
-            unsigned long     baudrate);
+            uint32_t     baudrate);
 
-  void setFlags(unsigned long filterOffWindowTime_ms,
+  void setFlags(uint32_t filterOffWindowTime_ms,
                 bool          intervalFilterEnabled,
                 bool          mute,
                 bool          collectStats);
@@ -166,12 +166,12 @@ private:
   String         sentence_part;
   uint16_t       max_length = P094_MAX_MSG_LENGTH;
   uint16_t       nrFilters{};
-  unsigned long  filterOffWindowTime      = 0;
+  uint32_t  filterOffWindowTime      = 0;
   uint32_t       sentences_received       = 0;
   uint32_t       sentences_received_error = 0;
   bool           current_sentence_errored = false;
   uint32_t       length_last_received     = 0;
-  unsigned long  disable_filter_window    = 0;
+  uint32_t  disable_filter_window    = 0;
 
   # if P094_DEBUG_OPTIONS
   uint32_t debug_counter           = 0;

@@ -11,7 +11,7 @@ std::map<int, TimingStats> pluginStats;
 std::map<int, TimingStats> controllerStats;
 std::map<int, TimingStats> networkStats;
 std::map<TimingStatsElements, TimingStats> miscStats;
-unsigned long timingstats_last_reset(0);
+uint32_t timingstats_last_reset(0);
 
 
 void TimingStats::add(int32_t duration_usec) {
@@ -97,7 +97,7 @@ const __FlashStringHelper* getPluginFunctionName(int function) {
   return F("Unknown");
 }
 
-bool mustLogFunction(int function) {
+static bool mustLogFunction(int function) {
   if (!Settings.EnableTimingStats()) { return false; }
 
   switch (function) {
@@ -170,7 +170,7 @@ const __FlashStringHelper* getCPluginCFunctionName(CPlugin::Function function) {
   return F("Unknown");
 }
 
-bool mustLogCFunction(CPlugin::Function function) {
+static bool mustLogCFunction(CPlugin::Function function) {
   if (!Settings.EnableTimingStats()) { return false; }
 
   switch (function) {
@@ -205,14 +205,14 @@ bool mustLogCFunction(CPlugin::Function function) {
   return false;
 }
 
-bool mustLogNWFunction(NWPlugin::Function function)
+static bool mustLogNWFunction(NWPlugin::Function function)
 {
   return Settings.EnableTimingStats();
 }
 
 
 // Return flash string type to reduce bin size
-const __FlashStringHelper* getMiscStatsName_F(TimingStatsElements stat) {
+static const __FlashStringHelper* getMiscStatsName_F(TimingStatsElements stat) {
   switch (stat) {
     case TimingStatsElements::LOADFILE_STATS:             return F("Load File");
     case TimingStatsElements::SAVEFILE_STATS:             return F("Save File");

@@ -8,6 +8,76 @@
 #include "../Helpers/Numerical.h"
 #include "../Helpers/StringConverter.h"
 
+static const __FlashStringHelper* toString(UnaryOperator op)
+{
+  switch (op)
+  {
+    case UnaryOperator::Not:
+      break; // No need to replace
+    case UnaryOperator::Log:
+      return F("log");
+    case UnaryOperator::Ln:
+      return F("ln");
+    case UnaryOperator::Abs:
+      return F("abs");
+    case UnaryOperator::Exp:
+      return F("exp");
+    case UnaryOperator::Sqrt:
+      return F("sqrt");
+    case UnaryOperator::Sq:
+      return F("sq");
+    case UnaryOperator::Round:
+      return F("round");
+    case UnaryOperator::Sin:
+      return F("sin");
+    case UnaryOperator::Sin_d:
+      return F("sin_d");
+    case UnaryOperator::Cos:
+      return F("cos");
+    case UnaryOperator::Cos_d:
+      return F("cos_d");
+    case UnaryOperator::Tan:
+      return F("tan");
+    case UnaryOperator::Tan_d:
+      return F("tan_d");
+    case UnaryOperator::ArcSin:
+      return F("asin");
+    case UnaryOperator::ArcSin_d:
+      return F("asin_d");
+    case UnaryOperator::ArcCos:
+      return F("acos");
+    case UnaryOperator::ArcCos_d:
+      return F("acos_d");
+    case UnaryOperator::ArcTan:
+      return F("atan");
+    case UnaryOperator::ArcTan_d:
+      return F("atan_d");
+    case UnaryOperator::Map:
+      return F("map");
+    case UnaryOperator::MapC:
+      return F("mapc");
+  }
+  return F("");
+}
+
+#if !defined(LIMIT_BUILD_SIZE) && FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
+
+static const __FlashStringHelper* toString(BinaryOperator op)
+{
+  switch (op)
+  {
+    case BinaryOperator::ArcTan2:
+      return F("atan2");
+    case BinaryOperator::ArcTan2_d:
+      return F("atan2_d");
+    case BinaryOperator::FMod:
+      return F("fmod");
+  }
+  return F("");
+}
+
+#endif // if !defined(LIMIT_BUILD_SIZE) && FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
+
 
 RulesCalculate_t::RulesCalculate_t() {
   for (int i = 0; i < STACK_SIZE; ++i) {
@@ -18,9 +88,7 @@ RulesCalculate_t::RulesCalculate_t() {
 /********************************************************************************************\
    Calculate function for simple expressions
  \*********************************************************************************************/
-bool isError(CalculateReturnCode returnCode) {
-  return returnCode != CalculateReturnCode::OK;
-}
+bool isError(CalculateReturnCode returnCode) { return returnCode != CalculateReturnCode::OK; }
 
 bool RulesCalculate_t::is_number(char oc, char c, char pc)
 {
@@ -29,57 +97,59 @@ bool RulesCalculate_t::is_number(char oc, char c, char pc)
     (c == '.')   ||                                // A decimal point of a floating point number.
     ((oc == '0') && ((c == 'x') || (c == 'b'))) || // HEX (0x) or BIN (0b) prefixes.
     isxdigit(c)  ||                                // HEX digit also includes normal decimal numbers
-    ((is_operator(oc) || ('\0' == oc)) && (c == '-') 
-        && (isdigit(pc) || ('\0' == pc))) // Beginning of a negative number after an operator or 'separator' and before a digit or end-of-digit.
+    ((is_operator(oc) || ('\0' == oc)) && (c == '-')
+     && (isdigit(pc) || ('\0' == pc)))             // Beginning of a negative number after an operator or 'separator' and before a digit or
+                                                   // end-of-digit.
   ;
 }
 
-bool RulesCalculate_t::is_operator(char c)
-{
-  return c == '+' || c == '-' || c == '*' || c == '/' || c == '^' || c == '%';
-}
+bool RulesCalculate_t::is_operator(char c) { return c == '+' || c == '-' || c == '*' || c == '/' || c == '^' || c == '%'; }
 
 bool RulesCalculate_t::is_unary_operator(char c)
 {
   const UnaryOperator op = static_cast<UnaryOperator>(c);
-  return (op == UnaryOperator::Not || (
-          c >= static_cast<char>(UnaryOperator::Log) &&
-          c <= static_cast<char>(UnaryOperator::ArcTan_d)));
-/*
-  switch (op) {
-    case UnaryOperator::Not:
-    case UnaryOperator::Log:
-    case UnaryOperator::Ln:
-    case UnaryOperator::Abs:
-    case UnaryOperator::Exp:
-    case UnaryOperator::Sqrt:
-    case UnaryOperator::Sq:
-    case UnaryOperator::Round:
-    case UnaryOperator::Sin:
-    case UnaryOperator::Cos:
-    case UnaryOperator::Tan:
-    case UnaryOperator::ArcSin:
-    case UnaryOperator::ArcCos:
-    case UnaryOperator::ArcTan:
-    case UnaryOperator::Sin_d:
-    case UnaryOperator::Cos_d:
-    case UnaryOperator::Tan_d:
-    case UnaryOperator::ArcSin_d:
-    case UnaryOperator::ArcCos_d:
-    case UnaryOperator::ArcTan_d:
-      return true;
-  }
-  return false;
-  */
+
+  return op == UnaryOperator::Not || (
+    c >= static_cast<char>(UnaryOperator::Log) &&
+    c <= static_cast<char>(UnaryOperator::ArcTan_d));
+
+  /*
+     switch (op) {
+      case UnaryOperator::Not:
+      case UnaryOperator::Log:
+      case UnaryOperator::Ln:
+      case UnaryOperator::Abs:
+      case UnaryOperator::Exp:
+      case UnaryOperator::Sqrt:
+      case UnaryOperator::Sq:
+      case UnaryOperator::Round:
+      case UnaryOperator::Sin:
+      case UnaryOperator::Cos:
+      case UnaryOperator::Tan:
+      case UnaryOperator::ArcSin:
+      case UnaryOperator::ArcCos:
+      case UnaryOperator::ArcTan:
+      case UnaryOperator::Sin_d:
+      case UnaryOperator::Cos_d:
+      case UnaryOperator::Tan_d:
+      case UnaryOperator::ArcSin_d:
+      case UnaryOperator::ArcCos_d:
+      case UnaryOperator::ArcTan_d:
+        return true;
+     }
+     return false;
+   */
 }
 
 #if !defined(LIMIT_BUILD_SIZE) && FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
+
 // binary = 2-argument functions
 bool RulesCalculate_t::is_binary_operator(char c)
 {
-  return (c >= static_cast<char>(BinaryOperator::ArcTan2) &&
-          c <= static_cast<char>(BinaryOperator::FMod));
+  return c >= static_cast<char>(BinaryOperator::ArcTan2) &&
+         c <= static_cast<char>(BinaryOperator::FMod);
 }
+
 #endif // if !defined(LIMIT_BUILD_SIZE) && FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
 
 // quinary = 5-argument functions
@@ -127,13 +197,13 @@ ESPEASY_RULES_FLOAT_TYPE RulesCalculate_t::apply_operator(char op, ESPEASY_RULES
       return static_cast<int>(round(first)) % static_cast<int>(round(second));
     #else
       return static_cast<int>(roundf(first)) % static_cast<int>(roundf(second));
-    #endif
+    #endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
     case '^':
     #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
       return pow(first, second);
     #else
       return powf(first, second);
-    #endif
+    #endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
     default:
       return 0;
   }
@@ -144,43 +214,44 @@ ESPEASY_RULES_FLOAT_TYPE RulesCalculate_t::apply_unary_operator(char op, ESPEASY
   ESPEASY_RULES_FLOAT_TYPE ret{};
   const UnaryOperator un_op = static_cast<UnaryOperator>(op);
 
-  switch (un_op) {
+  switch (un_op)
+  {
     case UnaryOperator::Not:
     #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
       return essentiallyZero(round(first)) ? 1 : 0;
     #else
       return essentiallyZero(roundf(first)) ? 1 : 0;
-    #endif
+    #endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
     case UnaryOperator::Log:
     #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
       return log10(first);
     #else
       return log10f(first);
-    #endif
+    #endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
     case UnaryOperator::Ln:
     #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
       return log(first);
     #else
       return logf(first);
-    #endif
+    #endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
     case UnaryOperator::Abs:
     #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
       return fabs(first);
     #else
       return fabsf(first);
-    #endif
+    #endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
     case UnaryOperator::Exp:
     #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
       return exp(first);
     #else
       return expf(first);
-    #endif
+    #endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
     case UnaryOperator::Sqrt:
     #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
       return sqrt(first);
     #else
       return sqrtf(first);
-    #endif
+    #endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
     case UnaryOperator::Sq:
       return first * first;
     case UnaryOperator::Round:
@@ -188,7 +259,7 @@ ESPEASY_RULES_FLOAT_TYPE RulesCalculate_t::apply_unary_operator(char op, ESPEASY
       return round(first);
     #else
       return roundf(first);
-    #endif
+    #endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
     default:
       break;
   }
@@ -197,30 +268,31 @@ ESPEASY_RULES_FLOAT_TYPE RulesCalculate_t::apply_unary_operator(char op, ESPEASY
   const bool useDegree = angleDegree(un_op);
 
   // First the trigonometric functions with angle as output
-  switch (un_op) {
+  switch (un_op)
+  {
     case UnaryOperator::ArcSin:
     case UnaryOperator::ArcSin_d:
-    #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+    # if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
       ret = asin(first);
-    #else
+    # else
       ret = asinf(first);
-    #endif
+    # endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
       return useDegree ? degrees(ret) : ret;
     case UnaryOperator::ArcCos:
     case UnaryOperator::ArcCos_d:
-    #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+    # if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
       ret = acos(first);
-    #else
+    # else
       ret = acosf(first);
-    #endif
+    # endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
       return useDegree ? degrees(ret) : ret;
     case UnaryOperator::ArcTan:
     case UnaryOperator::ArcTan_d:
-    #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+    # if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
       ret = atan(first);
-    #else
+    # else
       ret = atanf(first);
-    #endif
+    # endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
       return useDegree ? degrees(ret) : ret;
     default:
       break;
@@ -231,34 +303,36 @@ ESPEASY_RULES_FLOAT_TYPE RulesCalculate_t::apply_unary_operator(char op, ESPEASY
     first = radians(first);
   }
 
-  switch (un_op) {
+  switch (un_op)
+  {
     case UnaryOperator::Sin:
     case UnaryOperator::Sin_d:
-    #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+    # if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
       return sin(first);
-    #else
+    # else
       return sinf(first);
-    #endif
+    # endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
     case UnaryOperator::Cos:
     case UnaryOperator::Cos_d:
-    #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+    # if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
       return cos(first);
-    #else
+    # else
       return cosf(first);
-    #endif
+    # endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
     case UnaryOperator::Tan:
     case UnaryOperator::Tan_d:
-    #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+    # if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
       return tan(first);
-    #else
+    # else
       return tanf(first);
-    #endif
+    # endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
     default:
       break;
   }
 #else // if FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
 
-  switch (un_op) {
+  switch (un_op)
+  {
     case UnaryOperator::Sin:
     case UnaryOperator::Sin_d:
     case UnaryOperator::Cos:
@@ -281,33 +355,37 @@ ESPEASY_RULES_FLOAT_TYPE RulesCalculate_t::apply_unary_operator(char op, ESPEASY
 }
 
 #if !defined(LIMIT_BUILD_SIZE) && FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
+
 ESPEASY_RULES_FLOAT_TYPE RulesCalculate_t::apply_binary_operator(char op, ESPEASY_RULES_FLOAT_TYPE first, ESPEASY_RULES_FLOAT_TYPE second)
 {
   ESPEASY_RULES_FLOAT_TYPE ret{};
-  const BinaryOperator bin_op = static_cast<BinaryOperator>(op);
-  
+  const BinaryOperator     bin_op = static_cast<BinaryOperator>(op);
+
   const bool useDegree = angleDegree(bin_op);
-  switch (bin_op) {
+
+  switch (bin_op)
+  {
     case BinaryOperator::ArcTan2:
     case BinaryOperator::ArcTan2_d:
-      #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+      # if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
       ret = atan2(first, second);
-      #else
+      # else
       ret = atan2f(first, second);
-      #endif
+      # endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
       return useDegree ? degrees(ret) : ret;
     case BinaryOperator::FMod:
-      #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+      # if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
       return fmod(first, second);
-      #else // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+      # else // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
       return fmodf(first, second);
-      #endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
-  }      
+      # endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+  }
   return ret;
 }
+
 #endif // if !defined(LIMIT_BUILD_SIZE) && FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
 
-ESPEASY_RULES_FLOAT_TYPE RulesCalculate_t::apply_quinary_operator(char op, 
+ESPEASY_RULES_FLOAT_TYPE RulesCalculate_t::apply_quinary_operator(char                     op,
                                                                   ESPEASY_RULES_FLOAT_TYPE first,
                                                                   ESPEASY_RULES_FLOAT_TYPE second,
                                                                   ESPEASY_RULES_FLOAT_TYPE third,
@@ -317,11 +395,11 @@ ESPEASY_RULES_FLOAT_TYPE RulesCalculate_t::apply_quinary_operator(char op,
   ESPEASY_RULES_FLOAT_TYPE ret{};
   const UnaryOperator qu_op = static_cast<UnaryOperator>(op);
 
-  if (UnaryOperator::Map == qu_op || UnaryOperator::MapC == qu_op) {
+  if ((UnaryOperator::Map == qu_op) || (UnaryOperator::MapC == qu_op)) {
 
     // Clamp the result if the operator is MapC
     if (qu_op == UnaryOperator::MapC) {
-      first = constrain(first, min(second, third), max(second, third));;
+      first = constrain(first, min(second, third), max(second, third));
     }
     ret = mapADCtoFloat(first, second, third, fourth, fifth);
   }
@@ -351,28 +429,31 @@ CalculateReturnCode RulesCalculate_t::RPNCalculate(char *token)
     ESPEASY_RULES_FLOAT_TYPE first  = pop();
 
     ret = push(apply_operator(token[0], first, second));
+
     // addLog(LOG_LEVEL_INFO, strformat(F("RPNCalculate operator %c: 1: %.4f 2: %.4f"), token[0], first, second));
 
-// FIXME TD-er: Regardless whether it is an error, all code paths return ret;
-//    if (isError(ret)) { return ret; }
+    // FIXME TD-er: Regardless whether it is an error, all code paths return ret;
+    //    if (isError(ret)) { return ret; }
   } else if (is_unary_operator(token[0]) && (token[1] == 0))
   {
     ESPEASY_RULES_FLOAT_TYPE first = pop();
 
     ret = push(apply_unary_operator(token[0], first));
+
     // addLog(LOG_LEVEL_INFO, strformat(F("RPNCalculate unary %d: 1: %.4f"), token[0], first));
 
-// FIXME TD-er: Regardless whether it is an error, all code paths return ret;
-//    if (isError(ret)) { return ret; }
+    // FIXME TD-er: Regardless whether it is an error, all code paths return ret;
+    //    if (isError(ret)) { return ret; }
   #if !defined(LIMIT_BUILD_SIZE) && FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
   } else if (is_binary_operator(token[0]) && (token[1] == 0))
   {
     const ESPEASY_RULES_FLOAT_TYPE second = pop();
     const ESPEASY_RULES_FLOAT_TYPE first  = pop();
-    
+
     ret = push(apply_binary_operator(token[0], first, second));
+
     // addLog(LOG_LEVEL_INFO, strformat(F("RPNCalculate binary %d: 1: %.4f 2: %.4f"), token[0], first, second));
-  
+
   #endif // if !defined(LIMIT_BUILD_SIZE) && FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
   } else if (is_quinary_operator(token[0]) && (token[1] == 0))
   {
@@ -383,21 +464,24 @@ CalculateReturnCode RulesCalculate_t::RPNCalculate(char *token)
     ESPEASY_RULES_FLOAT_TYPE first  = pop();
 
     ret = push(apply_quinary_operator(token[0], first, second, third, fourth, fifth));
-    // addLog(LOG_LEVEL_INFO, strformat(F("RPNCalculate quinary %d: 1: %.4f 2: %.4f 3: %.4f 4: %.4f 5: %.4f"), token[0], first, second, third, fourth, fifth));
+
+    // addLog(LOG_LEVEL_INFO, strformat(F("RPNCalculate quinary %d: 1: %.4f 2: %.4f 3: %.4f 4: %.4f 5: %.4f"), token[0], first, second,
+    // third, fourth, fifth));
 
   } else {
     // Fetch next if there is any
     ESPEASY_RULES_FLOAT_TYPE value{};
+
     if (validDoubleFromString(token, value)) {
 
-    //   addLog(LOG_LEVEL_INFO, strformat(F("RPNCalculate push value: %.4f token: %s"), value, token));
-    // } else {
-    //   addLog(LOG_LEVEL_INFO, strformat(F("RPNCalculate unknown token: %s"), token));
+      //   addLog(LOG_LEVEL_INFO, strformat(F("RPNCalculate push value: %.4f token: %s"), value, token));
+      // } else {
+      //   addLog(LOG_LEVEL_INFO, strformat(F("RPNCalculate unknown token: %s"), token));
     }
     ret = push(value); // If it is a value, push to the stack
 
-// FIXME TD-er: Regardless whether it is an error, all code paths return ret;
-//    if (isError(ret)) { return ret; }
+    // FIXME TD-er: Regardless whether it is an error, all code paths return ret;
+    //    if (isError(ret)) { return ret; }
   }
 
   return ret;
@@ -411,7 +495,15 @@ CalculateReturnCode RulesCalculate_t::RPNCalculate(char *token)
 // 1            + -               left to right
 int RulesCalculate_t::op_preced(const char c)
 {
-  if (is_unary_operator(c)) { return 4; // right to left
+  // All function tokens (unary, binary and quinary) must have the highest precedence,
+  // or a pending operator in front of a function call is applied before the function is evaluated.
+  if (is_unary_operator(c) ||
+#if !defined(LIMIT_BUILD_SIZE) && FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
+      is_binary_operator(c) ||
+#endif // if !defined(LIMIT_BUILD_SIZE) && FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
+      is_quinary_operator(c)) 
+  { 
+    return 4; // right to left
   }
 
   switch (c)
@@ -431,27 +523,28 @@ int RulesCalculate_t::op_preced(const char c)
 
 bool RulesCalculate_t::op_left_assoc(const char c)
 {
-  if (is_operator(c)) { return true;        // left to right
+  if (is_operator(c)) { return true; // left to right
   }
-/*
-  // FIXME TD-er: Disabled the check as the return value is false anyway.
-  if (is_unary_operator(c)) { return false; // right to left
-  }
-  */
+
+  /*
+     // FIXME TD-er: Disabled the check as the return value is false anyway.
+     if (is_unary_operator(c)) { return false; // right to left
+     }
+   */
   return false;
 }
 
 /* unused:
-unsigned int RulesCalculate_t::op_arg_count(const char c)
-{
-  if (is_unary_operator(c)) { return 1; }
+   unsigned int RulesCalculate_t::op_arg_count(const char c)
+   {
+   if (is_unary_operator(c)) { return 1; }
 
-  if (is_operator(c)) { return 2; }
+   if (is_operator(c)) { return 2; }
 
-  if (is_quinary_operator(c)) { return 5; }
-  return 0;
-}
-*/
+   if (is_quinary_operator(c)) { return 5; }
+   return 0;
+   }
+ */
 
 CalculateReturnCode RulesCalculate_t::doCalculate(const char *input, ESPEASY_RULES_FLOAT_TYPE *result)
 {
@@ -492,15 +585,19 @@ CalculateReturnCode RulesCalculate_t::doCalculate(const char *input, ESPEASY_RUL
     {
       // Get peek-ahead char
       pcpos = strpos + 1;
-      pc = *pcpos;
+      pc    = *pcpos;
+
       while ((pcpos < strend) && (' ' == pc)) {
         ++pcpos;
         pc = *pcpos;
       }
-      // addLog(LOG_LEVEL_INFO, strformat(F("doCalculate is_number: oc: %d c: %d/%c pc: %d token: %s input: %s sl: %u"), oc, c, c, pc, token, input, sl));
+
+      // addLog(LOG_LEVEL_INFO, strformat(F("doCalculate is_number: oc: %d c: %d/%c pc: %d token: %s input: %s sl: %u"), oc, c, c, pc,
+      // token, input, sl));
       if ((pcpos >= strend)) {
         pc = '\0';
       }
+
       // If the token is a number (identifier), then add it to the token queue.
       if (is_number(oc, c, pc))
       {
@@ -564,7 +661,22 @@ CalculateReturnCode RulesCalculate_t::doCalculate(const char *input, ESPEASY_RUL
         *(TokenPos) = 0; // Mark end of token string
         error       = RPNCalculate(token);
         TokenPos    = token;
-        c           = 0; // reset
+        if (isError(error)) { return error; }
+
+        // Finish the previous argument: pop all operators off the stack onto the token queue
+        // until the left parenthesis of the function call (which stays on the stack).
+        while (sl > 0 && stack[sl - 1] != '(')
+        {
+          *TokenPos = stack[sl - 1];
+          ++TokenPos;
+          *(TokenPos) = 0; // Mark end of token string
+          error       = RPNCalculate(token);
+          TokenPos    = token;
+
+          if (isError(error)) { return error; }
+          sl--;
+        }
+        c = 0; // reset
       }
 
       // If the token is a left parenthesis, then push it onto the stack.
@@ -581,13 +693,16 @@ CalculateReturnCode RulesCalculate_t::doCalculate(const char *input, ESPEASY_RUL
       {
         bool pe = false;
         sc = '\0';
-        // addLog(LOG_LEVEL_INFO, strformat(F("doCalculate stack content 0x%s"), formatToHex_array(reinterpret_cast<const uint8_t*>(stack), sl + 1).c_str()));
+
+        // addLog(LOG_LEVEL_INFO, strformat(F("doCalculate stack content 0x%s"), formatToHex_array(reinterpret_cast<const uint8_t*>(stack),
+        // sl + 1).c_str()));
 
         // Until the token at the top of the stack is a left parenthesis,
         // pop operators off the stack onto the token queue
         while (sl < OPERATOR_STACK_SIZE)
         {
           *(TokenPos) = 0; // Mark end of token string
+
           // addLog(LOG_LEVEL_INFO, strformat(F("doCalculate popping stack sl: %u token: %s sc: %d"), sl, token, sc));
           if (sc == '(') {
             // const auto first = pop(); // Get last value from stack
@@ -595,6 +710,7 @@ CalculateReturnCode RulesCalculate_t::doCalculate(const char *input, ESPEASY_RUL
             // addLog(LOG_LEVEL_INFO, strformat(F("doCalculate at ( last value: %.4f sl: %u"), first, sl));
           } else {
             error = RPNCalculate(token);
+
             // const auto first = pop(); // Get last value from stack
             // push(first); // push back
             // addLog(LOG_LEVEL_INFO, strformat(F("doCalculate last value on stack: %.4f sl: %u"), first, sl));
@@ -607,6 +723,7 @@ CalculateReturnCode RulesCalculate_t::doCalculate(const char *input, ESPEASY_RUL
           if (sl > 0) {
             sc = stack[sl - 1];
           }
+
           if (pe || (sl == 0)) {
             break;
           }
@@ -614,8 +731,10 @@ CalculateReturnCode RulesCalculate_t::doCalculate(const char *input, ESPEASY_RUL
           if (sc == '(')
           {
             pe = true;
+
             if (sl > 1) {
               sc = stack[sl - 2];
+
               if (is_operator(sc)) { // Not a function call
                 // Don't touch
               } else if (is_unary_operator(sc) ||
@@ -625,9 +744,9 @@ CalculateReturnCode RulesCalculate_t::doCalculate(const char *input, ESPEASY_RUL
                          is_quinary_operator(sc)) { // Function call, so process the function too
                 *TokenPos = sc;
                 ++TokenPos;
-                stack[sl - 2] = '\0'; // Don't process again on stack wind-down
+                stack[sl - 2] = '\0';               // Don't process again on stack wind-down
               } else {
-                sc = '\0'; // Reset
+                sc = '\0';                          // Reset
               }
             }
           }
@@ -635,9 +754,11 @@ CalculateReturnCode RulesCalculate_t::doCalculate(const char *input, ESPEASY_RUL
           {
             *TokenPos = sc;
             ++TokenPos;
+
             if (sl > 0) {
               sl--;
             }
+
             // addLog(LOG_LEVEL_INFO, strformat(F("doCalculate next token: %s sl: %u sc: %d"), token, sl, sc));
           }
         }
@@ -649,6 +770,12 @@ CalculateReturnCode RulesCalculate_t::doCalculate(const char *input, ESPEASY_RUL
 
         // Pop the left parenthesis from the stack, but not onto the token queue.
         if (sl > 0) {
+          sl--;
+        }
+
+        // Also remove the function token that has just been processed (marked '\0' above),
+        // otherwise it blocks the operators below it and operator precedence is lost.
+        if ((sl > 0) && (stack[sl - 1] == '\0')) {
           sl--;
         }
 
@@ -665,7 +792,8 @@ CalculateReturnCode RulesCalculate_t::doCalculate(const char *input, ESPEASY_RUL
     ++strpos;
   }
 
-  // addLog(LOG_LEVEL_INFO, strformat(F("doCalculate final stack content 0x%s"), formatToHex_array(reinterpret_cast<const uint8_t*>(stack), sl + 1).c_str()));
+  // addLog(LOG_LEVEL_INFO, strformat(F("doCalculate final stack content 0x%s"), formatToHex_array(reinterpret_cast<const uint8_t*>(stack),
+  // sl + 1).c_str()));
   // When there are no more tokens to read:
   // While there are still operator tokens in the stack:
   while (sl > 0)
@@ -678,8 +806,9 @@ CalculateReturnCode RulesCalculate_t::doCalculate(const char *input, ESPEASY_RUL
 
     *(TokenPos) = 0; // Mark end of token string
     // addLog(LOG_LEVEL_INFO, strformat(F("doCalculate closing up stack sl: %u token: %s sc: %d"), sl, token, sc));
-    error       = RPNCalculate(token);
-    TokenPos    = token;
+    error    = RPNCalculate(token);
+    TokenPos = token;
+
     // const auto first = pop(); // Get last value from stack
     // push(first); // push back
     // addLog(LOG_LEVEL_INFO, strformat(F("doCalculate closing, last value on stack: %.4f sl: %u"), first, sl));
@@ -693,6 +822,7 @@ CalculateReturnCode RulesCalculate_t::doCalculate(const char *input, ESPEASY_RUL
   *(TokenPos) = 0; // Mark end of token string
   error       = RPNCalculate(token);
   TokenPos    = token;
+
   // const auto first = pop(); // Get last value from stack
   // push(first); // push back
   // addLog(LOG_LEVEL_INFO, strformat(F("doCalculate final value on stack: %.4f sl: %u"), first, sl));
@@ -721,6 +851,7 @@ void preProcessReplace(String& input, UnaryOperator op) {
 }
 
 #if !defined(LIMIT_BUILD_SIZE) && FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
+
 void preProcessReplace(String& input, BinaryOperator op) {
   String find = toString(op);
 
@@ -731,11 +862,13 @@ void preProcessReplace(String& input, BinaryOperator op) {
 
   input.replace(find, replace);
 }
+
 #endif // if !defined(LIMIT_BUILD_SIZE) && FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
 
 bool angleDegree(UnaryOperator op)
 {
-  switch (op) {
+  switch (op)
+  {
     case UnaryOperator::Sin_d:
     case UnaryOperator::Cos_d:
     case UnaryOperator::Tan_d:
@@ -750,9 +883,11 @@ bool angleDegree(UnaryOperator op)
 }
 
 #if !defined(LIMIT_BUILD_SIZE) && FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
+
 bool angleDegree(BinaryOperator op)
 {
   return BinaryOperator::ArcTan2_d == op;
+
   // switch (op) // Future extension for 4 or more BinaryOperator options and multiple _d options
   // {
   // case BinaryOperator::ArcTan2_d:
@@ -763,72 +898,7 @@ bool angleDegree(BinaryOperator op)
   // }
   // return false;
 }
-#endif // if !defined(LIMIT_BUILD_SIZE) && FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
 
-const __FlashStringHelper* toString(UnaryOperator op)
-{
-  switch (op) {
-    case UnaryOperator::Not:
-      break; // No need to replace
-    case UnaryOperator::Log:
-      return F("log");
-    case UnaryOperator::Ln:
-      return F("ln");
-    case UnaryOperator::Abs:
-      return F("abs");
-    case UnaryOperator::Exp:
-      return F("exp");
-    case UnaryOperator::Sqrt:
-      return F("sqrt");
-    case UnaryOperator::Sq:
-      return F("sq");
-    case UnaryOperator::Round:
-      return F("round");
-    case UnaryOperator::Sin:
-      return F("sin");
-    case UnaryOperator::Sin_d:
-      return F("sin_d");
-    case UnaryOperator::Cos:
-      return F("cos");
-    case UnaryOperator::Cos_d:
-      return F("cos_d");
-    case UnaryOperator::Tan:
-      return F("tan");
-    case UnaryOperator::Tan_d:
-      return F("tan_d");
-    case UnaryOperator::ArcSin:
-      return F("asin");
-    case UnaryOperator::ArcSin_d:
-      return F("asin_d");
-    case UnaryOperator::ArcCos:
-      return F("acos");
-    case UnaryOperator::ArcCos_d:
-      return F("acos_d");
-    case UnaryOperator::ArcTan:
-      return F("atan");
-    case UnaryOperator::ArcTan_d:
-      return F("atan_d");
-    case UnaryOperator::Map:
-      return F("map");
-    case UnaryOperator::MapC:
-      return F("mapc");
-  }
-  return F("");
-}
-
-#if !defined(LIMIT_BUILD_SIZE) && FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
-const __FlashStringHelper* toString(BinaryOperator op)
-{
-  switch (op) {
-    case BinaryOperator::ArcTan2:
-      return F("atan2");
-    case BinaryOperator::ArcTan2_d:
-      return F("atan2_d");
-    case BinaryOperator::FMod:
-      return F("fmod");
-  }
-  return F("");
-}
 #endif // if !defined(LIMIT_BUILD_SIZE) && FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
 
 String RulesCalculate_t::preProces(const String& input)
@@ -837,33 +907,33 @@ String RulesCalculate_t::preProces(const String& input)
 
   const UnaryOperator operators[] = {
     UnaryOperator::Not
-    ,UnaryOperator::Log
-    ,UnaryOperator::Ln
-    ,UnaryOperator::Abs
-    ,UnaryOperator::Exp
-    ,UnaryOperator::Sqrt
-    ,UnaryOperator::Sq
-    ,UnaryOperator::Round
+    , UnaryOperator::Log
+    , UnaryOperator::Ln
+    , UnaryOperator::Abs
+    , UnaryOperator::Exp
+    , UnaryOperator::Sqrt
+    , UnaryOperator::Sq
+    , UnaryOperator::Round
     #if FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
 
     // Try the "arc" functions first or else "sin" is already replaced when "asin" is tried.
-    ,UnaryOperator::ArcSin
-    ,UnaryOperator::ArcSin_d
-    ,UnaryOperator::Sin
-    ,UnaryOperator::Sin_d
+    , UnaryOperator::ArcSin
+    , UnaryOperator::ArcSin_d
+    , UnaryOperator::Sin
+    , UnaryOperator::Sin_d
 
-    ,UnaryOperator::ArcCos
-    ,UnaryOperator::ArcCos_d
-    ,UnaryOperator::Cos
-    ,UnaryOperator::Cos_d
+    , UnaryOperator::ArcCos
+    , UnaryOperator::ArcCos_d
+    , UnaryOperator::Cos
+    , UnaryOperator::Cos_d
 
-    ,UnaryOperator::ArcTan
-    ,UnaryOperator::ArcTan_d
-    ,UnaryOperator::Tan
-    ,UnaryOperator::Tan_d
+    , UnaryOperator::ArcTan
+    , UnaryOperator::ArcTan_d
+    , UnaryOperator::Tan
+    , UnaryOperator::Tan_d
     #endif // if FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
-    ,UnaryOperator::Map // FIXME ?Move to new QuintaryOperator enum?
-    ,UnaryOperator::MapC
+    , UnaryOperator::Map // FIXME ?Move to new QuintaryOperator enum?
+    , UnaryOperator::MapC
 
   };
 
@@ -872,11 +942,20 @@ String RulesCalculate_t::preProces(const String& input)
   for (size_t i = 0; i < nrOperators; ++i) {
     const UnaryOperator op = operators[i];
 #if FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
-    if (op == UnaryOperator::ArcSin && preprocessed.indexOf(F("sin")) == -1) i += 3;
-    else if (op == UnaryOperator::ArcCos && preprocessed.indexOf(F("cos")) == -1) i += 3;
-    else if (op == UnaryOperator::ArcTan && preprocessed.indexOf(F("tan")) == -1) i += 3;
-    else 
-#endif
+
+    if ((op == UnaryOperator::ArcSin) &&
+        (preprocessed.indexOf(F("sin")) == -1)) {                                                                              i += 3;
+    }
+    else if ((op == UnaryOperator::ArcCos) &&
+             (preprocessed.indexOf(F("cos")) ==
+              -1)) {                                                                                   i += 3;
+    }
+    else if ((op == UnaryOperator::ArcTan) &&
+             (preprocessed.indexOf(F("tan")) ==
+              -1)) {                                                                                   i += 3;
+    }
+    else
+#endif // if FEATURE_TRIGONOMETRIC_FUNCTIONS_RULES
     {
       preProcessReplace(preprocessed, op);
     }
@@ -891,6 +970,7 @@ String RulesCalculate_t::preProces(const String& input)
   };
 
   constexpr size_t nrOperators2 = NR_ELEMENTS(operators2);
+
   for (size_t i = 0; i < nrOperators2; ++i) {
     const BinaryOperator op = operators2[i];
     preProcessReplace(preprocessed, op);
@@ -899,4 +979,3 @@ String RulesCalculate_t::preProces(const String& input)
 
   return preprocessed;
 }
-

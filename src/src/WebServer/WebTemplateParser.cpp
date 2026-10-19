@@ -140,7 +140,7 @@ const __FlashStringHelper* getGpMenuIcon(uint8_t index) {
   return F("");
 }
 
-const __FlashStringHelper* getGpMenuLabel(uint8_t index) {
+static const __FlashStringHelper* getGpMenuLabel(uint8_t index) {
   switch (index) {
     case MENU_INDEX_MAIN:              return F("Main");
     case MENU_INDEX_CONFIG:            return F("Config");
@@ -177,7 +177,7 @@ const __FlashStringHelper* getGpMenuLabel(uint8_t index) {
   return F("");
 }
 
-const __FlashStringHelper* getGpMenuURL(uint8_t index) {
+static const __FlashStringHelper* getGpMenuURL(uint8_t index) {
   switch (index) {
     case MENU_INDEX_MAIN: return F("/");
     case MENU_INDEX_CONFIG: return F("/config");
@@ -211,7 +211,7 @@ const __FlashStringHelper* getGpMenuURL(uint8_t index) {
   return F("");
 }
 
-bool GpMenuVisible(uint8_t index) {
+static bool GpMenuVisible(uint8_t index) {
   switch (index) {
     case MENU_INDEX_MAIN: return MENU_INDEX_MAIN_VISIBLE;
     case MENU_INDEX_CONFIG: return MENU_INDEX_CONFIG_VISIBLE;

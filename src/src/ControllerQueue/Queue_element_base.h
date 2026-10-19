@@ -23,7 +23,7 @@ public:
   virtual const UnitMessageCount_t* getUnitMessageCount() const = 0;
   virtual UnitMessageCount_t      * getUnitMessageCount()       = 0;
 
-  unsigned long _timestamp;
+  uint32_t _timestamp;
   controllerIndex_t _controller_idx;
   taskIndex_t _taskIndex;
 

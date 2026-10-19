@@ -583,7 +583,7 @@ void PluginStats::webformLoad_show_val(
   ESPEASY_RULES_FLOAT_TYPE value,
   const String           & unit) const
 {
-  addRowLabel(concat(getLabel(), label));
+  addRowLabel(getLabel() + label);
   addHtmlFloat(value, _nrDecimals);
 
   if (!unit.isEmpty()) {

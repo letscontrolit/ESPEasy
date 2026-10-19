@@ -41,28 +41,34 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: '3.13'
-      - name: Dependencies
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          version: "latest"
+          enable-cache: false
+      - name: Install dependencies
         run: |
-          sudo apt install binutils build-essential libffi-dev libgit2-dev
-          pip install uv
+          uv pip install --system pioarduino
           uv pip install --system -r requirements.txt
-          pio pkg update -e ${{ matrix.env }}
-      - name: Build and archive
-        id: build-and-archive
-        env:
-          CHIP: ${{ matrix.chip }}
-          ENV: ${{ matrix.env }}
+      - name: Get current date
+        id: date
         run: |
-          python tools/ci/build-and-archive.py
+          echo "builddate=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
+      - name: Run PlatformIO
+        env:
+          PYTHONIOENCODING: utf-8
+          PYTHONUTF8: '1'
+        run: platformio run -e ${{ matrix.env }}
       - id: string
         uses: Entepotenz/change-string-case-action-min-dependencies@v1
         with:
           string: ${{ matrix.chip }}
       - uses: actions/upload-artifact@v7
         with:
-          name: Bin-${{ steps.string.outputs.uppercase }}-${{ matrix.env }}
+          # FIXME Workaround to (temporarily) not use # in the artifact name, see https://github.com/actions/upload-artifact/issues/473
+          name: Bin-${{ steps.string.outputs.uppercase }}-${{ matrix.env }}-${{ steps.date.outputs.builddate }}_PR_${{ github.event.number }}_${{ github.run_id }} # Sort by ESP type
           path: |
-            bin
+            ./build_output/bin
           if-no-files-found: ignore
 
   prepare-dist:

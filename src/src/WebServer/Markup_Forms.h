@@ -322,12 +322,19 @@ void addFormPinStateSelect(int gpio,
 
 int getFormItemInt(const __FlashStringHelper * key, int defaultValue);
 int getFormItemInt(const String& key, int defaultValue);
+uint64_t getFormItemUInt64(const String& key, uint64_t defaultValue);
 
 bool getCheckWebserverArg_int(const String& key,
                               int         & value);
 
 bool getCheckWebserverArg_int(const String& key,
                               uint32_t      & value);
+
+bool getCheckWebserverArg_int(const String& key,
+                              uint64_t      & value);
+
+bool getCheckWebserverArg_int(const String& key,
+                              int64_t      & value);
 
 bool update_whenset_FormItemInt(const __FlashStringHelper * key,
                                 int         & value,

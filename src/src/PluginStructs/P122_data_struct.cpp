@@ -439,6 +439,7 @@ bool P122_data_struct::readValue(uint16_t& value)
 
   if (crc8(buffer, 2) == buffer[2])
   {
+    // TODO TD-er: Use getUint16FromBigEndianByteStream
     value  = buffer[0] << 8;
     value += buffer[1];
     value &= 0xFFFC;
@@ -550,7 +551,7 @@ bool P122_data_struct::writeUserReg()
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
-unsigned long P122_data_struct::getTempDuration()
+uint32_t P122_data_struct::getTempDuration()
 {
   //  Datasheet table 7
   switch (_resolution)
@@ -565,7 +566,7 @@ unsigned long P122_data_struct::getTempDuration()
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 // Calculate the minimum delay for humidity measurement (depends on the resolution)
-unsigned long P122_data_struct::getHumDuration()
+uint32_t P122_data_struct::getHumDuration()
 {
   // Datasheet table 7
   switch (_resolution)

@@ -27,7 +27,7 @@
 // 1=Comfortable
 // 2=Dry
 // 3=Wet
-int humStatDomoticz(struct EventStruct *event, uint8_t rel_index) {
+static int humStatDomoticz(struct EventStruct *event, uint8_t rel_index) {
   userVarIndex_t userVarIndex = event->BaseVarIndex + rel_index;
 
   if (validTaskVarIndex(rel_index) && validUserVarIndex(userVarIndex)) {
@@ -168,7 +168,7 @@ String formatDomoticzSensorType(struct EventStruct *event) {
 #  include <ArduinoJson.h>
 
 bool deserializeDomoticzJson(const String& json,
-                             unsigned int& idx, float& nvalue, long& nvaluealt,
+                             unsigned int& idx, float& nvalue, int32_t& nvaluealt,
                              String& svalue1, String& switchtype) {
   uint16_t jsonlength = 512;
 
@@ -180,8 +180,8 @@ bool deserializeDomoticzJson(const String& json,
     return false;
   }
 
-  // Use long here as intermediate object type to prevent ArduinoJSON from adding a new template variant to the code.
-  const long idx_long = root[F("idx")];
+  // Use int32_t here as intermediate object type to prevent ArduinoJSON from adding a new template variant to the code.
+  const int32_t idx_long = root[F("idx")];
 
   idx       = idx_long;
   nvalue    = root[F("nvalue")];

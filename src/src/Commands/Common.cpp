@@ -213,10 +213,10 @@ String Command_GetORSetETH(struct EventStruct *event,
 }
 #endif
 
-String Command_GetORSetInt8_t(struct EventStruct *event,
+String Command_GetORSetUInt32_t(struct EventStruct *event,
                             const __FlashStringHelper * targetDescription,
                             const char         *Line,
-                            int8_t             *value,
+                            uint32_t           *value,
                             int                 arg)
 {
   bool hasArgument = false;
@@ -226,11 +226,10 @@ String Command_GetORSetInt8_t(struct EventStruct *event,
 
     if (GetArgv(Line, TmpStr1, arg + 1)) {
       hasArgument = true;
-      TmpStr1.toLowerCase();
 
-      int32_t tmp_int = 0;
-      if (validIntFromString(TmpStr1, tmp_int)) {
-        *value = static_cast<int8_t>(tmp_int);
+      uint32_t tmp_int{};
+      if (validUIntFromString(TmpStr1, tmp_int)) {
+        *value = tmp_int;
       }
     }
   }

@@ -57,12 +57,12 @@ float altitudeFromPressure(float atmospheric, float seaLevel);
 /********************************************************************************************\
    In memory convert float to long
  \*********************************************************************************************/
-unsigned long float2ul(float f);
+uint32_t float2ul(float f);
 
 /********************************************************************************************\
    In memory convert long to float
  \*******************************************************************************************/
-float ul2float(unsigned long ul);
+float ul2float(uint32_t ul);
 
 
 

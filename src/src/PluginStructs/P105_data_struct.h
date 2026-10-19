@@ -80,8 +80,8 @@ struct P105_data_struct : public PluginTaskData_base {
 
   AHTx_Device   device;
   AHTx_state    state;
-  unsigned long last_measurement;
-  unsigned long trigger_time;
+  uint32_t last_measurement;
+  uint32_t trigger_time;
 };
 
 #endif // ifdef USES_P105

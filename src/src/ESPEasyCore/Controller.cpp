@@ -1267,11 +1267,11 @@ bool GetTLS_Certificate(String& cert, bool caRoot)
 /*********************************************************************************************\
 * send specific sensor task data, effectively calling PluginCall(PLUGIN_READ...)
 \*********************************************************************************************/
-void SensorSendTask(struct EventStruct *event, unsigned long timestampUnixTime) {
+void SensorSendTask(struct EventStruct *event, uint32_t timestampUnixTime) {
   SensorSendTask(event, timestampUnixTime, millis());
 }
 
-void SensorSendTask(struct EventStruct *event, unsigned long timestampUnixTime, unsigned long lasttimer)
+void SensorSendTask(struct EventStruct *event, uint32_t timestampUnixTime, uint32_t lasttimer)
 {
   if (!validTaskIndex(event->TaskIndex)) {
     return;

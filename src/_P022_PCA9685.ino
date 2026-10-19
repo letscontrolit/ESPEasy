@@ -30,7 +30,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
   uint16_t freq    = PCA9685_MAX_FREQUENCY;
   uint16_t range   = PCA9685_MAX_PWM;
 
-  if ((event != nullptr) && (event->TaskIndex >= 0))
+  if ((event != nullptr) && validTaskIndex(event->TaskIndex))
   {
     address = CONFIG_PORT;
     mode2   = PCONFIG(0);
@@ -271,7 +271,7 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
           }
           else {
             if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-              addLog(LOG_LEVEL_ERROR, concat(log, strformat(F(" the pwm value %d  is invalid value."), event->Par2)));
+              addLog(LOG_LEVEL_ERROR, log + strformat(F(" the pwm value %d  is invalid value."), event->Par2));
             }
           }
         }
@@ -418,7 +418,8 @@ boolean Plugin_022(uint8_t function, struct EventStruct *event, String& string)
       if (instanceCommand && (equals(command, F("pulse"))))
       {
         success = true;
-        log     = concat(P022_data_struct::P022_logPrefix(address, F("GPIO ")), event->Par1);
+        log     = P022_data_struct::P022_logPrefix(address, F("GPIO "));
+        log    += event->Par1;
 
         if ((event->Par1 >= 0) && (event->Par1 <= PCA9685_MAX_PINS))
         {

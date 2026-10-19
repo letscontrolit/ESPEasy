@@ -6,9 +6,12 @@
 
 
 #ifdef ESP32
-  # define LOG_BUFFER_EXPIRE         30000 // Time after which a buffered log item is considered expired.
-#else
-  # define LOG_BUFFER_EXPIRE         5000  // Time after which a buffered log item is considered expired.
+  # define LOGENTRY_FREEMEM_THRESHOLD   20000
+  # define LOG_BUFFER_EXPIRE            30000 // Time after which a buffered log item is considered expired.
+#endif // ifdef ESP32
+#ifdef ESP8266
+  # define LOGENTRY_FREEMEM_THRESHOLD   5000
+  # define LOG_BUFFER_EXPIRE            10000 // Time after which a buffered log item is considered expired.
 #endif // ifdef ESP32
 
 
@@ -43,22 +46,20 @@ struct LogEntry_t {
     return isValid();
   }
 
-  void   setSubscribers();
+  void     setSubscribers();
 
-  // This may clear pending reads when a log subscriber is no longer actively reading
-  void   updateSubscribers();
+  void     markReadBySubscriber(uint8_t subscriber);
 
-  void   markReadBySubscriber(uint8_t subscriber);
+  bool     validForSubscriber(uint8_t subscriber) const;
 
-  bool   validForSubscriber(uint8_t subscriber) const;
-
-  size_t print(Print& out,
-               size_t offset = 0,
-               size_t length = std::numeric_limits<size_t>::max()) const;
-
+  /*
+     size_t print(Print& out,
+                 size_t offset = 0,
+                 size_t length = std::numeric_limits<size_t>::max()) const;
+   */
   String   getMessage() const;
 
-  bool     isExpired() const;
+  bool     hasExpired(size_t freeMem) const;
 
   bool     isValid() const;
 

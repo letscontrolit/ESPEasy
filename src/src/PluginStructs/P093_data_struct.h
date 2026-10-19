@@ -213,7 +213,7 @@ private:
 
   void          connect();
 
-  unsigned long getBaudRate() const;
+  uint32_t getBaudRate() const;
 
   void          sendPacket(const uint8_t *packet,
                            size_t         size);
@@ -268,11 +268,11 @@ private:
   bool           _fastBaudRate;
   uint8_t        _readBuffer[READ_BUFFER_LEN] = { 0 };
   uint8_t        _readPos;
-  unsigned long  _writeTimeout;
+  uint32_t  _writeTimeout;
   Values         _currentValues;
   Values         _wantedSettings;
   uint8_t        _infoModeIndex;
-  unsigned long  _statusUpdateTimeout;
+  uint32_t  _statusUpdateTimeout;
   bool           _tempMode;
   bool           _wideVaneAdj;
   bool           _valuesInitialized;

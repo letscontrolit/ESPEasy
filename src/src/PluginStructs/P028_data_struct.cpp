@@ -306,6 +306,7 @@ bool P028_data_struct::readUncompensatedData() {
   uncompensated.temperature = data_msb | data_lsb | data_xlsb;
 
   /* Store the parsed register values for temperature data */
+  // TODO TD-er: Use getUint16FromLittleEndianByteStream  (maybe also the 2 above?)
   data_lsb               = (uint32_t)BME280_data[BME280_DATA_ADDR + 6] << 8;
   data_msb               = (uint32_t)BME280_data[BME280_DATA_ADDR + 7];
   uncompensated.humidity = data_msb | data_lsb;

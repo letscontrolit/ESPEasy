@@ -473,7 +473,7 @@ void NodesHandler::updateThisNode() {
     const NodeStruct *preferred = getPreferredNode_notMatching(thisNode.sta_mac);
 
     if (preferred != nullptr) {
-      if (!preferred->isExpired()) {
+      if (!preferred->hasExpired()) {
         // Only take the distance of another node if it is running a build which does not send out traceroute
         // If it is a build sending traceroute, only consider having a distance if you know how to reach the gateway node
         // This does impose an issue when a gateway node is running an older version, as the next hops never will have a traceroute too.
@@ -552,13 +552,13 @@ NodesMap::const_iterator NodesHandler::find(uint8_t unit_nr) const
   return _nodes.find(unit_nr);
 }
 
-bool NodesHandler::refreshNodeList(unsigned long max_age_allowed, unsigned long& max_age)
+bool NodesHandler::refreshNodeList(uint32_t max_age_allowed, uint32_t& max_age)
 {
   max_age = 0;
   bool nodeRemoved = false;
 
   for (auto it = _nodes.begin(); it != _nodes.end();) {
-    unsigned long age = it->second.getAge();
+    uint32_t age = it->second.getAge();
     if (age > max_age_allowed) {
       bool mustErase = true;
       #ifdef USES_ESPEASY_NOW

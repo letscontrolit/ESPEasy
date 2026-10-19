@@ -229,15 +229,15 @@ void NW004_data_struct_ETH_SPI::webform_load(EventStruct *event)
 
     FormSelectorOptions selector(NR_ELEMENTS(ids), options, ids);
     auto params = NW004_makeWebFormItemParams(NW004_KEY_ETH_PHY_TYPE);
-    params._defaultIntValue = static_cast<int>(EthPhyType_t::notSet);
-    showFormSelector(*_kvs, selector, params);
+    params._defaultValue.setInt(static_cast<int>(EthPhyType_t::notSet));
+    showFormSelector(*_kvs, selector, std::move(params));
   }
   {
     auto params = NW004_makeWebFormItemParams(NW004_KEY_ETH_PHY_ADDR);
     params._min             = -1;
     params._max             = 127;
-    params._defaultIntValue = 1;
-    showWebformItem(*_kvs, params);
+    params._defaultValue.setInt(1);
+    showWebformItem(*_kvs, std::move(params));
     addFormNote(F("I&sup2;C-address of Ethernet PHY"));
   }
   {

@@ -178,7 +178,7 @@ boolean Plugin_059(uint8_t function, struct EventStruct *event, String& string)
       {
         if (P_059_sensordefs[event->TaskIndex]->hasChanged())
         {
-          const long c = P_059_sensordefs[event->TaskIndex]->read();
+          const int c = P_059_sensordefs[event->TaskIndex]->read();
           UserVar.setFloat(event->TaskIndex, 0, c);
 #ifndef BUILD_NO_DEBUG
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {

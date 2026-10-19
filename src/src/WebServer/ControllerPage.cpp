@@ -29,118 +29,10 @@
 # include "../Helpers/ESPEasy_Storage.h"
 
 // ********************************************************************************
-// Web Interface controller page
-// ********************************************************************************
-void handle_controllers() {
-  # ifndef BUILD_NO_RAM_TRACKER
-  checkRAM(F("handle_controllers"));
-  # endif // ifndef BUILD_NO_RAM_TRACKER
-
-  if (!startStream_send_stdTemplate(MENU_INDEX_CONTROLLERS)) { return; }
-
-  // 'index' value in the URL
-  uint8_t controllerindex       = getFormItemInt(F("index"), 0);
-  const bool controllerIndexSet = controllerindex != 0 && validControllerIndex(controllerindex - 1);
-  --controllerindex; // Index in URL is starting from 1, but starting from 0 in the array.
-
-  const int protocol_webarg_value = getFormItemInt(F("protocol"), -1);
-
-  // submitted data
-  if ((protocol_webarg_value != -1) && controllerIndexSet)
-  {
-    const protocolIndex_t protocolIndex = protocol_webarg_value;
-    bool mustInit                       = false;
-    bool mustCallCpluginSave            = false;
-    {
-      // Place in a scope to free ControllerSettings memory ASAP
-      MakeControllerSettings(ControllerSettings); // -V522
-
-      if (!AllocatedControllerSettings()) {
-        addHtmlError(F("Not enough free memory to save settings"));
-      } else {
-        // Need to make sure every byte between the members is also zero
-        // Otherwise the checksum will fail and settings will be saved too often.
-        ControllerSettings->reset();
-
-        if (Settings.Protocol[controllerindex] != protocolIndex)
-        {
-          // Protocol has changed.
-          Settings.Protocol[controllerindex] = protocolIndex;
-
-          // there is a protocolIndex selected?
-          if (protocolIndex != 0)
-          {
-            mustInit = true;
-            handle_controllers_clearLoadDefaults(controllerindex, *ControllerSettings);
-          }
-        }
-
-        // subitted same protocolIndex
-        else
-        {
-          // there is a protocolIndex selected
-          if (protocolIndex != 0)
-          {
-            mustInit = true;
-            handle_controllers_CopySubmittedSettings(controllerindex, *ControllerSettings);
-            mustCallCpluginSave = true;
-          }
-        }
-        addHtmlError(SaveControllerSettings(controllerindex, *ControllerSettings));
-        # if FEATURE_MQTT_DISCOVER
-
-        // AutoDiscovery enabled?
-        if (ControllerSettings->mqtt_autoDiscovery()
-            && Settings.ControllerEnabled(controllerindex)
-
-            // && (ControllerSettings->MqttAutoDiscoveryTrigger[0] != 0)
-            && (ControllerSettings->MqttAutoDiscoveryTopic[0] != 0)
-            ) {
-          // Generate random time-offset in 0.1 sec, range 1..30 seconds
-          mqttDiscoveryTimeout = random(10, MQTT_DISCOVERY_MAX_DELAY_0_1_SECONDS);
-
-          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-            #ifndef BUILD_NO_DEBUG
-            addLog(LOG_LEVEL_INFO, strformat(F("MQTT : Start AutoDiscovery on Save. Starting in %.1f sec."), mqttDiscoveryTimeout / 10));
-            #else // ifndef BUILD_NO_DEBUG
-            addLog(LOG_LEVEL_INFO, strformat(F("MQTT : Discovery starting in %.1f sec."), mqttDiscoveryTimeout / 10));
-            #endif // ifndef BUILD_NO_DEBUG
-          }
-        }
-        # endif // if FEATURE_MQTT_DISCOVER
-      }
-    }
-
-    if (mustCallCpluginSave) {
-      // Call CPLUGIN_WEBFORM_SAVE after destructing ControllerSettings object to reduce RAM usage.
-      // Controller plugin almost only deals with custom controller settings.
-      // Even if they need to save things to the ControllerSettings, then the changes must
-      // already be saved first as the CPluginCall does not have the ControllerSettings as argument.
-      handle_controllers_CopySubmittedSettings_CPluginCall(controllerindex);
-    }
-    addHtmlError(SaveSettings());
-
-    if (mustInit) {
-      // Init controller plugin using the new settings.
-      CPlugin_Exit_Init(controllerindex);
-    }
-  }
-
-  if (controllerIndexSet)
-  {
-    handle_controllers_ControllerSettingsPage(controllerindex);
-  } else {
-    handle_controllers_ShowAllControllersTable();
-  }
-
-  sendTail_stdtemplate();
-}
-
-// ********************************************************************************
 // Selected controller has changed.
 // Clear all Controller settings and load some defaults
 // ********************************************************************************
-void handle_controllers_clearLoadDefaults(uint8_t controllerindex, ControllerSettingsStruct& ControllerSettings)
+static void handle_controllers_clearLoadDefaults(uint8_t controllerindex, ControllerSettingsStruct& ControllerSettings)
 {
   // Protocol has changed and it was not an empty one.
   // reset (some) default-settings
@@ -185,10 +77,12 @@ void handle_controllers_clearLoadDefaults(uint8_t controllerindex, ControllerSet
   ClearCustomControllerSettings(controllerindex);
 }
 
+
+
 // ********************************************************************************
 // Collect all submitted form data and store in the ControllerSettings
 // ********************************************************************************
-void handle_controllers_CopySubmittedSettings(uint8_t controllerindex, ControllerSettingsStruct& ControllerSettings)
+static void handle_controllers_CopySubmittedSettings(uint8_t controllerindex, ControllerSettingsStruct& ControllerSettings)
 {
   // copy all settings to controller settings struct
   for (int parameterIdx = 0; parameterIdx <= ControllerSettingsStruct::CONTROLLER_ENABLED; ++parameterIdx) {
@@ -197,7 +91,7 @@ void handle_controllers_CopySubmittedSettings(uint8_t controllerindex, Controlle
   }
 }
 
-void handle_controllers_CopySubmittedSettings_CPluginCall(uint8_t controllerindex) {
+static void handle_controllers_CopySubmittedSettings_CPluginCall(uint8_t controllerindex) {
   protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(controllerindex);
 
   if (validProtocolIndex(ProtocolIndex)) {
@@ -213,7 +107,7 @@ void handle_controllers_CopySubmittedSettings_CPluginCall(uint8_t controllerinde
 // ********************************************************************************
 // Show table with all selected controllers
 // ********************************************************************************
-void handle_controllers_ShowAllControllersTable()
+static void handle_controllers_ShowAllControllersTable()
 {
   html_add_form();
   html_table_class_multirow();
@@ -278,7 +172,7 @@ void handle_controllers_ShowAllControllersTable()
 // ********************************************************************************
 // Show the controller settings page
 // ********************************************************************************
-void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex)
+static void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex)
 {
   if (!validControllerIndex(controllerindex)) {
     return;
@@ -724,6 +618,117 @@ void handle_controllers_ControllerSettingsPage(controllerIndex_t controllerindex
   addSubmitButton();
   html_end_table();
   html_end_form();
+}
+
+
+
+
+// ********************************************************************************
+// Web Interface controller page
+// ********************************************************************************
+void handle_controllers() {
+  # ifndef BUILD_NO_RAM_TRACKER
+  checkRAM(F("handle_controllers"));
+  # endif // ifndef BUILD_NO_RAM_TRACKER
+
+  if (!startStream_send_stdTemplate(MENU_INDEX_CONTROLLERS)) { return; }
+
+  // 'index' value in the URL
+  uint8_t controllerindex       = getFormItemInt(F("index"), 0);
+  const bool controllerIndexSet = controllerindex != 0 && validControllerIndex(controllerindex - 1);
+  --controllerindex; // Index in URL is starting from 1, but starting from 0 in the array.
+
+  const int protocol_webarg_value = getFormItemInt(F("protocol"), -1);
+
+  // submitted data
+  if ((protocol_webarg_value != -1) && controllerIndexSet)
+  {
+    const protocolIndex_t protocolIndex = protocol_webarg_value;
+    bool mustInit                       = false;
+    bool mustCallCpluginSave            = false;
+    {
+      // Place in a scope to free ControllerSettings memory ASAP
+      MakeControllerSettings(ControllerSettings); // -V522
+
+      if (!AllocatedControllerSettings()) {
+        addHtmlError(F("Not enough free memory to save settings"));
+      } else {
+        // Need to make sure every byte between the members is also zero
+        // Otherwise the checksum will fail and settings will be saved too often.
+        ControllerSettings->reset();
+
+        if (Settings.Protocol[controllerindex] != protocolIndex)
+        {
+          // Protocol has changed.
+          Settings.Protocol[controllerindex] = protocolIndex;
+
+          // there is a protocolIndex selected?
+          if (protocolIndex != 0)
+          {
+            mustInit = true;
+            handle_controllers_clearLoadDefaults(controllerindex, *ControllerSettings);
+          }
+        }
+
+        // subitted same protocolIndex
+        else
+        {
+          // there is a protocolIndex selected
+          if (protocolIndex != 0)
+          {
+            mustInit = true;
+            handle_controllers_CopySubmittedSettings(controllerindex, *ControllerSettings);
+            mustCallCpluginSave = true;
+          }
+        }
+        addHtmlError(SaveControllerSettings(controllerindex, *ControllerSettings));
+        # if FEATURE_MQTT_DISCOVER
+
+        // AutoDiscovery enabled?
+        if (ControllerSettings->mqtt_autoDiscovery()
+            && Settings.ControllerEnabled(controllerindex)
+
+            // && (ControllerSettings->MqttAutoDiscoveryTrigger[0] != 0)
+            && (ControllerSettings->MqttAutoDiscoveryTopic[0] != 0)
+            ) {
+          // Generate random time-offset in 0.1 sec, range 1..30 seconds
+          mqttDiscoveryTimeout = random(10, MQTT_DISCOVERY_MAX_DELAY_0_1_SECONDS);
+
+          if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+            #ifndef BUILD_NO_DEBUG
+            addLog(LOG_LEVEL_INFO, strformat(F("MQTT : Start AutoDiscovery on Save. Starting in %.1f sec."), mqttDiscoveryTimeout / 10));
+            #else // ifndef BUILD_NO_DEBUG
+            addLog(LOG_LEVEL_INFO, strformat(F("MQTT : Discovery starting in %.1f sec."), mqttDiscoveryTimeout / 10));
+            #endif // ifndef BUILD_NO_DEBUG
+          }
+        }
+        # endif // if FEATURE_MQTT_DISCOVER
+      }
+    }
+
+    if (mustCallCpluginSave) {
+      // Call CPLUGIN_WEBFORM_SAVE after destructing ControllerSettings object to reduce RAM usage.
+      // Controller plugin almost only deals with custom controller settings.
+      // Even if they need to save things to the ControllerSettings, then the changes must
+      // already be saved first as the CPluginCall does not have the ControllerSettings as argument.
+      handle_controllers_CopySubmittedSettings_CPluginCall(controllerindex);
+    }
+    addHtmlError(SaveSettings());
+
+    if (mustInit) {
+      // Init controller plugin using the new settings.
+      CPlugin_Exit_Init(controllerindex);
+    }
+  }
+
+  if (controllerIndexSet)
+  {
+    handle_controllers_ControllerSettingsPage(controllerindex);
+  } else {
+    handle_controllers_ShowAllControllersTable();
+  }
+
+  sendTail_stdtemplate();
 }
 
 #endif // ifdef WEBSERVER_CONTROLLERS

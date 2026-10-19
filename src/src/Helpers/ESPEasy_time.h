@@ -30,7 +30,7 @@ public:
   // This way the unit can do things based on local time even when NTP servers may not respond.
   // Do not use this when booting from deep sleep.
   // Only call this once during boot.
-  void restoreLastKnownUnixTime(unsigned long lastSysTime,
+  void restoreLastKnownUnixTime(uint32_t lastSysTime,
                                 uint8_t       deepSleepState);
 
   // Set external time source
@@ -78,11 +78,11 @@ public:
 
   void          initTime();
 
-  unsigned long getLocalUnixTime() const;
-  unsigned long getLocalUnixTime(uint32_t& unix_time_frac) const;
+  uint32_t getLocalUnixTime() const;
+  uint32_t getLocalUnixTime(uint32_t& unix_time_frac) const;
 
   // Update and get the current systime
-  unsigned long now_();
+  uint32_t now_();
 
   // Update time and return whether the minute has changed since last check.
   bool          reportNewMinute();
@@ -129,10 +129,10 @@ public:
    \*********************************************************************************************/
 
   // Get the year given a Unix time stamp
-  static int    year(unsigned long t);
+  static int    year(uint32_t t);
 
   // Get the weekday, given a Unix time stamp
-  static int    weekday(unsigned long t);
+  static int    weekday(uint32_t t);
 
   // Convert a weekday number (Sun = 1 ... Sat = 7) to a 3 letter string
   static String weekday_str(int wday);

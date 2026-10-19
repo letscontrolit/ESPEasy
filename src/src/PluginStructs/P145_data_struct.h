@@ -124,8 +124,8 @@ public:
                                     int heaterPin);
   float               getCalibrationValue() const;
   float               getAutoCalibrationValue() const;
-  static const String getTypeName(int stype);
-  static const String getGasName(int stype);
+  static const __FlashStringHelper * getTypeName(int stype);
+  static const __FlashStringHelper * getGasName(int stype);
   static int          getNbrOfTypes();
   void                dump() const;
   void                heaterControl(void);

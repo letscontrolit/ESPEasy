@@ -357,7 +357,7 @@ uint32_t getEEPROMMaxSlots() {
     const uint32_t eepromSize = getEEPROMSize(static_cast<EEPROMExternal_Type_e>(Settings.EEPROMExternalType()));
 
     if (eepromSize) {
-      const uint32_t slotMax = (unsigned long)(((eepromSize - EEPROM_CUSTOM_START_OFFSET) / EEPROM_CUSTOM_DIVISOR) / sizeof_eeprom_slot);
+      const uint32_t slotMax = (uint32_t)(((eepromSize - EEPROM_CUSTOM_START_OFFSET) / EEPROM_CUSTOM_DIVISOR) / sizeof_eeprom_slot);
 
       return slotMax;
     }

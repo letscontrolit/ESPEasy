@@ -224,7 +224,7 @@ bool P094_filter::matches(const mBusPacket_header_t& other) const
   return true;
 }
 
-unsigned long P094_filter::computeUnixTimeExpiration() const
+uint32_t P094_filter::computeUnixTimeExpiration() const
 {
   // Match the interval window.
   const P094_Filter_Window filterWindow = getFilterWindow();
@@ -241,8 +241,8 @@ unsigned long P094_filter::computeUnixTimeExpiration() const
   }
 
   // Using UnixTime
-  const unsigned long currentTime = node_time.getUnixTime();
-  unsigned long window_max        = currentTime;
+  const uint32_t currentTime = node_time.getUnixTime();
+  uint32_t window_max        = currentTime;
 
   if ((filterWindow == P094_Filter_Window::One_hour) ||
       (filterWindow == P094_Filter_Window::Day) ||
