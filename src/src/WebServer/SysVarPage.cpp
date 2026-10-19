@@ -26,11 +26,58 @@
 // ********************************************************************************
 // Web Interface sysvars showing all system vars and their value.
 // ********************************************************************************
-void addSysVar_enum_html(SystemVariables::Enum enumval) {
+static void addSysVar_html(String input, bool isSpecialChar) {
+  // Make deepcopy for replacement, so parameter is a copy, not a const reference
+
+  html_TR_TD();
+  addHtml_pre(input);
+  
+  if (isSpecialChar) {
+    parseSpecialCharacters(input, false);
+    html_TD();
+    addHtml(input);
+    html_TD();
+    addHtml(URLEncode(input));
+  } else {
+    const String orig_input(input);
+
+    for (int i = 0; i < 2; ++i) {
+      const bool URLencoded = i == 1;
+
+      if (URLencoded) {
+        input = orig_input;
+      }
+
+      parseSystemVariables(input, URLencoded);
+      parseStandardConversions(input, URLencoded);
+      # if FEATURE_STRING_VARIABLES
+      input = parseTemplate_padded(input, 0, URLencoded);
+      # endif // if FEATURE_STRING_VARIABLES
+
+      html_TD();
+      addHtml(input);
+    }
+  }
+  delay(0);
+}
+
+static void addSysVar_html(const __FlashStringHelper *input) {
+  addSysVar_html(String(input), false);
+}
+
+static void addSysVar_html_specialChar(const __FlashStringHelper *input) {
+  addSysVar_html(String(input), true);
+}
+
+static void addSysVar_html(const String& input) {
+  addSysVar_html(input, false);
+}
+
+static void addSysVar_enum_html(SystemVariables::Enum enumval) {
   addSysVar_html(SystemVariables::toString(enumval), false);
 }
 
-void addSysVar_enum_html(const SystemVariables::Enum enumval[], size_t nrElements) {
+static void addSysVar_enum_html(const SystemVariables::Enum enumval[], size_t nrElements) {
   for (size_t i = 0; i < nrElements; ++i) {
     addSysVar_enum_html(enumval[i]);
   }
@@ -548,51 +595,6 @@ void handle_sysvars() {
   sendTail_stdtemplate();
 }
 
-void addSysVar_html(const __FlashStringHelper *input) {
-  addSysVar_html(String(input), false);
-}
 
-void addSysVar_html_specialChar(const __FlashStringHelper *input) {
-  addSysVar_html(String(input), true);
-}
-
-void addSysVar_html(const String& input) {
-  addSysVar_html(input, false);
-}
-
-void addSysVar_html(String input, bool isSpecialChar) {
-  // Make deepcopy for replacement, so parameter is a copy, not a const reference
-
-  html_TR_TD();
-  addHtml_pre(input);
-  
-  if (isSpecialChar) {
-    parseSpecialCharacters(input, false);
-    html_TD();
-    addHtml(input);
-    html_TD();
-    addHtml(URLEncode(input));
-  } else {
-    const String orig_input(input);
-
-    for (int i = 0; i < 2; ++i) {
-      const bool URLencoded = i == 1;
-
-      if (URLencoded) {
-        input = orig_input;
-      }
-
-      parseSystemVariables(input, URLencoded);
-      parseStandardConversions(input, URLencoded);
-      # if FEATURE_STRING_VARIABLES
-      input = parseTemplate_padded(input, 0, URLencoded);
-      # endif // if FEATURE_STRING_VARIABLES
-
-      html_TD();
-      addHtml(input);
-    }
-  }
-  delay(0);
-}
 
 #endif // WEBSERVER_SYSVARS

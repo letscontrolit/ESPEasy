@@ -65,12 +65,12 @@ uint64_t computeDecimalFactorForDecimals(int nrDecimals)
 }
 
 #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
-double estimateDoubleEpsilon(const double& a, const double& b)
+static double estimateDoubleEpsilon(const double& a, const double& b)
 {
   return std::max(std::abs(a), std::abs(b)) * ESPEASY_DOUBLE_EPSILON;
 }
 #endif
-float estimateEpsilon(const float& a, const float& b)
+static float estimateEpsilon(const float& a, const float& b)
 {
   return std::max(std::abs(a), std::abs(b)) * ESPEASY_FLOAT_EPSILON;
 }

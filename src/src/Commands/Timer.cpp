@@ -10,7 +10,7 @@
 #include "../Helpers/Misc.h"
 #include "../Helpers/Scheduler.h"
 
-const __FlashStringHelper * command_setRulesTimer(int msecFromNow, int timerIndex, int recurringCount, bool startImmediately = false) {
+static const __FlashStringHelper * command_setRulesTimer(int msecFromNow, int timerIndex, int recurringCount, bool startImmediately = false) {
   if (msecFromNow < 0)
   {
     addLog(LOG_LEVEL_ERROR, F("TIMER: time must be positive"));

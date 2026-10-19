@@ -20,6 +20,115 @@
 
 # endif // if FEATURE_EMAIL_TLS
 
+
+
+
+static bool getNextMailAddress(const String& data, String& address, int index)
+{
+  int found          = 0;
+  int strIndex[]     = { 0, -1 };
+  const int maxIndex = data.length() - 1;
+
+  for (int i = 0; i <= maxIndex && found <= index; i++) {
+    if ((data.charAt(i) == ',') || (i == maxIndex)) {
+      found++;
+      strIndex[0] = strIndex[1] + 1;
+      strIndex[1] = (i == maxIndex) ? i + 1 : i;
+    }
+  }
+
+  if (found > index) {
+    address = data.substring(strIndex[0], strIndex[1]);
+    return true;
+  }
+  return false;
+}
+
+
+static bool NPlugin_001_MTA(WiFiClient& client, const String& aStr, uint16_t aWaitForPattern, uint16_t timeout)
+{
+  # ifndef BUILD_NO_DEBUG
+
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    addLog(LOG_LEVEL_DEBUG, strformat(
+             F("NPlugin_001_MTA:  Waitfor: %u Timeout: %u ms Send: '%s'"),
+             aWaitForPattern,
+             timeout,
+             aStr.c_str()));
+  }
+  # endif // ifndef BUILD_NO_DEBUG
+
+  if (aStr.length()) {
+    client.PR_9453_FLUSH_TO_CLEAR(); // have to send msg to server so flush data first
+    client.println(aStr);
+  }
+
+  // Wait For Response
+  const uint32_t timer = millis() + timeout;
+  backgroundtasks();
+
+  do { // FIXME TD-er: Why this while loop??? makes no sense as it will only be run once
+    delay(0);
+
+    String line;
+    safeReadStringUntil(client, line, '\n', 1024); // , timeout);
+
+    # ifndef BUILD_NO_DEBUG
+
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+      addLogMove(LOG_LEVEL_DEBUG, concat(F("NPlugin_001_MTA: read line: "), line));
+    }
+    # endif // ifndef BUILD_NO_DEBUG
+
+
+    // response could be like: '220 domain', '220-domain','220+domain'
+    const String pattern_str_space = strformat(F("%d "), aWaitForPattern);
+    const String pattern_str_minus = strformat(F("%d-"), aWaitForPattern);
+    const String pattern_str_plus  = strformat(F("%d+"), aWaitForPattern);
+
+    const bool patternFound = line.indexOf(pattern_str_space) >= 0
+                              || line.indexOf(pattern_str_minus) >= 0
+                              || line.indexOf(pattern_str_plus) >= 0;
+
+    if (patternFound) {
+      return true;
+    }
+  } while (!timeOutReached(timer));
+
+  if (timeOutReached(timer)) {
+    if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+      addLogMove(LOG_LEVEL_ERROR,
+                 concat(F("NPlugin_001_MTA: timeout. "), aStr));
+    }
+  }
+
+  return false;
+}
+
+static bool NPlugin_001_Auth(WiFiClient& client, const String& user, const String& pass, uint16_t timeout)
+{
+  if (user.isEmpty() || pass.isEmpty()) {
+    // No user/password given.
+    return true;
+  }
+  base64 encoder;
+
+  bool success = true;
+
+  if (!NPlugin_001_MTA(client, F("AUTH LOGIN"), 334, timeout)) { success = false; }
+
+  if (!NPlugin_001_MTA(client, encoder.encode(user), 334, timeout)) { success = false; }
+
+  if (!NPlugin_001_MTA(client, encoder.encode(pass), 235, timeout)) { success = false; }
+#ifndef BUILD_NO_DEBUG
+  if (success) {
+    addLog(LOG_LEVEL_INFO, F("Email: Credentials Accepted"));
+  }
+#endif
+  return success;
+}
+
+
 bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, String& subject, String& body)
 {
   bool myStatus     = false;
@@ -383,108 +492,6 @@ bool NPlugin_001_send(const NotificationSettingsStruct& notificationsettings, St
   return myStatus;
 }
 
-bool NPlugin_001_Auth(WiFiClient& client, const String& user, const String& pass, uint16_t timeout)
-{
-  if (user.isEmpty() || pass.isEmpty()) {
-    // No user/password given.
-    return true;
-  }
-  base64 encoder;
 
-  bool success = true;
-
-  if (!NPlugin_001_MTA(client, F("AUTH LOGIN"), 334, timeout)) { success = false; }
-
-  if (!NPlugin_001_MTA(client, encoder.encode(user), 334, timeout)) { success = false; }
-
-  if (!NPlugin_001_MTA(client, encoder.encode(pass), 235, timeout)) { success = false; }
-#ifndef BUILD_NO_DEBUG
-  if (success) {
-    addLog(LOG_LEVEL_INFO, F("Email: Credentials Accepted"));
-  }
-#endif
-  return success;
-}
-
-bool NPlugin_001_MTA(WiFiClient& client, const String& aStr, uint16_t aWaitForPattern, uint16_t timeout)
-{
-  # ifndef BUILD_NO_DEBUG
-
-  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    addLog(LOG_LEVEL_DEBUG, strformat(
-             F("NPlugin_001_MTA:  Waitfor: %u Timeout: %u ms Send: '%s'"),
-             aWaitForPattern,
-             timeout,
-             aStr.c_str()));
-  }
-  # endif // ifndef BUILD_NO_DEBUG
-
-  if (aStr.length()) {
-    client.PR_9453_FLUSH_TO_CLEAR(); // have to send msg to server so flush data first
-    client.println(aStr);
-  }
-
-  // Wait For Response
-  const uint32_t timer = millis() + timeout;
-  backgroundtasks();
-
-  do { // FIXME TD-er: Why this while loop??? makes no sense as it will only be run once
-    delay(0);
-
-    String line;
-    safeReadStringUntil(client, line, '\n', 1024); // , timeout);
-
-    # ifndef BUILD_NO_DEBUG
-
-    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-      addLogMove(LOG_LEVEL_DEBUG, concat(F("NPlugin_001_MTA: read line: "), line));
-    }
-    # endif // ifndef BUILD_NO_DEBUG
-
-
-    // response could be like: '220 domain', '220-domain','220+domain'
-    const String pattern_str_space = strformat(F("%d "), aWaitForPattern);
-    const String pattern_str_minus = strformat(F("%d-"), aWaitForPattern);
-    const String pattern_str_plus  = strformat(F("%d+"), aWaitForPattern);
-
-    const bool patternFound = line.indexOf(pattern_str_space) >= 0
-                              || line.indexOf(pattern_str_minus) >= 0
-                              || line.indexOf(pattern_str_plus) >= 0;
-
-    if (patternFound) {
-      return true;
-    }
-  } while (!timeOutReached(timer));
-
-  if (timeOutReached(timer)) {
-    if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-      addLogMove(LOG_LEVEL_ERROR,
-                 concat(F("NPlugin_001_MTA: timeout. "), aStr));
-    }
-  }
-
-  return false;
-}
-
-bool getNextMailAddress(const String& data, String& address, int index)
-{
-  int found          = 0;
-  int strIndex[]     = { 0, -1 };
-  const int maxIndex = data.length() - 1;
-
-  for (int i = 0; i <= maxIndex && found <= index; i++) {
-    if ((data.charAt(i) == ',') || (i == maxIndex)) {
-      found++;
-      strIndex[0] = strIndex[1] + 1;
-      strIndex[1] = (i == maxIndex) ? i + 1 : i;
-    }
-  }
-
-  if (found > index) {
-    address = data.substring(strIndex[0], strIndex[1]);
-    return true;
-  }
-  return false;
-}
 
 #endif // ifdef USES_N001

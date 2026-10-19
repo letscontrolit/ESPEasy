@@ -353,6 +353,20 @@ String formatToHex_array(const uint8_t* data, size_t size)
   return res;
 }
 
+static String formatULLtoHex_no_prefix(const uint64_t& value, unsigned int minimal_hex_digits)
+{
+  const uint32_t msb_val = static_cast<uint32_t>(value >> 32);
+  const uint32_t lsb_val = static_cast<uint32_t>(value & 0xFFFFFFFF);
+  String res;
+  res.reserve(16);
+  res += formatToHex_no_prefix(msb_val, 8);
+  res += formatToHex_no_prefix(lsb_val, 8);
+  while (minimal_hex_digits < res.length() && res.startsWith(F("0"))) {
+    res = res.substring(1);
+  }
+  return res;
+}
+
 String formatULLtoHex(const uint64_t& value,
                    const __FlashStringHelper * prefix,
                    unsigned int minimal_hex_digits)
@@ -371,19 +385,6 @@ String formatULLtoHex(const uint64_t& value, unsigned int minimal_hex_digits)
   return formatULLtoHex(value, F("0x"), minimal_hex_digits);
 }
 
-String formatULLtoHex_no_prefix(const uint64_t& value, unsigned int minimal_hex_digits)
-{
-  const uint32_t msb_val = static_cast<uint32_t>(value >> 32);
-  const uint32_t lsb_val = static_cast<uint32_t>(value & 0xFFFFFFFF);
-  String res;
-  res.reserve(16);
-  res += formatToHex_no_prefix(msb_val, 8);
-  res += formatToHex_no_prefix(lsb_val, 8);
-  while (minimal_hex_digits < res.length() && res.startsWith(F("0"))) {
-    res = res.substring(1);
-  }
-  return res;
-}
 
 String formatULLtoHex_decimal(const uint64_t& value)
 {
@@ -481,7 +482,7 @@ String formatToHex_decimal(uint32_t value, uint32_t factor) {
 }
 
 
-int intFromHexChar(char a)
+static int intFromHexChar(char a)
 {
   if ((a >= 'A') && (a <= 'F'))      { return a - 'A' + 10; }
   else if ((a >= 'a') && (a <= 'f')) { return a - 'a' + 10; }
