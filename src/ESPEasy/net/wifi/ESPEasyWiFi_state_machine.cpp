@@ -58,7 +58,7 @@ void ESPEasyWiFi_t::begin()   {
   }
 }
 
-void ESPEasyWiFi_t::loop()
+void ESPEasyWiFi_t::loop_internal()
 {
   /*
      if ((_state != WiFi_STA_State_e::Disabled) &&
@@ -257,6 +257,14 @@ void ESPEasyWiFi_t::loop()
     // Check if we need to start AP
     // Flag captive portal in webserver and/or whether we might be in setup mode
   }
+}
+
+void ESPEasyWiFi_t::loop()
+{
+  if (_inLoop) { return; }
+  _inLoop = true;
+  loop_internal(); // current body, which has several early returns
+  _inLoop = false;
 }
 
 bool ESPEasyWiFi_t::connected() const

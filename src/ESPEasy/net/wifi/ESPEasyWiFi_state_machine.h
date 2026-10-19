@@ -58,6 +58,9 @@ private:
 
   void begin();
 
+  void loop_internal();
+
+
 public:
 
   // Process the state machine for managing WiFi connection
@@ -141,6 +144,8 @@ private:
   #else
   bool _disabledAtBoot = false;
   #endif
+
+  bool _inLoop = false;
 
   //  bool _passiveScan       = false;
   //  bool _includeHiddenSSID = false;
