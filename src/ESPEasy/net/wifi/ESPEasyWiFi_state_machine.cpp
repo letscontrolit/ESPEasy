@@ -229,7 +229,7 @@ void ESPEasyWiFi_t::loop_internal()
         }
 
         if (WiFi.status() == WL_CONNECTED) {
-          WiFi.disconnect(true);
+          doWiFiDisconnect();
         }
 
         if (wifi_STA_data) {

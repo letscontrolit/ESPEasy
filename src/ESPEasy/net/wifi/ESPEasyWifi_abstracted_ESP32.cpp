@@ -47,16 +47,16 @@ bool WiFi_pre_STA_setup()
 void doWiFiDisconnect() {
   uint8_t retry = 3;
 
-  #  ifdef BOARD_HAS_SDIO_ESP_HOSTED
-  bool wifioff = true;
-  #  else
-  bool wifioff = Settings.WiFiRestart_connection_lost();
-  #  endif // ifdef BOARD_HAS_SDIO_ESP_HOSTED
-
-  while (!WiFi.disconnect(wifioff) && retry) {
+  while (WiFi.isConnected() && !WiFi.disconnect() && retry) {
     --retry;
     delay(100);
   }
+  #  ifdef BOARD_HAS_SDIO_ESP_HOSTED
+  const bool wifioff = true;
+  #  else
+  const bool wifioff = Settings.WiFiRestart_connection_lost();
+  #  endif // ifdef BOARD_HAS_SDIO_ESP_HOSTED
+  if (wifioff) doSetSTA(false);
 
   /*
      {
@@ -73,38 +73,8 @@ bool doWifiIsAP(WiFiMode_t wifimode)  { return (wifimode == WIFI_MODE_AP) || (wi
 
 bool doWifiIsSTA(WiFiMode_t wifimode) { return (wifimode == WIFI_MODE_STA) || (wifimode == WIFI_MODE_APSTA); }
 
-bool doSetWifiMode(WiFiMode_t new_mode)
+static bool doSetWifiMode_internal(WiFiMode_t cur_mode, WiFiMode_t new_mode)
 {
-  if (!Settings.getNetworkEnabled(NETWORK_INDEX_WIFI_AP)) {
-    if (new_mode == WIFI_MODE_AP) { new_mode = WIFI_OFF; }
-
-    if (new_mode == WIFI_MODE_APSTA) { new_mode = WIFI_MODE_STA; }
-  }
-
-  if (!Settings.getNetworkEnabled(NETWORK_INDEX_WIFI_STA)) {
-    if (new_mode == WIFI_MODE_STA) { new_mode = WIFI_OFF; }
-
-    if (new_mode == WIFI_MODE_APSTA) { new_mode = WIFI_MODE_AP; }
-  }
-
-  const WiFiMode_t cur_mode = WiFi.getMode();
-
-  // Made this static flag an int as ESP8266 and ESP32 differ in the "not set" values
-  static int8_t processing_wifi_mode = -1;
-
-  if (cur_mode == new_mode) {
-    if (cur_mode != WIFI_OFF) {
-      //      registerWiFiEventHandler();
-    }
-    return true;
-  }
-
-  if (processing_wifi_mode == static_cast<int8_t>(new_mode)) {
-    // Prevent loops
-    return true;
-  }
-  processing_wifi_mode = static_cast<int8_t>(new_mode);
-
 
   if (cur_mode == WIFI_OFF) {
     // Needs to be set while WiFi is off
@@ -228,6 +198,35 @@ bool doSetWifiMode(WiFiMode_t new_mode)
     }
   }
   return true;
+}
+
+bool doSetWifiMode(WiFiMode_t new_mode)
+{
+  if (!Settings.getNetworkEnabled(NETWORK_INDEX_WIFI_AP)) {
+    if (new_mode == WIFI_MODE_AP) { new_mode = WIFI_OFF; }
+
+    if (new_mode == WIFI_MODE_APSTA) { new_mode = WIFI_MODE_STA; }
+  }
+
+  if (!Settings.getNetworkEnabled(NETWORK_INDEX_WIFI_STA)) {
+    if (new_mode == WIFI_MODE_STA) { new_mode = WIFI_OFF; }
+
+    if (new_mode == WIFI_MODE_APSTA) { new_mode = WIFI_MODE_AP; }
+  }
+
+
+  const WiFiMode_t cur_mode = WiFi.getMode();
+  if (cur_mode == new_mode) { return true; }
+
+  static bool processing_wifi_mode = false;
+  if (processing_wifi_mode) {
+    // Called again from within this function (e.g. via the scheduler or an event)
+    return true;
+  }
+  processing_wifi_mode = true;
+  const bool res = doSetWifiMode_internal(cur_mode, new_mode); // current body
+  processing_wifi_mode = false;
+  return res;
 }
 
 void doWifiScan(bool async, uint8_t channel) {

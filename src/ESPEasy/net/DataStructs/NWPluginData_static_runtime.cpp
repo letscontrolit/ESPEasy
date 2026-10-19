@@ -7,7 +7,10 @@
 #include "../../../src/Helpers/NetworkStatusLED.h"
 #include "../../../src/Helpers/StringConverter.h"
 
+#if FEATURE_WIFI
 #include "../wifi/ESPEasyWifi.h"
+#include "../wifi/ESPEasyWifi_abstracted.h"
+#endif
 
 #ifdef ESP32
 # include <esp_netif.h>
@@ -255,6 +258,11 @@ void NWPluginData_static_runtime::processEvents()
                  _connectedStats.isOff() &&
                  !_establishConnectStats.isOn()) {
         log_disconnected();
+#if FEATURE_WIFI
+        if (NETWORK_INDEX_WIFI_STA == _networkIndex) {
+          ESPEasy::net::wifi::doWiFiDisconnect();
+        }
+#endif
       }
     }
   }
