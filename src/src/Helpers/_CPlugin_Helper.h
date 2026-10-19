@@ -32,10 +32,6 @@ bool safeReadStringUntil(Stream     & input,
                          unsigned int timeout = 1000);
 
 
-#ifndef BUILD_NO_DEBUG
-void log_connecting_to(const __FlashStringHelper * prefix, cpluginID_t cpluginID, ControllerSettingsStruct& ControllerSettings);
-#endif // ifndef BUILD_NO_DEBUG
-
 bool count_connection_results(bool success, const __FlashStringHelper * prefix, cpluginID_t cpluginID, uint64_t statisticsTimerStart);
 
 #if FEATURE_HTTP_CLIENT

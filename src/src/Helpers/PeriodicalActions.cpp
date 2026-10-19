@@ -354,7 +354,7 @@ void scheduleNextMQTTdelayQueue() {
   }
 }
 
-void schedule_all_MQTTimport_tasks() {
+static void schedule_all_MQTTimport_tasks() {
   constexpr pluginID_t PLUGIN_MQTT_IMPORT(PLUGIN_ID_MQTT_IMPORT);
 
   deviceIndex_t DeviceIndex = getDeviceIndex(PLUGIN_MQTT_IMPORT); // Check if P037_MQTTimport is present in the build
@@ -566,7 +566,7 @@ void logTimerStatistics() {
 /********************************************************************************************\
    Clean up all before going to sleep or reboot.
  \*********************************************************************************************/
-void flushAndDisconnectAllClients() {
+static void flushAndDisconnectAllClients() {
   if (anyControllerEnabled()) {
 #if FEATURE_MQTT
     bool mqttControllerEnabled = validControllerIndex(firstEnabledMQTT_ControllerIndex());

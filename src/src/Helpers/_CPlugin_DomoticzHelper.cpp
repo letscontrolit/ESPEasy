@@ -27,7 +27,7 @@
 // 1=Comfortable
 // 2=Dry
 // 3=Wet
-int humStatDomoticz(struct EventStruct *event, uint8_t rel_index) {
+static int humStatDomoticz(struct EventStruct *event, uint8_t rel_index) {
   userVarIndex_t userVarIndex = event->BaseVarIndex + rel_index;
 
   if (validTaskVarIndex(rel_index) && validUserVarIndex(userVarIndex)) {

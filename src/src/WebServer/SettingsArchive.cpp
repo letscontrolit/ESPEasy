@@ -15,6 +15,79 @@
 # include "../Helpers/Misc.h"
 # include "../Helpers/StringConverter.h"
 
+// ********************************************************************************
+// download filetype selectors
+// ********************************************************************************
+static void addDownloadFiletypeCheckbox(FileType::Enum filetype, unsigned int filenr) {
+  const String fileName = getFileName(filetype, filenr);
+
+  addRowLabel(fileName);
+  addCheckBox(fileName, getDownloadFiletypeChecked(filetype, filenr));
+}
+
+static void storeDownloadFiletypeCheckbox(FileType::Enum filetype, unsigned int filenr) {
+  const bool isChecked = isFormItemChecked(getFileName(filetype, filenr));
+
+  switch (filetype)
+  {
+    case FileType::CONFIG_DAT: ResetFactoryDefaultPreference.fetchConfigDat(isChecked);
+      break;
+    case FileType::SECURITY_DAT: ResetFactoryDefaultPreference.fetchSecurityDat(isChecked);
+      break;
+    case FileType::NOTIFICATION_DAT: ResetFactoryDefaultPreference.fetchNotificationDat(isChecked);
+      break;
+    case FileType::RULES_TXT:
+    { ResetFactoryDefaultPreference.fetchRulesTXT(filenr, isChecked);
+      break;
+    }
+    case FileType::PROVISIONING_DAT:
+    { ResetFactoryDefaultPreference.fetchProvisioningDat(isChecked);
+      break;
+    }
+# if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE
+    case FileType::DEV_SECURITY_DAT:
+    { ResetFactoryDefaultPreference.fetchDeviceSecurityDat(isChecked);
+      break;
+    }
+# endif // if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE
+
+    case FileType::MAX_FILETYPE:
+      break;
+  }
+}
+
+# if FEATURE_CUSTOM_PROVISIONING
+
+static void addAllowFiletypeCheckbox(const ProvisioningStruct& ProvisioningSettings, FileType::Enum filetype, unsigned int filenr)
+{
+  const String fileName = getFileName(filetype, filenr);
+
+  addRowLabel(fileName);
+  addCheckBox(concat(F("allow_"), fileName), ProvisioningSettings.fetchFileTypeAllowed(filetype, filenr));
+}
+
+static void storeAllowFiletypeCheckbox(ProvisioningStruct& ProvisioningSettings, FileType::Enum filetype, unsigned int filenr)
+{
+  const bool isChecked = isFormItemChecked(concat(F("allow_"), getFileName(filetype, filenr)));
+
+  ProvisioningSettings.setFetchFileTypeAllowed(filetype, filenr, isChecked);
+}
+
+# endif // if FEATURE_CUSTOM_PROVISIONING
+
+static bool tryDownloadFileType(const String& url, const String& user, const String& pass, FileType::Enum filetype, unsigned int filenr) {
+  const String filename = getFileName(filetype, filenr);
+
+  addRowLabel(filename);
+  const String error = downloadFileType(url, user, pass, filetype, filenr);
+
+  if (error.length() == 0) {
+    addHtml(F("Success"));
+    return true;
+  }
+  addHtml(error);
+  return false;
+}
 
 // ********************************************************************************
 // Web Interface to manage archived settings
@@ -41,7 +114,7 @@ void handle_settingsarchive() {
           storeDownloadFiletypeCheckbox(FileType::RULES_TXT, i);
         }
       } else {
-        storeDownloadFiletypeCheckbox(ft);
+        storeDownloadFiletypeCheckbox(ft, 0);
       }
     }
 
@@ -62,6 +135,7 @@ void handle_settingsarchive() {
         ProvisioningSettings->ResetFactoryDefaultPreference = ResetFactoryDefaultPreference.getPreference();
 
         ProvisioningSettings->allowedFlags.allowFetchFirmware = isFormItemChecked(F("firmware"));
+
         for (int i = 0; i < FileType::MAX_FILETYPE; ++i) {
           const FileType::Enum ft = static_cast<FileType::Enum>(i);
 
@@ -70,7 +144,7 @@ void handle_settingsarchive() {
               storeAllowFiletypeCheckbox(*ProvisioningSettings, FileType::RULES_TXT, i);
             }
           } else {
-            storeAllowFiletypeCheckbox(*ProvisioningSettings, ft);
+            storeAllowFiletypeCheckbox(*ProvisioningSettings, ft, 0);
           }
         }
 
@@ -109,7 +183,7 @@ void handle_settingsarchive() {
 
       if (ft != FileType::RULES_TXT) {
         if (getDownloadFiletypeChecked(ft, 0)) {
-          if (tryDownloadFileType(url, user, pass, ft)) {
+          if (tryDownloadFileType(url, user, pass, ft, 0)) {
             somethingDownloaded = true;
           }
         }
@@ -174,6 +248,7 @@ void handle_settingsarchive() {
       addFormTextBox(F("User"), F("user"), user, 64);
       addFormPasswordBox(F("Pass"), F("pass"), pass, 64);
 # if FEATURE_CUSTOM_PROVISIONING
+
       if (ProvisioningSettings.get()) {
         addFormCheckBox(F("Store Credentials"), F("savecred"), ResetFactoryDefaultPreference.storeCredentials());
 
@@ -184,7 +259,7 @@ void handle_settingsarchive() {
           const FileType::Enum ft = static_cast<FileType::Enum>(i);
 
           if (ft != FileType::RULES_TXT) {
-            addAllowFiletypeCheckbox(*ProvisioningSettings, ft);
+            addAllowFiletypeCheckbox(*ProvisioningSettings, ft, 0);
           }
         }
 
@@ -212,7 +287,7 @@ void handle_settingsarchive() {
       const FileType::Enum ft = static_cast<FileType::Enum>(i);
 
       if (ft != FileType::RULES_TXT) {
-        addDownloadFiletypeCheckbox(ft);
+        addDownloadFiletypeCheckbox(ft, 0);
       }
     }
 
@@ -233,65 +308,6 @@ void handle_settingsarchive() {
   html_end_table();
   html_end_form();
   sendTail_stdtemplate();
-}
-
-// ********************************************************************************
-// download filetype selectors
-// ********************************************************************************
-void addDownloadFiletypeCheckbox(FileType::Enum filetype, unsigned int filenr) {
-  const String fileName = getFileName(filetype, filenr);
-  addRowLabel(fileName);
-  addCheckBox(fileName, getDownloadFiletypeChecked(filetype, filenr));
-}
-
-void storeDownloadFiletypeCheckbox(FileType::Enum filetype, unsigned int filenr) {
-  const bool isChecked = isFormItemChecked(getFileName(filetype, filenr));
-
-  switch (filetype) {
-    case FileType::CONFIG_DAT: ResetFactoryDefaultPreference.fetchConfigDat(isChecked); break;
-    case FileType::SECURITY_DAT: ResetFactoryDefaultPreference.fetchSecurityDat(isChecked); break;
-    case FileType::NOTIFICATION_DAT: ResetFactoryDefaultPreference.fetchNotificationDat(isChecked); break;
-    case FileType::RULES_TXT: { ResetFactoryDefaultPreference.fetchRulesTXT(filenr, isChecked); break; }
-    case FileType::PROVISIONING_DAT: { ResetFactoryDefaultPreference.fetchProvisioningDat(isChecked); break; }
-#if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE
-    case FileType::DEV_SECURITY_DAT: { ResetFactoryDefaultPreference.fetchDeviceSecurityDat(isChecked); break; }
-#endif
-
-    case FileType::MAX_FILETYPE:
-      break;
-  }
-}
-
-# if FEATURE_CUSTOM_PROVISIONING
-void addAllowFiletypeCheckbox(const ProvisioningStruct& ProvisioningSettings, FileType::Enum filetype, unsigned int filenr)
-{
-  const String fileName = getFileName(filetype, filenr);
-  addRowLabel(fileName);
-  addCheckBox(concat(F("allow_"), fileName), ProvisioningSettings.fetchFileTypeAllowed(filetype, filenr));
-}
-
-void storeAllowFiletypeCheckbox(ProvisioningStruct& ProvisioningSettings, FileType::Enum filetype, unsigned int filenr)
-{
-  const bool isChecked = isFormItemChecked(concat(F("allow_"), getFileName(filetype, filenr)));
-
-  ProvisioningSettings.setFetchFileTypeAllowed(filetype, filenr, isChecked);
-}
-
-# endif // if FEATURE_CUSTOM_PROVISIONING
-
-
-bool tryDownloadFileType(const String& url, const String& user, const String& pass, FileType::Enum filetype, unsigned int filenr) {
-  const String filename = getFileName(filetype, filenr);
-
-  addRowLabel(filename);
-  const String error = downloadFileType(url, user, pass, filetype, filenr);
-
-  if (error.length() == 0) {
-    addHtml(F("Success"));
-    return true;
-  }
-  addHtml(error);
-  return false;
 }
 
 #endif // if FEATURE_SETTINGS_ARCHIVE
