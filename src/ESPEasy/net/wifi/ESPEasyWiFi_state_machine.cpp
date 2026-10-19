@@ -252,11 +252,14 @@ void ESPEasyWiFi_t::loop_internal()
       break;
   }
 
-
+#ifdef ESP8266
+  // Check if we need to start AP
+  // Flag captive portal in webserver and/or whether we might be in setup mode
+  if (!connected() && shouldStartAP_fallback() && !WifiIsAP(WiFi.getMode()))
   {
-    // Check if we need to start AP
-    // Flag captive portal in webserver and/or whether we might be in setup mode
+   Scheduler.setNetworkInitTimer(0, NETWORK_INDEX_WIFI_AP);
   }
+#endif
 }
 
 void ESPEasyWiFi_t::loop()
