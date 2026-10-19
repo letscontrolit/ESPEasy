@@ -115,7 +115,7 @@ boolean Plugin_123(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_SET_DEFAULTS:
     {
-      P123_CONFIG_DISPLAY_TASK = event->TaskIndex; // Preselect current task to avoid pointing to Task 1 by default
+      P123_CONFIG_DISPLAY_TASK = TASKS_MAX; // Preselect Not Set value
       P123_CONFIG_THRESHOLD    = P123_TS_THRESHOLD;
       P123_CONFIG_ROTATION     = P123_TS_ROTATION;
       P123_CONFIG_X_RES        = P123_TS_X_RES;
