@@ -2,4 +2,4 @@
 
 #include "../CustomBuild/ESPEasyLimits.h"
 
-protocolIndex_t   INVALID_PROTOCOL_INDEX   = CPLUGIN_MAX;
+const protocolIndex_t   INVALID_PROTOCOL_INDEX   = CPLUGIN_MAX + 1;
