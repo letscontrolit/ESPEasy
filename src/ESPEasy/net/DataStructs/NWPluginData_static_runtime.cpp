@@ -292,9 +292,9 @@ void NWPluginData_static_runtime::processEvents()
     if (Settings.UseRules && _eventInterfaceName.length())
     {
       if (_operationalStats.isOn()) {
-        eventQueue.addDeDup(concat(_eventInterfaceName, F("#Connected")));
+        eventQueue.addDeDup(concat(_eventInterfaceName, F("#Connected")), true);
       } else if (_operationalStats.isOff()) {
-        eventQueue.addDeDup(concat(_eventInterfaceName, F("#Disconnected")));
+        eventQueue.addDeDup(concat(_eventInterfaceName, F("#Disconnected")), true);
       }
     }
     statusLED(true);
@@ -302,9 +302,9 @@ void NWPluginData_static_runtime::processEvents()
 
   if (_startStopStats.changedSinceLastCheck_and_clear() && Settings.UseRules) {
     if (_startStopStats.isOn()) {
-      eventQueue.addDeDup(concat(_eventInterfaceName, F("#Enabled")));
+      eventQueue.addDeDup(concat(_eventInterfaceName, F("#Enabled")), true);
     } else if (_startStopStats.isOff()) {
-      eventQueue.addDeDup(concat(_eventInterfaceName, F("#Disabled")));
+      eventQueue.addDeDup(concat(_eventInterfaceName, F("#Disabled")), true);
     }
   }
 }
