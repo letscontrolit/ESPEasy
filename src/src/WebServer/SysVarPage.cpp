@@ -503,6 +503,8 @@ void handle_sysvars() {
       F("Degrees to radians: %c_d2r%(22)"),
       F("Radians to degrees: %c_r2d%(0.357)"),
       #endif // ifndef LIMIT_BUILD_SIZE
+      F("To 2's complement: %c_to2c%(-127,10)"),
+      F("From 2's complement: %c_fr2c%(255,8)"),
 
       F(""), // addFormSeparator(3,
       F("Mins to days: %c_m2day%(1900)"),
