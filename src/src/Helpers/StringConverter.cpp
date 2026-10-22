@@ -1846,7 +1846,7 @@ void parseStandardConversions(String& s, bool useURLencode) {
   #else
   SMART_CONV(F("%c_random%"), floatToString(HwRandom_f(data.arg1, data.arg2), 3, true))
   #endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
-  SMART_CONV(F("%c_to2c%"), toString(toTwosComplement(static_cast<uint32_t>(data.arg1), static_cast<uint8_t>(data.arg2)), 0))
+  SMART_CONV(F("%c_to2c%"), toString(toTwosComplement(static_cast<int32_t>(data.arg1), static_cast<uint8_t>(data.arg2)), 0))
   SMART_CONV(F("%c_fr2c%"), toString(fromTwosComplement(static_cast<uint32_t>(data.arg1), static_cast<uint8_t>(data.arg2)), 0))
   #undef SMART_CONV
 
