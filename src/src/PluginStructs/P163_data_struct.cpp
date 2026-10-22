@@ -39,6 +39,7 @@ bool P163_data_struct::init(struct EventStruct *event) {
     }
   } else {
     delete sensor; // Clean up if initialization fails
+    sensor = nullptr;
     addLog(LOG_LEVEL_ERROR, F("RadSens: Initialization failed!"));
   }
   return isInitialized();
