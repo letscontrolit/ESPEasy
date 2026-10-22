@@ -390,8 +390,8 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
                 } else if (ctrlEnabled && valueName.endsWith(F(".idx"))) { // Task-controller idx value
                   protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(ctrlNr - 1);
 
-                  if ((Settings.Protocol[ctrlNr - 1] != 0) && validProtocolIndex(ProtocolIndex) &&
-                      getProtocolStruct(ProtocolIndex).usesID) {
+                  if (validProtocolIndex(ProtocolIndex) &&
+                      getProtocolStruct(ProtocolIndex).usesID && (Settings.Protocol[ctrlNr - 1] != 0)) {
                     value = Settings.TaskDeviceID[ctrlNr - 1][taskIndex];
                   }
                 }
