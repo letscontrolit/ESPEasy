@@ -52,6 +52,4 @@
     Stop the enrolment. A running enrolment ends with the event ``<taskname>#EnrollFailed=253``; one still waiting in the queue is dropped without event, and the *Enroll* value becomes ``-253``.
     "
 
-The commands reach every task of this plugin: use a single Fingerprint task per ESP.
-
 ESPEasy appends its own ``OK`` to the output of every plugin command it ran, so the HTTP body is e.g. ``{"enroll":3}OK``: parse from the first ``{`` to the last ``}``. ``delete``, ``deleteall``, ``cancel`` and ``led`` answer only ``OK``: their result comes later, as an event or in ``fingerprint,list``.
