@@ -25,13 +25,10 @@ P163_data_struct::~P163_data_struct() {
 * init
 *****************************************************/
 bool P163_data_struct::init(struct EventStruct *event) {
-  initialized = false;
   delete sensor; // In case init() is called again
   sensor = new (std::nothrow) CG_RadSens(RS_DEFAULT_I2C_ADDRESS);
 
   if ((nullptr != sensor) && sensor->init()) {
-    initialized = true;
-
     sensor->setLPmode(_lowPowerMode);
     sensor->setLedState(_ledState);
 
