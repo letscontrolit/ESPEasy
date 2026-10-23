@@ -42,7 +42,9 @@ bool WiFi_pre_STA_setup() {
 void doWiFiDisconnect() {
   // Only call disconnect when STA is active
   if (doWifiIsSTA(WiFi.getMode())) {
-    WiFi.disconnect(true);
+    WiFi.disconnect();
+    if (Settings.WiFiRestart_connection_lost())
+    doSetSTA(false);
 //    wifi_station_disconnect();
   }
   /*
@@ -58,35 +60,8 @@ bool doWifiIsAP(WiFiMode_t wifimode)  { return (wifimode == WIFI_AP) || (wifimod
 
 bool doWifiIsSTA(WiFiMode_t wifimode) { return (wifimode == WIFI_STA) || (wifimode == WIFI_AP_STA); }
 
-bool doSetWifiMode(WiFiMode_t new_mode)
+static bool doSetWifiMode_internal(WiFiMode_t cur_mode, WiFiMode_t new_mode)
 {
-  if (!Settings.getNetworkEnabled(NETWORK_INDEX_WIFI_AP)) {
-    if (new_mode == WIFI_AP) { new_mode = WIFI_OFF; }
-
-    if (new_mode == WIFI_AP_STA) { new_mode = WIFI_STA; }
-  }
-
-  if (!Settings.getNetworkEnabled(NETWORK_INDEX_WIFI_STA)) {
-    if (new_mode == WIFI_STA) { new_mode = WIFI_OFF; }
-
-    if (new_mode == WIFI_AP_STA) { new_mode = WIFI_AP; }
-  }
-
-  const WiFiMode_t cur_mode = WiFi.getMode();
-
-  // Made this static flag an int as ESP8266 and ESP32 differ in the "not set" values
-  static int8_t processing_wifi_mode = -1;
-
-  if (cur_mode == new_mode) {
-    return true;
-  }
-
-  if (processing_wifi_mode == static_cast<int8_t>(new_mode)) {
-    // Prevent loops
-    return true;
-  }
-  processing_wifi_mode = static_cast<int8_t>(new_mode);
-
 
   if (!doWifiIsSTA(new_mode)) {
     // calls lwIP's dhcp_stop(),
@@ -141,6 +116,34 @@ bool doSetWifiMode(WiFiMode_t new_mode)
   }
 
   return true;
+}
+
+bool doSetWifiMode(WiFiMode_t new_mode)
+{
+  if (!Settings.getNetworkEnabled(NETWORK_INDEX_WIFI_AP)) {
+    if (new_mode == WIFI_AP) { new_mode = WIFI_OFF; }
+
+    if (new_mode == WIFI_AP_STA) { new_mode = WIFI_STA; }
+  }
+
+  if (!Settings.getNetworkEnabled(NETWORK_INDEX_WIFI_STA)) {
+    if (new_mode == WIFI_STA) { new_mode = WIFI_OFF; }
+
+    if (new_mode == WIFI_AP_STA) { new_mode = WIFI_AP; }
+  }
+
+  const WiFiMode_t cur_mode = WiFi.getMode();
+  if (cur_mode == new_mode) { return true; }
+
+  static bool processing_wifi_mode = false;
+  if (processing_wifi_mode) {
+    // Called again from within this function (e.g. via the scheduler or an event)
+    return true;
+  }
+  processing_wifi_mode = true;
+  const bool res = doSetWifiMode_internal(cur_mode, new_mode); // current body
+  processing_wifi_mode = false;
+  return res;
 }
 
 void doWifiScan(bool async, uint8_t channel) {

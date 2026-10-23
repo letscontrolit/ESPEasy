@@ -16,9 +16,6 @@ typedef std::vector<IPAddress> IP6Addresses_t;
 #endif // if FEATURE_USE_IPV6
 
 
-#define NETWORK_INDEX_WIFI_STA  0 // Always the first network index
-#define NETWORK_INDEX_WIFI_AP   1 // Always the 2nd network index
-
 namespace ESPEasy {
 namespace net {
 

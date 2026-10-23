@@ -7,7 +7,10 @@
 #include "../../../src/Helpers/NetworkStatusLED.h"
 #include "../../../src/Helpers/StringConverter.h"
 
+#if FEATURE_WIFI
 #include "../wifi/ESPEasyWifi.h"
+#include "../wifi/ESPEasyWifi_abstracted.h"
+#endif
 
 #ifdef ESP32
 # include <esp_netif.h>
@@ -255,6 +258,11 @@ void NWPluginData_static_runtime::processEvents()
                  _connectedStats.isOff() &&
                  !_establishConnectStats.isOn()) {
         log_disconnected();
+#if FEATURE_WIFI
+        if (NETWORK_INDEX_WIFI_STA == _networkIndex) {
+          ESPEasy::net::wifi::doWiFiDisconnect();
+        }
+#endif
       }
     }
   }
@@ -284,9 +292,9 @@ void NWPluginData_static_runtime::processEvents()
     if (Settings.UseRules && _eventInterfaceName.length())
     {
       if (_operationalStats.isOn()) {
-        eventQueue.addDeDup(concat(_eventInterfaceName, F("#Connected")));
+        eventQueue.addDeDup(concat(_eventInterfaceName, F("#Connected")), true);
       } else if (_operationalStats.isOff()) {
-        eventQueue.addDeDup(concat(_eventInterfaceName, F("#Disconnected")));
+        eventQueue.addDeDup(concat(_eventInterfaceName, F("#Disconnected")), true);
       }
     }
     statusLED(true);
@@ -294,9 +302,9 @@ void NWPluginData_static_runtime::processEvents()
 
   if (_startStopStats.changedSinceLastCheck_and_clear() && Settings.UseRules) {
     if (_startStopStats.isOn()) {
-      eventQueue.addDeDup(concat(_eventInterfaceName, F("#Enabled")));
+      eventQueue.addDeDup(concat(_eventInterfaceName, F("#Enabled")), true);
     } else if (_startStopStats.isOff()) {
-      eventQueue.addDeDup(concat(_eventInterfaceName, F("#Disabled")));
+      eventQueue.addDeDup(concat(_eventInterfaceName, F("#Disabled")), true);
     }
   }
 }

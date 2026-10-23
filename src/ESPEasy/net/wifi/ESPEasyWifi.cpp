@@ -142,19 +142,18 @@ bool validWiFiCredentials(const String& ssid, const String& pass) {
 // ********************************************************************************
 bool WiFiConnected() {
   if (!Settings.getNetworkEnabled(NETWORK_INDEX_WIFI_STA)) { return false; }
+/*
+  // FIXME TD-er: Do we need to call loop() here? See: https://github.com/letscontrolit/ESPEasy/issues/5665
   static uint32_t lastCheckedTime = 0;
 
-  const int32_t timePassed = timePassedSince(lastCheckedTime);
-
-  if (lastCheckedTime != 0) {
-    if (timePassed < 10) {
-      // Rate limit time spent in WiFiConnected() to max. 100x per sec to process the rest of this function
-      return ESPEasyWiFi.connected();
-    }
-    lastCheckedTime = millis();
+  if ((lastCheckedTime != 0) && (timePassedSince(lastCheckedTime) < 10)) {
+    // Rate limit time spent in WiFiConnected() to max. 100x per sec to process the rest of this function
+    return ESPEasyWiFi.connected();
   }
-
+  lastCheckedTime = millis();
   ESPEasyWiFi.loop();
+  
+*/
   return ESPEasyWiFi.connected();
 }
 
