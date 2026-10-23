@@ -39,65 +39,72 @@ size_t buildCommand(uint8_t *buf, uint32_t address, uint8_t cmd, const uint8_t *
   return i;
 }
 
+// Each byte fills the current field of the packet, then moves on to the next one.
+// Any error goes back to waiting for a header.
 bool Parser::feed(uint8_t c) {
-  switch (_pos)
+  switch (_field)
   {
-    case 0:
+    case Field::HeaderHi:
 
-      if (c == HEADER_HI) { _pos = 1; }
-      return false;
-    case 1:
+      if (c == HEADER_HI) { _field = Field::HeaderLo; }
+      break;
+    case Field::HeaderLo:
 
-      if (c == HEADER_LO) { _pos = 2; }
-      else if (c != HEADER_HI) { _pos = 0; }
-      return false;
-    case 2: case 3: case 4: case 5:
-      _pkt.address = (_pos == 2 ? 0 : _pkt.address << 8) | c;
-      ++_pos;
-      return false;
-    case 6:
+      if (c == HEADER_LO) {
+        _field       = Field::Address;
+        _pkt.address = 0;
+        _received    = 0;
+      } else if (c != HEADER_HI) { // EF EF 01: the second EF can still start the header
+        _field = Field::HeaderHi;
+      }
+      break;
+    case Field::Address: // big endian
+      _pkt.address = (_pkt.address << 8) | c;
+
+      if (++_received == 4) { _field = Field::Pid; }
+      break;
+    case Field::Pid: // the checksum covers PID, length and payload
       _pkt.pid = c;
       _sum     = c;
-      ++_pos;
-      return false;
-    case 7:
+      _field   = Field::LengthHi;
+      break;
+    case Field::LengthHi:
       _length = static_cast<uint16_t>(c << 8);
       _sum   += c;
-      ++_pos;
-      return false;
-    case 8:
+      _field  = Field::LengthLo;
+      break;
+    case Field::LengthLo: // payload + 2 checksum bytes
       _length |= c;
       _sum    += c;
 
       if ((_length < 2) || (_length > MAX_PAYLOAD + 2)) {
         ++_errors;
-        _pos = 0;
-        return false;
+        _field = Field::HeaderHi;
+        break;
       }
       _pkt.size = static_cast<uint8_t>(_length - 2);
       _received = 0;
-      _pos      = _pkt.size > 0 ? 9 : 10;
-      return false;
-    case 9:
+      _field    = _pkt.size > 0 ? Field::Payload : Field::ChecksumHi;
+      break;
+    case Field::Payload:
       _pkt.payload[_received++] = c;
       _sum                     += c;
 
-      if (_received == _pkt.size) { _pos = 10; }
-      return false;
-    case 10:
+      if (_received == _pkt.size) { _field = Field::ChecksumHi; }
+      break;
+    case Field::ChecksumHi:
       _checksum = static_cast<uint16_t>(c << 8);
-      _pos      = 11;
-      return false;
-    default: // 11
+      _field    = Field::ChecksumLo;
+      break;
+    case Field::ChecksumLo: // packet complete
       _checksum |= c;
-      _pos       = 0;
+      _field     = Field::HeaderHi;
 
-      if (_checksum != _sum) {
-        ++_errors;
-        return false;
-      }
-      return true;
+      if (_checksum == _sum) { return true; }
+      ++_errors;
+      break;
   }
+  return false;
 }
 
 bool indexUsed(const uint8_t *table, uint16_t id) { return (table[id >> 3] >> (id & 7)) & 1; }

@@ -90,7 +90,7 @@ public:
   // Returns true when c completes a valid packet, available with packet() until the next feed().
   bool          feed(uint8_t c);
 
-  void          reset()        { _pos = 0; }
+  void          reset()        { _field = Field::HeaderHi; }
 
   const Packet& packet() const { return _pkt; }
 
@@ -98,9 +98,23 @@ public:
 
 private:
 
+  // Packet field the next byte belongs to
+  enum class Field : uint8_t {
+    HeaderHi, // EF
+    HeaderLo, // 01
+    Address,  // 4 bytes
+    Pid,      // packet identifier, first byte of the checksum
+    LengthHi,
+    LengthLo,
+    Payload,  // length - 2 bytes
+    ChecksumHi,
+    ChecksumLo
+
+  };
+
   Packet _pkt;
-  uint8_t _pos       = 0;
-  uint8_t _received  = 0;
+  Field _field       = Field::HeaderHi;
+  uint8_t _received  = 0; // address or payload bytes received so far
   uint16_t _length   = 0;
   uint16_t _sum      = 0;
   uint16_t _checksum = 0;
