@@ -1,5 +1,4 @@
-#ifndef PLUGINSTRUCTS_P190_DATA_STRUCT_H
-#define PLUGINSTRUCTS_P190_DATA_STRUCT_H
+#pragma once
 
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P190
@@ -198,4 +197,3 @@ private:
 };
 
 #endif // ifdef USES_P190
-#endif // ifndef PLUGINSTRUCTS_P190_DATA_STRUCT_H

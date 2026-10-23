@@ -1,5 +1,4 @@
-#ifndef PLUGINSTRUCTS_P190_PROTOCOL_H
-#define PLUGINSTRUCTS_P190_PROTOCOL_H
+#pragma once
 
 // Packet encoding / decoding of the Grow fingerprint sensor protocol (R503, R307, R502, ZFM-20, AS608, ...).
 // No ESPEasy or Arduino dependencies, so it can be unit tested on the host (test/test_protocol.cpp).
@@ -233,5 +232,3 @@ inline uint8_t ledColor(const char *arg) {
 }
 
 } // namespace P190_proto
-
-#endif // ifndef PLUGINSTRUCTS_P190_PROTOCOL_H
