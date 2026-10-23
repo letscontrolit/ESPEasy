@@ -690,6 +690,11 @@ RFID
 
 Plugins: |Plugin_RFID|
 
+Security
+--------
+
+Plugins: |Plugin_Security|
+
 Switch input
 ------------
 
