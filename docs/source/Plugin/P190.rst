@@ -52,12 +52,12 @@ Wiring (R503)
 
   "Red", "VCC **3.3 V** (not 5 V)", "3V3"
   "Black", "GND", "GND"
-  "Yellow", "TX of the module", "RX GPIO of the task (e.g. GPIO16)"
-  "Green", "RX of the module", "TX GPIO of the task (e.g. GPIO17)"
-  "Blue", "WAKEUP: low while a finger touches the sensor", "optional *Touch* GPIO (e.g. GPIO4)"
+  "Yellow", "TX of the module", "RX GPIO of the task"
+  "Green", "RX of the module", "TX GPIO of the task"
+  "Blue", "WAKEUP: low while a finger touches the sensor", "optional *Touch* GPIO"
   "White", "3.3VT: power of the touch circuit", "3V3"
 
-With the *Touch* GPIO the module is only queried when a finger is on the sensor. Without it, the module is queried every *Scan interval*.
+With the *Touch* GPIO the module is only queried when a finger is on the sensor. Without it, the module is queried every **Scan interval** (a plugin setting in msec, see *Scan* below).
 
 The colors are those of the Grow datasheet. Some R503 clones differ: a common one has a **brown** (or dark red) wire instead of the green one for the RX of the module. If unsure, power only red, white and black and measure the two data wires against GND: the TX of the module idles at about 3.3 V, the RX doesn't. Swapping TX and RX does no harm at 3.3 V, the module just doesn't answer.
 
@@ -75,7 +75,7 @@ Sensor
 
 See: :ref:`SerialHelper_page`
 
-A hardware serial port is recommended. Select the RX and TX GPIO pins the module is connected to, e.g. **HW Serial2** with GPIO16 (RX) and GPIO17 (TX).
+A hardware serial port is recommended. Select the RX and TX GPIO pins the module is connected to; on ESP32 any available GPIO can be used.
 
 * **Touch (WAKEUP, blue)**: Optional input GPIO connected to the WAKEUP output of the module.
 
@@ -90,6 +90,8 @@ Scan
 ^^^^
 
 * **Scan interval (no touch GPIO)**: How often the module is asked to capture an image when no *Touch* GPIO is configured. Range 50 .. 5000 msec, default 250 msec.
+
+  The regular task **Interval** isn't available: the values are sent once per scanned finger, and resending the last ID on an interval could e.g. open a door again.
 
 * **Minimum score**: Matches with a lower score are reported as not recognised (ID ``-1``). ``0`` (default) accepts every match of the module.
 
