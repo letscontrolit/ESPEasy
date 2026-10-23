@@ -14,7 +14,7 @@
 //#include "../../ESPEasy_fdwdecl.h"
 
 
-controllerIndex_t firstEnabledBlynk_ControllerIndex() {
+static controllerIndex_t firstEnabledBlynk_ControllerIndex() {
   for (controllerIndex_t i = 0; i < CONTROLLER_MAX; ++i) {
     protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(i);
 

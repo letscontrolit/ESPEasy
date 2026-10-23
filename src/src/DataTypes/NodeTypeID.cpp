@@ -2,13 +2,24 @@
 
 #include "../Helpers/StringConverter.h"
 
-String toNodeTypeDisplayString(uint8_t nodeType) {
-  const __FlashStringHelper* suffix = F("");
-
+static const __FlashStringHelper* toNodeTypeDisplayFlashString(uint8_t nodeType)
+{
   switch (nodeType)
   {
     case NODE_TYPE_ID_ESP_EASY_STD:        return F("ESP Easy");
     case NODE_TYPE_ID_ESP_EASYM_STD:       return F("ESP Easy Mega");
+    case NODE_TYPE_ID_RPI_EASY_STD:        return F("RPI Easy");
+    case NODE_TYPE_ID_ARDUINO_EASY_STD:    return F("Arduino Easy");
+    case NODE_TYPE_ID_NANO_EASY_STD:       return F("Nano Easy");
+    default:
+    return F("");
+  }
+}
+
+static const __FlashStringHelper* toNodeType_ESP32_suffix(uint8_t nodeType) {
+  const __FlashStringHelper* suffix = F("");
+  switch (nodeType)
+  {
     case NODE_TYPE_ID_ESP_EASY32_STD:      break;
     case NODE_TYPE_ID_ESP_EASY32S2_STD:    suffix = F("-S2"); break;
     case NODE_TYPE_ID_ESP_EASY32S3_STD:    suffix = F("-S3"); break;
@@ -23,11 +34,18 @@ String toNodeTypeDisplayString(uint8_t nodeType) {
     case NODE_TYPE_ID_ESP_EASY32H4_STD:    suffix = F("-H4"); break;
     case NODE_TYPE_ID_ESP_EASY32P4_STD:    suffix = F("-P4"); break;
     case NODE_TYPE_ID_ESP_EASY32P4r3_STD:  suffix = F("-P4r3"); break;
-    case NODE_TYPE_ID_RPI_EASY_STD:        return F("RPI Easy");
-    case NODE_TYPE_ID_ARDUINO_EASY_STD:    return F("Arduino Easy");
-    case NODE_TYPE_ID_NANO_EASY_STD:       return F("Nano Easy");
+
     default:
-    return EMPTY_STRING;
+    return nullptr; // Not an ESP32 node type
   }
+  return suffix;
+}
+
+String toNodeTypeDisplayString(uint8_t nodeType) {
+  String res(toNodeTypeDisplayFlashString(nodeType));
+  if (!res.isEmpty()) return res;
+
+  const __FlashStringHelper* suffix = toNodeType_ESP32_suffix(nodeType);
+  if (suffix == nullptr) return EMPTY_STRING;
   return concat(F("ESP Easy 32"), suffix);  
 }

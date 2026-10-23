@@ -27,33 +27,33 @@
 // Normally those would be declared in the .h file as private members
 // But since these are not part of a class, forward declare them in the .cpp
 //void createAndSetPortStatus_Mode_State(uint32_t key, uint8_t newMode, int8_t newState);
-const __FlashStringHelper * getPluginIDAndPrefix(char selection, pluginID_t& pluginID, bool& success);
-void logErrorGpioOffline(const __FlashStringHelper * prefix, int port);
-void logErrorGpioOutOfRange(const __FlashStringHelper * prefix, int port, const char* Line = nullptr);
-void logErrorGpioNotOutput(const __FlashStringHelper * prefix, int port);
-void logErrorModeOutOfRange(const __FlashStringHelper * prefix, int port);
-bool gpio_monitor_helper(int port, struct EventStruct *event, const char* Line);
-bool gpio_unmonitor_helper(int port, struct EventStruct *event, const char* Line);
+static const __FlashStringHelper * getPluginIDAndPrefix(char selection, pluginID_t& pluginID, bool& success);
+static void logErrorGpioOffline(const __FlashStringHelper * prefix, int port);
+static void logErrorGpioOutOfRange(const __FlashStringHelper * prefix, int port, const char* Line = nullptr);
+static void logErrorGpioNotOutput(const __FlashStringHelper * prefix, int port);
+static void logErrorModeOutOfRange(const __FlashStringHelper * prefix, int port);
+static bool gpio_monitor_helper(int port, struct EventStruct *event, const char* Line);
+static bool gpio_unmonitor_helper(int port, struct EventStruct *event, const char* Line);
 #ifdef USES_P009
-bool mcpgpio_range_pattern_helper(struct EventStruct *event, const char* Line, bool isWritePattern);
+static bool mcpgpio_range_pattern_helper(struct EventStruct *event, const char* Line, bool isWritePattern);
 #endif
 #ifdef USES_P019
-bool pcfgpio_range_pattern_helper(struct EventStruct *event, const char* Line, bool isWritePattern);
+static bool pcfgpio_range_pattern_helper(struct EventStruct *event, const char* Line, bool isWritePattern);
 #endif
-bool gpio_mode_range_helper(uint8_t pin, uint8_t pinMode, struct EventStruct *event, const char* Line);
+static bool gpio_mode_range_helper(uint8_t pin, uint8_t pinMode, struct EventStruct *event, const char* Line);
 #ifdef USES_P019
-uint8_t getPcfAddress(uint8_t pin);
+static uint8_t getPcfAddress(uint8_t pin);
 #endif
-bool setGPIOMode(uint8_t pin, uint8_t mode);
+static bool setGPIOMode(uint8_t pin, uint8_t mode);
 #ifdef USES_P019
-bool setPCFMode(uint8_t pin, uint8_t mode);
+static bool setPCFMode(uint8_t pin, uint8_t mode);
 #endif
 #ifdef USES_P009
-bool setMCPMode(uint8_t pin, uint8_t mode);
-bool mcpgpio_plugin_range_helper(uint8_t pin1, uint8_t pin2, uint16_t &result);
+static bool setMCPMode(uint8_t pin, uint8_t mode);
+static bool mcpgpio_plugin_range_helper(uint8_t pin1, uint8_t pin2, uint16_t &result);
 #endif
 #ifdef USES_P019
-bool pcfgpio_plugin_range_helper(uint8_t pin1, uint8_t pin2, uint16_t &result);
+static bool pcfgpio_plugin_range_helper(uint8_t pin1, uint8_t pin2, uint16_t &result);
 #endif
 
 
