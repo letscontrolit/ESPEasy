@@ -66,6 +66,8 @@ When the module answers, the log shows ``Fingerprint: module ready, 0 of 200 tem
 Configuration
 -------------
 
+.. image:: P190_DeviceConfiguration.png
+
 * **Name**: Required by ESPEasy, must be unique among the list of available devices/tasks.
 
 * **Enabled**: The device can be disabled or enabled. When not enabled the device should not use any resources.
