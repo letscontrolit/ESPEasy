@@ -1,0 +1,207 @@
+.. include:: ../Plugin/_plugin_substitutions_p19x.repl
+.. _P190_page:
+
+|P190_typename|
+==================================================
+
+|P190_shortinfo|
+
+Plugin details
+--------------
+
+Type: |P190_type|
+
+Name: |P190_name|
+
+Status ESP32: |P190_status|
+
+Status ESP8266: |P190_status_lb|
+
+GitHub: |P190_github|_
+
+Maintainer: |P190_maintainer|
+
+Used libraries: |P190_usedlibraries|
+
+Description
+-----------
+
+The Grow fingerprint modules store up to a few hundred fingerprint templates and do the matching themselves: the ESP only asks the module to capture an image and search its library, and gets back the slot number (ID) of the recognised finger and a match score. Supported are the **R503** (round, with an RGB LED ring), **R307**, **R502**, **ZFM-20**, **AS608** and compatible modules, that all use the same serial protocol.
+
+The plugin:
+
+* Recognises a finger and sends its ID and score to the controllers and the rules (ID ``-1`` = not recognised).
+* Enrols, deletes, counts and lists fingers with commands, from rules, HTTP or MQTT. Enrolment can pick the first free slot by itself.
+* Shows the enrolment progress as a task value and as events, so an enrolment page or another system can follow it.
+* Drives the LED ring of the R503: automatic feedback (recognised / not recognised / enrolling) and a ``fingerprint,led`` command.
+* Uses the touch detection (WAKEUP) output of the module when it is connected, or polls the module when it is not.
+* Doesn't block: the protocol runs as a state machine, ESPEasy keeps running while the module works.
+
+.. image:: P190_R503.png
+  :width: 300px
+  :alt: R503 fingerprint module with RGB LED ring and its 6-wire cable
+
+R503 fingerprint module (image sourced from an AliExpress vendor)
+
+Wiring (R503)
+-------------
+
+.. csv-table::
+  :header: "Wire", "Function", "ESP32"
+  :widths: 10, 30, 30
+
+  "Red", "VCC **3.3 V** (not 5 V)", "3V3"
+  "Black", "GND", "GND"
+  "Yellow", "TX of the module", "RX GPIO of the task (e.g. GPIO16)"
+  "Green", "RX of the module", "TX GPIO of the task (e.g. GPIO17)"
+  "Blue", "WAKEUP: low while a finger touches the sensor", "optional *Touch* GPIO (e.g. GPIO4)"
+  "White", "3.3VT: power of the touch circuit", "3V3"
+
+With the *Touch* GPIO the module is only queried when a finger is on the sensor. Without it, the module is queried every *Scan interval*.
+
+The colors are those of the Grow datasheet. Some R503 clones differ: a common one has a **brown** (or dark red) wire instead of the green one for the RX of the module. If unsure, power only red, white and black and measure the two data wires against GND: the TX of the module idles at about 3.3 V, the RX doesn't. Swapping TX and RX does no harm at 3.3 V, the module just doesn't answer.
+
+When the module answers, the log shows ``Fingerprint: module ready, 0 of 200 templates used`` a few seconds after the start. ``Fingerprint: no answer from the module, check wiring and baud rate`` means TX/RX swapped, no power or a wrong baud rate; the plugin retries every 5 seconds.
+
+Configuration
+-------------
+
+* **Name**: Required by ESPEasy, must be unique among the list of available devices/tasks.
+
+* **Enabled**: The device can be disabled or enabled. When not enabled the device should not use any resources.
+
+Sensor
+^^^^^^
+
+See: :ref:`SerialHelper_page`
+
+A hardware serial port is recommended. On ESP32, selecting **HW Serial0**, **HW Serial1** or **HW Serial2** fills in the default GPIO pins of that port (3/1, 26/27 and 16/17), that can be changed.
+
+* **Touch (WAKEUP, blue)**: Optional input GPIO connected to the WAKEUP output of the module.
+
+* **Baud rate**: Speed of the serial connection, 9600 to 115200 baud. Factory setting of the modules: ``57600``.
+
+Module
+^^^^^^
+
+* **Password** and **Address**: Only needed when they were changed in the module. Factory settings: password ``0x00000000``, address ``0xFFFFFFFF``.
+
+Scan
+^^^^
+
+* **Scan interval (no touch GPIO)**: How often the module is asked to capture an image when no *Touch* GPIO is configured. Range 50 .. 5000 msec, default 250 msec.
+
+* **Minimum score**: Matches with a lower score are reported as not recognised (ID ``-1``). ``0`` (default) accepts every match of the module.
+
+LED ring (R503)
+^^^^^^^^^^^^^^^
+
+* **Show result on the LED ring**: Enabled by default. The ring shows the result of every scan and the enrolment state:
+
+.. csv-table::
+  :header: "When", "Ring"
+  :widths: 20, 40
+
+  "Finger recognised", "2 flashes in the **Recognised** color (default blue)"
+  "Finger not recognised", "2 flashes in the **Not recognised** color (default red)"
+  "Enrolment running", "Purple, breathing, from the start to the end (follow the *Enroll* value or the events for the separate steps)"
+  "Enrolment stored", "3 flashes in the **Recognised** color"
+  "Enrolment failed", "3 flashes in the **Not recognised** color"
+
+* **Recognised** / **Not recognised**: Colors used for the result. Green, yellow, cyan and white need the full RGB version of the R503; on these modules purple looks pink / magenta.
+
+Outside these moments the plugin doesn't drive the ring, the ``fingerprint,led`` command can.
+
+Values
+^^^^^^
+
+.. csv-table::
+  :header: "Value", "Description"
+  :widths: 10, 40
+
+  "ID", "Slot of the recognised finger (0..199 on the R503), ``-1`` = not recognised"
+  "Score", "Match score from the module (higher = better)"
+  "Count", "Number of fingers stored in the module"
+  "Enroll", "Progress of the last enrolment, see below"
+
+The values are sent once per touch, when a finger is scanned: the rules get ``<taskname>#ID``, ``<taskname>#Score`` and ``<taskname>#Count``. The module must see the finger lifted before it scans again.
+
+The *Enroll* value is only updated, never sent: it is meant to be polled (``/json?tasknr=<n>&view=sensorupdate``, value number 4) by web pages or systems that don't get the rules events.
+
+.. csv-table::
+  :header: "Enroll", "Meaning"
+  :widths: 10, 40
+
+  "0", "No enrolment yet, or accepted and waiting to start"
+  "1", "Place the finger (capture 1)"
+  "2", "Lift the finger"
+  "3", "Place the finger again (capture 2)"
+  "4", "Merging and storing"
+  "5", "Stored"
+  "< 0", "Failed: minus the error code (e.g. ``-254`` = timeout), see the error codes below"
+
+Commands available
+^^^^^^^^^^^^^^^^^^
+
+.. include:: P190_commands.repl
+
+Events
+^^^^^^
+
+.. include:: P190_events.repl
+
+Error codes
+^^^^^^^^^^^
+
+Error codes in the *EnrollFailed* and *Error* events, and (negative) in the *Enroll* value:
+
+.. csv-table::
+  :header: "Code", "Meaning"
+  :widths: 10, 40
+
+  "10", "The two captures are not the same finger"
+  "11", "Slot out of range"
+  "24", "Flash error in the module"
+  "252", "No free slot"
+  "253", "Cancelled"
+  "254", "No finger placed / lifted within 20 seconds"
+  "255", "No answer from the module"
+
+Other values are confirmation codes of the module (see its datasheet).
+
+Security
+^^^^^^^^
+
+.. warning:: The ``/control`` and ``/json`` endpoints don't ask for the ESPEasy admin password. Anyone who can reach the ESP can enrol a finger, also over the slot of an authorised person. Limit the clients with **Config → Client IP filtering** (e.g. *Allow IP range*), or keep the ESP in a network only trusted devices can reach.
+
+Rules example
+^^^^^^^^^^^^^
+
+A task named ``Finger``, opening a door relay on GPIO26 for 2 seconds for fingers 0..9:
+
+.. code-block:: none
+
+  on Finger#ID do
+    if %eventvalue1% >= 0 and %eventvalue1% < 10
+      Pulse,26,1,2000
+    endif
+  endon
+
+  on Finger#EnrollScan do
+    LogEntry,'Place the finger (%eventvalue1%/2)'
+  endon
+
+  on Finger#Enrolled do
+    LogEntry,'Finger stored at %eventvalue1%'
+  endon
+
+Enrol from the browser: ``http://<esp-ip>/control?cmd=fingerprint,enroll`` (first free slot) or ``http://<esp-ip>/control?cmd=fingerprint,enroll,0``.
+
+Change log
+----------
+
+.. versionchanged:: 2.0
+  ...
+
+  |added|
+  2026-10-23 Initial release version.
