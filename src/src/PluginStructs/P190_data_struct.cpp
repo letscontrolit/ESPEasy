@@ -9,6 +9,7 @@
 # define P190_TOUCH_RETRY_MS    100   // Touch GPIO active but no image yet: retry interval
 # define P190_REINIT_MS         5000  // Retry interval when the module doesn't answer
 # define P190_MAX_QUEUE         8
+# define P190_MAX_READ_BYTES    64    // Serial bytes handled per loop() call: a full acknowledge (52 bytes max.)
 
 using namespace P190_proto;
 
@@ -100,7 +101,9 @@ void P190_data_struct::replyError(struct EventStruct *event, const String& messa
 void P190_data_struct::loop(struct EventStruct *event) {
   if (nullptr == _serial) { return; }
 
-  for (int available = _serial->available(); available > 0; --available) {
+  // Bounded: never more than P190_MAX_READ_BYTES per call, also if the module (or noise) keeps sending.
+  // The rest is handled on the next call; a missing acknowledge ends with the response timeout below.
+  for (int n = min(_serial->available(), P190_MAX_READ_BYTES); n > 0; --n) {
     const int c = _serial->read();
 
     if (c < 0) { break; }
@@ -265,7 +268,8 @@ void P190_data_struct::led(uint8_t mode, uint8_t color, uint8_t speed, uint8_t t
 // ----------------------------------------------------------------------------------------------------
 
 void P190_data_struct::sendCommand(uint8_t cmd, const uint8_t *params, size_t nparams, uint32_t timeoutMs) {
-  while (_serial->available() > 0) { _serial->read(); } // Drop late or unexpected bytes
+  // Drop late or unexpected bytes: only those already received, so a continuous stream can't block here
+  for (int n = _serial->available(); n > 0; --n) { _serial->read(); }
   _parser.reset();
 
   uint8_t buf[MAX_CMD_SIZE];
