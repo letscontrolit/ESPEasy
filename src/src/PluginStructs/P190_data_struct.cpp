@@ -466,6 +466,7 @@ void P190_data_struct::handleAck(struct EventStruct *event, const Packet& pkt) {
         addEvent(event, F("Deleted"), _step == P190_Step::Empty ? -1 : _req.id);
 
         if (_step == P190_Step::Empty) {
+          // All slots free: clear the bits, but keep one bit per slot (clear() would leave the bitmap empty)
           std::fill(_index.begin(), _index.end(), 0);
         } else {
           setIndex(_req.id, false);
