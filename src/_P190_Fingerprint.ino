@@ -6,9 +6,7 @@
 // #######################################################################################################
 
 /** Changelog:
- * 2026-10-23 alexbn71: Plugin ID 190, assigned by the ESPEasy maintainers (was 251, the custom plugin range)
- * 2026-10-18 alexbn71: Enrolment at the first free slot, command fingerprint,list, value Enroll
- * 2026-10-14 alexbn71: Initial plugin setup
+ * 2026-10-23 alexbn71: Initial version, developed in https://github.com/alexbn71/ESPEasy-P190-Fingerprint
  */
 
 /** Info:
