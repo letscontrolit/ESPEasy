@@ -58,8 +58,8 @@ constexpr uint8_t COLOR_CYAN   = 6;
 constexpr uint8_t COLOR_WHITE  = 7;
 
 constexpr size_t MAX_PARAMS   = 8;
-constexpr size_t MAX_PAYLOAD  = 40;               // Acknowledges are at most 33 bytes (ReadIndexTable)
-constexpr size_t MAX_CMD_SIZE = 12 + MAX_PARAMS;  // header 2 + address 4 + PID 1 + length 2 + cmd 1 + checksum 2
+constexpr size_t MAX_PAYLOAD  = 40;              // Acknowledges are at most 33 bytes (ReadIndexTable)
+constexpr size_t MAX_CMD_SIZE = 12 + MAX_PARAMS; // header 2 + address 4 + PID 1 + length 2 + cmd 1 + checksum 2
 
 // Builds a command packet in buf (at least 12 + nparams bytes). Returns the packet length, 0 if nparams is too large.
 size_t buildCommand(uint8_t       *buf,
@@ -74,33 +74,38 @@ struct Packet {
   uint8_t  size    = 0; // payload bytes, checksum excluded
   uint8_t  payload[MAX_PAYLOAD]{};
 
-  uint8_t  code() const               { return size > 0 ? payload[0] : 0xFF; }
+  uint8_t  code() const { return size > 0 ? payload[0] : 0xFF; }
+
   uint16_t word(size_t offset) const  { // big endian 16 bit value at payload[offset]
     return offset + 1 < size ? static_cast<uint16_t>((payload[offset] << 8) | payload[offset + 1]) : 0;
   }
+
 };
 
 // Byte by byte packet decoder: resyncs on the header, drops packets with a bad length or checksum.
-class Parser {
+class Parser
+{
 public:
 
   // Returns true when c completes a valid packet, available with packet() until the next feed().
   bool          feed(uint8_t c);
 
   void          reset()        { _pos = 0; }
+
   const Packet& packet() const { return _pkt; }
+
   uint32_t      errors() const { return _errors; }
 
 private:
 
-  Packet   _pkt;
-  uint8_t  _pos      = 0;
-  uint8_t  _received = 0;
+  Packet _pkt;
+  uint8_t _pos       = 0;
+  uint8_t _received  = 0;
   uint16_t _length   = 0;
   uint16_t _sum      = 0;
   uint16_t _checksum = 0;
   uint32_t _errors   = 0;
-};
+}; // class Parser
 
 // Template index table: one bit per template, bit 0 of byte 0 = template 0 (as sent by ReadIndexTable)
 constexpr uint16_t INDEX_PAGE_TEMPLATES = 256;
@@ -110,8 +115,8 @@ bool indexUsed(const uint8_t *table,
                uint16_t       id);
 
 // First free template below capacity, -1 if all are used
-int  indexFirstFree(const uint8_t *table,
-                    uint16_t       capacity);
+int indexFirstFree(const uint8_t *table,
+                   uint16_t       capacity);
 
 // Case insensitive match of a name in a list, or a number in 1..count. Returns 1..count, 0 if not found.
 uint8_t lookup(const char        *arg,

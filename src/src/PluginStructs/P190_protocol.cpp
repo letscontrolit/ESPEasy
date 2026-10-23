@@ -25,22 +25,29 @@ size_t buildCommand(uint8_t *buf, uint32_t address, uint8_t cmd, const uint8_t *
   buf[i++] = static_cast<uint8_t>(length);
   buf[i++] = cmd;
 
-  for (size_t p = 0; p < nparams; ++p) { buf[i++] = params[p]; }
+  for (size_t p = 0; p < nparams; ++p) {
+    buf[i++] = params[p];
+  }
 
   uint16_t sum = 0;
 
-  for (size_t p = 6; p < i; ++p) { sum += buf[p]; }
+  for (size_t p = 6; p < i; ++p) {
+    sum += buf[p];
+  }
   buf[i++] = static_cast<uint8_t>(sum >> 8);
   buf[i++] = static_cast<uint8_t>(sum);
   return i;
 }
 
 bool Parser::feed(uint8_t c) {
-  switch (_pos) {
+  switch (_pos)
+  {
     case 0:
+
       if (c == HEADER_HI) { _pos = 1; }
       return false;
     case 1:
+
       if (c == HEADER_LO) { _pos = 2; }
       else if (c != HEADER_HI) { _pos = 0; }
       return false;
@@ -93,11 +100,9 @@ bool Parser::feed(uint8_t c) {
   }
 }
 
-bool indexUsed(const uint8_t *table, uint16_t id) {
-  return (table[id >> 3] >> (id & 7)) & 1;
-}
+bool indexUsed(const uint8_t *table, uint16_t id) { return (table[id >> 3] >> (id & 7)) & 1; }
 
-int indexFirstFree(const uint8_t *table, uint16_t capacity) {
+int  indexFirstFree(const uint8_t *table, uint16_t capacity) {
   for (uint16_t id = 0; id < capacity; ++id) {
     if (!indexUsed(table, id)) { return id; }
   }
@@ -121,7 +126,11 @@ uint8_t lookup(const char *arg, const char *const *names, uint8_t count) {
     const char *a = arg;
     const char *n = names[i];
 
-    while (*a && *n && ((*a | 0x20) == *n)) { ++a; ++n; } // names are lower case
+    // names are lower case
+    while (*a && *n && ((*a | 0x20) == *n)) {
+      ++a;
+      ++n;
+    }
 
     if ((*a == '\0') && (*n == '\0')) { return i + 1; }
   }

@@ -2,7 +2,7 @@
 
 #ifdef USES_P190
 
-# include "../../ESPEasy-Globals.h" // printToWebJSON
+# include "../../ESPEasy-Globals.h"   // printToWebJSON
 
 # define P190_FINGER_TIMEOUT_MS 20000 // Enrolment: max wait for placing / lifting the finger
 # define P190_FINGER_POLL_MS    100   // Enrolment: GenImg interval while waiting for the finger
@@ -18,8 +18,8 @@ void P190_colorSelector(const __FlashStringHelper *label, const __FlashStringHel
     F("Red"), F("Blue"), F("Purple"), F("Green"), F("Yellow"), F("Cyan"), F("White"),
   };
   const int optionValues[] = {
-    COLOR_RED,   COLOR_BLUE,   COLOR_PURPLE, COLOR_GREEN,
-    COLOR_YELLOW, COLOR_CYAN,  COLOR_WHITE,
+    COLOR_RED,    COLOR_BLUE,    COLOR_PURPLE,    COLOR_GREEN,
+    COLOR_YELLOW, COLOR_CYAN,    COLOR_WHITE,
   };
   const FormSelectorOptions selector(NR_ELEMENTS(optionValues), options, optionValues);
 
@@ -45,8 +45,8 @@ P190_data_struct::~P190_data_struct() {
 }
 
 bool P190_data_struct::init(struct EventStruct *event) {
-  const int8_t            rx   = CONFIG_PIN1;
-  const int8_t            tx   = CONFIG_PIN2;
+  const int8_t rx              = CONFIG_PIN1;
+  const int8_t tx              = CONFIG_PIN2;
   const ESPEasySerialPort port = static_cast<ESPEasySerialPort>(CONFIG_PORT);
 
   _serial = new (std::nothrow) ESPeasySerial(port, rx, tx);
@@ -143,7 +143,7 @@ void P190_data_struct::idle(struct EventStruct *event) {
   if (!_ready) {
     if (timeOutReached(_nextInit)) {
       _nextInit = millis() + P190_REINIT_MS;
-      startJob(event, { P190_Job::Init, 0, {} });
+      startJob(event, P190_Job::Init);
     }
     return;
   }
@@ -163,7 +163,7 @@ void P190_data_struct::idle(struct EventStruct *event) {
 
     if (_waitLift || !timeOutReached(_nextScan)) { return; }
     _nextScan = millis() + P190_TOUCH_RETRY_MS;
-    startJob(event, { P190_Job::Scan, 0, {} });
+    startJob(event, P190_Job::Scan);
     return;
   }
 
@@ -175,7 +175,7 @@ void P190_data_struct::idle(struct EventStruct *event) {
     _job = P190_Job::Scan;
     startStep(P190_Step::ScanRemove);
   } else {
-    startJob(event, { P190_Job::Scan, 0, {} });
+    startJob(event, P190_Job::Scan);
   }
 }
 
@@ -210,17 +210,35 @@ void P190_data_struct::setIndex(uint16_t id, bool used) {
   }
 }
 
+void P190_data_struct::startJob(struct EventStruct *event, P190_Job job) {
+  P190_request req{};
+
+  req.job = job;
+  startJob(event, req);
+}
+
 void P190_data_struct::startJob(struct EventStruct *event, const P190_request& req) {
   _req    = req;
   _job    = req.job;
   _cancel = false;
 
-  switch (_job) {
-    case P190_Job::Init:   startStep(P190_Step::VerifyPassword); break;
-    case P190_Job::Scan:   startStep(P190_Step::ScanImage);      break;
-    case P190_Job::Delete: startStep(P190_Step::Delete);         break;
-    case P190_Job::Empty:  startStep(P190_Step::Empty);          break;
-    case P190_Job::Count:  startStep(P190_Step::ReadCount);      break;
+  switch (_job)
+  {
+    case P190_Job::Init:
+      startStep(P190_Step::VerifyPassword);
+      break;
+    case P190_Job::Scan:
+      startStep(P190_Step::ScanImage);
+      break;
+    case P190_Job::Delete:
+      startStep(P190_Step::Delete);
+      break;
+    case P190_Job::Empty:
+      startStep(P190_Step::Empty);
+      break;
+    case P190_Job::Count:
+      startStep(P190_Step::ReadCount);
+      break;
     case P190_Job::Led:
       led(req.led[0], req.led[2], req.led[1], req.led[3], P190_Step::None);
       break;
@@ -269,7 +287,9 @@ void P190_data_struct::led(uint8_t mode, uint8_t color, uint8_t speed, uint8_t t
 
 void P190_data_struct::sendCommand(uint8_t cmd, const uint8_t *params, size_t nparams, uint32_t timeoutMs) {
   // Drop late or unexpected bytes: only those already received, so a continuous stream can't block here
-  for (int n = _serial->available(); n > 0; --n) { _serial->read(); }
+  for (int n = _serial->available(); n > 0; --n) {
+    _serial->read();
+  }
   _parser.reset();
 
   uint8_t buf[MAX_CMD_SIZE];
@@ -282,7 +302,8 @@ void P190_data_struct::sendCommand(uint8_t cmd, const uint8_t *params, size_t np
 }
 
 void P190_data_struct::sendStep() {
-  switch (_step) {
+  switch (_step)
+  {
     case P190_Step::VerifyPassword:
     {
       const uint8_t p[] = {
@@ -339,7 +360,7 @@ void P190_data_struct::sendStep() {
       break;
     }
     case P190_Step::Empty:
-      sendCommand(CMD_EMPTY, nullptr, 0, 5000);
+      sendCommand(CMD_EMPTY,    nullptr,  0, 5000);
       break;
     case P190_Step::Led:
       sendCommand(CMD_AURA_LED, _req.led, sizeof(_req.led));
@@ -356,8 +377,10 @@ void P190_data_struct::sendStep() {
 void P190_data_struct::handleAck(struct EventStruct *event, const Packet& pkt) {
   const uint8_t code = pkt.code();
 
-  switch (_step) {
+  switch (_step)
+  {
     case P190_Step::VerifyPassword:
+
       if (code == CODE_OK) {
         startStep(P190_Step::ReadParams);
       } else {
@@ -370,6 +393,7 @@ void P190_data_struct::handleAck(struct EventStruct *event, const Packet& pkt) {
       break;
 
     case P190_Step::ReadParams:
+
       if (code == CODE_OK) {
         const uint16_t capacity = pkt.word(5);
 
@@ -381,6 +405,7 @@ void P190_data_struct::handleAck(struct EventStruct *event, const Packet& pkt) {
       break;
 
     case P190_Step::ReadIndex:
+
       if ((code == CODE_OK) && (pkt.size >= 1 + INDEX_PAGE_BYTES)) {
         for (size_t i = 0; i < INDEX_PAGE_BYTES; ++i) {
           const size_t pos = _indexPage * INDEX_PAGE_BYTES + i;
@@ -402,6 +427,7 @@ void P190_data_struct::handleAck(struct EventStruct *event, const Packet& pkt) {
       break;
 
     case P190_Step::ReadCount:
+
       if (code == CODE_OK) {
         _count = pkt.word(1);
         UserVar.setFloat(event->TaskIndex, P190_VALUE_COUNT, _count);
@@ -417,6 +443,7 @@ void P190_data_struct::handleAck(struct EventStruct *event, const Packet& pkt) {
       break;
 
     case P190_Step::ScanImage:
+
       if (code == CODE_OK) {
         startStep(P190_Step::ScanFeatures);
       } else {
@@ -425,6 +452,7 @@ void P190_data_struct::handleAck(struct EventStruct *event, const Packet& pkt) {
       break;
 
     case P190_Step::ScanFeatures:
+
       if (code == CODE_OK) {
         startStep(P190_Step::ScanSearch);
       } else {
@@ -445,6 +473,7 @@ void P190_data_struct::handleAck(struct EventStruct *event, const Packet& pkt) {
     }
 
     case P190_Step::ScanRemove:
+
       if (code == CODE_NO_FINGER) { _waitLift = false; }
       finish();
       break;
@@ -459,6 +488,7 @@ void P190_data_struct::handleAck(struct EventStruct *event, const Packet& pkt) {
 
     case P190_Step::Delete:
     case P190_Step::Empty:
+
       if (code == CODE_OK) {
         addLog(LOG_LEVEL_INFO, _step == P190_Step::Empty
                ? String(F("Fingerprint: all templates deleted"))
@@ -480,6 +510,7 @@ void P190_data_struct::handleAck(struct EventStruct *event, const Packet& pkt) {
       break;
 
     case P190_Step::Led:
+
       if (code != CODE_OK) {
         addLog(LOG_LEVEL_ERROR, concat(F("Fingerprint: LED command failed, code "), code));
 
@@ -500,8 +531,10 @@ void P190_data_struct::handleAck(struct EventStruct *event, const Packet& pkt) {
 }
 
 void P190_data_struct::handleEnrollAck(struct EventStruct *event, uint8_t code) {
-  switch (_step) {
+  switch (_step)
+  {
     case P190_Step::EnrollImage:
+
       if (code == CODE_OK) {
         startStep(P190_Step::EnrollFeatures);
       } else if (timeOutReached(_fingerDeadline)) {
@@ -512,6 +545,7 @@ void P190_data_struct::handleEnrollAck(struct EventStruct *event, uint8_t code) 
       break;
 
     case P190_Step::EnrollFeatures:
+
       if ((code == CODE_OK) && (_capture == 2)) {
         setEnrollState(event, P190_ENROLL_STORING);
         startStep(P190_Step::EnrollModel);
@@ -531,6 +565,7 @@ void P190_data_struct::handleEnrollAck(struct EventStruct *event, uint8_t code) 
       break;
 
     case P190_Step::EnrollRemove:
+
       if (code == CODE_NO_FINGER) {
         addEvent(event, F("EnrollScan"), _capture);
         setEnrollState(event, _capture == 1 ? P190_ENROLL_PLACE1 : P190_ENROLL_PLACE2);
@@ -544,6 +579,7 @@ void P190_data_struct::handleEnrollAck(struct EventStruct *event, uint8_t code) 
       break;
 
     case P190_Step::EnrollModel:
+
       if (code == CODE_OK) {
         startStep(P190_Step::EnrollStore);
       } else {
@@ -645,9 +681,9 @@ void P190_data_struct::enrollDone(struct EventStruct *event, int errorCode) {
 bool P190_data_struct::plugin_write(struct EventStruct *event, const String& string) {
   if (!equals(parseString(string, 1), F("fingerprint"))) { return false; }
 
-  const String  sub = parseString(string, 2);
-  P190_request  req{};
-  int32_t       value = 0;
+  const String sub = parseString(string, 2);
+  P190_request req{};
+  int32_t value = 0;
 
   if (equals(sub, F("enroll"))) {
     // fingerprint,enroll[,<id>]: without ID, the first free slot. Answer: {"enroll":<id>} or {"error":"..."}
@@ -723,8 +759,8 @@ bool P190_data_struct::plugin_write(struct EventStruct *event, const String& str
     req.job = P190_Job::Count;
   } else if (equals(sub, F("led"))) {
     // fingerprint,led,<mode>,<color>[,<speed>[,<times>]]
-    const uint8_t mode  = ledMode(parseString(string, 3).c_str());
-    uint8_t       color = ledColor(parseString(string, 4).c_str());
+    const uint8_t mode = ledMode(parseString(string, 3).c_str());
+    uint8_t color      = ledColor(parseString(string, 4).c_str());
 
     if ((mode == AURA_OFF) && (color == 0)) { color = COLOR_RED; }
 
@@ -774,7 +810,7 @@ void P190_data_struct::showValues(struct EventStruct *event) const {
   TaskValuesWriterHelper data(event);
 
   data.setWriteRegularTaskValuesFirst();
-  data.writeCustom(varNr++, F("Module"), _ready ? String(F("OK")) : String(F("No answer")));
+  data.writeCustom(varNr++, F("Module"),    _ready ? String(F("OK")) : String(F("No answer")));
   data.writeCustom(varNr++, F("Templates"), strformat(F("%d / %d"), _count, _capacity), true);
 }
 

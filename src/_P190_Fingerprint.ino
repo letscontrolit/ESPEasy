@@ -65,9 +65,9 @@ boolean Plugin_190(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEVALUENAMES:
     {
-      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[P190_VALUE_ID],    PSTR(PLUGIN_VALUENAME1_190));
-      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[P190_VALUE_SCORE], PSTR(PLUGIN_VALUENAME2_190));
-      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[P190_VALUE_COUNT], PSTR(PLUGIN_VALUENAME3_190));
+      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[P190_VALUE_ID],     PSTR(PLUGIN_VALUENAME1_190));
+      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[P190_VALUE_SCORE],  PSTR(PLUGIN_VALUENAME2_190));
+      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[P190_VALUE_COUNT],  PSTR(PLUGIN_VALUENAME3_190));
       strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[P190_VALUE_ENROLL], PSTR(PLUGIN_VALUENAME4_190));
 
       for (uint8_t i = 0; i < 4; ++i) {
@@ -120,8 +120,8 @@ boolean Plugin_190(uint8_t function, struct EventStruct *event, String& string)
                     "Power with 3.3V only. Without the touch GPIO the module is polled at the scan interval."));
 
       addFormSubHeader(F("Module"));
-      addFormTextBox(F("Password"), F("pwd"), formatToHex(P190_PASSWORD, 8), 10);
-      addFormTextBox(F("Address"),  F("addr"), formatToHex(P190_ADDRESS, 8), 10);
+      addFormTextBox(F("Password"), F("pwd"),  formatToHex(P190_PASSWORD, 8), 10);
+      addFormTextBox(F("Address"),  F("addr"), formatToHex(P190_ADDRESS, 8),  10);
       addFormNote(F("Factory setting: password 0x00000000, address 0xFFFFFFFF"));
 
       addFormSubHeader(F("Scan"));
