@@ -39,7 +39,7 @@ public:
   bool plugin_write(struct EventStruct *event,
                     String            & string);
   bool isInitialized() const {
-    return initialized;
+    return initialized && (nullptr != sensor);
   }
 
 private:

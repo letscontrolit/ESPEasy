@@ -25,6 +25,8 @@ P163_data_struct::~P163_data_struct() {
 * init
 *****************************************************/
 bool P163_data_struct::init(struct EventStruct *event) {
+  initialized = false;
+  delete sensor; // In case init() is called again
   sensor = new (std::nothrow) CG_RadSens(RS_DEFAULT_I2C_ADDRESS);
 
   if ((nullptr != sensor) && sensor->init()) {
@@ -59,6 +61,8 @@ bool P163_data_struct::plugin_read(struct EventStruct *event) {
 
 bool P163_data_struct::setOutputValues(struct EventStruct *event) {
   bool result = false;
+
+  if (nullptr == sensor) { return result; }
 
   const uint32_t count    = _readIncrement ? sensor->getNumberOfPulses() : sensor->getNumberOfNewPulses();
   const uint32_t incCount = sensor->getNumberOfPulses();
