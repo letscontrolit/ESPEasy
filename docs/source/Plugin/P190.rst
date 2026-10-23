@@ -75,7 +75,7 @@ Sensor
 
 See: :ref:`SerialHelper_page`
 
-A hardware serial port is recommended. On ESP32, selecting **HW Serial0**, **HW Serial1** or **HW Serial2** fills in the default GPIO pins of that port (3/1, 26/27 and 16/17), that can be changed.
+A hardware serial port is recommended. Select the RX and TX GPIO pins the module is connected to, e.g. **HW Serial2** with GPIO16 (RX) and GPIO17 (TX).
 
 * **Touch (WAKEUP, blue)**: Optional input GPIO connected to the WAKEUP output of the module.
 

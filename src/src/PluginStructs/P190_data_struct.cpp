@@ -25,47 +25,6 @@ void P190_colorSelector(const __FlashStringHelper *label, const __FlashStringHel
   selector.addFormSelector(label, id, selected);
 }
 
-// ESPEasy has a (disabled) helper for this, but it would use the SoC defaults: on the ESP32 Serial1 is
-// on GPIO9/10, the flash pins. Serial2 uses the well known 16/17 instead of the Arduino core 3.x default
-// 4/25. Other chips (S2, S3, C3, ...) have different pins: no defaults there.
-# if defined(ESP32) && CONFIG_IDF_TARGET_ESP32
-static_assert(static_cast<int>(ESPEasySerialPort::serial0) == 2 &&
-              static_cast<int>(ESPEasySerialPort::serial1) == 4 &&
-              static_cast<int>(ESPEasySerialPort::serial2) == 5,
-              "Update the port numbers of P190_addSerialPinsScript");
-# endif
-
-bool P190_defaultSerialPins(uint8_t port, int8_t& rx, int8_t& tx) {
-# if defined(ESP32) && CONFIG_IDF_TARGET_ESP32
-
-  switch (static_cast<ESPEasySerialPort>(port)) {
-    case ESPEasySerialPort::serial0: rx = 3;  tx = 1;  return true;
-    case ESPEasySerialPort::serial1: rx = 26; tx = 27; return true;
-    case ESPEasySerialPort::serial2: rx = 16; tx = 17; return true;
-    default: break;
-  }
-# endif // if defined(ESP32) && CONFIG_IDF_TARGET_ESP32
-  return false;
-}
-
-void P190_addSerialPinsScript() {
-# if defined(ESP32) && CONFIG_IDF_TARGET_ESP32
-
-  // On a port change, set the defaults of the new port if RX/TX are empty or still the defaults of another port
-  html_add_script(F("window.addEventListener('load',function(){"
-                    "var p=document.getElementById('serPort'),"
-                    "rx=document.getElementById('taskdevicepin1'),tx=document.getElementById('taskdevicepin2');"
-                    "if(!p||!rx||!tx)return;"
-                    "var d={2:['3','1'],4:['26','27'],5:['16','17']};"
-                    "function isDef(){if(rx.value=='-1'&&tx.value=='-1')return true;"
-                    "for(var k in d){if(d[k][0]==rx.value&&d[k][1]==tx.value)return true;}return false;}"
-                    "function fill(){var v=d[p.value];if(v&&isDef()){rx.value=v[0];tx.value=v[1];}}"
-                    "p.addEventListener('change',fill);fill();});"),
-                  false);
-# endif // if defined(ESP32) && CONFIG_IDF_TARGET_ESP32
-}
-
-
 P190_data_struct::P190_data_struct(struct EventStruct *event) {
   const int mult = P190_BAUD_MULT;
 
@@ -85,15 +44,6 @@ P190_data_struct::~P190_data_struct() {
 }
 
 bool P190_data_struct::init(struct EventStruct *event) {
-  if ((CONFIG_PIN1 < 0) && (CONFIG_PIN2 < 0)) {
-    // Settings saved without RX/TX: use (and show) the defaults of the hardware serial port
-    int8_t rx, tx;
-
-    if (P190_defaultSerialPins(CONFIG_PORT, rx, tx)) {
-      CONFIG_PIN1 = rx;
-      CONFIG_PIN2 = tx;
-    }
-  }
   const int8_t            rx   = CONFIG_PIN1;
   const int8_t            tx   = CONFIG_PIN2;
   const ESPEasySerialPort port = static_cast<ESPEasySerialPort>(CONFIG_PORT);

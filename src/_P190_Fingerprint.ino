@@ -113,7 +113,6 @@ boolean Plugin_190(uint8_t function, struct EventStruct *event, String& string)
       const FormSelectorOptions selector(NR_ELEMENTS(optionValues), options, optionValues);
       selector.addFormSelector(F("Baud rate"), F("baud"), P190_BAUD_MULT);
       addFormNote(F("Factory setting: 57600"));
-      P190_addSerialPinsScript(); // HW Serial0/1/2 selected: fill RX/TX with the port defaults
       break;
     }
 
@@ -158,15 +157,6 @@ boolean Plugin_190(uint8_t function, struct EventStruct *event, String& string)
 
       if (validUIntFromString(webArg(F("addr")), value)) { P190_ADDRESS = value; }
 
-      if ((CONFIG_PIN1 < 0) && (CONFIG_PIN2 < 0)) {
-        // Hardware serial port without RX/TX: store the default GPIOs of the port
-        int8_t rx, tx;
-
-        if (P190_defaultSerialPins(CONFIG_PORT, rx, tx)) {
-          CONFIG_PIN1 = rx;
-          CONFIG_PIN2 = tx;
-        }
-      }
       success = true;
       break;
     }
