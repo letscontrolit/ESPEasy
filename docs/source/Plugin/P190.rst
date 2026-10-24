@@ -181,13 +181,15 @@ Security
 Rules example
 ^^^^^^^^^^^^^
 
-A task named ``Finger``, opening a door relay on GPIO26 for 2 seconds for fingers 0..9:
+A task named ``Finger`` at a door. The ``Finger#ID`` event comes for every finger placed on the sensor, with the slot of the finger found as ``%eventvalue1%``, or ``-1`` when it's not recognized. Here the fingers of the people allowed through this door are stored in the slots 0 to 9: they open the door relay on GPIO26 for 2 seconds. Any other finger, also one stored in a higher slot (e.g. enrolled for another door), is only logged.
 
 .. code-block:: none
 
   on Finger#ID do
-    if %eventvalue1% >= 0 and %eventvalue1% < 10
+    if %eventvalue1% >= 0 and %eventvalue1% <= 9
       Pulse,26,1,2000
+    else
+      LogEntry,'Finger %eventvalue1% not allowed (score [Finger#Score])'
     endif
   endon
 
