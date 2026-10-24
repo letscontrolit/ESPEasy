@@ -95,7 +95,7 @@ Scan
 
   The regular task **Interval** isn't available: the values are sent once per scanned finger, and resending the last ID on an interval could e.g. open a door again.
 
-* **Minimum score**: Matches with a lower score are reported as not recognised (ID ``-1``). ``0`` (default) accepts every match of the module.
+* **Minimum score**: Matches with a lower score are reported as not recognised (ID ``-1``, with their *Score*), and the ID found is shown in the log (level Info), to help tune this setting. ``0`` (default) accepts every match of the module.
 
 LED ring (R503)
 ^^^^^^^^^^^^^^^

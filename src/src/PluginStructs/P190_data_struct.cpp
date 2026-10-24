@@ -247,7 +247,7 @@ void P190_data_struct::startJob(struct EventStruct *event, const P190_request& r
       led(req.led[0], req.led[2], req.led[1], req.led[3], P190_Step::None);
       break;
     case P190_Job::Enroll:
-      _capture        = 1;
+      _capture        = P190_CAPTURE_1;
       _fingerDeadline = millis() + P190_FINGER_TIMEOUT_MS;
       fpLog(LOG_LEVEL_INFO, concat(F("enrolling ID "), _req.id));
       addEvent(event, F("EnrollScan"), _capture);
@@ -338,13 +338,13 @@ void P190_data_struct::sendStep() {
     case P190_Step::ScanFeatures:
     case P190_Step::EnrollFeatures:
     {
-      const uint8_t p[] = { static_cast<uint8_t>(_step == P190_Step::ScanFeatures ? 1 : _capture) };
+      const uint8_t p[] = { static_cast<uint8_t>(_step == P190_Step::ScanFeatures ? P190_CAPTURE_1 : _capture) };
       sendCommand(CMD_IMG_2_TZ, p, sizeof(p));
       break;
     }
     case P190_Step::ScanSearch:
     {
-      const uint8_t p[] = { 1, 0, 0, static_cast<uint8_t>(_capacity >> 8), static_cast<uint8_t>(_capacity) };
+      const uint8_t p[] = { P190_CAPTURE_1, 0, 0, static_cast<uint8_t>(_capacity >> 8), static_cast<uint8_t>(_capacity) };
       sendCommand(CMD_SEARCH, p, sizeof(p), P190_SEARCH_TIMEOUT_MS);
       break;
     }
@@ -471,6 +471,10 @@ void P190_data_struct::handleAck(struct EventStruct *event, const Packet& pkt) {
       if ((code == CODE_OK) && (score >= _minScore)) {
         report(event, pkt.word(1), score);
       } else {
+        if ((code == CODE_OK) && loglevelActiveFor(LOG_LEVEL_INFO)) {
+          // Reported as no match (ID -1, so the rules don't act on it) with its score; the ID is only logged
+          fpLog(LOG_LEVEL_INFO, strformat(F("ID %d has score %d, below the minimum score %d"), pkt.word(1), score, _minScore));
+        }
         report(event, -1, score);
       }
       break;
@@ -550,7 +554,7 @@ void P190_data_struct::handleEnrollAck(struct EventStruct *event, uint8_t code) 
 
     case P190_Step::EnrollFeatures:
 
-      if ((code == CODE_OK) && (_capture == 2)) {
+      if ((code == CODE_OK) && (_capture == P190_CAPTURE_2)) {
         setEnrollState(event, P190_ENROLL_STORING);
         startStep(P190_Step::EnrollModel);
         break;
@@ -572,7 +576,7 @@ void P190_data_struct::handleEnrollAck(struct EventStruct *event, uint8_t code) 
 
       if (code == CODE_NO_FINGER) {
         addEvent(event, F("EnrollScan"), _capture);
-        setEnrollState(event, _capture == 1 ? P190_ENROLL_PLACE1 : P190_ENROLL_PLACE2);
+        setEnrollState(event, _capture == P190_CAPTURE_1 ? P190_ENROLL_PLACE1 : P190_ENROLL_PLACE2);
         _fingerDeadline = millis() + P190_FINGER_TIMEOUT_MS;
         startStep(P190_Step::EnrollImage, P190_FINGER_POLL_MS);
       } else if (timeOutReached(_fingerDeadline)) {
@@ -691,14 +695,14 @@ bool P190_data_struct::plugin_write(struct EventStruct *event, const String& str
 
   if (equals(sub, F("enroll"))) {
     // fingerprint,enroll[,<id>]: without ID, the first free slot. Answer: {"enroll":<id>} or {"error":"..."}
-    const String arg = parseString(string, 3);
+    const bool autoSlot = parseString(string, 3).isEmpty();
 
     if (enrollPending()) {
       replyError(event, F("an enrolment is already running"));
       return true;
     }
 
-    if (arg.isEmpty()) {
+    if (autoSlot) {
       if (!_ready || !_indexValid) {
         replyError(event, F("used slots unknown, use fingerprint,enroll,<id>"));
         return true;
@@ -710,9 +714,13 @@ bool P190_data_struct::plugin_write(struct EventStruct *event, const String& str
         setEnrollState(event, -P190_ERR_LIBRARY_FULL);
         return true;
       }
-    } else if (!validIntFromString(arg, value) || (value < 0) || (value >= _capacity)) {
-      replyError(event, strformat(F("the ID must be 0..%d"), _capacity - 1));
-      return true;
+    } else {
+      value = event->Par2;
+
+      if ((value < 0) || (value >= _capacity)) {
+        replyError(event, strformat(F("the ID must be 0..%d"), _capacity - 1));
+        return true;
+      }
     }
     req.job = P190_Job::Enroll;
     req.id  = value;
@@ -729,7 +737,7 @@ bool P190_data_struct::plugin_write(struct EventStruct *event, const String& str
     // {"ready":true,"capacity":200,"count":2,"enroll":5,"slot":3,"used":[0,3]}
     // enroll/slot: state and slot of the last enrolment, used: null if the module can't list them
     String json = strformat(F("{\"ready\":%s,\"capacity\":%d,\"count\":%d,\"enroll\":%d,\"slot\":%d,\"used\":"),
-                            _ready ? "true" : "false", _capacity, _count,
+                            FsP(boolToString(_ready)), _capacity, _count,
                             static_cast<int>(UserVar.getFloat(event->TaskIndex, P190_VALUE_ENROLL)), _enrollSlot);
 
     if (_indexValid) {
@@ -751,12 +759,13 @@ bool P190_data_struct::plugin_write(struct EventStruct *event, const String& str
     reply(event, json);
     return true;
   } else if (equals(sub, F("delete"))) {
-    if (!validIntFromString(parseString(string, 3), value) || (value < 0) || (value >= _capacity)) {
+    // Par2 is 0 also without an ID: check that there is one
+    if (parseString(string, 3).isEmpty() || (event->Par2 < 0) || (event->Par2 >= _capacity)) {
       fpLog(LOG_LEVEL_ERROR, strformat(F("the ID must be 0..%d"), _capacity - 1));
       return true;
     }
     req.job = P190_Job::Delete;
-    req.id  = value;
+    req.id  = event->Par2;
   } else if (equals(sub, F("deleteall"))) {
     req.job = P190_Job::Empty;
   } else if (equals(sub, F("count"))) {

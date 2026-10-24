@@ -31,6 +31,10 @@
 # define P190_VALUE_COUNT      2
 # define P190_VALUE_ENROLL     3
 
+// Enrolment captures, each one stored in the module character buffer with the same number (a scan uses buffer 1)
+# define P190_CAPTURE_1        1
+# define P190_CAPTURE_2        2
+
 // Value Enroll: progress of the last enrolment, for pages and controllers that don't get the rules events
 # define P190_ENROLL_NONE      0      // No enrolment yet, or accepted and not started
 # define P190_ENROLL_PLACE1    1      // Place the finger (capture 1)
@@ -193,7 +197,7 @@ private:
   uint32_t     _timeout = 0;
   P190_request _req{};
   P190_Step    _ledNext        = P190_Step::None;
-  uint8_t      _capture        = 1; // Enrolment: capture 1 or 2 (= char buffer)
+  uint8_t      _capture        = P190_CAPTURE_1; // Enrolment: capture 1 or 2 (= char buffer)
   uint32_t     _fingerDeadline = 0;
   bool         _cancel         = false;
 
