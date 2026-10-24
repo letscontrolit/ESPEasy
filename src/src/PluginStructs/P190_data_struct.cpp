@@ -32,7 +32,7 @@ P190_data_struct::P190_data_struct(struct EventStruct *event) {
   _address      = P190_ADDRESS;
   _password     = P190_PASSWORD;
   _baud         = 9600ul * ((mult >= 1 && mult <= 12) ? mult : P190_DEF_BAUD_MULT);
-  _touchPin     = validGpio(CONFIG_PIN3) ? CONFIG_PIN3 : -1;
+  _touchPin     = CONFIG_PIN3;
   _ledFeedback  = P190_LED_FEEDBACK != 0;
   _matchColor   = constrain(static_cast<int>(P190_MATCH_COLOR), 1, 7);
   _noMatchColor = constrain(static_cast<int>(P190_NOMATCH_COLOR), 1, 7);
@@ -55,7 +55,7 @@ bool P190_data_struct::init(struct EventStruct *event) {
   _serial->begin(_baud);
   serialHelper_log_GpioDescription(port, rx, tx);
 
-  if (_touchPin >= 0) {
+  if (validGpio(_touchPin)) {
     pinMode(_touchPin, INPUT_PULLUP);
   }
 
@@ -69,7 +69,7 @@ bool P190_data_struct::init(struct EventStruct *event) {
 
 bool P190_data_struct::touched() const {
   // The WAKEUP output of the module is low while a finger touches the sensor
-  return _touchPin >= 0 && digitalRead(_touchPin) == LOW;
+  return validGpio(_touchPin) && digitalRead(_touchPin) == LOW;
 }
 
 void P190_data_struct::addEvent(struct EventStruct *event, const __FlashStringHelper *name, int value) const {
@@ -155,7 +155,7 @@ void P190_data_struct::idle(struct EventStruct *event) {
     return;
   }
 
-  if (_touchPin >= 0) {
+  if (validGpio(_touchPin)) {
     if (!touched()) {
       _waitLift = false;
       return;
