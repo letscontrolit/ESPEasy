@@ -117,7 +117,7 @@ void P190_data_struct::loop(struct EventStruct *event) {
   }
 
   if (_waiting) {
-    if (timePassedSince(_sentAt) > static_cast<long>(_timeout)) {
+    if (timePassedSince(_sentAt) > static_cast<int32_t>(_timeout)) {
       _waiting = false;
       handleTimeout(event);
     }
@@ -205,11 +205,8 @@ void P190_data_struct::refresh() {
 void P190_data_struct::setIndex(uint16_t id, bool used) {
   if (static_cast<size_t>(id >> 3) >= _index.size()) { return; }
 
-  if (used) {
-    _index[id >> 3] |= 1 << (id & 7);
-  } else {
-    _index[id >> 3] &= ~(1 << (id & 7));
-  }
+  // One bit per slot: bit (id % 8) of byte (id / 8)
+  bitWrite(_index[id >> 3], id & 7, used);
 }
 
 void P190_data_struct::startJob(struct EventStruct *event, P190_Job job) {
