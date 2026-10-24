@@ -847,6 +847,11 @@ P178 :ref:`P178_page`
 
 .. include:: ../Plugin/P178_commands.repl
 
+P190 :ref:`P190_page`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. include:: ../Plugin/P190_commands.repl
+
 
 
 .. .. *** Insert regular plugin commands above this remark! ***

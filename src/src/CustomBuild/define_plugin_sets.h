@@ -3053,6 +3053,9 @@ To create/register a plugin, you have to :
   #ifndef USES_P180
     #define USES_P180   // Generic - I2C Generic
   #endif
+  #if !defined(USES_P190) && defined(ESP32)
+    #define USES_P190   // Security - Fingerprint (Grow R503/R307)
+  #endif
 
   // Controllers
   #ifndef USES_C015
@@ -3114,7 +3117,7 @@ To create/register a plugin, you have to :
 #if defined(USES_P044) && !defined(USES_P020) // P020 is used to replace/emulate P044
   #define USES_P020
 #endif
-#if defined(USES_P020) || defined(USES_P049) || defined(USES_P052) || defined(USES_P053) || defined(USES_P056)  || defined(USES_P065) || defined(USES_P071) || defined(USES_P075) || defined(USES_P077) || defined(USES_P078) || defined(USES_P082) || defined(USES_P085) || defined(USES_P087) || defined(USES_P093)|| defined(USES_P094) || defined(USES_P102) || defined(USES_P108) || defined(USES_P134) || defined(USES_P144) || defined(USES_P159) || defined(USES_P176) || defined(USES_C018)
+#if defined(USES_P020) || defined(USES_P049) || defined(USES_P052) || defined(USES_P053) || defined(USES_P056)  || defined(USES_P065) || defined(USES_P071) || defined(USES_P075) || defined(USES_P077) || defined(USES_P078) || defined(USES_P082) || defined(USES_P085) || defined(USES_P087) || defined(USES_P093)|| defined(USES_P094) || defined(USES_P102) || defined(USES_P108) || defined(USES_P134) || defined(USES_P144) || defined(USES_P159) || defined(USES_P176) || defined(USES_P190) || defined(USES_C018)
   // At least one plugin uses serial.
   #ifndef PLUGIN_USES_SERIAL
     #define PLUGIN_USES_SERIAL

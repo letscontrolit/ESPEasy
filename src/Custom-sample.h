@@ -626,6 +626,7 @@ static const char DATA_ESPEASY_DEFAULT_MIN_CSS[] PROGMEM = {
 // #define USES_P178   // LU9685 Servo controller
 
 // #define USES_P180   // I2C Generic
+// #define USES_P190   // Security - Fingerprint (Grow R503/R307)
 
 /*
  #######################################################################################################

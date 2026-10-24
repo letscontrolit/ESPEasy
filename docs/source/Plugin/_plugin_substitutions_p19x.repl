@@ -1,0 +1,13 @@
+.. |P190_name| replace:: :cyan:`Fingerprint (Grow R503/R307)`
+.. |P190_type| replace:: :cyan:`Security`
+.. |P190_typename| replace:: :cyan:`Security - Fingerprint (Grow R503/R307)`
+.. |P190_porttype| replace:: `Serial`
+.. |P190_status| replace:: :yellow:`MAX`
+.. |P190_status_lb| replace:: `.`
+.. |P190_github| replace:: P190_Fingerprint.ino
+.. _P190_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P190_Fingerprint.ino
+.. |P190_usedby| replace:: `Grow R503, R307, R502, ZFM-20, AS608 and compatible fingerprint modules`
+.. |P190_shortinfo| replace:: `Fingerprint reader with enrollment, for the Grow R503/R307 family of modules`
+.. |P190_maintainer| replace:: `alexbn71`
+.. |P190_compileinfo| replace:: `.`
+.. |P190_usedlibraries| replace:: `.`

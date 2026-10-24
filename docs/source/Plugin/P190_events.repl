@@ -1,0 +1,83 @@
+.. csv-table::
+   :header: "Event", "Example"
+   :widths: 30, 20
+
+   "
+   ``<taskname>#ID``
+   A finger was scanned. ``%eventvalue1%`` is the slot of the recognized finger, or ``-1`` when it was not recognized. Sent once per touch, together with the ``Score`` and ``Count`` values.
+   ","
+
+   .. code-block:: none
+
+      on Finger#ID do
+        if %eventvalue1% >= 0
+          Pulse,26,1,2000
+        endif
+      endon
+
+   "
+   "
+   ``<taskname>#EnrollScan=<n>``
+   Enrollment: place the finger on the sensor, capture ``<n>`` = 1 or 2.
+   ","
+
+   .. code-block:: none
+
+      on Finger#EnrollScan do
+        LogEntry,'Place the finger (%eventvalue1%/2)'
+      endon
+
+   "
+   "
+   ``<taskname>#EnrollRemove=<n>``
+   Enrollment: lift the finger after capture ``<n>``.
+   ","
+
+   .. code-block:: none
+
+      on Finger#EnrollRemove do
+        LogEntry,'Lift the finger'
+      endon
+
+   "
+   "
+   ``<taskname>#Enrolled=<id>``
+   Enrollment done, the finger is stored at slot ``<id>``.
+   ","
+
+   .. code-block:: none
+
+      on Finger#Enrolled do
+        LogEntry,'Finger stored at %eventvalue1%'
+      endon
+
+   "
+   "
+   ``<taskname>#EnrollFailed=<code>``
+   Enrollment failed, see the error codes.
+   ","
+
+   .. code-block:: none
+
+      on Finger#EnrollFailed do
+        LogEntry,'Enrollment failed, code %eventvalue1%'
+      endon
+
+   "
+   "
+   ``<taskname>#Deleted=<id>``
+   Slot ``<id>`` deleted by ``fingerprint,delete``, or ``-1`` after ``fingerprint,deleteall``.
+   ","
+   "
+   "
+   ``<taskname>#Count=<n>``
+   Answer to ``fingerprint,count``: ``<n>`` fingers are stored in the module.
+   ","
+   "
+   "
+   ``<taskname>#Error=<code>``
+   ``fingerprint,delete``, ``deleteall``, ``count`` or ``led`` failed, see the error codes.
+   ","
+   "
+
+These events are only generated when Rules are enabled.
