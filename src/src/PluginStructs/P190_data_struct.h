@@ -22,6 +22,9 @@
 # define P190_DEF_BAUD_MULT    6                // 57600 baud
 # define P190_DEF_POLL_MS      250
 # define P190_DEF_CAPACITY     200              // R503; replaced by the library size read from the module
+# define P190_MAX_CAPACITY     3000             // Largest library size accepted from the module
+# define P190_ACK_TIMEOUT_MS   2000             // Max wait for an acknowledge
+# define P190_SEARCH_TIMEOUT_MS 3000            // Max wait for a Search acknowledge: it goes through the whole library
 
 # define P190_VALUE_ID         0
 # define P190_VALUE_SCORE      1
@@ -129,7 +132,7 @@ private:
   void sendCommand(uint8_t        cmd,
                    const uint8_t *params,
                    size_t         nparams,
-                   uint32_t       timeoutMs = 2000);
+                   uint32_t       timeoutMs = P190_ACK_TIMEOUT_MS);
   void handleAck(struct EventStruct       *event,
                  const P190_proto::Packet& pkt);
   void handleTimeout(struct EventStruct *event);

@@ -340,7 +340,7 @@ void P190_data_struct::sendStep() {
     case P190_Step::ScanSearch:
     {
       const uint8_t p[] = { 1, 0, 0, static_cast<uint8_t>(_capacity >> 8), static_cast<uint8_t>(_capacity) };
-      sendCommand(CMD_SEARCH, p, sizeof(p), 3000);
+      sendCommand(CMD_SEARCH, p, sizeof(p), P190_SEARCH_TIMEOUT_MS);
       break;
     }
     case P190_Step::EnrollModel:
@@ -396,7 +396,7 @@ void P190_data_struct::handleAck(struct EventStruct *event, const Packet& pkt) {
       if (code == CODE_OK) {
         const uint16_t capacity = pkt.word(5);
 
-        if ((capacity > 0) && (capacity <= 3000)) { _capacity = capacity; }
+        if ((capacity > 0) && (capacity <= P190_MAX_CAPACITY)) { _capacity = capacity; }
       }
       _index.assign((_capacity + 7) / 8, 0);
       _indexValid = false;
