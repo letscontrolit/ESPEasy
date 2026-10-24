@@ -2,7 +2,9 @@
 
 #ifdef USES_P190
 
-# include "../../ESPEasy-Globals.h"   // printToWebJSON
+# include "../../ESPEasy-Globals.h" // printToWebJSON
+
+# include <GPIO_Direct_Access.h>
 
 # define P190_FINGER_TIMEOUT_MS 20000 // Enrolment: max wait for placing / lifting the finger
 # define P190_FINGER_POLL_MS    100   // Enrolment: GenImg interval while waiting for the finger
@@ -69,7 +71,7 @@ bool P190_data_struct::init(struct EventStruct *event) {
 
 bool P190_data_struct::touched() const {
   // The WAKEUP output of the module is low while a finger touches the sensor
-  return validGpio(_touchPin) && digitalRead(_touchPin) == LOW;
+  return validGpio(_touchPin) && DIRECT_pinRead(_touchPin) == LOW;
 }
 
 void P190_data_struct::addEvent(struct EventStruct *event, const __FlashStringHelper *name, int value) const {
