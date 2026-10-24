@@ -153,6 +153,8 @@ private:
   void addEvent(struct EventStruct        *event,
                 const __FlashStringHelper *name,
                 int                        value) const;
+  void fpLog(uint8_t       logLevel,
+             const String& message) const;
 
   ESPeasySerial          *_serial = nullptr;
   P190_proto::Parser      _parser;

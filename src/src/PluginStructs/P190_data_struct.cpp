@@ -80,6 +80,11 @@ void P190_data_struct::addEvent(struct EventStruct *event, const __FlashStringHe
   }
 }
 
+void P190_data_struct::fpLog(uint8_t logLevel, const String& message) const {
+  // The prefix is a single flash string for all the log messages
+  addLog(logLevel, concat(F("Fingerprint: "), message));
+}
+
 void P190_data_struct::setEnrollState(struct EventStruct *event, int state) const {
   // Only the value: sendData() would also resend ID to the rules and controllers (and open the door again)
   UserVar.setFloat(event->TaskIndex, P190_VALUE_ENROLL, state);
@@ -92,7 +97,7 @@ void P190_data_struct::reply(struct EventStruct *event, const String& json) cons
 }
 
 void P190_data_struct::replyError(struct EventStruct *event, const String& message) const {
-  addLog(LOG_LEVEL_ERROR, concat(F("Fingerprint: "), message));
+  fpLog(LOG_LEVEL_ERROR, message);
   reply(event, concat(F("{\"error\":\""), message) + F("\"}"));
 }
 
@@ -244,7 +249,7 @@ void P190_data_struct::startJob(struct EventStruct *event, const P190_request& r
     case P190_Job::Enroll:
       _capture        = 1;
       _fingerDeadline = millis() + P190_FINGER_TIMEOUT_MS;
-      addLog(LOG_LEVEL_INFO, concat(F("Fingerprint: enrolling ID "), _req.id));
+      fpLog(LOG_LEVEL_INFO, concat(F("enrolling ID "), _req.id));
       addEvent(event, F("EnrollScan"), _capture);
       setEnrollState(event, P190_ENROLL_PLACE1);
 
@@ -383,9 +388,9 @@ void P190_data_struct::handleAck(struct EventStruct *event, const Packet& pkt) {
       if (code == CODE_OK) {
         startStep(P190_Step::ReadParams);
       } else {
-        addLog(LOG_LEVEL_ERROR, code == CODE_WRONG_PASSWORD
-               ? String(F("Fingerprint: wrong module password"))
-               : concat(F("Fingerprint: password check failed, code "), code));
+        fpLog(LOG_LEVEL_ERROR, code == CODE_WRONG_PASSWORD
+              ? String(F("wrong module password"))
+              : concat(F("password check failed, code "), code));
         _nextInit = millis() + P190_REINIT_MS;
         finish();
       }
@@ -419,7 +424,7 @@ void P190_data_struct::handleAck(struct EventStruct *event, const Packet& pkt) {
         }
         _indexValid = true;
       } else {
-        addLog(LOG_LEVEL_ERROR, concat(F("Fingerprint: reading the used slots failed, code "), code));
+        fpLog(LOG_LEVEL_ERROR, concat(F("reading the used slots failed, code "), code));
         _indexValid = false;
       }
       startStep(P190_Step::ReadCount);
@@ -434,7 +439,7 @@ void P190_data_struct::handleAck(struct EventStruct *event, const Packet& pkt) {
 
       if (_job == P190_Job::Init) {
         _ready = true;
-        addLogMove(LOG_LEVEL_INFO, strformat(F("Fingerprint: module ready, %d of %d templates used"), _count, _capacity));
+        fpLog(LOG_LEVEL_INFO, strformat(F("module ready, %d of %d templates used"), _count, _capacity));
       } else if (_job == P190_Job::Count) {
         addEvent(event, F("Count"), _count);
       }
@@ -489,9 +494,9 @@ void P190_data_struct::handleAck(struct EventStruct *event, const Packet& pkt) {
     case P190_Step::Empty:
 
       if (code == CODE_OK) {
-        addLog(LOG_LEVEL_INFO, _step == P190_Step::Empty
-               ? String(F("Fingerprint: all templates deleted"))
-               : concat(F("Fingerprint: deleted ID "), _req.id));
+        fpLog(LOG_LEVEL_INFO, _step == P190_Step::Empty
+              ? String(F("all templates deleted"))
+              : concat(F("deleted ID "), _req.id));
         addEvent(event, F("Deleted"), _step == P190_Step::Empty ? -1 : _req.id);
 
         if (_step == P190_Step::Empty) {
@@ -502,7 +507,7 @@ void P190_data_struct::handleAck(struct EventStruct *event, const Packet& pkt) {
         }
         refresh();
       } else {
-        addLog(LOG_LEVEL_ERROR, concat(F("Fingerprint: delete failed, code "), code));
+        fpLog(LOG_LEVEL_ERROR, concat(F("delete failed, code "), code));
         addEvent(event, F("Error"), code);
         finish();
       }
@@ -511,7 +516,7 @@ void P190_data_struct::handleAck(struct EventStruct *event, const Packet& pkt) {
     case P190_Step::Led:
 
       if (code != CODE_OK) {
-        addLog(LOG_LEVEL_ERROR, concat(F("Fingerprint: LED command failed, code "), code));
+        fpLog(LOG_LEVEL_ERROR, concat(F("LED command failed, code "), code));
 
         if (_job == P190_Job::Led) { addEvent(event, F("Error"), code); }
       }
@@ -553,7 +558,7 @@ void P190_data_struct::handleEnrollAck(struct EventStruct *event, uint8_t code) 
 
       if (code != CODE_OK) {
         // Poor image: lift the finger and repeat the same capture
-        addLog(LOG_LEVEL_INFO, concat(F("Fingerprint: image not usable, place the finger again, code "), code));
+        fpLog(LOG_LEVEL_INFO, concat(F("image not usable, place the finger again, code "), code));
       }
       addEvent(event, F("EnrollRemove"), _capture);
       setEnrollState(event, P190_ENROLL_LIFT);
@@ -598,7 +603,7 @@ void P190_data_struct::handleEnrollAck(struct EventStruct *event, uint8_t code) 
 void P190_data_struct::handleTimeout(struct EventStruct *event) {
   if (_step == P190_Step::ReadIndex) {
     // Module without ReadIndexTable: carry on without the used slots (fingerprint,enroll then needs an ID)
-    addLog(LOG_LEVEL_INFO, F("Fingerprint: the module doesn't list the used slots"));
+    fpLog(LOG_LEVEL_INFO, F("the module doesn't list the used slots"));
     _indexSupported = false;
     _indexValid     = false;
     startStep(P190_Step::ReadCount);
@@ -606,7 +611,7 @@ void P190_data_struct::handleTimeout(struct EventStruct *event) {
   }
 
   if (_ready || (_job != P190_Job::Init)) {
-    addLog(LOG_LEVEL_ERROR, F("Fingerprint: no answer from the module, check wiring and baud rate"));
+    fpLog(LOG_LEVEL_ERROR, F("no answer from the module, check wiring and baud rate"));
   }
   const P190_Job job = _job;
 
@@ -631,9 +636,9 @@ void P190_data_struct::report(struct EventStruct *event, int id, int score) {
   UserVar.setFloat(event->TaskIndex, P190_VALUE_SCORE, score);
 
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-    addLogMove(LOG_LEVEL_INFO, id >= 0
-               ? strformat(F("Fingerprint: match ID %d, score %d"), id, score)
-               : strformat(F("Fingerprint: no match (score %d)"), score));
+    fpLog(LOG_LEVEL_INFO, id >= 0
+          ? strformat(F("match ID %d, score %d"), id, score)
+          : strformat(F("no match (score %d)"), score));
   }
   sendData(event);
   _waitLift = true;
@@ -647,12 +652,12 @@ void P190_data_struct::report(struct EventStruct *event, int id, int score) {
 
 void P190_data_struct::enrollDone(struct EventStruct *event, int errorCode) {
   if (errorCode == CODE_OK) {
-    addLog(LOG_LEVEL_INFO, concat(F("Fingerprint: enrolled ID "), _req.id));
+    fpLog(LOG_LEVEL_INFO, concat(F("enrolled ID "), _req.id));
     addEvent(event, F("Enrolled"), _req.id);
     setIndex(_req.id, true);
     setEnrollState(event, P190_ENROLL_DONE);
   } else {
-    addLog(LOG_LEVEL_ERROR, concat(F("Fingerprint: enrolment failed, code "), errorCode));
+    fpLog(LOG_LEVEL_ERROR, concat(F("enrolment failed, code "), errorCode));
     addEvent(event, F("EnrollFailed"), errorCode);
     setEnrollState(event, -errorCode);
   }
@@ -747,7 +752,7 @@ bool P190_data_struct::plugin_write(struct EventStruct *event, const String& str
     return true;
   } else if (equals(sub, F("delete"))) {
     if (!validIntFromString(parseString(string, 3), value) || (value < 0) || (value >= _capacity)) {
-      addLogMove(LOG_LEVEL_ERROR, strformat(F("Fingerprint: the ID must be 0..%d"), _capacity - 1));
+      fpLog(LOG_LEVEL_ERROR, strformat(F("the ID must be 0..%d"), _capacity - 1));
       return true;
     }
     req.job = P190_Job::Delete;
@@ -770,7 +775,7 @@ bool P190_data_struct::plugin_write(struct EventStruct *event, const String& str
     if ((mode == 0) || (color == 0) ||
         (!speedArg.isEmpty() && !validIntFromString(speedArg, speed)) ||
         (!timesArg.isEmpty() && !validIntFromString(timesArg, times))) {
-      addLog(LOG_LEVEL_ERROR, F("Fingerprint: use fingerprint,led,<mode>,<color>[,<speed>[,<times>]]"));
+      fpLog(LOG_LEVEL_ERROR, F("use fingerprint,led,<mode>,<color>[,<speed>[,<times>]]"));
       return true;
     }
     req.job    = P190_Job::Led;
@@ -794,12 +799,12 @@ bool P190_data_struct::plugin_write(struct EventStruct *event, const String& str
     if (queued && !_cancel) { setEnrollState(event, -P190_ERR_CANCELLED); } // Never started: no enrollDone()
     return true;
   } else {
-    addLog(LOG_LEVEL_ERROR, concat(F("Fingerprint: unknown command "), sub));
+    fpLog(LOG_LEVEL_ERROR, concat(F("unknown command "), sub));
     return true;
   }
 
   if (!request(req)) {
-    addLog(LOG_LEVEL_ERROR, F("Fingerprint: too many commands queued"));
+    fpLog(LOG_LEVEL_ERROR, F("too many commands queued"));
   }
   return true;
 }
