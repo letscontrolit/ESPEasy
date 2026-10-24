@@ -84,7 +84,7 @@ bool GPIO_plugin_helper_data_t::init(
   savePortStatus(_portStatus_key, newStatus);
 
   // @giig1967g-20181022: set initial UserVar of the switch
-  if ((newStatus.state != -1) && Settings.TaskDevicePin1Inversed[event->TaskIndex]) {
+  if ((newStatus.state != -1) && Settings.TaskDevicePin1Inversed(event->TaskIndex)) {
     UserVar.setFloat(event->TaskIndex, 0, !newStatus.state);
   } else {
     UserVar.setFloat(event->TaskIndex, 0, newStatus.state);
@@ -207,7 +207,7 @@ void GPIO_plugin_helper_data_t::tenPerSecond(
         currentStatus.output = new_outputState;
         bool sendState = new_outputState;
 
-        if (Settings.TaskDevicePin1Inversed[event->TaskIndex])
+        if (Settings.TaskDevicePin1Inversed(event->TaskIndex))
         {
           sendState = !sendState;
         }
@@ -327,7 +327,7 @@ void GPIO_plugin_helper_data_t::tenPerSecond(
         {
           bool sendState = pinState;
 
-          if (Settings.TaskDevicePin1Inversed[event->TaskIndex])
+          if (Settings.TaskDevicePin1Inversed(event->TaskIndex))
           {
             sendState = !sendState;
           }

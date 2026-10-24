@@ -369,7 +369,7 @@ void WebTemplateParser::getErrorNotifications() {
     if (Settings.Protocol[x] != 0) {
       const protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(x);
 
-      if (Settings.ControllerEnabled[x] &&
+      if (Settings.ControllerEnabled(x) &&
           validProtocolIndex(ProtocolIndex) &&
           getProtocolStruct(ProtocolIndex).usesMQTT) {
         ++nrMQTTenabled;

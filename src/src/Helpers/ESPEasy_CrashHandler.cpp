@@ -10,13 +10,13 @@
  \*********************************************************************************************/
 static uint8_t disablePlugin(uint8_t bootFailedCount) {
   for (taskIndex_t i = 0; i < TASKS_MAX && bootFailedCount > 0; ++i) {
-    if (Settings.TaskDeviceEnabled[i]) {
+    if (Settings.TaskDeviceEnabled(i)) {
       --bootFailedCount;
 
       if (bootFailedCount == 0) {
         // Disable temporarily as unit crashed
         // FIXME TD-er: Should this be stored?
-        Settings.TaskDeviceEnabled[i] = false;
+        Settings.TaskDeviceEnabled(i, false);
       }
     }
   }
@@ -30,7 +30,7 @@ static uint8_t disableAllPlugins(uint8_t bootFailedCount) {
     for (taskIndex_t i = 0; i < TASKS_MAX; ++i) {
       // Disable temporarily as unit crashed
       // FIXME TD-er: Should this be stored?
-      Settings.TaskDeviceEnabled[i] = false;
+      Settings.TaskDeviceEnabled(i, false);
     }
   }
   return bootFailedCount;
@@ -41,11 +41,11 @@ static uint8_t disableAllPlugins(uint8_t bootFailedCount) {
  \*********************************************************************************************/
 static uint8_t disableController(uint8_t bootFailedCount) {
   for (controllerIndex_t i = 0; i < CONTROLLER_MAX && bootFailedCount > 0; ++i) {
-    if (Settings.ControllerEnabled[i]) {
+    if (Settings.ControllerEnabled(i)) {
       --bootFailedCount;
 
       if (bootFailedCount == 0) {
-        Settings.ControllerEnabled[i] = false;
+        Settings.ControllerEnabled(i, false);
       }
     }
   }
@@ -57,7 +57,7 @@ static uint8_t disableAllControllers(uint8_t bootFailedCount) {
     --bootFailedCount;
 
     for (controllerIndex_t i = 0; i < CONTROLLER_MAX; ++i) {
-      Settings.ControllerEnabled[i] = false;
+      Settings.ControllerEnabled(i, false);
     }
   }
   return bootFailedCount;
@@ -70,11 +70,11 @@ static uint8_t disableAllControllers(uint8_t bootFailedCount) {
 
 static uint8_t disableNotification(uint8_t bootFailedCount) {
   for (uint8_t i = 0; i < NOTIFICATION_MAX && bootFailedCount > 0; ++i) {
-    if (Settings.NotificationEnabled[i]) {
+    if (Settings.NotificationEnabled(i)) {
       --bootFailedCount;
 
       if (bootFailedCount == 0) {
-        Settings.NotificationEnabled[i] = false;
+        Settings.NotificationEnabled(i, false);
       }
     }
   }
@@ -86,7 +86,7 @@ static uint8_t disableAllNotifications(uint8_t bootFailedCount) {
     --bootFailedCount;
 
     for (uint8_t i = 0; i < NOTIFICATION_MAX; ++i) {
-      Settings.NotificationEnabled[i] = false;
+      Settings.NotificationEnabled(i, false);
     }
   }
   return bootFailedCount;

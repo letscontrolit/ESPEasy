@@ -465,7 +465,7 @@ static bool BuildFixes()
 
     for (taskIndex_t taskIndex = 0; taskIndex < TASKS_MAX; ++taskIndex) {
       if (Settings.getPluginID_for_task(taskIndex) == PLUGIN_ID_P003_PULSE) {
-        Settings.TaskDevicePin1PullUp[taskIndex] = true;
+        Settings.TaskDevicePin1PullUp(taskIndex, true);
       }
     }
     #endif // ifdef USES_P003

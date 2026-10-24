@@ -272,7 +272,7 @@ void C013_Receive(struct EventStruct *event) {
           if (currentPluginID == infoReply->deviceNumber) {
             // Check to see if task already is set to receive from this host
             if ((Settings.TaskDeviceDataFeed[infoReply->destTaskIndex] == infoReply->sourceUnit) &&
-                Settings.TaskDeviceEnabled[infoReply->destTaskIndex]) {
+                Settings.TaskDeviceEnabled(infoReply->destTaskIndex)) {
               mustUpdateCurrentTask = true;
             }
           }
@@ -296,7 +296,7 @@ void C013_Receive(struct EventStruct *event) {
             }
 
             for (controllerIndex_t x = 0; x < CONTROLLER_MAX; x++) {
-              Settings.TaskDeviceSendData[x][infoReply->destTaskIndex] = false;
+              Settings.TaskDeviceSendData(x, infoReply->destTaskIndex, false);
             }
             safe_strncpy(ExtraTaskSettings.TaskDeviceName, infoReply->taskName, sizeof(infoReply->taskName));
 
@@ -332,7 +332,7 @@ void C013_Receive(struct EventStruct *event) {
         SaveTaskSettings(taskIndex);
         SaveSettings();
 
-        if (Settings.TaskDeviceEnabled[taskIndex]) {
+        if (Settings.TaskDeviceEnabled(taskIndex)) {
           struct EventStruct TempEvent(taskIndex);
           TempEvent.Source = EventValueSource::Enum::VALUE_SOURCE_UDP;
 

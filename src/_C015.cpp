@@ -145,7 +145,7 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
           if (validProtocolIndex(ProtocolIndex)) {
             const cpluginID_t number = getCPluginID_from_ProtocolIndex(ProtocolIndex);
 
-            if ((i != event->ControllerIndex) && (number == 15) && Settings.ControllerEnabled[i]) {
+            if ((i != event->ControllerIndex) && (number == 15) && Settings.ControllerEnabled(i)) {
               success = false;
 
               // FIXME:  this will only show a warning message and not uncheck "enabled" in webform.
@@ -182,7 +182,7 @@ bool CPlugin_015(CPlugin::Function function, struct EventStruct *event, String& 
         break;
       }
 
-      if (!Settings.ControllerEnabled[event->ControllerIndex]) {
+      if (!Settings.ControllerEnabled(event->ControllerIndex)) {
         break;
       }
 
@@ -270,7 +270,7 @@ bool do_process_c015_delay_queue(cpluginID_t cpluginID, const Queue_element_base
   const C015_queue_element& element = static_cast<const C015_queue_element&>(element_base);
 
 // *INDENT-ON*
-if (!Settings.ControllerEnabled[element._controller_idx]) {
+if (!Settings.ControllerEnabled(element._controller_idx)) {
   // controller has been disabled. Answer true to flush queue.
   return true;
 }

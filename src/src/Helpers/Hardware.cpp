@@ -872,7 +872,7 @@ static void addSwitchPlugin(taskIndex_t taskIndex, int gpio, const String& name,
     true, // enabled
     name, // name
     pins);
-  Settings.TaskDevicePin1PullUp[taskIndex] = true;
+  Settings.TaskDevicePin1PullUp(taskIndex, true);
 
   if (activeLow) {
     Settings.TaskDevicePluginConfig[taskIndex][2] = 1; // SWITCH_TYPE_PUSH_ACTIVE_LOW;
@@ -1018,7 +1018,7 @@ void setBasicTaskValues(taskIndex_t taskIndex, uint32_t taskdevicetimer,
       Settings.TaskDeviceTimer[taskIndex] = 0;
     }
   }
-  Settings.TaskDeviceEnabled[taskIndex] = enabled;
+  Settings.TaskDeviceEnabled(taskIndex, enabled);
   //Settings.TaskDeviceEnabled[taskIndex].enabled = enabled;
   safe_strncpy(ExtraTaskSettings.TaskDeviceName, name.c_str(), sizeof(ExtraTaskSettings.TaskDeviceName));
 

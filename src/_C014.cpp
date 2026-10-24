@@ -399,7 +399,7 @@ bool CPlugin_014(CPlugin::Function function, struct EventStruct *event, String& 
 
             deviceName = getTaskDeviceName(x);
 
-            if (validDeviceIndex(DeviceIndex) && Settings.TaskDeviceEnabled[x]) { // Device is enabled so send information
+            if (validDeviceIndex(DeviceIndex) && Settings.TaskDeviceEnabled(x)) { // Device is enabled so send information
                                                                                   // device enabled
               valuesList = EMPTY_STRING;
 

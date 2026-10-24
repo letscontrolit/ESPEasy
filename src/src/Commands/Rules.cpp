@@ -27,10 +27,13 @@ const __FlashStringHelper * Command_Rules_Execute(struct EventStruct *event, con
 
 String Command_Rules_UseRules(struct EventStruct *event, const char *Line)
 {
-  return Command_GetORSetBool(event, F("Rules:"),
-                              Line,
-                              (bool *)&Settings.UseRules,
-                              1);
+  bool useRules = Settings.UseRules; // Workaround for converting Settings.UseRules to a bit-field
+  const String res = Command_GetORSetBool(event, F("Rules:"),
+                                          Line,
+                                          (bool *)&useRules,
+                                          1);
+  Settings.UseRules = useRules;
+  return res;
 }
 
 const __FlashStringHelper * Command_Rules_Async_Events(struct EventStruct *event, const char *Line)

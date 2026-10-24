@@ -70,7 +70,7 @@ bool CPluginCall(CPlugin::Function Function, struct EventStruct *event, String& 
 
       for (controllerIndex_t x = 0; x < CONTROLLER_MAX; x++) {
         const bool checkedEnabled = 
-          Settings.ControllerEnabled[x] || 
+          Settings.ControllerEnabled(x) || 
           Function == CPlugin::Function::CPLUGIN_EXIT;
 
         if ((Settings.Protocol[x] != 0) && checkedEnabled) {
@@ -102,7 +102,7 @@ bool CPluginCall(CPlugin::Function Function, struct EventStruct *event, String& 
     case CPlugin::Function::CPLUGIN_PROTOCOL_RECV:
     case CPlugin::Function::CPLUGIN_TASK_CHANGE_NOTIFICATION:
       if (!validControllerIndex(event->ControllerIndex) 
-       || !Settings.ControllerEnabled[event->ControllerIndex]) 
+       || !Settings.ControllerEnabled(event->ControllerIndex)) 
        {
         return false;
        }
@@ -154,7 +154,7 @@ bool CPluginCall(CPlugin::Function Function, struct EventStruct *event, String& 
     case CPlugin::Function::CPLUGIN_ACKNOWLEDGE: // calls to send acknowledge back to controller
 
       for (controllerIndex_t x = 0; x < CONTROLLER_MAX; x++) {
-        if (Settings.ControllerEnabled[x] && supportedCPluginID(Settings.Protocol[x])) {
+        if (Settings.ControllerEnabled(x) && supportedCPluginID(Settings.Protocol[x])) {
           do_CPluginCall(
             getProtocolIndex_from_ControllerIndex(x),
             Function,
@@ -174,7 +174,7 @@ bool CPluginCall(CPlugin::Function Function, struct EventStruct *event, String& 
 // Check if there is any controller enabled.
 bool anyControllerEnabled() {
   for (controllerIndex_t x = 0; x < CONTROLLER_MAX; x++) {
-    if (Settings.ControllerEnabled[x] && supportedCPluginID(Settings.Protocol[x])) {
+    if (Settings.ControllerEnabled(x) && supportedCPluginID(Settings.Protocol[x])) {
       return true;
     }
   }
@@ -185,7 +185,7 @@ bool anyControllerEnabled() {
 controllerIndex_t findFirstEnabledControllerWithId(cpluginID_t cpluginid) {
   if (supportedCPluginID(cpluginid)) {
     for (controllerIndex_t i = 0; i < CONTROLLER_MAX; i++) {
-      if ((Settings.Protocol[i] == cpluginid) && Settings.ControllerEnabled[i]) {
+      if ((Settings.Protocol[i] == cpluginid) && Settings.ControllerEnabled(i)) {
         return i;
       }
     }

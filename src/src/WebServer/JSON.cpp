@@ -470,7 +470,7 @@ void handle_json()
               uint32_t ttl_json = 60; // Default value
 
               // For simplicity, do the optional values first.
-              if (Settings.TaskDeviceEnabled[TaskIndex]) {
+              if (Settings.TaskDeviceEnabled(TaskIndex)) {
                 if (taskInterval == 0) {
                   ttl_json = 1;
                 } else {
@@ -522,7 +522,7 @@ void handle_json()
                     if (controllerWriter) {
                       controllerWriter->write({ F("Controller"), x + 1 });
                       controllerWriter->write({ F("IDX"),        Settings.TaskDeviceID[x][TaskIndex] });
-                      controllerWriter->write({ F("Enabled"),    !!Settings.TaskDeviceSendData[x][TaskIndex] });
+                      controllerWriter->write({ F("Enabled"),    !!Settings.TaskDeviceSendData(x, TaskIndex) });
                     }
                   }
                 }
@@ -576,7 +576,7 @@ void handle_json()
               }
 
               taskWriter->write({ F("TaskEnabled"),
-                                  Settings.TaskDeviceEnabled[TaskIndex] });
+                                  Settings.TaskDeviceEnabled(TaskIndex) });
               taskWriter->write({ F("TaskNumber"), TaskIndex + 1 });
 
               if (showSpecificTask) {
