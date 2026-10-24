@@ -11,7 +11,7 @@
 # include "P190_protocol.h"
 
 # define P190_BAUD_MULT        PCONFIG(0)       // Baud rate / 9600: 1, 2, 4, 6 or 12
-# define P190_LED_FEEDBACK     PCONFIG(1)       // 1 = show match / no match / enrolment on the LED ring
+# define P190_LED_FEEDBACK     PCONFIG(1)       // 1 = show match / no match / enrollment on the LED ring
 # define P190_MATCH_COLOR      PCONFIG(2)       // LED color of a match (P190_proto::COLOR_...)
 # define P190_NOMATCH_COLOR    PCONFIG(3)       // LED color of no match
 # define P190_POLL_MS          PCONFIG(4)       // Scan interval when no touch GPIO is set (ms)
@@ -31,12 +31,12 @@
 # define P190_VALUE_COUNT      2
 # define P190_VALUE_ENROLL     3
 
-// Enrolment captures, each one stored in the module character buffer with the same number (a scan uses buffer 1)
+// Enrollment captures, each one stored in the module character buffer with the same number (a scan uses buffer 1)
 # define P190_CAPTURE_1        1
 # define P190_CAPTURE_2        2
 
-// Value Enroll: progress of the last enrolment, for pages and controllers that don't get the rules events
-# define P190_ENROLL_NONE      0      // No enrolment yet, or accepted and not started
+// Value Enroll: progress of the last enrollment, for pages and controllers that don't get the rules events
+# define P190_ENROLL_NONE      0      // No enrollment yet, or accepted and not started
 # define P190_ENROLL_PLACE1    1      // Place the finger (capture 1)
 # define P190_ENROLL_LIFT      2      // Lift the finger
 # define P190_ENROLL_PLACE2    3      // Place the finger again (capture 2)
@@ -47,7 +47,7 @@
 // Error codes of the <taskname>#EnrollFailed and #Error events, besides the module confirmation codes
 # define P190_ERR_NO_RESPONSE  0xFF   // The module didn't answer
 # define P190_ERR_FINGER_TIMEOUT 0xFE // No finger placed (or not lifted) within P190_FINGER_TIMEOUT_MS
-# define P190_ERR_CANCELLED    0xFD   // fingerprint,cancel
+# define P190_ERR_CANCELED     0xFD   // fingerprint,cancel
 # define P190_ERR_LIBRARY_FULL 0xFC   // fingerprint,enroll without ID: no free slot
 
 // LED color selector of the settings page (here, not in the .ino: PlatformIO adds prototypes of .ino
@@ -183,7 +183,7 @@ private:
   bool                _indexValid     = false;
   bool                _indexSupported = true;  // The module answers ReadIndexTable
   uint8_t             _indexPage      = 0;
-  int                 _enrollSlot     = -1;    // Slot of the last enrolment (fingerprint,list)
+  int                 _enrollSlot     = -1;    // Slot of the last enrollment (fingerprint,list)
   uint32_t            _nextInit       = 0;
   uint32_t            _nextScan       = 0;
   bool                _waitLift       = false; // Don't scan again until the finger is lifted
@@ -197,7 +197,7 @@ private:
   uint32_t     _timeout = 0;
   P190_request _req{};
   P190_Step    _ledNext        = P190_Step::None;
-  uint8_t      _capture        = P190_CAPTURE_1; // Enrolment: capture 1 or 2 (= char buffer)
+  uint8_t      _capture        = P190_CAPTURE_1; // Enrollment: capture 1 or 2 (= char buffer)
   uint32_t     _fingerDeadline = 0;
   bool         _cancel         = false;
 

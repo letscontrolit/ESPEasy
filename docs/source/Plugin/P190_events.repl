@@ -4,7 +4,7 @@
 
    "
    ``<taskname>#ID``
-   A finger was scanned. ``%eventvalue1%`` is the slot of the recognised finger, or ``-1`` when it was not recognised. Sent once per touch, together with the ``Score`` and ``Count`` values.
+   A finger was scanned. ``%eventvalue1%`` is the slot of the recognized finger, or ``-1`` when it was not recognized. Sent once per touch, together with the ``Score`` and ``Count`` values.
    ","
 
    .. code-block:: none
@@ -18,7 +18,7 @@
    "
    "
    ``<taskname>#EnrollScan=<n>``
-   Enrolment: place the finger on the sensor, capture ``<n>`` = 1 or 2.
+   Enrollment: place the finger on the sensor, capture ``<n>`` = 1 or 2.
    ","
 
    .. code-block:: none
@@ -30,7 +30,7 @@
    "
    "
    ``<taskname>#EnrollRemove=<n>``
-   Enrolment: lift the finger after capture ``<n>``.
+   Enrollment: lift the finger after capture ``<n>``.
    ","
 
    .. code-block:: none
@@ -42,7 +42,7 @@
    "
    "
    ``<taskname>#Enrolled=<id>``
-   Enrolment done, the finger is stored at slot ``<id>``.
+   Enrollment done, the finger is stored at slot ``<id>``.
    ","
 
    .. code-block:: none
@@ -54,13 +54,13 @@
    "
    "
    ``<taskname>#EnrollFailed=<code>``
-   Enrolment failed, see the error codes.
+   Enrollment failed, see the error codes.
    ","
 
    .. code-block:: none
 
       on Finger#EnrollFailed do
-        LogEntry,'Enrolment failed, code %eventvalue1%'
+        LogEntry,'Enrollment failed, code %eventvalue1%'
       endon
 
    "

@@ -11,9 +11,9 @@
 
 /** Info:
  * Grow fingerprint modules on a serial port: R503 (with RGB LED ring), R307, R502, ZFM-20, AS608, ...
- * A finger on the sensor is searched in the module library: the values ID (-1 = not recognised), Score
+ * A finger on the sensor is searched in the module library: the values ID (-1 = not recognized), Score
  * and Count (templates stored) are sent to the controllers and the rules (event <taskname>#ID).
- * The value Enroll is the progress of the last enrolment (P190_ENROLL_...), readable from /json.
+ * The value Enroll is the progress of the last enrollment (P190_ENROLL_...), readable from /json.
  *
  * Commands:
  *   fingerprint,enroll[,<id>]                          store a new finger at <id>, or at the first free slot
@@ -24,7 +24,7 @@
  *   fingerprint,count                                  read the number of stored fingers (event #Count)
  *   fingerprint,led,<mode>,<color>[,<speed>[,<times>]] LED ring: breathing|flash|on|off|fadein|fadeout,
  *                                                      red|blue|purple|green|yellow|cyan|white
- *   fingerprint,cancel                                 stop an enrolment
+ *   fingerprint,cancel                                 stop an enrollment
  *
  * Events: <taskname>#EnrollScan=<n>, #EnrollRemove=<n>, #Enrolled=<id>, #EnrollFailed=<code>,
  *         #Deleted=<id> (-1 = all), #Count=<n>, #Error=<code>
@@ -144,13 +144,13 @@ boolean Plugin_190(uint8_t function, struct EventStruct *event, String& string)
       addFormNumericBox(F("Scan interval (no touch GPIO)"), F("poll"), P190_POLL_MS, 50, 5000);
       addUnit(F("ms"));
       addFormNumericBox(F("Minimum score"), F("minscore"), P190_MIN_SCORE, 0, 1000);
-      addFormNote(F("Matches with a lower score are reported as not recognised (ID -1). 0 = accept every match of the module."));
+      addFormNote(F("Matches with a lower score are reported as not recognized (ID -1). 0 = accept every match of the module."));
 
       addFormSubHeader(F("LED ring (R503)"));
       addFormCheckBox(F("Show result on the LED ring"), F("ledfb"), P190_LED_FEEDBACK != 0);
-      P190_colorSelector(F("Recognised"),     F("okcolor"), P190_MATCH_COLOR);
-      P190_colorSelector(F("Not recognised"), F("kocolor"), P190_NOMATCH_COLOR);
-      addFormNote(F("Green, yellow, cyan and white need the full RGB version of the R503. Enrolment: purple."));
+      P190_colorSelector(F("Recognized"),     F("okcolor"), P190_MATCH_COLOR);
+      P190_colorSelector(F("Not recognized"), F("kocolor"), P190_NOMATCH_COLOR);
+      addFormNote(F("Green, yellow, cyan and white need the full RGB version of the R503. Enrollment: purple."));
 
       success = true;
       break;

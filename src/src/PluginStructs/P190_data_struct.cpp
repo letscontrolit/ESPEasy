@@ -6,8 +6,8 @@
 
 # include <GPIO_Direct_Access.h>
 
-# define P190_FINGER_TIMEOUT_MS 20000 // Enrolment: max wait for placing / lifting the finger
-# define P190_FINGER_POLL_MS    100   // Enrolment: GenImg interval while waiting for the finger
+# define P190_FINGER_TIMEOUT_MS 20000 // Enrollment: max wait for placing / lifting the finger
+# define P190_FINGER_POLL_MS    100   // Enrollment: GenImg interval while waiting for the finger
 # define P190_TOUCH_RETRY_MS    100   // Touch GPIO active but no image yet: retry interval
 # define P190_REINIT_MS         5000  // Retry interval when the module doesn't answer
 # define P190_MAX_QUEUE         8
@@ -36,9 +36,9 @@ P190_data_struct::P190_data_struct(struct EventStruct *event) {
   _baud         = 9600ul * ((mult >= 1 && mult <= 12) ? mult : P190_DEF_BAUD_MULT);
   _touchPin     = CONFIG_PIN3;
   _ledFeedback  = P190_LED_FEEDBACK != 0;
-  _matchColor   = constrain(static_cast<int>(P190_MATCH_COLOR), 1, 7);
-  _noMatchColor = constrain(static_cast<int>(P190_NOMATCH_COLOR), 1, 7);
-  _pollMs       = constrain(static_cast<int>(P190_POLL_MS), 50, 5000);
+  _matchColor   = constrain(P190_MATCH_COLOR, 1, 7);
+  _noMatchColor = constrain(P190_NOMATCH_COLOR, 1, 7);
+  _pollMs       = constrain(P190_POLL_MS, 50, 5000);
   _minScore     = max(0, static_cast<int>(P190_MIN_SCORE));
 }
 
@@ -133,7 +133,7 @@ void P190_data_struct::loop(struct EventStruct *event) {
     _cancel = false;
 
     if (_job == P190_Job::Enroll) {
-      enrollDone(event, P190_ERR_CANCELLED);
+      enrollDone(event, P190_ERR_CANCELED);
       return;
     }
   }
@@ -338,7 +338,8 @@ void P190_data_struct::sendStep() {
     case P190_Step::ScanFeatures:
     case P190_Step::EnrollFeatures:
     {
-      const uint8_t p[] = { static_cast<uint8_t>(_step == P190_Step::ScanFeatures ? P190_CAPTURE_1 : _capture) };
+      const uint8_t buffer = _step == P190_Step::ScanFeatures ? P190_CAPTURE_1 : _capture;
+      const uint8_t p[]    = { buffer };
       sendCommand(CMD_IMG_2_TZ, p, sizeof(p));
       break;
     }
@@ -661,7 +662,7 @@ void P190_data_struct::enrollDone(struct EventStruct *event, int errorCode) {
     setIndex(_req.id, true);
     setEnrollState(event, P190_ENROLL_DONE);
   } else {
-    fpLog(LOG_LEVEL_ERROR, concat(F("enrolment failed, code "), errorCode));
+    fpLog(LOG_LEVEL_ERROR, concat(F("enrollment failed, code "), errorCode));
     addEvent(event, F("EnrollFailed"), errorCode);
     setEnrollState(event, -errorCode);
   }
@@ -698,28 +699,28 @@ bool P190_data_struct::plugin_write(struct EventStruct *event, const String& str
     const bool autoSlot = parseString(string, 3).isEmpty();
 
     if (enrollPending()) {
-      replyError(event, F("an enrolment is already running"));
-      return true;
+      replyError(event, F("an enrollment is already running"));
+      return false;
     }
 
     if (autoSlot) {
       if (!_ready || !_indexValid) {
         replyError(event, F("used slots unknown, use fingerprint,enroll,<id>"));
-        return true;
+        return false;
       }
       value = indexFirstFree(_index.data(), _capacity);
 
       if (value < 0) {
         replyError(event, F("no free slot"));
         setEnrollState(event, -P190_ERR_LIBRARY_FULL);
-        return true;
+        return false;
       }
     } else {
       value = event->Par2;
 
       if ((value < 0) || (value >= _capacity)) {
         replyError(event, strformat(F("the ID must be 0..%d"), _capacity - 1));
-        return true;
+        return false;
       }
     }
     req.job = P190_Job::Enroll;
@@ -727,7 +728,7 @@ bool P190_data_struct::plugin_write(struct EventStruct *event, const String& str
 
     if (!request(req)) {
       replyError(event, F("too many commands queued"));
-      return true;
+      return false;
     }
     _enrollSlot = value;
     setEnrollState(event, P190_ENROLL_NONE);
@@ -735,7 +736,7 @@ bool P190_data_struct::plugin_write(struct EventStruct *event, const String& str
     return true;
   } else if (equals(sub, F("list"))) {
     // {"ready":true,"capacity":200,"count":2,"enroll":5,"slot":3,"used":[0,3]}
-    // enroll/slot: state and slot of the last enrolment, used: null if the module can't list them
+    // enroll/slot: state and slot of the last enrollment, used: null if the module can't list them
     String json = strformat(F("{\"ready\":%s,\"capacity\":%d,\"count\":%d,\"enroll\":%d,\"slot\":%d,\"used\":"),
                             FsP(boolToString(_ready)), _capacity, _count,
                             static_cast<int>(UserVar.getFloat(event->TaskIndex, P190_VALUE_ENROLL)), _enrollSlot);
@@ -747,7 +748,7 @@ bool P190_data_struct::plugin_write(struct EventStruct *event, const String& str
       for (uint16_t id = 0; id < _capacity; ++id) {
         if (indexUsed(_index.data(), id)) {
           if (!first) { json += ','; }
-          json += static_cast<int>(id);
+          json += id;
           first = false;
         }
       }
@@ -762,7 +763,7 @@ bool P190_data_struct::plugin_write(struct EventStruct *event, const String& str
     // Par2 is 0 also without an ID: check that there is one
     if (parseString(string, 3).isEmpty() || (event->Par2 < 0) || (event->Par2 >= _capacity)) {
       fpLog(LOG_LEVEL_ERROR, strformat(F("the ID must be 0..%d"), _capacity - 1));
-      return true;
+      return false;
     }
     req.job = P190_Job::Delete;
     req.id  = event->Par2;
@@ -785,13 +786,13 @@ bool P190_data_struct::plugin_write(struct EventStruct *event, const String& str
         (!speedArg.isEmpty() && !validIntFromString(speedArg, speed)) ||
         (!timesArg.isEmpty() && !validIntFromString(timesArg, times))) {
       fpLog(LOG_LEVEL_ERROR, F("use fingerprint,led,<mode>,<color>[,<speed>[,<times>]]"));
-      return true;
+      return false;
     }
     req.job    = P190_Job::Led;
     req.led[0] = mode;
-    req.led[1] = constrain(static_cast<int>(speed), 0, 255);
+    req.led[1] = constrain(speed, 0, 255);
     req.led[2] = color;
-    req.led[3] = constrain(static_cast<int>(times), 0, 255);
+    req.led[3] = constrain(times, 0, 255);
   } else if (equals(sub, F("cancel"))) {
     bool queued = false;
 
@@ -805,15 +806,16 @@ bool P190_data_struct::plugin_write(struct EventStruct *event, const String& str
     }
     _cancel = _job == P190_Job::Enroll;
 
-    if (queued && !_cancel) { setEnrollState(event, -P190_ERR_CANCELLED); } // Never started: no enrollDone()
+    if (queued && !_cancel) { setEnrollState(event, -P190_ERR_CANCELED); } // Never started: no enrollDone()
     return true;
   } else {
     fpLog(LOG_LEVEL_ERROR, concat(F("unknown command "), sub));
-    return true;
+    return false;
   }
 
   if (!request(req)) {
     fpLog(LOG_LEVEL_ERROR, F("too many commands queued"));
+    return false;
   }
   return true;
 }
