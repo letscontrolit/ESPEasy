@@ -371,25 +371,26 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
               }
             }
           }
+          const bool forController = valueName.indexOf(F(".controller")) == 8;
           if (!isHandled && valueName.startsWith(F("settings."))) {  // Task settings values
             String value;
-            if (valueName.endsWith(F(".enabled"))) {           // Task state
+            if (!forController && valueName.endsWith(F(".enabled"))) { // Task state
               value = Settings.TaskDeviceEnabled[taskIndex] ? '1' : '0';
             } else if (valueName.endsWith(F(".interval"))) {   // Task interval
               value = Settings.TaskDeviceTimer[taskIndex];
             } else if (valueName.endsWith(F(".valuecount"))) { // Task value count
               value = getValueCountForTask(taskIndex);
-            } else if ((valueName.indexOf(F(".controller")) == 8) && valueName.length() >= 20) { // Task controller values
-              String ctrl = valueName.substring(19, 20);
+            } else if (forController && valueName.length() >= 20) { // Task controller values
+              const String ctrl = valueName.substring(19, 20);
               int32_t ctrlNr = 0;
-              if (validIntFromString(ctrl, ctrlNr) && (ctrlNr >= 1) && (ctrlNr <= CONTROLLER_MAX) && 
-                  Settings.ControllerEnabled[ctrlNr - 1]) { // Controller nr. valid and enabled
+              if (validIntFromString(ctrl, ctrlNr) && (ctrlNr >= 1) && (ctrlNr <= CONTROLLER_MAX)) {
+                const bool ctrlEnabled = Settings.ControllerEnabled[ctrlNr - 1]; // Controller nr. valid and enabled
                 if (valueName.endsWith(F(".enabled"))) {    // Task-controller enabled
-                  value = Settings.TaskDeviceSendData[ctrlNr - 1][taskIndex];
-                } else if (valueName.endsWith(F(".idx"))) { // Task-controller idx value
+                  value = ctrlEnabled ? Settings.TaskDeviceSendData[ctrlNr - 1][taskIndex] : 0;
+                } else if (ctrlEnabled && valueName.endsWith(F(".idx"))) { // Task-controller idx value
                   protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(ctrlNr - 1);
 
-                  if (validProtocolIndex(ProtocolIndex) && 
+                  if (validProtocolIndex(ProtocolIndex) &&
                       getProtocolStruct(ProtocolIndex).usesID && (Settings.Protocol[ctrlNr - 1] != 0)) {
                     value = Settings.TaskDeviceID[ctrlNr - 1][taskIndex];
                   }
