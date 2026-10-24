@@ -79,7 +79,7 @@ See: :ref:`SerialHelper_page`
 
 A hardware serial port is recommended. Select the RX and TX GPIO pins the module is connected to; on ESP32 any available GPIO can be used.
 
-* **Touch (WAKEUP, blue)**: Optional input GPIO connected to the WAKEUP output of the module.
+* **Touch (WAKEUP)**: Optional input GPIO connected to the WAKEUP output of the module (see *Wiring* above).
 
 * **Baud rate**: Speed of the serial connection, 9600 to 115200 baud. Factory setting of the modules: ``57600``.
 

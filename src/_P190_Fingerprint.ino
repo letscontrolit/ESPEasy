@@ -79,7 +79,7 @@ boolean Plugin_190(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_GET_DEVICEGPIONAMES:
     {
       serialHelper_getGpioNames(event);
-      event->String3 = formatGpioName_input_optional(F("Touch (WAKEUP, blue)"));
+      event->String3 = formatGpioName_input_optional(F("Touch (WAKEUP)"));
       break;
     }
 
@@ -132,9 +132,6 @@ boolean Plugin_190(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      addFormNote(F("Wiring R503: red 3.3V, black GND, yellow TX, green RX, blue WAKEUP (touch), white 3.3VT. "
-                    "Power with 3.3V only. Without the touch GPIO the module is polled at the scan interval."));
-
       addFormSubHeader(F("Module"));
       addFormTextBox(F("Password"), F("pwd"),  formatToHex(P190_PASSWORD, 8), 10);
       addFormTextBox(F("Address"),  F("addr"), formatToHex(P190_ADDRESS, 8),  10);
