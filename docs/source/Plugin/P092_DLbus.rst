@@ -13,6 +13,10 @@ The data transmission looks as follows:
 * So that the beginning of a data frame can be detected, a SYNC of 16 high bits is sent before the first data byte.
 * The data transmission is carried out as Manchester code (EXOR linked) with a display clock of 50 or 488Hz (depending on control type).
 
+The plugin starts recording after the pause in front of the SYNC.
+Some controls (e.g. the UVR61-3 up to v8.2) send their data frames back-to-back, without any pause.
+When pulses are received but no pause comes, the plugin logs ``No pause between the data frames, receiving without sync pause`` once, then records two data frames starting at any pulse and finds the SYNC in the decoded bits.
+
 This is necessary to ensure the supply voltage of the logger and DL sensors from the data signal.
 If the receiver is synchronized to the display clock, the correct bit value appears always during the second half period of the data bit (inverted in the first half period).
 
