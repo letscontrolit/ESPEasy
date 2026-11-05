@@ -80,6 +80,11 @@
 // thanks to Greg Cook and the team behind reveng.sourceforge.net.
 
 /** Changelog
+ * 2026-11-05 TheItschi:  Enable Interval setting (TimerOption), was taken from 'Sleep time' (default 0 = never read)
+ *                        Fix inverted 5 min interval check for rain rate and lightning strikes (were always 0)
+ *                        Fix lightning reference count init (-1 on unsigned), use first valid frame as reference
+ *                        Add raw lightning strike counter as value 2
+ *                        Fix ISR buffer overflow check writing 1 byte past ISR buffer
  * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported)
  *                        Uncrustify source
  * 2023-07-24 tonhuisman: Fix compilation issues
@@ -155,6 +160,7 @@ boolean Plugin_046(uint8_t function, struct EventStruct *event, String& string)
       dev.VType          = Sensor_VType::SENSOR_TYPE_DUAL; // New type, see ESPEasy.ino
       dev.FormulaOption  = true;
       dev.SendDataOption = true;
+      dev.TimerOption    = true;                           // Allow setting the task interval
       dev.ValueCount     = 3;
       break;
     }
@@ -228,8 +234,8 @@ boolean Plugin_046(uint8_t function, struct EventStruct *event, String& string)
         }
         case (4):
         {
-          addHtml(F("<TR><TD>Value 1: Strikes this hour, 0 decimals"));
-          addHtml(F("<BR>Values 2, 3: not used</TD>"));
+          addHtml(F("<TR><TD>Value 1: Strikes in last 5 min, 0 decimals"));
+          addHtml(F("<BR>Value 2: Raw strike counter<BR>Value 3: not used</TD>"));
           break;
         }
         case (5):
@@ -327,7 +333,7 @@ boolean Plugin_046(uint8_t function, struct EventStruct *event, String& string)
             Plugin_046_lastrainctr              = 0;
             Plugin_046_lastraincount            = -1;
             Plugin_046_laststrikectr            = 0;
-            Plugin_046_laststrikecount          = -1;
+            Plugin_046_laststrikecount          = UINT_MAX;
             attachInterrupt(P046_data->Plugin_046_SCLKpin, Plugin_046_ISR_SCLK, RISING);
             attachInterrupt(P046_data->Plugin_046_nSELpin, Plugin_046_ISR_nSEL, CHANGE);
           }
@@ -449,7 +455,12 @@ boolean Plugin_046(uint8_t function, struct EventStruct *event, String& string)
 
             if (wdcounter < Plugin_046_lastrainctr) { Plugin_046_lastrainctr = wdcounter; }
 
-            if (Plugin_046_lastrainctr > (wdcounter + 10)) // 5 min interval
+            if (Plugin_046_lastraincount < 0) {             // first valid frame: take as reference
+              Plugin_046_lastraincount = rainnow;
+              Plugin_046_lastrainctr   = wdcounter;
+            }
+
+            if (wdcounter >= (Plugin_046_lastrainctr + 10)) // 5 min interval (10 x 30 s)
             {
               Plugin_046_lastrainctr = wdcounter;
 
@@ -473,24 +484,24 @@ boolean Plugin_046(uint8_t function, struct EventStruct *event, String& string)
           }
           case (4):
           {
-            // int strikes = 0;
-            unsigned int strikesnow = int((P046_data->Plugin_046_databuffer[21]) * 256 + P046_data->Plugin_046_databuffer[20]);
+            const unsigned int strikesnow = (P046_data->Plugin_046_databuffer[21] << 8) | P046_data->Plugin_046_databuffer[20];
+
+            if (Plugin_046_laststrikecount == UINT_MAX) {     // first valid frame: take as reference
+              Plugin_046_laststrikecount = strikesnow;
+              Plugin_046_laststrikectr   = wdcounter;
+            }
 
             if (wdcounter < Plugin_046_laststrikectr) { Plugin_046_laststrikectr = wdcounter; }
 
-            if (Plugin_046_laststrikectr > (wdcounter + 10)) // 5 min interval
+            if (wdcounter >= (Plugin_046_laststrikectr + 10)) // 5 min interval (10 x 30 s)
             {
               Plugin_046_laststrikectr = wdcounter;
-
-              if (strikesnow > Plugin_046_laststrikecount)
-              {
-                Plugin_046_strikesph       = strikesnow - Plugin_046_laststrikecount;
-                Plugin_046_laststrikecount = strikesnow;
-              } else {
-                Plugin_046_strikesph = 0;
-              }
+              Plugin_046_strikesph     = (strikesnow >= Plugin_046_laststrikecount)
+                                         ? (strikesnow - Plugin_046_laststrikecount) : 0; // counter reset -> 0
+              Plugin_046_laststrikecount = strikesnow;
             }
             UserVar.setFloat(event->TaskIndex, 0, Plugin_046_strikesph);
+            UserVar.setFloat(event->TaskIndex, 1, strikesnow); // raw strike counter
             break;
           }
           case (5):
@@ -572,7 +583,7 @@ void Plugin_046_ISR_SCLK() // Interrupt on SCLK rising
       P046_data->Plugin_046_ISR_Buffer[P046_data->Plugin_046_bytepointer] = P046_data->Plugin_046_receivedData;
       P046_data->Plugin_046_bytepointer++;           // TReady for the next uint8_t ...
 
-      if (P046_data->Plugin_046_bytepointer > Plugin_046_RAW_BUFFER_SIZE) {
+      if (P046_data->Plugin_046_bytepointer >= Plugin_046_RAW_BUFFER_SIZE) { // Was '>': wrote 1 byte past ISR_Buffer into databuffer[0]
         P046_data->Plugin_046_ReceiveActive = false; // We don't want a bufferoverflow, so abort
         P046_data->Plugin_046_MasterSlave   = false;
       }
