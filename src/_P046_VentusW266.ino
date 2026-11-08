@@ -234,7 +234,7 @@ boolean Plugin_046(uint8_t function, struct EventStruct *event, String& string)
         }
         case (4):
         {
-          addHtml(F("<TR><TD>Value 1: Strikes in last 5 min, 0 decimals"));
+          addHtml(F("<TR><TD>Value 1: Strikes per 5 min interval, 0 decimals"));
           addHtml(F("<BR>Value 2: Raw strike counter<BR>Value 3: not used</TD>"));
           break;
         }

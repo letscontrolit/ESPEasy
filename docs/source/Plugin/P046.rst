@@ -152,7 +152,7 @@ Sensor
 
 .. include:: DataAcquisition.repl
 
-* **Interval**: How often should the task publish its value. Rain rate and lightning strikes are calculated over a 5 minute window, so an interval of 60 seconds or more is sufficient.
+* **Interval**: How often should the task publish its value. Rain rate and lightning strikes are not a sliding window: they are calculated from the counter difference over a fixed interval of at least 5 minutes, evaluated when the task is read. With a 60 second task interval a new value is calculated every 5..6 minutes, and the reported value covers a period that ended between 0 and about 5 minutes ago (plus the transmit interval of the outdoor unit).
 
 Indicators (recommended settings)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -173,7 +173,7 @@ Indicators (recommended settings)
    "Rain per hour", "RainHour", "600", "0", "**Rain**: Gives the rain per **mm** per hour and the total rainfall (which will eventually roll over or reset if the batteries are changed)."
    "Rain total", "GustSpeed", "600", "0", "**Rain**"
    "UV index", "UV", "60", "1", "**UV**: Gives the UV index with 1 decimal precision."
-   "Strikes (5 min)", "Strikes", "300", "0", "**Lightning strikes**: Gives the number of lightning strikes detected during the last 5 minutes."
+   "Strikes per 5 min interval", "Strikes", "300", "0", "**Lightning strikes**: Gives the number of lightning strikes counted in a fixed interval of at least 5 minutes. The value is updated once per interval and held until the next update."
    "Strike counter", "StrikeCount", "300", "0", "**Lightning strikes**: Raw cumulative strike counter of the outdoor unit (resets when the batteries are changed)."
    "Lightning distance", "StrikeDistance", "60", "0", "**Lightning distance**: Gives the distance to the closest lightning strike (stormfront). When no lightning is detected the value is ``-1``."
 
