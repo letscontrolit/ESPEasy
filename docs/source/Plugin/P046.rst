@@ -157,7 +157,7 @@ Sensor
 Indicators (recommended settings)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. warning:: Although the "main" instance shows three values, only two will be send to the plugin as specified in the additional explanation.
+.. note:: The number of values of each instance depends on the selected plugin function, e.g. the "main" instance has two values (temperature and humidity).
       Only the main plugin instance has the ability to read the display unit. You need one, and only one, main instance.
       All other instances read the data fetched by the main plugin.
 

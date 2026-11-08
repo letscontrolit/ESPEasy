@@ -85,6 +85,7 @@
  *                        Fix lightning reference count init (-1 on unsigned), use first valid frame as reference
  *                        Add raw lightning strike counter as value 2
  *                        Fix ISR buffer overflow check writing 1 byte past ISR buffer
+ *                        Number of values, VType and default value names now depend on the selected function
  * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported)
  *                        Uncrustify source
  * 2023-07-24 tonhuisman: Fix compilation issues
@@ -100,9 +101,6 @@
 # define PLUGIN_046                       // Mandatory framework constants
 # define PLUGIN_ID_046               46
 # define PLUGIN_NAME_046             "Hardware - Ventus W266"
-# define PLUGIN_VALUENAME1_046       ""
-# define PLUGIN_VALUENAME2_046       ""
-# define PLUGIN_VALUENAME3_046       ""
 
 # define Plugin_046_MagicByte        0x7F // When we read this uint8_t on MOSI, switch to MISO
 # define Plugin_046_RAW_BUFFER_SIZE  24   // Payload is 23 bytes, added space for header
@@ -145,6 +143,29 @@ volatile int Plugin_046_strikesph = 0;
 // TODO TD-er: These call-back functions are quite long and will take a lot of iRAM.
 void    Plugin_046_ISR_nSEL() IRAM_ATTR; // Interrupt routines
 void    Plugin_046_ISR_SCLK() IRAM_ATTR;
+
+// Number of values and VType depend on the selected plugin function (PCONFIG(0))
+uint8_t P046_getValueCount(int choice) {
+  switch (choice) {
+    case 0: // Main + Temp/Hygro
+    case 2: // Rain
+    case 4: // Lightning strikes
+      return 2;
+    case 1: // Wind
+      return 3;
+  }
+  return 1;
+}
+
+Sensor_VType P046_getVType(int choice) {
+  switch (choice) {
+    case 0: return Sensor_VType::SENSOR_TYPE_TEMP_HUM;
+    case 1: return Sensor_VType::SENSOR_TYPE_WIND;
+    case 2:
+    case 4: return Sensor_VType::SENSOR_TYPE_DUAL;
+  }
+  return Sensor_VType::SENSOR_TYPE_SINGLE;
+}
 
 boolean Plugin_046(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -210,8 +231,7 @@ boolean Plugin_046(uint8_t function, struct EventStruct *event, String& string)
         case (0):
         {
           addHtml(F("<TR><TD><B>Be sure you only have 1 main plugin!</B></TD>"));
-          addHtml(F("<TR><TD>Value 1: Temperature, 1 decimal<BR>Value 2: Humidity, 0 decimals"));
-          addHtml(F("<BR>Value 3: not used</TD>"));
+          addHtml(F("<TR><TD>Value 1: Temperature, 1 decimal<BR>Value 2: Humidity, 0 decimals</TD>"));
           break;
         }
         case (1):
@@ -222,44 +242,38 @@ boolean Plugin_046(uint8_t function, struct EventStruct *event, String& string)
         }
         case (2):
         {
-          addHtml(F("<TR><TD>Value 1: Rain in mm per hour<BR>Value 2: Total rain in mm"));
-          addHtml(F("<BR>Value 3: not used</TD>"));
+          addHtml(F("<TR><TD>Value 1: Rain in mm per hour<BR>Value 2: Total rain in mm</TD>"));
           break;
         }
         case (3):
         {
-          addHtml(F("<TR><TD>Value 1: UV, 1 decimal"));
-          addHtml(F("<BR>Values 2, 3</TD>"));
+          addHtml(F("<TR><TD>Value 1: UV, 1 decimal</TD>"));
           break;
         }
         case (4):
         {
           addHtml(F("<TR><TD>Value 1: Strikes per 5 min interval, 0 decimals"));
-          addHtml(F("<BR>Value 2: Raw strike counter<BR>Value 3: not used</TD>"));
+          addHtml(F("<BR>Value 2: Raw strike counter</TD>"));
           break;
         }
         case (5):
         {
-          addHtml(F("<TR><TD>Value 1: Distance in km, 0 decimals"));
-          addHtml(F("<BR>Values 2, 3: not used</TD>"));
+          addHtml(F("<TR><TD>Value 1: Distance in km, 0 decimals</TD>"));
           break;
         }
         case (6):
         {
-          addHtml(F("<TR><TD>Value 1: Batterybyte, 0 decimals"));
-          addHtml(F("<BR>Values 2, 3: not used</TD>"));
+          addHtml(F("<TR><TD>Value 1: Batterybyte, 0 decimals</TD>"));
           break;
         }
         case (7):
         {
-          addHtml(F("<TR><TD>Value 1: Last rainbyte, 0 decimals"));
-          addHtml(F("<BR>Values 2, 3: not used</TD>"));
+          addHtml(F("<TR><TD>Value 1: Last rainbyte, 0 decimals</TD>"));
           break;
         }
         case (8):
         {
-          addHtml(F("<TR><TD>Value 1: Last lightningbyte, 0 decimals"));
-          addHtml(F("<BR>Values 2, 3: not used</TD>"));
+          addHtml(F("<TR><TD>Value 1: Last lightningbyte, 0 decimals</TD>"));
           break;
         }
       }
@@ -290,9 +304,36 @@ boolean Plugin_046(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEVALUENAMES:
     {
-      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_046));
-      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_046));
-      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[2], PSTR(PLUGIN_VALUENAME3_046));
+      // Default value names depend on the selected plugin function
+      const __FlashStringHelper *names[3] = { F("Value"), F(""), F("") };
+
+      switch (PCONFIG(0)) {
+        case 0: names[0] = F("Temperature"); names[1] = F("Humidity"); break;
+        case 1: names[0] = F("Direction");   names[1] = F("Average"); names[2] = F("Gust"); break;
+        case 2: names[0] = F("Rain");        names[1] = F("RainTotal"); break;
+        case 3: names[0] = F("UV");          break;
+        case 4: names[0] = F("Strikes");     names[1] = F("StrikeCount"); break;
+        case 5: names[0] = F("Distance");    break;
+      }
+
+      for (uint8_t i = 0; i < 3; ++i) {
+        ExtraTaskSettings.setTaskDeviceValueName(i, names[i]);
+      }
+      break;
+    }
+
+    case PLUGIN_GET_DEVICEVALUECOUNT:
+    {
+      event->Par1 = P046_getValueCount(PCONFIG(0));
+      success     = true;
+      break;
+    }
+
+    case PLUGIN_GET_DEVICEVTYPE:
+    {
+      event->sensorType = P046_getVType(PCONFIG(0));
+      event->idx        = -1;
+      success           = true;
       break;
     }
 
