@@ -310,7 +310,7 @@ void NWPluginData_static_runtime::processEvents()
   }
 }
 
-void NWPluginData_static_runtime::setStaticIP(const IPAddress& ip, const IPAddress& gateway, const IPAddress& subnetmask,
+bool NWPluginData_static_runtime::setStaticIP(const IPAddress& ip, const IPAddress& gateway, const IPAddress& subnetmask,
                                               const IPAddress& dns)
 {
   _useStaticIP = IPAddressSet(ip) && IPAddressSet(gateway) && IPAddressSet(subnetmask);
@@ -325,6 +325,7 @@ void NWPluginData_static_runtime::setStaticIP(const IPAddress& ip, const IPAddre
     _dns_cache[1] = INADDR_NONE;
   }
 #endif // ifdef ESP32
+  return _useStaticIP;
 }
 
 String NWPluginData_static_runtime::statusToString() const

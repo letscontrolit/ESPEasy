@@ -104,7 +104,15 @@ bool NW001_data_struct_WiFi_STA::init(EventStruct *event)
       runtime_data->clear(event->NetworkIndex);
       IPAddress ip, gateway, sn, dns;
       getStaticIPAddresses(ip, gateway, sn, dns);
-      runtime_data->setStaticIP(ip, gateway, sn, dns);
+      if (runtime_data->setStaticIP(ip, gateway, sn, dns))
+      {
+#ifdef ESP32
+        if (_netif) {
+          _netif->config(ip, gateway, sn, dns);
+        }
+        NWPlugin::forceDHCP_request(&NW_PLUGIN_INTERFACE);
+#endif
+      }
     }
   }
 

@@ -127,7 +127,7 @@ struct NWPluginData_static_runtime {
 
   void     processEvents();
 
-  void setStaticIP(const IPAddress & ip, const IPAddress & gateway, const IPAddress & subnetmask, const IPAddress & dns);
+  bool setStaticIP(const IPAddress & ip, const IPAddress & gateway, const IPAddress & subnetmask, const IPAddress & dns);
 
   // =============================================
   // OnOffTimers for keeping track of:

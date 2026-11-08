@@ -221,7 +221,8 @@ bool NWPlugin::IP_in_subnet(const IPAddress& localIP,
                             const IPAddress& subnet)
 {
   #if FEATURE_USE_IPV6
-  if ((localIP.type() != client_ip.type()) || 
+
+  if ((localIP.type() != client_ip.type()) ||
       (localIP.type() != subnet.type())) { return false; }
   #endif // if FEATURE_USE_IPV6
 
@@ -289,7 +290,7 @@ bool NWPlugin::IP_in_subnet(const IPAddress & ip,
 
   if (ip_type == NWPlugin::IP_type::ipv6_link_local) {
     // Must match zone, or else it will always match.
-    if (ip.zone() != networkID.zone()) return false;
+    if (ip.zone() != networkID.zone()) { return false; }
   }
 # endif // if FEATURE_USE_IPV6
 
@@ -367,22 +368,27 @@ bool NWPlugin::isFlagSet(NWPlugin::NetforkFlags flag, NetworkInterface*networkIn
 
 bool NWPlugin::forceDHCP_request(NetworkInterface*networkInterface)
 {
-  if (!NWPlugin::isFlagSet(NWPlugin::NetforkFlags::DHCP_client, networkInterface)) {
-    return false;
-  }
-
   auto netif = networkInterface->netif();
 
   if (netif == nullptr) { return false; }
 
   const char*desc = esp_netif_get_desc(netif);
-  esp_err_t  err  = esp_netif_dhcpc_stop(netif);
+  esp_err_t  err  = ESP_OK;
 
-  if (err != 0) {
-    addLog(LOG_LEVEL_ERROR, strformat(F("%s: DHCPc could not be stopped! Error: 0x%04x: %s"), desc, err, esp_err_to_name(err)));
+  if (NWPlugin::isFlagSet(NWPlugin::NetforkFlags::DHCP_client, networkInterface)) {
+    err = esp_netif_dhcpc_stop(netif);
+
+    if (err != 0) {
+      addLog(LOG_LEVEL_ERROR, strformat(F("%s: DHCPc could not be stopped! Error: 0x%04x: %s"), desc, err, esp_err_to_name(err)));
+      return false;
+    }
+    addLog(LOG_LEVEL_INFO, strformat(F("%s: DHCPc stopped"), desc));
+  }
+
+  if (networkInterface->getStatusBits() & ESP_NETIF_HAS_STATIC_IP_BIT) {
     return false;
   }
-  addLog(LOG_LEVEL_INFO, strformat(F("%s: DHCPc stopped"), desc));
+
   err = esp_netif_dhcpc_start(netif);
 
   if ((err != ESP_OK) && (err != ESP_ERR_ESP_NETIF_DHCP_ALREADY_STARTED)) {
