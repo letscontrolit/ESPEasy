@@ -14,7 +14,7 @@
 * Special timer to handle timed GPIO actions
 \*********************************************************************************************/
 void ESPEasy_Scheduler::setGPIOTimer(
-  unsigned long msecFromNow,
+  uint32_t msecFromNow,
   pluginID_t    pluginID,
   int           pinnr,
   int           state,
@@ -79,7 +79,7 @@ void ESPEasy_Scheduler::clearGPIOTimer(pluginID_t pluginID, int pinnr)
   }
 }
 
-void ESPEasy_Scheduler::process_gpio_timer(SchedulerTimerID timerID, unsigned long lasttimer) {
+void ESPEasy_Scheduler::process_gpio_timer(SchedulerTimerID timerID, uint32_t lasttimer) {
   auto it = systemTimers.find(timerID.mixed_id);
 
   if (it == systemTimers.end()) {
@@ -91,7 +91,7 @@ void ESPEasy_Scheduler::process_gpio_timer(SchedulerTimerID timerID, unsigned lo
     // Recurring timer
     it->second.markNextRecurring();
 
-    unsigned long newTimer = lasttimer;
+    uint32_t newTimer = lasttimer;
     setNextTimeInterval(newTimer, it->second.getInterval());
     setNewTimerAt(timerID, newTimer);
   }

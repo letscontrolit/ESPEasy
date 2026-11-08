@@ -82,7 +82,7 @@ bool ESPEasy_key_value_store_import_export::do_export(
 }
 
 
-bool getNextKeyValue(String& json, String& key, String& value)
+static bool getNextKeyValue(String& json, String& key, String& value)
 {
   String keyValueStr;
   int pos = json.indexOf(',');

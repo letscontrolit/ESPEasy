@@ -2,7 +2,7 @@
 
 #if FEATURE_PACKED_RAW_DATA
 
-uint8_t getPackedDataTypeSize(PackedData_enum dtype, float& factor, float& offset) {
+static uint8_t getPackedDataTypeSize(PackedData_enum dtype, float& factor, float& offset) {
   offset = 0;
   factor = 1;
   if (dtype > 0x1000 && dtype < 0x12FF) {
@@ -35,7 +35,7 @@ uint8_t getPackedDataTypeSize(PackedData_enum dtype, float& factor, float& offse
   return 0;
 }
 
-void LoRa_uintToBytes(uint64_t value, uint8_t byteSize, uint8_t *data, uint8_t& cursor) {
+static void LoRa_uintToBytes(uint64_t value, uint8_t byteSize, uint8_t *data, uint8_t& cursor) {
   // Clip values to upper limit
   const uint64_t upperlimit = (1ull << (8*byteSize)) - 1;
   if (value > upperlimit) { value = upperlimit; }
@@ -49,7 +49,7 @@ void LoRa_uintToBytes(uint64_t value, uint8_t byteSize, uint8_t *data, uint8_t& 
   }
 }
 
-void LoRa_intToBytes(int64_t value, uint8_t byteSize, uint8_t *data, uint8_t& cursor) {
+static void LoRa_intToBytes(int64_t value, uint8_t byteSize, uint8_t *data, uint8_t& cursor) {
   // Clip values to lower limit
   const int64_t lowerlimit = (1ull << ((8*byteSize) - 1)) * -1;
   if (value < lowerlimit) { value = lowerlimit; }
@@ -59,7 +59,7 @@ void LoRa_intToBytes(int64_t value, uint8_t byteSize, uint8_t *data, uint8_t& cu
   LoRa_uintToBytes(value, byteSize, data, cursor);
 }
 
-String LoRa_base16Encode(uint8_t *data, size_t size) {
+static String LoRa_base16Encode(uint8_t *data, size_t size) {
   String output;
   output.reserve(size * 2);
   char buffer[3];

@@ -280,11 +280,6 @@ enum class Swipe_action_e : uint8_t {
 };
 # endif // if TOUCH_FEATURE_EXTENDED_TOUCH && TOUCH_FEATURE_SWIPE
 
-const __FlashStringHelper* toString(Touch_action_e action);
-
-# if TOUCH_FEATURE_EXTENDED_TOUCH && TOUCH_FEATURE_SWIPE
-const __FlashStringHelper* toString(Swipe_action_e action);
-# endif // if TOUCH_FEATURE_EXTENDED_TOUCH && TOUCH_FEATURE_SWIPE
 
 class ESPEasy_TouchHandler {
 public:

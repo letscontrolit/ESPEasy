@@ -277,6 +277,24 @@ void addSelector_Item(const __FlashStringHelper *option, int index, bool    sele
 
 void addSelector_Item(const String& option, int index, bool    selected, bool    disabled, const String& attr)
 {
+  addSelector_Item(option, String(index), selected, disabled, attr);
+}
+
+void addSelector_Item_index64(const String& option,
+                      uint64_t              index,
+                      bool                  selected,
+                      bool                  disabled,
+                      const String&         attr)
+{
+  addSelector_Item(option, ull2String(index), selected, disabled, attr);
+}
+
+void addSelector_Item(const String& option,
+                      const String& index,
+                      bool          selected,
+                      bool          disabled,
+                      const String& attr)
+{
   addHtml(F("<option "));
   addHtmlAttribute(F("value"), index);
 

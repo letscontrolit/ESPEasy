@@ -163,7 +163,7 @@ After that, the configuration page of the device provides a three step configura
 
 #.  **Choose the type of sensor you want to use**
       
-    Inital configuration step is to decide on which sensor family you want to use. This device support two:
+    Initial configuration step is to decide on which sensor family you want to use. This device support two:
 
     * Thermocouple  -->   Thermocoupling Sensors
     * RTD           -->   Resistor Temperature Device Sensors

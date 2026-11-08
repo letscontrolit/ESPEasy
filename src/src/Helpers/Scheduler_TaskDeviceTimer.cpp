@@ -14,8 +14,8 @@
 * When the plugin task is initialized, a call to schedule_task_device_timer_at_init
 * will bootstrap this sequence.
 \*********************************************************************************************/
-void ESPEasy_Scheduler::schedule_task_device_timer_at_init(unsigned long task_index) {
-  unsigned long runAt = millis();
+void ESPEasy_Scheduler::schedule_task_device_timer_at_init(uint32_t task_index) {
+  uint32_t runAt = millis();
 
   if (!isDeepSleepEnabled()) {
     // Deepsleep is not enabled, add some offset based on the task index
@@ -35,7 +35,7 @@ void ESPEasy_Scheduler::schedule_all_task_device_timers() {
   }
 }
 
-void ESPEasy_Scheduler::schedule_task_device_timer(unsigned long task_index, unsigned long runAt) {
+void ESPEasy_Scheduler::schedule_task_device_timer(uint32_t task_index, uint32_t runAt) {
   /*
      String log = F("schedule_task_device_timer: task: ");
      log += task_index;
@@ -70,9 +70,9 @@ void ESPEasy_Scheduler::schedule_task_device_timer(unsigned long task_index, uns
   }
 }
 
-void ESPEasy_Scheduler::reschedule_task_device_timer(unsigned long task_index, unsigned long lasttimer) {
+void ESPEasy_Scheduler::reschedule_task_device_timer(uint32_t task_index, uint32_t lasttimer) {
   if (!validTaskIndex(task_index)) { return; }
-  unsigned long newtimer = Settings.TaskDeviceTimer[task_index];
+  uint32_t newtimer = Settings.TaskDeviceTimer[task_index];
 
   if (newtimer != 0) {
     newtimer = lasttimer + (newtimer * 1000);
@@ -80,7 +80,7 @@ void ESPEasy_Scheduler::reschedule_task_device_timer(unsigned long task_index, u
   }
 }
 
-void ESPEasy_Scheduler::process_task_device_timer(SchedulerTimerID timerID, unsigned long lasttimer) {
+void ESPEasy_Scheduler::process_task_device_timer(SchedulerTimerID timerID, uint32_t lasttimer) {
   const TaskDeviceTimerID *tmp = reinterpret_cast<const TaskDeviceTimerID *>(&timerID);
   const taskIndex_t task_index = tmp->getTaskIndex();
 

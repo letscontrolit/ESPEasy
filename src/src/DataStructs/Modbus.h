@@ -62,7 +62,7 @@ private:
   # ifndef BUILD_NO_DEBUG
   String LogString;                                // for debug logging
   # endif // ifndef BUILD_NO_DEBUG
-  unsigned long timeout     = 0;                   // send and read timeout
+  uint32_t timeout     = 0;                   // send and read timeout
   MODBUS_states_t TXRXstate = MODBUS_IDLE;         // state for handle() state machine
   unsigned int RXavailable  = 0;
   unsigned int payLoad      = 0;                   // number of bytes to receive as payload. Payload may come as seperate frame.

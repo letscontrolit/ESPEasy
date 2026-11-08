@@ -127,6 +127,20 @@ uint8_t getValueCountFromSensorType(Sensor_VType sensorType, bool log)
   return 0;
 }
 
+bool getBasicSensorTypeFromValueCount(uint8_t valueCount, Sensor_VType& sensorType)
+{
+  switch (valueCount)
+  {
+    case 1: sensorType = Sensor_VType::SENSOR_TYPE_SINGLE; break;
+    case 2: sensorType = Sensor_VType::SENSOR_TYPE_DUAL;   break;
+    case 3: sensorType = Sensor_VType::SENSOR_TYPE_TRIPLE; break;
+    case 4: sensorType = Sensor_VType::SENSOR_TYPE_QUAD;   break;
+    default: 
+      return false;
+  }
+  return true;
+}
+
 const __FlashStringHelper* getSensorTypeLabel(Sensor_VType sensorType) {
   switch (sensorType) {
     case Sensor_VType::SENSOR_TYPE_SWITCH:           return F("Switch");

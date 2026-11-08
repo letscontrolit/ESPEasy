@@ -7,7 +7,7 @@ P003_data_struct::P003_data_struct(const Internal_GPIO_pulseHelper::pulseCounter
 
 bool P003_data_struct::plugin_read(struct EventStruct *event) {
   bool success = true;
-  unsigned long pulseCounter, pulseCounterTotal;
+  uint32_t pulseCounter, pulseCounterTotal;
   float pulseTime_msec;
 
   pulseHelper.getPulseCounters(pulseCounter, pulseCounterTotal, pulseTime_msec);
@@ -57,7 +57,7 @@ bool P003_data_struct::plugin_read(struct EventStruct *event) {
 }
 
 bool P003_data_struct::plugin_peek(struct EventStruct *event) {
-  unsigned long pulseCounter, pulseCounterTotal;
+  uint32_t pulseCounter, pulseCounterTotal;
   float pulseTime_msec;
 
   pulseHelper.getPulseCounters(pulseCounter, pulseCounterTotal, pulseTime_msec);

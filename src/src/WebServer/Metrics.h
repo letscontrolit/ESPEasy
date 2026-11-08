@@ -6,7 +6,6 @@
 #ifdef WEBSERVER_METRICS
 
 void handle_metrics();
-void handle_metrics_devices();
 
 #endif    // ifdef WEBSERVER_METRICS
 

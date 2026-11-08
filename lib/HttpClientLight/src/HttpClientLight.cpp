@@ -503,7 +503,7 @@ void HTTPClientLight::setConnectTimeout(int32_t connectTimeout)
  * set the timeout for the TCP connection
  * @param timeout unsigned int
  */
-void HTTPClientLight::setTimeout(uint16_t timeout)
+void HTTPClientLight::setTimeout(uint32_t timeout)
 {
     _tcpTimeout = timeout;
     if(connected()) {
@@ -1173,7 +1173,7 @@ bool HTTPClientLight::connect(void)
     } else {
         IPAddress remote_addr;
         // Add include "ESP8266WiFi.h" for this to work
-        if (!WiFi.hostByName(_host.c_str(), remote_addr)) {
+        if (Network.hostByName(_host.c_str(), remote_addr) != 1) {
             return false;
         }
         if(!_client->connect(remote_addr, _port, _connectTimeout)) {
@@ -1376,6 +1376,10 @@ int HTTPClientLight::writeToStreamDataBlock(Stream * stream, int size)
     uint8_t * buff = (uint8_t *) malloc(buff_size);
 
     if(buff) {
+        // a server gone silent without closing stays connected(): give up
+        // after _tcpTimeout without data, as handleHeaderResponse() does
+        unsigned long lastDataTime = millis();
+
         // read all data from server
         while(connected() && (len > 0 || len == -1)) {
 
@@ -1448,8 +1452,14 @@ int HTTPClientLight::writeToStreamDataBlock(Stream * stream, int size)
                     len -= readBytes;
                 }
 
+                lastDataTime = millis();
                 delay(0);
             } else {
+                if((millis() - lastDataTime) > _tcpTimeout) {
+                    log_w("read timeout after %d bytes", bytesWritten);
+                    free(buff);
+                    return HTTPC_ERROR_READ_TIMEOUT;
+                }
                 delay(1);
             }
         }

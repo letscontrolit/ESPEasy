@@ -131,6 +131,8 @@ void run_compiletime_checks() {
   #ifdef USES_C016
   check_size<C016_binary_element,                   24u>();
   #endif
+  check_size<ValueStruct,                           16u>();
+  check_size<unsigned long,                         4u>();
 
 
   #if FEATURE_NON_STANDARD_24_TASKS && defined(ESP8266)

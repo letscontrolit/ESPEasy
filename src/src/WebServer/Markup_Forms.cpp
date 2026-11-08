@@ -685,23 +685,44 @@ int getFormItemInt(const String& key, int defaultValue) {
   return value;
 }
 
+uint64_t getFormItemUInt64(const String& key, uint64_t defaultValue)
+{
+  uint64_t value = defaultValue;
+
+  getCheckWebserverArg_int(key, value);
+  return value;
+}
+
 bool getCheckWebserverArg_int(const String& key, int& value) {
-  const String valueStr = webArg(key);
-  if (valueStr.isEmpty()) return false;
-  // FIXME TD-er: Since ESP_IDF 5.1 int32_t != int
-  int32_t tmp{};
-  const bool res = validIntFromString(valueStr, tmp);
+  int64_t tmp{};
+  if (!getCheckWebserverArg_int(key, tmp)) return false;
   value = tmp;
-  return res;
+  return true;
 }
 
 bool getCheckWebserverArg_int(const String& key,
                               uint32_t      & value) {
+  uint64_t tmp{};
+  if (!getCheckWebserverArg_int(key, tmp)) return false;
+  value = tmp;
+  return true;
+}
+
+bool getCheckWebserverArg_int(const String& key,
+                              uint64_t      & value) 
+{
   const String valueStr = webArg(key);
   if (valueStr.isEmpty()) return false;
-  uint32_t tmp{};
-  const bool res = validUIntFromString(valueStr, tmp);
-  value = tmp;
+  const bool res = validUInt64FromString(valueStr, value);
+  return res;
+}
+
+bool getCheckWebserverArg_int(const String& key,
+                              int64_t      & value)
+{
+  const String valueStr = webArg(key);
+  if (valueStr.isEmpty()) return false;
+  const bool res = validInt64FromString(valueStr, value);
   return res;
 }
 

@@ -28,191 +28,85 @@
 // ********************************************************************************
 // Web Interface hardware page
 // ********************************************************************************
-#if FEATURE_I2C
+# if FEATURE_I2C
+
 void handle_interfaces_i2c() {
   navMenuIndex = MENU_INDEX_INTERFACES_I2C;
   handle_interfaces();
 }
-#endif // if FEATURE_I2C
 
-#if FEATURE_SPI
+# endif // if FEATURE_I2C
+
+# if FEATURE_SPI
+
 void handle_interfaces_spi() {
   navMenuIndex = MENU_INDEX_INTERFACES_SPI;
   handle_interfaces();
 }
-#endif // if FEATURE_SPI
 
-#if FEATURE_MODBUS && FEATURE_MODBUS_INTERFACES_TAB
+# endif // if FEATURE_SPI
+
+# if FEATURE_MODBUS && FEATURE_MODBUS_INTERFACES_TAB
+
 void handle_interfaces_modbus() {
   navMenuIndex = MENU_INDEX_INTERFACES_MODBUS;
   handle_interfaces();
 }
-#endif // if FEATURE_MODBUS
 
-#if FEATURE_CAN
+# endif // if FEATURE_MODBUS
+
+# if FEATURE_CAN
+
 void handle_interfaces_can() {
   navMenuIndex = MENU_INDEX_INTERFACES_CAN;
   handle_interfaces();
 }
-#endif // if FEATURE_CAN
 
-#if FEATURE_WRMBUS
+# endif // if FEATURE_CAN
+
+# if FEATURE_WRMBUS
+
 void handle_interfaces_wrmbus() {
   navMenuIndex = MENU_INDEX_INTERFACES_WRMBUS;
   handle_interfaces();
 }
-#endif // if FEATURE_WRMBUS
 
-#if FEATURE_WIMBUS
+# endif // if FEATURE_WRMBUS
+
+# if FEATURE_WIMBUS
+
 void handle_interfaces_wimbus() {
   navMenuIndex = MENU_INDEX_INTERFACES_WIMBUS;
   handle_interfaces();
 }
-#endif // if FEATURE_WIMBUS
 
-void handle_interfaces() {
-# ifndef BUILD_NO_RAM_TRACKER
-  checkRAM(F("handle_interfaces"));
-# endif
+# endif // if FEATURE_WIMBUS
 
-  uint8_t newNavIndex = navMenuIndex;
-  if ((newNavIndex != MENU_INDEX_INTERFACES) && (newNavIndex <= MENU_MAX_INDEX_SHOWN)) {
-#if FEATURE_I2C
-    newNavIndex = MENU_INDEX_INTERFACES_I2C;
-#elif FEATURE_SPI
-    newNavIndex = MENU_INDEX_INTERFACES_SPI;
-#elif FEATURE_MODBUS && FEATURE_MODBUS_INTERFACES_TAB
-    newNavIndex = MENU_INDEX_INTERFACES_MODBUS;
-#elif FEATURE_CAN
-    newNavIndex = MENU_INDEX_INTERFACES_CAN;
-#elif FEATURE_WRMBUS
-    newNavIndex = MENU_INDEX_INTERFACES_WRMBUS;
-#elif FEATURE_WIMBUS
-    newNavIndex = MENU_INDEX_INTERFACES_WIMBUS;
-#else
-    // FIXME TD-er: Should we still continue here? Why not simply return;
-    newNavIndex = MENU_INDEX_INTERFACES;
-#endif
+
+# if FEATURE_I2C
+#  if FEATURE_PLUGIN_PRIORITY
+
+static bool isI2CPriorityTaskActive(uint8_t i2cBus) {
+  bool hasI2CPriorityTask = false;
+
+  for (taskIndex_t taskIndex = 0; taskIndex < TASKS_MAX && !hasI2CPriorityTask; taskIndex++) {
+    hasI2CPriorityTask |= isPluginI2CPowerManager_from_TaskIndex(taskIndex, i2cBus);
   }
-  if (!startStream_send_stdTemplate(newNavIndex)) return;
-
-  save_interfaces();
-
-
-  html_add_form();
-
-  html_table_class_normal();
-  addFormFixedFirstColumn(); // This must be added as the first element in a table definition
-  addFormHeader(strformat(F("%s Interfaces Settings"), FsP(getGpMenuIcon(navMenuIndex))), F(""), F("Interfaces/Interfaces.html"));
-
-  #if FEATURE_I2C
-  if (navMenuIndex == MENU_INDEX_INTERFACES_I2C) {
-    interfaces_show_I2C();
-  }
-  #endif
-  
-  #if FEATURE_SPI
-  if (navMenuIndex == MENU_INDEX_INTERFACES_SPI) {
-    interfaces_show_SPI();
-  }
-  #endif
-
-  #if FEATURE_MODBUS && FEATURE_MODBUS_INTERFACES_TAB
-  if (navMenuIndex == MENU_INDEX_INTERFACES_MODBUS) {
-    interfaces_show_MODBUS();
-  }
-  #endif // if FEATURE_MODBUS
-  
-  #if FEATURE_CAN
-  if (navMenuIndex == MENU_INDEX_INTERFACES_CAN) {
-    interfaces_show_CAN();
-  }
-  #endif // if FEATURE_CAN
-  
-  #if FEATURE_WRMBUS
-  if (navMenuIndex == MENU_INDEX_INTERFACES_WRMBUS) {
-    interfaces_show_WRMBUS();
-  }
-  #endif // if FEATURE_WRMBUS
-
-  #if FEATURE_WIMBUS
-  if (navMenuIndex == MENU_INDEX_INTERFACES_WIMBUS) {
-    interfaces_show_WIMBUS();
-  }
-  #endif // if FEATURE_WIMBUS
-
-  addFormSeparator(2);
-
-  html_TR_TD();
-  html_TD();
-  addSubmitButton();
-  html_TR_TD();
-  html_end_table();
-  html_end_form();
-
-  sendTail_stdtemplate();
+  return hasI2CPriorityTask;
 }
 
-void save_interfaces() {
+#  endif // if FEATURE_PLUGIN_PRIORITY
 
-  String error;
-  bool   updated{};
-
-  #if FEATURE_I2C
-
-  if ((navMenuIndex == MENU_INDEX_INTERFACES_I2C) && save_I2C(error)) { updated = true; }
-  #endif
-
-  #if FEATURE_SPI
-  if ((navMenuIndex == MENU_INDEX_INTERFACES_SPI) && save_SPI(error)) { updated = true; }
-  #endif
-
-  #if FEATURE_MODBUS && FEATURE_MODBUS_INTERFACES_TAB
-  if ((navMenuIndex == MENU_INDEX_INTERFACES_MODBUS) && save_MODBUS(error)) { updated = true; }
-  #endif // if FEATURE_MODBUS
-
-  #if FEATURE_CAN
-  if ((navMenuIndex == MENU_INDEX_INTERFACES_CAN) && save_CAN(error)) { updated = true; }
-  #endif // if FEATURE_CAN
-
-  #if FEATURE_WRMBUS
-  if ((navMenuIndex == MENU_INDEX_INTERFACES_WRMBUS) && save_WRMBUS(error)) { updated = true; }
-  #endif // if FEATURE_WRMBUS
-
-  #if FEATURE_WIMBUS
-  if ((navMenuIndex == MENU_INDEX_INTERFACES_WIMBUS) && save_WIMBUS(error)) { updated = true; }
-  #endif // if FEATURE_WIMBUS
-
-  if (updated) {
-    error += SaveSettings();
-    addHtmlError(error);
-
-    if (error.isEmpty()) {
-#if FEATURE_I2C
-      // Apply I2C settings.
-      initI2C();
-#endif
-
-#if FEATURE_SPI
-      // Apply SPI settings
-      initializeSPIBuses();
-#endif
-    }
-  }
-}
-
-#if FEATURE_I2C
-
-bool save_I2C(String& error) {
+static bool save_I2C(String& error) {
   bool updated{};
 
 
   if (isFormItem(F("pi2csp0"))) {
     updated = true;
-# if FEATURE_PLUGIN_PRIORITY
+#  if FEATURE_PLUGIN_PRIORITY
 
     if (!isI2CPriorityTaskActive(0))
-# endif // if FEATURE_PLUGIN_PRIORITY
+#  endif // if FEATURE_PLUGIN_PRIORITY
     {
       update_whenset_FormItemInt(F("psda0"), Settings.Pin_i2c_sda);
       update_whenset_FormItemInt(F("pscl0"), Settings.Pin_i2c_scl);
@@ -220,7 +114,7 @@ bool save_I2C(String& error) {
     Settings.I2C_clockSpeed        = getFormItemInt(F("pi2csp0"), DEFAULT_I2C_CLOCK_SPEED);
     Settings.I2C_clockSpeed_Slow   = getFormItemInt(F("pi2cspslow0"), DEFAULT_I2C_CLOCK_SPEED_SLOW);
     Settings.WireClockStretchLimit = getFormItemInt(F("wirestretch"));
-# if FEATURE_I2CMULTIPLEXER
+#  if FEATURE_I2CMULTIPLEXER
     Settings.I2C_Multiplexer_Type = getFormItemInt(F("pi2cmuxtype0"));
 
     if (Settings.I2C_Multiplexer_Type != I2C_MULTIPLEXER_NONE) {
@@ -229,23 +123,23 @@ bool save_I2C(String& error) {
       Settings.I2C_Multiplexer_Addr = -1;
     }
     Settings.I2C_Multiplexer_ResetPin = getFormItemInt(F("pi2cmuxreset0"));
-# endif // if FEATURE_I2CMULTIPLEXER
+#  endif // if FEATURE_I2CMULTIPLEXER
   }
-# if FEATURE_I2C_MULTIPLE // No loop used here, to avoid adding setters to the SettingsStruct template code
+#  if FEATURE_I2C_MULTIPLE // No loop used here, to avoid adding setters to the SettingsStruct template code
 
   if ((getI2CBusCount() > 1) && isFormItem(F("pi2csp1"))) {
     updated = true;
-#  if FEATURE_PLUGIN_PRIORITY
+#   if FEATURE_PLUGIN_PRIORITY
 
     if (!isI2CPriorityTaskActive(1))
-#  endif // if FEATURE_PLUGIN_PRIORITY
+#   endif // if FEATURE_PLUGIN_PRIORITY
     {
       update_whenset_FormItemInt(F("psda1"), Settings.Pin_i2c2_sda);
       update_whenset_FormItemInt(F("pscl1"), Settings.Pin_i2c2_scl);
     }
     Settings.I2C2_clockSpeed      = getFormItemInt(F("pi2csp1"),     DEFAULT_I2C_CLOCK_SPEED);
     Settings.I2C2_clockSpeed_Slow = getFormItemInt(F("pi2cspslow1"), DEFAULT_I2C_CLOCK_SPEED_SLOW);
-#  if FEATURE_I2CMULTIPLEXER
+#   if FEATURE_I2CMULTIPLEXER
     Settings.I2C2_Multiplexer_Type = getFormItemInt(F("pi2cmuxtype1"));
 
     if (Settings.I2C2_Multiplexer_Type != I2C_MULTIPLEXER_NONE) {
@@ -254,25 +148,25 @@ bool save_I2C(String& error) {
       Settings.I2C2_Multiplexer_Addr = -1;
     }
     Settings.I2C2_Multiplexer_ResetPin = getFormItemInt(F("pi2cmuxreset1"));
-#  endif // if FEATURE_I2CMULTIPLEXER
+#   endif // if FEATURE_I2CMULTIPLEXER
   }
 
 
-#  if FEATURE_I2C_INTERFACE_3
+#   if FEATURE_I2C_INTERFACE_3
 
   if ((getI2CBusCount() > 2) && isFormItem(F("pi2csp2"))) {
     updated = true;
-#   if FEATURE_PLUGIN_PRIORITY
+#    if FEATURE_PLUGIN_PRIORITY
 
     if (!isI2CPriorityTaskActive(2))
-#   endif // if FEATURE_PLUGIN_PRIORITY
+#    endif // if FEATURE_PLUGIN_PRIORITY
     {
       update_whenset_FormItemInt(F("psda2"), Settings.Pin_i2c3_sda);
       update_whenset_FormItemInt(F("pscl2"), Settings.Pin_i2c3_scl);
     }
     Settings.I2C3_clockSpeed      = getFormItemInt(F("pi2csp2"),     DEFAULT_I2C_CLOCK_SPEED);
     Settings.I2C3_clockSpeed_Slow = getFormItemInt(F("pi2cspslow2"), DEFAULT_I2C_CLOCK_SPEED_SLOW);
-#   if FEATURE_I2CMULTIPLEXER
+#    if FEATURE_I2CMULTIPLEXER
     Settings.I2C3_Multiplexer_Type = getFormItemInt(F("pi2cmuxtype2"));
 
     if (Settings.I2C3_Multiplexer_Type != I2C_MULTIPLEXER_NONE) {
@@ -281,21 +175,22 @@ bool save_I2C(String& error) {
       Settings.I2C3_Multiplexer_Addr = -1;
     }
     Settings.I2C3_Multiplexer_ResetPin = getFormItemInt(F("pi2cmuxreset2"));
-#   endif // if FEATURE_I2CMULTIPLEXER
+#    endif // if FEATURE_I2CMULTIPLEXER
   }
-#  endif // if FEATURE_I2C_INTERFACE_3
+#   endif // if FEATURE_I2C_INTERFACE_3
 
-# endif // if FEATURE_I2C_MULTIPLE
+#  endif // if FEATURE_I2C_MULTIPLE
 
   return updated;
 }
 
-#endif
+# endif // if FEATURE_I2C
 
 
-#if FEATURE_SPI
-bool save_SPI(String& error) {
-# ifdef ESP32
+# if FEATURE_SPI
+
+static bool save_SPI(String& error) {
+#  ifdef ESP32
   bool SPI_updated{};
 
   if (update_whenset_FormItemInt(F("initspi0"), Settings.InitSPI)) {
@@ -324,42 +219,67 @@ bool save_SPI(String& error) {
     }
   }
   return SPI_updated;
-# else // for ESP8266 we keep the old UI
+#  else // for ESP8266 we keep the old UI
   const auto old_initSPI = Settings.InitSPI;
   Settings.InitSPI = isFormItemChecked(F("initspi")); // SPI Init
   return old_initSPI != Settings.InitSPI;
-# endif // ifdef ESP32
+#  endif // ifdef ESP32
 }
 
-#endif
+# endif // if FEATURE_SPI
 
-#if FEATURE_MODBUS && FEATURE_MODBUS_INTERFACES_TAB
-bool save_MODBUS(String& error) {
+# if FEATURE_MODBUS && FEATURE_MODBUS_INTERFACES_TAB
+
+static bool save_MODBUS(String& error) {
   return false; // TODO
 }
-#endif // if FEATURE_MODBUS
 
-#if FEATURE_CAN
-bool save_CAN(String& error) {
+# endif // if FEATURE_MODBUS
+
+# if FEATURE_CAN
+
+static bool save_CAN(String& error) {
   return false; // TODO
 }
-#endif // if FEATURE_CAN
 
-#if FEATURE_WRMBUS
-bool save_WRMBUS(String& error) {
+# endif // if FEATURE_CAN
+
+# if FEATURE_WRMBUS
+
+static bool save_WRMBUS(String& error) {
   return false; // TODO
 }
-#endif // if FEATURE_WRMBUS
 
-#if FEATURE_WIMBUS
-bool save_WIMBUS(String& error) {
+# endif // if FEATURE_WRMBUS
+
+# if FEATURE_WIMBUS
+
+static bool save_WIMBUS(String& error) {
   return false; // TODO
 }
-#endif // if FEATURE_WIMBUS
 
-#if FEATURE_I2C
-void interfaces_show_I2C() {
-# if FEATURE_I2CMULTIPLEXER
+# endif // if FEATURE_WIMBUS
+
+# if FEATURE_I2C
+#  if FEATURE_PLUGIN_PRIORITY
+
+static void I2CShowSdaSclReadonly(int8_t i2c_sda, int8_t i2c_scl, uint8_t i2cBus) {
+  int  pinnr = -1;
+  bool input, output, warning = false;
+
+  addFormNote(strformat(F("I2C (%d) GPIO pins can't be changed when an I2C Priority task is configured."), i2cBus));
+  addRowLabel(formatGpioName_bidirectional(F("SDA")));
+  getGpioInfo(i2c_sda, pinnr, input, output, warning);
+  addHtml(createGPIO_label(i2c_sda, pinnr, true, true, false));
+  addRowLabel(formatGpioName_output(F("SCL")));
+  getGpioInfo(i2c_scl, pinnr, input, output, warning);
+  addHtml(createGPIO_label(i2c_scl, pinnr, true, true, false));
+}
+
+#  endif // if FEATURE_PLUGIN_PRIORITY
+
+static void interfaces_show_I2C() {
+#  if FEATURE_I2CMULTIPLEXER
   const __FlashStringHelper *i2c_muxtype_options[] = {
     F("- None -"),
     F("TCA9548a - 8 channel"),
@@ -400,26 +320,26 @@ void interfaces_show_I2C() {
     mux_opt++;
   }
   const FormSelectorOptions addrSelector(mux_opt, i2c_mux_options, i2c_mux_choices);
-# endif // if FEATURE_I2CMULTIPLEXER
+#  endif // if FEATURE_I2CMULTIPLEXER
 
   uint8_t i2cBus = 0;
-# if FEATURE_I2C_MULTIPLE
+#  if FEATURE_I2C_MULTIPLE
 
   for (uint8_t i2cBus = 0; i2cBus < getI2CBusCount(); ++i2cBus)
-# endif // if FEATURE_I2C_MULTIPLE
+#  endif // if FEATURE_I2C_MULTIPLE
   {
-# if !FEATURE_I2C_MULTIPLE
+#  if !FEATURE_I2C_MULTIPLE
     addFormSubHeader(F("I2C Bus"));
-# else
+#  else
     addFormSubHeader(strformat(F("I2C Bus %u"), i2cBus));
-# endif // if !FEATURE_I2C_MULTIPLE
+#  endif // if !FEATURE_I2C_MULTIPLE
     addFormDetailsStart((0 == i2cBus) || Settings.isI2CEnabled(i2cBus));
-# if FEATURE_PLUGIN_PRIORITY
+#  if FEATURE_PLUGIN_PRIORITY
 
     if (isI2CPriorityTaskActive(i2cBus)) {
       I2CShowSdaSclReadonly(Settings.getI2CSdaPin(i2cBus), Settings.getI2CSclPin(i2cBus), i2cBus);
     } else
-# endif // if FEATURE_PLUGIN_PRIORITY
+#  endif // if FEATURE_PLUGIN_PRIORITY
     {
       addFormPinSelectI2C(formatGpioName_bidirectional(F("SDA")), strformat(F("psda%u"), i2cBus), i2cBus, Settings.getI2CSdaPin(i2cBus));
       addFormPinSelectI2C(formatGpioName_output(F("SCL")),        strformat(F("pscl%u"), i2cBus), i2cBus, Settings.getI2CSclPin(i2cBus));
@@ -433,22 +353,23 @@ void interfaces_show_I2C() {
 
     if (0 == i2cBus) { // Only support Clock-stretching on Bus 1
       addFormNumericBox(F("I2C ClockStretchLimit"), F("wirestretch"), Settings.WireClockStretchLimit, 0);
-# ifdef ESP8266
+#  ifdef ESP8266
       addUnit(F("usec"));
-# endif
-# ifdef ESP32
+#  endif
+#  ifdef ESP32
       addUnit(F("1/80 usec"));
-# endif
+#  endif
     }
 
-# if FEATURE_I2CMULTIPLEXER
-#  if !FEATURE_I2C_MULTIPLE
+#  if FEATURE_I2CMULTIPLEXER
+#   if !FEATURE_I2C_MULTIPLE
     addFormSubHeader(F("I2C Multiplexer"));
-#  else // if !FEATURE_I2C_MULTIPLE
+#   else // if !FEATURE_I2C_MULTIPLE
     addFormSubHeader(strformat(F("I2C Multiplexer %u"), i2cBus));
-#  endif // if !FEATURE_I2C_MULTIPLE
+#   endif // if !FEATURE_I2C_MULTIPLE
 
     addFormDetailsStart(Settings.getI2CMultiplexerType(i2cBus) != I2C_MULTIPLEXER_NONE);
+
     // Select the type of multiplexer to use
     {
       muxSelector.addFormSelector(F("I2C Multiplexer type"), strformat(F("pi2cmuxtype%u"), i2cBus), Settings.getI2CMultiplexerType(i2cBus));
@@ -463,22 +384,25 @@ void interfaces_show_I2C() {
       addFormNote(F("Will be pulled low to force a reset. Reset is not available on PCA9540."));
     }
     addFormDetailsEnd();
-# endif // if FEATURE_I2CMULTIPLEXER
-  addFormDetailsEnd();
+#  endif // if FEATURE_I2CMULTIPLEXER
+    addFormDetailsEnd();
   }
 }
-#endif
 
-#if FEATURE_SPI
-void interfaces_show_SPI() {
+# endif // if FEATURE_I2C
 
-# ifdef ESP32
+# if FEATURE_SPI
+
+static void interfaces_show_SPI() {
+
+#  ifdef ESP32
 
   for (uint8_t spi_bus = 0; spi_bus < getSPIBusCount(); ++spi_bus) {
     // SPI Init
     addFormSubHeader(concat(F("SPI Bus "), spi_bus));
     {
       addFormDetailsStart(0 == spi_bus || ((0 != spi_bus) && (static_cast<SPI_Options_e>(Settings.InitSPI1) != SPI_Options_e::None)));
+
       // Script to show GPIO pins for User-defined SPI GPIOs
       // html_add_script(F("function spiOptionChanged(elem) {var spipinstyle = elem.value == 9 ? '' :
       // 'none';document.getElementById('tr_spipinsclk').style.display = spipinstyle;document.getElementById('tr_spipinmiso').style.display
@@ -493,24 +417,24 @@ void interfaces_show_SPI() {
       const __FlashStringHelper *spi_options[] = {
         getSPI_optionToString(SPI_Options_e::None),
         getSPI_optionToString(SPI_Options_e::Vspi_Fspi),
-#  ifdef ESP32_CLASSIC
+#   ifdef ESP32_CLASSIC
         getSPI_optionToString(SPI_Options_e::Hspi),
-#  endif
+#   endif
         getSPI_optionToString(SPI_Options_e::UserDefined_VSPI)
-#  if SOC_SPI_PERIPH_NUM > 2
+#   if SOC_SPI_PERIPH_NUM > 2
         , getSPI_optionToString(SPI_Options_e::UserDefined_HSPI)
-#  endif
+#   endif
       };
       const int spi_index[] = {
         static_cast<int>(SPI_Options_e::None),
         static_cast<int>(SPI_Options_e::Vspi_Fspi),
-#  ifdef ESP32_CLASSIC
+#   ifdef ESP32_CLASSIC
         static_cast<int>(SPI_Options_e::Hspi),
-#  endif
+#   endif
         static_cast<int>(SPI_Options_e::UserDefined_VSPI)
-#  if SOC_SPI_PERIPH_NUM > 2
+#   if SOC_SPI_PERIPH_NUM > 2
         , static_cast<int>(SPI_Options_e::UserDefined_HSPI)
-#  endif
+#   endif
       };
       constexpr size_t nrOptions = NR_ELEMENTS(spi_index);
       FormSelectorOptions selector(nrOptions, spi_options, spi_index);
@@ -530,65 +454,193 @@ void interfaces_show_SPI() {
       addFormDetailsEnd();
     }
   }
-# else // for ESP8266 we keep the existing UI
+#  else // for ESP8266 we keep the existing UI
   addFormSubHeader(F("SPI Bus 0"));
   addFormCheckBox(F("Init SPI"), F("initspi"), Settings.InitSPI > static_cast<int>(SPI_Options_e::None));
   addFormNote(F("CLK=GPIO-14 (D5), MISO=GPIO-12 (D6), MOSI=GPIO-13 (D7)"));
   addFormNote(F("Chip Select (CS) config must be done in the plugin"));
-# endif // ifdef ESP32
+#  endif // ifdef ESP32
 }
-#endif
 
-#if FEATURE_MODBUS && FEATURE_MODBUS_INTERFACES_TAB
-void interfaces_show_MODBUS() {
+# endif // if FEATURE_SPI
+
+# if FEATURE_MODBUS && FEATURE_MODBUS_INTERFACES_TAB
+
+static void interfaces_show_MODBUS() {
   addRowLabel(F("TODO")); // TODO
 }
-#endif // if FEATURE_MODBUS
 
-#if FEATURE_CAN
-void interfaces_show_CAN() {
+# endif // if FEATURE_MODBUS
+
+# if FEATURE_CAN
+
+static void interfaces_show_CAN() {
   addRowLabel(F("TODO")); // TODO
 }
-#endif // if FEATURE_CAN
 
-#if FEATURE_WRMBUS
-void interfaces_show_WRMBUS() {
+# endif // if FEATURE_CAN
+
+# if FEATURE_WRMBUS
+
+static void interfaces_show_WRMBUS() {
   addRowLabel(F("TODO")); // TODO
 }
-#endif // if FEATURE_WRMBUS
 
-#if FEATURE_WIMBUS
-void interfaces_show_WIMBUS() {
+# endif // if FEATURE_WRMBUS
+
+# if FEATURE_WIMBUS
+
+static void interfaces_show_WIMBUS() {
   addRowLabel(F("TODO")); // TODO
 }
-#endif // if FEATURE_WIMBUS
 
-#if FEATURE_I2C
-# if FEATURE_PLUGIN_PRIORITY
+# endif // if FEATURE_WIMBUS
 
-bool isI2CPriorityTaskActive(uint8_t i2cBus) {
-  bool hasI2CPriorityTask = false;
+static void save_interfaces() {
 
-  for (taskIndex_t taskIndex = 0; taskIndex < TASKS_MAX && !hasI2CPriorityTask; taskIndex++) {
-    hasI2CPriorityTask |= isPluginI2CPowerManager_from_TaskIndex(taskIndex, i2cBus);
+  String error;
+  bool   updated{};
+
+  # if FEATURE_I2C
+
+  if ((navMenuIndex == MENU_INDEX_INTERFACES_I2C) && save_I2C(error)) { updated = true; }
+  # endif // if FEATURE_I2C
+
+  # if FEATURE_SPI
+
+  if ((navMenuIndex == MENU_INDEX_INTERFACES_SPI) && save_SPI(error)) { updated = true; }
+  # endif // if FEATURE_SPI
+
+  # if FEATURE_MODBUS && FEATURE_MODBUS_INTERFACES_TAB
+
+  if ((navMenuIndex == MENU_INDEX_INTERFACES_MODBUS) && save_MODBUS(error)) { updated = true; }
+  # endif // if FEATURE_MODBUS
+
+  # if FEATURE_CAN
+
+  if ((navMenuIndex == MENU_INDEX_INTERFACES_CAN) && save_CAN(error)) { updated = true; }
+  # endif // if FEATURE_CAN
+
+  # if FEATURE_WRMBUS
+
+  if ((navMenuIndex == MENU_INDEX_INTERFACES_WRMBUS) && save_WRMBUS(error)) { updated = true; }
+  # endif // if FEATURE_WRMBUS
+
+  # if FEATURE_WIMBUS
+
+  if ((navMenuIndex == MENU_INDEX_INTERFACES_WIMBUS) && save_WIMBUS(error)) { updated = true; }
+  # endif // if FEATURE_WIMBUS
+
+  if (updated) {
+    error += SaveSettings();
+    addHtmlError(error);
+
+    if (error.isEmpty()) {
+# if FEATURE_I2C
+
+      // Apply I2C settings.
+      initI2C();
+# endif // if FEATURE_I2C
+
+# if FEATURE_SPI
+
+      // Apply SPI settings
+      initializeSPIBuses();
+# endif // if FEATURE_SPI
+    }
   }
-  return hasI2CPriorityTask;
 }
 
-void I2CShowSdaSclReadonly(int8_t i2c_sda, int8_t i2c_scl, uint8_t i2cBus) {
-  int  pinnr = -1;
-  bool input, output, warning = false;
+void handle_interfaces() {
+# ifndef BUILD_NO_RAM_TRACKER
+  checkRAM(F("handle_interfaces"));
+# endif
 
-  addFormNote(strformat(F("I2C (%d) GPIO pins can't be changed when an I2C Priority task is configured."), i2cBus));
-  addRowLabel(formatGpioName_bidirectional(F("SDA")));
-  getGpioInfo(i2c_sda, pinnr, input, output, warning);
-  addHtml(createGPIO_label(i2c_sda, pinnr, true, true, false));
-  addRowLabel(formatGpioName_output(F("SCL")));
-  getGpioInfo(i2c_scl, pinnr, input, output, warning);
-  addHtml(createGPIO_label(i2c_scl, pinnr, true, true, false));
+  uint8_t newNavIndex = navMenuIndex;
+
+  if ((newNavIndex != MENU_INDEX_INTERFACES) && (newNavIndex <= MENU_MAX_INDEX_SHOWN)) {
+# if FEATURE_I2C
+    newNavIndex = MENU_INDEX_INTERFACES_I2C;
+# elif FEATURE_SPI
+    newNavIndex = MENU_INDEX_INTERFACES_SPI;
+# elif FEATURE_MODBUS && FEATURE_MODBUS_INTERFACES_TAB
+    newNavIndex = MENU_INDEX_INTERFACES_MODBUS;
+# elif FEATURE_CAN
+    newNavIndex = MENU_INDEX_INTERFACES_CAN;
+# elif FEATURE_WRMBUS
+    newNavIndex = MENU_INDEX_INTERFACES_WRMBUS;
+# elif FEATURE_WIMBUS
+    newNavIndex = MENU_INDEX_INTERFACES_WIMBUS;
+# else // if FEATURE_I2C
+
+    // FIXME TD-er: Should we still continue here? Why not simply return;
+    newNavIndex = MENU_INDEX_INTERFACES;
+# endif // if FEATURE_I2C
+  }
+
+  if (!startStream_send_stdTemplate(newNavIndex)) { return; }
+
+  save_interfaces();
+
+
+  html_add_form();
+
+  html_table_class_normal();
+  addFormFixedFirstColumn(); // This must be added as the first element in a table definition
+  addFormHeader(strformat(F("%s Interfaces Settings"), FsP(getGpMenuIcon(navMenuIndex))), F(""), F("Interfaces/Interfaces.html"));
+
+  # if FEATURE_I2C
+
+  if (navMenuIndex == MENU_INDEX_INTERFACES_I2C) {
+    interfaces_show_I2C();
+  }
+  # endif // if FEATURE_I2C
+
+  # if FEATURE_SPI
+
+  if (navMenuIndex == MENU_INDEX_INTERFACES_SPI) {
+    interfaces_show_SPI();
+  }
+  # endif // if FEATURE_SPI
+
+  # if FEATURE_MODBUS && FEATURE_MODBUS_INTERFACES_TAB
+
+  if (navMenuIndex == MENU_INDEX_INTERFACES_MODBUS) {
+    interfaces_show_MODBUS();
+  }
+  # endif // if FEATURE_MODBUS
+
+  # if FEATURE_CAN
+
+  if (navMenuIndex == MENU_INDEX_INTERFACES_CAN) {
+    interfaces_show_CAN();
+  }
+  # endif // if FEATURE_CAN
+
+  # if FEATURE_WRMBUS
+
+  if (navMenuIndex == MENU_INDEX_INTERFACES_WRMBUS) {
+    interfaces_show_WRMBUS();
+  }
+  # endif // if FEATURE_WRMBUS
+
+  # if FEATURE_WIMBUS
+
+  if (navMenuIndex == MENU_INDEX_INTERFACES_WIMBUS) {
+    interfaces_show_WIMBUS();
+  }
+  # endif // if FEATURE_WIMBUS
+
+  addFormSeparator(2);
+
+  html_TR_TD();
+  html_TD();
+  addSubmitButton();
+  html_TR_TD();
+  html_end_table();
+  html_end_form();
+
+  sendTail_stdtemplate();
 }
-
-# endif // if FEATURE_PLUGIN_PRIORITY
-#endif
 
 #endif // ifdef WEBSERVER_INTERFACES

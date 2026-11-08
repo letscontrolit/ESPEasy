@@ -3,7 +3,7 @@
 
 
 #include "../../ESPEasy_common.h"
-#include <list>
+#include <forward_list>
 
 #include "../DataStructs/timer_id_couple.h"
 
@@ -13,25 +13,26 @@ struct msecTimerHandlerStruct {
 
   void setEcoMode(bool enabled);
 
-  void registerAt(unsigned long id,
-                  unsigned long timer);
+  void registerAt(uint32_t id,
+                  uint32_t timer);
 
-  void remove(unsigned long id);
+  void remove(uint32_t id);
 
   // Check if timeout has been reached and also return its set timer.
   // Return 0 if no item has reached timeout moment.
-  unsigned long getNextId(unsigned long& timer);
+  uint32_t getNextId(uint32_t& timer);
 
   // Check if a give ID is scheduled and if so, return the set timer.
   // N.B. the ID is the mixed ID.
-  bool   getTimerForId(unsigned long  id,
-                       unsigned long& timer) const;
-
+  bool   getTimerForId(uint32_t  id,
+                       uint32_t& timer) const;
+#ifndef BUILD_NO_DEBUG
   String getQueueStats();
+#endif
 
   void   updateIdleTimeStats();
 
-  float  getIdleTimePct() const;
+  float  getIdleTimePct() ;
 
 private:
 
@@ -43,21 +44,23 @@ private:
 
   void recordRunning();
 
+#ifndef BUILD_NO_DEBUG
   // Statistics
-  unsigned long get_called;
-  unsigned long get_called_ret_id;
-  unsigned long max_queue_length;
+  uint32_t get_called{};
+  uint32_t get_called_ret_id{};
+  uint32_t max_queue_length{};
+#endif
 
   // Compute idle system time
-  uint32_t last_exec_time_usec;
-  uint32_t total_idle_time_usec;
-  uint32_t last_log_start_time;
-  float         idle_time_pct;
-  bool          is_idle;
-  bool          eco_mode;
+  uint32_t last_exec_time_usec{};
+  uint32_t total_idle_time_usec{};
+  uint32_t last_log_start_time{};
+  float         idle_time_pct{};
+  bool          is_idle{};
+  bool          eco_mode{};
 
   // The list of set timers
-  std::list<timer_id_couple>_timer_ids;
+  std::forward_list<timer_id_couple>_timer_ids;
 };
 
 #endif // HELPERS_MSECTIMERHANDLERSTRUCT_H

@@ -133,7 +133,7 @@ boolean Plugin_059(uint8_t function, struct EventStruct *event, String& string)
       P_059_sensordefs[event->TaskIndex]->setLimit(PCONFIG_LONG(0), PCONFIG_LONG(1));
       P_059_sensordefs[event->TaskIndex]->setIndexTrigger(true);
 
-      ExtraTaskSettings.TaskDeviceValueDecimals[event->BaseVarIndex] = 0;
+      ExtraTaskSettings.TaskDeviceValueDecimals[0] = 0;
 
       String log = F("QEI  : GPIO: ");
 
@@ -178,7 +178,7 @@ boolean Plugin_059(uint8_t function, struct EventStruct *event, String& string)
       {
         if (P_059_sensordefs[event->TaskIndex]->hasChanged())
         {
-          const long c = P_059_sensordefs[event->TaskIndex]->read();
+          const int c = P_059_sensordefs[event->TaskIndex]->read();
           UserVar.setFloat(event->TaskIndex, 0, c);
 #ifndef BUILD_NO_DEBUG
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {

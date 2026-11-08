@@ -1,6 +1,6 @@
 #include "../DataTypes/IntendedRebootReason.h"
 
-const __FlashStringHelper * toString_f(IntendedRebootReason_e reason) {
+static const __FlashStringHelper * toString_f(IntendedRebootReason_e reason) {
   switch (reason) {
     case IntendedRebootReason_e::DeepSleep:              return F("DeepSleep");
     case IntendedRebootReason_e::DelayedReboot:          return F("DelayedReboot");

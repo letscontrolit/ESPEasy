@@ -170,12 +170,12 @@ uint8_t rn2xx3::get_busy_count() const
   return _rn2xx3_handler.get_busy_count();
 }
 
-rn2xx3_handler::RN_state rn2xx3::wait_command_finished(unsigned long timeout)
+rn2xx3_handler::RN_state rn2xx3::wait_command_finished(uint32_t timeout)
 {
   return _rn2xx3_handler.wait_command_finished(timeout);
 }
 
-rn2xx3_handler::RN_state rn2xx3::wait_command_accepted(unsigned long timeout)
+rn2xx3_handler::RN_state rn2xx3::wait_command_accepted(uint32_t timeout)
 {
   return _rn2xx3_handler.wait_command_accepted(timeout);
 }
@@ -226,7 +226,7 @@ bool rn2xx3::setDR(int dr)
   return _rn2xx3_handler.setDR(dr);
 }
 
-void rn2xx3::sleep(long msec)
+void rn2xx3::sleep(int32_t msec)
 {
   // FIXME TD-er: Must make this a command that waits for other commands to be finished first.
   _rn2xx3_handler._serial.print(F("sys sleep "));

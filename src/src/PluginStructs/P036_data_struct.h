@@ -492,7 +492,7 @@ public:
   # endif // ifdef P036_ENABLE_LEFT_ALIGN
 
   # if P036_FEATURE_DISPLAY_PREVIEW
-  bool web_show_values();
+  bool web_show_values(struct EventStruct *event);
   # endif // if P036_FEATURE_DISPLAY_PREVIEW
 
   // Instantiate display here - does not work to do this within the INIT call

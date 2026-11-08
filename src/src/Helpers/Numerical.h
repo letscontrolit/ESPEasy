@@ -8,7 +8,9 @@
   \*********************************************************************************************/
 
 bool isValidFloat(float f);
+#if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
 bool isValidDouble(ESPEASY_RULES_FLOAT_TYPE f);
+#endif
 
 bool validIntFromString(const String& tBuf, int32_t& result);
 

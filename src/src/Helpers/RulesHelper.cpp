@@ -10,7 +10,7 @@
    Test for common mistake
    Return true if mistake was found (and corrected)
  \*********************************************************************************************/
-bool rules_replace_common_mistakes(const String& from, const String& to, String& line)
+static bool rules_replace_common_mistakes(const String& from, const String& to, String& line)
 {
   if (line.indexOf(from) == -1) {
     return false; // Nothing replaced
@@ -37,7 +37,7 @@ bool rules_replace_common_mistakes(const String& from, const String& to, String&
    Check for common mistakes
    Return true if nothing strange found
  \*********************************************************************************************/
-bool check_rules_line_user_errors(String& line)
+static bool check_rules_line_user_errors(String& line)
 {
   bool res = true;
 
@@ -56,7 +56,7 @@ bool check_rules_line_user_errors(String& line)
    Strip comment from the line.
    Return true when comment was stripped.
  \*********************************************************************************************/
-bool rules_strip_trailing_comments(String& line)
+static bool rules_strip_trailing_comments(String& line)
 {
   // Strip trailing comments
   int comment = line.indexOf(F("//"));

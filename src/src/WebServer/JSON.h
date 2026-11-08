@@ -1,10 +1,8 @@
-#ifndef WEBSERVER_WEBSERVER_JSON_H
-#define WEBSERVER_WEBSERVER_JSON_H
-
+#pragma once
 
 #include "../WebServer/common.h"
 
-class KeyValueWriter;
+struct TaskValuesWriterHelper;
 
 // ********************************************************************************
 // Web Interface get CSV value from task
@@ -14,19 +12,16 @@ void handle_csvval();
 #endif
 
 #ifdef WEBSERVER_JSON
+
 // ********************************************************************************
 // Web Interface JSON page (no password!)
 // ********************************************************************************
 void handle_json();
 
-void handle_json_stream_task_value_data(KeyValueWriter* parent,
-                                        uint16_t       valueNumber,
-                                        const String & valueName,
-                                        uint8_t        nrDecimals,
-                                        const String & value,
-                                        const String & presentation,
-                                        const String & uom);
-#endif
+void handle_json_stream_task_value_data(TaskValuesWriterHelper*data);
+
+#endif // ifdef WEBSERVER_JSON
+
 // ********************************************************************************
 // JSON formatted timing statistics
 // ********************************************************************************
@@ -34,12 +29,9 @@ void handle_json_stream_task_value_data(KeyValueWriter* parent,
 #ifdef WEBSERVER_NEW_UI
 void handle_timingstats_json();
 
-#endif // WEBSERVER_NEW_UI
-
-#ifdef WEBSERVER_NEW_UI
-#if FEATURE_ESPEASY_P2P
+# if FEATURE_ESPEASY_P2P
 void handle_nodes_list_json();
-#endif
+# endif
 void handle_buildinfo();
 
 #endif // WEBSERVER_NEW_UI
@@ -48,35 +40,34 @@ void handle_buildinfo();
 /*********************************************************************************************\
    Streaming versions directly to TXBuffer
 \*********************************************************************************************/
-#if FEATURE_CHART_JS || defined(WEBSERVER_NEW_UI)
-void stream_to_json_object_value(const __FlashStringHelper *  object, const String& value);
-void stream_to_json_object_value(const String& object, const String& value);
-void stream_to_json_object_value(const __FlashStringHelper *  object, int value);
-void stream_to_json_object_value(const String& object, int value);
-#endif
-
 String jsonBool(bool value);
 #ifdef WEBSERVER_NEW_UI
+
 // Add JSON formatted data directly to the TXbuffer, including a trailing comma.
-void stream_next_json_object_value(const __FlashStringHelper * object, const String& value);
-void stream_next_json_object_value(const __FlashStringHelper * object, String&& value);
-void stream_next_json_object_value(const String& object, const String& value);
-void stream_next_json_object_value(const __FlashStringHelper * object, int value);
-void stream_next_json_object_value(const String& object, int value);
+void stream_next_json_object_value(const __FlashStringHelper *object,
+                                   const String             & value);
+void stream_next_json_object_value(const __FlashStringHelper *object,
+                                   String                  && value);
+void stream_next_json_object_value(const String& object,
+                                   const String& value);
+void stream_next_json_object_value(const __FlashStringHelper *object,
+                                   int                        value);
+void stream_next_json_object_value(const String& object,
+                                   int           value);
 
 // Add JSON formatted data directly to the TXbuffer, including a closing '}'
-void stream_last_json_object_value(const __FlashStringHelper * object, const String& value);
-void stream_last_json_object_value(const __FlashStringHelper * object, String&& value);
-void stream_last_json_object_value(const String& object, const String& value);
-void stream_last_json_object_value(const __FlashStringHelper * object, int value);
+void stream_last_json_object_value(const __FlashStringHelper *object,
+                                   const String             & value);
+void stream_last_json_object_value(const __FlashStringHelper *object,
+                                   String                  && value);
+void stream_last_json_object_value(const String& object,
+                                   const String& value);
+void stream_last_json_object_value(const __FlashStringHelper *object,
+                                   int                        value);
 
-//void stream_json_object_values(const LabelType::Enum labels[]);
+// void stream_json_object_values(const LabelType::Enum labels[]);
 
 void stream_next_json_object_value(LabelType::Enum label);
 
 void stream_last_json_object_value(LabelType::Enum label);
-#endif
-
-
-
-#endif
+#endif // ifdef WEBSERVER_NEW_UI

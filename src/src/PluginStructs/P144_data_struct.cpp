@@ -74,6 +74,7 @@ bool P144_data_struct::processSensor() {
       new_data = processRx(easySerial->read());
       if (new_data) 
       {
+        // TODO TD-er: Use getUint16FromBigEndianByteStream
         pm25Value = float((serialRxBuffer[3] << 8) + serialRxBuffer[4]);
         #ifdef PLUGIN_144_DEBUG
         if (loglevelActiveFor(LOG_LEVEL_INFO))

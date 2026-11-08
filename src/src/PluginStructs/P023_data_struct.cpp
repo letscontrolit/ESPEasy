@@ -319,6 +319,7 @@ void P023_data_struct::setCurrentText(const String& string, int X, int Y) {
     if (currentLines[X].length() >= static_cast<size_t>(Y)) {
       currentLines[X] = currentLines[X].substring(0, Y + 1) + string;
     } else {
+      // TODO TD-er: Check if we can use prefixToMinimumLength here
       for (size_t i = currentLines[X].length(); i < static_cast<size_t>(Y); ++i) {
         currentLines[X] += ' ';
       }
@@ -329,28 +330,16 @@ void P023_data_struct::setCurrentText(const String& string, int X, int Y) {
   }
 }
 
-bool P023_data_struct::web_show_values() {
-  bool result     = true;
-  uint8_t maxLine = P23_Nlines;
-
-  for (; maxLine > 0; --maxLine) { // Don't show trailing empty lines
-    String tmp = currentLines[maxLine - 1];
-    tmp.trim();
-
-    if (!tmp.isEmpty()) { break; }
+bool P023_data_struct::web_show_values(struct EventStruct *event) {
+  TaskValuesWriterHelper data(event);
+  // Iterate over all lines so we can be sure the divs are added.
+  constexpr uint8_t nrLines = NR_ELEMENTS(currentLines);
+  for (uint8_t i = 0; i < nrLines; ++i) {
+    const bool isLast = i == (nrLines - 1);
+    data.setPreformatted();
+    data.writeCustom(i, currentLines[i], EMPTY_STRING, F("style='font-size:75%;'"), isLast);
   }
-
-  addHtml(F("<pre>")); // To keep spaces etc. in the shown output
-
-  for (uint8_t i = 0; i < maxLine; ++i) {
-    addHtmlDiv(F("div_l"), currentLines[i], EMPTY_STRING, F("style='font-size:75%;'"));
-
-    if (i != maxLine - 1) {
-      addHtmlDiv(F("div_br"));
-    }
-  }
-  addHtml(F("</pre>"));
-  return result;
+  return true; // Don't show anything else
 }
 
 #endif // if P023_FEATURE_DISPLAY_PREVIEW

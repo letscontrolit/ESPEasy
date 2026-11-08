@@ -337,8 +337,8 @@ void DeleteNotNeededValues(String& s, uint8_t numberOfValuesWanted)
     if (i < numberOfValuesWanted)
     {
       // yes, so just remove the tokens
-      s.replace(startToken, EMPTY_STRING);
-      s.replace(endToken,   EMPTY_STRING);
+      remove(s, startToken);
+      remove(s, endToken);
     }
     else
     {
@@ -348,10 +348,8 @@ void DeleteNotNeededValues(String& s, uint8_t numberOfValuesWanted)
 
       while (startIndex != -1 && endIndex != -1  && endIndex > startIndex)
       {
-        String p = s.substring(startIndex, endIndex + 4);
-
         // remove the whole string including tokens
-        s.replace(p, EMPTY_STRING);
+        remove(s, s.substring(startIndex, endIndex + 4));
 
         // find next ones
         startIndex = s.indexOf(startToken);

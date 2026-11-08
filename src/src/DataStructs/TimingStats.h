@@ -180,10 +180,10 @@ private:
 
 
 const __FlashStringHelper* getPluginFunctionName(int function);
-bool                       mustLogFunction(int function);
+//bool                       mustLogFunction(int function);
 const __FlashStringHelper* getCPluginCFunctionName(CPlugin::Function function);
-bool                       mustLogCFunction(CPlugin::Function function);
-bool                       mustLogNWFunction(NWPlugin::Function function);
+//bool                       mustLogCFunction(CPlugin::Function function);
+//bool                       mustLogNWFunction(NWPlugin::Function function);
 String                     getMiscStatsName(TimingStatsElements stat);
 
 void                       stopTimerTask(deviceIndex_t T,
@@ -204,7 +204,7 @@ extern std::map<int, TimingStats> pluginStats;
 extern std::map<int, TimingStats> controllerStats;
 extern std::map<int, TimingStats> networkStats;
 extern std::map<TimingStatsElements, TimingStats> miscStats;
-extern unsigned long timingstats_last_reset;
+extern uint32_t timingstats_last_reset;
 
 # define START_TIMER const uint32_t statisticsTimerStart(micros());
 # define STOP_TIMER_TASK(T, F) stopTimerTask(T, F, statisticsTimerStart);

@@ -326,7 +326,7 @@ const char Internal_commands_w[] PROGMEM =
 ;
 #endif
 
-const char* getInternalCommand_Haystack_Offset(const char firstLetter, int& offset)
+static const char* getInternalCommand_Haystack_Offset(const char firstLetter, int& offset)
 {
   const char *haystack = nullptr;
 

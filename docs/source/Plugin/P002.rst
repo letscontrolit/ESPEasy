@@ -310,7 +310,7 @@ But also the wind direction is not increasing when the resistance increases.
 
 Therefore we need a look-up table. 
 
-What binning does is it tries to match each sample to a specific bin (similar to an entry in the Multipoint Processing table) and simply counts each occurence per bin.
+What binning does is it tries to match each sample to a specific bin (similar to an entry in the Multipoint Processing table) and simply counts each occurrence per bin.
 After a measurement period (the time between 2 calls to "run" the task, typically the "interval") the bin with the highest count is picked and the output value of this bin will be returned as output.
 
 When using "Binning", it can be useful to also have some formula to process the data first before mapping the data to the correct bin.

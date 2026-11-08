@@ -93,33 +93,9 @@ void etharp_gratuitous_r(struct netif *netif)     { tcpip_callback_with_block((t
 #if FEATURE_ESPEASY_P2P
 
 /*********************************************************************************************\
-   Send event using UDP message
-\*********************************************************************************************/
-void SendUDPCommand(uint8_t destUnit, const char *data, uint8_t dataLength)
-{
-  if (!NetworkConnected(10)) {
-    return;
-  }
-
-  if (destUnit != 0)
-  {
-    sendUDP(destUnit, (const uint8_t *)data, dataLength);
-    delay(10);
-  } else {
-    for (auto it = Nodes.begin(); it != Nodes.end(); ++it) {
-      if (it->first != Settings.Unit) {
-        sendUDP(it->first, (const uint8_t *)data, dataLength);
-        delay(10);
-      }
-    }
-  }
-  delay(50);
-}
-
-/*********************************************************************************************\
    Send UDP message to specific unit (unit 255=broadcast)
 \*********************************************************************************************/
-void sendUDP(uint8_t unit, const uint8_t *data, uint8_t size)
+static void sendUDP(uint8_t unit, const uint8_t *data, uint8_t size)
 {
   if (!NetworkConnected(10)) {
     return;
@@ -150,6 +126,32 @@ void sendUDP(uint8_t unit, const uint8_t *data, uint8_t size)
   FeedSW_watchdog();
   delay(0);
 }
+
+
+/*********************************************************************************************\
+   Send event using UDP message
+\*********************************************************************************************/
+void SendUDPCommand(uint8_t destUnit, const char *data, uint8_t dataLength)
+{
+  if (!NetworkConnected(10)) {
+    return;
+  }
+
+  if (destUnit != 0)
+  {
+    sendUDP(destUnit, (const uint8_t *)data, dataLength);
+    delay(10);
+  } else {
+    for (auto it = Nodes.begin(); it != Nodes.end(); ++it) {
+      if (it->first != Settings.Unit) {
+        sendUDP(it->first, (const uint8_t *)data, dataLength);
+        delay(10);
+      }
+    }
+  }
+  delay(50);
+}
+
 
 /*********************************************************************************************\
    Update UDP port (ESPEasy propiertary protocol)
@@ -469,8 +471,8 @@ String getTypeStringForUnit(uint8_t unit) {
 \*********************************************************************************************/
 void refreshNodeList()
 {
-  unsigned long max_age;
-  const unsigned long max_age_allowed = 10 * 60 * 1000; // 10 minutes
+  uint32_t max_age;
+  const uint32_t max_age_allowed = 10 * 60 * 1000; // 10 minutes
 
   Nodes.refreshNodeList(max_age_allowed, max_age);
 
@@ -623,8 +625,8 @@ uint16_t  _respondToPort;
 
 bool _pending;
 unsigned short _delay;
-unsigned long  _process_time;
-unsigned long  _notify_time;
+uint32_t  _process_time;
+uint32_t  _notify_time;
 
 #  define SSDP_INTERVAL     1200
 #  define SSDP_PORT         1900
@@ -709,7 +711,7 @@ bool SSDP_begin() {
 /********************************************************************************************\
    Send SSDP messages (notify & responses)
  \*********************************************************************************************/
-void SSDP_send(uint8_t method) {
+static void SSDP_send(uint8_t method) {
   uint32_t ip = ESPEasy::net::NetworkLocalIP();
 
   // FIXME TD-er: Why create String objects of these flashstrings?
@@ -942,12 +944,14 @@ void SSDP_update() {
 // ********************************************************************************
 // Return subnet range of active network interface.
 // ********************************************************************************
+/*
 bool getSubnetRange(IPAddress& low, IPAddress& high)
 {
   low = ESPEasy::net::NetworkID();
   high = ESPEasy::net::NetworkBroadcast();
   return true;
 }
+  */
 
 // ********************************************************************************
 // Functions to test and handle network/client connectivity.
@@ -956,7 +960,7 @@ bool getSubnetRange(IPAddress& low, IPAddress& high)
 #ifdef CORE_POST_2_5_0
 # include <AddrList.h>
 #endif // ifdef CORE_POST_2_5_0
-
+/*
 bool hasIPaddr() {
   if (useStaticIP()) { return true; }
 
@@ -965,12 +969,12 @@ bool hasIPaddr() {
 
   for (auto addr : addrList) {
     if ((configured = (!addr.isLocal() && (addr.ifnumber() == STATION_IF)))) {
-      /*
-         ESPEASY_SERIAL_CONSOLE_PORT.printf("STA: IF='%s' hostname='%s' addr= %s\n",
-                    addr.ifname().c_str(),
-                    addr.ifhostname(),
-                    addr.toString().c_str());
-       */
+      
+      //   ESPEASY_SERIAL_CONSOLE_PORT.printf("STA: IF='%s' hostname='%s' addr= %s\n",
+      //              addr.ifname().c_str(),
+      //              addr.ifhostname(),
+      //              addr.toString().c_str());
+      
       break;
     }
   }
@@ -979,7 +983,7 @@ bool hasIPaddr() {
   return WiFi.isConnected();
 #endif // ifdef CORE_POST_2_5_0
 }
-
+*/
 bool useStaticIP() {
   #if FEATURE_ETHERNET
 
@@ -1120,7 +1124,7 @@ bool connectClient(WiFiClient& client, IPAddress ip, uint16_t port, uint32_t tim
 
 #endif // FEATURE_HTTP_CLIENT
 
-void scrubDNS() {
+static void scrubDNS() {
   /*
   #if FEATURE_ETHERNET
 
@@ -1211,7 +1215,7 @@ bool setDNS(int index, const IPAddress& dns) {
 bool resolveHostByName(const char *aHostname, IPAddress& aResult, uint32_t timeout_ms) {
   START_TIMER;
 
-  if (!ESPEasy::net::NetworkConnected(true)) {
+  if (!ESPEasy::net::NetworkConnected()) {
     return false;
   }
 
@@ -1220,16 +1224,32 @@ bool resolveHostByName(const char *aHostname, IPAddress& aResult, uint32_t timeo
   // FIXME TD-er: Must try to restore DNS server entries.
   scrubDNS();
 
-#if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ESP32)
-  bool resolvedIP = WiFi.hostByName(aHostname, aResult) == 1;
-#else // if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ESP32)
-  bool resolvedIP = WiFi.hostByName(aHostname, aResult, timeout_ms) == 1;
-#endif // if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ESP32)
-  delay(0);
-  FeedSW_watchdog();
+  bool resolvedIP{};
+  String host(aHostname);
+  host.trim();
 
-  if (!resolvedIP) {
-    Scheduler.sendGratuitousARP_now();
+  uint32_t start = millis();
+
+  for (int attempt = 0; 
+       attempt < 2 && !resolvedIP && timePassedSince(start) < static_cast<int32_t>(timeout_ms);
+       ++attempt) {
+
+#if defined(ARDUINO_ESP8266_RELEASE_2_3_0)
+    resolvedIP = WiFi.hostByName(host.c_str(), aResult) == 1;
+#elif defined(ESP32)
+    resolvedIP = Network.hostByName(host.c_str(), aResult) == 1;
+#else // if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ESP32)
+    resolvedIP = WiFi.hostByName(host.c_str(), aResult, timeout_ms) == 1;
+#endif // if defined(ARDUINO_ESP8266_RELEASE_2_3_0) || defined(ESP32)
+    delay(0);
+    FeedSW_watchdog();
+
+    if (!resolvedIP && attempt == 0) {
+      #ifdef ESP32
+      dns_clear_cache();
+      #endif
+      Scheduler.sendGratuitousARP_now();
+    }
   }
   STOP_TIMER(HOST_BY_NAME_STATS);
   return resolvedIP;
@@ -1293,7 +1313,7 @@ void sendGratuitousARP() {
 #endif // ifdef SUPPORT_ARP
 }
 
-bool splitHostPortString(const String& hostPortString, String& host, uint16_t& port) {
+static bool splitHostPortString(const String& hostPortString, String& host, uint16_t& port) {
   port = 80; // Some default
   int index_colon = hostPortString.indexOf(':');
 
@@ -1367,7 +1387,10 @@ String splitURL(const String& fullURL, String& user, String& pass, String& host,
   return fullURL.substring(endhost);
 }
 
-String joinURL(const String& user, const String& pass, const String& host, uint16_t& port, const String& uri, const String& protocol)
+# if defined(CORE_POST_2_6_0) || defined(ESP32)
+#  if FEATURE_TLS
+
+static String joinURL(const String& user, const String& pass, const String& host, uint16_t& port, const String& uri, const String& protocol)
 {
   String fullURL;
   if (protocol.isEmpty()) {
@@ -1394,8 +1417,10 @@ String joinURL(const String& user, const String& pass, const String& host, uint1
 
   return fullURL;
 }
+#endif
+#endif
 
-String get_user_agent_string() {
+static String get_user_agent_string() {
   static unsigned int agent_size = 20;
   String userAgent;
 
@@ -1410,7 +1435,7 @@ String get_user_agent_string() {
   return userAgent;
 }
 
-bool splitHeaders(int& strpos, const String& multiHeaders, String& name, String& value) {
+static bool splitHeaders(int& strpos, const String& multiHeaders, String& name, String& value) {
   if (strpos < 0) {
     return false;
   }
@@ -1434,7 +1459,7 @@ bool splitHeaders(int& strpos, const String& multiHeaders, String& name, String&
   return true;
 }
 
-String extractParam(const String& authReq, const String& param, const char delimit) {
+static String extractParam(const String& authReq, const String& param, const char delimit) {
   int _begin = authReq.indexOf(param);
 
   if (_begin == -1) { return EMPTY_STRING; }
@@ -1443,7 +1468,7 @@ String extractParam(const String& authReq, const String& param, const char delim
 
 #if FEATURE_HTTP_CLIENT
 
-String getCNonce(const int len) {
+static String getCNonce(const int len) {
   static const char alphanum[] = "0123456789"
                                  "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
                                  "abcdefghijklmnopqrstuvwxyz";
@@ -1457,12 +1482,12 @@ String getCNonce(const int len) {
   return s;
 }
 
-String getDigestAuth(const String& authReq,
-                     const String& username,
-                     const String& password,
-                     const String& method,
-                     const String& uri,
-                     unsigned int  counter) {
+static String getDigestAuth(const String& authReq,
+                            const String& username,
+                            const String& password,
+                            const String& method,
+                            const String& uri,
+                            unsigned int  counter) {
   // extracting required parameters for RFC 2069 simpler Digest
   const String realm  = extractParam(authReq, F("realm=\""), '"');
   const String nonce  = extractParam(authReq, F("nonce=\""), '"');
@@ -1508,7 +1533,7 @@ String getDigestAuth(const String& authReq,
 
 # if !defined(BUILD_NO_DEBUG) || defined(ESP32)
 
-void log_http_result(const ESPEasy_HTTPClient& http,
+static void log_http_result(const ESPEasy_HTTPClient& http,
                      const String    & logIdentifier,
                      const String    & host,
                      const String    & HttpMethod,
@@ -1548,8 +1573,10 @@ void log_http_result(const ESPEasy_HTTPClient& http,
 }
 
 # endif // ifndef BUILD_NO_DEBUG
-
-int http_authenticate(const String& logIdentifier,
+// Initiate the HTTP connection.
+// Also try to authenticate using either Basic auth or Digest.
+// @retval HTTP return code.
+static int http_authenticate(const String& logIdentifier,
                       WiFiClient  & client,
                       ESPEasy_HTTPClient  & http,
                       uint16_t      timeout,
@@ -1712,7 +1739,7 @@ int http_authenticate(const String& logIdentifier,
       http.end();
 # if defined(CORE_POST_2_6_0) || defined(ESP32)
 #  if FEATURE_TLS
-      const String fullURL = joinURL(user, pass, host, port, uri);
+      const String fullURL = joinURL(user, pass, host, port, uri, EMPTY_STRING);
       if (fullURL.startsWith(F("https")))
         http.begin(fullURL, nullptr); // HTTPS
       else 
@@ -1900,7 +1927,7 @@ bool downloadFile(const String& url, String file_save) {
 
 // User and Pass may be updated if they occur in the hostname part.
 // Thus have to be copied instead of const reference.
-bool start_downloadFile(WiFiClient  & client,
+static bool start_downloadFile(WiFiClient  & client,
                         ESPEasy_HTTPClient  & http,
                         const String& url,
                         String      & file_save,
@@ -1984,10 +2011,15 @@ bool downloadFile(const String& url, String file_save, const String& user, const
     const size_t downloadBuffSize = 256;
     uint8_t buff[downloadBuffSize];
     size_t  bytesWritten  = 0;
-    unsigned long timeout = millis() + DOWNLOAD_FILE_TIMEOUT;
+    uint32_t timeout = millis() + DOWNLOAD_FILE_TIMEOUT;
 
     // get tcp stream
-    WiFiClient *stream = &client;
+    WiFiClient *stream = http.getStreamPtr();
+
+    if (stream == nullptr) {
+      stream = &client;
+    }
+
 
     // read all data from server
     while (http.connected() && (len > 0 || len == -1)) {
@@ -2007,6 +2039,8 @@ bool downloadFile(const String& url, String file_save, const String& user, const
           addLog(LOG_LEVEL_ERROR, error);
           http.end();
           client.stop();
+          f.close();
+          tryDeleteFile(file_save);
           return false;
         }
         bytesWritten += c;
@@ -2020,6 +2054,8 @@ bool downloadFile(const String& url, String file_save, const String& user, const
         delay(0);
         http.end();
         client.stop();
+        f.close();
+        tryDeleteFile(file_save);
         return false;
       }
       delay(0);
@@ -2083,10 +2119,14 @@ bool downloadFirmware(const String& url, String& file_save, String& user, String
     const size_t downloadBuffSize = 256;
     uint8_t buff[downloadBuffSize];
     size_t  bytesWritten  = 0;
-    unsigned long timeout = millis() + DOWNLOAD_FILE_TIMEOUT;
+    uint32_t timeout = millis() + DOWNLOAD_FILE_TIMEOUT;
 
     // get tcp stream
-    WiFiClient *stream = &client;
+    WiFiClient *stream = http.getStreamPtr();
+
+    if (stream == nullptr) {
+      stream = &client;
+    }
 
     while (error.isEmpty() && http.connected() && (len > 0 || len == -1)) {
       // read up to downloadBuffSize at a time.

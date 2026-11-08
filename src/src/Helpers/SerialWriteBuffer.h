@@ -19,8 +19,9 @@ private:
   void prepare_prefix() override;
 
 
-
+#if FEATURE_COLORIZE_CONSOLE_LOGS
   String colorize(const String& str) const;
+#endif
 
 };
 

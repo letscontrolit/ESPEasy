@@ -3,8 +3,10 @@
 #include "../Helpers/ESPEasy_time_calc.h"
 
 bool timer_id_couple::operator<(const timer_id_couple& other) const {
-  const unsigned long now(millis());
+  // timeDiff is positive when _timer is before other._timer
+  return timeDiff(_timer, other._timer) > 0;
+}
 
-  // timediff > 0, means timer has already passed
-  return timeDiff(_timer, now) > timeDiff(other._timer, now);
+bool timer_id_couple::operator()(const timer_id_couple& item) const {
+  return _id == item._id;
 }

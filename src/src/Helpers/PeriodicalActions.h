@@ -31,7 +31,6 @@ void runEach30Seconds();
 #if FEATURE_MQTT
 
 void scheduleNextMQTTdelayQueue();
-void schedule_all_MQTTimport_tasks();
 
 void processMQTTdelayQueue();
 
@@ -43,8 +42,6 @@ void runPeriodicalMQTT();
 
 
 void logTimerStatistics();
-
-void updateLoopStats_30sec(uint8_t loglevel);
 
 /********************************************************************************************\
    Clean up all before going to sleep or reboot.

@@ -20,7 +20,7 @@
 #endif
 
 //      networkIndex = (event->Par1 - 1);   Par1 is here for 1 ... NETWORK_MAX
-bool validNetworkVar(struct EventStruct *event, ESPEasy::net::networkIndex_t& networkIndex)
+static bool validNetworkVar(struct EventStruct *event, ESPEasy::net::networkIndex_t& networkIndex)
 {
   if (event->Par1 <= 0) { return false; }
   networkIndex = static_cast<ESPEasy::net::networkIndex_t>(event->Par1 - 1);

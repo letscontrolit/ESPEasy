@@ -229,15 +229,15 @@ boolean Plugin_043(uint8_t function, struct EventStruct *event, String& string)
     {
       if (P043_MAX_SETTINGS == 0) { P043_MAX_SETTINGS = P043_DEFAULT_MAX; }
 
-      unsigned long clockEvent = (unsigned long)node_time.minute() % 10
-                                 | (unsigned long)(node_time.minute() / 10) << 4
-                                 | (unsigned long)(node_time.hour() % 10) << 8
-                                 | (unsigned long)(node_time.hour() / 10) << 12
-                                 | (unsigned long)node_time.weekday() << 16;
+      uint32_t clockEvent = (uint32_t)node_time.minute() % 10
+                                 | (uint32_t)(node_time.minute() / 10) << 4
+                                 | (uint32_t)(node_time.hour() % 10) << 8
+                                 | (uint32_t)(node_time.hour() / 10) << 12
+                                 | (uint32_t)node_time.weekday() << 16;
 
       for (uint8_t x = 0; x < P043_MAX_SETTINGS; x++)
       {
-        unsigned long clockSet = Cache.getTaskDevicePluginConfigLong(event->TaskIndex, x);
+        uint32_t clockSet = Cache.getTaskDevicePluginConfigLong(event->TaskIndex, x);
 
         # ifndef PLUGIN_BUILD_MINIMAL_OTA
 

@@ -7,14 +7,6 @@
 
 # include "../Helpers/_CPlugin_Helper.h"
 
-// HUM_STAT can be one of:
-
-// 0=Normal
-// 1=Comfortable
-// 2=Dry
-// 3=Wet
-int humStatDomoticz(struct EventStruct *event,
-                       uint8_t                rel_index);
 
 int    mapRSSItoDomoticz();
 
@@ -26,7 +18,7 @@ String formatDomoticzSensorType(struct EventStruct *event);
 bool   deserializeDomoticzJson(const String& json,
                                unsigned int& idx,
                                float       & nvalue,
-                               long        & nvaluealt,
+                               int32_t        & nvaluealt,
                                String      & svalue1,
                                String      & switchtype);
 

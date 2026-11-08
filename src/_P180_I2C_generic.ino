@@ -246,7 +246,7 @@ boolean Plugin_180(uint8_t function, struct EventStruct *event, String& string)
 
       addFormCheckBox(F("Parsing & executing log (INFO)"), F("plog"), P180_LOG_DEBUG == 1);
 
-      for (uint8_t i = 0; i < P180_NR_OUTPUT_VALUES; ++i) {
+      for (uint32_t i = 0; i < P180_NR_OUTPUT_VALUES; ++i) {
         addFormSubHeader(strformat(F("Value %d I2C Commands"), i + 1));
 
         // type
@@ -289,7 +289,7 @@ boolean Plugin_180(uint8_t function, struct EventStruct *event, String& string)
       {
         String strings[P180_CUSTOM_BUFFER_SIZE];
 
-        for (uint8_t varNr = 0; varNr < VARS_PER_TASK; varNr++) {
+        for (uint32_t varNr = 0; varNr < VARS_PER_TASK; varNr++) {
           strings[P180_BUFFER_START_CACHE + varNr] = webArg(getPluginCustomArgName(20 + varNr));    // Name
 
           if (strings[P180_BUFFER_START_CACHE + varNr].isEmpty()) {

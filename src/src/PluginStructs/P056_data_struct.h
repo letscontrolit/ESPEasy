@@ -17,8 +17,8 @@ struct P056_data_struct : public PluginTaskData_base {
   bool  available();
   float GetPM2_5();
   float GetPM10_();
-  bool  ReadAverage(float pm25,
-                    float pm10);
+  bool  ReadAverage(float& pm25,
+                    float& pm10);
   void  SetWorkingPeriod(int minutes);
 
 private:

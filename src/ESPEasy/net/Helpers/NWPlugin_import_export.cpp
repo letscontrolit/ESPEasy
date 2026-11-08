@@ -33,7 +33,7 @@
 namespace ESPEasy {
 namespace net {
 
-ESPEasy_key_value_store_import_export::LabelStringFunction getLabelFnc(ESPEasy::net::nwpluginID_t nwpluginID)
+static ESPEasy_key_value_store_import_export::LabelStringFunction getLabelFnc(ESPEasy::net::nwpluginID_t nwpluginID)
 {
 
   switch (nwpluginID.value)
@@ -67,7 +67,7 @@ ESPEasy_key_value_store_import_export::LabelStringFunction getLabelFnc(ESPEasy::
   return nullptr;
 }
 
-ESPEasy_key_value_store_import_export::NextKeyFunction getNextKeyFnc(ESPEasy::net::nwpluginID_t nwpluginID, bool includeCredentials)
+static ESPEasy_key_value_store_import_export::NextKeyFunction getNextKeyFnc(ESPEasy::net::nwpluginID_t nwpluginID, bool includeCredentials)
 {
 
   switch (nwpluginID.value)

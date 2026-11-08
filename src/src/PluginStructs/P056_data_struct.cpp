@@ -49,7 +49,7 @@ float P056_data_struct::GetPM10_() {
   }
 }
 
-bool P056_data_struct::ReadAverage(float pm25, float pm10) {
+bool P056_data_struct::ReadAverage(float& pm25, float& pm10) {
   if (isInitialized()) {
     return this->SDS->ReadAverage(pm25, pm10);
   } else {

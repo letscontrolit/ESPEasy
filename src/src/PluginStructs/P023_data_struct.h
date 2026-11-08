@@ -53,7 +53,7 @@ struct P023_data_struct : public PluginTaskData_base {
                       String            & string);
 
   # if P023_FEATURE_DISPLAY_PREVIEW
-  bool web_show_values();
+  bool web_show_values(struct EventStruct *event);
 
   void setCurrentText(const String& string,
                       int           X,

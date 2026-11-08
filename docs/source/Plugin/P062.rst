@@ -99,7 +99,7 @@ Sensitivity
 
 * **Release treshold (1..255)** The amount of 'touch' until a touch is no longer registered (released). This is the global configuration value, see below for per-key configuration.
 
-* **Panel sensitivity** When having direct access to the keypad, the sensitivity should be set to Normal. When mounting the keypad behind a sheet of glass or another capacitive inert material, the sensitivity can be set to Extra sensitive, to accomodate for a glass sheet of 4-6 mm.
+* **Panel sensitivity** When having direct access to the keypad, the sensitivity should be set to Normal. When mounting the keypad behind a sheet of glass or another capacitive inert material, the sensitivity can be set to Extra sensitive, to accommodate for a glass sheet of 4-6 mm.
 
 .. image:: P062_PanelSensitivityOptions.png
   :alt: Panel sensitivity options.

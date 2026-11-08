@@ -20,7 +20,7 @@ struct EventStruct;
 // Do NOT change order of members!
 struct C016_binary_element {
   TaskValues_Data_t values{};
-  unsigned long unixTime{};
+  uint32_t unixTime{};
   taskIndex_t   TaskIndex{ INVALID_TASK_INDEX };
   pluginID_t    pluginID{ INVALID_PLUGIN_ID };
   Sensor_VType  sensorType{ Sensor_VType::SENSOR_TYPE_NONE };
@@ -65,7 +65,7 @@ public:
 
   TaskValues_Data_t values{};
 
-  unsigned long unixTime = 0;
+  uint32_t unixTime = 0;
   Sensor_VType sensorType{ Sensor_VType::SENSOR_TYPE_NONE };
   uint8_t valueCount{};
 };

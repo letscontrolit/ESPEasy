@@ -22,6 +22,7 @@ void FactoryDefault_UnitName_NVS::applyToSettings() const {
   Settings.Unit = data[0];
   memcpy(Settings.Name, (char *)(data + 2), sizeof(Settings.Name));
 
+  // TODO TD-er: Settings.UDPPort = getUint16FromBigEndianByteStream(&data[2 + sizeof(Settings.Name)]);
   Settings.UDPPort = data[2 + sizeof(Settings.Name)] << 8 | data[3 + sizeof(Settings.Name)];
 }
 

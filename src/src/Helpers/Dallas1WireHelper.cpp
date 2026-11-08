@@ -30,23 +30,32 @@
 #  define DALLAS_IRAM_ATTR
 # endif // ifdef ESP8266
 # ifdef ESP32
-#  define DALLAS_IRAM_ATTR IRAM_ATTR
+
+// noinline: GCC inlines a function with a single caller into that caller.
+// (e.g. Dallas_read_bit_ISR, as LTO is enabled for ESP32 builds)
+// The timing critical code would then run from flash, as the caller is not in IRAM.
+#  define DALLAS_IRAM_ATTR IRAM_ATTR __attribute__((noinline))
 # endif // ifdef ESP32
 
+
+# ifndef DALLAS_RETRIES
+
+// Reset may fail if a
+#  define DALLAS_RETRIES 3
+# endif // ifndef DALLAS_RETRIES
 
 # include <vector>
 
 unsigned char ROM_NO[8]{ 0 };
 uint8_t LastDiscrepancy{};
 uint8_t LastFamilyDiscrepancy{};
-uint8_t LastDeviceFlag{};
+bool    LastDeviceFlag{};
 
 int32_t usec_release{};
 int32_t presence_start{};
 int32_t presence_end{};
 
-
-void DALLAS_IRAM_ATTR Dallas_pinModeInput(uint32_t gpio_pin_rx, uint32_t gpio_pin_tx)
+static void DALLAS_IRAM_ATTR Dallas_pinModeInput(uint32_t gpio_pin_rx, uint32_t gpio_pin_tx)
 {
   if (gpio_pin_rx == gpio_pin_tx) {
     // let pin float, pull up will raise level
@@ -62,7 +71,7 @@ void DALLAS_IRAM_ATTR Dallas_pinModeInput(uint32_t gpio_pin_rx, uint32_t gpio_pi
   }
 }
 
-void DALLAS_IRAM_ATTR Dallas_pinWrite(uint32_t gpio_pin_rx, uint32_t gpio_pin_tx, bool pinstate)
+static void DALLAS_IRAM_ATTR Dallas_pinWrite(uint32_t gpio_pin_rx, uint32_t gpio_pin_tx, bool pinstate)
 {
   DIRECT_pinWrite_ISR(gpio_pin_tx, pinstate);
 
@@ -131,8 +140,9 @@ int Dallas_measure_rise_time(int8_t gpio_pin_rx, int8_t gpio_pin_tx)
 // References to 1-wire family codes:
 // http://owfs.sourceforge.net/simple_family.html
 // https://github.com/owfs/owfs-doc/wiki/1Wire-Device-List
-const __FlashStringHelper* Dallas_getModel(uint8_t family, const bool hasFixedResolution) {
-  switch (family) {
+static const __FlashStringHelper* Dallas_getModel(uint8_t family, const bool hasFixedResolution) {
+  switch (family)
+  {
     case 0x28: return F("DS18B20");
     case 0x3b: return hasFixedResolution ? F("MAX31826") : F("DS1825");
     case 0x22: return F("DS1822");
@@ -172,7 +182,7 @@ uint64_t Dallas_addr_to_uint64(const uint8_t addr[]) {
   return tmpAddr_64;
 }
 
-void Dallas_uint64_to_addr(uint64_t value, uint8_t addr[]) {
+static void Dallas_uint64_to_addr(uint64_t value, uint8_t addr[]) {
   uint8_t i = 8;
 
   while (i > 0) {
@@ -181,6 +191,189 @@ void Dallas_uint64_to_addr(uint64_t value, uint8_t addr[]) {
     value >>= 8;
   }
 }
+
+static bool Dallas_plugin(pluginID_t pluginID)
+{
+  constexpr pluginID_t PLUGIN_ID_P004_DALLAS_TEMP(4);
+  constexpr pluginID_t PLUGIN_ID_P080_DALLAS_IBUTTON(80);
+  constexpr pluginID_t PLUGIN_ID_P100_DS2423_COUNTER(100);
+
+  return (pluginID == PLUGIN_ID_P004_DALLAS_TEMP) ||
+         (pluginID == PLUGIN_ID_P080_DALLAS_IBUTTON) ||
+         (pluginID == PLUGIN_ID_P100_DS2423_COUNTER);
+}
+
+/*********************************************************************************************\
+*  Dallas Read bit
+\*********************************************************************************************/
+static uint8_t DALLAS_IRAM_ATTR Dallas_read_bit_ISR(
+  int8_t    gpio_pin_rx,
+  int8_t    gpio_pin_tx,
+  uint32_t& start)
+{
+  uint8_t r = 0;
+
+  ISR_noInterrupts();
+
+  Dallas_pinLow;
+  start = micros();
+
+  // delayMicroseconds(1);
+  // Make sure there is at least 5 usec 'low' level.
+  // Minimum state by Infineon, however other brands, like Analog,
+  // claim lower minimum.
+  while (usecPassedSince_fast(start) < 4) {}
+
+  // Set to 'input', state will be pulled high by pull-up resistor
+  // This will take t_RC, which is typically 2 - 3 usec.
+  // We have to wait upto 15 usec to see the pin be pulled up,
+  // otherwise it is apparently be pulled low by the sensor
+  Dallas_pinInput;
+
+  if (Dallas_waitForPinHigh(gpio_pin_rx, start, 15 + usec_release)) {
+    // Wait for max 15 usec to have a high level
+    r = 1;
+    Dallas_pinHigh;
+  }
+
+  ISR_interrupts();
+
+  if (r == 0) {
+    // Wait upto 60 usec to have a high level
+    // Pin should be released within 15 ... 60 usec from start of read slot.
+    // We must make sure we don't try to do a strong pull-up
+    // while the sensor is still trying to pull-down.
+    Dallas_waitForPinHigh(gpio_pin_rx, start, 60);
+  }
+
+  // Pull high again so we can support parasite mode for 1 sensor
+  // Sending out a high signal level is stronger than a pull-up resistor can supply
+  Dallas_pinHigh;
+
+  return r;
+}
+
+static uint8_t Dallas_read_bit(int8_t gpio_pin_rx, int8_t gpio_pin_tx)
+{
+  if (gpio_pin_rx == -1) { return 0; }
+
+  if (gpio_pin_tx == -1) { return 0; }
+
+  uint32_t start;
+  const uint8_t r = Dallas_read_bit_ISR(gpio_pin_rx, gpio_pin_tx, start);
+
+  // Recovery time, make sure we at least wait for 10 usec + RC-rise time
+  delayMicroseconds(2 * usec_release + 10);
+
+  while (usecPassedSince_fast(start) < 60) {
+    // Allow for some
+    // Wait for another 45 usec
+    // Complete read cycle:
+    // LOW: 6 usec
+    // Float: 9 msec
+    // Read value. Typically the sensor keeps the level low for 27 usec.
+    // Wait for 55 usec => complete cycle = 6 + 9 + 55 = 70 usec.
+  }
+  return r;
+}
+
+/*********************************************************************************************\
+*  Dallas Write bit
+\*********************************************************************************************/
+static void DALLAS_IRAM_ATTR Dallas_write_bit_ISR(uint8_t   v,
+                                                  int8_t    gpio_pin_rx,
+                                                  int8_t    gpio_pin_tx,
+                                                  int32_t   low_time,
+                                                  int32_t   high_time,
+                                                  uint32_t& start)
+{
+  ISR_noInterrupts();
+  start = micros();
+  Dallas_pinLow;
+
+  while (usecPassedSince_fast(start) < low_time) {
+    // output remains low
+  }
+  start = micros();
+  Dallas_pinHigh;
+  ISR_interrupts();
+}
+
+static void Dallas_write_bit(uint8_t v, int8_t gpio_pin_rx, int8_t gpio_pin_tx)
+{
+  if (gpio_pin_tx == -1) { return; }
+
+  // Determine times in usec for high and low
+  // write 1: low 6 usec, high 64 usec  (no less than 6 usec low, or else scanning will no longer work)
+  // write 0: low 60 usec, high 20 usec
+  // High time is based on the recovery time, which is detected during reset
+  const int32_t low_time  = (v & 1) ? 7 : 60;
+  const int32_t high_time = (v & 1) ? (40 + usec_release) : (2 * usec_release + 20); // Recovery time
+  uint32_t start          = 0;
+
+  Dallas_write_bit_ISR(v, gpio_pin_rx, gpio_pin_tx, low_time, high_time, start);
+
+  // Minimum Recovery time
+  delayMicroseconds(10);
+
+  while (usecPassedSince_fast(start) <  high_time) {
+    // output remains high
+  }
+}
+
+/*********************************************************************************************\
+*  Dallas Write byte
+\*********************************************************************************************/
+static void Dallas_write(uint8_t ByteToWrite, int8_t gpio_pin_rx, int8_t gpio_pin_tx)
+{
+  uint8_t bitMask;
+
+  Dallas_pinHigh;
+
+# ifdef DEBUG_LOGIC_ANALYZER_PIN
+
+  // DEBUG code using logic analyzer for timings
+  DIRECT_pinWrite(DEBUG_LOGIC_ANALYZER_PIN, 1);
+# endif // ifdef DEBUG_LOGIC_ANALYZER_PIN
+
+  for (bitMask = 0x01; bitMask; bitMask <<= 1) {
+    Dallas_write_bit((bitMask & ByteToWrite) ? 1 : 0, gpio_pin_rx, gpio_pin_tx);
+  }
+# ifdef DEBUG_LOGIC_ANALYZER_PIN
+
+  // DEBUG code using logic analyzer for timings
+  DIRECT_pinWrite(DEBUG_LOGIC_ANALYZER_PIN, 0);
+# endif // ifdef DEBUG_LOGIC_ANALYZER_PIN
+}
+
+/*********************************************************************************************\
+*  Standard function to initiate addressing a sensor.
+\*********************************************************************************************/
+static bool Dallas_address_ROM(const uint8_t ROM[8], int8_t gpio_pin_rx, int8_t gpio_pin_tx)
+{
+  if (!Dallas_reset(gpio_pin_rx, gpio_pin_tx)) { return false; }
+  Dallas_write(0x55, gpio_pin_rx, gpio_pin_tx); // Choose ROM
+
+  for (uint8_t i = 0; i < 8; i++) {
+    Dallas_write(ROM[i], gpio_pin_rx, gpio_pin_tx);
+  }
+  return true;
+}
+
+// read power supply
+# ifndef LIMIT_BUILD_SIZE
+
+static bool Dallas_is_parasite(const uint8_t ROM[8], int8_t gpio_pin_rx, int8_t gpio_pin_tx, bool& isParasitePowered)
+{
+  if (!Dallas_address_ROM(ROM, gpio_pin_rx, gpio_pin_tx)) {
+    return false;
+  }
+  Dallas_write(0xB4, gpio_pin_rx, gpio_pin_tx); // read power supply
+  isParasitePowered = !Dallas_read_bit(gpio_pin_rx, gpio_pin_tx);
+  return isParasitePowered;
+}
+
+# endif // ifndef LIMIT_BUILD_SIZE
 
 void Dallas_addr_selector_webform_load(taskIndex_t TaskIndex, int8_t gpio_pin_rx, int8_t gpio_pin_tx, uint8_t nrVariables) {
   if ((gpio_pin_rx == -1) ||
@@ -191,6 +384,28 @@ void Dallas_addr_selector_webform_load(taskIndex_t TaskIndex, int8_t gpio_pin_rx
 
   if (nrVariables >= VARS_PER_TASK) {
     nrVariables = VARS_PER_TASK;
+  }
+
+  // find all suitable devices
+  std::vector<uint64_t> scan_res;
+  std::vector<bool> fixed_res;
+
+  for (uint8_t attempt = 0; attempt < DALLAS_RETRIES && scan_res.size() == 0; ++attempt)
+  {
+    Dallas_reset_search();
+    uint8_t tmpAddress[8]{};
+
+    while (Dallas_search(tmpAddress, gpio_pin_rx, gpio_pin_tx))
+    {
+      scan_res.push_back(Dallas_addr_to_uint64(tmpAddress));
+      bool hasFixedResolution = false;
+      Dallas_getResolution(tmpAddress, gpio_pin_rx, gpio_pin_tx, hasFixedResolution);
+      fixed_res.push_back(hasFixedResolution);
+    }
+
+    if (scan_res.size() == 0) {
+      delay(5);
+    }
   }
 
   std::map<uint64_t, String> addr_task_map;
@@ -220,20 +435,6 @@ void Dallas_addr_selector_webform_load(taskIndex_t TaskIndex, int8_t gpio_pin_rx
     }
   }
 
-  // find all suitable devices
-  std::vector<uint64_t> scan_res;
-  std::vector<bool> fixed_res;
-
-  Dallas_reset_search();
-  uint8_t tmpAddress[8]{};
-
-  while (Dallas_search(tmpAddress, gpio_pin_rx, gpio_pin_tx))
-  {
-    scan_res.push_back(Dallas_addr_to_uint64(tmpAddress));
-    bool hasFixedResolution = false;
-    Dallas_getResolution(tmpAddress, gpio_pin_rx, gpio_pin_tx, hasFixedResolution);
-    fixed_res.push_back(hasFixedResolution);
-  }
 
   for (uint8_t var_index = 0; var_index < nrVariables; ++var_index) {
     String rowLabel = F("Device Address");
@@ -244,15 +445,21 @@ void Dallas_addr_selector_webform_load(taskIndex_t TaskIndex, int8_t gpio_pin_rx
     }
     addRowLabel(rowLabel);
     addSelector_Head(concat(F("dallas_addr"), static_cast<int>(var_index)));
-    addSelector_Item(F("- None -"), -1, false); // Empty choice
+    addSelector_Item(F("- None -"), 0, false); // Empty choice
+
 
     // get currently saved address
-    uint8_t savedAddress[8];
-    Dallas_plugin_get_addr(savedAddress, TaskIndex, var_index); // Need to fetch only once?
+    uint64_t saved_addr64{};
+    {
+      uint8_t savedAddress[8];
+      Dallas_plugin_get_addr(savedAddress, TaskIndex, var_index); // Need to fetch only once?
+      saved_addr64 = Dallas_addr_to_uint64(savedAddress);
+    }
 
     for (uint8_t index = 0; index < scan_res.size(); ++index) {
+      const uint64_t scan_addr = scan_res[index];
       uint8_t tmpAddress[8]{};
-      Dallas_uint64_to_addr(scan_res[index], tmpAddress);
+      Dallas_uint64_to_addr(scan_addr, tmpAddress);
 
       String option;
 # ifndef LIMIT_BUILD_SIZE
@@ -264,20 +471,21 @@ void Dallas_addr_selector_webform_load(taskIndex_t TaskIndex, int8_t gpio_pin_rx
       }
 # endif // ifndef LIMIT_BUILD_SIZE
       option += Dallas_format_address(tmpAddress, fixed_res[index]);
-      auto it = addr_task_map.find(scan_res[index]);
+      auto it = addr_task_map.find(scan_addr);
 
       if (it != addr_task_map.end()) {
         option += it->second;
       }
 
-      const bool selected = (memcmp(tmpAddress, savedAddress, 8) == 0);
-      addSelector_Item(option, index, selected);
+      const bool selected = scan_addr == saved_addr64;
+      addSelector_Item_index64(option, scan_addr, selected);
     }
     addSelector_Foot();
   }
 }
 
 # ifndef LIMIT_BUILD_SIZE
+
 void Dallas_show_sensor_stats_webform_load(const Dallas_SensorData& sensor_data)
 {
   if (sensor_data.addr == 0) {
@@ -323,6 +531,23 @@ void Dallas_show_sensor_stats_webform_load(const Dallas_SensorData& sensor_data)
 
 # endif // ifndef LIMIT_BUILD_SIZE
 
+static void Dallas_plugin_set_addr(uint8_t addr[], taskIndex_t TaskIndex, uint8_t var_index)
+{
+  if (var_index >= 4) {
+    return;
+  }
+  LoadTaskSettings(TaskIndex);
+  const uint32_t mask = ~(0xFF << (var_index * 8));
+
+  for (uint8_t x = 0; x < 8; x++) {
+    uint32_t value = (uint32_t)ExtraTaskSettings.TaskDevicePluginConfigLong[x];
+    value                                          &= mask;
+    value                                          += (static_cast<uint32_t>(addr[x]) << (var_index * 8));
+    ExtraTaskSettings.TaskDevicePluginConfigLong[x] = (int32_t)value;
+  }
+  Cache.updateExtraTaskSettingsCache();
+}
+
 void Dallas_addr_selector_webform_save(taskIndex_t TaskIndex, int8_t gpio_pin_rx, int8_t gpio_pin_tx, uint8_t nrVariables)
 {
   if ((gpio_pin_rx == -1) ||
@@ -338,24 +563,13 @@ void Dallas_addr_selector_webform_save(taskIndex_t TaskIndex, int8_t gpio_pin_rx
   uint8_t addr[8]{};
 
   for (uint8_t var_index = 0; var_index < nrVariables; ++var_index) {
-    const int selection = getFormItemInt(concat(F("dallas_addr"), static_cast<int>(var_index)), -1);
+    const uint64_t selection = getFormItemUInt64(concat(F("dallas_addr"), static_cast<int>(var_index)), 0);
 
-    if (selection != -1) {
-      Dallas_scan(selection, addr, gpio_pin_rx, gpio_pin_tx);
+    if (selection != 0) {
+      Dallas_uint64_to_addr(selection, addr);
       Dallas_plugin_set_addr(addr, TaskIndex, var_index);
     }
   }
-}
-
-bool Dallas_plugin(pluginID_t pluginID)
-{
-  constexpr pluginID_t PLUGIN_ID_P004_DALLAS_TEMP(4);
-  constexpr pluginID_t PLUGIN_ID_P080_DALLAS_IBUTTON(80);
-  constexpr pluginID_t PLUGIN_ID_P100_DS2423_COUNTER(100);
-
-  return (pluginID == PLUGIN_ID_P004_DALLAS_TEMP) ||
-         (pluginID == PLUGIN_ID_P080_DALLAS_IBUTTON) ||
-         (pluginID == PLUGIN_ID_P100_DS2423_COUNTER);
 }
 
 void Dallas_plugin_get_addr(uint8_t addr[], taskIndex_t TaskIndex, uint8_t var_index)
@@ -368,23 +582,6 @@ void Dallas_plugin_get_addr(uint8_t addr[], taskIndex_t TaskIndex, uint8_t var_i
     uint32_t value = (uint32_t)Cache.getTaskDevicePluginConfigLong(TaskIndex, x);
     addr[x] = static_cast<uint8_t>((value >> (var_index * 8)) & 0xFF);
   }
-}
-
-void Dallas_plugin_set_addr(uint8_t addr[], taskIndex_t TaskIndex, uint8_t var_index)
-{
-  if (var_index >= 4) {
-    return;
-  }
-  LoadTaskSettings(TaskIndex);
-  const uint32_t mask = ~(0xFF << (var_index * 8));
-
-  for (uint8_t x = 0; x < 8; x++) {
-    uint32_t value = (uint32_t)ExtraTaskSettings.TaskDevicePluginConfigLong[x];
-    value                                          &= mask;
-    value                                          += (static_cast<uint32_t>(addr[x]) << (var_index * 8));
-    ExtraTaskSettings.TaskDevicePluginConfigLong[x] = (long)value;
-  }
-  Cache.updateExtraTaskSettingsCache();
 }
 
 /*********************************************************************************************\
@@ -409,20 +606,6 @@ uint8_t Dallas_scan(uint8_t getDeviceROM, uint8_t *ROM, int8_t gpio_pin_rx, int8
   return devCount;
 }
 
-// read power supply
-# ifndef LIMIT_BUILD_SIZE
-bool Dallas_is_parasite(const uint8_t ROM[8], int8_t gpio_pin_rx, int8_t gpio_pin_tx, bool& isParasitePowered)
-{
-  if (!Dallas_address_ROM(ROM, gpio_pin_rx, gpio_pin_tx)) {
-    return false;
-  }
-  Dallas_write(0xB4, gpio_pin_rx, gpio_pin_tx); // read power supply
-  isParasitePowered = !Dallas_read_bit(gpio_pin_rx, gpio_pin_tx);
-  return isParasitePowered;
-}
-
-# endif // ifndef LIMIT_BUILD_SIZE
-
 /*
    void Dallas_startConversion(const uint8_t ROM[8], int8_t gpio_pin_rx, int8_t gpio_pin_tx)
    {
@@ -435,10 +618,92 @@ bool Dallas_is_parasite(const uint8_t ROM[8], int8_t gpio_pin_rx, int8_t gpio_pi
    Dallas_write(0x44, gpio_pin_rx, gpio_pin_tx);
    }
  */
+
+/*********************************************************************************************\
+*  Dallas Read byte
+\*********************************************************************************************/
+static uint8_t Dallas_read(int8_t gpio_pin_rx, int8_t gpio_pin_tx)
+{
+  uint8_t bitMask;
+  uint8_t r = 0;
+
+  for (bitMask = 0x01; bitMask; bitMask <<= 1) {
+    if (Dallas_read_bit(gpio_pin_rx, gpio_pin_tx)) {
+      r |= bitMask;
+    }
+  }
+
+  return r;
+}
+
+/*********************************************************************************************\
+*  Dallas Calculate CRC8 and compare it of addr[0-7] and compares it to addr[8]
+\*********************************************************************************************/
+static bool Dallas_crc8(const uint8_t *addr)
+{
+  uint8_t crc = 0;
+  uint8_t len = 8;
+
+  while (len--)
+  {
+    uint8_t inbyte = *addr++; // from 0 to 7
+
+    for (uint8_t i = 8; i; i--)
+    {
+      uint8_t mix = (crc ^ inbyte) & 0x01;
+      crc >>= 1;
+
+      if (mix) { crc ^= 0x8C; }
+      inbyte >>= 1;
+    }
+  }
+  return crc == *addr; // addr 8
+}
+
+/*********************************************************************************************\
+*  Dallas Calculate CRC16
+\*********************************************************************************************/
+# ifdef USES_P100
+
+static uint16_t Dallas_crc16(const uint8_t *input, uint16_t len, uint16_t crc)
+{
+  static const uint8_t oddparity[16] =
+  { 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0 };
+
+  for (uint16_t i = 0; i < len; i++) {
+    // Even though we're just copying a byte from the input,
+    // we'll be doing 16-bit computation with it.
+    uint16_t cdata = input[i];
+    cdata = (cdata ^ crc) & 0xff;
+    crc >>= 8;
+
+    if (oddparity[cdata & 0x0F] ^ oddparity[cdata >> 4]) {
+      crc ^= 0xC001;
+    }
+
+    cdata <<= 6;
+    crc    ^= cdata;
+    cdata <<= 1;
+    crc    ^= cdata;
+  }
+
+  return crc;
+}
+
+# endif // ifdef USES_P100
+
 /*********************************************************************************************\
 *  Dallas Read temperature from scratchpad
 \*********************************************************************************************/
-Dallas_read_result Dallas_readTemp(const uint8_t ROM[8], float *value, int8_t gpio_pin_rx, int8_t gpio_pin_tx)
+enum class Dallas_read_result {
+  OK,
+  NoReply,
+  CRCerr,
+  PowerOnResetValue
+
+};
+
+static Dallas_read_result Dallas_readTemp(const uint8_t ROM[8], float *value, int8_t gpio_pin_rx, int8_t gpio_pin_tx)
 {
   int16_t DSTemp;
   uint8_t ScratchPad[12]{};
@@ -512,6 +777,7 @@ Dallas_read_result Dallas_readTemp(const uint8_t ROM[8], float *value, int8_t gp
       || (ROM[0] == 0x22)  // DS1822
       || (ROM[0] == 0x42)) // DS28EA00
   {
+    // TODO TD-er: Use getUint16FromLittleEndianByteStream
     DSTemp = (ScratchPad[1] << 8) + ScratchPad[0];
 
     if (DSTemp == 0x550) { // power-on reset value
@@ -534,6 +800,7 @@ Dallas_read_result Dallas_readTemp(const uint8_t ROM[8], float *value, int8_t gp
 }
 
 # ifdef USES_P080
+
 bool Dallas_readiButton(const uint8_t addr[8], int8_t gpio_pin_rx, int8_t gpio_pin_tx, int8_t lastState)
 {
   // maybe this is needed to trigger the reading
@@ -648,7 +915,7 @@ bool Dallas_readCounter(const uint8_t ROM[8], float *value, int8_t gpio_pin_rx, 
 /*********************************************************************************************\
 * Dallas Check for MAX31826 fixed 12 bit resolution, see datasheet page 9 'Memory'
 \*********************************************************************************************/
-bool Dallas_check_hasFixedResolution(const uint8_t ROM[8], const uint8_t ScratchPad[12]) {
+static bool Dallas_check_hasFixedResolution(const uint8_t ROM[8], const uint8_t ScratchPad[12]) {
   return (0x3B == ROM[0]) &&        // MAX31826: Family code 0x3B
          (0xFF == ScratchPad[2]) && // All 1s
          (0xFF == ScratchPad[3]) &&
@@ -770,7 +1037,7 @@ bool Dallas_setResolution(const uint8_t ROM[8], uint8_t res, int8_t gpio_pin_rx,
 
     // save the newly written values to eeprom
     Dallas_write(0x48, gpio_pin_rx, gpio_pin_tx);
-    delay(100);  // <--- added 20ms delay to allow 10ms long EEPROM write operation (as specified by datasheet)
+    delay(100);  // <--- added 20ms delay to allow 10ms int32_t EEPROM write operation (as specified by datasheet)
     Dallas_reset(gpio_pin_rx, gpio_pin_tx);
 
     return true; // new value set
@@ -782,118 +1049,120 @@ bool Dallas_setResolution(const uint8_t ROM[8], uint8_t res, int8_t gpio_pin_rx,
 \*********************************************************************************************/
 uint8_t Dallas_reset(int8_t gpio_pin_rx, int8_t gpio_pin_tx)
 {
-  presence_start = 0;
-  presence_end   = 0;
+  for (uint8_t attempt = 0; attempt < DALLAS_RETRIES; ++attempt) {
+    presence_start = 0;
+    presence_end   = 0;
 
-  // Keep track of usec_release as it is an indicator for the recovery time
-  usec_release = Dallas_measure_rise_time(gpio_pin_rx, gpio_pin_tx);
-  delayMicroseconds(10);
+    // Keep track of usec_release as it is an indicator for the recovery time
+    // Only call ISR_noInterrupts(); after this Dallas_measure_rise_time as it also disables interrupts.
+    usec_release = Dallas_measure_rise_time(gpio_pin_rx, gpio_pin_tx);
+    delayMicroseconds(10);
 
-  ISR_noInterrupts();
+    ISR_noInterrupts();
 
-# ifdef DEBUG_LOGIC_ANALYZER_PIN
-
-  // DEBUG code using logic analyzer for timings
-  DIRECT_pinWrite(DEBUG_LOGIC_ANALYZER_PIN, 1);
-# endif // ifdef DEBUG_LOGIC_ANALYZER_PIN
-
-  Dallas_pinInput;
-
-# ifdef DEBUG_LOGIC_ANALYZER_PIN
-
-  // DEBUG code using logic analyzer for timings
-  DIRECT_pinWrite(DEBUG_LOGIC_ANALYZER_PIN, 0);
-# endif // ifdef DEBUG_LOGIC_ANALYZER_PIN
-
-  // wait until the wire is high... just in case
-  if (Dallas_waitForPinHigh(gpio_pin_rx, micros(), 250)) {
 # ifdef DEBUG_LOGIC_ANALYZER_PIN
 
     // DEBUG code using logic analyzer for timings
     DIRECT_pinWrite(DEBUG_LOGIC_ANALYZER_PIN, 1);
 # endif // ifdef DEBUG_LOGIC_ANALYZER_PIN
-
-    // The master starts a transmission with a reset pulse,
-    // which pulls the wire to 0 volts for at least 480 µs.
-    // This resets communication of every slave device on the bus.
-    Dallas_pinLow;
-
-    delayMicroseconds(480); // t_RSTL 480 ... 960 usec
-
-    // puling pin high will be very fast, so start measurement before pulling high
-    const uint32_t start = micros();
-    Dallas_pinHigh;
-
-    //    digitalWrite(gpio_pin_tx, 1);
-    delayMicroseconds(1);
-
-
-    // Set to 'input', state will be pulled high by pull-up resistor
-    // Or will be kept pulled low by sensor
-    Dallas_pinInput;
+    {
+      Dallas_pinInput;
 
 # ifdef DEBUG_LOGIC_ANALYZER_PIN
 
-    // DEBUG code using logic analyzer for timings
-    DIRECT_pinWrite(DEBUG_LOGIC_ANALYZER_PIN, 0);
+      // DEBUG code using logic analyzer for timings
+      DIRECT_pinWrite(DEBUG_LOGIC_ANALYZER_PIN, 0);
+# endif // ifdef DEBUG_LOGIC_ANALYZER_PIN
+
+      // wait until the wire is high... just in case
+      if (Dallas_waitForPinHigh(gpio_pin_rx, micros(), 250)) {
+# ifdef DEBUG_LOGIC_ANALYZER_PIN
+
+        // DEBUG code using logic analyzer for timings
+        DIRECT_pinWrite(DEBUG_LOGIC_ANALYZER_PIN, 1);
+# endif // ifdef DEBUG_LOGIC_ANALYZER_PIN
+
+        // The master starts a transmission with a reset pulse,
+        // which pulls the wire to 0 volts for at least 480 µs.
+        // This resets communication of every slave device on the bus.
+        Dallas_pinLow;
+
+        delayMicroseconds(480); // t_RSTL 480 ... 960 usec
+
+        // puling pin high will be very fast, so start measurement before pulling high
+        const uint32_t start = micros();
+        Dallas_pinHigh;
+
+        //    digitalWrite(gpio_pin_tx, 1);
+        delayMicroseconds(1);
+
+
+        // Set to 'input', state will be pulled high by pull-up resistor
+        // Or will be kept pulled low by sensor
+        Dallas_pinInput;
+
+# ifdef DEBUG_LOGIC_ANALYZER_PIN
+
+        // DEBUG code using logic analyzer for timings
+        DIRECT_pinWrite(DEBUG_LOGIC_ANALYZER_PIN, 0);
 # endif // ifdef DEBUG_LOGIC_ANALYZER_PIN
 
 
-    // After that, any slave device, if present, shows that it exists with a "presence" pulse:
-    // it holds the bus low for at least 60 µs after the master releases the bus.
-    // This may take about 25 usec after release for present sensors to pull the line low.
-    // Sequence:
-    // - Release => pin high (typ: 1 usec as it was actively pulled high by GPIO)
-    // - Presence condition start (typ: 25 usec after release)
-    // - Presence condition end   (minimal duration 60 usec, typ: 110 usec)
-    // - Wait till 480 usec after release.
+        // After that, any slave device, if present, shows that it exists with a "presence" pulse:
+        // it holds the bus low for at least 60 µs after the master releases the bus.
+        // This may take about 25 usec after release for present sensors to pull the line low.
+        // Sequence:
+        // - Release => pin high (typ: 1 usec as it was actively pulled high by GPIO)
+        // - Presence condition start (typ: 25 usec after release)
+        // - Presence condition end   (minimal duration 60 usec, typ: 110 usec)
+        // - Wait till 480 usec after release.
 
-    // First check will only be to make sure the pin isn't pulled down for whatever reason
-    // Since we set the pin to high, this should return immediately
-    if (Dallas_waitForPinHigh(gpio_pin_rx, start, 15)) {
-      // Signal fall time will be quite fast, so no correction needed
-      presence_start = Dallas_measureWaitForPinLow(gpio_pin_rx, start, 60);
+        // First check will only be to make sure the pin isn't pulled down for whatever reason
+        // Since we set the pin to high, this should return immediately
+        if (Dallas_waitForPinHigh(gpio_pin_rx, start, 15)) {
+          // Signal fall time will be quite fast, so no correction needed
+          presence_start = Dallas_measureWaitForPinLow(gpio_pin_rx, start, 60);
 
-      if (presence_start > 15) {
-        // t_PDH 15 ... 60 usec
-        // t_PDL 60 ... 240 usec
+          if (presence_start > 15) {
+            // t_PDH 15 ... 60 usec
+            // t_PDL 60 ... 240 usec
 
-        // Signal will rise only due to pull-up resistor
-        // Meaning measured duration may be off by usec_release (too long)
-        presence_end = Dallas_measureWaitForPinHigh(gpio_pin_rx, start, 60 + 240);
+            // Signal will rise only due to pull-up resistor
+            // Meaning measured duration may be off by usec_release (too int32_t)
+            presence_end = Dallas_measureWaitForPinHigh(gpio_pin_rx, start, 60 + 240);
 
-        // Set the pin high, just in case we have a (single) parasitic powered sensor
-        Dallas_pinHigh;
+            // Set the pin high, just in case we have a (single) parasitic powered sensor
+            Dallas_pinHigh;
 
-        // Enable interrupts again as soon as timing-critical section is done
-        ISR_interrupts();
+            // Enable interrupts again as soon as timing-critical section is done
+            ISR_interrupts();
 
-        const int32_t presence_duration = presence_end - presence_start;
+            const int32_t presence_duration = presence_end - presence_start;
 
-        if ((presence_duration >= 60) && (presence_duration < (240 /* + usec_release*/))) {
-          // t_RSTH = 480 usec
-          const int32_t timeLeft = 480 - usecPassedSince_fast(start);
+            if ((presence_duration >= 60) && (presence_duration < (240 /* + usec_release*/))) {
+              // t_RSTH = 480 usec
+              const int32_t timeLeft = 480 - usecPassedSince_fast(start);
 
-          if (timeLeft > 0) {
-            delayMicroseconds(timeLeft);
+              if (timeLeft > 0) {
+                delayMicroseconds(timeLeft);
+              }
+
+              return 1;
+            }
           }
-
-          return 1;
         }
-        return 0;
       }
+
+      // Set the pin high, just in case we have a (single) parasitic powered sensor
+      Dallas_pinHigh;
+
+      ISR_interrupts();
     }
+    delay(1);
   }
 
-  // Set the pin high, just in case we have a (single) parasitic powered sensor
-  Dallas_pinHigh;
-
-  ISR_interrupts();
   return 0;
 }
-
-# define FALSE 0
-# define TRUE  1
 
 /*********************************************************************************************\
 *  Dallas Reset Search
@@ -902,7 +1171,7 @@ void Dallas_reset_search()
 {
   // reset the search state
   LastDiscrepancy       = 0;
-  LastDeviceFlag        = FALSE;
+  LastDeviceFlag        = false;
   LastFamilyDiscrepancy = 0;
 
   for (uint8_t i = 0; i < 8; i++) {
@@ -915,16 +1184,14 @@ void Dallas_reset_search()
 \*********************************************************************************************/
 uint8_t Dallas_search(uint8_t *newAddr, int8_t gpio_pin_rx, int8_t gpio_pin_tx)
 {
-  uint8_t id_bit_number;
-  uint8_t last_zero, rom_byte_number, search_result;
-  unsigned char rom_byte_mask, search_direction;
+  unsigned char search_direction;
 
   // initialize for search
-  id_bit_number   = 1;
-  last_zero       = 0;
-  rom_byte_number = 0;
-  rom_byte_mask   = 1;
-  search_result   = 0;
+  uint8_t id_bit_number       = 1;
+  uint8_t last_zero           = 0;
+  uint8_t rom_byte_number     = 0;
+  unsigned char rom_byte_mask = 1;
+  bool search_result          = false;
 
   // if the last call was not the last one
   if (!LastDeviceFlag)
@@ -934,9 +1201,9 @@ uint8_t Dallas_search(uint8_t *newAddr, int8_t gpio_pin_rx, int8_t gpio_pin_tx)
     {
       // reset the search
       LastDiscrepancy       = 0;
-      LastDeviceFlag        = FALSE;
+      LastDeviceFlag        = false;
       LastFamilyDiscrepancy = 0;
-      return FALSE;
+      return false;
     }
 
     // issue the search command
@@ -1020,10 +1287,10 @@ uint8_t Dallas_search(uint8_t *newAddr, int8_t gpio_pin_rx, int8_t gpio_pin_tx)
 
       // check for last device
       if (LastDiscrepancy == 0) {
-        LastDeviceFlag = TRUE;
+        LastDeviceFlag = true;
       }
 
-      search_result = TRUE;
+      search_result = true;
     }
   }
 
@@ -1031,9 +1298,9 @@ uint8_t Dallas_search(uint8_t *newAddr, int8_t gpio_pin_rx, int8_t gpio_pin_tx)
   if (!search_result || !ROM_NO[0])
   {
     LastDiscrepancy       = 0;
-    LastDeviceFlag        = FALSE;
+    LastDeviceFlag        = false;
     LastFamilyDiscrepancy = 0;
-    search_result         = FALSE;
+    search_result         = false;
   }
 
   for (int i = 0; i < 8; i++) {
@@ -1041,235 +1308,6 @@ uint8_t Dallas_search(uint8_t *newAddr, int8_t gpio_pin_rx, int8_t gpio_pin_tx)
   }
 
   return search_result;
-}
-
-# undef FALSE
-# undef TRUE
-
-/*********************************************************************************************\
-*  Dallas Read byte
-\*********************************************************************************************/
-uint8_t Dallas_read(int8_t gpio_pin_rx, int8_t gpio_pin_tx)
-{
-  uint8_t bitMask;
-  uint8_t r = 0;
-
-  for (bitMask = 0x01; bitMask; bitMask <<= 1) {
-    if (Dallas_read_bit(gpio_pin_rx, gpio_pin_tx)) {
-      r |= bitMask;
-    }
-  }
-
-  return r;
-}
-
-/*********************************************************************************************\
-*  Dallas Write byte
-\*********************************************************************************************/
-void Dallas_write(uint8_t ByteToWrite, int8_t gpio_pin_rx, int8_t gpio_pin_tx)
-{
-  uint8_t bitMask;
-
-  Dallas_pinHigh;
-
-# ifdef DEBUG_LOGIC_ANALYZER_PIN
-
-  // DEBUG code using logic analyzer for timings
-  DIRECT_pinWrite(DEBUG_LOGIC_ANALYZER_PIN, 1);
-# endif // ifdef DEBUG_LOGIC_ANALYZER_PIN
-
-  for (bitMask = 0x01; bitMask; bitMask <<= 1) {
-    Dallas_write_bit((bitMask & ByteToWrite) ? 1 : 0, gpio_pin_rx, gpio_pin_tx);
-  }
-# ifdef DEBUG_LOGIC_ANALYZER_PIN
-
-  // DEBUG code using logic analyzer for timings
-  DIRECT_pinWrite(DEBUG_LOGIC_ANALYZER_PIN, 0);
-# endif // ifdef DEBUG_LOGIC_ANALYZER_PIN
-}
-
-/*********************************************************************************************\
-*  Dallas Read bit
-\*********************************************************************************************/
-uint8_t Dallas_read_bit(int8_t gpio_pin_rx, int8_t gpio_pin_tx)
-{
-  if (gpio_pin_rx == -1) { return 0; }
-
-  if (gpio_pin_tx == -1) { return 0; }
-
-  uint32_t start;
-  const uint8_t r = Dallas_read_bit_ISR(gpio_pin_rx, gpio_pin_tx, start);
-
-  // Recovery time, make sure we at least wait for 10 usec + RC-rise time
-  delayMicroseconds(2 * usec_release + 10);
-
-  while (usecPassedSince_fast(start) < 60) {
-    // Allow for some
-    // Wait for another 45 usec
-    // Complete read cycle:
-    // LOW: 6 usec
-    // Float: 9 msec
-    // Read value. Typically the sensor keeps the level low for 27 usec.
-    // Wait for 55 usec => complete cycle = 6 + 9 + 55 = 70 usec.
-  }
-  return r;
-}
-
-uint8_t DALLAS_IRAM_ATTR Dallas_read_bit_ISR(
-  int8_t    gpio_pin_rx,
-  int8_t    gpio_pin_tx,
-  uint32_t& start)
-{
-  uint8_t r = 0;
-
-  ISR_noInterrupts();
-
-  Dallas_pinLow;
-  start = micros();
-
-  // delayMicroseconds(1);
-  // Make sure there is at least 5 usec 'low' level.
-  // Minimum state by Infineon, however other brands, like Analog,
-  // claim lower minimum.
-  while (usecPassedSince_fast(start) < 4) {}
-
-  // Set to 'input', state will be pulled high by pull-up resistor
-  // This will take t_RC, which is typically 2 - 3 usec.
-  // We have to wait upto 15 usec to see the pin be pulled up,
-  // otherwise it is apparently be pulled low by the sensor
-  Dallas_pinInput;
-
-  if (Dallas_waitForPinHigh(gpio_pin_rx, start, 15 + usec_release)) {
-    // Wait for max 15 usec to have a high level
-    r = 1;
-    Dallas_pinHigh;
-  }
-
-  ISR_interrupts();
-
-  if (r == 0) {
-    // Wait upto 60 usec to have a high level
-    // Pin should be released within 15 ... 60 usec from start of read slot.
-    // We must make sure we don't try to do a strong pull-up
-    // while the sensor is still trying to pull-down.
-    Dallas_waitForPinHigh(gpio_pin_rx, start, 60);
-  }
-
-  // Pull high again so we can support parasite mode for 1 sensor
-  // Sending out a high signal level is stronger than a pull-up resistor can supply
-  Dallas_pinHigh;
-
-  return r;
-}
-
-/*********************************************************************************************\
-*  Dallas Write bit
-\*********************************************************************************************/
-void Dallas_write_bit(uint8_t v, int8_t gpio_pin_rx, int8_t gpio_pin_tx)
-{
-  if (gpio_pin_tx == -1) { return; }
-
-  // Determine times in usec for high and low
-  // write 1: low 6 usec, high 64 usec  (no less than 6 usec low, or else scanning will no longer work)
-  // write 0: low 60 usec, high 20 usec
-  // High time is based on the recovery time, which is detected during reset
-  const long low_time  = (v & 1) ? 7 : 60;
-  const long high_time = (v & 1) ? (40 + usec_release) : (2 * usec_release + 20); // Recovery time
-  uint32_t   start     = 0;
-
-  Dallas_write_bit_ISR(v, gpio_pin_rx, gpio_pin_tx, low_time, high_time, start);
-
-  // Minimum Recovery time
-  delayMicroseconds(10);
-
-  while (usecPassedSince_fast(start) <  high_time) {
-    // output remains high
-  }
-}
-
-void DALLAS_IRAM_ATTR Dallas_write_bit_ISR(uint8_t   v,
-                                           int8_t    gpio_pin_rx,
-                                           int8_t    gpio_pin_tx,
-                                           long      low_time,
-                                           long      high_time,
-                                           uint32_t& start)
-{
-  ISR_noInterrupts();
-  start = micros();
-  Dallas_pinLow;
-
-  while (usecPassedSince_fast(start) < low_time) {
-    // output remains low
-  }
-  start = micros();
-  Dallas_pinHigh;
-  ISR_interrupts();
-}
-
-/*********************************************************************************************\
-*  Standard function to initiate addressing a sensor.
-\*********************************************************************************************/
-bool Dallas_address_ROM(const uint8_t ROM[8], int8_t gpio_pin_rx, int8_t gpio_pin_tx)
-{
-  if (!Dallas_reset(gpio_pin_rx, gpio_pin_tx)) { return false; }
-  Dallas_write(0x55, gpio_pin_rx, gpio_pin_tx); // Choose ROM
-
-  for (uint8_t i = 0; i < 8; i++) {
-    Dallas_write(ROM[i], gpio_pin_rx, gpio_pin_tx);
-  }
-  return true;
-}
-
-/*********************************************************************************************\
-*  Dallas Calculate CRC8 and compare it of addr[0-7] and compares it to addr[8]
-\*********************************************************************************************/
-bool Dallas_crc8(const uint8_t *addr)
-{
-  uint8_t crc = 0;
-  uint8_t len = 8;
-
-  while (len--)
-  {
-    uint8_t inbyte = *addr++; // from 0 to 7
-
-    for (uint8_t i = 8; i; i--)
-    {
-      uint8_t mix = (crc ^ inbyte) & 0x01;
-      crc >>= 1;
-
-      if (mix) { crc ^= 0x8C; }
-      inbyte >>= 1;
-    }
-  }
-  return crc == *addr; // addr 8
-}
-
-/*********************************************************************************************\
-*  Dallas Calculate CRC16
-\*********************************************************************************************/
-uint16_t Dallas_crc16(const uint8_t *input, uint16_t len, uint16_t crc)
-{
-  static const uint8_t oddparity[16] =
-  { 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0 };
-
-  for (uint16_t i = 0; i < len; i++) {
-    // Even though we're just copying a byte from the input,
-    // we'll be doing 16-bit computation with it.
-    uint16_t cdata = input[i];
-    cdata = (cdata ^ crc) & 0xff;
-    crc >>= 8;
-
-    if (oddparity[cdata & 0x0F] ^ oddparity[cdata >> 4]) {
-      crc ^= 0xC001;
-    }
-
-    cdata <<= 6;
-    crc    ^= cdata;
-    cdata <<= 1;
-    crc    ^= cdata;
-  }
-
-  return crc;
 }
 
 void Dallas_SensorData::clear() {
@@ -1344,7 +1382,8 @@ bool Dallas_SensorData::collect_value(int8_t gpio_rx, int8_t gpio_tx) {
       --nrRetries;
       Dallas_read_result res = Dallas_readTemp(tmpaddr, &value, gpio_rx, gpio_tx);
 
-      switch (res) {
+      switch (res)
+      {
         case Dallas_read_result::OK:
           ++read_success;
           lastReadError = false;

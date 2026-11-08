@@ -75,14 +75,14 @@ extern boolean printToWebJSON;
 
 
 // FIXME TD-er: Must move this to some proper class (ESPEasy_Scheduler ?)
-extern unsigned long timermqtt_interval;
+extern uint32_t timermqtt_interval;
 
 
-extern unsigned long lastSend;
-extern unsigned long lastWeb;
+extern uint32_t lastSend;
+extern uint32_t lastWeb;
 
-extern unsigned long wdcounter;
-extern unsigned long timerAwakeFromDeepSleep;
+extern uint32_t wdcounter;
+extern uint32_t timerAwakeFromDeepSleep;
 
 
 #if FEATURE_ADC_VCC

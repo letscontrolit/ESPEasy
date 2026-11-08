@@ -111,9 +111,7 @@ void KeyValueWriter_JSON::write(const KeyValueStruct& kv)
 
   if (!kv._key.isEmpty()) {
     auto& pr = getPrint();
-    pr.write('"');
-    kv._key.print(pr);
-    pr.write('"');
+    pr.print(to_json_value(kv._key.toString(), true));
     pr.write(':');
   }
 
@@ -160,6 +158,10 @@ void KeyValueWriter_JSON::write(const KeyValueStruct& kv)
     getPrint().write('\n');
 #endif
   }
+  if (!kv.__id.isEmpty()) {
+    // Write also ID
+    write({ concat(kv._key.toString(), F("_id")), kv.getID() });
+  }
 }
 
 void KeyValueWriter_JSON::writeValue(const ValueStruct& val, bool forceString)
@@ -183,7 +185,7 @@ void KeyValueWriter_JSON::writeValue(const ValueStruct& val, bool forceString)
 
     case ValueStruct::ValueType::Int:
     case ValueStruct::ValueType::UInt:
-      pr.print(str);
+      pr.print(to_json_value(str, val.getPreferredFormat() != ValueStruct::PreferredFormat::Default));
       return;
     case ValueStruct::ValueType::Bool:
 
@@ -197,14 +199,13 @@ void KeyValueWriter_JSON::writeValue(const ValueStruct& val, bool forceString)
     case ValueStruct::ValueType::String:
     case ValueStruct::ValueType::FlashString:
       if (forceString) {
-        String tmp(to_json_value(str));
-        if (!isWrappedWithQuotes(tmp)) {
-          tmp = wrap_String(tmp, '"');
-        }
-        pr.print(tmp);
+        pr.print(to_json_value(str, true));
         return;
       }
       break;
+    case ValueStruct::ValueType::IP:
+        pr.print(to_json_value(str, true));
+        return;
   }
   pr.print(to_json_value(str));
 }

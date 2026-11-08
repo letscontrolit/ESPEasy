@@ -62,7 +62,7 @@
 #include "../Helpers/StringConverter.h"
 
 
-bool checkNrArguments(const char *cmd, const String& Line, int nrArguments) {
+static bool checkNrArguments(const char *cmd, const String& Line, int nrArguments) {
   if (nrArguments < 0) { return true; }
 
   // 0 arguments means argument on pos1 is valid (the command) and argpos 2 should not be there.
@@ -129,7 +129,7 @@ bool checkNrArguments(const char *cmd, const String& Line, int nrArguments) {
   return true;
 }
 
-bool checkSourceFlags(EventValueSource::Enum source, EventValueSourceGroup::Enum group) {
+static bool checkSourceFlags(EventValueSource::Enum source, EventValueSourceGroup::Enum group) {
   if (EventValueSource::partOfGroup(source, group)) {
     return true;
   }
@@ -174,7 +174,7 @@ bool InternalCommands::do_command_case_all_restricted(command_function pFunc,
   return do_command_case(_data,  pFunc, nrArguments, EventValueSourceGroup::Enum::RESTRICTED);
 }
 
-bool do_command_case_check(command_case_data         & data,
+static bool do_command_case_check(command_case_data         & data,
                            int                         nrArguments,
                            EventValueSourceGroup::Enum group)
 {

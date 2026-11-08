@@ -11,10 +11,10 @@
 
 String Command_UDP_Port(struct EventStruct *event, const char *Line)
 {
-  return Command_GetORSetBool(event, F("UDPPort:"),
-                              Line,
-                              (bool *)&Settings.UDPPort,
-                              1);
+  return Command_GetORSetUInt32_t(event, F("UDPPort:"),
+                                  Line,
+                                  &Settings.UDPPort,
+                                  1);
 }
 
 #if FEATURE_ESPEASY_P2P

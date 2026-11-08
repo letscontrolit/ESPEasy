@@ -5,8 +5,8 @@
 #include "../Globals/Settings.h"
 
 
-String SerialWriteBuffer_t::colorize(const String& str) const {
 #if FEATURE_COLORIZE_CONSOLE_LOGS
+String SerialWriteBuffer_t::colorize(const String& str) const {
   if (!Settings.ColorizeSerialLog()) return str;
   const __FlashStringHelper *format = F("%s");
 
@@ -31,10 +31,8 @@ String SerialWriteBuffer_t::colorize(const String& str) const {
 
   }
   return strformat(format, str.c_str());
-#else // if FEATURE_COLORIZE_CONSOLE_LOGS
-  return str;
-#endif // if FEATURE_COLORIZE_CONSOLE_LOGS
 }
+#endif // if FEATURE_COLORIZE_CONSOLE_LOGS
 
 
 size_t SerialWriteBuffer_t::write_skipping(Print& stream)
@@ -49,7 +47,11 @@ void SerialWriteBuffer_t::prepare_prefix()
   _prefix = format_msec_duration(_timestamp);
 
   if (_loglevel == LOG_LEVEL_NONE) {
+#if FEATURE_COLORIZE_CONSOLE_LOGS
     _prefix += colorize(F(" : >  "));
+#else
+    _prefix += F(" : >  ");
+#endif
   } else {
       #ifndef LIMIT_BUILD_SIZE
     _prefix += strformat(F(" : (%d) "), FreeMem());
@@ -59,10 +61,12 @@ void SerialWriteBuffer_t::prepare_prefix()
     {
       String loglevelDisplayString = getLogLevelDisplayString(_loglevel);
 
-      while (loglevelDisplayString.length() < LOG_LEVEL_MAX_STRING_LENGTH) {
-        loglevelDisplayString += ' ';
-      }
+      padToMinimumLength(loglevelDisplayString, LOG_LEVEL_MAX_STRING_LENGTH);
+#if FEATURE_COLORIZE_CONSOLE_LOGS
       _prefix += colorize(loglevelDisplayString);
+#else
+      _prefix += loglevelDisplayString;
+#endif
     }
     _prefix += F(" | ");
   }

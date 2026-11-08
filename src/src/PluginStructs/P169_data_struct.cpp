@@ -616,7 +616,7 @@ void P169_data_struct::adjustForDisturbances(struct EventStruct *event)
                  F("AS3935: Watchdog Threshold and Spike Rejection settings are already maxed out. Freq = %d"),
                  frequency));
       }
-    } else if (timePassedSince(_sense_adj_last) > static_cast<long>(_sense_increase_interval))
+    } else if (timePassedSince(_sense_adj_last) > static_cast<int32_t>(_sense_increase_interval))
     {
       if (loglevelActiveFor(LOG_LEVEL_INFO)) {
         addLog(LOG_LEVEL_INFO, strformat(
@@ -692,7 +692,7 @@ void P169_data_struct::tryIncreasedSensitivity(struct EventStruct *event)
 
   // increase sensor sensitivity every once in a while. _sense_increase_interval controls how quickly the code
   // attempts to increase sensitivity.
-  if (timePassedSince(_sense_adj_last) > static_cast<long>(_sense_increase_interval))
+  if (timePassedSince(_sense_adj_last) > static_cast<int32_t>(_sense_increase_interval))
   {
     _sense_adj_last = millis();
 

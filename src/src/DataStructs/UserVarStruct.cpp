@@ -45,7 +45,7 @@ float UserVarStruct::operator[](unsigned int index) const
   }
 }
 
-unsigned long UserVarStruct::getSensorTypeLong(taskIndex_t taskIndex, bool raw) const
+uint32_t UserVarStruct::getSensorTypeLong(taskIndex_t taskIndex, bool raw) const
 {
   const TaskValues_Data_t *data = getRawOrComputed(taskIndex, 0, Sensor_VType::SENSOR_TYPE_ULONG, raw);
 
@@ -55,7 +55,7 @@ unsigned long UserVarStruct::getSensorTypeLong(taskIndex_t taskIndex, bool raw) 
   return 0u;
 }
 
-void UserVarStruct::setSensorTypeLong(taskIndex_t taskIndex, unsigned long value)
+void UserVarStruct::setSensorTypeLong(taskIndex_t taskIndex, uint32_t value)
 {
   if (validTaskIndex(taskIndex)) {
     if (Cache.hasFormula(taskIndex, 0)) {

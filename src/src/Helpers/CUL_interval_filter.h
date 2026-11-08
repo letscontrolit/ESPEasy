@@ -13,10 +13,10 @@
 struct CUL_time_filter_struct {
   CUL_time_filter_struct() = default;
   CUL_time_filter_struct(uint32_t      checksum,
-                         unsigned long UnixTimeExpiration);
+                         uint32_t UnixTimeExpiration);
 
   uint32_t      _checksum{};
-  unsigned long _UnixTimeExpiration{};
+  uint32_t _UnixTimeExpiration{};
 };
 
 typedef uint32_t mBusSerial;

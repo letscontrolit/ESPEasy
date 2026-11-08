@@ -193,13 +193,13 @@ bool write_Eth_Show_Connected(const ETHClass& eth, KeyValueWriter *writer)
 
   if (writer->summaryValueOnly()) {
     String s = concat(
-      String(eth.linkSpeed()),
+      static_cast<uint32_t>(eth.linkSpeed()),
       eth.fullDuplex() ? F("Mbps FD") : F("Mbps HD"));
 
     if (!eth.autoNegotiation()) { s += F("(manual)"); }
     writer->write({ EMPTY_STRING, s });
   } else {
-    KeyValueStruct kv(F("Link Speed"), eth.linkSpeed());
+    KeyValueStruct kv(F("Link Speed"), static_cast<uint32_t>(eth.linkSpeed()));
 # if FEATURE_TASKVALUE_UNIT_OF_MEASURE
     kv.setUnit(UOM_Mbps);
 # endif

@@ -7,8 +7,6 @@
 
 //-V::569
 
-String generate_external_URL(const String& fname);
-
 void serve_favicon();
 
 enum class JSfiles_e {
@@ -414,7 +412,7 @@ static const char DATA_UPDATE_SENSOR_VALUES_DEVICE_PAGE_JS[] PROGMEM = {
   "a=elId('value_'+l);"
   "a&&(a.innerHTML=s);"
   "const u=elId('valuename_'+l);"
-  "u&&(u.innerHTML=r.Name+':')"
+  "u&&(u.innerHTML=r.Name)"
   "}}loopDeLoop(e)})"
   ".catch(e=>{loopDeLoop(5000)})},e)}"
 };

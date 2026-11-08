@@ -85,7 +85,7 @@ bool CPlugin_002(CPlugin::Function function, struct EventStruct *event, String& 
       if (validControllerIndex(ControllerID)) {
         unsigned int idx;
         float  nvalue;
-        long   nvaluealt;
+        int32_t   nvaluealt;
         String svalue1, switchtype;
 
         if (deserializeDomoticzJson(event->String2, idx, nvalue, nvaluealt, svalue1, switchtype)) {

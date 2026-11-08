@@ -48,7 +48,7 @@ struct __attribute__((__packed__)) NodeStruct
 
   uint32_t getAge() const;
 
-  bool          isExpired() const;
+  bool          hasExpired() const;
 
   float         getLoad() const;
 

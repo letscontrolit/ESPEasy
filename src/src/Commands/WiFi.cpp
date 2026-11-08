@@ -310,7 +310,7 @@ String Command_Wifi_OTA_hosted_mcu(
 
         // Prevent reading more data than expected
         if (size > len) {
-          addLog(LOG_LEVEL_ERROR, strformat(F("ERROR: Update received extra bytes: %lu!"), (unsigned long)size - len));
+          addLog(LOG_LEVEL_ERROR, strformat(F("ERROR: Update received extra bytes: %lu!"), (uint32_t)size - len));
           break;
         }
 

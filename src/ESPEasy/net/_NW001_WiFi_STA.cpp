@@ -221,10 +221,8 @@ bool NWPlugin_001(NWPlugin::Function function, EventStruct *event, String& strin
 
               KeyValueStruct kv(
                 F("WiFi TSF time"),
-                concat(
-                  secondsToDayHourMinuteSecond(micros_to_sec_usec(tsf_time, tsf_usec)),
-                  strformat(F(".%06u"), tsf_usec))
-                );
+                secondsToDayHourMinuteSecond(micros_to_sec_usec(tsf_time, tsf_usec)) +
+                strformat(F(".%06u"), tsf_usec));
 #  if FEATURE_TASKVALUE_UNIT_OF_MEASURE
               kv.setUnit(UOM_usec);
 #  endif

@@ -745,19 +745,19 @@ bool PluginCall(uint8_t Function, struct EventStruct *event, String& str)
               if (taskIndex < 9) { log += ' '; }
               log += taskIndex + 1;
 
-              while (log.length() < 30) { log += ' '; }
+              padToMinimumLength(log, 30);
               log += F("Free mem after: ");
               log += freemem_end;
 
-              while (log.length() < 53) { log += ' '; }
+              padToMinimumLength(log, 53);
               log += F("plugin: ");
               log += freemem_begin - freemem_end;
 
-              while (log.length() < 67) { log += ' '; }
+              padToMinimumLength(log, 67);
 
               log += Settings.TaskDeviceEnabled[taskIndex] ? F("[ena]") : F("[dis]");
 
-              while (log.length() < 73) { log += ' '; }
+              padToMinimumLength(log, 73);
               log += getPluginNameFromDeviceIndex(getDeviceIndex_from_TaskIndex(taskIndex));
 
               addLogMove(LOG_LEVEL_DEBUG, log);

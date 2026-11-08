@@ -50,7 +50,7 @@ struct C023_ConfigStruct
   char          DeviceAddr[C023_DEVICE_ADDR_LEN]                = { 0 };
   char          NetworkSessionKey[C023_NETWORK_SESSION_KEY_LEN] = { 0 };
   char          AppSessionKey[C023_APP_SESSION_KEY_LEN]         = { 0 };
-  unsigned long baudrate                                        = 9600;
+  uint32_t baudrate                                        = 9600;
   int8_t        rxpin                                           = -1;
   int8_t        txpin                                           = -1;
   int8_t        resetpin                                        = -1;

@@ -11,6 +11,7 @@
 #include "../ESPEasyCore/ESPEasy_Log.h"
 #include "../ESPEasyCore/ESPEasy_backgroundtasks.h"
 #include "../Globals/ESPEasy_Scheduler.h"
+#include "../Globals/ESPEasy_time.h"
 #include "../Globals/EventQueue.h"
 #include "../Globals/RTC.h"
 #include "../Globals/Settings.h"
@@ -25,7 +26,7 @@
 #include "../Helpers/StringConverter.h"
 #include "../WebServer/ESPEasy_WebServer.h"
 
-void updateLoopStats() {
+static void updateLoopStats() {
   ++loopCounter;
   ++loopCounter_full;
 
@@ -46,12 +47,12 @@ void updateLoopStats() {
     return; // No loop should take > 10 sec.
   }
 
-  if (shortestLoop > static_cast<unsigned long>(usecSince)) {
+  if (shortestLoop > static_cast<uint32_t>(usecSince)) {
     shortestLoop   = usecSince;
     loopCounterMax = 30 * 1000000 / usecSince;
   }
 
-  if (longestLoop < static_cast<unsigned long>(usecSince)) {
+  if (longestLoop < static_cast<uint32_t>(usecSince)) {
     longestLoop = usecSince;
   }
 }
@@ -84,6 +85,7 @@ void ESPEasy_loop()
     #endif
     firstLoop               = false;
     timerAwakeFromDeepSleep = millis(); // Allow to run for "awake" number of seconds, now we have wifi.
+    Scheduler.sendGratuitousARP_now();
 
     // schedule_all_task_device_timers(); // Disabled for now, since we are now using queues for controllers.
     if (Settings.UseRules && isDeepSleepEnabled())
@@ -103,6 +105,7 @@ void ESPEasy_loop()
     #if FEATURE_ESPEASY_P2P
     sendSysInfoUDP(1);
     #endif
+    node_time.initTime();
   }
 
   setWebserverRunning(ESPEasy::net::NWPluginCall(NWPlugin::Function::NWPLUGIN_WEBSERVER_SHOULD_RUN));
@@ -186,5 +189,10 @@ void ESPEasy_loop()
     prepare_deepSleep(Settings.Delay);
 
     // deepsleep will never return, its a special kind of reboot
+  }
+
+  if (firstLoopConnectionsEstablished) {
+    // FIXME TD-er: First NTP call may fail, so we make several here.
+    node_time.initTime();
   }
 }

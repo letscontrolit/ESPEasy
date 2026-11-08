@@ -12,82 +12,7 @@
 #if FEATURE_JSON_PARSE
 # include "../Helpers/StringConverter.h"
 
-// Private for now
-String getJsonValue(JsonVariant element,
-                    bool        asJson);
-
-String getJsonValue(DynamicJsonDocument *root,
-                    String               key,
-                    bool                 asJson) {
-  // Process the key and navigate the JSON
-  JsonVariant value = *root;
-  size_t start      = 0;
-  size_t end;
-  String result;
-
-  while ((end = key.indexOf('.', start)) != -1) {
-    const String part = key.substring(start, end);
-    start = end + 1;
-
-    // Look for an array e.g., "result[0]" → object "result", index 0
-    const int bracketStart = part.indexOf('[');
-
-    if (bracketStart != -1) {
-      const String objectName = part.substring(0, bracketStart);
-      const String indexStr   = part.substring(bracketStart + 1, part.indexOf(']', bracketStart));
-
-      if (objectName.length() > 0) {
-        value = value[objectName]; // Access the object
-      }
-
-      if (value.is<JsonArray>()) {
-        value = value[indexStr.toInt()];
-      } else {
-        value = value[indexStr]; // fallback if not actually array
-      }
-    } else {
-      // Normal object access without array
-      value = value[part];
-    }
-
-    if (value.isNull()) {
-      break; // Key path is invalid
-    }
-  }
-
-  if (!value.isNull()) {
-    const String lastPart     = key.substring(start);
-    const int    bracketStart = lastPart.indexOf('[');
-
-    if (bracketStart != -1) {
-      const String objectName = lastPart.substring(0, bracketStart);
-      const String indexStr   = lastPart.substring(bracketStart + 1, lastPart.indexOf(']', bracketStart));
-
-      if (objectName.length() > 0) {
-        value = value[objectName];
-      }
-
-      if (value.is<JsonArray>()) {
-        value = value[indexStr.toInt()];
-      } else {
-        value = value[indexStr];
-      }
-    } else {
-      value = value[lastPart];
-    }
-  }
-
-  // Append the value to the CSV string if it exists
-  if (!value.isNull()) {
-    result += getJsonValue(value, asJson);
-  } else {
-    result += F("null");
-  }
-
-  return result;
-}
-
-String getJsonValue(JsonVariant value, bool asJson) {
+static String getJsonValue(JsonVariant value, bool asJson) {
   # if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
   const int nr_decimals = ESPEASY_DOUBLE_NR_DECIMALS;
   # else // ifdef FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
@@ -165,6 +90,77 @@ String getJsonValue(JsonVariant value, bool asJson) {
 
   } else {
     result += F("unknown");
+  }
+
+  return result;
+}
+
+String getJsonValue(DynamicJsonDocument *root,
+                    String               key,
+                    bool                 asJson) {
+  // Process the key and navigate the JSON
+  JsonVariant value = *root;
+  size_t start      = 0;
+  size_t end;
+  String result;
+
+  while ((end = key.indexOf('.', start)) != -1) {
+    const String part = key.substring(start, end);
+    start = end + 1;
+
+    // Look for an array e.g., "result[0]" → object "result", index 0
+    const int bracketStart = part.indexOf('[');
+
+    if (bracketStart != -1) {
+      const String objectName = part.substring(0, bracketStart);
+      const String indexStr   = part.substring(bracketStart + 1, part.indexOf(']', bracketStart));
+
+      if (objectName.length() > 0) {
+        value = value[objectName]; // Access the object
+      }
+
+      if (value.is<JsonArray>()) {
+        value = value[indexStr.toInt()];
+      } else {
+        value = value[indexStr]; // fallback if not actually array
+      }
+    } else {
+      // Normal object access without array
+      value = value[part];
+    }
+
+    if (value.isNull()) {
+      break; // Key path is invalid
+    }
+  }
+
+  if (!value.isNull()) {
+    const String lastPart     = key.substring(start);
+    const int    bracketStart = lastPart.indexOf('[');
+
+    if (bracketStart != -1) {
+      const String objectName = lastPart.substring(0, bracketStart);
+      const String indexStr   = lastPart.substring(bracketStart + 1, lastPart.indexOf(']', bracketStart));
+
+      if (objectName.length() > 0) {
+        value = value[objectName];
+      }
+
+      if (value.is<JsonArray>()) {
+        value = value[indexStr.toInt()];
+      } else {
+        value = value[indexStr];
+      }
+    } else {
+      value = value[lastPart];
+    }
+  }
+
+  // Append the value to the CSV string if it exists
+  if (!value.isNull()) {
+    result += getJsonValue(value, asJson);
+  } else {
+    result += F("null");
   }
 
   return result;

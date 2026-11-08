@@ -11,6 +11,7 @@
 // This task reads data from the MQTT Import input stream and saves the value
 
 /**
+ * 2026-09-11 tonhuisman: Process variables to allow for longer JSON attribute names
  * 2026-08-02 tonhuisman: Add better support for JSON parsing, that handles multiple levels and arrays
  * 2025-08-20 tonhuisman: Generate events with numeric values using the configured decimals setting.
  * 2025-06-14 tonhuisman: Add support for Custom Value Type per task value
@@ -555,7 +556,12 @@ boolean Plugin_037(uint8_t function, struct EventStruct *event, String& string)
                 jsonAttribute.trim();
 
                 if (!jsonAttribute.isEmpty()) {
+                  #  if FEATURE_STRING_VARIABLES
+                  key = parseTemplate(jsonAttribute); // Process variables to allow for longer JSON attribute names
+                  key.trim();                         // The JSON parser is quite picky about extra spaces...
+                  #  else // if FEATURE_STRING_VARIABLES
                   key = jsonAttribute;
+                  #  endif // if FEATURE_STRING_VARIABLES
 
                   #  if FEATURE_JSON_PARSE
                   Payload = getJsonValue(P037_data->root, key, false);

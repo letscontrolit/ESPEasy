@@ -371,25 +371,26 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
               }
             }
           }
+          const bool forController = valueName.indexOf(F(".controller")) == 8;
           if (!isHandled && valueName.startsWith(F("settings."))) {  // Task settings values
             String value;
-            if (valueName.endsWith(F(".enabled"))) {           // Task state
+            if (!forController && valueName.endsWith(F(".enabled"))) { // Task state
               value = Settings.TaskDeviceEnabled[taskIndex] ? '1' : '0';
             } else if (valueName.endsWith(F(".interval"))) {   // Task interval
               value = Settings.TaskDeviceTimer[taskIndex];
             } else if (valueName.endsWith(F(".valuecount"))) { // Task value count
               value = getValueCountForTask(taskIndex);
-            } else if ((valueName.indexOf(F(".controller")) == 8) && valueName.length() >= 20) { // Task controller values
-              String ctrl = valueName.substring(19, 20);
+            } else if (forController && valueName.length() >= 20) { // Task controller values
+              const String ctrl = valueName.substring(19, 20);
               int32_t ctrlNr = 0;
-              if (validIntFromString(ctrl, ctrlNr) && (ctrlNr >= 1) && (ctrlNr <= CONTROLLER_MAX) && 
-                  Settings.ControllerEnabled[ctrlNr - 1]) { // Controller nr. valid and enabled
+              if (validIntFromString(ctrl, ctrlNr) && (ctrlNr >= 1) && (ctrlNr <= CONTROLLER_MAX)) {
+                const bool ctrlEnabled = Settings.ControllerEnabled[ctrlNr - 1]; // Controller nr. valid and enabled
                 if (valueName.endsWith(F(".enabled"))) {    // Task-controller enabled
-                  value = Settings.TaskDeviceSendData[ctrlNr - 1][taskIndex];
-                } else if (valueName.endsWith(F(".idx"))) { // Task-controller idx value
+                  value = ctrlEnabled ? Settings.TaskDeviceSendData[ctrlNr - 1][taskIndex] : 0;
+                } else if (ctrlEnabled && valueName.endsWith(F(".idx"))) { // Task-controller idx value
                   protocolIndex_t ProtocolIndex = getProtocolIndex_from_ControllerIndex(ctrlNr - 1);
 
-                  if (validProtocolIndex(ProtocolIndex) && 
+                  if (validProtocolIndex(ProtocolIndex) &&
                       getProtocolStruct(ProtocolIndex).usesID && (Settings.Protocol[ctrlNr - 1] != 0)) {
                     value = Settings.TaskDeviceID[ctrlNr - 1][taskIndex];
                   }
@@ -522,9 +523,7 @@ String parseTemplate_padded(String& tmpString, uint8_t minimal_lineSize, bool us
   parse_string_commands(newString);
 
   // padding spaces
-  while (newString.length() < minimal_lineSize) {
-    newString += ' ';
-  }
+  padToMinimumLength(newString, minimal_lineSize);
 
   STOP_TIMER(PARSE_TEMPLATE_PADDED);
   #ifndef BUILD_NO_RAM_TRACKER
@@ -800,6 +799,7 @@ void transformValue(
 
               if (valueJustLength > 1)
               {
+                // TODO TD-er: Check if we can use prefixToMinimumLength here
                 if (isDigit(valueJust[1]))                          // Check Pn where n is between 0 and 9
                 {
                   int filler = valueJust[1] - value.length() - '0'; // char '0' = 48; char '9' = 58
@@ -814,6 +814,7 @@ void transformValue(
 
               if (valueJustLength > 1)
               {
+                // TODO TD-er: Check if we can use padToMinimumLength here
                 if (isDigit(valueJust[1]))                          // Check Sn where n is between 0 and 9
                 {
                   int filler = valueJust[1] - value.length() - '0'; // 48
@@ -888,6 +889,7 @@ void transformValue(
 
       if (rightJustify)
       {
+        // TODO TD-er: Check if we can use prefixToMinimumLength here
         int filler = lineSize - newString.length() - value.length() - tmpString.length();
 
         for (uint8_t f = 0; f < filler; f++) {
@@ -932,6 +934,7 @@ void transformValue(
 // Return INVALID_TASK_INDEX when not found, else return taskIndex
 taskIndex_t findTaskIndexByName(String deviceName, bool allowDisabled)
 {
+  deviceName.trim();
   deviceName.toLowerCase();
   // cache this, since LoadTaskSettings does take some time.
   auto result = Cache.taskIndexName.find(deviceName);
@@ -1105,7 +1108,18 @@ void parseCommandString(struct EventStruct *event, const String& string)
   checkRAM(F("parseCommandString"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
 
-  for (uint8_t i = 0; i < 5; ++i) {
-    event->ParN[i] = parseCommandArgumentInt(string, i + 1);
+  CommandArgParser args;
+  args.readCommand(string);
+
+#ifndef BUILD_NO_DEBUG
+  args.debug(F("parseCommandString"), LOG_LEVEL_DEBUG);
+#endif // ifndef BUILD_NO_DEBUG
+
+
+  constexpr uint8_t nrInts = NR_ELEMENTS(event->ParN);
+
+  for (uint8_t i = 0; i < nrInts; ++i) {
+    event->ParN[i] = args.getArgInt(i);
+//    parseCommandArgumentInt(string, i + 1);
   }
 }

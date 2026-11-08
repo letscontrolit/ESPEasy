@@ -868,7 +868,7 @@ bool P128_data_struct::plugin_fifty_per_second(struct EventStruct *event) {
 
 void P128_data_struct::fade(void) {
   for (int pixel = 0; pixel < pixelCount; pixel++) {
-    long  counter  = 20 * (counter20ms - starttime[pixel]);
+    int32_t  counter  = 20 * (counter20ms - starttime[pixel]);
     float progress = (float)counter / (float)fadetime;
     progress = constrain(progress, 0.0f, 1.0f);
 
@@ -918,7 +918,7 @@ void P128_data_struct::colorfade(void) {
 }
 
 void P128_data_struct::wipe(void) {
-  if (counter20ms % (unsigned long)(SPEED_MAX / abs(speed)) == 0) {
+  if (counter20ms % (uint32_t)(SPEED_MAX / abs(speed)) == 0) {
     if (speed > 0) {
       Plugin_128_pixels->SetPixelColor(_counter_mode_step, rrggbb);
 
@@ -935,7 +935,7 @@ void P128_data_struct::wipe(void) {
 }
 
 void P128_data_struct::dualwipe(void) {
-  if (counter20ms % (unsigned long)(SPEED_MAX / abs(speed)) == 0) {
+  if (counter20ms % (uint32_t)(SPEED_MAX / abs(speed)) == 0) {
     if (speed > 0) {
       const int i = abs(static_cast<int>(_counter_mode_step - pixelCount));
       Plugin_128_pixels->SetPixelColor(_counter_mode_step, rrggbb);
@@ -1033,7 +1033,7 @@ void P128_data_struct::faketv(void) {
  * Cycles a rainbow over the entire string of LEDs.
  */
 void P128_data_struct::rainbow(void) {
-  const long  counter  = 20 * (counter20ms - starttimerb);
+  const int32_t  counter  = 20 * (counter20ms - starttimerb);
   const float progress = (float)counter / (float)fadetime;
 
   if (fadeIn == true) {
@@ -1073,7 +1073,7 @@ uint32_t P128_data_struct::Wheel(uint8_t pos) {
 
 // Larson Scanner K.I.T.T.
 void P128_data_struct::kitt(void) {
-  if (counter20ms % (unsigned long)(SPEED_MAX / abs(speed)) == 0) {
+  if (counter20ms % (uint32_t)(SPEED_MAX / abs(speed)) == 0) {
     for (uint16_t i = 0; i < pixelCount; i++) {
       # if defined(RGBW) || defined(GRBW)
       RgbwColor px_rgb = Plugin_128_pixels->GetPixelColor(i);
@@ -1113,7 +1113,7 @@ void P128_data_struct::kitt(void) {
 
 // Firing comets from one end.
 void P128_data_struct::comet(void) {
-  if (counter20ms % (unsigned long)(SPEED_MAX / abs(speed)) == 0) {
+  if (counter20ms % (uint32_t)(SPEED_MAX / abs(speed)) == 0) {
     for (uint16_t i = 0; i < pixelCount; i++) {
       const uint16_t pixelIndex = (speed > 0) ? i : pixelCount - i - 1;
       # if defined(RGBW) || defined(GRBW)
@@ -1149,7 +1149,7 @@ void P128_data_struct::comet(void) {
 
 // Theatre lights
 void P128_data_struct::theatre(void) {
-  if ((counter20ms % (unsigned long)(SPEED_MAX / abs(speed)) == 0) && (speed != 0)) {
+  if ((counter20ms % (uint32_t)(SPEED_MAX / abs(speed)) == 0) && (speed != 0)) {
     if (speed > 0) {
       Plugin_128_pixels->RotateLeft(1, 0, (pixelCount / count) * count - 1);
     } else {
@@ -1162,7 +1162,7 @@ void P128_data_struct::theatre(void) {
  * Runs a single pixel back and forth.
  */
 void P128_data_struct::scan(void) {
-  if ((counter20ms % (unsigned long)(SPEED_MAX / abs(speed)) == 0) && (speed != 0)) {
+  if ((counter20ms % (uint32_t)(SPEED_MAX / abs(speed)) == 0) && (speed != 0)) {
     if (_counter_mode_step >= uint16_t(((ledf - ledi) * 2) - 2)) {
       _counter_mode_step = 0;
     }
@@ -1183,7 +1183,7 @@ void P128_data_struct::scan(void) {
  * Runs two pixel back and forth in opposite directions.
  */
 void P128_data_struct::dualscan(void) {
-  if ((counter20ms % (unsigned long)(SPEED_MAX / abs(speed)) == 0) && (speed != 0)) {
+  if ((counter20ms % (uint32_t)(SPEED_MAX / abs(speed)) == 0) && (speed != 0)) {
     if (_counter_mode_step >= uint16_t(((ledf - ledi) * 2) - 2)) {
       _counter_mode_step = 0;
     }
@@ -1205,7 +1205,7 @@ void P128_data_struct::dualscan(void) {
  * Inspired by www.tweaking4all.com/hardware/arduino/arduino-led-strip-effects/
  */
 void P128_data_struct::twinkle(void) {
-  if ((counter20ms % (unsigned long)(SPEED_MAX / abs(speed)) == 0) && (speed != 0)) {
+  if ((counter20ms % (uint32_t)(SPEED_MAX / abs(speed)) == 0) && (speed != 0)) {
     if (_counter_mode_step == 0) {
       // Plugin_128_pixels->ClearTo(rrggbb);
       for (int i = 0; i < pixelCount; i++) {
@@ -1226,7 +1226,7 @@ void P128_data_struct::twinkle(void) {
  * Blink several LEDs on, fading out.
  */
 void P128_data_struct::twinklefade(void) {
-  if ((counter20ms % (unsigned long)(SPEED_MAX / abs(speed)) == 0) && (speed != 0)) {
+  if ((counter20ms % (uint32_t)(SPEED_MAX / abs(speed)) == 0) && (speed != 0)) {
     for (uint16_t i = 0; i < pixelCount; i++) {
       # if defined(RGBW) || defined(GRBW)
       RgbwColor px_rgb = Plugin_128_pixels->GetPixelColor(pixelCount - i - 1);
@@ -1261,7 +1261,7 @@ void P128_data_struct::twinklefade(void) {
  * Inspired by www.tweaking4all.com/hardware/arduino/adruino-led-strip-effects/
  */
 void P128_data_struct::sparkle(void) {
-  if ((counter20ms % (unsigned long)(SPEED_MAX / abs(speed)) == 0) && (speed != 0)) {
+  if ((counter20ms % (uint32_t)(SPEED_MAX / abs(speed)) == 0) && (speed != 0)) {
     // Plugin_128_pixels->ClearTo(rrggbb);
     for (int i = 0; i < pixelCount; i++) {
       Plugin_128_pixels->SetPixelColor(i, rrggbb);
@@ -1410,7 +1410,7 @@ void P128_data_struct::Fire2012(void) {
  * Fire flicker function
  */
 void P128_data_struct::fire_flicker() {
-  if ((counter20ms % (unsigned long)(SPEED_MAX / abs(speed)) == 0) && (speed != 0)) {
+  if ((counter20ms % (uint32_t)(SPEED_MAX / abs(speed)) == 0) && (speed != 0)) {
     byte w   = 0;   // (SEGMENT.colors[0] >> 24) & 0xFF;
     byte r   = 255; // (SEGMENT.colors[0] >> 16) & 0xFF;
     byte g   = 96;  // (SEGMENT.colors[0] >>  8) & 0xFF;

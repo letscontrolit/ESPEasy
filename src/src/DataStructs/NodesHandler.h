@@ -52,8 +52,8 @@ public:
   // Remove nodes in list older than max_age_allowed (msec)
   // Returns oldest age, max_age (msec) not removed from the list.
   // Return true if a node has been removed.
-  bool refreshNodeList(unsigned long  max_age_allowed,
-                       unsigned long& max_age);
+  bool refreshNodeList(uint32_t  max_age_allowed,
+                       uint32_t& max_age);
 
 
   const NodeStruct                   * getPreferredNode() const;
@@ -77,7 +77,7 @@ public:
 
   bool              lastTimeValidDistanceExpired() const;
 
-  unsigned long     get_lastTimeValidDistance() const {
+  uint32_t     get_lastTimeValidDistance() const {
     return _lastTimeValidDistance;
   }
 
@@ -125,7 +125,7 @@ private:
   void setRSSI(NodeStruct *node,
                int         rssi);
 
-  unsigned long _lastTimeValidDistance = 0;
+  uint32_t _lastTimeValidDistance = 0;
 
   uint8_t _distance = 255; // Cached value
 

@@ -36,7 +36,7 @@ GPIO_plugin_helper_data_t::GPIO_plugin_helper_data_t(
   _longpressFired(false)
 {
   // store millis for debounce, doubleclick and long press
-  const unsigned long cur_millis = millis();
+  const uint32_t cur_millis = millis();
 
   _debounceTimer    = cur_millis; // debounce timer
   _doubleClickTimer = cur_millis; // doubleclick timer
@@ -144,11 +144,11 @@ void GPIO_plugin_helper_data_t::tenPerSecond(
     _longpressTimer = millis();
     _longpressFired = false;
 
-    const unsigned long debounceTime = timePassedSince(_debounceTimer);
+    const uint32_t debounceTime = timePassedSince(_debounceTimer);
 
     if (debounceTime >= _debounceInterval_ms) // de-bounce check
     {
-      const unsigned long deltaDC = timePassedSince(_doubleClickTimer);
+      const uint32_t deltaDC = timePassedSince(_doubleClickTimer);
 
       if ((deltaDC >= _doubleClickMaxInterval_ms) ||
           (_doubleClickCounter == 3))
@@ -293,7 +293,7 @@ void GPIO_plugin_helper_data_t::tenPerSecond(
       // Reset SafeButton counter
       _safeButtonCounter = 0;
 
-      const unsigned long deltaLP = timePassedSince(_longpressTimer);
+      const uint32_t deltaLP = timePassedSince(_longpressTimer);
 
       if (deltaLP >= _longpressMinInterval_ms)
       {

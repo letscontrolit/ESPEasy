@@ -1,6 +1,4 @@
-#ifndef PLUGINSTRUCTS_P116_DATA_STRUCT_H
-#define PLUGINSTRUCTS_P116_DATA_STRUCT_H
-
+#pragma once
 #include "../../_Plugin_Helper.h"
 #ifdef USES_P116
 
@@ -9,6 +7,7 @@
 # include <Adafruit_ST7735.h>      // include Adafruit ST7735 TFT library
 # include <Adafruit_ST7789.h>      // include Adafruit ST7789 TFT library
 # include <Adafruit_ST7796S_kbv.h> // include Adafruit ST7796 TFT library
+# include <Adafruit_ST7796S.h>     // include Adafruit ST7796 new primary TFT library
 
 # if defined(ST7789_EXTRA_INIT) && !ST7789_EXTRA_INIT
 #  define P116_EXTRA_ST7789 0      // This will get disabled for ESP8266 in Adafruit_ST7789.h
@@ -22,19 +21,25 @@
 # if defined(ST7735_EXTRA_INIT) && !ST7735_EXTRA_INIT
 #  define P116_EXTRA_ST7735 0 // This will get disabled for ESP8266 in Adafruit_ST7735.h
 # endif // if defined(ST7735_EXTRA_INIT) && !ST7735_EXTRA_INIT
-# if defined(LIMIT_BUILD_SIZE) and !defined(P116_EXTRA_ST7789)
+# if defined(LIMIT_BUILD_SIZE) and !defined(P116_EXTRA_ST7735)
 #  define P116_EXTRA_ST7735 0
 # endif // if defined(LIMIT_BUILD_SIZE) and !defined(P116_EXTRA_ST7735)
 # ifndef P116_EXTRA_ST7735
 #  define P116_EXTRA_ST7735 1
 # endif // ifndef P116_EXTRA_ST7735
+# if defined(LIMIT_BUILD_SIZE) and !defined(P116_EXTRA_ST7796)
+#  define P116_EXTRA_ST7796 0
+# endif // if defined(LIMIT_BUILD_SIZE) and !defined(P116_EXTRA_ST7796)
+# ifndef P116_EXTRA_ST7796
+#  define P116_EXTRA_ST7796 1
+# endif // ifndef P116_EXTRA_ST7796
 
 # include "../Helpers/AdafruitGFX_helper.h" // Use Adafruit graphics helper object
 # include "../CustomBuild/StorageLayout.h"
 
-# define P116_Nlines           24 // The number of different lines which can be displayed
+# define P116_Nlines           24           // The number of different lines which can be displayed
 # define P116_Nchars           60
-# define P116_DebounceTreshold  5 // number of 20 msec (fifty per second) ticks before the button has settled
+# define P116_DebounceTreshold  5           // number of 20 msec (fifty per second) ticks before the button has settled
 
 // # define P116_SHOW_SPLASH                               // Enable to show splash (text)
 
@@ -58,6 +63,7 @@
 # define P116_CONFIG_FLAG_CMD_TRIGGER   20              // Flag-offset to store 4 bits for Command trigger, uses bits 20, 21, 22 and 23
 # define P116_CONFIG_FLAG_BACK_FILL     28              // Flag: Background fill when printing text
 # define P116_CONFIG_FLAG_TYPE2         29              // Flag-offset to store 2 more bits for Hardwaretype, uses bits 29 and 30
+# define P116_CONFIG_FLAG_INVERTED      31              // Flag: Invert display colors
 
 // Getters
 # define P116_CONFIG_FLAG_GET_MODE          (get4BitFromUL(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_MODE))
@@ -94,7 +100,7 @@ enum class ST77xx_type_e : uint8_t {
   ST7789vw_240x240  = 4u,
   ST7789vw_240x280  = 5u,
   ST7789vw_135x240  = 6u,
-  ST7796s_320x480   = 7u,
+  ST7796s_320x480   = 7u, // Switched driver to Adafruit_ST7796S (new primary driver)
   ST7735s_80x160_M5 = 8u,
   # if P116_EXTRA_ST7789
   ST7789vw1_135x240 = 9u,
@@ -108,6 +114,10 @@ enum class ST77xx_type_e : uint8_t {
   ST77xxs_240x320 = 15u,
   ST77xxs_240x280 = 16u,
   # endif // if P116_EXTRA_ST7735
+  # if P116_EXTRA_ST7796
+  ST7796s2_320x480 = 17u,
+  # endif // if P116_EXTRA_ST7796
+
 };
 
 enum class P116_CommandTrigger : uint8_t {
@@ -116,6 +126,7 @@ enum class P116_CommandTrigger : uint8_t {
   st7735 = 2u,
   st7789 = 3u,
   st7796 = 4u,
+
 };
 
 const __FlashStringHelper* ST77xx_type_toString(const ST77xx_type_e& device);
@@ -135,12 +146,13 @@ public:
                    uint8_t             backlightPercentage,
                    uint32_t            displayTimer,
                    String              commandTrigger,
-                   uint16_t            fgcolor      = ADAGFX_WHITE,
-                   uint16_t            bgcolor      = ADAGFX_BLACK,
-                   bool                textBackFill = true
+                   uint16_t            fgcolor         = ADAGFX_WHITE,
+                   uint16_t            bgcolor         = ADAGFX_BLACK,
+                   bool                textBackFill    = true,
+                   bool                invertedDisplay = false
                    # if                ADAGFX_FONTS_INCLUDED
                    ,
-                   const uint8_t defaultFontId = 0
+                   const uint8_t       defaultFontId = 0
                    # endif // if ADAGFX_FONTS_INCLUDED
                    );
   P116_data_struct() = delete;
@@ -161,9 +173,8 @@ public:
   void registerButtonState(uint8_t newButtonState,
                            bool    bPin3Invers);
   void markButtonStateProcessed();
-  bool getButtonState() {
-    return ButtonState;
-  }
+
+  bool getButtonState() { return ButtonState; }
 
 private:
 
@@ -171,12 +182,15 @@ private:
   void updateFontMetrics();
   void cleanup();
 
-  Adafruit_ST77xx      *st77xx    = nullptr;
-  Adafruit_ST7735      *st7735    = nullptr;
-  Adafruit_ST7789      *st7789    = nullptr;
-  Adafruit_ST7796S_kbv *st7796    = nullptr;
-  AdafruitGFX_helper   *gfxHelper = nullptr;
-  enum ST77xx_type_e    _device;
+  Adafruit_ST77xx  *st77xx   = nullptr;
+  Adafruit_ST7735  *st7735   = nullptr;
+  Adafruit_ST7789  *st7789   = nullptr;
+  Adafruit_ST7796S *st7796s2 = nullptr;
+  # if P116_EXTRA_ST7796
+  Adafruit_ST7796S_kbv *st7796 = nullptr;
+  # endif // if P116_EXTRA_ST7796
+  AdafruitGFX_helper *gfxHelper = nullptr;
+  enum ST77xx_type_e  _device;
 
   uint16_t _xpix         = 0;
   uint16_t _ypix         = 0;
@@ -197,6 +211,7 @@ private:
   uint16_t            _fgcolor;
   uint16_t            _bgcolor;
   bool                _textBackFill;
+  bool                _invertedDisplay;
   # if ADAGFX_FONTS_INCLUDED
   uint8_t _defaultFontId;
   # endif // if ADAGFX_FONTS_INCLUDED
@@ -214,8 +229,7 @@ private:
   String strings[P116_Nlines];
   bool   stringsLoaded     = false;
   bool   stringsHasContent = false;
+
 };
 
-
 #endif // ifdef USES_P116
-#endif // ifndef PLUGINSTRUCTS_P116_DATA_STRUCT_H

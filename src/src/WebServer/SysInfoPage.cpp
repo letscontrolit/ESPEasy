@@ -41,9 +41,9 @@
 #  include "../Helpers/Hardware_temperature_sensor.h"
 # endif
 
-#if FEATURE_EEPROM_EXTERNAL
-#include "../../ESPEasy/eeprom/Helpers/EEPROMExternal.h"
-#endif // if FEATURE_EEPROM_EXTERNAL
+# if FEATURE_EEPROM_EXTERNAL
+#  include "../../ESPEasy/eeprom/Helpers/EEPROMExternal.h"
+# endif // if FEATURE_EEPROM_EXTERNAL
 
 # ifdef ESP32
 #  include <esp_partition.h>
@@ -207,8 +207,8 @@ void handle_sysinfo_json() {
           writer->write({ F("vendor"), LabelType::FLASH_CHIP_VENDOR });
         }
         writer->write({ F("device"),      LabelType::FLASH_CHIP_MODEL });
-        writer->write({ F("real_size"),  getFlashRealSizeInBytes() / 1024 });
-        writer->write({ F("ide_size"),   ESP.getFlashChipSize() / 1024 });
+        writer->write({ F("real_size"),  static_cast<uint32_t>(getFlashRealSizeInBytes() >> 10) });
+        writer->write({ F("ide_size"),   static_cast<uint32_t>(ESP.getFlashChipSize() >> 10) });
 
         // Please check what is supported for the ESP32
         writer->write({ F("flash_speed"), LabelType::FLASH_CHIP_SPEED });
@@ -217,11 +217,11 @@ void handle_sysinfo_json() {
 
         writer->write({ F("writes"),        RTC.flashDayCounter });
         writer->write({ F("flash_counter"), RTC.flashCounter });
-        writer->write({ F("sketch_size"),   getSketchSize() / 1024 });
-        writer->write({ F("sketch_free"),   getFreeSketchSpace() / 1024 });
+        writer->write({ F("sketch_size"),   static_cast<uint32_t>(getSketchSize() >> 10) });
+        writer->write({ F("sketch_free"),   static_cast<uint32_t>(getFreeSketchSpace() >> 10) });
 
-        writer->write({ F("spiffs_size"),   SpiffsTotalBytes() / 1024 });
-        writer->write({ F("spiffs_free"),   SpiffsFreeSpace() / 1024 });
+        writer->write({ F("spiffs_size"),   static_cast<uint32_t>(SpiffsTotalBytes() >> 10) });
+        writer->write({ F("spiffs_free"),   static_cast<uint32_t>(SpiffsFreeSpace() >> 10) });
       }
     }
 
@@ -233,77 +233,12 @@ void handle_sysinfo_json() {
 
 # ifdef WEBSERVER_SYSINFO
 
-void handle_sysinfo() {
-  #  ifndef BUILD_NO_RAM_TRACKER
-  checkRAM(F("handle_sysinfo"));
-  #  endif // ifndef BUILD_NO_RAM_TRACKER
-
-  if (!startStream_send_stdTemplate(MENU_INDEX_TOOLS)) { return; }
-#ifdef WEBSERVER_GITHUB_COPY
-  html_reset_copyTextCounter();
-#endif
-
-  addHtml(printWebString);
-  addHtml(F("<form>"));
-
-  // the table header
-  html_table_class_normal();
-
-
-  #  ifdef WEBSERVER_GITHUB_COPY
-
-  // Not using addFormHeader() to get the copy button on the same header line as 2nd column
-  html_TR();
-  html_table_header(F("System Info"), 225);
-  addHtml(F("<TH>")); // Needed to get the copy button on the same header line.
-  addCopyButton(F("copyText"), F("\\n"), F("Copy info to clipboard"));
-
-  TXBuffer.addFlashString((PGM_P)FPSTR(githublogo));
-  serve_JS(JSfiles_e::GitHubClipboard);
-
-  #  else // ifdef WEBSERVER_GITHUB_COPY
-  addFormHeader(F("System Info"));
-
-  #  endif // ifdef WEBSERVER_GITHUB_COPY
-
-  handle_sysinfo_basicInfo();
-
-#  ifndef WEBSERVER_SYSINFO_MINIMAL
-  handle_sysinfo_memory();
-#  endif
-
-  handle_sysinfo_Network();
-
-#  ifndef WEBSERVER_SYSINFO_MINIMAL
-  handle_sysinfo_WiFiSettings();
-#  endif
-
-  handle_sysinfo_NetworkAdapters();
-
-  handle_sysinfo_Firmware();
-
-#  ifndef WEBSERVER_SYSINFO_MINIMAL
-  handle_sysinfo_SystemStatus();
-
-  handle_sysinfo_NetworkServices();
-
-  handle_sysinfo_ESP_Board();
-
-  handle_sysinfo_Storage();
-#  endif // ifndef WEBSERVER_SYSINFO_MINIMAL
-
-
-  html_end_table();
-  html_end_form();
-  sendTail_stdtemplate();
-}
-
-void handle_sysinfo_basicInfo() {
+static void handle_sysinfo_basicInfo() {
   static const LabelType::Enum labels[] PROGMEM =
   {
-#if FEATURE_MDNS
+#  if FEATURE_MDNS
     LabelType::M_DNS,
-#endif
+#  endif
     LabelType::UNIT_NR,
 
     LabelType::LOCAL_TIME,
@@ -334,7 +269,7 @@ void handle_sysinfo_basicInfo() {
 
 #  ifndef WEBSERVER_SYSINFO_MINIMAL
 
-void handle_sysinfo_memory() {
+static void handle_sysinfo_memory() {
   addTableSeparator(F("Memory"), 2, 3);
 
   static const LabelType::Enum labels[] PROGMEM =
@@ -377,7 +312,6 @@ void handle_sysinfo_memory() {
 
 #  endif // ifndef WEBSERVER_SYSINFO_MINIMAL
 
-
 void handle_sysinfo_Network() {
   addTableSeparator(F("Network"), 2, 3);
 
@@ -409,8 +343,9 @@ void handle_sysinfo_Network() {
   }
 }
 
-void handle_sysinfo_NetworkAdapters() {
-#ifndef LIMIT_BUILD_SIZE
+static void handle_sysinfo_NetworkAdapters() {
+#  ifndef LIMIT_BUILD_SIZE
+
   for (ESPEasy::net::networkIndex_t x = 0; x < NETWORK_MAX; ++x)
   {
     if (Settings.getNetworkEnabled(x)) {
@@ -421,25 +356,25 @@ void handle_sysinfo_NetworkAdapters() {
           strformat(F("%s (%d)"),
                     getNWPluginNameFromNWPluginID(pluginID).c_str(),
                     x + 1));
-#  ifdef WEBSERVER_NETWORK
-#   ifdef ESP32
+#   ifdef WEBSERVER_NETWORK
+#    ifdef ESP32
         ESPEasy::net::write_NetworkAdapterFlags(x, &writer);
         ESPEasy::net::write_IP_config(x, &writer);
-#   endif // ifdef ESP32
-#  endif // ifdef WEBSERVER_NETWORK
+#    endif // ifdef ESP32
+#   endif // ifdef WEBSERVER_NETWORK
         ESPEasy::net::write_NetworkConnectionInfo(x, &writer);
       }
     }
   }
-#endif
+#  endif // ifndef LIMIT_BUILD_SIZE
 
   html_TR();
 }
 
 #  ifndef WEBSERVER_SYSINFO_MINIMAL
 
-void handle_sysinfo_WiFiSettings() {
-  if (!ESPEasy::net::wifi::WiFiConnected()) return;
+static void handle_sysinfo_WiFiSettings() {
+  if (!ESPEasy::net::wifi::WiFiConnected()) { return; }
   addTableSeparator(F("WiFi Settings"), 2, 3);
 
   static const LabelType::Enum labels[] PROGMEM =
@@ -486,7 +421,7 @@ void handle_sysinfo_WiFiSettings() {
 
 #  endif // ifndef WEBSERVER_SYSINFO_MINIMAL
 
-void handle_sysinfo_Firmware() {
+static void handle_sysinfo_Firmware() {
   addTableSeparator(F("Firmware"), 2, 3);
 
   static const LabelType::Enum labels[] PROGMEM =
@@ -516,19 +451,19 @@ void handle_sysinfo_Firmware() {
 
 #  ifndef WEBSERVER_SYSINFO_MINIMAL
 
-void handle_sysinfo_SystemStatus() {
+static void handle_sysinfo_SystemStatus() {
   addTableSeparator(F("System Status"), 2, 3);
 
   static const LabelType::Enum labels[] PROGMEM =
   {
     // Actual Loglevel
-#if FEATURE_SYSLOG
+#   if FEATURE_SYSLOG
     LabelType::SYSLOG_LOG_LEVEL,
-#endif
+#   endif
     LabelType::SERIAL_LOG_LEVEL,
-# ifdef WEBSERVER_LOG
+#   ifdef WEBSERVER_LOG
     LabelType::WEB_LOG_LEVEL,
-#endif
+#   endif
 #   if FEATURE_SD
     LabelType::SD_LOG_LEVEL,
 #   endif // if FEATURE_SD
@@ -576,7 +511,7 @@ void handle_sysinfo_NetworkServices() {
 
 #  ifndef WEBSERVER_SYSINFO_MINIMAL
 
-void handle_sysinfo_ESP_Board() {
+static void handle_sysinfo_ESP_Board() {
   addTableSeparator(F("ESP Board"), 2, 3);
 
   static const LabelType::Enum labels[] PROGMEM =
@@ -610,7 +545,7 @@ void handle_sysinfo_ESP_Board() {
 
 #  ifndef WEBSERVER_SYSINFO_MINIMAL
 
-void handle_sysinfo_Storage() {
+static void handle_sysinfo_Storage() {
   addTableSeparator(F("Storage"), 2, 3);
 
   static const LabelType::Enum labels[] PROGMEM =
@@ -641,14 +576,14 @@ void handle_sysinfo_Storage() {
   #   ifndef LIMIT_BUILD_SIZE
   addRowLabel(F("Page size"));
   addHtmlInt(SpiffsPagesize());
-#if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+#    if FEATURE_TASKVALUE_UNIT_OF_MEASURE
   addUnit(getFormUnit(LabelType::FREE_MEM)); // FIXME TD-er: Add labeltype
-#endif
+#    endif
   addRowLabel(F("Block size"));
   addHtmlInt(SpiffsBlocksize());
-#if FEATURE_TASKVALUE_UNIT_OF_MEASURE
+#    if FEATURE_TASKVALUE_UNIT_OF_MEASURE
   addUnit(getFormUnit(LabelType::FREE_MEM)); // FIXME TD-er: Add labeltype
-#endif
+#    endif
 
   addRowLabel(F("Number of blocks"));
   addHtmlInt(SpiffsTotalBytes() / SpiffsBlocksize());
@@ -667,7 +602,7 @@ void handle_sysinfo_Storage() {
   }
   #   endif // ifndef LIMIT_BUILD_SIZE
 
-#if FEATURE_CHART_STORAGE_LAYOUT && !defined(BUILD_NO_DEBUG)
+#   if FEATURE_CHART_STORAGE_LAYOUT && !defined(BUILD_NO_DEBUG)
 
   if (showSettingsFileLayout) {
     addTableSeparator(F("Settings Files"), 2, 3);
@@ -723,29 +658,96 @@ void handle_sysinfo_Storage() {
   #    endif // ifdef ESP8266
 #   endif // if FEATURE_CHART_STORAGE_LAYOUT
 
-  #ifndef LIMIT_BUILD_SIZE
+  #   ifndef LIMIT_BUILD_SIZE
 
-  #if FEATURE_EEPROM_EXTERNAL
+  #    if FEATURE_EEPROM_EXTERNAL
   {
     const bool eepromChecked = ESPEasy::eeprom::checkEEPROMEnabled() > 0;
+
     if (eepromChecked) {
       addFormSubHeader(F("External I2C EEPROM"));
       addRowLabel(F("EEPROM Model/size"));
       addHtml(getEEPROMName(static_cast<ESPEasy::eeprom::EEPROMExternal_Type_e>(Settings.EEPROMExternalType())));
       addRowLabel(F("EEPROM Enabled"));
       addEnabled(eepromChecked);
+
       if (ESPEasy::eeprom::isEEPROMExternalWriteProtected()) {
         addHtml(F(" Write-protected!"));
-      } 
+      }
       addRowLabel(F("'WriteEE' slots available"));
       addHtmlInt(ESPEasy::eeprom::getEEPROMMaxSlots());
     }
   }
-  #endif // if FEATURE_EEPROM_EXTERNAL
-  #endif // ifndef LIMIT_BUILD_SIZE
+  #    endif // if FEATURE_EEPROM_EXTERNAL
+  #   endif // ifndef LIMIT_BUILD_SIZE
 }
 
 #  endif // ifndef WEBSERVER_SYSINFO_MINIMAL
+
+void handle_sysinfo() {
+  #  ifndef BUILD_NO_RAM_TRACKER
+  checkRAM(F("handle_sysinfo"));
+  #  endif // ifndef BUILD_NO_RAM_TRACKER
+
+  if (!startStream_send_stdTemplate(MENU_INDEX_TOOLS)) { return; }
+#  ifdef WEBSERVER_GITHUB_COPY
+  html_reset_copyTextCounter();
+#  endif
+
+  addHtml(printWebString);
+  addHtml(F("<form>"));
+
+  // the table header
+  html_table_class_normal();
+
+
+  #  ifdef WEBSERVER_GITHUB_COPY
+
+  // Not using addFormHeader() to get the copy button on the same header line as 2nd column
+  html_TR();
+  html_table_header(F("System Info"), 225);
+  addHtml(F("<TH>")); // Needed to get the copy button on the same header line.
+  addCopyButton(F("copyText"), F("\\n"), F("Copy info to clipboard"));
+
+  TXBuffer.addFlashString((PGM_P)FPSTR(githublogo));
+  serve_JS(JSfiles_e::GitHubClipboard);
+
+  #  else // ifdef WEBSERVER_GITHUB_COPY
+  addFormHeader(F("System Info"));
+
+  #  endif // ifdef WEBSERVER_GITHUB_COPY
+
+  handle_sysinfo_basicInfo();
+
+#  ifndef WEBSERVER_SYSINFO_MINIMAL
+  handle_sysinfo_memory();
+#  endif
+
+  handle_sysinfo_Network();
+
+#  ifndef WEBSERVER_SYSINFO_MINIMAL
+  handle_sysinfo_WiFiSettings();
+#  endif
+
+  handle_sysinfo_NetworkAdapters();
+
+  handle_sysinfo_Firmware();
+
+#  ifndef WEBSERVER_SYSINFO_MINIMAL
+  handle_sysinfo_SystemStatus();
+
+  handle_sysinfo_NetworkServices();
+
+  handle_sysinfo_ESP_Board();
+
+  handle_sysinfo_Storage();
+#  endif // ifndef WEBSERVER_SYSINFO_MINIMAL
+
+
+  html_end_table();
+  html_end_form();
+  sendTail_stdtemplate();
+}
 
 # endif    // ifdef WEBSERVER_SYSINFO
 

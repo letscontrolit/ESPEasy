@@ -59,7 +59,7 @@ void serialPrintln() {
    }
 
 
-   void serialPrint(unsigned long value) {
+   void serialPrint(uint32_t value) {
    serialPrint(String(value));
    }
 
@@ -67,7 +67,7 @@ void serialPrintln() {
    serialPrint(String(value));
    }
 
-   void serialPrintln(unsigned long value) {
+   void serialPrintln(uint32_t value) {
    serialPrintln(String(value));
    }
  */

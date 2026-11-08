@@ -134,7 +134,7 @@ bool P025_data_struct::read(float& value, taskVarIndex_t index) const {
     return false;
   }
 
-  const long sds = waitReady025(_i2cAddress);
+  const int sds = waitReady025(_i2cAddress);
 
   if (sds == 0) {
 # ifndef BUILD_NO_DEBUG
@@ -203,7 +203,7 @@ P025_sensorType P025_data_struct::detectType(uint8_t i2cAddress)
     (0x8000);     // Start a single conversion
 
   if (startMeasurement(i2cAddress, defaultValue)) {
-    const long sps = waitReady025(i2cAddress);
+    const int32_t sps = waitReady025(i2cAddress);
 
     if (sps > 0) {
       // Sample rate is either 250 (ADS1115) or 2400 (ADS1015)
@@ -231,10 +231,10 @@ bool P025_data_struct::startMeasurement(uint8_t i2cAddress, uint16_t configRegis
   return false;
 }
 
-long P025_data_struct::waitReady025(uint8_t i2cAddress)
+int32_t P025_data_struct::waitReady025(uint8_t i2cAddress)
 {
   const uint32_t start   = micros();
-  unsigned long  timeout = millis();
+  uint32_t  timeout = millis();
 
   bool is_ok = false;
 
@@ -257,8 +257,8 @@ long P025_data_struct::waitReady025(uint8_t i2cAddress)
     const bool ready = reg.operatingStatus == 1;
 
     if (ready && is_ok) {
-      const long res = usecPassedSince_fast(start);
-      const long sps = (res > 0) ? 1000000 / res : 0;
+      const int32_t res = usecPassedSince_fast(start);
+      const int32_t sps = (res > 0) ? 1000000 / res : 0;
 # ifndef BUILD_NO_DEBUG
 
       if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {

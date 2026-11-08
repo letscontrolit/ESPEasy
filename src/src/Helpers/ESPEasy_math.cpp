@@ -41,6 +41,19 @@ int maxNrDecimals_fpType(const float& value)
   return res;
 }
 
+int quick_pow10(uint8_t n)
+{
+    static int pow10[] = {
+        1, 10, 100, 1000, 10000, 
+        100000, 1000000, 10000000, 100000000, 1000000000
+    };
+
+    constexpr uint8_t max_n = NR_ELEMENTS(pow10) - 1;
+
+    if (n <= max_n) return pow10[n]; 
+    return pow10[max_n - 1];
+}
+
 uint64_t computeDecimalFactorForDecimals(int nrDecimals)
 {
   uint64_t factor = 1;
@@ -52,12 +65,12 @@ uint64_t computeDecimalFactorForDecimals(int nrDecimals)
 }
 
 #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
-double estimateDoubleEpsilon(const double& a, const double& b)
+static double estimateDoubleEpsilon(const double& a, const double& b)
 {
   return std::max(std::abs(a), std::abs(b)) * ESPEASY_DOUBLE_EPSILON;
 }
 #endif
-float estimateEpsilon(const float& a, const float& b)
+static float estimateEpsilon(const float& a, const float& b)
 {
   return std::max(std::abs(a), std::abs(b)) * ESPEASY_FLOAT_EPSILON;
 }
