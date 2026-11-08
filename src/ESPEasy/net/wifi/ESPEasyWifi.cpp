@@ -87,22 +87,10 @@ namespace wifi {
    - Set timerAPstart when "valid WiFi connection" state is observed.
    - Disable timerAPstart when ESPEASY_WIFI_SERVICES_INITIALIZED wifi state is reached.
 
-   For the first attempt to connect after a cold boot (RTC values are 0), a WiFi scan will be
-   performed to find the strongest known SSID.
-   This will set RTC.lastBSSID and RTC.lastWiFiChannel
-
-   Quick reconnect (using BSSID/channel of last connection) when both apply:
-   - If wifi_connect_attempt < 3
-   - RTC.lastBSSID is known
-   - RTC.lastWiFiChannel != 0
-
-   Change of wifi settings when both apply:
-   - "other" settings valid
-   - (wifi_connect_attempt % 2) == 0
-
-   Reset of wifi_connect_attempt to 0 when both apply:
-   - connection successful
-   - Connection stable (connected for > 5 minutes)
+   The last successful BSSID, channel, and credential index are saved to RTC when connected.
+   ESP32 also stores them in NVS after the connection is stable. When enabled and available,
+   this candidate is tried before scanning; a failed quick reconnect clears it and falls back
+   to normal candidate selection.
 
  */
 bool validWiFiSSID(const String& ssid) {

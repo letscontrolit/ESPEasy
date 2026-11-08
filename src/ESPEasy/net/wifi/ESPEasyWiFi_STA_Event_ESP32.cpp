@@ -10,6 +10,7 @@
 #   include <PPP.h>
 #  endif
 #  include <NetworkManager.h>
+#  include <atomic>
 
 #  include "../../../src/DataTypes/ESPEasyTimeSource.h"
 #  include "../../../src/ESPEasyCore/ESPEasy_Log.h"
@@ -24,8 +25,8 @@ namespace wifi {
 
 static NWPluginData_static_runtime stats_and_cache(&WiFi.STA, F("WiFi"));
 
-static wifi_event_sta_connected_t _wifi_event_sta_connected;
-static WiFiDisconnectReason _wifi_disconnect_reason = WiFiDisconnectReason::WIFI_DISCONNECT_REASON_UNSPECIFIED;
+static std::atomic<uint8_t> _wifi_auth_mode{};
+static std::atomic<WiFiDisconnectReason> _wifi_disconnect_reason{ WiFiDisconnectReason::WIFI_DISCONNECT_REASON_UNSPECIFIED };
 
 static bool _ESPEasyWiFi_STA_EventHandler_initialized{};
 
@@ -33,7 +34,7 @@ ESPEasyWiFi_STA_EventHandler::ESPEasyWiFi_STA_EventHandler(networkIndex_t networ
 {
   stats_and_cache.clear(networkIndex);
   nw_event_id = Network.onEvent(ESPEasyWiFi_STA_EventHandler::WiFiEvent);
-  memset(&_wifi_event_sta_connected, 0, sizeof(_wifi_event_sta_connected));
+  _wifi_auth_mode.store(0);
   _ESPEasyWiFi_STA_EventHandler_initialized = true;
 }
 
@@ -53,9 +54,9 @@ bool ESPEasyWiFi_STA_EventHandler::initialized()                                
 
 NWPluginData_static_runtime * ESPEasyWiFi_STA_EventHandler::getNWPluginData_static_runtime() { return &stats_and_cache; }
 
-WiFiDisconnectReason          ESPEasyWiFi_STA_EventHandler::getLastDisconnectReason() const  { return _wifi_disconnect_reason; }
+WiFiDisconnectReason          ESPEasyWiFi_STA_EventHandler::getLastDisconnectReason() const  { return _wifi_disconnect_reason.load(); }
 
-uint8_t                       ESPEasyWiFi_STA_EventHandler::getAuthMode() const              { return _wifi_event_sta_connected.authmode; }
+uint8_t                       ESPEasyWiFi_STA_EventHandler::getAuthMode() const              { return _wifi_auth_mode.load(); }
 
 bool                          ESPEasyWiFi_STA_EventHandler::restore_dns_from_cache() const
 {
@@ -83,7 +84,7 @@ bool                          ESPEasyWiFi_STA_EventHandler::restore_dns_from_cac
 
 const __FlashStringHelper * ESPEasyWiFi_STA_EventHandler::getWiFi_encryptionType() const
 {
-  return WiFi_encryptionType(_wifi_event_sta_connected.authmode);
+  return WiFi_encryptionType(_wifi_auth_mode.load());
 }
 
 // ********************************************************************************
@@ -92,63 +93,54 @@ const __FlashStringHelper * ESPEasyWiFi_STA_EventHandler::getWiFi_encryptionType
 // ********************************************************************************
 #  include <WiFi.h>
 
-static bool ignoreDisconnectEvent = false;
-
 void ESPEasyWiFi_STA_EventHandler::WiFiEvent(WiFiEvent_t event_id, arduino_event_info_t info) {
-  bool clear_wifi_event_sta_connected = false;
-
   switch (event_id)
   {
     case ARDUINO_EVENT_WIFI_OFF:
-      clear_wifi_event_sta_connected = true;
-      addLog(LOG_LEVEL_INFO, F("WIFI_OFF"));
+      _wifi_auth_mode.store(0);
+      stats_and_cache.queueEvent(NWPluginData_static_runtime::DeferredEventType::WiFiOffLog);
       break;
     case ARDUINO_EVENT_WIFI_READY:
-      //    clear_wifi_event_sta_connected = true;
-      addLog(LOG_LEVEL_INFO, F("WIFI_READY"));
+      stats_and_cache.queueEvent(NWPluginData_static_runtime::DeferredEventType::WiFiReadyLog);
       break;
     case ARDUINO_EVENT_WIFI_SCAN_DONE:
-      addLog(LOG_LEVEL_INFO, F("SCAN_DONE"));
+      stats_and_cache.queueEvent(NWPluginData_static_runtime::DeferredEventType::WiFiScanDoneLog);
       break;
     case ARDUINO_EVENT_WIFI_STA_START:
-      clear_wifi_event_sta_connected = true;
-      stats_and_cache.mark_start();
+      _wifi_auth_mode.store(0);
+      stats_and_cache.queueEvent(NWPluginData_static_runtime::DeferredEventType::Started);
       break;
     case ARDUINO_EVENT_WIFI_STA_STOP:
-      clear_wifi_event_sta_connected = true;
-      stats_and_cache.mark_stop();
+      _wifi_auth_mode.store(0);
+      stats_and_cache.queueEvent(NWPluginData_static_runtime::DeferredEventType::Stopped);
       break;
     case ARDUINO_EVENT_WIFI_STA_CONNECTED:
-      memcpy(&_wifi_event_sta_connected, &info.wifi_sta_connected, sizeof(_wifi_event_sta_connected));
-      stats_and_cache.mark_connected();
+      _wifi_auth_mode.store(info.wifi_sta_connected.authmode);
+      stats_and_cache.queueEvent(NWPluginData_static_runtime::DeferredEventType::Connected);
       break;
     case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
-      clear_wifi_event_sta_connected = true;
-      _wifi_disconnect_reason        = static_cast<WiFiDisconnectReason>(info.wifi_sta_disconnected.reason);
-      stats_and_cache.mark_disconnected();
+      _wifi_auth_mode.store(0);
+      _wifi_disconnect_reason.store(static_cast<WiFiDisconnectReason>(info.wifi_sta_disconnected.reason));
+      stats_and_cache.queueEvent(NWPluginData_static_runtime::DeferredEventType::Disconnected);
       break;
     case ARDUINO_EVENT_WIFI_STA_AUTHMODE_CHANGE:
-      _wifi_event_sta_connected.authmode = info.wifi_sta_authmode_change.new_mode;
-      addLog(LOG_LEVEL_INFO, F("STA_AUTHMODE_CHANGE"));
+      _wifi_auth_mode.store(info.wifi_sta_authmode_change.new_mode);
+      stats_and_cache.queueEvent(NWPluginData_static_runtime::DeferredEventType::WiFiAuthmodeChangeLog);
       break;
     case ARDUINO_EVENT_WIFI_STA_GOT_IP:
-      stats_and_cache.mark_got_IP();
+      stats_and_cache.queueEvent(NWPluginData_static_runtime::DeferredEventType::GotIP);
       break;
 #  if FEATURE_USE_IPV6
     case ARDUINO_EVENT_WIFI_STA_GOT_IP6:
-      stats_and_cache.mark_got_IPv6(&info.got_ip6);
+      stats_and_cache.queueEvent(NWPluginData_static_runtime::DeferredEventType::GotIPv6, &info.got_ip6);
       break;
 #  endif // if FEATURE_USE_IPV6
     case ARDUINO_EVENT_WIFI_STA_LOST_IP:
-      stats_and_cache.mark_lost_IP();
+      stats_and_cache.queueEvent(NWPluginData_static_runtime::DeferredEventType::LostIP);
       break;
 
     default:
       break;
-  }
-
-  if (clear_wifi_event_sta_connected) {
-    memset(&_wifi_event_sta_connected, 0, sizeof(_wifi_event_sta_connected));
   }
 
   /*

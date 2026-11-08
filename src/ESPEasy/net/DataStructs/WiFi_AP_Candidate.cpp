@@ -56,6 +56,7 @@ WiFi_AP_Candidate::WiFi_AP_Candidate(const WiFi_AP_Candidate& other)
   # ifdef ESP32
   #  if ESP_IDF_VERSION_MAJOR >= 5
   memcpy(&this->country, &other.country, sizeof(wifi_country_t));
+  this->bandwidth = other.bandwidth;
   #  endif
   # endif // ifdef ESP32
 }

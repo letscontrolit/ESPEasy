@@ -176,7 +176,7 @@ static bool doSetWifiMode_internal(WiFiMode_t cur_mode, WiFiMode_t new_mode)
 
     if (doWifiIsSTA(new_mode)) {
       //      WiFi.setAutoConnect(Settings.SDK_WiFi_autoreconnect());
-      WiFi.setAutoReconnect(Settings.SDK_WiFi_autoreconnect());
+      WiFi.setAutoReconnect(false);
     }
     delay(100); // Must allow for some time to init.
   }
@@ -610,7 +610,7 @@ void doSetConnectionSpeed(bool ForceWiFi_bg_mode)
     #   if CONFIG_SOC_WIFI_SUPPORT_5G
     setProtocol(WIFI_IF_AP,  protocol, protocol_5GHz);
     #   else
-    setProtocol(WIFI_IF_STA, protocol);
+    setProtocol(WIFI_IF_AP, protocol);
     #   endif // if CONFIG_SOC_WIFI_SUPPORT_5G
   }
   #  endif // ifndef SOC_WIFI_SUPPORTED
