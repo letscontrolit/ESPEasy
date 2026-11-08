@@ -2,13 +2,14 @@
 
 #ifdef USES_P116
 
-#include "../Helpers/Hardware_SPI.h"
+# include "../Helpers/Hardware_SPI.h"
 
 /****************************************************************************
  * ST77xx_type_toString: Display-value for the device selected
  ***************************************************************************/
 const __FlashStringHelper* ST77xx_type_toString(const ST77xx_type_e& device) {
-  switch (device) {
+  switch (device)
+  {
     case ST77xx_type_e::ST7735s_128x128: return F("ST7735 128 x 128px");
     case ST77xx_type_e::ST7735s_128x160: return F("ST7735 128 x 160px");
     case ST77xx_type_e::ST7735s_80x160: return F("ST7735 80 x 160px");
@@ -30,6 +31,9 @@ const __FlashStringHelper* ST77xx_type_toString(const ST77xx_type_e& device) {
     case ST77xx_type_e::ST7789vw3_135x240: return F("ST7789 135 x 240px (alt3)");
     # endif // if P116_EXTRA_ST7789
     case ST77xx_type_e::ST7796s_320x480: return F("ST7796 320 x 480px");
+    # if P116_EXTRA_ST7796
+    case ST77xx_type_e::ST7796s2_320x480: return F("ST7796 320 x 480px (alt1)");
+    # endif // if P116_EXTRA_ST7796
   }
   return F("Unsupported type!");
 }
@@ -40,7 +44,8 @@ const __FlashStringHelper* ST77xx_type_toString(const ST77xx_type_e& device) {
 void ST77xx_type_toResolution(const ST77xx_type_e& device,
                               uint16_t           & x,
                               uint16_t           & y) {
-  switch (device) {
+  switch (device)
+  {
     case ST77xx_type_e::ST7735s_128x128:
       x = 128;
       y = 128;
@@ -97,6 +102,9 @@ void ST77xx_type_toResolution(const ST77xx_type_e& device,
       break;
     # endif // if P116_EXTRA_ST7735
     case ST77xx_type_e::ST7796s_320x480:
+    # if P116_EXTRA_ST7796
+    case ST77xx_type_e::ST7796s2_320x480:
+    # endif // if P116_EXTRA_ST7796
       x = 320;
       y = 480;
       break;
@@ -107,7 +115,8 @@ void ST77xx_type_toResolution(const ST77xx_type_e& device,
  * P116_CommandTrigger_toString: return the command string selected
  ***************************************************************************/
 const __FlashStringHelper* P116_CommandTrigger_toString(const P116_CommandTrigger& cmd) {
-  switch (cmd) {
+  switch (cmd)
+  {
     case P116_CommandTrigger::tft: return F("tft");
     case P116_CommandTrigger::st7735: return F("st7735");
     case P116_CommandTrigger::st7789: return F("st7789");
@@ -130,7 +139,8 @@ P116_data_struct::P116_data_struct(ST77xx_type_e       device,
                                    String              commandTrigger,
                                    uint16_t            fgcolor,
                                    uint16_t            bgcolor,
-                                   bool                textBackFill
+                                   bool                textBackFill,
+                                   bool                invertedDisplay
                                    # if                ADAGFX_FONTS_INCLUDED
                                    ,
                                    const uint8_t       defaultFontId
@@ -138,7 +148,7 @@ P116_data_struct::P116_data_struct(ST77xx_type_e       device,
                                    )
   : _device(device), _rotation(rotation), _fontscaling(fontscaling), _textmode(textmode), _backlightPin(backlightPin),
   _backlightPercentage(backlightPercentage), _displayTimer(displayTimer), _displayTimeout(displayTimer),
-  _commandTrigger(commandTrigger), _fgcolor(fgcolor), _bgcolor(bgcolor), _textBackFill(textBackFill)
+  _commandTrigger(commandTrigger), _fgcolor(fgcolor), _bgcolor(bgcolor), _textBackFill(textBackFill), _invertedDisplay(invertedDisplay)
   # if ADAGFX_FONTS_INCLUDED
   , _defaultFontId(defaultFontId)
   # endif // if ADAGFX_FONTS_INCLUDED
@@ -169,16 +179,19 @@ bool P116_data_struct::plugin_init(struct EventStruct *event) {
   DebounceCounter = 0;     // debounce counter
 
   if (nullptr == st77xx) {
-    #ifndef BUILD_NO_DEBUG
+    # ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_INFO, F("ST77xx: Init start."));
-    #endif // ifndef BUILD_NO_DEBUG
+    # endif // ifndef BUILD_NO_DEBUG
     uint8_t initRoptions = 0xFF;
 
-    #ifdef ESP32
+    # ifdef ESP32
     auto spi_ptr = getSPIBusForTask(event->TaskIndex);
-    if (!spi_ptr) return false;
-    #endif
-    switch (_device) {
+
+    if (!spi_ptr) { return false; }
+    # endif // ifdef ESP32
+
+    switch (_device)
+    {
       case ST77xx_type_e::ST7735s_128x128:
 
         initRoptions = INITR_144GREENTAB; // 128x128px
@@ -219,14 +232,14 @@ bool P116_data_struct::plugin_init(struct EventStruct *event) {
           initRoptions = INITR_BLACKTAB170x320; // 170x320px
         }
 
-        // fall through
+      // fall through
       case ST77xx_type_e::ST77xxs_240x320:
 
         if (initRoptions == 0xFF) {
           initRoptions = INITR_BLACKTAB240x320; // 240x320px
         }
 
-        // fall through
+      // fall through
       case ST77xx_type_e::ST77xxs_240x280:
 
         if (initRoptions == 0xFF) {
@@ -289,18 +302,35 @@ bool P116_data_struct::plugin_init(struct EventStruct *event) {
         }
         break;
       }
-      case ST77xx_type_e::ST7796s_320x480:
+      # if P116_EXTRA_ST7796
+      case ST77xx_type_e::ST7796s2_320x480:
       {
-        # ifdef ESP32
+        #  ifdef ESP32
         st7796 = new (std::nothrow) Adafruit_ST7796S_kbv(spi_ptr, PIN(0), PIN(1), PIN(2));
-        # endif // ifdef ESP32
-        # ifdef ESP8266
+        #  endif // ifdef ESP32
+        #  ifdef ESP8266
         st7796 = new (std::nothrow) Adafruit_ST7796S_kbv(PIN(0), PIN(1), PIN(2));
-        # endif // ifdef ESP8266
+        #  endif // ifdef ESP8266
 
         if (nullptr != st7796) {
           st7796->begin();
           st77xx = st7796;
+        }
+        break;
+      }
+      # endif // if P116_EXTRA_ST7796
+      case ST77xx_type_e::ST7796s_320x480:
+      {
+        # ifdef ESP32
+        st7796s2 = new (std::nothrow) Adafruit_ST7796S(spi_ptr, PIN(0), PIN(1), PIN(2));
+        # endif // ifdef ESP32
+        # ifdef ESP8266
+        st7796s2 = new (std::nothrow) Adafruit_ST7796S(PIN(0), PIN(1), PIN(2));
+        # endif // ifdef ESP8266
+
+        if (nullptr != st7796s2) {
+          st7796s2->init(_xpix, _ypix, 0, 0, ST7796S_BGR); // Initialize with BGR color order
+          st77xx = st7796s2;
         }
         break;
       }
@@ -347,8 +377,10 @@ bool P116_data_struct::plugin_init(struct EventStruct *event) {
 
       gfxHelper->initialize();
       gfxHelper->setRotation(_rotation);
-      st77xx->fillScreen(_bgcolor);             // fill screen with black color
-      st77xx->setTextColor(_fgcolor, _bgcolor); // set text color to white and black background
+      gfxHelper->invertDisplay(_invertedDisplay); // Invert display if requested, before setting the colors
+      st77xx->invertDisplay(_invertedDisplay);    // Invert display if requested, before setting the colors
+      st77xx->fillScreen(_bgcolor);               // fill screen with black color
+      st77xx->setTextColor(_fgcolor, _bgcolor);   // set text color to white and black background
 
       # ifdef P116_SHOW_SPLASH
       uint16_t yPos = 0;

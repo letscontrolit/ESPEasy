@@ -133,7 +133,7 @@ boolean Plugin_059(uint8_t function, struct EventStruct *event, String& string)
       P_059_sensordefs[event->TaskIndex]->setLimit(PCONFIG_LONG(0), PCONFIG_LONG(1));
       P_059_sensordefs[event->TaskIndex]->setIndexTrigger(true);
 
-      ExtraTaskSettings.TaskDeviceValueDecimals[event->BaseVarIndex] = 0;
+      ExtraTaskSettings.TaskDeviceValueDecimals[0] = 0;
 
       String log = F("QEI  : GPIO: ");
 
