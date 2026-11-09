@@ -13,6 +13,9 @@
 # include "../Globals/WiFi_AP_Candidates.h"
 # include "../wifi/ESPEasyWifi.h"
 # include "../wifi/ESPEasyWifi_abstracted.h"
+# ifdef ESP8266
+#  include "../wifi/ESPEasyWiFi_STA_Event_ESP8266.h"
+# endif
 
 
 namespace ESPEasy {
@@ -60,6 +63,10 @@ void ESPEasyWiFi_t::begin()   {
 
 void ESPEasyWiFi_t::loop_internal()
 {
+#ifdef ESP8266
+  ESPEasyWiFi_STA_EventHandler::processEvents();
+#endif
+
   /*
      if ((_state != WiFi_STA_State_e::Disabled) &&
         (getWiFi_STA_NWPluginData_static_runtime() == nullptr)) {
