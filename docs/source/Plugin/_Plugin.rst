@@ -510,6 +510,7 @@ There are different released versions of ESP Easy:
    ":ref:`P177_page`","|P177_status|","|P177_status_lb|","P177"
    ":ref:`P178_page`","|P178_status|","|P178_status_lb|","P178"
    ":ref:`P180_page`","|P180_status|","|P180_status_lb|","P180"
+   ":ref:`P190_page`","|P190_status|","|P190_status_lb|","P190"
 
 
 .. include:: <isonum.txt>
@@ -688,6 +689,11 @@ RFID
 ----
 
 Plugins: |Plugin_RFID|
+
+Security
+--------
+
+Plugins: |Plugin_Security|
 
 Switch input
 ------------

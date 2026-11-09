@@ -1,0 +1,55 @@
+.. csv-table::
+    :header: "Command Syntax", "Extra information"
+    :widths: 20, 30
+
+    "
+    ``fingerprint,enroll[,<id>]``
+    ","
+    Store a new finger at slot ``<id>`` (an existing finger in that slot is overwritten), or, without ``<id>``, at the first free slot. The user places the finger, lifts it and places it again; the progress is reported with the *Enroll* value and the ``EnrollScan``, ``EnrollRemove``, ``Enrolled`` and ``EnrollFailed`` events.
+
+    Only one enrollment at a time: a second ``enroll`` is refused while one is queued or running.
+
+    From HTTP (``/control?cmd=fingerprint,enroll``) the answer is JSON: ``{""enroll"":3}`` (the slot used) or ``{""error"":""no free slot""}``.
+    "
+    "
+    ``fingerprint,list``
+    ","
+    State of the module and the used slots. From HTTP the answer is JSON, e.g. ``{""ready"":true,""capacity"":200,""count"":2,""enroll"":5,""slot"":3,""used"":[0,3]}``.
+
+    ``enroll`` and ``slot`` are the state and the slot of the last enrollment. ``used`` is ``null`` if the module can't list its slots: then ``enroll`` needs an ``<id>``.
+    "
+    "
+    ``fingerprint,delete,<id>``
+    ","
+    Delete the finger stored at slot ``<id>``. Event ``<taskname>#Deleted=<id>``, or ``<taskname>#Error=<code>`` on failure.
+    "
+    "
+    ``fingerprint,deleteall``
+    ","
+    Delete all fingers. Event ``<taskname>#Deleted=-1``.
+    "
+    "
+    ``fingerprint,count``
+    ","
+    Read the number of stored fingers. Event ``<taskname>#Count=<n>``, and the *Count* value is updated.
+    "
+    "
+    ``fingerprint,led,<mode>,<color>[,<speed>[,<times>]]``
+    ","
+    Control the LED ring of the R503.
+
+    ``<mode>``: ``breathing``, ``flash``, ``on``, ``off``, ``fadein``, ``fadeout`` (or 1..6).
+
+    ``<color>``: ``red``, ``blue``, ``purple``, ``green``, ``yellow``, ``cyan``, ``white`` (or 1..7; green to white need the full RGB R503).
+
+    ``<speed>``: 0..255, default 100. ``<times>``: 0..255, 0 = forever (default).
+
+    Example: ``fingerprint,led,breathing,blue``
+    "
+    "
+    ``fingerprint,cancel``
+    ","
+    Stop the enrollment. A running enrollment ends with the event ``<taskname>#EnrollFailed=253``; one still waiting in the queue is dropped without event, and the *Enroll* value becomes ``-253``.
+    "
+
+ESPEasy appends its own ``OK`` to the output of every plugin command it ran, so the HTTP body is e.g. ``{"enroll":3}OK``: parse from the first ``{`` to the last ``}``. A command that fails (e.g. ``{"error":"no free slot"}``) is followed by ``Command unknown: ...`` instead, and logged as such. ``delete``, ``deleteall``, ``cancel`` and ``led`` answer only ``OK``: their result comes later, as an event or in ``fingerprint,list``.
