@@ -205,26 +205,46 @@ void HLW8012::resetEnergy() {
     _cf_pulse_count_total = 0;
 }
 
-void HLW8012::expectedCurrent(float value) {
+void HLW8012::expectedCurrent(float expected) {
     bool valid = false;
     if (static_cast<int>(_current) == 0) getCurrent(valid);
     const float current = _current; // Copy volatile
-    if (valid && static_cast<int>(current) > 0) _current_multiplier *= (value / current);
+    if (valid && static_cast<int>(current) > 0) _current_multiplier *= (expected / current);
 }
 
-void HLW8012::expectedVoltage(float value) {
+void HLW8012::expectedVoltage(float expected) {
     bool valid = false;
     if (static_cast<int>(_voltage) == 0) getVoltage(valid);
     const float voltage = _voltage;
-    if (valid && static_cast<int>(voltage) > 0) _voltage_multiplier *= (value / voltage);
+    if (valid && static_cast<int>(voltage) > 0) _voltage_multiplier *= (expected / voltage);
 }
 
-void HLW8012::expectedActivePower(float value) {
+void HLW8012::expectedActivePower(float expected) {
     bool valid = false;
     if (static_cast<int>(_power) == 0) getActivePower(valid);
     const float power = _power;
-    if (valid && static_cast<int>(power) > 0) _power_multiplier *= (value / power);
+    if (valid && static_cast<int>(power) > 0) _power_multiplier *= (expected / power);
 }
+
+void HLW8012::expectedCurrent(float expected, float measured) {
+    if (static_cast<int>(expected) == 0 || static_cast<int>(measured) == 0)
+      return;
+    _current_multiplier *= (expected / measured);
+}
+
+void HLW8012::expectedVoltage(float expected, float measured) {
+    if (static_cast<int>(expected) == 0 || static_cast<int>(measured) == 0)
+      return;
+    _voltage_multiplier *= (expected / measured);
+}
+
+void HLW8012::expectedActivePower(float expected, float measured) {
+    if (static_cast<int>(expected) == 0 || static_cast<int>(measured) == 0)
+      return;
+    _power_multiplier *= (expected / measured);
+}
+
+
 
 void HLW8012::resetMultipliers() {
     _calculateDefaultMultipliers();
