@@ -12,3 +12,16 @@
 .. |P180_compileinfo| replace:: `.`
 .. |P180_usedlibraries| replace:: `.`
 
+.. |P187_name| replace:: :cyan:`Dummy Data Injector`
+.. |P187_type| replace:: :cyan:`Generic`
+.. |P187_typename| replace:: :cyan:`Generic - Dummy Data Injector`
+.. |P187_porttype| replace:: `.`
+.. |P187_status| replace:: :yellow:`COLLECTION H` 
+.. |P187_status_lb| replace:: `.`
+.. |P187_github| replace:: P187_Dummy_Data_Injector.ino
+.. _P187_github: https://github.com/letscontrolit/ESPEasy/blob/mega/src/_P187_Dummy_Data_Injector.ino
+.. |P187_usedby| replace:: `Dummy Data Injector`
+.. |P187_shortinfo| replace:: `Dummy Data Injector`
+.. |P187_maintainer| replace:: `.`
+.. |P187_compileinfo| replace:: `.`
+.. |P187_usedlibraries| replace:: `.`
