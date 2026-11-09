@@ -94,6 +94,15 @@ int32_t  fromTwosComplement(uint32_t twoComplementValue, uint8_t nrBits)
 
 uint32_t toTwosComplement(int32_t value, uint8_t nrBits)
 {
+  if (nrBits == 0) return 0;
+  if (nrBits >= 32) return static_cast<uint32_t>(value);
+
+  // Safely generate a mask for nrBits < 32
+  const uint32_t mask = (1ul << nrBits) - 1;
+  
+  // Casting to unsigned handles negative values automatically
+  return static_cast<uint32_t>(value) & mask;
+/*
   if (value >= 0) return value;
   if (nrBits <= 1) return 0;
   if (nrBits >= 32) nrBits = 32;
@@ -109,8 +118,35 @@ uint32_t toTwosComplement(int32_t value, uint8_t nrBits)
   //  int64_t res = value;
   //  res += (1 << nrBits);
   return res;
+*/
 }
 
+uint16_t swapLEbyteOrder16(uint16_t value) {
+  return __builtin_bswap16(value); // GCC internal
+  // return ((value & 0xFF) << 8) | ((value & 0xFF00) >> 8);
+}
+
+uint32_t swapLEbyteOrder(uint32_t value, uint8_t bits) {
+  switch (bits) {
+    case 16:
+      return __builtin_bswap16(static_cast<uint16_t>(value)); // GCC internal
+      // return ((value & 0xFF) << 8) | ((value & 0xFF00) >> 8);
+    case 24:
+      return __builtin_bswap32(value & 0x00FFFFFF) >> 8; // GCC internal
+      // return ((value & 0xFF0000) >> 16) | (value & 0xFF00) | ((value & 0xFF) << 16);
+    case 32:
+      return __builtin_bswap32(value); // GCC internal
+      // return ((value & 0xFF000000) >> 24) | ((value & 0xFF0000) >> 16) | ((value & 0xFF00) << 8) | ((value & 0xFF) << 24);
+  }
+  return value;
+}
+
+uint64_t swapLEbyteOrder64(uint64_t value) {
+  return __builtin_bswap64(value); // GCC internal
+  // value = ((value << 8) & 0xFF00FF00FF00FF00ull) | ((value >> 8) & 0x00FF00FF00FF00FFull);
+  // value = ((value << 16) & 0xFFFF0000FFFF0000ull) | ((value >> 16) & 0x0000FFFF0000FFFFull);
+  // return (value << 32) | (value >> 32);
+}
 
 bool remoteConfig(struct EventStruct *event, const String& string)
 {

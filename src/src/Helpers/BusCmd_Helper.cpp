@@ -190,10 +190,10 @@ String BusCmd_Command_struct::toString() {
 
   if (!variable.isEmpty()) {
     result += strformat(
-                      #  if FEATURE_BUSCMD_STRING
-                      BusCmd_DataFormat_e::string == format ? F(", string: %s") :
-                      #  endif // if FEATURE_BUSCMD_STRING
-                      F(", variable: %s"), variable.c_str());
+      #  if FEATURE_BUSCMD_STRING
+      BusCmd_DataFormat_e::string == format ? F(", string: %s") :
+      #  endif // if FEATURE_BUSCMD_STRING
+      F(", variable: %s"), variable.c_str());
   }
 
   if (!calculation.isEmpty()) {
@@ -663,52 +663,41 @@ bool BusCmd_Helper_struct::executeBusCmdCommands() {
             break;
           case BusCmd_DataFormat_e::uint16_t_LE:
             du16             = _iBusCmd_Handler->read16u();
-            _it->d0_uint16_t = (du16 << 8) | (du16 >> 8);
+            _it->d0_uint16_t = swapLEbyteOrder16(du16);
             break;
           case BusCmd_DataFormat_e::uint24_t_LE:
             du32             = _iBusCmd_Handler->read24u();
-            _it->d0_uint32_t = ((du32 & 0xFF0000) >> 16) | (du32 & 0xFF00) | ((du32 & 0xFF) << 16);
+            _it->d0_uint32_t = swapLEbyteOrder(du32, 24);
             break;
           case BusCmd_DataFormat_e::uint32_t_LE:
             du32             = _iBusCmd_Handler->read32u();
-            _it->d0_uint32_t = ((du32 & 0xFF000000) >> 24) | ((du32 & 0xFF0000) >> 16) | ((du32 & 0xFF00) << 8) | ((du32 & 0xFF) << 24);
+            _it->d0_uint32_t = swapLEbyteOrder(du32, 32);
             break;
           case BusCmd_DataFormat_e::int16_t_LE:
           {
-            du16 = _iBusCmd_Handler->read16u();
-            const bool isNeg = bitRead(du16, 15);
-            du16            &= ((1 << 15) - 1);
-            du16             = ((du16 << 8) | (du16 >> 8)) | (isNeg ? (1 << 15) : 0);
-            _it->d0_uint16_t = du16;
+            du16            = _iBusCmd_Handler->read16u();
+            du16            = swapLEbyteOrder16(du16);
+            _it->d0_int16_t = fromTwosComplement(du16, 16);
             break;
           }
           case BusCmd_DataFormat_e::int24_t:
           {
-            du32 = _iBusCmd_Handler->read24u();
-            const bool isNeg = bitRead(du32, 23);
-            du32            &= ((1 << 23) - 1);
-            _it->d0_uint32_t = du32 | (isNeg ? (1 << 31) : 0);
+            du32            = _iBusCmd_Handler->read24u();
+            _it->d0_int32_t = fromTwosComplement(du32, 24);
             break;
           }
           case BusCmd_DataFormat_e::int24_t_LE:
           {
-            du32 = _iBusCmd_Handler->read24u();
-            const bool isNeg = bitRead(du32, 23);
-            du32            &= ((1 << 23) - 1);
-            _it->d0_uint32_t = (((du32 & 0xFF0000) >> 16) | (du32 & 0xFF00) | ((du32 & 0xFF) << 16))
-                               | (isNeg ? (1 << 31) : 0);
+            du32            = _iBusCmd_Handler->read24u();
+            du32            = swapLEbyteOrder(du32, 24);
+            _it->d0_int32_t = fromTwosComplement(du32, 24);
             break;
           }
           case BusCmd_DataFormat_e::int32_t_LE:
           {
-            du32 = _iBusCmd_Handler->read32u();
-            const bool isNeg = bitRead(du32, 31);
-            du32            &= ((uint32_t)(1 << 31u) - 1);
-            _it->d0_uint32_t = (((du32 & 0xFF000000) >> 24) |
-                                ((du32 & 0xFF0000) >> 16) |
-                                ((du32 & 0xFF00) << 8) |
-                                ((du32 & 0xFF) << 24))
-                               | (isNeg ? (1 << 31) : 0);
+            du32            = _iBusCmd_Handler->read32u();
+            du32            = swapLEbyteOrder(du32, 32);
+            _it->d0_int32_t = (int32_t)du32;
             break;
           }
           case BusCmd_DataFormat_e::bytes:
@@ -746,48 +735,37 @@ bool BusCmd_Helper_struct::executeBusCmdCommands() {
             result = _iBusCmd_Handler->write32u(_it->d0_uint32_t);
             break;
           case BusCmd_DataFormat_e::uint16_t_LE:
-            result = _iBusCmd_Handler->write16u((_it->d0_uint16_t << 8) | (_it->d0_uint16_t >> 8));
+            result = _iBusCmd_Handler->write16u(swapLEbyteOrder16(_it->d0_uint16_t));
             break;
           case BusCmd_DataFormat_e::uint24_t_LE:
-            du32   = ((_it->d0_uint32_t & 0xFF0000) >> 16) | (_it->d0_uint32_t & 0xFF00) | ((_it->d0_uint32_t & 0xFF) << 16);
+            du32   = swapLEbyteOrder(_it->d0_uint32_t, 24);
             result = _iBusCmd_Handler->write24u(du32);
             break;
           case BusCmd_DataFormat_e::uint32_t_LE:
-            du32 = ((_it->d0_uint32_t & 0xFF000000) >> 24) | ((_it->d0_uint32_t & 0xFF0000) >> 16) |
-                   (_it->d0_uint32_t & 0xFF00) | ((_it->d0_uint32_t & 0xFF) << 16);
+            du32   = swapLEbyteOrder(_it->d0_uint32_t, 32);
             result = _iBusCmd_Handler->write32u(du32);
             break;
           case BusCmd_DataFormat_e::int16_t_LE:
           {
-            du16 = _it->d0_uint16_t;
-            const bool isNeg = bitRead(du16, 15);
-            du16  &= ((1 << 15) - 1);
-            du16   = ((du16 << 8) | (du16 >> 8)) | (isNeg ? (1 << 15) : 0);
+            du16   = toTwosComplement(_it->d0_int16_t, 16);
+            du16   = swapLEbyteOrder16(du16);
             result = _iBusCmd_Handler->write16u(du16);
             break;
           }
           case BusCmd_DataFormat_e::int24_t:
-            result = _iBusCmd_Handler->write24u(_it->d0_uint32_t);
+            du32   = toTwosComplement(_it->d0_int32_t, 24);
+            result = _iBusCmd_Handler->write24u(du32);
             break;
           case BusCmd_DataFormat_e::int24_t_LE:
           {
-            du32 = _it->d0_uint32_t;
-            const bool isNeg = bitRead(du32, 31);
-            du32 &= ((1 << 23) - 1);
-            du32  = (((du32 & 0xFF0000) >> 16) | (du32 & 0xFF00) | ((du32 & 0xFF) << 16))
-                    | isNeg ? (1 << 23) : 0;
+            du32   = toTwosComplement(_it->d0_int32_t, 24);
+            du32   = swapLEbyteOrder(du32, 24);
             result = _iBusCmd_Handler->write24u(du32);
             break;
           }
           case BusCmd_DataFormat_e::int32_t_LE:
           {
-            du32 = _it->d0_uint32_t;
-            const bool isNeg = bitRead(du32, 31);
-            du32 = (((du32 & 0xFF000000) >> 24) |
-                    ((du32 & 0xFF0000) >> 16) |
-                    (du32 & 0xFF00) |
-                    ((du32 & 0xFF) << 16))
-                   | (isNeg ? (1 << 31) : 0);
+            du32   = swapLEbyteOrder(_it->d0_uint32_t, 32);
             result = _iBusCmd_Handler->write32u(du32);
             break;
           }
@@ -828,52 +806,41 @@ bool BusCmd_Helper_struct::executeBusCmdCommands() {
             break;
           case BusCmd_DataFormat_e::uint16_t_LE:
             du16             = _iBusCmd_Handler->read16uREG(_it->reg, wideReg);
-            _it->d0_uint16_t = (du16 << 8) | (du16 >> 8);
+            _it->d0_uint16_t = swapLEbyteOrder16(du16);
             break;
           case BusCmd_DataFormat_e::uint24_t_LE:
             du32             = _iBusCmd_Handler->read24uREG(_it->reg, wideReg);
-            _it->d0_uint32_t = ((du32 & 0xFF0000) >> 16) | (du32 & 0xFF00) | ((du32 & 0xFF) << 16);
+            _it->d0_uint32_t = swapLEbyteOrder(du32, 24);
             break;
           case BusCmd_DataFormat_e::uint32_t_LE:
             du32             = _iBusCmd_Handler->read32uREG(_it->reg, wideReg);
-            _it->d0_uint32_t = ((du32 & 0xFF000000) >> 24) | ((du32 & 0xFF0000) >> 16) | ((du32 & 0xFF00) << 8) | ((du32 & 0xFF) << 24);
+            _it->d0_uint32_t = swapLEbyteOrder(du32, 32);
             break;
           case BusCmd_DataFormat_e::int16_t_LE:
           {
-            du16 = _iBusCmd_Handler->read16uREG(_it->reg, wideReg);
-            const bool isNeg = bitRead(du16, 15);
-            du16            &= ((1 << 15) - 1);
-            du16             = ((du16 << 8) | (du16 >> 8)) | (isNeg ? (1 << 15) : 0);
-            _it->d0_uint16_t = du16;
+            du16            = _iBusCmd_Handler->read16uREG(_it->reg, wideReg);
+            du16            = swapLEbyteOrder16(du16);
+            _it->d0_int16_t = fromTwosComplement(du16, 16);
             break;
           }
           case BusCmd_DataFormat_e::int24_t:
           {
-            du32 = _iBusCmd_Handler->read24uREG(_it->reg, wideReg);
-            const bool isNeg = bitRead(du32, 23);
-            du32            &= ((1 << 23) - 1);
-            _it->d0_uint32_t = du32 | (isNeg ? (1 << 31) : 0);
+            du32            = _iBusCmd_Handler->read24uREG(_it->reg, wideReg);
+            _it->d0_int32_t = fromTwosComplement(du32, 24);
             break;
           }
           case BusCmd_DataFormat_e::int24_t_LE:
           {
-            du32 = _iBusCmd_Handler->read24uREG(_it->reg, wideReg);
-            const bool isNeg = bitRead(du32, 23);
-            du32            &= ((1 << 23) - 1);
-            _it->d0_uint32_t = (((du32 & 0xFF0000) >> 16) | (du32 & 0xFF00) | ((du32 & 0xFF) << 16))
-                               | (isNeg ? (1 << 31) : 0);
+            du32            = _iBusCmd_Handler->read24uREG(_it->reg, wideReg);
+            du32            = swapLEbyteOrder(du32, 24);
+            _it->d0_int32_t = fromTwosComplement(du32, 24);
             break;
           }
           case BusCmd_DataFormat_e::int32_t_LE:
           {
-            du32 = _iBusCmd_Handler->read32uREG(_it->reg, wideReg);
-            const bool isNeg = bitRead(du32, 31);
-            du32            &= ((uint32_t)(1 << 31u) - 1);
-            _it->d0_uint32_t = (((du32 & 0xFF000000) >> 24) |
-                                ((du32 & 0xFF0000) >> 16) |
-                                ((du32 & 0xFF00) << 8) |
-                                ((du32 & 0xFF) << 24))
-                               | (isNeg ? (1 << 31) : 0);
+            du32            = _iBusCmd_Handler->read32uREG(_it->reg, wideReg);
+            du32            = swapLEbyteOrder(du32, 32);
+            _it->d0_int32_t = (int32_t)du32;
             break;
           }
           case BusCmd_DataFormat_e::bytes:
@@ -913,48 +880,37 @@ bool BusCmd_Helper_struct::executeBusCmdCommands() {
             result = _iBusCmd_Handler->write32uREG(_it->reg, _it->d0_uint32_t, wideReg);
             break;
           case BusCmd_DataFormat_e::uint16_t_LE:
-            result = _iBusCmd_Handler->write16uREG(_it->reg, (_it->d0_uint16_t << 8) | (_it->d0_uint16_t >> 8), wideReg);
+            result = _iBusCmd_Handler->write16uREG(_it->reg, swapLEbyteOrder16(_it->d0_uint16_t), wideReg);
             break;
           case BusCmd_DataFormat_e::uint24_t_LE:
-            du32   = ((_it->d0_uint32_t & 0xFF0000) >> 16) | (_it->d0_uint32_t & 0xFF00) | ((_it->d0_uint32_t & 0xFF) << 16);
+            du32   = swapLEbyteOrder(_it->d0_uint32_t, 24);
             result = _iBusCmd_Handler->write24uREG(_it->reg, du32, wideReg);
             break;
           case BusCmd_DataFormat_e::uint32_t_LE:
-            du32 = ((_it->d0_uint32_t & 0xFF000000) >> 24) | ((_it->d0_uint32_t & 0xFF0000) >> 16) |
-                   (_it->d0_uint32_t & 0xFF00) | ((_it->d0_uint32_t & 0xFF) << 16);
+            du32   = swapLEbyteOrder(_it->d0_uint32_t, 32);
             result = _iBusCmd_Handler->write32uREG(_it->reg, du32, wideReg);
             break;
           case BusCmd_DataFormat_e::int16_t_LE:
           {
-            du16 = _it->d0_uint16_t;
-            const bool isNeg = bitRead(du16, 15);
-            du16  &= ((1 << 15) - 1);
-            du16   = ((du16 << 8) | (du16 >> 8)) | (isNeg ? (1 << 15) : 0);
+            du16   = toTwosComplement(_it->d0_uint16_t, 16);
+            du16   = swapLEbyteOrder16(du16);
             result = _iBusCmd_Handler->write16uREG(_it->reg, du16, wideReg);
             break;
           }
           case BusCmd_DataFormat_e::int24_t:
-            result = _iBusCmd_Handler->write24uREG(_it->reg, _it->d0_uint32_t, wideReg);
+            du32   = toTwosComplement(_it->d0_int32_t, 24);
+            result = _iBusCmd_Handler->write24uREG(_it->reg, du32, wideReg);
             break;
           case BusCmd_DataFormat_e::int24_t_LE:
           {
-            du32 = _it->d0_uint32_t;
-            const bool isNeg = bitRead(du32, 31);
-            du32 &= ((1 << 23) - 1);
-            du32  = (((du32 & 0xFF0000) >> 16) | (du32 & 0xFF00) | ((du32 & 0xFF) << 16))
-                    | isNeg ? (1 << 23) : 0;
+            du32   = toTwosComplement(_it->d0_int32_t, 24);
+            du32   = swapLEbyteOrder(du32, 24);
             result = _iBusCmd_Handler->write24uREG(_it->reg, du32, wideReg);
             break;
           }
           case BusCmd_DataFormat_e::int32_t_LE:
           {
-            du32 = _it->d0_uint32_t;
-            const bool isNeg = bitRead(du32, 31);
-            du32 = (((du32 & 0xFF000000) >> 24) |
-                    ((du32 & 0xFF0000) >> 16) |
-                    (du32 & 0xFF00) |
-                    ((du32 & 0xFF) << 16))
-                   | (isNeg ? (1 << 31) : 0);
+            du32   = swapLEbyteOrder(_it->d0_uint32_t, 32);
             result = _iBusCmd_Handler->write32uREG(_it->reg, du32, wideReg);
             break;
           }

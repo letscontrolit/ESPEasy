@@ -379,6 +379,12 @@ The conversion always outputs a string, but not all of these can be converted ba
    * - Radians to degrees: ``%c_r2d%(0.357)``
      - Radians to degrees: ``20.45``
      - Radians to degrees
+   * - To 2's complement: ``%c_to2c%(-127,10)``
+     - To 2's complement: 897
+     - Convert an integer to 2's complment
+   * - From 2's complement: ``%c_fr2c%(255,8)``
+     - From 2's complement: -1
+     - Convert a 2's complment to an integer
    * - Mins to days: ``%c_m2day%(1900)``
      - Mins to days: ``1.32``
      - Minutes expressed in days
