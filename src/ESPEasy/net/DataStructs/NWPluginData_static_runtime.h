@@ -156,7 +156,10 @@ struct NWPluginData_static_runtime {
 
   void     processEvents();
 
-  bool setStaticIP(const IPAddress & ip, const IPAddress & gateway, const IPAddress & subnetmask, const IPAddress & dns);
+  bool     setStaticIP(const IPAddress& ip,
+                       const IPAddress& gateway,
+                       const IPAddress& subnetmask,
+                       const IPAddress& dns);
 
   // =============================================
   // OnOffTimers for keeping track of:
@@ -189,23 +192,24 @@ struct NWPluginData_static_runtime {
 #endif
 
   IPAddress _ip, _gateway, _sn, _dns;
-  bool _useStaticIP{}; // Added to make sure we don't have to re-check IP from a callback
+  bool      _useStaticIP{}; // Added to make sure we don't have to re-check IP from a callback
 
 private:
 
 #ifdef ESP32
   struct DeferredEvent {
     DeferredEventType type{};
-#if FEATURE_USE_IPV6
+# if FEATURE_USE_IPV6
     ip_event_got_ip6_t ipv6Event{};
-#endif
+# endif
+
   };
 
   static constexpr uint8_t DEFERRED_EVENT_QUEUE_SIZE = 16;
-  DeferredEvent _deferredEvents[DEFERRED_EVENT_QUEUE_SIZE]{};
-  uint8_t _deferredEventRead{};
-  uint8_t _deferredEventWrite{};
-  bool _deferredEventOverflow{};
+  DeferredEvent            _deferredEvents[DEFERRED_EVENT_QUEUE_SIZE]{};
+  uint8_t                  _deferredEventRead{};
+  uint8_t                  _deferredEventWrite{};
+  bool                     _deferredEventOverflow{};
 
   NetworkInterface *_netif{};
 #endif // ifdef ESP32

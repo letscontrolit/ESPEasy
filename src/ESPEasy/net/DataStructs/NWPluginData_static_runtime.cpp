@@ -337,8 +337,6 @@ void NWPluginData_static_runtime::processEvents()
 
   //  _gotIP6Stats.set(hasIPv6());
 #endif // if FEATURE_USE_IPV6
-  const bool connected_changed        = _connectedStats.changedSinceLastCheck_and_clear();
-  const bool establishConnect_changed = _establishConnectStats.changedSinceLastCheck_and_clear();
 
   if (_gotIPStats.changedSinceLastCheck_and_clear()) {
 #ifdef ESP32
@@ -407,26 +405,22 @@ void NWPluginData_static_runtime::processEvents()
   }
 #endif // if FEATURE_USE_IPV6
 
-  if (connected_changed || establishConnect_changed)
+# ifndef BUILD_NO_DEBUG
+  const bool connected_changed        = _connectedStats.changedSinceLastCheck_and_clear();
+  const bool establishConnect_changed = _establishConnectStats.changedSinceLastCheck_and_clear();
+  if (connected_changed)
   {
-    if (_establishConnectStats.isSet()) {
+    if (_connectedStats.isSet()) {
       if (_connectedStats.isOn()) {
         log_connected();
 
         //    _establishConnectStats.resetCount();
-      } else if (_establishConnectStats.isSet() &&
-                 _connectedStats.isOff() &&
-                 !_establishConnectStats.isOn()) {
+      } else {
         log_disconnected();
-#if FEATURE_WIFI
-
-        if (NETWORK_INDEX_WIFI_STA == _networkIndex) {
-          ESPEasy::net::wifi::doWiFiDisconnect();
-        }
-#endif // if FEATURE_WIFI
       }
     }
   }
+#endif
 
   _operationalStats.set(operational());
 

@@ -338,6 +338,7 @@ void ESPEasyWiFi_t::setState(WiFi_STA_State_e newState, uint32_t timeout) {
     {
 
       if (oldState == WiFi_STA_State_e::STA_Connecting) {
+        // FIXME TD-er: Merge with WiFi_STA_State_e::STA_Reconnecting below
         // "Connect Fail"
         if (_connectAttemptStarted) {
           WiFi_AP_Candidates.markCurrentConnectionFailed();
@@ -561,6 +562,10 @@ bool ESPEasyWiFi_t::connectSTA()
 # endif // ifdef ESP32
   wifi_STA_data->mark_begin_establish_connection();
 
+  doWiFiDisconnect();
+
+  _connectAttemptStarted = true;
+
   if (candidate.bits.isHidden /*&& Settings.HiddenSSID_SlowConnectPerBSSID()*/) {
     //      WiFi.disconnect(false, true);
 # ifdef ESP32
@@ -568,6 +573,11 @@ bool ESPEasyWiFi_t::connectSTA()
     WiFi.setSortMethod(WIFI_CONNECT_AP_BY_SIGNAL);
 # endif // ifdef ESP32
     WiFi.begin(candidate.ssid.c_str(), key.c_str(), candidate.channel, candidate.bssid.mac);
+          // If the ssid returned from the scan is empty, it is a hidden SSID
+      // it appears that the WiFi.begin() function is asynchronous and takes
+      // additional time to connect to a hidden SSID. Therefore a delay of 1000ms
+      // is added for hidden SSIDs before calling WiFi.status()
+//      delay(1000);
   } else {
     if (candidate.allowQuickConnect()) {
 # ifdef ESP32
@@ -583,7 +593,9 @@ bool ESPEasyWiFi_t::connectSTA()
     }
   }
 
-  _connectAttemptStarted = true;
+      // Always wait for a second
+//    WiFi.waitForConnectResult(1000); // https://github.com/arendst/Tasmota/issues/14985
+
   return true;
 }
 

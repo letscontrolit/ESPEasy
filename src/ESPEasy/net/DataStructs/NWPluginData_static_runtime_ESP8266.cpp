@@ -95,7 +95,7 @@ void NWPluginData_static_runtime::mark_begin_establish_connection()
 void NWPluginData_static_runtime::mark_connected()
 {
   _establishConnectStats.setOff();
-  _connectedStats.setOn();
+  _connectedStats.forceSet(true);
   if (_useStaticIP) {
     // Since we won't get an event stating we got an IP, we need to trigger it here
     mark_got_IP();

@@ -42,9 +42,14 @@ bool WiFi_pre_STA_setup() {
 void doWiFiDisconnect() {
   // Only call disconnect when STA is active
   if (doWifiIsSTA(WiFi.getMode())) {
+    // See https://github.com/esp8266/Arduino/issues/5912
+    WiFi.persistent(false);
+
     WiFi.disconnect();
     if (Settings.WiFiRestart_connection_lost())
     doSetSTA(false);
+
+    delay(0);
 //    wifi_station_disconnect();
   }
   /*
@@ -291,7 +296,7 @@ void doSetConnectionSpeed(bool ForceWiFi_bg_mode) {
     }
   } else {
     // No need to perform a next attempt.
-    WiFi_AP_Candidates.markAttempt();
+//    WiFi_AP_Candidates.markAttempt();
   }
 
   if (WiFi.getPhyMode() == phyMode) {
