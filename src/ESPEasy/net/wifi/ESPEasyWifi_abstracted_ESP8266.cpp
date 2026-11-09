@@ -61,6 +61,15 @@ void doWiFiDisconnect() {
   */
 }
 
+void doWiFiDisconnectBeforeConnect() {
+  if (!doWifiIsSTA(WiFi.getMode())) { return; }
+
+  // Avoid persisting credentials while clearing the previous connection attempt.
+  WiFi.persistent(false);
+  WiFi.disconnect();
+  delay(0);
+}
+
 bool doWifiIsAP(WiFiMode_t wifimode)  { return (wifimode == WIFI_AP) || (wifimode == WIFI_AP_STA); }
 
 bool doWifiIsSTA(WiFiMode_t wifimode) { return (wifimode == WIFI_STA) || (wifimode == WIFI_AP_STA); }

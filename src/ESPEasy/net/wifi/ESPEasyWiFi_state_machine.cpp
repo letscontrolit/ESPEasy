@@ -569,7 +569,11 @@ bool ESPEasyWiFi_t::connectSTA()
 # endif // ifdef ESP32
   wifi_STA_data->mark_begin_establish_connection();
 
+# ifdef ESP8266
+  doWiFiDisconnectBeforeConnect();
+# else
   doWiFiDisconnect();
+# endif
 
   _connectAttemptStarted = true;
 
