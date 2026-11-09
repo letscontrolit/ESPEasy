@@ -39,7 +39,7 @@ public:
   bool plugin_write(struct EventStruct *event,
                     String            & string);
   bool isInitialized() const {
-    return initialized;
+    return nullptr != sensor;
   }
 
 private:
@@ -57,8 +57,6 @@ private:
   bool _lowPowerMode  = false;
   bool _ledState      = true;
   bool _changeOnly    = false;
-
-  bool initialized = false;
 };
 
 #endif // ifdef USES_P163

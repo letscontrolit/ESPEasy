@@ -19,6 +19,11 @@ class Adafruit_GFX : public Print {
 
 public:
   Adafruit_GFX(int16_t w, int16_t h); // Constructor
+#if !defined(__AVR__)
+  // Virtual so deleting a canvas or display through an Adafruit_GFX pointer
+  // frees it. Skipped on AVR, where it links malloc/free into every sketch.
+  virtual ~Adafruit_GFX() {}
+#endif
 
   /**********************************************************************/
   /*!
