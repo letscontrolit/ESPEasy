@@ -7,11 +7,15 @@
 #include "../../../src/Helpers/NetworkStatusLED.h"
 #include "../../../src/Helpers/StringConverter.h"
 
-#include "../wifi/ESPEasyWifi.h"
+#if FEATURE_WIFI
+# include "../wifi/ESPEasyWifi.h"
+# include "../wifi/ESPEasyWifi_abstracted.h"
+#endif // if FEATURE_WIFI
 
 #ifdef ESP32
 # include <esp_netif.h>
-#endif
+# include <freertos/FreeRTOS.h>
+#endif // ifdef ESP32
 
 
 #if FEATURE_MDNS
@@ -22,6 +26,10 @@
 
 namespace ESPEasy {
 namespace net {
+
+#ifdef ESP32
+static portMUX_TYPE deferredEventMux = portMUX_INITIALIZER_UNLOCKED;
+#endif
 
 #define CONNECTION_CONSIDERED_STABLE_MSEC    60000
 #define CONNECT_TIMEOUT_MAX                  10000 // in milliSeconds
@@ -100,6 +108,13 @@ bool NWPluginData_static_runtime::getTrafficCount(TX_RX_traffic_count& traffic) 
 
 void NWPluginData_static_runtime::clear(networkIndex_t networkIndex)
 {
+#ifdef ESP32
+  portENTER_CRITICAL(&deferredEventMux);
+  _deferredEventRead     = 0;
+  _deferredEventWrite    = 0;
+  _deferredEventOverflow = false;
+  portEXIT_CRITICAL(&deferredEventMux);
+#endif // ifdef ESP32
   _connectedStats.reset();
   _gotIPStats.reset();
 #if FEATURE_USE_IPV6
@@ -134,11 +149,41 @@ void NWPluginData_static_runtime::clear(networkIndex_t networkIndex)
 
   _connectionFailures = 0;
 
-  _ip      = INADDR_NONE;
-  _gateway = INADDR_NONE;
-  _sn      = INADDR_NONE;
-  _dns     = INADDR_NONE;
+  _useStaticIP = false;
+  _ip          = INADDR_NONE;
+  _gateway     = INADDR_NONE;
+  _sn          = INADDR_NONE;
+  _dns         = INADDR_NONE;
 }
+
+#ifdef ESP32
+
+void NWPluginData_static_runtime::queueEvent(DeferredEventType event
+# if                                                                     FEATURE_USE_IPV6
+                                             , const ip_event_got_ip6_t *ipv6Event
+# endif
+                                             )
+{
+  portENTER_CRITICAL(&deferredEventMux);
+  const uint8_t nextWrite = (_deferredEventWrite + 1) % DEFERRED_EVENT_QUEUE_SIZE;
+
+  if (nextWrite == _deferredEventRead) {
+    _deferredEventOverflow = true;
+  } else {
+    DeferredEvent& queuedEvent = _deferredEvents[_deferredEventWrite];
+    queuedEvent.type = event;
+# if FEATURE_USE_IPV6
+
+    if (ipv6Event != nullptr) {
+      memcpy(&queuedEvent.ipv6Event, ipv6Event, sizeof(queuedEvent.ipv6Event));
+    }
+# endif // if FEATURE_USE_IPV6
+    _deferredEventWrite = nextWrite;
+  }
+  portEXIT_CRITICAL(&deferredEventMux);
+}
+
+#endif // ifdef ESP32
 
 void NWPluginData_static_runtime::processEvent_and_clear()
 {
@@ -164,6 +209,124 @@ void NWPluginData_static_runtime::processEvents()
 #ifdef ESP32
 
   if (_netif == nullptr) { return; }
+
+  bool eventQueueOverflow = false;
+
+  for (;;) {
+    DeferredEvent event;
+    bool haveEvent = false;
+    portENTER_CRITICAL(&deferredEventMux);
+
+    if (_deferredEventRead != _deferredEventWrite) {
+      event              = _deferredEvents[_deferredEventRead];
+      _deferredEventRead = (_deferredEventRead + 1) % DEFERRED_EVENT_QUEUE_SIZE;
+      haveEvent          = true;
+    }
+    eventQueueOverflow     = eventQueueOverflow || _deferredEventOverflow;
+    _deferredEventOverflow = false;
+    portEXIT_CRITICAL(&deferredEventMux);
+
+    if (!haveEvent) { break; }
+
+    switch (event.type)
+    {
+      case DeferredEventType::Started:
+        mark_start();
+        break;
+      case DeferredEventType::Stopped:
+        mark_stop();
+        break;
+      case DeferredEventType::Connected:
+        mark_connected();
+        break;
+      case DeferredEventType::Disconnected:
+        mark_disconnected();
+        break;
+      case DeferredEventType::GotIP:
+        mark_got_IP();
+        break;
+      case DeferredEventType::LostIP:
+        mark_lost_IP();
+        break;
+# if FEATURE_USE_IPV6
+      case DeferredEventType::GotIPv6:
+        mark_got_IPv6(&event.ipv6Event);
+        break;
+# else // if FEATURE_USE_IPV6
+      case DeferredEventType::GotIPv6:
+        break;
+# endif // if FEATURE_USE_IPV6
+      case DeferredEventType::WiFiOffLog:
+        addLog(LOG_LEVEL_INFO, F("WIFI_OFF"));
+        break;
+      case DeferredEventType::WiFiReadyLog:
+        addLog(LOG_LEVEL_INFO, F("WIFI_READY"));
+        break;
+      case DeferredEventType::WiFiScanDoneLog:
+        addLog(LOG_LEVEL_INFO, F("SCAN_DONE"));
+        break;
+      case DeferredEventType::WiFiAuthmodeChangeLog:
+        addLog(LOG_LEVEL_INFO, F("STA_AUTHMODE_CHANGE"));
+        break;
+      case DeferredEventType::APStarted:
+        mark_start();
+
+        if (hasIP()) {
+          mark_got_IP();
+        }
+        break;
+      case DeferredEventType::APStationDisconnected:
+# if FEATURE_WIFI
+
+        if (!ESPEasy::net::wifi::wifiAPmodeActivelyUsed()) {
+          mark_disconnected();
+        }
+# endif // if FEATURE_WIFI
+        break;
+      case DeferredEventType::APStationIPAssigned:
+
+        if (!_gotIPStats.isOn() && hasIP()) {
+          mark_got_IP();
+        }
+        break;
+      case DeferredEventType::APStationConnectedLog:
+        # ifndef BUILD_NO_DEBUG
+
+        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+          addLog(LOG_LEVEL_DEBUG, F("AP_STACONNECTED"));
+        }
+        # endif // ifndef BUILD_NO_DEBUG
+        break;
+      case DeferredEventType::APStationDisconnectedLog:
+        # ifndef BUILD_NO_DEBUG
+
+        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+          addLog(LOG_LEVEL_DEBUG, F("AP_STADISCONNECTED"));
+        }
+        # endif // ifndef BUILD_NO_DEBUG
+        break;
+      case DeferredEventType::APStationIPAssignedLog:
+        # ifndef BUILD_NO_DEBUG
+
+        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+          addLog(LOG_LEVEL_DEBUG, F("AP_STAIPASSIGNED"));
+        }
+        # endif // ifndef BUILD_NO_DEBUG
+        break;
+      case DeferredEventType::APGotIPv6Log:
+        # ifndef BUILD_NO_DEBUG
+
+        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+          addLog(LOG_LEVEL_DEBUG, F("AP_GOT_IP6"));
+        }
+        # endif // ifndef BUILD_NO_DEBUG
+        break;
+    }
+  }
+
+  if (eventQueueOverflow) {
+    addLog(LOG_LEVEL_ERROR, F("Network event queue overflow"));
+  }
 #endif // ifdef ESP32
 
   // TD-er: Just set these just to be sure we didn't miss any events.
@@ -174,8 +337,6 @@ void NWPluginData_static_runtime::processEvents()
 
   //  _gotIP6Stats.set(hasIPv6());
 #endif // if FEATURE_USE_IPV6
-  const bool connected_changed        = _connectedStats.changedSinceLastCheck_and_clear();
-  const bool establishConnect_changed = _establishConnectStats.changedSinceLastCheck_and_clear();
 
   if (_gotIPStats.changedSinceLastCheck_and_clear()) {
 #ifdef ESP32
@@ -244,20 +405,22 @@ void NWPluginData_static_runtime::processEvents()
   }
 #endif // if FEATURE_USE_IPV6
 
-  if (connected_changed || establishConnect_changed)
+# ifndef BUILD_NO_DEBUG
+  const bool connected_changed        = _connectedStats.changedSinceLastCheck_and_clear();
+  const bool establishConnect_changed = _establishConnectStats.changedSinceLastCheck_and_clear();
+  if (connected_changed)
   {
-    if (_establishConnectStats.isSet()) {
+    if (_connectedStats.isSet()) {
       if (_connectedStats.isOn()) {
         log_connected();
 
         //    _establishConnectStats.resetCount();
-      } else if (_establishConnectStats.isSet() &&
-                 _connectedStats.isOff() &&
-                 !_establishConnectStats.isOn()) {
+      } else {
         log_disconnected();
       }
     }
   }
+#endif
 
   _operationalStats.set(operational());
 
@@ -284,9 +447,9 @@ void NWPluginData_static_runtime::processEvents()
     if (Settings.UseRules && _eventInterfaceName.length())
     {
       if (_operationalStats.isOn()) {
-        eventQueue.addDeDup(concat(_eventInterfaceName, F("#Connected")));
+        eventQueue.addDeDup(concat(_eventInterfaceName, F("#Connected")), true);
       } else if (_operationalStats.isOff()) {
-        eventQueue.addDeDup(concat(_eventInterfaceName, F("#Disconnected")));
+        eventQueue.addDeDup(concat(_eventInterfaceName, F("#Disconnected")), true);
       }
     }
     statusLED(true);
@@ -294,14 +457,14 @@ void NWPluginData_static_runtime::processEvents()
 
   if (_startStopStats.changedSinceLastCheck_and_clear() && Settings.UseRules) {
     if (_startStopStats.isOn()) {
-      eventQueue.addDeDup(concat(_eventInterfaceName, F("#Enabled")));
+      eventQueue.addDeDup(concat(_eventInterfaceName, F("#Enabled")), true);
     } else if (_startStopStats.isOff()) {
-      eventQueue.addDeDup(concat(_eventInterfaceName, F("#Disabled")));
+      eventQueue.addDeDup(concat(_eventInterfaceName, F("#Disabled")), true);
     }
   }
 }
 
-void NWPluginData_static_runtime::setStaticIP(const IPAddress& ip, const IPAddress& gateway, const IPAddress& subnetmask,
+bool NWPluginData_static_runtime::setStaticIP(const IPAddress& ip, const IPAddress& gateway, const IPAddress& subnetmask,
                                               const IPAddress& dns)
 {
   _useStaticIP = IPAddressSet(ip) && IPAddressSet(gateway) && IPAddressSet(subnetmask);
@@ -316,6 +479,7 @@ void NWPluginData_static_runtime::setStaticIP(const IPAddress& ip, const IPAddre
     _dns_cache[1] = INADDR_NONE;
   }
 #endif // ifdef ESP32
+  return _useStaticIP;
 }
 
 String NWPluginData_static_runtime::statusToString() const

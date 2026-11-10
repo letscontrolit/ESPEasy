@@ -58,6 +58,9 @@ private:
 
   void begin();
 
+  void loop_internal();
+
+
 public:
 
   // Process the state machine for managing WiFi connection
@@ -117,18 +120,18 @@ private:
   LongTermTimer _last_state_change;
   LongTermTimer _state_timeout;
   LongTermTimer _last_seen_connected;
+  LongTermTimer _last_TX_pwr_update;
 
   uint8_t _scan_channel{};
 
   //  LongTermTimer _AP_start_timestamp;
 
   uint32_t _connect_attempt = 0;
+  bool _connectAttemptStarted{};
   
 
 
   //  uint32_t _nrReconnects = 0;
-
-  bool _callbackError = false;
 
   // Special modes for initial setup or re-configuration of a node via serial port/IMPROV
   //  bool _improvActive = false;
@@ -141,6 +144,8 @@ private:
   #else
   bool _disabledAtBoot = false;
   #endif
+
+  bool _inLoop = false;
 
   //  bool _passiveScan       = false;
   //  bool _includeHiddenSSID = false;

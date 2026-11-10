@@ -4,7 +4,7 @@
 #include "../Helpers/Misc.h"
 #include "../Helpers/StringConverter.h"
 
-void EventQueueStruct::add(const String& event, bool deduplicate)
+void EventQueueStruct::add(const String& event, bool deduplicate, bool toFront)
 {
   if (!deduplicate || !isDuplicate(event)) {
 #if defined(USE_SECOND_HEAP) || defined(ESP32)
@@ -18,27 +18,31 @@ void EventQueueStruct::add(const String& event, bool deduplicate)
     HeapSelectDram ephemeral;
 # endif // ifdef USE_SECOND_HEAP
 
+    if (toFront) {
+      _eventQueue.emplace_front(std::move(tmp));
+    }
+    else {
 
-    _eventQueue.emplace_back(std::move(tmp));
+      _eventQueue.emplace_back(std::move(tmp));
+    }
 #else // if defined(USE_SECOND_HEAP) || defined(ESP32)
-    _eventQueue.push_back(event);
+
+    if (toFront) {
+      _eventQueue.emplace_front(event);
+    }
+    else {
+      _eventQueue.push_back(event);
+    }
 #endif // if defined(USE_SECOND_HEAP) || defined(ESP32)
   }
 }
 
-void EventQueueStruct::add(const __FlashStringHelper *event, bool deduplicate)
+void EventQueueStruct::add(const __FlashStringHelper *event, bool deduplicate, bool toFront)
 {
-  String str;
-
-  move_special(str, String(event), 0);
-  add(str, deduplicate);
+  addMove(String(event), deduplicate, toFront);
 }
 
-void EventQueueStruct::addDeDup(const String& event)              { add(event, true); }
-
-void EventQueueStruct::addDeDup(const __FlashStringHelper *event) { add(event, true); }
-
-void EventQueueStruct::addMove(String&& event, bool deduplicate)
+void EventQueueStruct::addMove(String&& event, bool deduplicate, bool toFront)
 {
   if (!event.length()) { return; }
 
@@ -52,12 +56,30 @@ void EventQueueStruct::addMove(String&& event, bool deduplicate)
     // Do not add to the list while on 2nd heap
     HeapSelectDram ephemeral;
     # endif // ifdef USE_SECOND_HEAP
-    _eventQueue.emplace_back(std::move(tmp));
-    #else // if defined(USE_SECOND_HEAP) || defined(ESP32)
-    _eventQueue.emplace_back(std::move(event));
-    #endif // ifdef USE_SECOND_HEAP
+
+    if (toFront) {
+      _eventQueue.emplace_front(std::move(tmp));
+    }
+    else {
+      _eventQueue.emplace_back(std::move(tmp));
+    }
+#else // if defined(USE_SECOND_HEAP) || defined(ESP32)
+
+    if (toFront) {
+      _eventQueue.emplace_front(event);
+    }
+    else {
+      _eventQueue.push_back(event);
+    }
+#endif // if defined(USE_SECOND_HEAP) || defined(ESP32)
   }
 }
+
+void EventQueueStruct::addDeDup(String&& event, bool toFront)                   { addMove(std::move(event), true, toFront); }
+
+void EventQueueStruct::addDeDup(const String& event, bool toFront)              { add(event, true, toFront); }
+
+void EventQueueStruct::addDeDup(const __FlashStringHelper *event, bool toFront) { add(event, true, toFront); }
 
 void EventQueueStruct::add(taskIndex_t TaskIndex, const String& varName, const String& eventValue)
 {

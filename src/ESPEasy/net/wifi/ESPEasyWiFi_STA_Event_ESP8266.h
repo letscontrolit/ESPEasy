@@ -36,6 +36,8 @@ public:
 
   NWPluginData_static_runtime* getNWPluginData_static_runtime();
 
+  static void                  processEvents();
+
   WiFiDisconnectReason         getLastDisconnectReason() const;
   uint8_t                      getAuthMode() const;
 
@@ -43,8 +45,7 @@ public:
 
 
   // ********************************************************************************
-  // Functions called on events.
-  // Make sure not to call anything in these functions that result in delay() or yield()
+  // Functions called on events. These only enqueue event data for processEvents().
   // ********************************************************************************
   static void onConnected(const WiFiEventStationModeConnected& event);
 

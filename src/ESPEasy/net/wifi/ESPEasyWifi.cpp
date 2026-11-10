@@ -87,22 +87,10 @@ namespace wifi {
    - Set timerAPstart when "valid WiFi connection" state is observed.
    - Disable timerAPstart when ESPEASY_WIFI_SERVICES_INITIALIZED wifi state is reached.
 
-   For the first attempt to connect after a cold boot (RTC values are 0), a WiFi scan will be
-   performed to find the strongest known SSID.
-   This will set RTC.lastBSSID and RTC.lastWiFiChannel
-
-   Quick reconnect (using BSSID/channel of last connection) when both apply:
-   - If wifi_connect_attempt < 3
-   - RTC.lastBSSID is known
-   - RTC.lastWiFiChannel != 0
-
-   Change of wifi settings when both apply:
-   - "other" settings valid
-   - (wifi_connect_attempt % 2) == 0
-
-   Reset of wifi_connect_attempt to 0 when both apply:
-   - connection successful
-   - Connection stable (connected for > 5 minutes)
+   The last successful BSSID, channel, and credential index are saved to RTC when connected.
+   ESP32 also stores them in NVS after the connection is stable. When enabled and available,
+   this candidate is tried before scanning; a failed quick reconnect clears it and falls back
+   to normal candidate selection.
 
  */
 bool validWiFiSSID(const String& ssid) {
@@ -142,19 +130,18 @@ bool validWiFiCredentials(const String& ssid, const String& pass) {
 // ********************************************************************************
 bool WiFiConnected() {
   if (!Settings.getNetworkEnabled(NETWORK_INDEX_WIFI_STA)) { return false; }
+/*
+  // FIXME TD-er: Do we need to call loop() here? See: https://github.com/letscontrolit/ESPEasy/issues/5665
   static uint32_t lastCheckedTime = 0;
 
-  const int32_t timePassed = timePassedSince(lastCheckedTime);
-
-  if (lastCheckedTime != 0) {
-    if (timePassed < 10) {
-      // Rate limit time spent in WiFiConnected() to max. 100x per sec to process the rest of this function
-      return ESPEasyWiFi.connected();
-    }
-    lastCheckedTime = millis();
+  if ((lastCheckedTime != 0) && (timePassedSince(lastCheckedTime) < 10)) {
+    // Rate limit time spent in WiFiConnected() to max. 100x per sec to process the rest of this function
+    return ESPEasyWiFi.connected();
   }
-
+  lastCheckedTime = millis();
   ESPEasyWiFi.loop();
+  
+*/
   return ESPEasyWiFi.connected();
 }
 
