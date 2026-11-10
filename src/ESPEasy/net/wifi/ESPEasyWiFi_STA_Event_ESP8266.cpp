@@ -39,6 +39,9 @@ enum class DeferredEventType : uint8_t {
 };
 
 struct DeferredEvent {
+  DeferredEvent() = default;
+  DeferredEvent(DeferredEventType t, WiFiDisconnectReason reason, uint8_t mode)
+    : type(t), disconnectReason(reason), authMode(mode) {}
   DeferredEventType     type{};
   WiFiDisconnectReason  disconnectReason{ WiFiDisconnectReason::WIFI_DISCONNECT_REASON_UNSPECIFIED };
   uint8_t               authMode{};
