@@ -30,6 +30,10 @@ The Philips chip PCD8544 is used for driving a monochrome LCD display, often kno
 
 The monochrome display has an 84 x 48 pixel resolution.
 
+Since 2026-11-10, the plugin also supports displays using the Sitronix **ST7567** controller with a resolution of 128 x 64 pixels, like the OPEN-SMART 1.8" LCD module, or 128 x 32 pixels (pins ``GND``, ``3V3``, ``SDI``, ``SCK``, ``DC``, ``CS``, ``RST``, ``LED``). The controller is selected with the **Display controller** setting.
+
+ST7567 support is controlled by the plugin build flag ``P141_FEATURE_ST7567``. It is enabled by default for ESP32 builds. For ESP8266 builds it is disabled to save space, and can be enabled by adding ``#define P141_FEATURE_ST7567 1`` to ``Custom.h`` (or ``-DP141_FEATURE_ST7567=1`` to the build flags) of a custom build.
+
 The plugin can be configured to show predefined text, a reservation for up to 9 lines is made, but only the lines that can fit on-screen will be shown, or via commands, sent via http or from rules, text or graphical elements like lines, rectangles, circles, pixels, etc., can be shown.
 
 Hardware
@@ -89,12 +93,15 @@ Device
 Actuator
 ^^^^^^^^
 
-* **GPIO -> SCE** Select the GPIO pin to use for the ``SCE``, a.k.a. ``CS``, connection.
+* **Display controller** Select the controller used on the display: *PCD8544 Nokia 5110 (84x48)* (default), *ST7567 (128x64)* or *ST7567 (128x32)*. The ST7567 options are only available when the build includes ``P141_FEATURE_ST7567``.
+
+* **GPIO -> SCE/CS** Select the GPIO pin to use for the ``SCE``, a.k.a. ``CS``, connection.
 * **GPIO -> D/C** The GPIO pin to use for the ``D/C`` connection (Data/Command).
 * **GPIO -> RST (optional)** Select the GPIO pin to use for the ``RST`` (reset) connection. If the display doesn't have a ``RST`` connection, or no free pin is available, it can be set to *None*.
 * **GPIO -> Backlight (optional)** Select the GPIO pin to use for controlling the backlight. To save power, the backlight can be dimmed, or turned off if the display is turned off. If set to *None* and the ``LED`` input connected to ``VCC``, the max. brightness is used for the backlight.
 * **Backlight percentage** The backlight can be controlled via PWM modulation on the Backlight (LED) pin of the display. This is set as a percentage between 0 and 100%.
-* **Display Contrast**: The PCD8544 supports setting the contrast level, to get an optimally visible display content. This can be fine-tuned here. Range: 0..100%.
+* **Backlight active low** Check when the backlight is switched on by a *low* signal on the ``LED`` pin, like on the OPEN-SMART ST7567 module.
+* **Display Contrast**: The PCD8544 supports setting the contrast level, to get an optimally visible display content. This can be fine-tuned here. Range: 0..100%. For the ST7567 a value around 50% is a good starting point, higher values make the display darker.
 * **Display button** A GPIO pin can be configured to wake the display on demand. This, combined with the **Display Timeout** setting, can preserve the lifetime of the display, and save some power.
 * **Inversed Logic** When checked, reverses the pin-state action of the **Display button** gpio. This allows an external circuit, f.e. an IR sensor, that may provide a *high* signal when activated, to wake the display.
 * **Display Timeout** Select the timeout in seconds to turn off the display after the last update or wake-up. Only used if the **Display button** is *also* configured.

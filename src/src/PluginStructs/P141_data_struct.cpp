@@ -16,9 +16,40 @@ const __FlashStringHelper* toString(P141_CommandTrigger cmd) {
 }
 
 /****************************************************************************
+ * Display controller helpers
+ ***************************************************************************/
+const __FlashStringHelper* toString(P141_Controller controller) {
+  switch (controller) {
+    case P141_Controller::ST7567: return F("ST7567 (128x64)");
+    case P141_Controller::ST7567_32: return F("ST7567 (128x32)");
+    case P141_Controller::PCD8544: break;
+  }
+  return F("PCD8544 Nokia 5110 (84x48)");
+}
+
+uint16_t P141_getXpix(P141_Controller controller) {
+  # if P141_FEATURE_ST7567
+
+  if ((P141_Controller::ST7567 == controller) || (P141_Controller::ST7567_32 == controller)) { return P141_ST7567_LCDWIDTH; }
+  # endif // if P141_FEATURE_ST7567
+  return 84;
+}
+
+uint16_t P141_getYpix(P141_Controller controller) {
+  # if P141_FEATURE_ST7567
+
+  if (P141_Controller::ST7567 == controller) { return 64; }
+
+  if (P141_Controller::ST7567_32 == controller) { return 32; }
+  # endif // if P141_FEATURE_ST7567
+  return 48;
+}
+
+/****************************************************************************
  * Constructor
  ***************************************************************************/
-P141_data_struct::P141_data_struct(uint8_t             rotation,
+P141_data_struct::P141_data_struct(P141_Controller     controller,
+                                   uint8_t             rotation,
                                    uint8_t             fontscaling,
                                    AdaGFXTextPrintMode textmode,
                                    int8_t              backlightPin,
@@ -35,7 +66,8 @@ P141_data_struct::P141_data_struct(uint8_t             rotation,
                                    const uint8_t       defaultFontId
                                    # endif // if ADAGFX_FONTS_INCLUDED
                                    )
-  : _rotation(rotation), _fontscaling(fontscaling), _textmode(textmode), _backlightPin(backlightPin),
+  : _controller(controller), _xpix(P141_getXpix(controller)), _ypix(P141_getYpix(controller)),
+  _rotation(rotation), _fontscaling(fontscaling), _textmode(textmode), _backlightPin(backlightPin),
   _backlightPercentage(backlightPercentage), _contrast(contrast), _displayTimer(displayTimer),
   _displayTimeout(displayTimer), _commandTrigger(commandTrigger), _fgcolor(fgcolor), _bgcolor(bgcolor),
   _textBackFill(textBackFill), _displayInverted(displayInverted)
@@ -58,6 +90,8 @@ P141_data_struct::~P141_data_struct() {
  * plugin_init: Initialize display
  ***************************************************************************/
 bool P141_data_struct::plugin_init(struct EventStruct *event) {
+  _backlightInverted = bitRead(P141_CONFIG_FLAGS, P141_CONFIG_FLAG_BACKLIGHT_INV);
+
 #ifdef ESP32
   auto spi_ptr = getSPIBusForTask(event->TaskIndex);
   if (!spi_ptr) return false;
@@ -72,27 +106,41 @@ bool P141_data_struct::plugin_init(struct EventStruct *event) {
 
 
 
-  if (nullptr == pcd8544) {
+  if (nullptr == _lcd) {
     #ifndef BUILD_NO_DEBUG
     addLog(LOG_LEVEL_INFO, F("PCD8544: Init start."));
     #endif // ifndef BUILD_NO_DEBUG
 
-    pcd8544 = new (std::nothrow) Adafruit_PCD8544(P141_DC_PIN, P141_CS_PIN, P141_RST_PIN
-                                                  # ifdef ESP32
-                                                  , spi_ptr
-                                                  # endif // ifdef ESP32
-                                                  );
+    # if P141_FEATURE_ST7567
+
+    if ((P141_Controller::ST7567 == _controller) || (P141_Controller::ST7567_32 == _controller)) {
+      st7567 = new (std::nothrow) P141_ST7567(_ypix, P141_DC_PIN, P141_CS_PIN, P141_RST_PIN
+                                              #  ifdef ESP32
+                                              , spi_ptr
+                                              #  endif // ifdef ESP32
+                                              );
+      _lcd = st7567;
+    } else
+    # endif // if P141_FEATURE_ST7567
+    {
+      pcd8544 = new (std::nothrow) Adafruit_PCD8544(P141_DC_PIN, P141_CS_PIN, P141_RST_PIN
+                                                    # ifdef ESP32
+                                                    , spi_ptr
+                                                    # endif // ifdef ESP32
+                                                    );
+      _lcd = pcd8544;
+    }
     # ifndef BUILD_NO_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log;
       log.reserve(90);
-      log += strformat(F("PCD8544: Init done, address: 0x%x "), reinterpret_cast<ulong>(pcd8544));
+      log += strformat(F("PCD8544: Init done, address: 0x%x "), reinterpret_cast<ulong>(_lcd));
 
-      if (nullptr == pcd8544) {
+      if (nullptr == _lcd) {
         log += F("in");
       }
-      log += strformat(F("valid, commands: %s, display: PCD8544"), _commandTrigger.c_str());
+      log += strformat(F("valid, commands: %s, display: %s"), _commandTrigger.c_str(), FsP(toString(_controller)));
       addLogMove(LOG_LEVEL_INFO, log);
     }
     # endif // ifndef BUILD_NO_DEBUG
@@ -100,9 +148,17 @@ bool P141_data_struct::plugin_init(struct EventStruct *event) {
     addLog(LOG_LEVEL_ERROR, F("PCD8544: No init?"));
   }
 
-  if (nullptr != pcd8544) {
-    pcd8544->begin(); // Start the display
-    gfxHelper = new (std::nothrow) AdafruitGFX_helper(pcd8544,
+  if (nullptr != _lcd) {
+    # if P141_FEATURE_ST7567
+
+    if (nullptr != st7567) {
+      st7567->begin();  // Start the display
+    } else
+    # endif // if P141_FEATURE_ST7567
+    {
+      pcd8544->begin(); // Start the display
+    }
+    gfxHelper = new (std::nothrow) AdafruitGFX_helper(_lcd,
                                                       _commandTrigger,
                                                       _xpix,
                                                       _ypix,
@@ -122,17 +178,17 @@ bool P141_data_struct::plugin_init(struct EventStruct *event) {
 
     if (nullptr != gfxHelper) {
       gfxHelper->initialize();
-      pcd8544->setContrast(_contrast);
+      lcdSetContrast(_contrast);
       gfxHelper->invertDisplay(_displayInverted);
       gfxHelper->setRotation(_rotation);
-      pcd8544->fillScreen(_bgcolor);             // fill screen with black color
-      pcd8544->setTextColor(_fgcolor, _bgcolor); // set text color to white and black background
+      _lcd->fillScreen(_bgcolor);             // fill screen with black color
+      _lcd->setTextColor(_fgcolor, _bgcolor); // set text color to white and black background
 
       gfxHelper->setColumnRowMode(bitRead(P141_CONFIG_FLAGS, P141_CONFIG_FLAG_USE_COL_ROW));
       gfxHelper->setLineSpacing(P141_CONFIG_FLAG_GET_LINESPACING);
-      pcd8544->setTextSize(_fontscaling); // Handles 0 properly, text size, default 1 = very small
-      pcd8544->setCursor(0, 0);           // move cursor to position (0, 0) pixel
-      pcd8544->display();
+      _lcd->setTextSize(_fontscaling); // Handles 0 properly, text size, default 1 = very small
+      _lcd->setCursor(0, 0);           // move cursor to position (0, 0) pixel
+      lcdDisplay();
       updateFontMetrics();
 
 
@@ -175,11 +231,11 @@ bool P141_data_struct::plugin_exit(struct EventStruct *event) {
   addLog(LOG_LEVEL_INFO, F("PCD8544: Exit."));
   # endif // ifdef BUILD_NO_DEBUG
 
-  if ((nullptr != pcd8544) && bitRead(P141_CONFIG_FLAGS, P141_CONFIG_FLAG_CLEAR_ON_EXIT)) {
-    pcd8544->fillScreen(_displayInverted
+  if ((nullptr != _lcd) && bitRead(P141_CONFIG_FLAGS, P141_CONFIG_FLAG_CLEAR_ON_EXIT)) {
+    _lcd->fillScreen(_displayInverted
                         ? ADAGFX_WHITE
                         : ADAGFX_BLACK); // fill screen with black or white color
-    pcd8544->display();
+    lcdDisplay();
     displayOnOff(false);
   }
   cleanup();
@@ -195,13 +251,52 @@ void P141_data_struct::cleanup() {
 
   delete pcd8544;
   pcd8544 = nullptr;
+  # if P141_FEATURE_ST7567
+  delete st7567;
+  st7567 = nullptr;
+  # endif // if P141_FEATURE_ST7567
+  _lcd   = nullptr;
+}
+
+/****************************************************************************
+ * lcdDisplay: Transfer the buffer to the active display
+ ***************************************************************************/
+void P141_data_struct::lcdDisplay() {
+  # if P141_FEATURE_ST7567
+
+  if (nullptr != st7567) {
+    st7567->display();
+    return;
+  }
+  # endif // if P141_FEATURE_ST7567
+
+  if (nullptr != pcd8544) {
+    pcd8544->display();
+  }
+}
+
+/****************************************************************************
+ * lcdSetContrast: Set contrast, 0..100%
+ ***************************************************************************/
+void P141_data_struct::lcdSetContrast(uint8_t contrastPercent) {
+  # if P141_FEATURE_ST7567
+
+  if (nullptr != st7567) {
+    st7567->setContrast(map(contrastPercent, 0, 100, 0, P141_ST7567_CONTRAST_MAX));
+    return;
+  }
+  # endif // if P141_FEATURE_ST7567
+
+  if (nullptr != pcd8544) {
+    pcd8544->setContrast(contrastPercent);
+  }
 }
 
 /****************************************************************************
  * plugin_read: Re-draw the default content
  ***************************************************************************/
 bool P141_data_struct::plugin_read(struct EventStruct *event) {
-  if (nullptr != pcd8544) {
+  if (nullptr != _lcd) {
     if (stringsHasContent) {
       gfxHelper->setColumnRowMode(false); // Turn off column mode
       uint8_t  yPos  = 0;                 // Bound to the display
@@ -224,11 +319,11 @@ bool P141_data_struct::plugin_read(struct EventStruct *event) {
         if (15 == P141_CONFIG_FLAG_GET_LINESPACING) {
           yPos += (_fontheight * _fontscaling);                             // Auto, using font-height and scaling
         } else {
-          pcd8544->getTextBounds(F("Ay"), 0, 0, &dum, &dum, &udum, &hText); // Measure current font-height
+          _lcd->getTextBounds(F("Ay"), 0, 0, &dum, &dum, &udum, &hText); // Measure current font-height
           yPos += hText + P141_CONFIG_FLAG_GET_LINESPACING;                 // Explicit distance
         }
       }
-      pcd8544->display();
+      lcdDisplay();
       gfxHelper->setColumnRowMode(bitRead(P141_CONFIG_FLAGS, P141_CONFIG_FLAG_USE_COL_ROW)); // Restore column mode
       # if P141_FEATURE_CURSOR_XY_VALUES
       updateValues(event);
@@ -243,7 +338,7 @@ bool P141_data_struct::plugin_read(struct EventStruct *event) {
  * plugin_ten_per_second: check button, if any, that wakes up the display
  ***************************************************************************/
 bool P141_data_struct::plugin_ten_per_second(struct EventStruct *event) {
-  if ((P141_CONFIG_BUTTON_PIN != -1) && (getButtonState()) && (nullptr != pcd8544)) {
+  if ((P141_CONFIG_BUTTON_PIN != -1) && (getButtonState()) && (nullptr != _lcd)) {
     displayOnOff(true);
     markButtonStateProcessed();
   }
@@ -257,7 +352,7 @@ bool P141_data_struct::plugin_once_a_second(struct EventStruct *event) {
   if (_displayTimer > 0) {
     _displayTimer--;
 
-    if ((nullptr != pcd8544) && (_displayTimer == 0)) {
+    if ((nullptr != _lcd) && (_displayTimer == 0)) {
       displayOnOff(false);
     }
   }
@@ -272,7 +367,7 @@ bool P141_data_struct::plugin_write(struct EventStruct *event,
   bool success     = false;
   const String cmd = parseString(string, 1);
 
-  if ((nullptr != pcd8544) && cmd.equals(_commandTriggerCmd)) {
+  if ((nullptr != _lcd) && cmd.equals(_commandTriggerCmd)) {
     const String arg1 = parseString(string, 2);
     success = true;
 
@@ -283,8 +378,8 @@ bool P141_data_struct::plugin_write(struct EventStruct *event,
       displayOnOff(true);
     }
     else if (equals(arg1, F("clear"))) {       // Empty screen
-      pcd8544->fillScreen(_bgcolor);
-      pcd8544->display();                      // Put on display
+      _lcd->fillScreen(_bgcolor);
+      lcdDisplay();                      // Put on display
     }
     else if (equals(arg1, F("inv")) &&         // Invert display
              (event->Par2 >= 0) && (event->Par2 <= 1)) {
@@ -300,9 +395,9 @@ bool P141_data_struct::plugin_write(struct EventStruct *event,
       if (nullptr != gfxHelper) {
         gfxHelper->invertDisplay(_displayInverted);
       } else {
-        pcd8544->invertDisplay(_displayInverted);
+        _lcd->invertDisplay(_displayInverted);
       }
-      pcd8544->display();                            // Put on display
+      lcdDisplay();                            // Put on display
     }
     else if (equals(arg1, F("backlight"))) {         // Backlight percentage
       if ((P141_CONFIG_BACKLIGHT_PIN != -1) &&       // All is valid?
@@ -320,12 +415,12 @@ bool P141_data_struct::plugin_write(struct EventStruct *event,
              (event->Par2 <= 100)) {
       P141_CONFIG_CONTRAST = event->Par2;   // Set but don't store
       _contrast            = event->Par2;   // Also set to current
-      pcd8544->setContrast(_contrast);
+      lcdSetContrast(_contrast);
     } else {
       success = false;
     }
   }
-  else if (pcd8544 && (cmd.equals(_commandTrigger) ||
+  else if (_lcd && (cmd.equals(_commandTrigger) ||
                        (gfxHelper && gfxHelper->isAdaGFXTrigger(cmd)))) {
     if (!bitRead(P141_CONFIG_FLAGS, P141_CONFIG_FLAG_NO_WAKE)) { // Wake display?
       displayOnOff(true);
@@ -337,7 +432,7 @@ bool P141_data_struct::plugin_write(struct EventStruct *event,
       updateFontMetrics();  // Font or color may have changed
 
       if (success) {
-        pcd8544->display(); // Put on display
+        lcdDisplay(); // Put on display
         # if P141_FEATURE_CURSOR_XY_VALUES
         updateValues(event);
         # endif // if P141_FEATURE_CURSOR_XY_VALUES
@@ -387,15 +482,18 @@ bool P141_data_struct::plugin_get_config_value(struct EventStruct *event,
  ***************************************************************************/
 void P141_data_struct::displayOnOff(bool state) {
   if (validGpio(_backlightPin)) {
+    int value = state ? ((1024 / 100) * _backlightPercentage) : 0;
+
+    if (_backlightInverted) { value = 1023 - value; } // Active low backlight
     # if defined(ESP8266)
-    analogWrite(_backlightPin, state ? ((1024 / 100) * _backlightPercentage) : 0);
+    analogWrite(_backlightPin, value);
     # endif // if defined(ESP8266)
     # if defined(ESP32)
-    analogWriteESP32(_backlightPin, state ? ((1024 / 100) * _backlightPercentage) : 0, 0);
+    analogWriteESP32(_backlightPin, value, 0);
     # endif // if defined(ESP32)
   }
 
-  if (!state && pcd8544) { pcd8544->fillScreen(ADAGFX_BLACK); } // Can't turn off, clearing the display is the least bad alternative
+  if (!state && _lcd) { _lcd->fillScreen(ADAGFX_BLACK); } // Can't turn off, clearing the display is the least bad alternative
   _displayTimer = (state ? _displayTimeout : 0);
 }
 

@@ -8,6 +8,8 @@
 
 
 /** Changelog:
+ * 2026-11-11 TheItschi:  Add option for active low backlight
+ * 2026-11-10 TheItschi:  Add support for ST7567 128x64 and 128x32 LCDs (f.e. OPEN-SMART 1.8" LCD), when P141_FEATURE_ST7567 is enabled
  * 2025-08-12 tonhuisman: Enable use of secondary SPI bus
  * 2024-08-12 tonhuisman: Add Default font selection setting, if AdafruitGFX_Helper fonts are included
  * 2022-10-08 tonhuisman: Enable PLUGIN_GET_CONFIG_VALUE event to get runtime info from plugin
@@ -30,7 +32,7 @@
 
 # define PLUGIN_141
 # define PLUGIN_ID_141         141
-# define PLUGIN_NAME_141       "Display - PCD8544 Nokia 5110 LCD"
+# define PLUGIN_NAME_141       "Display - PCD8544 Nokia 5110 / ST7567 LCD"
 # define PLUGIN_VALUENAME1_141 "CursorX"
 # define PLUGIN_VALUENAME2_141 "CursorY"
 
@@ -75,7 +77,7 @@ boolean Plugin_141(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEGPIONAMES:
     {
-      event->String1 = formatGpioName_output(F("SCE"));
+      event->String1 = formatGpioName_output(F("SCE/CS"));
       event->String2 = formatGpioName_output(F("D/C"));
       event->String3 = formatGpioName_output_optional(F("RST "));
       break;
@@ -114,8 +116,26 @@ boolean Plugin_141(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
+      # if P141_FEATURE_ST7567
+      {
+        const __FlashStringHelper *controllers[] = {
+          toString(P141_Controller::PCD8544),
+          toString(P141_Controller::ST7567),
+          toString(P141_Controller::ST7567_32),
+        };
+        const int controllerOptions[] = {
+          static_cast<int>(P141_Controller::PCD8544),
+          static_cast<int>(P141_Controller::ST7567),
+          static_cast<int>(P141_Controller::ST7567_32),
+        };
+        const FormSelectorOptions selector(NR_ELEMENTS(controllers), controllers, controllerOptions);
+        selector.addFormSelector(F("Display controller"), F("pcontroller"), P141_CONFIG_CONTROLLER);
+      }
+      # endif // if P141_FEATURE_ST7567
+
       AdaGFXFormBacklight(F("pbacklight"), P141_CONFIG_BACKLIGHT_PIN,
                           F("pbackpercent"), P141_CONFIG_BACKLIGHT_PERCENT);
+      addFormCheckBox(F("Backlight active low"), F("pbackinv"), bitRead(P141_CONFIG_FLAGS, P141_CONFIG_FLAG_BACKLIGHT_INV));
 
       addFormNumericBox(F("Display Contrast"), F("pcontrast"), P141_CONFIG_CONTRAST, 0, 100);
       addUnit(F("0-100%"));
@@ -200,6 +220,11 @@ boolean Plugin_141(uint8_t function, struct EventStruct *event, String& string)
       P141_CONFIG_BACKLIGHT_PIN     = getFormItemInt(F("pbacklight"));
       P141_CONFIG_BACKLIGHT_PERCENT = getFormItemInt(F("pbackpercent"));
       P141_CONFIG_CONTRAST          = getFormItemInt(F("pcontrast"));
+      # if P141_FEATURE_ST7567
+      P141_CONFIG_CONTROLLER        = getFormItemInt(F("pcontroller"));
+      # else // if P141_FEATURE_ST7567
+      P141_CONFIG_CONTROLLER        = static_cast<int>(P141_Controller::PCD8544);
+      # endif // if P141_FEATURE_ST7567
       # if ADAGFX_FONTS_INCLUDED
       P141_CONFIG_DEFAULT_FONT = getFormItemInt(F("deffont"));
       # endif // if ADAGFX_FONTS_INCLUDED
@@ -219,6 +244,7 @@ boolean Plugin_141(uint8_t function, struct EventStruct *event, String& string)
 
       bitWrite(lSettings, P141_CONFIG_FLAG_BACK_FILL, !isFormItemChecked(F("pbackfill")));       // Bit 28 Back fill text (inv)
       bitWrite(lSettings, P141_CONFIG_FLAG_INVERTED,  isFormItemChecked(F("pinvert")));          // Bit 29 Invert display
+      bitWrite(lSettings, P141_CONFIG_FLAG_BACKLIGHT_INV, isFormItemChecked(F("pbackinv")));     // Bit 30 Backlight active low
       P141_CONFIG_FLAGS = lSettings;
 
       String strings[P141_Nlines];
@@ -239,8 +265,8 @@ boolean Plugin_141(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DISPLAY_PARAMETERS:
     {
-      event->Par1 = 84;                                             // X-resolution in pixels
-      event->Par2 = 48;                                             // Y-resolution in pixels
+      event->Par1 = P141_getXpix(static_cast<P141_Controller>(P141_CONFIG_CONTROLLER)); // X-resolution in pixels
+      event->Par2 = P141_getYpix(static_cast<P141_Controller>(P141_CONFIG_CONTROLLER)); // Y-resolution in pixels
       event->Par3 = P141_CONFIG_FLAG_GET_ROTATION;                  // Rotation (0..3: 0, 90, 180, 270 degrees)
       event->Par4 = static_cast<int>(AdaGFXColorDepth::Monochrome); // Color depth
 
@@ -252,7 +278,8 @@ boolean Plugin_141(uint8_t function, struct EventStruct *event, String& string)
     {
       if (Settings.isSPI_validForTask(event->TaskIndex)) {
         initPluginTaskData(event->TaskIndex,
-                           new (std::nothrow) P141_data_struct(P141_CONFIG_FLAG_GET_ROTATION,
+                           new (std::nothrow) P141_data_struct(static_cast<P141_Controller>(P141_CONFIG_CONTROLLER),
+                                                               P141_CONFIG_FLAG_GET_ROTATION,
                                                                P141_CONFIG_FLAG_GET_FONTSCALE,
                                                                static_cast<AdaGFXTextPrintMode>(P141_CONFIG_FLAG_GET_MODE),
                                                                P141_CONFIG_BACKLIGHT_PIN,
