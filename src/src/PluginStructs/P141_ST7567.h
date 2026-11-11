@@ -20,6 +20,8 @@
 # define ST7567_X_OFFSET        4   // Visible area starts at column 4 (ADC reversed)
 # define ST7567_CONTRAST_MAX    63  // Electronic volume range 0..63
 
+// Note: WIDTH and HEIGHT used in the implementation are the (protected) Adafruit_GFX members
+// holding the raw, unrotated display size, not defines.
 class P141_ST7567 : public Adafruit_GFX {
 public:
 
