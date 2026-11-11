@@ -21,24 +21,27 @@ const __FlashStringHelper* toString(P141_CommandTrigger cmd) {
 const __FlashStringHelper* toString(P141_Controller controller) {
   switch (controller) {
     case P141_Controller::ST7567: return F("ST7567 (128x64)");
+    case P141_Controller::ST7567_32: return F("ST7567 (128x32)");
     case P141_Controller::PCD8544: break;
   }
   return F("PCD8544 Nokia 5110 (84x48)");
 }
 
 uint16_t P141_getXpix(P141_Controller controller) {
-  # if FEATURE_ST7567
+  # if P141_FEATURE_ST7567
 
-  if (P141_Controller::ST7567 == controller) { return ST7567_LCDWIDTH; }
-  # endif // if FEATURE_ST7567
+  if ((P141_Controller::ST7567 == controller) || (P141_Controller::ST7567_32 == controller)) { return ST7567_LCDWIDTH; }
+  # endif // if P141_FEATURE_ST7567
   return 84;
 }
 
 uint16_t P141_getYpix(P141_Controller controller) {
-  # if FEATURE_ST7567
+  # if P141_FEATURE_ST7567
 
-  if (P141_Controller::ST7567 == controller) { return ST7567_LCDHEIGHT; }
-  # endif // if FEATURE_ST7567
+  if (P141_Controller::ST7567 == controller) { return 64; }
+
+  if (P141_Controller::ST7567_32 == controller) { return 32; }
+  # endif // if P141_FEATURE_ST7567
   return 48;
 }
 
@@ -108,17 +111,17 @@ bool P141_data_struct::plugin_init(struct EventStruct *event) {
     addLog(LOG_LEVEL_INFO, F("PCD8544: Init start."));
     #endif // ifndef BUILD_NO_DEBUG
 
-    # if FEATURE_ST7567
+    # if P141_FEATURE_ST7567
 
-    if (P141_Controller::ST7567 == _controller) {
-      st7567 = new (std::nothrow) P141_ST7567(P141_DC_PIN, P141_CS_PIN, P141_RST_PIN
+    if ((P141_Controller::ST7567 == _controller) || (P141_Controller::ST7567_32 == _controller)) {
+      st7567 = new (std::nothrow) P141_ST7567(_ypix, P141_DC_PIN, P141_CS_PIN, P141_RST_PIN
                                               #  ifdef ESP32
                                               , spi_ptr
                                               #  endif // ifdef ESP32
                                               );
       _lcd = st7567;
     } else
-    # endif // if FEATURE_ST7567
+    # endif // if P141_FEATURE_ST7567
     {
       pcd8544 = new (std::nothrow) Adafruit_PCD8544(P141_DC_PIN, P141_CS_PIN, P141_RST_PIN
                                                     # ifdef ESP32
@@ -146,12 +149,12 @@ bool P141_data_struct::plugin_init(struct EventStruct *event) {
   }
 
   if (nullptr != _lcd) {
-    # if FEATURE_ST7567
+    # if P141_FEATURE_ST7567
 
     if (nullptr != st7567) {
       st7567->begin();  // Start the display
     } else
-    # endif // if FEATURE_ST7567
+    # endif // if P141_FEATURE_ST7567
     {
       pcd8544->begin(); // Start the display
     }
@@ -248,10 +251,10 @@ void P141_data_struct::cleanup() {
 
   delete pcd8544;
   pcd8544 = nullptr;
-  # if FEATURE_ST7567
+  # if P141_FEATURE_ST7567
   delete st7567;
   st7567 = nullptr;
-  # endif // if FEATURE_ST7567
+  # endif // if P141_FEATURE_ST7567
   _lcd   = nullptr;
 }
 
@@ -259,13 +262,13 @@ void P141_data_struct::cleanup() {
  * lcdDisplay: Transfer the buffer to the active display
  ***************************************************************************/
 void P141_data_struct::lcdDisplay() {
-  # if FEATURE_ST7567
+  # if P141_FEATURE_ST7567
 
   if (nullptr != st7567) {
     st7567->display();
     return;
   }
-  # endif // if FEATURE_ST7567
+  # endif // if P141_FEATURE_ST7567
 
   if (nullptr != pcd8544) {
     pcd8544->display();
@@ -276,13 +279,13 @@ void P141_data_struct::lcdDisplay() {
  * lcdSetContrast: Set contrast, 0..100%
  ***************************************************************************/
 void P141_data_struct::lcdSetContrast(uint8_t contrastPercent) {
-  # if FEATURE_ST7567
+  # if P141_FEATURE_ST7567
 
   if (nullptr != st7567) {
     st7567->setContrast(map(contrastPercent, 0, 100, 0, ST7567_CONTRAST_MAX));
     return;
   }
-  # endif // if FEATURE_ST7567
+  # endif // if P141_FEATURE_ST7567
 
   if (nullptr != pcd8544) {
     pcd8544->setContrast(contrastPercent);

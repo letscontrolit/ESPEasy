@@ -6,9 +6,20 @@
 
 # include <Adafruit_GFX.h>     // include Adafruit graphics library
 # include <Adafruit_PCD8544.h> // include Adafruit PCD8544 LCD library
-# if FEATURE_ST7567
-#  include "../PluginStructs/P141_ST7567.h" // ST7567 128x64 LCD driver
-# endif // if FEATURE_ST7567
+
+// Support for ST7567 LCDs, enabled by default on ESP32 only, to not increase the size of ESP8266 builds.
+// Can be enabled in a Custom build by adding: #define P141_FEATURE_ST7567 1
+# ifndef P141_FEATURE_ST7567
+#  if defined(ESP32) && !defined(LIMIT_BUILD_SIZE)
+#   define P141_FEATURE_ST7567  1
+#  else // if defined(ESP32) && !defined(LIMIT_BUILD_SIZE)
+#   define P141_FEATURE_ST7567  0
+#  endif // if defined(ESP32) && !defined(LIMIT_BUILD_SIZE)
+# endif // ifndef P141_FEATURE_ST7567
+
+# if P141_FEATURE_ST7567
+#  include "../PluginStructs/P141_ST7567.h" // ST7567 128x64 / 128x32 LCD driver
+# endif // if P141_FEATURE_ST7567
 
 # include "../Helpers/AdafruitGFX_helper.h" // Use Adafruit graphics helper object
 
@@ -76,7 +87,8 @@
 
 enum class P141_Controller : uint8_t {
   PCD8544 = 0u, // Nokia 5110, 84x48
-  ST7567  = 1u, // f.e. OPEN-SMART 1.8" LCD, 128x64
+  ST7567  = 1u, // ST7567 128x64, f.e. OPEN-SMART 1.8" LCD
+  ST7567_32 = 2u, // ST7567 128x32
 };
 
 const __FlashStringHelper* toString(P141_Controller controller);
@@ -146,9 +158,9 @@ private:
 
   Adafruit_GFX       *_lcd      = nullptr; // Generic access to the active display
   Adafruit_PCD8544   *pcd8544   = nullptr;
-  # if FEATURE_ST7567
+  # if P141_FEATURE_ST7567
   P141_ST7567        *st7567    = nullptr;
-  # endif // if FEATURE_ST7567
+  # endif // if P141_FEATURE_ST7567
   AdafruitGFX_helper *gfxHelper = nullptr;
 
   P141_Controller _controller;

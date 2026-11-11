@@ -30,9 +30,9 @@ The Philips chip PCD8544 is used for driving a monochrome LCD display, often kno
 
 The monochrome display has an 84 x 48 pixel resolution.
 
-Since 2026-11-10, the plugin also supports displays using the Sitronix **ST7567** controller with a resolution of 128 x 64 pixels, like the OPEN-SMART 1.8" LCD module (pins ``GND``, ``3V3``, ``SDI``, ``SCK``, ``DC``, ``CS``, ``RST``, ``LED``). The controller is selected with the **Display controller** setting.
+Since 2026-11-10, the plugin also supports displays using the Sitronix **ST7567** controller with a resolution of 128 x 64 pixels, like the OPEN-SMART 1.8" LCD module, or 128 x 32 pixels (pins ``GND``, ``3V3``, ``SDI``, ``SCK``, ``DC``, ``CS``, ``RST``, ``LED``). The controller is selected with the **Display controller** setting.
 
-ST7567 support is controlled by the build flag ``FEATURE_ST7567``. It is enabled by default for ESP32 builds. For ESP8266 builds it is disabled to save space, and can be enabled by adding ``#define FEATURE_ST7567 1`` to ``Custom.h`` (or ``-DFEATURE_ST7567=1`` to the build flags) of a custom build.
+ST7567 support is controlled by the plugin build flag ``P141_FEATURE_ST7567``. It is enabled by default for ESP32 builds. For ESP8266 builds it is disabled to save space, and can be enabled by adding ``#define P141_FEATURE_ST7567 1`` to ``Custom.h`` (or ``-DP141_FEATURE_ST7567=1`` to the build flags) of a custom build.
 
 The plugin can be configured to show predefined text, a reservation for up to 9 lines is made, but only the lines that can fit on-screen will be shown, or via commands, sent via http or from rules, text or graphical elements like lines, rectangles, circles, pixels, etc., can be shown.
 
@@ -93,7 +93,7 @@ Device
 Actuator
 ^^^^^^^^
 
-* **Display controller** Select the controller used on the display: *PCD8544 Nokia 5110 (84x48)* (default) or *ST7567 (128x64)*.
+* **Display controller** Select the controller used on the display: *PCD8544 Nokia 5110 (84x48)* (default), *ST7567 (128x64)* or *ST7567 (128x32)*. The ST7567 options are only available when the build includes ``P141_FEATURE_ST7567``.
 
 * **GPIO -> SCE/CS** Select the GPIO pin to use for the ``SCE``, a.k.a. ``CS``, connection.
 * **GPIO -> D/C** The GPIO pin to use for the ``D/C`` connection (Data/Command).

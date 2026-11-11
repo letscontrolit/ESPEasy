@@ -9,7 +9,7 @@
 
 /** Changelog:
  * 2026-11-11 TheItschi:  Add option for active low backlight
- * 2026-11-10 TheItschi:  Add support for ST7567 128x64 LCD controller (f.e. OPEN-SMART 1.8" LCD)
+ * 2026-11-10 TheItschi:  Add support for ST7567 128x64 and 128x32 LCDs (f.e. OPEN-SMART 1.8" LCD), when P141_FEATURE_ST7567 is enabled
  * 2025-08-12 tonhuisman: Enable use of secondary SPI bus
  * 2024-08-12 tonhuisman: Add Default font selection setting, if AdafruitGFX_Helper fonts are included
  * 2022-10-08 tonhuisman: Enable PLUGIN_GET_CONFIG_VALUE event to get runtime info from plugin
@@ -116,20 +116,22 @@ boolean Plugin_141(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      # if FEATURE_ST7567
+      # if P141_FEATURE_ST7567
       {
         const __FlashStringHelper *controllers[] = {
           toString(P141_Controller::PCD8544),
           toString(P141_Controller::ST7567),
+          toString(P141_Controller::ST7567_32),
         };
         const int controllerOptions[] = {
           static_cast<int>(P141_Controller::PCD8544),
           static_cast<int>(P141_Controller::ST7567),
+          static_cast<int>(P141_Controller::ST7567_32),
         };
         const FormSelectorOptions selector(NR_ELEMENTS(controllers), controllers, controllerOptions);
         selector.addFormSelector(F("Display controller"), F("pcontroller"), P141_CONFIG_CONTROLLER);
       }
-      # endif // if FEATURE_ST7567
+      # endif // if P141_FEATURE_ST7567
 
       AdaGFXFormBacklight(F("pbacklight"), P141_CONFIG_BACKLIGHT_PIN,
                           F("pbackpercent"), P141_CONFIG_BACKLIGHT_PERCENT);
@@ -137,9 +139,9 @@ boolean Plugin_141(uint8_t function, struct EventStruct *event, String& string)
 
       addFormNumericBox(F("Display Contrast"), F("pcontrast"), P141_CONFIG_CONTRAST, 0, 100);
       addUnit(F("0-100%"));
-      # if FEATURE_ST7567 && !defined(LIMIT_BUILD_SIZE)
+      # if P141_FEATURE_ST7567 && !defined(LIMIT_BUILD_SIZE)
       addFormNote(F("ST7567: Start with ~50%, higher values make the display darker."));
-      # endif // if FEATURE_ST7567 && !defined(LIMIT_BUILD_SIZE)
+      # endif // if P141_FEATURE_ST7567 && !defined(LIMIT_BUILD_SIZE)
 
       AdaGFXFormDisplayButton(F("pbutton"), P141_CONFIG_BUTTON_PIN,
                               F("pbtnInverse"), bitRead(P141_CONFIG_FLAGS, P141_CONFIG_FLAG_INVERT_BUTTON),
@@ -221,11 +223,11 @@ boolean Plugin_141(uint8_t function, struct EventStruct *event, String& string)
       P141_CONFIG_BACKLIGHT_PIN     = getFormItemInt(F("pbacklight"));
       P141_CONFIG_BACKLIGHT_PERCENT = getFormItemInt(F("pbackpercent"));
       P141_CONFIG_CONTRAST          = getFormItemInt(F("pcontrast"));
-      # if FEATURE_ST7567
+      # if P141_FEATURE_ST7567
       P141_CONFIG_CONTROLLER        = getFormItemInt(F("pcontroller"));
-      # else // if FEATURE_ST7567
+      # else // if P141_FEATURE_ST7567
       P141_CONFIG_CONTROLLER        = static_cast<int>(P141_Controller::PCD8544);
-      # endif // if FEATURE_ST7567
+      # endif // if P141_FEATURE_ST7567
       # if ADAGFX_FONTS_INCLUDED
       P141_CONFIG_DEFAULT_FONT = getFormItemInt(F("deffont"));
       # endif // if ADAGFX_FONTS_INCLUDED
