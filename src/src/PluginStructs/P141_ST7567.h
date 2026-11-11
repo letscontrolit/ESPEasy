@@ -14,11 +14,11 @@
  * (https://github.com/olikraus/u8g2)
  ***************************************************************************/
 
-# define ST7567_LCDWIDTH        128
-# define ST7567_RAM_COLUMNS     132 // Display RAM size of the controller
-# define ST7567_RAM_PAGES       9   // 8 pages + icon page
-# define ST7567_X_OFFSET        4   // Visible area starts at column 4 (ADC reversed)
-# define ST7567_CONTRAST_MAX    63  // Electronic volume range 0..63
+# define P141_ST7567_LCDWIDTH        128
+# define P141_ST7567_RAM_COLUMNS     132 // Display RAM size of the controller
+# define P141_ST7567_RAM_PAGES       9   // 8 pages + icon page
+# define P141_ST7567_X_OFFSET        4   // Visible area starts at column 4 (ADC reversed)
+# define P141_ST7567_CONTRAST_MAX    63  // Electronic volume range 0..63
 
 // Note: WIDTH and HEIGHT used in the implementation are the (protected) Adafruit_GFX members
 // holding the raw, unrotated display size, not defines.

@@ -30,7 +30,7 @@ const __FlashStringHelper* toString(P141_Controller controller) {
 uint16_t P141_getXpix(P141_Controller controller) {
   # if P141_FEATURE_ST7567
 
-  if ((P141_Controller::ST7567 == controller) || (P141_Controller::ST7567_32 == controller)) { return ST7567_LCDWIDTH; }
+  if ((P141_Controller::ST7567 == controller) || (P141_Controller::ST7567_32 == controller)) { return P141_ST7567_LCDWIDTH; }
   # endif // if P141_FEATURE_ST7567
   return 84;
 }
@@ -282,7 +282,7 @@ void P141_data_struct::lcdSetContrast(uint8_t contrastPercent) {
   # if P141_FEATURE_ST7567
 
   if (nullptr != st7567) {
-    st7567->setContrast(map(contrastPercent, 0, 100, 0, ST7567_CONTRAST_MAX));
+    st7567->setContrast(map(contrastPercent, 0, 100, 0, P141_ST7567_CONTRAST_MAX));
     return;
   }
   # endif // if P141_FEATURE_ST7567

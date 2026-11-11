@@ -10,7 +10,7 @@ P141_ST7567::P141_ST7567(uint8_t   height,
                          int8_t    cs_pin,
                          int8_t    rst_pin,
                          SPIClass *theSPI)
-  : Adafruit_GFX(ST7567_LCDWIDTH, height), _dcpin(dc_pin), _rstpin(rst_pin) {
+  : Adafruit_GFX(P141_ST7567_LCDWIDTH, height), _dcpin(dc_pin), _rstpin(rst_pin) {
   _spi_dev = new (std::nothrow) Adafruit_SPIDevice(cs_pin, 4000000, SPI_BITORDER_MSBFIRST, SPI_MODE0, theSPI);
   _buffer  = new (std::nothrow) uint8_t[WIDTH * HEIGHT / 8]();
 }
@@ -84,12 +84,12 @@ void P141_ST7567::setAddress(uint8_t page, uint8_t column) {
  * clearRAM: Clear all display RAM, some displays show garbage at the borders otherwise
  ***************************************************************************/
 void P141_ST7567::clearRAM() {
-  const uint8_t zero[ST7567_RAM_COLUMNS]{};
+  const uint8_t zero[P141_ST7567_RAM_COLUMNS]{};
 
-  for (uint8_t page = 0; page < ST7567_RAM_PAGES; ++page) {
+  for (uint8_t page = 0; page < P141_ST7567_RAM_PAGES; ++page) {
     setAddress(page, 0);
     digitalWrite(_dcpin, HIGH);
-    _spi_dev->write(zero, ST7567_RAM_COLUMNS);
+    _spi_dev->write(zero, P141_ST7567_RAM_COLUMNS);
   }
 }
 
@@ -97,7 +97,7 @@ void P141_ST7567::clearRAM() {
  * setContrast: Electronic volume 0..63
  ***************************************************************************/
 void P141_ST7567::setContrast(uint8_t val) {
-  if (val > ST7567_CONTRAST_MAX) { val = ST7567_CONTRAST_MAX; }
+  if (val > P141_ST7567_CONTRAST_MAX) { val = P141_ST7567_CONTRAST_MAX; }
   command(0x81);
   command(val);
 }
@@ -160,7 +160,7 @@ void P141_ST7567::display() {
   if (nullptr == _buffer) { return; }
 
   for (uint8_t page = 0; page < (HEIGHT / 8); ++page) {
-    setAddress(page, ST7567_X_OFFSET);
+    setAddress(page, P141_ST7567_X_OFFSET);
     digitalWrite(_dcpin, HIGH);
     _spi_dev->write(_buffer + (page * WIDTH), WIDTH);
   }
