@@ -27,11 +27,19 @@ const __FlashStringHelper* toString(P141_Controller controller) {
 }
 
 uint16_t P141_getXpix(P141_Controller controller) {
-  return P141_Controller::ST7567 == controller ? ST7567_LCDWIDTH : 84;
+  # if FEATURE_ST7567
+
+  if (P141_Controller::ST7567 == controller) { return ST7567_LCDWIDTH; }
+  # endif // if FEATURE_ST7567
+  return 84;
 }
 
 uint16_t P141_getYpix(P141_Controller controller) {
-  return P141_Controller::ST7567 == controller ? ST7567_LCDHEIGHT : 48;
+  # if FEATURE_ST7567
+
+  if (P141_Controller::ST7567 == controller) { return ST7567_LCDHEIGHT; }
+  # endif // if FEATURE_ST7567
+  return 48;
 }
 
 /****************************************************************************
@@ -100,14 +108,18 @@ bool P141_data_struct::plugin_init(struct EventStruct *event) {
     addLog(LOG_LEVEL_INFO, F("PCD8544: Init start."));
     #endif // ifndef BUILD_NO_DEBUG
 
+    # if FEATURE_ST7567
+
     if (P141_Controller::ST7567 == _controller) {
       st7567 = new (std::nothrow) P141_ST7567(P141_DC_PIN, P141_CS_PIN, P141_RST_PIN
-                                              # ifdef ESP32
+                                              #  ifdef ESP32
                                               , spi_ptr
-                                              # endif // ifdef ESP32
+                                              #  endif // ifdef ESP32
                                               );
       _lcd = st7567;
-    } else {
+    } else
+    # endif // if FEATURE_ST7567
+    {
       pcd8544 = new (std::nothrow) Adafruit_PCD8544(P141_DC_PIN, P141_CS_PIN, P141_RST_PIN
                                                     # ifdef ESP32
                                                     , spi_ptr
@@ -134,9 +146,13 @@ bool P141_data_struct::plugin_init(struct EventStruct *event) {
   }
 
   if (nullptr != _lcd) {
+    # if FEATURE_ST7567
+
     if (nullptr != st7567) {
       st7567->begin();  // Start the display
-    } else {
+    } else
+    # endif // if FEATURE_ST7567
+    {
       pcd8544->begin(); // Start the display
     }
     gfxHelper = new (std::nothrow) AdafruitGFX_helper(_lcd,
@@ -232,8 +248,10 @@ void P141_data_struct::cleanup() {
 
   delete pcd8544;
   pcd8544 = nullptr;
+  # if FEATURE_ST7567
   delete st7567;
   st7567 = nullptr;
+  # endif // if FEATURE_ST7567
   _lcd   = nullptr;
 }
 
@@ -241,9 +259,15 @@ void P141_data_struct::cleanup() {
  * lcdDisplay: Transfer the buffer to the active display
  ***************************************************************************/
 void P141_data_struct::lcdDisplay() {
+  # if FEATURE_ST7567
+
   if (nullptr != st7567) {
     st7567->display();
-  } else if (nullptr != pcd8544) {
+    return;
+  }
+  # endif // if FEATURE_ST7567
+
+  if (nullptr != pcd8544) {
     pcd8544->display();
   }
 }
@@ -252,9 +276,15 @@ void P141_data_struct::lcdDisplay() {
  * lcdSetContrast: Set contrast, 0..100%
  ***************************************************************************/
 void P141_data_struct::lcdSetContrast(uint8_t contrastPercent) {
+  # if FEATURE_ST7567
+
   if (nullptr != st7567) {
     st7567->setContrast(map(contrastPercent, 0, 100, 0, ST7567_CONTRAST_MAX));
-  } else if (nullptr != pcd8544) {
+    return;
+  }
+  # endif // if FEATURE_ST7567
+
+  if (nullptr != pcd8544) {
     pcd8544->setContrast(contrastPercent);
   }
 }

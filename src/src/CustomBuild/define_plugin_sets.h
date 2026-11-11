@@ -3130,6 +3130,21 @@ To create/register a plugin, you have to :
   #endif
 #endif
 
+#ifdef USES_P141
+  #ifndef FEATURE_ST7567
+    #if defined(ESP32) && !defined(LIMIT_BUILD_SIZE)
+      #define FEATURE_ST7567  1 // Support for ST7567 128x64 LCD in P141
+    #else
+      #define FEATURE_ST7567  0 // Disabled for ESP8266 to save space, can be enabled in Custom.h
+    #endif
+  #endif
+#else
+  #ifdef FEATURE_ST7567
+    #undef FEATURE_ST7567
+  #endif
+  #define FEATURE_ST7567  0
+#endif
+
 #if defined(USES_P099) || defined(USES_P123)
   #ifndef PLUGIN_USES_TOUCHHANDLER
     #define PLUGIN_USES_TOUCHHANDLER

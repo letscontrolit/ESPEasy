@@ -2,7 +2,7 @@
 #define PLUGINSTRUCTS_P141_ST7567_H
 
 #include "../../_Plugin_Helper.h"
-#ifdef USES_P141
+#if defined(USES_P141) && FEATURE_ST7567
 
 # include <Adafruit_GFX.h>
 # include <Adafruit_SPIDevice.h>
@@ -46,5 +46,5 @@ private:
   uint8_t             _buffer[ST7567_LCDWIDTH * ST7567_LCDHEIGHT / 8]{};
 };
 
-#endif // ifdef USES_P141
+#endif // if defined(USES_P141) && FEATURE_ST7567
 #endif // ifndef PLUGINSTRUCTS_P141_ST7567_H

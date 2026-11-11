@@ -32,6 +32,8 @@ The monochrome display has an 84 x 48 pixel resolution.
 
 Since 2026-11-10, the plugin also supports displays using the Sitronix **ST7567** controller with a resolution of 128 x 64 pixels, like the OPEN-SMART 1.8" LCD module (pins ``GND``, ``3V3``, ``SDI``, ``SCK``, ``DC``, ``CS``, ``RST``, ``LED``). The controller is selected with the **Display controller** setting.
 
+ST7567 support is controlled by the build flag ``FEATURE_ST7567``. It is enabled by default for ESP32 builds. For ESP8266 builds it is disabled to save space, and can be enabled by adding ``#define FEATURE_ST7567 1`` to ``Custom.h`` (or ``-DFEATURE_ST7567=1`` to the build flags) of a custom build.
+
 The plugin can be configured to show predefined text, a reservation for up to 9 lines is made, but only the lines that can fit on-screen will be shown, or via commands, sent via http or from rules, text or graphical elements like lines, rectangles, circles, pixels, etc., can be shown.
 
 Hardware

@@ -1,6 +1,6 @@
 #include "../PluginStructs/P141_ST7567.h"
 
-#ifdef USES_P141
+#if defined(USES_P141) && FEATURE_ST7567
 
 /****************************************************************************
  * Constructor, hardware SPI
@@ -137,4 +137,4 @@ void P141_ST7567::display() {
   }
 }
 
-#endif // ifdef USES_P141
+#endif // if defined(USES_P141) && FEATURE_ST7567

@@ -116,6 +116,7 @@ boolean Plugin_141(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
+      # if FEATURE_ST7567
       {
         const __FlashStringHelper *controllers[] = {
           toString(P141_Controller::PCD8544),
@@ -128,6 +129,7 @@ boolean Plugin_141(uint8_t function, struct EventStruct *event, String& string)
         const FormSelectorOptions selector(NR_ELEMENTS(controllers), controllers, controllerOptions);
         selector.addFormSelector(F("Display controller"), F("pcontroller"), P141_CONFIG_CONTROLLER);
       }
+      # endif // if FEATURE_ST7567
 
       AdaGFXFormBacklight(F("pbacklight"), P141_CONFIG_BACKLIGHT_PIN,
                           F("pbackpercent"), P141_CONFIG_BACKLIGHT_PERCENT);
@@ -135,9 +137,9 @@ boolean Plugin_141(uint8_t function, struct EventStruct *event, String& string)
 
       addFormNumericBox(F("Display Contrast"), F("pcontrast"), P141_CONFIG_CONTRAST, 0, 100);
       addUnit(F("0-100%"));
-      # ifndef LIMIT_BUILD_SIZE
+      # if FEATURE_ST7567 && !defined(LIMIT_BUILD_SIZE)
       addFormNote(F("ST7567: Start with ~50%, higher values make the display darker."));
-      # endif // ifndef LIMIT_BUILD_SIZE
+      # endif // if FEATURE_ST7567 && !defined(LIMIT_BUILD_SIZE)
 
       AdaGFXFormDisplayButton(F("pbutton"), P141_CONFIG_BUTTON_PIN,
                               F("pbtnInverse"), bitRead(P141_CONFIG_FLAGS, P141_CONFIG_FLAG_INVERT_BUTTON),
@@ -219,7 +221,11 @@ boolean Plugin_141(uint8_t function, struct EventStruct *event, String& string)
       P141_CONFIG_BACKLIGHT_PIN     = getFormItemInt(F("pbacklight"));
       P141_CONFIG_BACKLIGHT_PERCENT = getFormItemInt(F("pbackpercent"));
       P141_CONFIG_CONTRAST          = getFormItemInt(F("pcontrast"));
+      # if FEATURE_ST7567
       P141_CONFIG_CONTROLLER        = getFormItemInt(F("pcontroller"));
+      # else // if FEATURE_ST7567
+      P141_CONFIG_CONTROLLER        = static_cast<int>(P141_Controller::PCD8544);
+      # endif // if FEATURE_ST7567
       # if ADAGFX_FONTS_INCLUDED
       P141_CONFIG_DEFAULT_FONT = getFormItemInt(F("deffont"));
       # endif // if ADAGFX_FONTS_INCLUDED

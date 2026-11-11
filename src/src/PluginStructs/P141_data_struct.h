@@ -6,7 +6,9 @@
 
 # include <Adafruit_GFX.h>     // include Adafruit graphics library
 # include <Adafruit_PCD8544.h> // include Adafruit PCD8544 LCD library
-# include "../PluginStructs/P141_ST7567.h" // ST7567 128x64 LCD driver
+# if FEATURE_ST7567
+#  include "../PluginStructs/P141_ST7567.h" // ST7567 128x64 LCD driver
+# endif // if FEATURE_ST7567
 
 # include "../Helpers/AdafruitGFX_helper.h" // Use Adafruit graphics helper object
 
@@ -144,7 +146,9 @@ private:
 
   Adafruit_GFX       *_lcd      = nullptr; // Generic access to the active display
   Adafruit_PCD8544   *pcd8544   = nullptr;
+  # if FEATURE_ST7567
   P141_ST7567        *st7567    = nullptr;
+  # endif // if FEATURE_ST7567
   AdafruitGFX_helper *gfxHelper = nullptr;
 
   P141_Controller _controller;
