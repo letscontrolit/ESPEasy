@@ -139,9 +139,6 @@ boolean Plugin_141(uint8_t function, struct EventStruct *event, String& string)
 
       addFormNumericBox(F("Display Contrast"), F("pcontrast"), P141_CONFIG_CONTRAST, 0, 100);
       addUnit(F("0-100%"));
-      # if P141_FEATURE_ST7567 && !defined(LIMIT_BUILD_SIZE)
-      addFormNote(F("ST7567: Start with ~50%, higher values make the display darker."));
-      # endif // if P141_FEATURE_ST7567 && !defined(LIMIT_BUILD_SIZE)
 
       AdaGFXFormDisplayButton(F("pbutton"), P141_CONFIG_BUTTON_PIN,
                               F("pbtnInverse"), bitRead(P141_CONFIG_FLAGS, P141_CONFIG_FLAG_INVERT_BUTTON),
