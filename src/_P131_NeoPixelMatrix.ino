@@ -100,7 +100,15 @@ boolean Plugin_131(uint8_t function, struct EventStruct *event, String& string)
           F("RGB"),
           # endif // ifdef ESP32
         };
-        const FormSelectorOptions  selector(NR_ELEMENTS(stripOptions), stripOptions, optionValuesZeroOne);
+
+        const int stripOptionValues[] = {
+          0, // GRB
+          1, // GRBW
+          # ifdef ESP32
+          2, // RGB
+          # endif // ifdef ESP32
+        };
+        const FormSelectorOptions selector(NR_ELEMENTS(stripOptionValues), stripOptions, stripOptionValues);
         selector.addFormSelector(F("Strip Type"),
                                  F("striptype"),
                                  P131_CONFIG_FLAGS_GET_VERSION == 0 ? P131_CONFIG_FLAGS_GET_STRIP_TYPE : P131_CONFIG_FLAG_B_GET_STRIP_TYPE);
