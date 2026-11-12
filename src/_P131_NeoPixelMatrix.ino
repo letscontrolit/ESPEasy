@@ -7,6 +7,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2026-11-11 tonhuisman: Add support for RGB strip type, on ESP32 only!
  * 2024-04-17 tonhuisman: Add selection of a default font to use.
  * 2023-10-03 tonhuisman: Optimizate alignment of settings struct, exclude some logging if BUILD_NO_DEBUG is defined
  * 2023-02-27 tonhuisman: Implement support for getting config values, see AdafruitGFX_Helper.h changelog for details
@@ -74,6 +75,7 @@ boolean Plugin_131(uint8_t function, struct EventStruct *event, String& string)
 
       set8BitToUL(P131_CONFIG_FLAGS_B, P131_CONFIG_FLAG_B_BRIGHTNESS, 40);  // Default brightness
       set8BitToUL(P131_CONFIG_FLAGS_B, P131_CONFIG_FLAG_B_MAXBRIGHT,  255); // Default max brightness
+      set2BitToUL(P131_CONFIG_FLAGS_B, P131_CONFIG_FLAGS_B_VERSION, P131_CONFIG_CURRENT_VERSION);
 
       P131_CONFIG_COLORS = ADAGFX_WHITE | (ADAGFX_BLACK << 16);
 
@@ -91,9 +93,17 @@ boolean Plugin_131(uint8_t function, struct EventStruct *event, String& string)
       const int optionValuesZeroOne[] { 0, 1 };
 
       {
-        const __FlashStringHelper *stripOptions[] = { F("GRB"), F("GRBW") }; // Selection copied from P038
-        const FormSelectorOptions selector(2, stripOptions, optionValuesZeroOne);
-        selector.addFormSelector(F("Strip Type"), F("striptype"),  P131_CONFIG_FLAGS_GET_STRIP_TYPE);
+        const __FlashStringHelper *stripOptions[] = {
+          F("GRB"),
+          F("GRBW"),
+          # ifdef ESP32
+          F("RGB"),
+          # endif // ifdef ESP32
+        };
+        const FormSelectorOptions  selector(NR_ELEMENTS(stripOptions), stripOptions, optionValuesZeroOne);
+        selector.addFormSelector(F("Strip Type"),
+                                 F("striptype"),
+                                 P131_CONFIG_FLAGS_GET_VERSION == 0 ? P131_CONFIG_FLAGS_GET_STRIP_TYPE : P131_CONFIG_FLAG_B_GET_STRIP_TYPE);
       }
 
       {
@@ -123,14 +133,14 @@ boolean Plugin_131(uint8_t function, struct EventStruct *event, String& string)
         const FormSelectorOptions selRowCol(2, optionsRowCol, optionValuesZeroOne);
         const FormSelectorOptions selProZig(2, optionsProZig, optionValuesZeroOne);
 
-        selTop.addFormSelector(F("Matrix start-pixel"), F("mxstart"), 
-          get2BitFromUL(P131_CONFIG_FLAGS, P131_FLAGS_MATRIX_TYPE_TOP));
+        selTop.addFormSelector(F("Matrix start-pixel"), F("mxstart"),
+                               get2BitFromUL(P131_CONFIG_FLAGS, P131_FLAGS_MATRIX_TYPE_TOP));
 
-        selRowCol.addFormSelector(F("Matrix Rows/Columns mode"), F("mxrowcol"), 
-          bitRead(P131_CONFIG_FLAGS, P131_FLAGS_MATRIX_TYPE_RC));
+        selRowCol.addFormSelector(F("Matrix Rows/Columns mode"), F("mxrowcol"),
+                                  bitRead(P131_CONFIG_FLAGS, P131_FLAGS_MATRIX_TYPE_RC));
 
-        selProZig.addFormSelector(F("Matrix flow direction"), F("mxprozig"), 
-          bitRead(P131_CONFIG_FLAGS, P131_FLAGS_MATRIX_TYPE_PZ));
+        selProZig.addFormSelector(F("Matrix flow direction"), F("mxprozig"),
+                                  bitRead(P131_CONFIG_FLAGS, P131_FLAGS_MATRIX_TYPE_PZ));
 
         addFormSubHeader(F("Multiple matrices: Tiles"));
 
@@ -139,14 +149,14 @@ boolean Plugin_131(uint8_t function, struct EventStruct *event, String& string)
         addFormNumericBox(F("Tile matrix height"), F("tlheight"),
                           P131_CONFIG_TILE_HEIGHT, 1, P131_Nlines);
 
-        selTop.addFormSelector(F("Tile start-matrix"), F("tlstart"), 
-          get2BitFromUL(P131_CONFIG_FLAGS, P131_FLAGS_TILE_TYPE_TOP));
+        selTop.addFormSelector(F("Tile start-matrix"), F("tlstart"),
+                               get2BitFromUL(P131_CONFIG_FLAGS, P131_FLAGS_TILE_TYPE_TOP));
 
-        selRowCol.addFormSelector(F("Tile Rows/Columns mode"), F("tlrowcol"), 
-          bitRead(P131_CONFIG_FLAGS, P131_FLAGS_TILE_TYPE_RC));
+        selRowCol.addFormSelector(F("Tile Rows/Columns mode"), F("tlrowcol"),
+                                  bitRead(P131_CONFIG_FLAGS, P131_FLAGS_TILE_TYPE_RC));
 
-        selProZig.addFormSelector(F("Tile flow direction"), F("tlprozig"), 
-          bitRead(P131_CONFIG_FLAGS, P131_FLAGS_TILE_TYPE_PZ));
+        selProZig.addFormSelector(F("Tile flow direction"), F("tlprozig"),
+                                  bitRead(P131_CONFIG_FLAGS, P131_FLAGS_TILE_TYPE_PZ));
       }
 
       addFormSubHeader(F("Display"));
@@ -307,9 +317,10 @@ boolean Plugin_131(uint8_t function, struct EventStruct *event, String& string)
       set4BitToUL(P131_CONFIG_FLAGS, P131_CONFIG_FLAG_CMD_TRIGGER, getFormItemInt(F("cmdtrigger")));
 
       bitWrite(P131_CONFIG_FLAGS, P131_CONFIG_FLAG_CLEAR_ON_EXIT, isFormItemChecked(F("clearOnExit")));
-      bitWrite(P131_CONFIG_FLAGS, P131_CONFIG_FLAG_STRIP_TYPE,    getFormItemInt(F("striptype")) == 1);
+      set3BitToUL(P131_CONFIG_FLAGS_B, P131_CONFIG_FLAGS_B_STRIP_TYPE, getFormItemInt(F("striptype")));
+      set2BitToUL(P131_CONFIG_FLAGS_B, P131_CONFIG_FLAGS_B_VERSION, P131_CONFIG_CURRENT_VERSION);
       # ifdef P131_SHOW_SPLASH
-      bitWrite(P131_CONFIG_FLAGS, P131_CONFIG_FLAG_SHOW_SPLASH,   !isFormItemChecked(F("splash")));
+      bitWrite(P131_CONFIG_FLAGS, P131_CONFIG_FLAG_SHOW_SPLASH, !isFormItemChecked(F("splash")));
       # endif // ifdef P131_SHOW_SPLASH
 
 
@@ -365,15 +376,14 @@ boolean Plugin_131(uint8_t function, struct EventStruct *event, String& string)
         log += String(P131_CONFIG_FLAGS_GET_MATRIX_TYPE, BIN);
         addLogMove(LOG_LEVEL_INFO, log);
         # endif // ifndef BUILD_NO_DEBUG
+        const uint8_t stripType = P131_CONFIG_FLAGS_GET_VERSION == 0 ? P131_CONFIG_FLAGS_GET_STRIP_TYPE : P131_CONFIG_FLAG_B_GET_STRIP_TYPE;
         initPluginTaskData(event->TaskIndex, new (std::nothrow) P131_data_struct(P131_CONFIG_MATRIX_WIDTH,
                                                                                  P131_CONFIG_MATRIX_HEIGHT,
                                                                                  P131_CONFIG_TILE_WIDTH,
                                                                                  P131_CONFIG_TILE_HEIGHT,
                                                                                  PIN(0),
                                                                                  P131_CONFIG_FLAGS_GET_MATRIX_TYPE,
-                                                                                 P131_CONFIG_FLAGS_GET_STRIP_TYPE
-                                                                                    ? NEO_GRBW + NEO_KHZ800
-                                                                                    : NEO_GRB + NEO_KHZ800,
+                                                                                 P131_ledTypeFromStripType(stripType),
                                                                                  P131_CONFIG_FLAG_GET_ROTATION,
                                                                                  P131_CONFIG_FLAG_GET_FONTSCALE,
                                                                                  static_cast<AdaGFXTextPrintMode>(P131_CONFIG_FLAG_GET_MODE),
