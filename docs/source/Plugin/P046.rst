@@ -173,6 +173,7 @@ Indicators (recommended settings)
    "Rain per hour", "RainHour", "600", "0", "**Rain**: Gives the rain per **mm** per hour and the total rainfall (which will eventually roll over or reset if the batteries are changed)."
    "Rain total", "GustSpeed", "600", "0", "**Rain**"
    "UV index", "UV", "60", "1", "**UV**: Gives the UV index with 1 decimal precision."
+   "Unused", "Unused", "60", "0", "**UV**: Always 0. A Domoticz UV device expects the value as ``UV;temperature``, with only the UV index it is not recognized as UV sensor."
    "Strikes per 5 min interval", "Strikes", "300", "0", "**Lightning strikes**: Gives the number of lightning strikes counted in a fixed interval of at least 5 minutes. The value is updated once per interval and held until the next update."
    "Strike counter", "StrikeCount", "300", "0", "**Lightning strikes**: Raw cumulative strike counter of the outdoor unit (resets when the batteries are changed)."
    "Lightning distance", "StrikeDistance", "60", "0", "**Lightning distance**: Gives the distance to the closest lightning strike (stormfront). When no lightning is detected the value is ``-1``."

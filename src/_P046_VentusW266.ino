@@ -86,6 +86,8 @@
  *                        Add raw lightning strike counter as value 2
  *                        Fix ISR buffer overflow check writing 1 byte past ISR buffer
  *                        Number of values, VType and default value names now depend on the selected function
+ *                        UV has a 2nd value (always 0), as a Domoticz UV device expects "UV;temp"
+ *                        Use the default interval for existing tasks that were saved with interval 0
  * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported)
  *                        Uncrustify source
  * 2023-07-24 tonhuisman: Fix compilation issues
@@ -149,6 +151,7 @@ uint8_t P046_getValueCount(int choice) {
   switch (choice) {
     case 0: // Main + Temp/Hygro
     case 2: // Rain
+    case 3: // UV: 2nd value is always 0, a Domoticz UV device expects "UV;temp"
     case 4: // Lightning strikes
       return 2;
     case 1: // Wind
@@ -162,6 +165,7 @@ Sensor_VType P046_getVType(int choice) {
     case 0: return Sensor_VType::SENSOR_TYPE_TEMP_HUM;
     case 1: return Sensor_VType::SENSOR_TYPE_WIND;
     case 2: return Sensor_VType::SENSOR_TYPE_DUAL; // Rain rate + total, as expected by a Domoticz rain device
+    case 3: return Sensor_VType::SENSOR_TYPE_DUAL; // UV: a Domoticz UV device needs "UV;temp", value 2 stays 0
   }
 
   // Lightning strikes (4): SINGLE, so controllers only get the strike count, the raw counter (value 2) is for rules/display
@@ -248,7 +252,7 @@ boolean Plugin_046(uint8_t function, struct EventStruct *event, String& string)
         }
         case (3):
         {
-          addHtml(F("<TR><TD>Value 1: UV, 1 decimal</TD>"));
+          addHtml(F("<TR><TD>Value 1: UV, 1 decimal<BR>Value 2: always 0 (Domoticz UV device expects \"UV;temp\")</TD>"));
           break;
         }
         case (4):
@@ -312,7 +316,7 @@ boolean Plugin_046(uint8_t function, struct EventStruct *event, String& string)
         case 0: names[0] = F("Temperature"); names[1] = F("Humidity"); break;
         case 1: names[0] = F("Direction");   names[1] = F("Average"); names[2] = F("Gust"); break;
         case 2: names[0] = F("Rain");        names[1] = F("RainTotal"); break;
-        case 3: names[0] = F("UV");          break;
+        case 3: names[0] = F("UV");          names[1] = F("Unused"); break;
         case 4: names[0] = F("Strikes");     names[1] = F("StrikeCount"); break;
         case 5: names[0] = F("Distance");    break;
       }
@@ -351,6 +355,12 @@ boolean Plugin_046(uint8_t function, struct EventStruct *event, String& string)
     {
       if (!P046_data) {
         P046_data = new (std::nothrow) P046_data_struct();
+      }
+
+      // Tasks saved before the interval was configurable can have interval 0 and would only be read once
+      // at boot, before the first frame arrived, leaving their values at 0 forever.
+      if (Settings.TaskDeviceTimer[event->TaskIndex] == 0) {
+        Settings.TaskDeviceTimer[event->TaskIndex] = (Settings.Delay > 0) ? Settings.Delay : 60;
       }
 
       uint8_t choice = PCONFIG(0);
