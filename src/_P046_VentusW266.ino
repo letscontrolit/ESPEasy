@@ -161,9 +161,10 @@ Sensor_VType P046_getVType(int choice) {
   switch (choice) {
     case 0: return Sensor_VType::SENSOR_TYPE_TEMP_HUM;
     case 1: return Sensor_VType::SENSOR_TYPE_WIND;
-    case 2:
-    case 4: return Sensor_VType::SENSOR_TYPE_DUAL;
+    case 2: return Sensor_VType::SENSOR_TYPE_DUAL; // Rain rate + total, as expected by a Domoticz rain device
   }
+
+  // Lightning strikes (4): SINGLE, so controllers only get the strike count, the raw counter (value 2) is for rules/display
   return Sensor_VType::SENSOR_TYPE_SINGLE;
 }
 
