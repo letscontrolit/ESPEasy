@@ -152,12 +152,12 @@ Sensor
 
 .. include:: DataAcquisition.repl
 
-* **Interval**: How often should the task publish its value (5..15 seconds is normal).
+* **Interval**: How often should the task publish its value. Rain rate and lightning strikes are not a sliding window: they are calculated from the counter difference over a fixed interval of at least 5 minutes, evaluated when the task is read. With a 60 second task interval a new value is calculated every 5..6 minutes, and the reported value covers a period that ended between 0 and about 5 minutes ago (plus the transmit interval of the outdoor unit).
 
 Indicators (recommended settings)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. warning:: Although the "main" instance shows three values, only two will be send to the plugin as specified in the additional explanation.
+.. note:: The number of values of each instance depends on the selected plugin function, e.g. the "main" instance has two values (temperature and humidity).
       Only the main plugin instance has the ability to read the display unit. You need one, and only one, main instance.
       All other instances read the data fetched by the main plugin.
 
@@ -173,7 +173,9 @@ Indicators (recommended settings)
    "Rain per hour", "RainHour", "600", "0", "**Rain**: Gives the rain per **mm** per hour and the total rainfall (which will eventually roll over or reset if the batteries are changed)."
    "Rain total", "GustSpeed", "600", "0", "**Rain**"
    "UV index", "UV", "60", "1", "**UV**: Gives the UV index with 1 decimal precision."
-   "Strikes per hour", "Strikes", "300", "0", "**Lightning strikes**: Gives the number of lightning strikes per hour during the last 5 minutes."
+   "Unused", "Unused", "60", "0", "**UV**: Always 0. A Domoticz UV device expects the value as ``UV;temperature``, with only the UV index it is not recognized as UV sensor."
+   "Strikes per 5 min interval", "Strikes", "300", "0", "**Lightning strikes**: Gives the number of lightning strikes counted in a fixed interval of at least 5 minutes. The value is updated once per interval and held until the next update."
+   "Strike counter", "StrikeCount", "300", "0", "**Lightning strikes**: Raw cumulative strike counter of the outdoor unit (resets when the batteries are changed)."
    "Lightning distance", "StrikeDistance", "60", "0", "**Lightning distance**: Gives the distance to the closest lightning strike (stormfront). When no lightning is detected the value is ``-1``."
 
 .. note::
