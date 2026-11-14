@@ -119,9 +119,9 @@ Actuator
 .. image:: P131_StripTypeOptions.png
   :alt: The Strip type options
 
-*GRB* : Most commonly, the LEDs are of GRB type.
-
-*GRBW* : If the LEDs also support Brightness control, then the GRBW type should be selected.
+* *GRB* : Most commonly, the LEDs are of GRB type.
+* *GRBW* : If the LEDs also support Brightness control, then the GRBW type should be selected.
+* *RGB* : Some matrices use RGB type LEDs, which is supported on ESP32 only.
 
 
 Matrix

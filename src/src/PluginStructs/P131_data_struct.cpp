@@ -7,11 +7,27 @@
  * P131_CommandTrigger_toString: return the command string selected
  ***************************************************************************/
 const __FlashStringHelper* P131_CommandTrigger_toString(P131_CommandTrigger cmd) {
-  switch (cmd) {
+  switch (cmd)
+  {
     case P131_CommandTrigger::neomatrix: return F("neomatrix");
     case P131_CommandTrigger::neo: return F("neo");
   }
   return F("None");
+}
+
+/****************************************************************************
+ * P131_ledTypeFromStripType: return the LED type based on strip type
+ ***************************************************************************/
+neoPixelType P131_ledTypeFromStripType(uint8_t stripType) {
+  switch (stripType)
+  {
+    case 0: return NEO_GRB + NEO_KHZ800; // Default
+    case 1: return NEO_GRBW + NEO_KHZ800;
+    # ifdef ESP32
+    case 2: return NEO_RGB + NEO_KHZ800;
+    # endif // ifdef ESP32
+    default: return NEO_GRB + NEO_KHZ800; // Default
+  }
 }
 
 // **************************************************************************/
