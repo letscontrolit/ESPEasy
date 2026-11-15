@@ -1440,9 +1440,9 @@ static void handle_devicess_ShowAllTasksTable(uint8_t page)
 
             // fallthrough
             case DEVICE_TYPE_CUSTOM1:
+              showpin1 = true;
             case DEVICE_TYPE_CUSTOM0:
             {
-              showpin1 = true;
 
               if (pluginHasGPIODescription || (device.Type == DEVICE_TYPE_CUSTOM0)) {
                 addHtml(description);
