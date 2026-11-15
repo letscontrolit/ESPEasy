@@ -136,6 +136,10 @@ void ESPEasyWiFi_t::loop_internal()
 
         // No known candidates, so need to scan first.
         if (WifiIsAP(WiFi.getMode())) {
+#ifdef ESP8266
+          setState(WiFi_STA_State_e::STA_AP_Scanning, WIFI_STATE_MACHINE_STA_AP_SCANNING_TIMEOUT);
+          break;
+#else
           if (WiFi.softAPgetStationNum()) {
             // TODO TD-er: Must check if any client is connected.
             // If not, then we can disable AP mode and switch to WiFi_STA_State_e::STA_Scanning
@@ -145,6 +149,7 @@ void ESPEasyWiFi_t::loop_internal()
             setAP(false);
             // TODO TD-er: Must also turn back on when we're done scanning?
           }
+#endif
         }
         setState(WiFi_STA_State_e::STA_Scanning, WIFI_STATE_MACHINE_STA_SCANNING_TIMEOUT);
       }
@@ -183,6 +188,7 @@ void ESPEasyWiFi_t::loop_internal()
           // TODO TD-er: What to do with 5 GHz WiFi?
           if (_scan_channel > 14) {
             _scan_channel = 0;
+            _scanCompleted = true;
 
             // "Scan Success"
             setState(WiFi_STA_State_e::STA_Initializing);
@@ -191,11 +197,13 @@ void ESPEasyWiFi_t::loop_internal()
             setState(WiFi_STA_State_e::STA_AP_Scanning, 500);
           }
         } else {
+          _scanCompleted = true;
           // "Scan Success"
           setState(WiFi_STA_State_e::STA_Initializing);
         }
       } else if (scanCompleteStatus == -2) { // WIFI_SCAN_FAILED
         addLog(LOG_LEVEL_ERROR, F("WiFi : Scan failed"));
+        _scanCompleted = true;
 
         //        WiFi.scanDelete();
         setState(WiFi_STA_State_e::TimeOut, 1000);
@@ -267,7 +275,11 @@ void ESPEasyWiFi_t::loop_internal()
   // Flag captive portal in webserver and/or whether we might be in setup mode
   if (!connected() && shouldStartAP_fallback() && !WifiIsAP(WiFi.getMode()))
   {
-   Scheduler.setNetworkInitTimer(0, NETWORK_INDEX_WIFI_AP);
+    if (getWiFi_AP_NWPluginData_static_runtime() != nullptr) {
+      setAPinternal(true);
+    } else {
+      Scheduler.setNetworkInitTimer(0, NETWORK_INDEX_WIFI_AP);
+    }
   }
 #endif
 }
@@ -411,6 +423,7 @@ void ESPEasyWiFi_t::setState(WiFi_STA_State_e newState, uint32_t timeout) {
 
     case WiFi_STA_State_e::STA_Connected:
     {
+      _scanCompleted = false;
 # ifdef ESP32
 
       // FIXME TD-er: Must move to ESP32-specific cpp file
@@ -452,6 +465,7 @@ void ESPEasyWiFi_t::checkConnectProgress() {}
 
 void ESPEasyWiFi_t::startScanning()
 {
+  _scanCompleted = false;
   _state = _scan_channel == 0 ? WiFi_STA_State_e::STA_Scanning : WiFi_STA_State_e::STA_AP_Scanning;
   setSTA(true);
   WifiScan(true, _scan_channel);
@@ -625,8 +639,16 @@ bool ESPEasyWiFi_t::shouldStartAP_fallback() const
     return true;
   }
 
+  if (!SecuritySettings.hasWiFiCredentials()) {
+    return false;
+  }
+
   if (Settings.DoNotStartAPfallback_ConnectFail()) {
     return false;
+  }
+
+  if (_scanCompleted && !WiFi_AP_Candidates.hasCandidates()) {
+    return true;
   }
 
   return (Settings.ConnectFailRetryCount > 0) &&
