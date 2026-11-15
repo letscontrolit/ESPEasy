@@ -258,7 +258,7 @@ void ImprovWiFi::getAvailableWifiNetworks()
     #endif 
     const std::vector<std::string> wifinetworks = {
       WiFi.SSID(id).c_str(),
-      std::string{ static_cast<char>(WiFi.RSSI(id)) },
+      std::to_string(static_cast<int>(WiFi.RSSI(id))),
       (openWiFi ? "NO" : "YES")
     };
 
