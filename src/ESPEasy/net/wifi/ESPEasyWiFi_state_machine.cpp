@@ -165,11 +165,10 @@ void ESPEasyWiFi_t::loop_internal()
       // When scanning per channel, call for scanning next channel
       if (scanCompleteStatus >= 0) {
         const int scanResultCount = WiFi.scanComplete();
-        const int scanCount = scanResultCount > 0 ? scanResultCount : 0;
         WiFi_AP_Candidates.load_knownCredentials();
         WiFi_AP_Candidates.process_WiFiscan();
 # ifndef BUILD_NO_DEBUG
-
+        const int scanCount = scanResultCount > 0 ? scanResultCount : 0;
         if (_state == WiFi_STA_State_e::STA_Scanning) {
           addLog(LOG_LEVEL_INFO, strformat(
                    F("WiFi : Scan done, found %d APs"),
