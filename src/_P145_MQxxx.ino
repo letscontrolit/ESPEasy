@@ -178,7 +178,8 @@ boolean Plugin_145(byte function, struct EventStruct *event, String& string)
 
       if (validGpio(P145_CONFIG_PIN_HEATER))
       {
-        string += F("<BR>HEAT: ");
+        string += event->String1;
+        string += F("HEAT: ");
         string += formatGpioLabel(P145_CONFIG_PIN_HEATER, false);
       }
       success = true;
