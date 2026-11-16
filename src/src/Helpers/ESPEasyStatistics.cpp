@@ -9,7 +9,7 @@
 #include "../Helpers/_Plugin_init.h"
 
 
-void stream_json_timing_stats(const TimingStats& stats, long timeSinceLastReset) {
+static void stream_json_timing_stats(const TimingStats& stats, long timeSinceLastReset) {
   uint32_t minVal, maxVal;
   uint32_t  count = stats.getMinMax(minVal, maxVal);
   float call_per_sec = static_cast<float>(count) / static_cast<float>(timeSinceLastReset) * 1000.0f;

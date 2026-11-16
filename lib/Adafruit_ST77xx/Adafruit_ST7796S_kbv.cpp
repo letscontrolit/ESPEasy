@@ -135,16 +135,17 @@ Adafruit_ST7796S_kbv::Adafruit_ST7796S_kbv(SPIClass *spiClass, int8_t dc, int8_t
 //                     cs, rst, rd) {}
 
 // clang-format off
-static const uint8_t PROGMEM initcmd[] = {
+static const uint8_t PROGMEM initcmd_kbv[] = {
   //  (COMMAND_BYTE), n, data_bytes....
   0x01,                 0x80,                     // Soft reset, then delay 150 ms
+  0x11,                 0x80,                     // Exit Sleep, then delay 150 ms
   0xF0,                 1,                  0xC3, // ?? Unlock Manufacturer
   0xF0,                 1,                  0x96,
 #if 0
 #elif 0                                           // LCDWIKI
   0x36,                 1,                  0x68,
   0x3A,                 1,                  0x05,
-  0               0xB0, 1,                  0x80,
+  0xB0,                 1,                  0x80,
   0xB6,                 2,                  0x00, 0x02,
   0xB5,                 4,                  0x02, 0x03, 0x00,  0x04,
   0xB1,                 2,                  0x80, 0x10,
@@ -244,7 +245,7 @@ void Adafruit_ST7796S_kbv::begin(uint32_t freq) {
   }
 
   uint8_t cmd, x, numArgs;
-  const uint8_t *addr = initcmd;
+  const uint8_t *addr = initcmd_kbv;
 
   while ((cmd = pgm_read_byte(addr++)) > 0) {
     x       = pgm_read_byte(addr++);

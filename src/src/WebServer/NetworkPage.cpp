@@ -29,116 +29,28 @@
 
 using namespace ESPEasy::net;
 
-void handle_networks()
+// ********************************************************************************
+// Selected network has changed.
+// Clear all Network settings and load some defaults
+// ********************************************************************************
+static void handle_networks_clearLoadDefaults(ESPEasy::net::networkIndex_t networkindex, NetworkSettingsStruct& NetworkSettings)
 {
-# ifndef BUILD_NO_RAM_TRACKER
-  checkRAM(F("handle_networks"));
-# endif // ifndef BUILD_NO_RAM_TRACKER
-
-  if (!startStream_send_stdTemplate(MENU_INDEX_NETWORK)) { return; }
-
-  // 'index' value in the URL
-  uint8_t networkindex       = getFormItemInt(F("index"), 0);
-  const bool networkIndexSet = networkindex != 0 && validNetworkIndex(networkindex - 1);
-  --networkindex; // Index in URL is starting from 1, but starting from 0 in the array.
-
-  const int networkDriver_webarg_value = getFormItemInt(F("networkDriver"), -1);
-
-  // submitted data
-  if ((networkDriver_webarg_value != -1) && networkIndexSet)
-  {
-    bool mustInit             = false;
-    bool mustCallNWpluginSave = false;
-
-    // TODO TD-er: Implement saving submitted settings
-    const nwpluginID_t nwpluginID = nwpluginID_t::toPluginID(networkDriver_webarg_value);
-
-    auto NetworkSettings = MakeNetworkSettings();
-
-    if (Settings.getNWPluginID_for_network(networkindex) != nwpluginID)
-    {
-# ifndef LIMIT_BUILD_SIZE
-      addLog(LOG_LEVEL_INFO, strformat(
-               F("HandleNW: Driver changed from %d to %d"),
-               Settings.getNWPluginID_for_network(networkindex).value,
-               nwpluginID.value));
-# endif // ifndef LIMIT_BUILD_SIZE
-
-      // NetworkDriver has changed.
-      Settings.setNWPluginID_for_network(networkindex, nwpluginID);
-
-      // there is a networkDriverIndex selected?
-      if (nwpluginID.isValid())
-      {
-        mustInit = true;
-
-        handle_networks_clearLoadDefaults(networkindex, *NetworkSettings);
-      }
-    }
-
-    // subitted same networkDriverIndex
-    else
-    {
-      // there is a networkDriverIndex selected
-# ifndef LIMIT_BUILD_SIZE
-      addLog(LOG_LEVEL_INFO, concat(
-               F("HandleNW: Driver selected: "),
-               nwpluginID.value) + (nwpluginID.isValid() ? F("valid") : F("invalid")));
-# endif // ifndef LIMIT_BUILD_SIZE
-
-      if (nwpluginID.isValid())
-      {
-        mustInit = true;
-
-        handle_networks_CopySubmittedSettings(networkindex, *NetworkSettings);
-        mustCallNWpluginSave = true;
-      }
-    }
-
-    if (mustCallNWpluginSave) {
-      // Call NWPLUGIN_WEBFORM_SAVE after destructing NetworkSettings object to reduce RAM usage.
-      // Network plugin almost only deals with custom network settings.
-      // Even if they need to save things to the NetworkSettings, then the changes must
-      // already be saved first as the NWPluginCall does not have the NetworkSettings as argument.
-      handle_networks_CopySubmittedSettings_NWPluginCall(networkindex);
-    }
-    addHtmlError(SaveSettings());
-
-    if (mustInit) {
-      // Init network plugin using the new settings.
-      NWPlugin_Exit_Init(networkindex);
-    }
-
-  }
-
-  if (networkIndexSet)
-  {
-    handle_networks_NetworkSettingsPage(networkindex);
-  }
-  else
-  {
-    handle_networks_ShowAllNetworksTable();
-  }
-
-  sendTail_stdtemplate();
-}
-
-void handle_networks_clearLoadDefaults(ESPEasy::net::networkIndex_t networkindex, NetworkSettingsStruct& NetworkSettings) {
-
   // TODO TD-er: Must also check NetworkDriverStruct to see if something else must be done
 }
 
-void handle_networks_CopySubmittedSettings(ESPEasy::net::networkIndex_t networkindex, NetworkSettingsStruct& NetworkSettings)
+// ********************************************************************************
+// Collect all submitted form data and store in the NetworkSettings
+// ********************************************************************************
+static void handle_networks_CopySubmittedSettings(ESPEasy::net::networkIndex_t networkindex, NetworkSettingsStruct& NetworkSettings)
 {
   // copy all settings to network settings struct
   for (int parameterIdx = 0; parameterIdx <= NetworkSettingsStruct::NETWORK_ENABLED; ++parameterIdx) {
     NetworkSettingsStruct::VarType varType = static_cast<NetworkSettingsStruct::VarType>(parameterIdx);
     saveNetworkParameterForm(NetworkSettings, networkindex, varType);
   }
-
 }
 
-void handle_networks_CopySubmittedSettings_NWPluginCall(ESPEasy::net::networkIndex_t networkindex) {
+static void handle_networks_CopySubmittedSettings_NWPluginCall(ESPEasy::net::networkIndex_t networkindex) {
   networkDriverIndex_t NetworkDriverIndex = getNetworkDriverIndex_from_NetworkIndex(networkindex);
 
   if (validNetworkDriverIndex(NetworkDriverIndex)) {
@@ -176,7 +88,10 @@ void handle_networks_CopySubmittedSettings_NWPluginCall(ESPEasy::net::networkInd
 
 }
 
-void handle_networks_ShowAllNetworksTable()
+// ********************************************************************************
+// Show table with all selected networks
+// ********************************************************************************
+static void handle_networks_ShowAllNetworksTable()
 {
   html_add_form();
   html_table_class_multirow();
@@ -312,7 +227,10 @@ void handle_networks_ShowAllNetworksTable()
   html_end_form();
 }
 
-void handle_networks_NetworkSettingsPage(ESPEasy::net::networkIndex_t networkindex)
+// ********************************************************************************
+// Show the network settings page
+// ********************************************************************************
+static void handle_networks_NetworkSettingsPage(ESPEasy::net::networkIndex_t networkindex)
 {
   if (!validNetworkIndex(networkindex)) { return; }
 
@@ -402,9 +320,9 @@ void handle_networks_NetworkSettingsPage(ESPEasy::net::networkIndex_t networkind
 # ifdef ESP32
     addFormNote(F(
                   "For fallback interface, it is the delay after connection of primary interface has failed. For non-fallback it is the delay from boot"));
-    addFormCheckBox(F("Append Name to Hostname"), F("append_hostname"), Settings.getAppendNetworkAdapterNameToHostname(networkindex));
+    addFormCheckBox(F("Append Name to Hostname"), F("append_hostname"),  Settings.getAppendNetworkAdapterNameToHostname(networkindex));
 # endif // ifdef ESP32
-    addFormCheckBox(F("Block Web Access"), F("block_web_access"), Settings.getNetworkInterfaceSubnetBlockClientIP(networkindex));
+    addFormCheckBox(F("Block Web Access"),        F("block_web_access"), Settings.getNetworkInterfaceSubnetBlockClientIP(networkindex));
     addFormNote(F("When checked, any host from a subnet on this network interface will be blocked to access the ESPEasy web interface"));
 
 # if FEATURE_USE_IPV6
@@ -493,6 +411,100 @@ void handle_networks_NetworkSettingsPage(ESPEasy::net::networkIndex_t networkind
   html_end_table();
   html_end_form();
 
+}
+
+void handle_networks()
+{
+# ifndef BUILD_NO_RAM_TRACKER
+  checkRAM(F("handle_networks"));
+# endif // ifndef BUILD_NO_RAM_TRACKER
+
+  if (!startStream_send_stdTemplate(MENU_INDEX_NETWORK)) { return; }
+
+  // 'index' value in the URL
+  uint8_t networkindex       = getFormItemInt(F("index"), 0);
+  const bool networkIndexSet = networkindex != 0 && validNetworkIndex(networkindex - 1);
+  --networkindex; // Index in URL is starting from 1, but starting from 0 in the array.
+
+  const int networkDriver_webarg_value = getFormItemInt(F("networkDriver"), -1);
+
+  // submitted data
+  if ((networkDriver_webarg_value != -1) && networkIndexSet)
+  {
+    bool mustInit             = false;
+    bool mustCallNWpluginSave = false;
+
+    // TODO TD-er: Implement saving submitted settings
+    const nwpluginID_t nwpluginID = nwpluginID_t::toPluginID(networkDriver_webarg_value);
+
+    auto NetworkSettings = MakeNetworkSettings();
+
+    if (Settings.getNWPluginID_for_network(networkindex) != nwpluginID)
+    {
+# ifndef LIMIT_BUILD_SIZE
+      addLog(LOG_LEVEL_INFO, strformat(
+               F("HandleNW: Driver changed from %d to %d"),
+               Settings.getNWPluginID_for_network(networkindex).value,
+               nwpluginID.value));
+# endif // ifndef LIMIT_BUILD_SIZE
+
+      // NetworkDriver has changed.
+      Settings.setNWPluginID_for_network(networkindex, nwpluginID);
+
+      // there is a networkDriverIndex selected?
+      if (nwpluginID.isValid())
+      {
+        mustInit = true;
+
+        handle_networks_clearLoadDefaults(networkindex, *NetworkSettings);
+      }
+    }
+
+    // subitted same networkDriverIndex
+    else
+    {
+      // there is a networkDriverIndex selected
+# ifndef LIMIT_BUILD_SIZE
+      addLog(LOG_LEVEL_INFO, concat(
+               F("HandleNW: Driver selected: "),
+               nwpluginID.value) + (nwpluginID.isValid() ? F("valid") : F("invalid")));
+# endif // ifndef LIMIT_BUILD_SIZE
+
+      if (nwpluginID.isValid())
+      {
+        mustInit = true;
+
+        handle_networks_CopySubmittedSettings(networkindex, *NetworkSettings);
+        mustCallNWpluginSave = true;
+      }
+    }
+
+    if (mustCallNWpluginSave) {
+      // Call NWPLUGIN_WEBFORM_SAVE after destructing NetworkSettings object to reduce RAM usage.
+      // Network plugin almost only deals with custom network settings.
+      // Even if they need to save things to the NetworkSettings, then the changes must
+      // already be saved first as the NWPluginCall does not have the NetworkSettings as argument.
+      handle_networks_CopySubmittedSettings_NWPluginCall(networkindex);
+    }
+    addHtmlError(SaveSettings());
+
+    if (mustInit) {
+      // Init network plugin using the new settings.
+      NWPlugin_Exit_Init(networkindex);
+    }
+
+  }
+
+  if (networkIndexSet)
+  {
+    handle_networks_NetworkSettingsPage(networkindex);
+  }
+  else
+  {
+    handle_networks_ShowAllNetworksTable();
+  }
+
+  sendTail_stdtemplate();
 }
 
 #endif // ifdef WEBSERVER_NETWORK

@@ -44,7 +44,7 @@
 
 #if defined(ESP8266)
   # include <ESP8266WiFi.h>
-int WIFI_CONNECT_STATUS() {
+static int WIFI_CONNECT_STATUS() {
   if (WiFi.isConnected()) {
     return 7;
   }
@@ -53,7 +53,7 @@ int WIFI_CONNECT_STATUS() {
 #endif // if defined(ESP8266)
 #if defined(ESP32)
   # include <WiFi.h>
-int WIFI_CONNECT_STATUS() {
+static int WIFI_CONNECT_STATUS() {
   if (WiFi.STA.connected()) {
     if (WiFi.STA.hasIP())  {
       return 7;
@@ -65,7 +65,7 @@ int WIFI_CONNECT_STATUS() {
 #endif // if defined(ESP32)
 
 
-String getReplacementString(const String& format, const String& s) {
+static String getReplacementString(const String& format, const String& s) {
   int startpos = s.indexOf(format);
   int endpos   = s.indexOf('%', startpos + 1);
   if (endpos == -1) {
@@ -87,19 +87,19 @@ String getReplacementString(const String& format, const String& s) {
   return R;
 }
 
-void replSunRiseTimeString(const String& format, String& s, boolean useURLencode) {
+static void replSunRiseTimeString(const String& format, String& s, boolean useURLencode) {
   const String R(getReplacementString(format, s));
 
   repl(R, node_time.getSunriseTimeString(':', ESPEasy_time::getSecOffset(R)), s, useURLencode);
 }
 
-void replSunSetTimeString(const String& format, String& s, boolean useURLencode) {
+static void replSunSetTimeString(const String& format, String& s, boolean useURLencode) {
   const String R(getReplacementString(format, s));
 
   repl(R, node_time.getSunsetTimeString(':', ESPEasy_time::getSecOffset(R)), s, useURLencode);
 }
 
-String timeReplacement_leadZero(int value)
+static String timeReplacement_leadZero(int value)
 {
   char valueString[5] = { 0 };
 
@@ -108,7 +108,7 @@ String timeReplacement_leadZero(int value)
 }
 
 // FIXME TD-er: Try to match these with  StringProvider::getValue
-LabelType::Enum SystemVariables2LabelType(SystemVariables::Enum enumval) {
+static LabelType::Enum SystemVariables2LabelType(SystemVariables::Enum enumval) {
   LabelType::Enum label = LabelType::MAX_LABEL;
 
   switch (enumval)
@@ -327,7 +327,7 @@ String SystemVariables::getSystemVariable(SystemVariables::Enum enumval) {
   while (__pos__ != -1) { (S((T_str), s, useURLencode)); __pos__ = s.indexOf(T_str, __pos__ + 1);}
 
 // Parse %vN% to replace ESPEasy variables
-bool parse_pct_v_num_pct(String& s, boolean useURLencode, int start_pos)
+static bool parse_pct_v_num_pct(String& s, boolean useURLencode, int start_pos)
 {
   const String key_prefix = F("%v");
   int v_index = s.indexOf(key_prefix, start_pos);

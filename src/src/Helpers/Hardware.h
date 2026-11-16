@@ -92,8 +92,6 @@ void readBootCause();
 /********************************************************************************************\
    Hardware specific configurations
  \*********************************************************************************************/
-const __FlashStringHelper* getDeviceModelBrandString(DeviceModel model);
-
 String                     getDeviceModelString(DeviceModel model);
 
 bool                       modelMatchingFlashSize(DeviceModel model);
@@ -103,15 +101,8 @@ void                       setFactoryDefault(DeviceModel model);
 /********************************************************************************************\
    Add pre defined plugins and rules.
  \*********************************************************************************************/
-void                       addSwitchPlugin(taskIndex_t   taskIndex,
-                                           int           gpio,
-                                           const String& name,
-                                           bool          activeLow);
-
 void addPredefinedPlugins(const GpioFactorySettingsStruct& gpio_settings);
 
-void addButtonRelayRule(uint8_t buttonNumber,
-                        int     relay_gpio);
 
 void addPredefinedRules(const GpioFactorySettingsStruct& gpio_settings);
 

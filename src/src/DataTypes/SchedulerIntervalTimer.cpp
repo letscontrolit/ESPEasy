@@ -3,7 +3,7 @@
 #include "../Helpers/StringConverter.h"
 
 #ifndef BUILD_NO_DEBUG
-const __FlashStringHelper * toString_f(SchedulerIntervalTimer_e timer) {
+static const __FlashStringHelper * toString_f(SchedulerIntervalTimer_e timer) {
   switch (timer) {
     case SchedulerIntervalTimer_e::TIMER_20MSEC:           return F("TIMER_20MSEC");
     case SchedulerIntervalTimer_e::TIMER_100MSEC:          return F("TIMER_100MSEC");

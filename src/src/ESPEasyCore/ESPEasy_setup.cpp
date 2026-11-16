@@ -26,6 +26,7 @@
 #include "../Helpers/_Plugin_init.h"
 #include "../Helpers/DeepSleep.h"
 #include "../Helpers/ESPEasyRTC.h"
+#include "../Helpers/ESPEasy_CrashHandler.h"
 #include "../Helpers/ESPEasy_FactoryDefault.h"
 #include "../Helpers/ESPEasy_Storage.h"
 #include "../Helpers/ESPEasy_checks.h"
@@ -117,11 +118,13 @@ void RTOS_HandleSchedule(void *parameter)
 /*********************************************************************************************\
 * ISR call back function for handling the watchdog.
 \*********************************************************************************************/
-void sw_watchdog_callback(void *arg)
+/*
+static void sw_watchdog_callback(void *arg)
 {
   yield(); // feed the WD
   ++sw_watchdog_callback_count;
 }
+*/
 
 /*********************************************************************************************\
 * SETUP
@@ -405,44 +408,8 @@ void ESPEasy_setup()
 
   Settings.UseRTOSMultitasking = false; // For now, disable it, we experience heap corruption.
 
-  if ((RTC.bootFailedCount > 10) && (RTC.bootCounter > 10)) {
-    uint8_t toDisable = RTC.bootFailedCount - 10;
-    toDisable = disablePlugin(toDisable);
+  disableFailingComponent();
 
-    if (toDisable != 0) {
-      toDisable = disableController(toDisable);
-    }
-    #if FEATURE_NOTIFIER
-
-    if (toDisable != 0) {
-      toDisable = disableNotification(toDisable);
-    }
-    #endif // if FEATURE_NOTIFIER
-    if (toDisable != 0) {
-      toDisable = disableNetwork(toDisable);
-    }
-
-    if (toDisable != 0) {
-      toDisable = disableRules(toDisable);
-    }
-
-    if (toDisable != 0) {
-      toDisable = disableAllPlugins(toDisable);
-    }
-
-    if (toDisable != 0) {
-      toDisable = disableAllControllers(toDisable);
-    }
-#if FEATURE_NOTIFIER
-
-    if (toDisable != 0) {
-      toDisable = disableAllNotifications(toDisable);
-    }
-#endif // if FEATURE_NOTIFIER
-    if (toDisable != 0) {
-      toDisable = disableAllNetworkss(toDisable);
-    }
-  }
   #if FEATURE_ETHERNET
 
   // This ensures, that changing WIFI OR ETHERNET MODE happens properly only after reboot. Changing without reboot would not be a good idea.

@@ -6,7 +6,7 @@
 # include "../Helpers/StringConverter.h"
 # include "../WebServer/Markup_Forms.h"
 
-String DevSpecific_Security_getLabelString(SecurityStruct_deviceSpecific::KeyType keytype,
+static String DevSpecific_Security_getLabelString(SecurityStruct_deviceSpecific::KeyType keytype,
                                            uint16_t                               index,
                                            bool                                   displayString,
                                            KVS_StorageType::Enum & storageType,
@@ -35,7 +35,7 @@ String DevSpecific_Security_getLabelString(SecurityStruct_deviceSpecific::KeyTyp
   return res;
 }
 
-WebFormItemParams make_DevSpecific_Security_WebFormItemParams(
+static WebFormItemParams make_DevSpecific_Security_WebFormItemParams(
   SecurityStruct_deviceSpecific::KeyType keytype,
   uint16_t                               index,
   bool                                   suppressIndex_displayString)

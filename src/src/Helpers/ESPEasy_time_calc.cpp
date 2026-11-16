@@ -22,13 +22,14 @@ uint32_t unix_time_frac_to_micros(uint32_t unix_time_frac)
 {
   return static_cast<float>(unix_time_frac) / 4294.967f;
 }
-
-uint32_t millis_to_unix_time_frac(uint32_t millis)
+/*
+static uint32_t millis_to_unix_time_frac(uint32_t millis)
 {
   return static_cast<float>(millis) * 4294967.0f;
 }
+  */
 
-uint32_t micros_to_unix_time_frac(uint32_t micros)
+static uint32_t micros_to_unix_time_frac(uint32_t micros)
 {
   return static_cast<float>(micros) * 4294.967f;
 }
@@ -58,7 +59,8 @@ uint32_t micros_to_sec_usec(int64_t micros, uint32_t& usec)
   return static_cast<uint32_t>(seconds);
 }
 
-uint64_t sec_time_frac_to_uptime_offset_usec(const uint32_t& seconds,
+/*
+static uint64_t sec_time_frac_to_uptime_offset_usec(const uint32_t& seconds,
                                    uint32_t        time_frac)
 {
   const uint64_t unix_time_usec = sec_time_frac_to_Micros(seconds, time_frac);
@@ -67,13 +69,14 @@ uint64_t sec_time_frac_to_uptime_offset_usec(const uint32_t& seconds,
     return unix_time_usec;
   return unix_time_usec - cur_usec;
 }
+*/
 
 
-bool isLeapYear(int year) {
+static bool isLeapYear(int year) {
   return (year > 0) && !(year % 4) && ((year % 100) || !(year % 400));
 }
 
-uint8_t getMonthDays(int year, uint8_t month) {
+static uint8_t getMonthDays(int year, uint8_t month) {
   const uint8_t monthDays[] = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 
   if ((month == 1) && isLeapYear(year)) {

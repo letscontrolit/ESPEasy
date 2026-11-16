@@ -31,7 +31,6 @@ void runEach30Seconds();
 #if FEATURE_MQTT
 
 void scheduleNextMQTTdelayQueue();
-void schedule_all_MQTTimport_tasks();
 
 void processMQTTdelayQueue();
 

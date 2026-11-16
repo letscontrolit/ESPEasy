@@ -67,14 +67,6 @@ UP_KeyValueWriter add_ChartJS_chart_header(
   size_t                     nrSamples  = 0,
   bool                       onlyJSON   = false);
 
-void add_ChartJS_chart_JSON_header(
-  KeyValueWriter_JSON      & parent,
-  const __FlashStringHelper *chartType,
-  const ChartJS_title      & chartTitle,
-  ChartJS_options_scales   & options,
-  size_t                     nrSamples,
-  bool                       enableZoom
-  );
 
 void add_ChartJS_chart_labels(
   KeyValueWriter& parent,

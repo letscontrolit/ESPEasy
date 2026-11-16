@@ -51,7 +51,7 @@ void initAnalogWrite()
 
 // Match frequency and resolution and optionally adjust duty accordingly
 // @return adjusted duty cycle
-uint32_t adapt_ledc_frequency_resolution_duty(uint32_t& frequency, uint8_t& resolution, uint32_t duty = 0)
+static uint32_t adapt_ledc_frequency_resolution_duty(uint32_t& frequency, uint8_t& resolution, uint32_t duty = 0)
 {
   while ((40000000u >> resolution) < frequency && resolution > 1) {
     --resolution;

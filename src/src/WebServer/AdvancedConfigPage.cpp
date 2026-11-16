@@ -32,6 +32,114 @@ void setLogLevelFor(LogDestination destination, LabelType::Enum label) {
   setLogLevelFor(destination, getFormItemInt(getInternalLabel(label)));
 }
 
+static void addFormDstSelect(bool isStart, uint16_t choice) {
+  uint16_t tmpstart(choice);
+  uint16_t tmpend(choice);
+
+  if (!TimeChangeRule(choice, 0).isValid()) {
+    time_zone.getDefaultDst_flash_values(tmpstart, tmpend);
+  }
+  TimeChangeRule rule(isStart ? tmpstart : tmpend, 0);
+  {
+    const __FlashStringHelper *  week[] = { F("Last"), F("1st"), F("2nd"), F("3rd"), F("4th") };
+    constexpr int weekValues[] = { 0, 1, 2, 3, 4 };
+    addRowLabel(concat(
+      isStart ? F("Start")  : F("End"),
+      F(" (week, dow, month)")));
+
+    const FormSelectorOptions selector(NR_ELEMENTS(weekValues), week, weekValues);
+    selector.addSelector(
+      isStart ? F("dststartweek")  : F("dstendweek"), 
+      rule.week);
+  }
+  html_BR();
+  {
+    const __FlashStringHelper *  dow[] = { F("Sun"), F("Mon"), F("Tue"), F("Wed"), F("Thu"), F("Fri"), F("Sat") };
+    constexpr int dowValues[]  = { 1, 2, 3, 4, 5, 6, 7 };
+
+    const FormSelectorOptions selector(NR_ELEMENTS(dowValues), dow, dowValues);
+    selector.addSelector(
+      isStart ? F("dststartdow")   : F("dstenddow"),
+      rule.dow);
+  }
+  html_BR();
+  {
+    const __FlashStringHelper * month[] = { F("Jan"), F("Feb"), F("Mar"), F("Apr"), F("May"), F("Jun"), F("Jul"), F("Aug"), F("Sep"), F("Oct"), F("Nov"), F(
+                             "Dec") };
+    constexpr int monthValues[] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
+
+    const FormSelectorOptions selector(NR_ELEMENTS(monthValues), month, monthValues);
+    selector.addSelector(
+      isStart ? F("dststartmonth") : F("dstendmonth"),
+      rule.month);
+  }
+
+  addFormNumericBox(
+    isStart ? F("Start (localtime, e.g. 2h&rarr;3h)")  : F("End (localtime, e.g. 3h&rarr;2h)"),
+    isStart ? F("dststarthour")  : F("dstendhour"),
+    rule.hour, 0, 23);
+  addUnit(isStart ? F("hour &#x21b7;") : F("hour &#x21b6;"));
+}
+
+
+#if FEATURE_EXT_RTC
+static void addFormExtTimeSourceSelect(const __FlashStringHelper * label, const __FlashStringHelper * id, ExtTimeSource_e choice)
+{
+  addRowLabel(label);
+  const __FlashStringHelper * options[] = {
+    F("None"),
+    toString(ExtTimeSource_e::DS1307),
+    toString(ExtTimeSource_e::DS3231),
+    toString(ExtTimeSource_e::DS3232),
+    toString(ExtTimeSource_e::PCF8523),
+    toString(ExtTimeSource_e::PCF8563),
+    #if FEATURE_EXT_RTC_PCF8583
+    toString(ExtTimeSource_e::PCF8583),
+    toString(ExtTimeSource_e::PCF8583a),
+    #endif // if FEATURE_EXT_RTC_PCF8583
+  };
+  constexpr int optionValues[] = { 
+    static_cast<int>(ExtTimeSource_e::None),
+    static_cast<int>(ExtTimeSource_e::DS1307),
+    static_cast<int>(ExtTimeSource_e::DS3231),
+    static_cast<int>(ExtTimeSource_e::DS3232),
+    static_cast<int>(ExtTimeSource_e::PCF8523),
+    static_cast<int>(ExtTimeSource_e::PCF8563),
+    #if FEATURE_EXT_RTC_PCF8583
+    static_cast<int>(ExtTimeSource_e::PCF8583),
+    static_cast<int>(ExtTimeSource_e::PCF8583a),
+    #endif // if FEATURE_EXT_RTC_PCF8583
+    };
+
+  const FormSelectorOptions selector(NR_ELEMENTS(optionValues), options, optionValues);
+  selector.addSelector(id, static_cast<int>(choice));
+}
+#endif
+
+static void addFormLogLevelSelect(LabelType::Enum label, int choice)
+{
+  #ifdef BUILD_NO_DEBUG
+  if (choice > LOG_LEVEL_INFO) choice = LOG_LEVEL_INFO;
+  #endif
+
+  addRowLabel(getLabel(label));
+  addLogLevelFormSelectorOptions(getInternalLabel(label), choice);
+}
+
+#if FEATURE_SYSLOG
+static void addFormLogFacilitySelect(const __FlashStringHelper * label, const __FlashStringHelper * id, int choice)
+{
+  addRowLabel(label);
+  const __FlashStringHelper * options[] =
+  { F("Kernel"), F("User"),   F("Daemon"),   F("Message"), F("Local0"),  F("Local1"),
+    F("Local2"), F("Local3"), F("Local4"),   F("Local5"),  F("Local6"),  F("Local7") };
+  const int optionValues[] = { 0, 1, 3, 5, 16, 17, 18, 19, 20, 21, 22, 23 };
+
+  const FormSelectorOptions selector(NR_ELEMENTS(options), options, optionValues);
+  selector.addSelector(id, choice);
+}
+#endif
+
 // ********************************************************************************
 // Web Interface config page
 // ********************************************************************************
@@ -419,110 +527,6 @@ void handle_advanced() {
   sendTail_stdtemplate();
 }
 
-void addFormDstSelect(bool isStart, uint16_t choice) {
-  uint16_t tmpstart(choice);
-  uint16_t tmpend(choice);
 
-  if (!TimeChangeRule(choice, 0).isValid()) {
-    time_zone.getDefaultDst_flash_values(tmpstart, tmpend);
-  }
-  TimeChangeRule rule(isStart ? tmpstart : tmpend, 0);
-  {
-    const __FlashStringHelper *  week[] = { F("Last"), F("1st"), F("2nd"), F("3rd"), F("4th") };
-    constexpr int weekValues[] = { 0, 1, 2, 3, 4 };
-    addRowLabel(concat(
-      isStart ? F("Start")  : F("End"),
-      F(" (week, dow, month)")));
-
-    const FormSelectorOptions selector(NR_ELEMENTS(weekValues), week, weekValues);
-    selector.addSelector(
-      isStart ? F("dststartweek")  : F("dstendweek"), 
-      rule.week);
-  }
-  html_BR();
-  {
-    const __FlashStringHelper *  dow[] = { F("Sun"), F("Mon"), F("Tue"), F("Wed"), F("Thu"), F("Fri"), F("Sat") };
-    constexpr int dowValues[]  = { 1, 2, 3, 4, 5, 6, 7 };
-
-    const FormSelectorOptions selector(NR_ELEMENTS(dowValues), dow, dowValues);
-    selector.addSelector(
-      isStart ? F("dststartdow")   : F("dstenddow"),
-      rule.dow);
-  }
-  html_BR();
-  {
-    const __FlashStringHelper * month[] = { F("Jan"), F("Feb"), F("Mar"), F("Apr"), F("May"), F("Jun"), F("Jul"), F("Aug"), F("Sep"), F("Oct"), F("Nov"), F(
-                             "Dec") };
-    constexpr int monthValues[] = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
-
-    const FormSelectorOptions selector(NR_ELEMENTS(monthValues), month, monthValues);
-    selector.addSelector(
-      isStart ? F("dststartmonth") : F("dstendmonth"),
-      rule.month);
-  }
-
-  addFormNumericBox(
-    isStart ? F("Start (localtime, e.g. 2h&rarr;3h)")  : F("End (localtime, e.g. 3h&rarr;2h)"),
-    isStart ? F("dststarthour")  : F("dstendhour"),
-    rule.hour, 0, 23);
-  addUnit(isStart ? F("hour &#x21b7;") : F("hour &#x21b6;"));
-}
-
-void addFormExtTimeSourceSelect(const __FlashStringHelper * label, const __FlashStringHelper * id, ExtTimeSource_e choice)
-{
-  addRowLabel(label);
-  const __FlashStringHelper * options[] = {
-    F("None"),
-    toString(ExtTimeSource_e::DS1307),
-    toString(ExtTimeSource_e::DS3231),
-    toString(ExtTimeSource_e::DS3232),
-    toString(ExtTimeSource_e::PCF8523),
-    toString(ExtTimeSource_e::PCF8563),
-    #if FEATURE_EXT_RTC_PCF8583
-    toString(ExtTimeSource_e::PCF8583),
-    toString(ExtTimeSource_e::PCF8583a),
-    #endif // if FEATURE_EXT_RTC_PCF8583
-  };
-  constexpr int optionValues[] = { 
-    static_cast<int>(ExtTimeSource_e::None),
-    static_cast<int>(ExtTimeSource_e::DS1307),
-    static_cast<int>(ExtTimeSource_e::DS3231),
-    static_cast<int>(ExtTimeSource_e::DS3232),
-    static_cast<int>(ExtTimeSource_e::PCF8523),
-    static_cast<int>(ExtTimeSource_e::PCF8563),
-    #if FEATURE_EXT_RTC_PCF8583
-    static_cast<int>(ExtTimeSource_e::PCF8583),
-    static_cast<int>(ExtTimeSource_e::PCF8583a),
-    #endif // if FEATURE_EXT_RTC_PCF8583
-    };
-
-  const FormSelectorOptions selector(NR_ELEMENTS(optionValues), options, optionValues);
-  selector.addSelector(id, static_cast<int>(choice));
-}
-
-
-void addFormLogLevelSelect(LabelType::Enum label, int choice)
-{
-  #ifdef BUILD_NO_DEBUG
-  if (choice > LOG_LEVEL_INFO) choice = LOG_LEVEL_INFO;
-  #endif
-
-  addRowLabel(getLabel(label));
-  addLogLevelFormSelectorOptions(getInternalLabel(label), choice);
-}
-
-#if FEATURE_SYSLOG
-void addFormLogFacilitySelect(const __FlashStringHelper * label, const __FlashStringHelper * id, int choice)
-{
-  addRowLabel(label);
-  const __FlashStringHelper * options[] =
-  { F("Kernel"), F("User"),   F("Daemon"),   F("Message"), F("Local0"),  F("Local1"),
-    F("Local2"), F("Local3"), F("Local4"),   F("Local5"),  F("Local6"),  F("Local7") };
-  const int optionValues[] = { 0, 1, 3, 5, 16, 17, 18, 19, 20, 21, 22, 23 };
-
-  const FormSelectorOptions selector(NR_ELEMENTS(options), options, optionValues);
-  selector.addSelector(id, choice);
-}
-#endif
 
 #endif // ifdef WEBSERVER_ADVANCED

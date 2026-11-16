@@ -6,6 +6,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2026-10-25 tonhuisman: Use standard I2C library functions where possible, reformatted
  * 2025-06-14 tonhuisman: Add support for Custom Value Type per task value
  * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported for RFID)
  */
@@ -76,7 +77,7 @@ uint32_t getFirmwareVersion(void);
 void     Plugin_017_powerDown(void);
 int8_t   Plugin_017_writeCommand(const uint8_t *header,
                                  uint8_t        hlen);
-int16_t  Plugin_017_readResponse(uint8_t command,
+int8_t   Plugin_017_readResponse(uint8_t command,
                                  uint8_t buf[],
                                  uint8_t len);
 
@@ -230,24 +231,25 @@ bool P017_handle_timer_in(struct EventStruct *event)
   bool success = false;
 
   static uint32_t tempcounter = 0;
-  static uint8_t errorCount        = 0;
+  static uint8_t  errorCount  = 0;
 
-  switch (event->Par1) {
+  switch (event->Par1)
+  {
     case PN532_TIMER_TYPE_REMOVE_TAG:
     {
-# ifdef P017_DEBUG_LOGIC_ANALYZER_PIN_INIT
+      # ifdef P017_DEBUG_LOGIC_ANALYZER_PIN_INIT
 
       // DEBUG code using logic analyzer for timings
       // Mark we cleared the card anyway.
       DIRECT_pinWrite(P017_DEBUG_LOGIC_ANALYZER_PIN_INIT, 0);
-# endif // ifdef P017_DEBUG_LOGIC_ANALYZER_PIN_INIT
+      # endif // ifdef P017_DEBUG_LOGIC_ANALYZER_PIN_INIT
 
       // Reset card id on timeout
       if (P017_AUTO_TAG_REMOVAL == 0) {
         UserVar.setSensorTypeLong(event->TaskIndex, P017_NO_TAG_DETECTED_VALUE);
-        #ifndef BUILD_NO_DEBUG
+        # ifndef BUILD_NO_DEBUG
         addLog(LOG_LEVEL_INFO, F("RFID : Removed Tag"));
-        #endif // ifndef BUILD_NO_DEBUG
+        # endif // ifndef BUILD_NO_DEBUG
 
         if (P017_EVENT_ON_TAG_REMOVAL == 1) {
           sendData(event);
@@ -258,11 +260,11 @@ bool P017_handle_timer_in(struct EventStruct *event)
     }
     case PN532_TIMER_TYPE_START_READ_TAG:
     {
-        # ifdef P017_DEBUG_LOGIC_ANALYZER_PIN
+      # ifdef P017_DEBUG_LOGIC_ANALYZER_PIN
 
       // DEBUG code using logic analyzer for timings
       DIRECT_pinWrite(P017_DEBUG_LOGIC_ANALYZER_PIN, 1);
-        # endif // ifdef P017_DEBUG_LOGIC_ANALYZER_PIN
+      # endif // ifdef P017_DEBUG_LOGIC_ANALYZER_PIN
 
       // TODO: Clock stretching issue https://github.com/esp8266/Arduino/issues/1541
       # if FEATURE_I2C_MULTIPLE
@@ -297,11 +299,11 @@ bool P017_handle_timer_in(struct EventStruct *event)
     }
     case PN532_TIMER_TYPE_READ_TAG_RESPONSE:
     {
-              # ifdef P017_DEBUG_LOGIC_ANALYZER_PIN
+      # ifdef P017_DEBUG_LOGIC_ANALYZER_PIN
 
       // DEBUG code using logic analyzer for timings
       DIRECT_pinWrite(P017_DEBUG_LOGIC_ANALYZER_PIN, 1);
-        # endif // ifdef P017_DEBUG_LOGIC_ANALYZER_PIN
+      # endif // ifdef P017_DEBUG_LOGIC_ANALYZER_PIN
 
       uint8_t uid[] = { 0, 0, 0, 0, 0, 0, 0 };
       uint8_t uidLength;
@@ -334,12 +336,12 @@ bool P017_handle_timer_in(struct EventStruct *event)
 
 
       if (error == 0) {
-# ifdef P017_DEBUG_LOGIC_ANALYZER_PIN_INIT
+        # ifdef P017_DEBUG_LOGIC_ANALYZER_PIN_INIT
 
         // DEBUG code using logic analyzer for timings
         // Mark we read a card
         DIRECT_pinWrite(P017_DEBUG_LOGIC_ANALYZER_PIN_INIT, 1);
-# endif // ifdef P017_DEBUG_LOGIC_ANALYZER_PIN_INIT
+        # endif // ifdef P017_DEBUG_LOGIC_ANALYZER_PIN_INIT
 
         uint32_t key = uid[0];
 
@@ -348,7 +350,7 @@ bool P017_handle_timer_in(struct EventStruct *event)
           key  += uid[i];
         }
         const uint32_t old_key = UserVar.getSensorTypeLong(event->TaskIndex);
-        bool new_key                = false;
+        bool new_key           = false;
 
         if (old_key != key) {
           UserVar.setSensorTypeLong(event->TaskIndex, key);
@@ -356,14 +358,15 @@ bool P017_handle_timer_in(struct EventStruct *event)
         }
 
         tempcounter++;
-#ifndef BUILD_NO_DEBUG
+        # ifndef BUILD_NO_DEBUG
+
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           addLog(LOG_LEVEL_INFO, strformat(F("PN532: %s Tag: %d %u"),
                                            FsP(new_key ? F("New") : F("Old")),
                                            key,
                                            tempcounter));
         }
-#endif
+        # endif // ifndef BUILD_NO_DEBUG
 
         if (new_key) { sendData(event); }
         uint32_t resetTimer = P017_REMOVAL_TIMEOUT;
@@ -371,12 +374,12 @@ bool P017_handle_timer_in(struct EventStruct *event)
         if (resetTimer < 250) { resetTimer = 250; }
         Scheduler.setPluginTaskTimer(resetTimer, event->TaskIndex, PN532_TIMER_TYPE_REMOVE_TAG);
       } else {
-# ifdef P017_DEBUG_LOGIC_ANALYZER_PIN_INIT
+        # ifdef P017_DEBUG_LOGIC_ANALYZER_PIN_INIT
 
         // DEBUG code using logic analyzer for timings
         // Mark we no longer see the card
         DIRECT_pinWrite(P017_DEBUG_LOGIC_ANALYZER_PIN_INIT, 0);
-# endif // ifdef P017_DEBUG_LOGIC_ANALYZER_PIN_INIT
+        # endif // ifdef P017_DEBUG_LOGIC_ANALYZER_PIN_INIT
       }
       break;
     }
@@ -398,12 +401,13 @@ boolean Plugin_017_Init(int8_t resetPin)
 
   if (validGpio(resetPin))
   {
-    #ifndef BUILD_NO_DEBUG
+    # ifndef BUILD_NO_DEBUG
+
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       addLogMove(LOG_LEVEL_INFO,
                  concat(F("PN532: Reset on pin: "), resetPin));
     }
-    #endif // ifndef BUILD_NO_DEBUG
+    # endif // ifndef BUILD_NO_DEBUG
     pinMode(resetPin, OUTPUT);
     digitalWrite(resetPin, LOW);
     delay(100);
@@ -418,7 +422,8 @@ boolean Plugin_017_Init(int8_t resetPin)
   uint32_t versiondata = getFirmwareVersion();
 
   if (versiondata) {
-#ifndef BUILD_NO_DEBUG
+    # ifndef BUILD_NO_DEBUG
+
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       addLog(LOG_LEVEL_INFO,
              strformat(F("PN532: Found chip PN5%s FW: %s.%s"),
@@ -426,14 +431,14 @@ boolean Plugin_017_Init(int8_t resetPin)
                        formatToHex_no_prefix((versiondata >> 16) & 0xFF, 2).c_str(),
                        formatToHex_no_prefix((versiondata >> 8) & 0xFF,  2).c_str()));
     }
-#endif
+    # endif // ifndef BUILD_NO_DEBUG
   }
   else {
-# ifdef P017_DEBUG_LOGIC_ANALYZER_PIN_INIT
+    # ifdef P017_DEBUG_LOGIC_ANALYZER_PIN_INIT
 
     // DEBUG code using logic analyzer for timings
     DIRECT_pinWrite(P017_DEBUG_LOGIC_ANALYZER_PIN_INIT, 0);
-# endif // ifdef P017_DEBUG_LOGIC_ANALYZER_PIN_INIT
+    # endif // ifdef P017_DEBUG_LOGIC_ANALYZER_PIN_INIT
 
     return false;
   }
@@ -446,11 +451,11 @@ boolean Plugin_017_Init(int8_t resetPin)
   Plugin_017_pn532_packetbuffer[3] = 0x01; // use IRQ pin!
 
   if (Plugin_017_writeCommand(Plugin_017_pn532_packetbuffer, 4)) {
-# ifdef P017_DEBUG_LOGIC_ANALYZER_PIN_INIT
+    # ifdef P017_DEBUG_LOGIC_ANALYZER_PIN_INIT
 
     // DEBUG code using logic analyzer for timings
     DIRECT_pinWrite(P017_DEBUG_LOGIC_ANALYZER_PIN_INIT, 0);
-# endif // ifdef P017_DEBUG_LOGIC_ANALYZER_PIN_INIT
+    # endif // ifdef P017_DEBUG_LOGIC_ANALYZER_PIN_INIT
 
     return false;
   }
@@ -458,11 +463,11 @@ boolean Plugin_017_Init(int8_t resetPin)
   // to prevent nack on next read
   I2C_wakeup(PN532_I2C_ADDRESS);
   delay(1);
-# ifdef P017_DEBUG_LOGIC_ANALYZER_PIN_INIT
+  # ifdef P017_DEBUG_LOGIC_ANALYZER_PIN_INIT
 
   // DEBUG code using logic analyzer for timings
   DIRECT_pinWrite(P017_DEBUG_LOGIC_ANALYZER_PIN_INIT, 0);
-# endif // ifdef P017_DEBUG_LOGIC_ANALYZER_PIN_INIT
+  # endif // ifdef P017_DEBUG_LOGIC_ANALYZER_PIN_INIT
 
   return true;
 }
@@ -482,7 +487,7 @@ uint32_t getFirmwareVersion(void)
   }
 
   // read data packet
-  int16_t status = Plugin_017_readResponse(
+  int8_t status = Plugin_017_readResponse(
     PN532_COMMAND_GETFIRMWAREVERSION,
     Plugin_017_pn532_packetbuffer,
     sizeof(Plugin_017_pn532_packetbuffer));
@@ -542,7 +547,7 @@ uint8_t Plugin_017_readPassiveTargetID(uint8_t *uid, uint8_t *uidLength)
   uint8_t Plugin_017_pn532_packetbuffer[64] = { 0 };
 
   // read data packet
-  const int16_t read_code = Plugin_017_readResponse(
+  const int8_t read_code = Plugin_017_readResponse(
     PN532_COMMAND_INLISTPASSIVETARGET,
     Plugin_017_pn532_packetbuffer,
     sizeof(Plugin_017_pn532_packetbuffer));
@@ -585,18 +590,17 @@ uint8_t Plugin_017_readPassiveTargetID(uint8_t *uid, uint8_t *uidLength)
 \*********************************************************************************************/
 int8_t Plugin_017_writeCommand(const uint8_t *header, uint8_t hlen)
 {
+  const uint8_t length = hlen + 1; // length of data field: TFI + DATA
+  uint8_t pre[]        = { PN532_PREAMBLE, PN532_STARTCODE1, PN532_STARTCODE2, 0, 0, PN532_HOSTTOPN532 };
+
+  pre[3] = length;
+  pre[4] = ~length + 1;
+  constexpr uint8_t pre_len = NR_ELEMENTS(pre);
+
   Wire.beginTransmission(PN532_I2C_ADDRESS);
 
-  Wire.write(PN532_PREAMBLE);
-  Wire.write(PN532_STARTCODE1);
-  Wire.write(PN532_STARTCODE2);
+  Wire.write(pre, pre_len);
 
-  uint8_t length = hlen + 1;       // length of data field: TFI + DATA
-
-  Wire.write(length);
-  Wire.write(~length + 1);         // checksum of length
-
-  Wire.write(PN532_HOSTTOPN532);
   uint8_t sum = PN532_HOSTTOPN532; // sum of TFI + DATA
 
   for (uint8_t i = 0; i < hlen; ++i) {
@@ -607,11 +611,11 @@ int8_t Plugin_017_writeCommand(const uint8_t *header, uint8_t hlen)
     }
   }
 
-  uint8_t checksum = ~sum + 1; // checksum of TFI + DATA
+  const uint8_t checksum = ~sum + 1; // checksum of TFI + DATA
 
   Wire.write(checksum);
   Wire.write(PN532_POSTAMBLE);
-  uint8_t status = Wire.endTransmission();
+  const uint8_t status = Wire.endTransmission();
 
   if (status != 0) {
     return PN532_INVALID_FRAME;
@@ -623,7 +627,7 @@ int8_t Plugin_017_writeCommand(const uint8_t *header, uint8_t hlen)
 /*********************************************************************************************\
 * PN532 read response
 \*********************************************************************************************/
-int16_t Plugin_017_readResponse(uint8_t command, uint8_t buf[], uint8_t len)
+int8_t Plugin_017_readResponse(uint8_t command, uint8_t buf[], uint8_t len)
 {
   delay(1); // Need to wait a little as the PN53x may not 'see' the request if we send it too quickly.
 
@@ -690,7 +694,8 @@ int8_t Plugin_017_readAckFrame()
 
   uint16_t time = 0;
 
-  do {
+  do
+  {
     if (Wire.requestFrom(PN532_I2C_ADDRESS,  sizeof(PN532_ACK) + 1)) {
       if (Wire.read() & 1) { // check first uint8_t --- status
         break;               // PN532 is ready

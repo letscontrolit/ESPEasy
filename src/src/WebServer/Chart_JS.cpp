@@ -7,7 +7,7 @@
 # include "../WebServer/HTML_wrappers.h"
 # include "../WebServer/JSON.h"
 
-void add_ChartJS_array(KeyValueWriter& parent,
+static void add_ChartJS_array(KeyValueWriter& parent,
                        int             valueCount,
                        const String    array[])
 {
@@ -16,7 +16,7 @@ void add_ChartJS_array(KeyValueWriter& parent,
   }
 }
 
-void add_ChartJS_array(KeyValueWriter& parent,
+static void add_ChartJS_array(KeyValueWriter& parent,
                        int             valueCount,
                        const float     array[],
                        uint8_t         nrDecimals)
@@ -26,7 +26,7 @@ void add_ChartJS_array(KeyValueWriter& parent,
   }
 }
 
-void add_ChartJS_array(KeyValueWriter& parent,
+static void add_ChartJS_array(KeyValueWriter& parent,
                        int             valueCount,
                        const int       array[])
 {
@@ -54,53 +54,7 @@ UP_KeyValueWriter add_ChartJS_chart_header(
     onlyJSON);
 }
 
-UP_KeyValueWriter add_ChartJS_chart_header(
-  const __FlashStringHelper *chartType,
-  const String             & id,
-  const ChartJS_title      & chartTitle,
-  ChartJS_options_scales   & options,
-  bool                       enableZoom,
-  size_t                     nrSamples,
-  bool                       onlyJSON)
-{
-  if (!onlyJSON) {
-    addHtml(F("<div class=\"chart-container\" style=\"position: relative; height:40vh; width:95vw\">"));
-    addHtml(F("<canvas"));
-    addHtmlAttribute(F("id"),     id);
-    addHtml(F("></canvas>"));
-    addHtml(F("</div>"));
-    const char *id_c_str = id.c_str();
-    addHtml(strformat(
-              F("<script>"
-                "const %sc=document.getElementById('%s');"
-                "const my_%s_C=new Chart(%sc,\n"),
-              id_c_str,
-              id_c_str,
-              id_c_str,
-              id_c_str));
-  }
-  UP_KeyValueWriter_JSON chartJSON(new (std::nothrow) KeyValueWriter_JSON(true));
-
-  if (chartJSON) {
-    chartJSON->allowFormatOverrides(false);
-
-    if (!onlyJSON) {
-      chartJSON->setFooter(F("\n);</script>"));
-    }
-
-    add_ChartJS_chart_JSON_header(
-      *chartJSON,
-      chartType,
-      chartTitle,
-      options,
-      nrSamples,
-      enableZoom);
-  }
-
-  return std::move(chartJSON);
-}
-
-void add_ChartJS_chart_JSON_header(
+static void add_ChartJS_chart_JSON_header(
   KeyValueWriter_JSON      & parent,
   const __FlashStringHelper *chartType,
   const ChartJS_title      & chartTitle,
@@ -160,6 +114,54 @@ void add_ChartJS_chart_JSON_header(
     options.toString(*optionsArr);
   }
 }
+
+UP_KeyValueWriter add_ChartJS_chart_header(
+  const __FlashStringHelper *chartType,
+  const String             & id,
+  const ChartJS_title      & chartTitle,
+  ChartJS_options_scales   & options,
+  bool                       enableZoom,
+  size_t                     nrSamples,
+  bool                       onlyJSON)
+{
+  if (!onlyJSON) {
+    addHtml(F("<div class=\"chart-container\" style=\"position: relative; height:40vh; width:95vw\">"));
+    addHtml(F("<canvas"));
+    addHtmlAttribute(F("id"),     id);
+    addHtml(F("></canvas>"));
+    addHtml(F("</div>"));
+    const char *id_c_str = id.c_str();
+    addHtml(strformat(
+              F("<script>"
+                "const %sc=document.getElementById('%s');"
+                "const my_%s_C=new Chart(%sc,\n"),
+              id_c_str,
+              id_c_str,
+              id_c_str,
+              id_c_str));
+  }
+  UP_KeyValueWriter_JSON chartJSON(new (std::nothrow) KeyValueWriter_JSON(true));
+
+  if (chartJSON) {
+    chartJSON->allowFormatOverrides(false);
+
+    if (!onlyJSON) {
+      chartJSON->setFooter(F("\n);</script>"));
+    }
+
+    add_ChartJS_chart_JSON_header(
+      *chartJSON,
+      chartType,
+      chartTitle,
+      options,
+      nrSamples,
+      enableZoom);
+  }
+
+  return std::move(chartJSON);
+}
+
+
 
 void add_ChartJS_chart_labels(
   KeyValueWriter& parent,

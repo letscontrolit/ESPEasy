@@ -26,7 +26,7 @@
 #include "../Helpers/StringConverter.h"
 #include "../WebServer/ESPEasy_WebServer.h"
 
-void updateLoopStats() {
+static void updateLoopStats() {
   ++loopCounter;
   ++loopCounter_full;
 

@@ -95,11 +95,6 @@ uint8_t getTypeForUnit(uint8_t unit);
 String getTypeStringForUnit(uint8_t unit);
 
 /*********************************************************************************************\
-   Send UDP message to specific unit (unit 255=broadcast)
-\*********************************************************************************************/
-void sendUDP(uint8_t unit, const uint8_t *data, uint8_t size);
-
-/*********************************************************************************************\
    Refresh aging for remote units, drop if too old...
 \*********************************************************************************************/
 void refreshNodeList();
@@ -152,10 +147,6 @@ extern uint32_t  _notify_time;
  \*********************************************************************************************/
 bool SSDP_begin();
 
-/********************************************************************************************\
-   Send SSDP messages (notify & responses)
- \*********************************************************************************************/
-void SSDP_send(uint8_t method);
 
 /********************************************************************************************\
    SSDP message processing
@@ -169,7 +160,7 @@ void SSDP_update();
 // ********************************************************************************
 // Return subnet range of WiFi.
 // ********************************************************************************
-bool getSubnetRange(IPAddress& low, IPAddress& high);
+//bool getSubnetRange(IPAddress& low, IPAddress& high);
 
 // ********************************************************************************
 // Functions to test and handle network/client connectivity.
@@ -180,7 +171,7 @@ bool getSubnetRange(IPAddress& low, IPAddress& high);
 #endif // ifdef CORE_POST_2_5_0
 
 
-bool hasIPaddr();
+//bool hasIPaddr();
 
 bool useStaticIP();
 
@@ -195,7 +186,6 @@ bool connectClient(WiFiClient& client, const char *hostname, uint16_t port, uint
 bool connectClient(WiFiClient& client, IPAddress ip, uint16_t port, uint32_t timeout_ms = 100);
 #endif // FEATURE_HTTP_CLIENT
 
-void scrubDNS();
 
 bool IPAddressSet(const IPAddress& ip);
 
@@ -214,8 +204,6 @@ bool beginWiFiUDP_randomPort(WiFiUDP& udp);
 void sendGratuitousARP();
 
 
-bool splitHostPortString(const String& hostPortString, String& host, uint16_t& port);
-
 // Split the username and password from a string like this:
 // username:password@hostname:portnr
 // @param  hostPortString  The string to parse
@@ -230,32 +218,8 @@ bool splitUserPass_HostPortString(const String& hostPortString, String& user, St
 // Return value is everything after the hostname:port section (including /)
 String splitURL(const String& fullURL, String& user, String& pass, String& host, uint16_t& port, String& file, String& protocol);
 
-String joinURL(const String& user, const String& pass, const String& host, uint16_t& port, const String& uri, const String& protocol = EMPTY_STRING );
-
 
 #if FEATURE_HTTP_CLIENT
-// Initiate the HTTP connection.
-// Also try to authenticate using either Basic auth or Digest.
-// @retval HTTP return code.
-int http_authenticate(const String& logIdentifier,
-                      WiFiClient  & client,
-                      ESPEasy_HTTPClient  & http,
-                      uint16_t      timeout,
-                      const String& user,
-                      const String& pass,
-                      const String& host,
-                      uint16_t      port,
-                      const String& protocol,
-                     # if FEATURE_JSON_EVENT
-                      String        uri,
-                     # else // if FEATURE_JSON_EVENT
-                      const String& uri,
-                     # endif // if FEATURE_JSON_EVENT
-                      const String& HttpMethod,
-                      const String& header,
-                      const String& postStr,
-                      bool          must_check_reply);
-
 
 String send_via_http(const String& logIdentifier,
                      uint16_t      timeout,

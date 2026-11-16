@@ -79,25 +79,18 @@ inline bool usecTimeOutReached(const uint64_t& timer) {
 
 uint32_t unix_time_frac_to_millis(uint32_t unix_time_frac);
 uint32_t unix_time_frac_to_micros(uint32_t unix_time_frac);
-uint32_t millis_to_unix_time_frac(uint32_t millis);
-uint32_t micros_to_unix_time_frac(uint32_t micros);
 
 uint32_t micros_to_sec_time_frac(int64_t micros, uint32_t& unix_time_frac);
 uint64_t sec_time_frac_to_Micros(uint32_t seconds, uint32_t time_frac);
 
 uint32_t micros_to_sec_usec(int64_t micros, uint32_t& usec);
 
-uint64_t sec_time_frac_to_uptime_offset_usec(const uint32_t& seconds,
-                                   uint32_t        time_frac = 0);
 
 /********************************************************************************************\
    Unix Time computations
  \*********************************************************************************************/
-bool isLeapYear(int year);
-
 // Get number of days in a month.
 // Month starts at 0 for January.
-uint8_t getMonthDays(int year, uint8_t month);
 uint8_t getMonthDays(const struct tm& tm);
 
 uint32_t makeTime(const struct tm& tm);

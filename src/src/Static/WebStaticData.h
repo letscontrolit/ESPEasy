@@ -7,8 +7,6 @@
 
 //-V::569
 
-String generate_external_URL(const String& fname);
-
 void serve_favicon();
 
 enum class JSfiles_e {

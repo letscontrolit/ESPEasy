@@ -3,17 +3,6 @@
 
 #include "../../ESPEasy_common.h"
 
-#if FEATURE_SEND_TO_HTTP || FEATURE_POST_TO_HTTP || FEATURE_PUT_TO_HTTP
-const __FlashStringHelper* httpEmitToHTTP(struct EventStruct        *event,
-                                          const __FlashStringHelper *logIdentifier,
-                                          const __FlashStringHelper *HttpMethod,
-                                          const char                *Line,
-                                          const int                  timeout,
-                                          const bool                 waitForAck,
-                                          const bool                 useHeader,
-                                          const bool                 useBody,
-                                          const bool                 useHttps);
-#endif // if FEATURE_SEND_TO_HTTP || FEATURE_POST_TO_HTTP || FEATURE_PUT_TO_HTTP
 #if FEATURE_SEND_TO_HTTP
 const __FlashStringHelper* Command_HTTP_SendToHTTP(struct EventStruct *event,
                                                    const char         *Line);

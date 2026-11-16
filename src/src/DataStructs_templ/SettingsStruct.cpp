@@ -793,7 +793,6 @@ void SettingsStruct_tmpl<N_TASKS>::clearTask(taskIndex_t task) {
     TaskDeviceSendData[i][task] = false;
   }
   TaskDeviceNumber[task]     = 0u; //.setInvalid();
-  OLD_TaskDeviceID[task]     = 0u; // UNUSED: this can be removed
   TaskDevicePin1[task]       = -1;
   TaskDevicePin2[task]       = -1;
   TaskDevicePin3[task]       = -1;

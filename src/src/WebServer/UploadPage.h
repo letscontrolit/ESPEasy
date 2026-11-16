@@ -1,5 +1,4 @@
-#ifndef WEBSERVER_WEBSERVER_UPLOADPAGE_H
-#define WEBSERVER_WEBSERVER_UPLOADPAGE_H
+#pragma once
 
 #include "../WebServer/common.h"
 
@@ -40,7 +39,4 @@ void handleFileUpload();
 # if FEATURE_SD
 void handleSDFileUpload();
 # endif // if FEATURE_SD
-void handleFileUploadBase(bool toSDcard);
 #endif // ifdef WEBSERVER_UPLOAD
-
-#endif // ifndef WEBSERVER_WEBSERVER_UPLOADPAGE_H

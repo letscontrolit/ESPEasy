@@ -30,11 +30,12 @@
 #include <vector>
 
 #if FEATURE_JSON_PARSE && FEATURE_EXTENDED_STRING_FUNCTIONS
-#include <ArduinoJson.h>
-#include "../Helpers/JSON_helper.h"
+# include <ArduinoJson.h>
+# include "../Helpers/JSON_helper.h"
 #endif // if FEATURE_JSON_PARSE && FEATURE_EXTENDED_STRING_FUNCTIONS
 
 #ifdef WEBSERVER_NEW_RULES
+
 String EventToFileName(const String& eventName) {
   int size  = eventName.length();
   int index = eventName.indexOf('=');
@@ -42,12 +43,12 @@ String EventToFileName(const String& eventName) {
   if (index > -1) {
     size = index;
   }
-#if defined(ESP8266)
+# if defined(ESP8266)
   String fileName = F("rules/");
-#endif // if defined(ESP8266)
-#if defined(ESP32)
+# endif // if defined(ESP8266)
+# if defined(ESP32)
   String fileName = F("/rules/");
-#endif // if defined(ESP32)
+# endif // if defined(ESP32)
   fileName += eventName.substring(0, size);
   fileName.replace('#', RULE_FILE_SEPARAROR);
   fileName.toLowerCase();
@@ -55,20 +56,19 @@ String EventToFileName(const String& eventName) {
 }
 
 String FileNameToEvent(const String& fileName) {
-#if defined(ESP8266)
+# if defined(ESP8266)
   String eventName = fileName.substring(6);
-#endif // if defined(ESP8266)
-#if defined(ESP32)
+# endif // if defined(ESP8266)
+# if defined(ESP32)
   String eventName = fileName.substring(7);
-#endif // if defined(ESP32)
+# endif // if defined(ESP32)
   eventName.replace(RULE_FILE_SEPARAROR, '#');
   return eventName;
 }
-#endif
 
-void checkRuleSets() {
-  Cache.rulesHelper.closeAllFiles();
-}
+#endif // ifdef WEBSERVER_NEW_RULES
+
+void checkRuleSets() { Cache.rulesHelper.closeAllFiles(); }
 
 /********************************************************************************************\
    Process next event from event queue
@@ -98,22 +98,25 @@ void rulesProcessing(const String& event) {
   }
   START_TIMER
   #ifndef BUILD_NO_RAM_TRACKER
-  checkRAM(F("rulesProcessing"));
+    checkRAM(F("rulesProcessing"));
   #endif // ifndef BUILD_NO_RAM_TRACKER
 #ifndef BUILD_NO_DEBUG
   const uint32_t timer = millis();
 #endif // ifndef BUILD_NO_DEBUG
-// #ifndef BUILD_NO_DEBUG
+
+  // #ifndef BUILD_NO_DEBUG
   if (loglevelActiveFor(LOG_LEVEL_INFO)) {
     addLogMove(LOG_LEVEL_INFO, concat(F("EVENT: "), event));
   }
-// #endif
+
+  // #endif
   if (Settings.OldRulesEngine()) {
     bool eventHandled = false;
 
     if (Settings.EnableRulesCaching()) {
       String filename;
       size_t pos = 0;
+
       if (Cache.rulesHelper.findMatchingRule(event, filename, pos)) {
         const bool startOnMatched = true; // We already matched the event
         eventHandled = rulesProcessingFile(filename, event, pos, startOnMatched);
@@ -134,7 +137,7 @@ void rulesProcessing(const String& event) {
     # ifndef BUILD_NO_DEBUG
     else {
       addLog(LOG_LEVEL_DEBUG, strformat(F("EVENT: %s is ingnored. File %s not found."),
-             event.c_str(), fileName.c_str()));
+                                        event.c_str(), fileName.c_str()));
     }
     # endif    // ifndef BUILD_NO_DEBUG
     #endif // WEBSERVER_NEW_RULES
@@ -151,739 +154,10 @@ void rulesProcessing(const String& event) {
 }
 
 /********************************************************************************************\
-   Rules processing
- \*********************************************************************************************/
-bool rulesProcessingFile(const String& fileName, 
-                         const String& event, 
-                         size_t pos,
-                         bool   startOnMatched) {
-  if (!Settings.UseRules || !fileExists(fileName)) {
-    return false;
-  }
-  #ifndef BUILD_NO_RAM_TRACKER
-  checkRAM(F("rulesProcessingFile"));
-  #endif // ifndef BUILD_NO_RAM_TRACKER
-#ifndef BUILD_NO_DEBUG
-
-  if (Settings.SerialLogLevel == LOG_LEVEL_DEBUG_DEV) {
-    serialPrint(F("RuleDebug Processing:"));
-    serialPrintln(fileName);
-    serialPrintln(F("     flags CMI  parse output:"));
-  }
-#endif // ifndef BUILD_NO_DEBUG
-
-  static uint8_t nestingLevel = 0;
-
-  nestingLevel++;
-
-  if (nestingLevel > RULES_MAX_NESTING_LEVEL) {
-    addLog(LOG_LEVEL_ERROR, F("EVENT: Error: Nesting level exceeded!"));
-    nestingLevel--;
-    return false;
-  }
-
-
-  bool match     = false;
-  bool codeBlock = false;
-  bool isCommand = false;
-  bool condition[RULES_IF_MAX_NESTING_LEVEL];
-  bool ifBranche[RULES_IF_MAX_NESTING_LEVEL];
-  uint8_t ifBlock     = 0;
-  uint8_t fakeIfBlock = 0;
-
-
-  bool moreAvailable = true;
-  bool eventHandled = false;
-  while (moreAvailable && !eventHandled) {
-    const bool searchNextOnBlock = !codeBlock && !match;
-    String line = Cache.rulesHelper.readLn(fileName, pos, moreAvailable, searchNextOnBlock);
-
-    // Parse the line and extract the action (if there is any)
-    String action;
-    {
-      START_TIMER
-      const bool matched_before_parse = match;
-      bool isOneLiner = false;
-      parseCompleteNonCommentLine(line, event, action, match, codeBlock,
-                                  isCommand, isOneLiner, condition, ifBranche, ifBlock,
-                                  fakeIfBlock, startOnMatched);
-      if ((matched_before_parse && !match) || isOneLiner) {
-        // We were processing a matching event and now crossed the "endon"
-        // Or just dealing with a oneliner.
-        // So we're done processing
-        eventHandled = true;
-        backgroundtasks();
-      }
-      STOP_TIMER(RULES_PARSE_LINE);
-    }
-
-    if (match) // rule matched for one action or a block of actions
-    {
-      START_TIMER
-      processMatchedRule(action, event,
-                         isCommand, condition,
-                         ifBranche, ifBlock, fakeIfBlock);
-      STOP_TIMER(RULES_PROCESS_MATCHED);
-    }
-  }
-
-/*
-  if (f) {
-    f.close();
-  }
-*/
-
-  nestingLevel--;
-  #ifndef BUILD_NO_RAM_TRACKER
-  checkRAM(F("rulesProcessingFile2"));
-  #endif // ifndef BUILD_NO_RAM_TRACKER
-  backgroundtasks();
-  return eventHandled; // && nestingLevel == 0;
-}
-
-
-/********************************************************************************************\
    Parse string commands
  \*********************************************************************************************/
-bool get_next_inner_bracket(const String& line, unsigned int& startIndex, int& closingIndex, char closingBracket)
-{
-  if (line.length() <= 1) {
-    // Not possible to have opening and closing bracket on a line this short.
-    return false;
-  }
-  char openingBracket = closingBracket;
 
-  switch (closingBracket) {
-    case ']': openingBracket = '['; break;
-    case '}': openingBracket = '{'; break;
-    case ')': openingBracket = '('; break;
-    default:
-      // unknown bracket type
-      return false;
-  }
-  // Closing bracket should not be found on the first position.
-  closingIndex = line.indexOf(closingBracket, startIndex + 1);
-
-  if (closingIndex == -1) { 
-    // not found
-    return false; 
-  }
-
-  for (int i = (closingIndex - 1); (i >= static_cast<int>(startIndex)) && (i >= 0); --i) {
-    if (line[i] == openingBracket) {
-      startIndex = i;
-      return true;
-    }
-  }
-  return false;
-}
-
-bool get_next_argument(const String& fullCommand, int& index, String& argument, char separator)
-{
-  if (index == -1) {
-    return false;
-  }
-  int newIndex = fullCommand.indexOf(separator, index);
-
-  if (newIndex == -1) {
-    argument = fullCommand.substring(index);
-  } else {
-    argument = fullCommand.substring(index, newIndex);
-  }
-
-  if (argument.startsWith(String(separator))) {
-    argument = argument.substring(1);
-  }
-
-  //  addLog(LOG_LEVEL_INFO, String("get_next_argument: ") + String(index) + " " + fullCommand + " " + argument);
-  index = newIndex;
-
-  if (index != -1) {
-    ++index;
-  }
-  return argument.length() > 0;
-}
-
-const char bitwise_functions[] PROGMEM = "bitread|bitset|bitclear|bitwrite|xor|and|or";
-enum class bitwise_functions_e {
-  bitread,
-  bitset,
-  bitclear,
-  bitwrite,
-  xor_e,  // protected keywords, thus appended _e
-  and_e,
-  or_e
-};
-
-
-bool parse_bitwise_functions(const String& cmd_s_lower, const String& arg1, const String& arg2, const String& arg3, int64_t& result) {
-  #ifndef BUILD_NO_DEBUG
-  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    String log = F("Bitwise: {");
-    log += wrapIfContains(cmd_s_lower, ':', '\"');
-    log += ':';
-    log += wrapIfContains(arg1, ':', '\"');
-
-    if (arg2.length() > 0) {
-      log += ':';
-      log += wrapIfContains(arg2, ':', '\"');
-
-      if (arg3.length() > 0) {
-        log += ':';
-        log += wrapIfContains(arg3, ':', '\"');
-      }
-    }
-    log += '}';
-    addLogMove(LOG_LEVEL_DEBUG, log);
-  }
-  #endif
-
-  if (cmd_s_lower.length() < 2) {
-    return false;
-  }
-
-  int command_i = GetCommandCode(cmd_s_lower.c_str(), bitwise_functions);
-  if (command_i == -1) {
-    // No matching function found
-    return false;
-  }
-  
-  if (cmd_s_lower.startsWith(F("bit"))) {
-    uint32_t bitnr = 0;
-    uint64_t iarg2 = 0;
-
-    if (!validUIntFromString(arg1, bitnr) || !validUInt64FromString(arg2, iarg2)) {
-      return false;
-    }
-
-    switch(static_cast<bitwise_functions_e>(command_i)) {
-      case bitwise_functions_e::bitread:
-        // Syntax like {bitread:0:123} to get a single decimal '1'
-        result = bitRead(iarg2, bitnr);
-        break;
-      case bitwise_functions_e::bitset:
-        // Syntax like {bitset:0:122} to set least significant bit of the given nr '122' to '1' => '123'
-        result = iarg2;
-        bitSetULL(result, bitnr);
-        break;
-      case bitwise_functions_e::bitclear:
-        // Syntax like {bitclear:0:123} to set least significant bit of the given nr '123' to '0' => '122'
-        result = iarg2;
-        bitClearULL(result, bitnr);
-        break;
-      case bitwise_functions_e::bitwrite:
-      {
-        uint32_t iarg3 = 0;
-        // Syntax like {bitwrite:0:122:1} to set least significant bit of the given nr '122' to '1' => '123'
-        if (validUIntFromString(arg3, iarg3)) {
-          const int bitvalue = (iarg3 & 1); // Only use the last bit of the given parameter
-          result = iarg2;
-          bitWriteULL(result, bitnr, bitvalue);
-        } else {
-          // Need 3 parameters, but 3rd one is not a valid uint
-          return false;
-        }
-        break;
-      }
-      default: 
-        return false;
-    }
-
-    // all functions starting with "bit" are checked
-    return true;
-  }
-
-  uint64_t iarg1, iarg2 = 0;
-
-  if (!validUInt64FromString(arg1, iarg1) || !validUInt64FromString(arg2, iarg2)) {
-    return false;
-  }
-
-  switch(static_cast<bitwise_functions_e>(command_i)) {
-    case bitwise_functions_e::xor_e:
-      // Syntax like {xor:127:15} to XOR the binary values 1111111 and 1111 => 1110000
-      result = iarg1 ^ iarg2;
-      break;
-    case bitwise_functions_e::and_e:
-      // Syntax like {and:254:15} to AND the binary values 11111110 and 1111 => 1110
-      result = iarg1 & iarg2;
-      break;
-    case bitwise_functions_e::or_e:
-      // Syntax like {or:254:15} to OR the binary values 11111110 and 1111 => 11111111
-      result = iarg1 | iarg2;
-      break;
-    default: 
-      return false;
-
-  }
-  return true;
-}
-
-bool parse_math_functions(const String& cmd_s_lower, const String& arg1, const String& arg2, const String& arg3, ESPEASY_RULES_FLOAT_TYPE& result) {
-  ESPEASY_RULES_FLOAT_TYPE farg1;
-  float  farg2, farg3 = 0.0f;
-
-  if (!cmd_s_lower.startsWith("crc") && !validDoubleFromString(arg1, farg1)) {
-    return false;
-  }
-
-  if (equals(cmd_s_lower, F("constrain"))) {
-    // Contrain a value X to be within range of A to B
-    // Syntax like {constrain:x:a:b} to constrain x in range a...b
-    if (validFloatFromString(arg2, farg2) && validFloatFromString(arg3, farg3)) {
-      if (farg2 > farg3) {
-        const float tmp = farg2;
-        farg2 = farg3;
-        farg3 = tmp;
-      }
-      result = constrain(farg1, farg2, farg3);
-    } else {
-      return false;
-    }
-  } else if (cmd_s_lower.startsWith("crc")) {
-    std::vector<uint8_t> argument = parseHexTextData(arg1, 1);
-    const String crctype          = cmd_s_lower.substring(3);
-
-    if (argument.size() > 0) {
-      if (equals(crctype, F("8"))) {
-        result = calc_CRC8(&argument[0], argument.size());
-      // } else if (equals(crctype, F("16"))) { // FIXME crc16 not supported until needed/used/tested
-      //   result = calc_CRC16((const char *)argument.data(), argument.size());
-      } else if (equals(crctype, F("32"))) {
-        result = calc_CRC32(&argument[0], argument.size());
-      } else {
-        return false;
-      }
-
-      if (!arg2.isEmpty() && validDoubleFromString(arg2, farg1)) { // Optional expected crc value
-        result = essentiallyEqual(result, farg1) ? 1.0 : 0.0; // Return 1 if the calculated crc == expected crc
-      }
-    } else {
-      return false;
-    }
-  } else {
-    // No matching function found
-    return false;
-  }
-  return true;
-}
-
-const char string_commands[] PROGMEM = "substring|indexof|indexof_ci|equals|equals_ci|timetomin|timetosec|strtol|tobin|tohex|ord|urlencode"
-  #if FEATURE_STRING_VARIABLES
-  "|lookup"
-  #if FEATURE_EXTENDED_STRING_FUNCTIONS
-  "|unescape|escape"
-  "|parse"
-  #endif // if FEATURE_EXTENDED_STRING_FUNCTIONS
-  #endif // if FEATURE_STRING_VARIABLES
-  #if FEATURE_JSON_PARSE && FEATURE_EXTENDED_STRING_FUNCTIONS
-  "|json"
-  #endif // if FEATURE_JSON_PARSE && FEATURE_EXTENDED_STRING_FUNCTIONS
-  ;
-enum class string_commands_e {
-  substring,
-  indexof,
-  indexof_ci,
-  equals,
-  equals_ci,
-  timetomin,
-  timetosec,
-  strtol,
-  tobin,
-  tohex,
-  ord,
-  urlencode,
-  #if FEATURE_STRING_VARIABLES
-  lookup,
-  #if FEATURE_EXTENDED_STRING_FUNCTIONS
-  unescape,
-  escape,
-  parse,
-  #endif // if FEATURE_EXTENDED_STRING_FUNCTIONS
-  #endif // if FEATURE_STRING_VARIABLES
-  #if FEATURE_JSON_PARSE && FEATURE_EXTENDED_STRING_FUNCTIONS
-  json,
-  #endif // if FEATURE_JSON_PARSE && FEATURE_EXTENDED_STRING_FUNCTIONS
-};
-
-
-static void hideEscaped(String &line, bool &mustReplaceEscapedBracket, bool &mustReplaceEscapedCurlyBracket, bool &mustReplaceEscapedColon) {
-  String MaskEscapedBracket;
-
-  if (hasEscapedCharacter(line,'(') || hasEscapedCharacter(line,')')) {
-    // replace the \( and \) with other characters to mask the escaped brackets so we can continue parsing.
-    // We have to unmask then after we're finished.
-    MaskEscapedBracket = static_cast<char>(0x11); // ASCII 0x11 = Device control 1
-    line.replace(F("\\("), MaskEscapedBracket);
-    MaskEscapedBracket = static_cast<char>(0x12); // ASCII 0x12 = Device control 2
-    line.replace(F("\\)"), MaskEscapedBracket);
-    mustReplaceEscapedBracket = true;
-  }
-
-  if (hasEscapedCharacter(line,'{') || hasEscapedCharacter(line,'}')) {
-    // replace the \{ and \} with other characters to mask the escaped curly brackets so we can continue parsing.
-    // We have to unmask then after we're finished.
-    MaskEscapedBracket = static_cast<char>(0x13); // ASCII 0x13 = Device control 3
-    line.replace(F("\\{"), MaskEscapedBracket);
-    MaskEscapedBracket = static_cast<char>(0x14); // ASCII 0x14 = Device control 4
-    line.replace(F("\\}"), MaskEscapedBracket);
-    mustReplaceEscapedCurlyBracket = true;
-  }
-
-  #if FEATURE_EXTENDED_STRING_FUNCTIONS
-  if (hasEscapedCharacter(line, ':')) {
-    // replace the \: with another character to mask the escaped colon so we can continue parsing.
-    // We have to unmask then after we're finished.
-    MaskEscapedBracket = static_cast<char>(0x15); // ASCII 0x15 = NAK
-    line.replace(F("\\:"), MaskEscapedBracket);
-    mustReplaceEscapedColon = true;
-  }
-  #endif // if FEATURE_EXTENDED_STRING_FUNCTIONS
-}
-
-static void hideMasked(String &line, bool mustReplaceMaskedChars) {
-  if (mustReplaceMaskedChars) {
-    line.replace('{', static_cast<char>(0x02));
-    line.replace('}', static_cast<char>(0x03));
-  }
-}
-
-static void restoreMaskedAndEscaped(String &line, bool mustReplaceMaskedChars, bool mustReplaceEscapedBracket, bool mustReplaceEscapedCurlyBracket, bool mustReplaceEscapedColon) {
-  String MaskEscapedBracket;
-
-  if (mustReplaceMaskedChars) {
-    // We now have to check if we did mask some parts and unmask them.
-    // Let's hope we don't mess up any Unicode here.
-    line.replace(static_cast<char>(0x02), '{');
-    line.replace(static_cast<char>(0x03), '}');
-  }
-
-  if (mustReplaceEscapedBracket) {
-    // We now have to check if we did mask some escaped bracket and unmask them.
-    // Let's hope we don't mess up any Unicode here.
-    MaskEscapedBracket = static_cast<char>(0x11); // ASCII 0x11 = Device control 1
-    line.replace(MaskEscapedBracket, F("\\("));
-    MaskEscapedBracket = static_cast<char>(0x12); // ASCII 0x12 = Device control 2
-    line.replace(MaskEscapedBracket, F("\\)"));
-  }
-
-  if (mustReplaceEscapedCurlyBracket) {
-    // We now have to check if we did mask some escaped curly bracket and unmask them.
-    // Let's hope we don't mess up any Unicode here.
-    MaskEscapedBracket = static_cast<char>(0x13); // ASCII 0x13 = Device control 3
-    line.replace(MaskEscapedBracket, F("\\{"));
-    MaskEscapedBracket = static_cast<char>(0x14); // ASCII 0x14 = Device control 4
-    line.replace(MaskEscapedBracket, F("\\}"));
-  }
-
-  #if FEATURE_EXTENDED_STRING_FUNCTIONS
-  if (mustReplaceEscapedColon) {
-    // We now have to check if we did mask some escaped colon and unmask them.
-    // Let's hope we don't mess up any Unicode here.
-    MaskEscapedBracket = static_cast<char>(0x15); // ASCII 0x15 = NAK
-    line.replace(MaskEscapedBracket, F("\\:"));
-  }
-  #endif // if FEATURE_EXTENDED_STRING_FUNCTIONS
-}
-
-void parse_string_commands(String& line) {
-  unsigned int startIndex = 0;
-  int closingIndex;
-
-  #if FEATURE_JSON_PARSE && FEATURE_EXTENDED_STRING_FUNCTIONS
-  DynamicJsonDocument*root       = nullptr;
-  uint16_t lastJsonMessageLength = 512;
-
-  // Cleanup lambda to deallocate resources
-  auto cleanupJSON = [&root]() {
-                        if (root != nullptr) {
-                          root->clear();
-                          delete root;
-                          root = nullptr;
-                        }
-                      };
-  #endif // if FEATURE_JSON_PARSE && FEATURE_EXTENDED_STRING_FUNCTIONS
-  bool mustReplaceMaskedChars = false;
-  bool mustReplaceEscapedBracket = false;
-  bool mustReplaceEscapedCurlyBracket = false;
-  bool mustReplaceEscapedColon = false;
-
-  hideEscaped(line, mustReplaceEscapedBracket, mustReplaceEscapedCurlyBracket, mustReplaceEscapedColon);
-
-  while (get_next_inner_bracket(line, startIndex, closingIndex, '}')) {
-    // Command without opening and closing brackets.
-    const String fullCommand = line.substring(startIndex + 1, closingIndex);
-    const String cmd_s_lower = parseString(fullCommand, 1, ':');
-    const String arg1        = parseStringKeepCaseNoTrim(fullCommand, 2, ':');
-    const String arg2        = parseStringKeepCaseNoTrim(fullCommand, 3, ':');
-    const String arg3        = parseStringKeepCaseNoTrim(fullCommand, 4, ':');
-
-    if (cmd_s_lower.length() > 0) {
-      String replacement; // maybe just replace with empty to avoid looping?
-      uint64_t iarg1, iarg2 = 0;
-      ESPEASY_RULES_FLOAT_TYPE fresult{};
-      int64_t  iresult = 0;
-      int32_t startpos, endpos = -1;
-      const bool arg1valid = validIntFromString(arg1, startpos);
-      const bool arg2valid = validIntFromString(arg2, endpos);
-
-      if (parse_math_functions(cmd_s_lower, arg1, arg2, arg3, fresult)) {
-        const bool trimTrailingZeros = true;
-        #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
-        replacement = doubleToString(fresult, maxNrDecimals_fpType(fresult), trimTrailingZeros);
-        #else
-        replacement = floatToString(fresult, maxNrDecimals_fpType(fresult), trimTrailingZeros);
-        #endif
-      } else if (parse_bitwise_functions(cmd_s_lower, arg1, arg2, arg3, iresult)) {
-        replacement = ull2String(iresult);
-      } else {
-
-        int command_i = GetCommandCode(cmd_s_lower.c_str(), string_commands);
-        if (command_i != -1) {
-          const string_commands_e command = static_cast<string_commands_e>(command_i);
-
-              //  addLog(LOG_LEVEL_INFO, strformat(F("parse_string_commands cmd: %s %s %s %s"), 
-              // cmd_s_lower.c_str(), arg1.c_str(), arg2.c_str(), arg3.c_str()));
-
-          switch (command) {
-            case string_commands_e::substring:
-              // substring arduino style (first char included, last char excluded)
-              // Syntax like 12345{substring:8:12:ANOTHER HELLO WORLD}67890
-
-              if (arg1valid) {
-                if (arg2valid){
-                  replacement = arg3.substring(startpos, endpos);
-                } else {
-                  replacement = arg3.substring(startpos);
-                }
-              }
-              break;
-            #if FEATURE_STRING_VARIABLES
-            case string_commands_e::lookup:
-              if (arg1valid && arg2valid && startpos > -1 && endpos > -1) {
-                replacement = arg3.substring(startpos * endpos, (startpos + 1) * endpos);
-              }
-              break;
-            #if FEATURE_EXTENDED_STRING_FUNCTIONS
-            case string_commands_e::unescape:
-            case string_commands_e::escape:
-              replacement = parseStringToEndKeepCaseNoTrim(fullCommand, 2, ':');
-              // Undo escape masks
-              restoreMaskedAndEscaped(replacement, mustReplaceMaskedChars, mustReplaceEscapedBracket, mustReplaceEscapedCurlyBracket, mustReplaceEscapedColon);
-
-              stripEscapeCharacters(replacement); // Always strip first to avoid double-escaping
-
-              if (string_commands_e::escape == command) {
-                addEscapeCharacters(replacement);
-              }
-              // Redo escape masks and masked {} characters
-              hideEscaped(replacement, mustReplaceEscapedBracket, mustReplaceEscapedCurlyBracket, mustReplaceEscapedColon);
-              hideMasked(replacement, mustReplaceMaskedChars);
-
-              break;
-            #endif // if FEATURE_EXTENDED_STRING_FUNCTIONS
-            #endif // if FEATURE_STRING_VARIABLES
-            case string_commands_e::indexof:
-            case string_commands_e::indexof_ci:
-              // indexOf arduino style (0-based position of first char returned, -1 if not found, case sensitive), 3rd argument is search-offset
-              // indexOf_ci : case-insensitive
-              // Syntax like {indexof:HELLO:"ANOTHER HELLO WORLD"} => 8, {indexof:hello:"ANOTHER HELLO WORLD"} => -1, {indexof_ci:Hello:"ANOTHER HELLO WORLD"} => 8
-              // or like {indexof_ci:hello:"ANOTHER HELLO WORLD":10} => -1
-
-              if (!arg1.isEmpty()
-                  && !arg2.isEmpty()) {
-                uint32_t offset = 0;
-                validUIntFromString(arg3, offset);
-                if (command == string_commands_e::indexof_ci) {
-                  String arg1copy(arg1);
-                  String arg2copy(arg2);
-                  arg1copy.toLowerCase();
-                  arg2copy.toLowerCase();
-                  replacement = arg2copy.indexOf(arg1copy, offset);
-                } else {
-                  replacement = arg2.indexOf(arg1, offset);
-                }
-              }
-              break;
-            case string_commands_e::equals:
-            case string_commands_e::equals_ci:
-              // equals: compare strings 1 = equal, 0 = unequal (case sensitive)
-              // equals_ci: case-insensitive compare
-              // Syntax like {equals:HELLO:HELLO} => 1, {equals:hello:HELLO} => 0, {equals_ci:hello:HELLO} => 1, {equals_ci:hello:BLA} => 0
-
-              if (!arg1.isEmpty()
-                  && !arg2.isEmpty()) {
-                if (command == string_commands_e::equals_ci) {
-                  replacement = arg2.equalsIgnoreCase(arg1);
-                } else {
-                  replacement = arg2.equals(arg1);
-                }
-              }
-              break;
-            case string_commands_e::timetomin:
-            case string_commands_e::timetosec:
-              // time to minutes, transform a substring hh:mm to minutes
-              // time to seconds, transform a substring hh:mm:ss to seconds
-              // syntax similar to substring
-
-              if (arg1valid
-                  && arg2valid) {
-                int timeSeconds = 0;
-                String timeString;
-                if(timeStringToSeconds(arg3.substring(startpos, endpos), timeSeconds, timeString)) {
-                  if (command == string_commands_e::timetosec) {
-                    replacement = timeSeconds;
-                  } else { // timetomin
-                    replacement = timeSeconds / 60;
-                  }
-                }
-              }
-              break;
-            case string_commands_e::strtol:
-              // string to long integer (from cstdlib)
-              // Syntax like 1234{strtol:16:38}7890
-              if (validUInt64FromString(arg1, iarg1)
-                  && validUInt64FromString(arg2, iarg2)) {
-                replacement = String(strtoul(arg2.c_str(), nullptr, iarg1));
-              }
-              break;
-            case string_commands_e::tobin:
-              // Convert to binary string
-              // Syntax like 1234{tobin:15}7890
-              if (validUInt64FromString(arg1, iarg1)) {
-                replacement = ull2String(iarg1, BIN);
-              }
-              break;
-            case string_commands_e::tohex:
-              // Convert to HEX string
-              // Syntax like 1234{tohex:15[,minHexDigits]}7890
-              if (validUInt64FromString(arg1, iarg1)) {
-                if (!validUInt64FromString(arg2, iarg2)) {
-                  iarg2 = 0;
-                }
-                replacement = formatToHex_no_prefix(iarg1, iarg2);
-              }
-              break;
-            case string_commands_e::ord:
-              {
-                // Give the ordinal/integer value of the first character of a string
-                // Syntax like let 1,{ord:B}
-                uint8_t uval = arg1.c_str()[0];
-                replacement = String(uval);
-              }
-              break;
-            case string_commands_e::urlencode:
-              // Convert to url-encoded string
-              // Syntax like {urlencode:"string to/encode"}
-              if (!arg1.isEmpty()) {
-                replacement = URLEncode(arg1);
-              }
-              break;
-            #if FEATURE_STRING_VARIABLES && FEATURE_EXTENDED_STRING_FUNCTIONS
-            case string_commands_e::parse:
-              // parse: a function to retrieve nth param (1-based), with optional separator, default: comma
-              // {parse:<param>:[<separator>]:<string-to-parse>}
-              if (arg1valid) {
-                String de_escaped = parseStringToEndKeepCaseNoTrim(fullCommand, 4, ':');
-                restoreMaskedAndEscaped(de_escaped, mustReplaceMaskedChars, mustReplaceEscapedBracket, mustReplaceEscapedCurlyBracket, mustReplaceEscapedColon);
-                stripEscapeCharacters(de_escaped);
-
-                replacement = parseStringKeepCase(de_escaped, startpos, arg2.isEmpty() ? ',' : arg2[0]);
-
-                addEscapeCharacters(replacement);
-                hideEscaped(replacement, mustReplaceEscapedBracket, mustReplaceEscapedCurlyBracket, mustReplaceEscapedColon);
-                hideMasked(replacement, mustReplaceMaskedChars); // re-apply
-              }
-              break;
-            #endif // if FEATURE_STRING_VARIABLES && FEATURE_EXTENDED_STRING_FUNCTIONS
-            #if FEATURE_JSON_PARSE && FEATURE_EXTENDED_STRING_FUNCTIONS
-            case string_commands_e::json:
-              // json: get a value from a (valid) JSON string
-              // {json:<attribute-to-retrieve>:[<asJson>]:<json-string>}
-              // attribute-to-retrieve can use: level.attr[n].subattr, multi-level supported, arrays[] are 0-based
-              // asJson: 1 (true), return a JSON compatible value, useful when retrieving a part of the input for passing on, default: 0 (false)
-              {
-                String jsonInput = parseStringToEndKeepCase(fullCommand, 4, ':');
-                if (arg1.isEmpty() || jsonInput.isEmpty()) {
-                  break;
-                }
-                restoreMaskedAndEscaped(jsonInput, mustReplaceMaskedChars, mustReplaceEscapedBracket, mustReplaceEscapedCurlyBracket, mustReplaceEscapedColon);
-                stripEscapeCharacters(jsonInput);
-                String arg1_ = arg1;
-                stripEscapeCharacters(arg1_);
-
-                if ((nullptr != root) && (jsonInput.length() * 2.5 > lastJsonMessageLength)) {
-                  cleanupJSON();
-                }
-
-                // Resize lastJsonMessageLength if needed
-                if (jsonInput.length() * 2 > lastJsonMessageLength) {
-                  lastJsonMessageLength = jsonInput.length() * 2;
-                }
-
-                // Allocate memory for root if needed
-                if (nullptr == root) {
-                  // Try to allocate in PSRAM or 2nd heap if possible
-                  constexpr unsigned size = sizeof(DynamicJsonDocument);
-                  void *ptr               = special_calloc(1, size);
-                  if (ptr) {    
-                    root = new (ptr) DynamicJsonDocument(lastJsonMessageLength); // Dynamic allocation
-                  }
-                }
-
-                if (nullptr != root) {
-                  // if (loglevelActiveFor(LOG_LEVEL_INFO)) { // for development debugging
-                  //   addLog(LOG_LEVEL_INFO, strformat(F("parse json: %s"), jsonInput.c_str()));
-                  // }
-                  // Parse the JSON
-                  DeserializationError error = deserializeJson(*root, jsonInput);
-
-                  if (!error) {
-                    // if (loglevelActiveFor(LOG_LEVEL_INFO)) { // for development debugging
-                    //   addLog(LOG_LEVEL_INFO, strformat(F("parse json for %s"), arg1.c_str()));
-                    // }
-                    replacement = getJsonValue(root, arg1_, arg2valid && 1 == endpos);
-                  }
-                }
-                break;
-              }
-            #endif // if FEATURE_JSON_PARSE && FEATURE_EXTENDED_STRING_FUNCTIONS
-          }
-        }
-      }
-
-      if (replacement.isEmpty()) {
-        // part in braces is not a supported command.
-        // replace the {} with other characters to mask the braces so we can continue parsing.
-        // We have to unmask then after we're finished.
-        // See: https://github.com/letscontrolit/ESPEasy/issues/2932#issuecomment-596139096
-        replacement = line.substring(startIndex, closingIndex + 1);
-        mustReplaceMaskedChars = true;
-        hideMasked(replacement, mustReplaceMaskedChars); // apply
-      }
-
-      // Replace the full command including opening and closing brackets.
-      line.replace(line.substring(startIndex, closingIndex + 1), replacement);
-
-      /*
-         if (replacement.length() > 0) {
-         addLog(LOG_LEVEL_INFO, strformat(F("parse_string_commands cmd: %s -> %s"), fullCommand.c_str(), replacement.c_str());
-         }
-       */
-    }
-  }
-
-  #if FEATURE_JSON_PARSE && FEATURE_EXTENDED_STRING_FUNCTIONS
-
-  if (nullptr != root) {
-    cleanupJSON();
-  }
-  #endif // if FEATURE_JSON_PARSE && FEATURE_EXTENDED_STRING_FUNCTIONS
-
-  restoreMaskedAndEscaped(line, mustReplaceMaskedChars, mustReplaceEscapedBracket, mustReplaceEscapedCurlyBracket, mustReplaceEscapedColon);
-}
-
-void substitute_eventvalue(String& line, const String& event) {
+static void substitute_eventvalue(String& line, const String& event) {
   if (substitute_eventvalue_CallBack_ptr != nullptr) {
     substitute_eventvalue_CallBack_ptr(line, event);
   }
@@ -926,7 +200,8 @@ void substitute_eventvalue(String& line, const String& event) {
           // Syntax: %eventvalueX|Y%
           // With: X = event value nr, Y = default value when eventvalue does not exist.
           String defaultValue('0');
-          int or_else_pos = line.indexOf('|', eventvalue_pos);
+          int    or_else_pos = line.indexOf('|', eventvalue_pos);
+
           if ((or_else_pos == -1) || (or_else_pos > percent_pos)) {
             or_else_pos = percent_pos;
           } else {
@@ -941,7 +216,7 @@ void substitute_eventvalue(String& line, const String& event) {
             line.replace(eventvalue, argString);
           } else {
             argc = nr.toInt();
-            
+
             // argc will be 0 on invalid int (0 was already handled)
             if (argc > 0) {
               String tmpParam;
@@ -978,12 +253,15 @@ void substitute_eventvalue(String& line, const String& event) {
   }
 }
 
-void parseCompleteNonCommentLine(String& line, const String& event,
-                                 String& action, bool& match,
-                                 bool& codeBlock, bool& isCommand, bool& isOneLiner,
-                                 bool condition[], bool ifBranche[],
-                                 uint8_t& ifBlock, uint8_t& fakeIfBlock,
-                                 bool   startOnMatched) {
+/********************************************************************************************\
+   Rules processing
+ \*********************************************************************************************/
+static void parseCompleteNonCommentLine(String& line, const String& event,
+                                        String& action, bool& match,
+                                        bool& codeBlock, bool& isCommand, bool& isOneLiner,
+                                        bool condition[], bool ifBranche[],
+                                        uint8_t& ifBlock, uint8_t& fakeIfBlock,
+                                        bool   startOnMatched) {
   if (line.length() == 0) {
     return;
   }
@@ -998,7 +276,7 @@ void parseCompleteNonCommentLine(String& line, const String& event,
   }
 
   if (line.equalsIgnoreCase(F("endon"))) // Check if action block has ended, then we will
-                                           // wait for a new "on" rule
+                                         // wait for a new "on" rule
   {
     isCommand   = false;
     codeBlock   = false;
@@ -1008,7 +286,7 @@ void parseCompleteNonCommentLine(String& line, const String& event,
     return;
   }
 
-  const bool lineStartsWith_pct_event = line.startsWith(F("%event"));;
+  const bool lineStartsWith_pct_event = line.startsWith(F("%event"));
 
   isCommand = true;
 
@@ -1033,14 +311,16 @@ void parseCompleteNonCommentLine(String& line, const String& event,
                   // processed
   {
     action.clear();
+
     if (lineStartsWith_on) {
       ifBlock     = 0;
       fakeIfBlock = 0;
 
       String ruleEvent;
+
       if (getEventFromRulesLine(line, ruleEvent, action)) {
         START_TIMER
-        match = startOnMatched || ruleMatch(event, ruleEvent);
+          match = startOnMatched || ruleMatch(event, ruleEvent);
         STOP_TIMER(RULES_MATCH);
       } else {
         match = false;
@@ -1058,22 +338,24 @@ void parseCompleteNonCommentLine(String& line, const String& event,
     }
   } else {
     #ifndef BUILD_NO_DEBUG
+
     if (loglevelActiveFor(LOG_LEVEL_DEBUG_DEV)) {
       // keep the line for the log
       action = line;
     } else {
-      action = std::move(line);  
+      action = std::move(line);
     }
-    #else
+    #else // ifndef BUILD_NO_DEBUG
     action = std::move(line);
-    #endif
+    #endif // ifndef BUILD_NO_DEBUG
   }
 
   if (isCommand && lineStartsWith_pct_event) {
     action = concat(F("restrict,"), action);
+
     if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-      addLogMove(LOG_LEVEL_ERROR, 
-        concat(F("Rules : Prefix command with 'restrict': "), action));
+      addLogMove(LOG_LEVEL_ERROR,
+                 concat(F("Rules : Prefix command with 'restrict': "), action));
     }
   }
 
@@ -1091,228 +373,71 @@ void parseCompleteNonCommentLine(String& line, const String& event,
 #endif // ifndef BUILD_NO_DEBUG
 }
 
-void processMatchedRule(String& action, const String& event,
-                        bool& isCommand, bool condition[], bool ifBranche[],
-                        uint8_t& ifBlock, uint8_t& fakeIfBlock) {
-  String lcAction = action;
-
-  lcAction.toLowerCase();
-  lcAction.trim();
-
-  if (fakeIfBlock) {
-    isCommand = false;
-  }
-  else if (ifBlock) {
-    if (condition[ifBlock - 1] != ifBranche[ifBlock - 1]) {
-      isCommand = false;
-    }
-  }
-  int split =
-    lcAction.startsWith(F("elseif ")) ? 0 : -1; // check for optional "elseif" condition
-
-  if (split != -1) {
-    // Found "elseif" condition
-    isCommand = false;
-
-    if (ifBlock && !fakeIfBlock) {
-      if (ifBranche[ifBlock - 1]) {
-        if (condition[ifBlock - 1]) {
-          ifBranche[ifBlock - 1] = false;
-        }
-        else {
-          String check = lcAction.substring(split + 7);
-          check.trim();
-          condition[ifBlock - 1] = conditionMatchExtended(check);
-#ifndef BUILD_NO_DEBUG
-
-          if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-            String log  = F("Lev.");
-            log += String(ifBlock);
-            log += F(": [elseif ");
-            log += check;
-            log += F("]=");
-            log += boolToString(condition[ifBlock - 1]);
-            addLogMove(LOG_LEVEL_DEBUG, log);
-          }
-#endif // ifndef BUILD_NO_DEBUG
-        }
-      }
-    }
-  } else {
-    // check for optional "if" condition
-    split = lcAction.startsWith(F("if ")) ? 0 : -1;
-
-    if (split != -1) {
-      if (ifBlock < RULES_IF_MAX_NESTING_LEVEL) {
-        if (isCommand) {
-          ifBlock++;
-          String check = lcAction.substring(split + 3);
-          check.trim();
-          condition[ifBlock - 1] = conditionMatchExtended(check);
-          ifBranche[ifBlock - 1] = true;
-#ifndef BUILD_NO_DEBUG
-
-          if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-            String log  = F("Lev.");
-            log += String(ifBlock);
-            log += F(": [if ");
-            log += check;
-            log += F("]=");
-            log += boolToString(condition[ifBlock - 1]);
-            addLogMove(LOG_LEVEL_DEBUG, log);
-          }
-#endif // ifndef BUILD_NO_DEBUG
-        } else {
-          fakeIfBlock++;
-        }
-      } else {
-        fakeIfBlock++;
-
-        if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-          String log  = F("Lev.");
-          log += String(ifBlock);
-          log += F(": Error: IF Nesting level exceeded!");
-          addLogMove(LOG_LEVEL_ERROR, log);
-        }
-      }
-      isCommand = false;
-    }
-  }
-
-  if ((equals(lcAction, F("else"))) && !fakeIfBlock) // in case of an "else" block of
-                                               // actions, set ifBranche to
-                                               // false
-  {
-    ifBranche[ifBlock - 1] = false;
-    isCommand              = false;
-#ifndef BUILD_NO_DEBUG
-
-    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-      String log  = F("Lev.");
-      log += String(ifBlock);
-      log += F(": [else]=");
-      log += boolToString(condition[ifBlock - 1] == ifBranche[ifBlock - 1]);
-      addLogMove(LOG_LEVEL_DEBUG, log);
-    }
-#endif // ifndef BUILD_NO_DEBUG
-  }
-
-  if (equals(lcAction, F("endif"))) // conditional block ends here
-  {
-    if (fakeIfBlock) {
-      fakeIfBlock--;
-    }
-    else if (ifBlock) {
-      ifBlock--;
-    }
-    isCommand = false;
-  }
-
-  // process the action if it's a command and unconditional, or conditional and
-  // the condition matches the if or else block.
-  if (isCommand) {
-    substitute_eventvalue(action, event);
-
-    const bool executeRestricted = equals(parseString(action, 1), F("restrict"));
-// #ifndef BUILD_NO_DEBUG
-    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      String actionlog = executeRestricted ? F("ACT  : (restricted) ") : F("ACT  : ");
-      actionlog += action;
-      addLogMove(LOG_LEVEL_INFO, actionlog);
-    }
-// #endif
-    if (executeRestricted) {
-      ExecuteCommand_all({EventValueSource::Enum::VALUE_SOURCE_RULES_RESTRICTED, parseStringToEndKeepCase(action, 2)});
-    } else {
-      // Use action.c_str() here as we need to preserve the action string.
-      ExecuteCommand_all({EventValueSource::Enum::VALUE_SOURCE_RULES, action.c_str()});
-    }
-    delay(0);
-  }
-}
-
-/********************************************************************************************\
-   Check if an event matches to a given rule
- \*********************************************************************************************/
-
-
 /********************************************************************************************\
    Check expression
  \*********************************************************************************************/
-bool conditionMatchExtended(String& check) {
-  int  condAnd   = -1;
-  int  condOr    = -1;
-  bool rightcond = false;
-  bool leftcond  = conditionMatch(check); // initial check
 
-  #ifndef BUILD_NO_DEBUG
-  String debugstr;
+// Balance the count of parentheses (aka round braces) by adding the missing left or right parentheses, if any
+// Returns the number of added parentheses, < 0 is left parentheses added, > 0 is right parentheses added
+static int balanceParentheses(String& string) {
+  int left  = 0;
+  int right = 0;
 
-  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    debugstr += boolToString(leftcond);
-  }
-  #endif // ifndef BUILD_NO_DEBUG
-
-  do {
-    #ifndef BUILD_NO_DEBUG
-
-    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-      String log = F("conditionMatchExtended: ");
-      log += debugstr;
-      log += ' ';
-      log += wrap_String(check, '"');
-      addLogMove(LOG_LEVEL_DEBUG, log);
+  for (unsigned int i = 0; i < string.length(); i++) {
+    if (string[i] == '(') {
+      left++;
+    } else if (string[i] == ')') {
+      right++;
     }
-    #endif // ifndef BUILD_NO_DEBUG
-    condAnd = check.indexOf(F(" and "));
-    condOr  = check.indexOf(F(" or "));
-
-    if ((condAnd > 0) || (condOr > 0)) {                             // we got AND/OR
-      if ((condAnd > 0) && (((condOr < 0) /*&& (condOr < condAnd)*/) ||
-                            ((condOr > 0) && (condOr > condAnd)))) { // AND is first
-        check     = check.substring(condAnd + 5);
-        rightcond = conditionMatch(check);
-        leftcond  = (leftcond && rightcond);
-
-        #ifndef BUILD_NO_DEBUG
-
-        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-          debugstr += F(" && ");
-        }
-        #endif // ifndef BUILD_NO_DEBUG
-      } else { // OR is first
-        check     = check.substring(condOr + 4);
-        rightcond = conditionMatch(check);
-        leftcond  = (leftcond || rightcond);
-
-        #ifndef BUILD_NO_DEBUG
-
-        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-          debugstr += F(" || ");
-        }
-        #endif // ifndef BUILD_NO_DEBUG
-      }
-
-      #ifndef BUILD_NO_DEBUG
-
-      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-        debugstr += boolToString(rightcond);
-      }
-      #endif // ifndef BUILD_NO_DEBUG
-    }
-  } while (condAnd > 0 || condOr > 0);
-
-  #ifndef BUILD_NO_DEBUG
-
-  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-    check = debugstr;
   }
-  #endif // ifndef BUILD_NO_DEBUG
-  return leftcond;
+
+  if (left != right) {
+    string.reserve(string.length() + abs(right - left)); // Re-allocate max. once
+  }
+
+  if (left > right) {
+    for (int i = 0; i < left - right; i++) {
+      string += ')';
+    }
+  } else if (right > left) {
+    for (int i = 0; i < right - left; i++) {
+      string = String('(') + string; // This is quite 'expensive'
+    }
+  }
+  return left - right;
 }
 
+/********************************************************************************************\
+   Matching time notations HH:MM:SS and HH:MM:SS and HH
+ \*********************************************************************************************/
 
-void logtimeStringToSeconds(const String& tBuf, int hours, int minutes, int seconds, bool valid)
+static bool get_next_argument(const String& fullCommand, int& index, String& argument, char separator)
+{
+  if (index == -1) {
+    return false;
+  }
+  int newIndex = fullCommand.indexOf(separator, index);
+
+  if (newIndex == -1) {
+    argument = fullCommand.substring(index);
+  } else {
+    argument = fullCommand.substring(index, newIndex);
+  }
+
+  if (argument.startsWith(String(separator))) {
+    argument = argument.substring(1);
+  }
+
+  //  addLog(LOG_LEVEL_INFO, String("get_next_argument: ") + String(index) + " " + fullCommand + " " + argument);
+  index = newIndex;
+
+  if (index != -1) {
+    ++index;
+  }
+  return argument.length() > 0;
+}
+
+static void logtimeStringToSeconds(const String& tBuf, int hours, int minutes, int seconds, bool valid)
 {
   #ifndef BUILD_NO_DEBUG
 
@@ -1321,6 +446,7 @@ void logtimeStringToSeconds(const String& tBuf, int hours, int minutes, int seco
     log  = F("timeStringToSeconds: ");
     log += wrap_String(tBuf, '"');
     log += F(" --> ");
+
     if (valid) {
       log += formatIntLeadingZeroes(hours, 2);
       log += ':';
@@ -1338,16 +464,18 @@ void logtimeStringToSeconds(const String& tBuf, int hours, int minutes, int seco
 
 // convert old and new time string to nr of seconds
 // return whether it should be considered a time string.
-bool timeStringToSeconds(const String& tBuf, int& time_seconds, String& timeString) {
+static bool timeStringToSeconds(const String& tBuf, int& time_seconds, String& timeString) {
   {
     // Make sure we only check for expected characters
     // e.g. if 10:11:12 > 7:07 and 10:11:12 < 20:09:04
-    // Should only try to match "7:07", not "7:07 and 10:11:12" 
+    // Should only try to match "7:07", not "7:07 and 10:11:12"
     // Or else it will find "7:07:11"
     bool done = false;
+
     for (uint8_t pos = 0; !done && timeString.length() < 8 && pos < tBuf.length(); ++pos) {
       char c = tBuf[pos];
-      if (isdigit(c) || c == ':') {
+
+      if (isdigit(c) || (c == ':')) {
         timeString += c;
       } else {
         done = true;
@@ -1406,34 +534,7 @@ bool timeStringToSeconds(const String& tBuf, int& time_seconds, String& timeStri
   return validTime;
 }
 
-// Balance the count of parentheses (aka round braces) by adding the missing left or right parentheses, if any
-// Returns the number of added parentheses, < 0 is left parentheses added, > 0 is right parentheses added
-int balanceParentheses(String& string) {
-  int left = 0;
-  int right = 0;
-  for (unsigned int i = 0; i < string.length(); i++) {
-    if (string[i] == '(') {
-      left++;
-    } else if (string[i] == ')') {
-      right++;
-    }
-  }
-  if (left != right) {
-    string.reserve(string.length() + abs(right - left)); // Re-allocate max. once
-  }
-  if (left > right) {
-    for (int i = 0; i < left - right; i++) {
-      string += ')';
-    }
-  } else if (right > left) {
-    for (int i = 0; i < right - left; i++) {
-      string = String('(') + string; // This is quite 'expensive'
-    }
-  }
-  return left - right;
-}
-
-bool conditionMatch(const String& check) {
+static bool conditionMatch(const String& check) {
   int  posStart, posEnd;
   char compare;
 
@@ -1449,12 +550,12 @@ bool conditionMatch(const String& check) {
   ESPEASY_RULES_FLOAT_TYPE Value1{};
   ESPEASY_RULES_FLOAT_TYPE Value2{};
 
-  int  timeInSec1 = 0;
-  int  timeInSec2 = 0;
+  int timeInSec1 = 0;
+  int timeInSec2 = 0;
   String timeString1, timeString2;
-  bool validTime1 = timeStringToSeconds(tmpCheck1, timeInSec1, timeString1);
-  bool validTime2 = timeStringToSeconds(tmpCheck2, timeInSec2, timeString2);
-  bool result     = false;
+  bool   validTime1 = timeStringToSeconds(tmpCheck1, timeInSec1, timeString1);
+  bool   validTime2 = timeStringToSeconds(tmpCheck2, timeInSec2, timeString2);
+  bool   result     = false;
 
   bool compareTimes = false;
 
@@ -1469,8 +570,9 @@ bool conditionMatch(const String& check) {
   } else {
     int condAnd = tmpCheck2.indexOf(F(" and "));
     int condOr  = tmpCheck2.indexOf(F(" or "));
-    if (condAnd > -1 || condOr > -1) {            // Only parse first condition, rest will be parsed 'later'
-      if (condAnd > -1 && (condOr == -1 || condAnd < condOr)) {
+
+    if ((condAnd > -1) || (condOr > -1)) { // Only parse first condition, rest will be parsed 'later'
+      if ((condAnd > -1) && ((condOr == -1) || (condAnd < condOr))) {
         tmpCheck2 = tmpCheck2.substring(0, condAnd);
       } else if (condOr > -1) {
         tmpCheck2 = tmpCheck2.substring(0, condOr);
@@ -1479,16 +581,17 @@ bool conditionMatch(const String& check) {
     }
     balanceParentheses(tmpCheck1);
     balanceParentheses(tmpCheck2);
+
     if (isError(Calculate(tmpCheck1, Value1
                           #if FEATURE_STRING_VARIABLES
                           , false // suppress logging specific errors when parsing strings
                           #endif // if FEATURE_STRING_VARIABLES
-                         )) ||
+                          )) ||
         isError(Calculate(tmpCheck2, Value2
                           #if FEATURE_STRING_VARIABLES
                           , false // suppress logging specific errors when parsing strings
                           #endif // if FEATURE_STRING_VARIABLES
-                         )))
+                          )))
     {
       #if FEATURE_STRING_VARIABLES
       result = compareStringValues(compare, tmpCheck1, tmpCheck2);
@@ -1518,19 +621,19 @@ bool conditionMatch(const String& check) {
 
     log += '(';
     const bool trimTrailingZeros = true;
-    log += compareTimes ? String(timeInSec1) : 
-#if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
-    doubleToString(Value1, 6, trimTrailingZeros);
-#else
-    floatToString(Value1, 6, trimTrailingZeros);
-#endif
+    log += compareTimes ? String(timeInSec1) :
+# if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+           doubleToString(Value1, 6, trimTrailingZeros);
+# else
+           floatToString(Value1, 6, trimTrailingZeros);
+# endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
     log += wrap_String(check.substring(posStart, posEnd), ' '); // Compare
-    log += compareTimes ? String(timeInSec2) : 
-#if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
-    doubleToString(Value2, 6, trimTrailingZeros);
-#else
-    floatToString(Value2, 6, trimTrailingZeros);
-#endif    
+    log += compareTimes ? String(timeInSec2) :
+# if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+           doubleToString(Value2, 6, trimTrailingZeros);
+# else
+           floatToString(Value2, 6, trimTrailingZeros);
+# endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
     log += ')';
     addLogMove(LOG_LEVEL_DEBUG, log);
   }
@@ -1539,6 +642,980 @@ bool conditionMatch(const String& check) {
   #endif // ifndef BUILD_NO_DEBUG
   return result;
 }
+
+static bool conditionMatchExtended(String& check) {
+  int  condAnd   = -1;
+  int  condOr    = -1;
+  bool rightcond = false;
+  bool leftcond  = conditionMatch(check); // initial check
+
+  #ifndef BUILD_NO_DEBUG
+  String debugstr;
+
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    debugstr += boolToString(leftcond);
+  }
+  #endif // ifndef BUILD_NO_DEBUG
+
+  do
+  {
+    #ifndef BUILD_NO_DEBUG
+
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+      String log = F("conditionMatchExtended: ");
+      log += debugstr;
+      log += ' ';
+      log += wrap_String(check, '"');
+      addLogMove(LOG_LEVEL_DEBUG, log);
+    }
+    #endif // ifndef BUILD_NO_DEBUG
+    condAnd = check.indexOf(F(" and "));
+    condOr  = check.indexOf(F(" or "));
+
+    if ((condAnd > 0) || (condOr > 0)) {                             // we got AND/OR
+      if ((condAnd > 0) && (((condOr < 0) /*&& (condOr < condAnd)*/) ||
+                            ((condOr > 0) && (condOr > condAnd)))) { // AND is first
+        check     = check.substring(condAnd + 5);
+        rightcond = conditionMatch(check);
+        leftcond  = (leftcond && rightcond);
+
+        #ifndef BUILD_NO_DEBUG
+
+        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+          debugstr += F(" && ");
+        }
+        #endif // ifndef BUILD_NO_DEBUG
+      } else { // OR is first
+        check     = check.substring(condOr + 4);
+        rightcond = conditionMatch(check);
+        leftcond  = (leftcond || rightcond);
+
+        #ifndef BUILD_NO_DEBUG
+
+        if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+          debugstr += F(" || ");
+        }
+        #endif // ifndef BUILD_NO_DEBUG
+      }
+
+      #ifndef BUILD_NO_DEBUG
+
+      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+        debugstr += boolToString(rightcond);
+      }
+      #endif // ifndef BUILD_NO_DEBUG
+    }
+  } while (condAnd > 0 || condOr > 0);
+
+  #ifndef BUILD_NO_DEBUG
+
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    check = debugstr;
+  }
+  #endif // ifndef BUILD_NO_DEBUG
+  return leftcond;
+}
+
+static void processMatchedRule(String& action, const String& event,
+                               bool& isCommand, bool condition[], bool ifBranche[],
+                               uint8_t& ifBlock, uint8_t& fakeIfBlock) {
+  String lcAction = action;
+
+  lcAction.toLowerCase();
+  lcAction.trim();
+
+  if (fakeIfBlock) {
+    isCommand = false;
+  }
+  else if (ifBlock) {
+    if (condition[ifBlock - 1] != ifBranche[ifBlock - 1]) {
+      isCommand = false;
+    }
+  }
+  int split =
+    lcAction.startsWith(F("elseif ")) ? 0 : -1; // check for optional "elseif" condition
+
+  if (split != -1) {
+    // Found "elseif" condition
+    isCommand = false;
+
+    if (ifBlock && !fakeIfBlock) {
+      if (ifBranche[ifBlock - 1]) {
+        if (condition[ifBlock - 1]) {
+          ifBranche[ifBlock - 1] = false;
+        }
+        else {
+          String check = lcAction.substring(split + 7);
+          check.trim();
+          condition[ifBlock - 1] = conditionMatchExtended(check);
+#ifndef BUILD_NO_DEBUG
+
+          if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+            String log = F("Lev.");
+            log += String(ifBlock);
+            log += F(": [elseif ");
+            log += check;
+            log += F("]=");
+            log += boolToString(condition[ifBlock - 1]);
+            addLogMove(LOG_LEVEL_DEBUG, log);
+          }
+#endif // ifndef BUILD_NO_DEBUG
+        }
+      }
+    }
+  } else {
+    // check for optional "if" condition
+    split = lcAction.startsWith(F("if ")) ? 0 : -1;
+
+    if (split != -1) {
+      if (ifBlock < RULES_IF_MAX_NESTING_LEVEL) {
+        if (isCommand) {
+          ifBlock++;
+          String check = lcAction.substring(split + 3);
+          check.trim();
+          condition[ifBlock - 1] = conditionMatchExtended(check);
+          ifBranche[ifBlock - 1] = true;
+#ifndef BUILD_NO_DEBUG
+
+          if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+            String log = F("Lev.");
+            log += String(ifBlock);
+            log += F(": [if ");
+            log += check;
+            log += F("]=");
+            log += boolToString(condition[ifBlock - 1]);
+            addLogMove(LOG_LEVEL_DEBUG, log);
+          }
+#endif // ifndef BUILD_NO_DEBUG
+        } else {
+          fakeIfBlock++;
+        }
+      } else {
+        fakeIfBlock++;
+
+        if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+          String log = F("Lev.");
+          log += String(ifBlock);
+          log += F(": Error: IF Nesting level exceeded!");
+          addLogMove(LOG_LEVEL_ERROR, log);
+        }
+      }
+      isCommand = false;
+    }
+  }
+
+  if ((equals(lcAction, F("else"))) && !fakeIfBlock) // in case of an "else" block of
+  // actions, set ifBranche to
+  // false
+  {
+    ifBranche[ifBlock - 1] = false;
+    isCommand              = false;
+#ifndef BUILD_NO_DEBUG
+
+    if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+      String log = F("Lev.");
+      log += String(ifBlock);
+      log += F(": [else]=");
+      log += boolToString(condition[ifBlock - 1] == ifBranche[ifBlock - 1]);
+      addLogMove(LOG_LEVEL_DEBUG, log);
+    }
+#endif // ifndef BUILD_NO_DEBUG
+  }
+
+  if (equals(lcAction, F("endif"))) // conditional block ends here
+  {
+    if (fakeIfBlock) {
+      fakeIfBlock--;
+    }
+    else if (ifBlock) {
+      ifBlock--;
+    }
+    isCommand = false;
+  }
+
+  // process the action if it's a command and unconditional, or conditional and
+  // the condition matches the if or else block.
+  if (isCommand) {
+    substitute_eventvalue(action, event);
+
+    const bool executeRestricted = equals(parseString(action, 1), F("restrict"));
+
+    // #ifndef BUILD_NO_DEBUG
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      String actionlog = executeRestricted ? F("ACT  : (restricted) ") : F("ACT  : ");
+      actionlog += action;
+      addLogMove(LOG_LEVEL_INFO, actionlog);
+    }
+
+    // #endif
+    if (executeRestricted) {
+      ExecuteCommand_all({ EventValueSource::Enum::VALUE_SOURCE_RULES_RESTRICTED, parseStringToEndKeepCase(action, 2) });
+    } else {
+      // Use action.c_str() here as we need to preserve the action string.
+      ExecuteCommand_all({ EventValueSource::Enum::VALUE_SOURCE_RULES, action.c_str() });
+    }
+    delay(0);
+  }
+}
+
+bool rulesProcessingFile(const String& fileName,
+                         const String& event,
+                         size_t        pos,
+                         bool          startOnMatched) {
+  if (!Settings.UseRules || !fileExists(fileName)) {
+    return false;
+  }
+  #ifndef BUILD_NO_RAM_TRACKER
+  checkRAM(F("rulesProcessingFile"));
+  #endif // ifndef BUILD_NO_RAM_TRACKER
+#ifndef BUILD_NO_DEBUG
+
+  if (Settings.SerialLogLevel == LOG_LEVEL_DEBUG_DEV) {
+    serialPrint(F("RuleDebug Processing:"));
+    serialPrintln(fileName);
+    serialPrintln(F("     flags CMI  parse output:"));
+  }
+#endif // ifndef BUILD_NO_DEBUG
+
+  static uint8_t nestingLevel = 0;
+
+  nestingLevel++;
+
+  if (nestingLevel > RULES_MAX_NESTING_LEVEL) {
+    addLog(LOG_LEVEL_ERROR, F("EVENT: Error: Nesting level exceeded!"));
+    nestingLevel--;
+    return false;
+  }
+
+
+  bool match     = false;
+  bool codeBlock = false;
+  bool isCommand = false;
+  bool condition[RULES_IF_MAX_NESTING_LEVEL];
+  bool ifBranche[RULES_IF_MAX_NESTING_LEVEL];
+  uint8_t ifBlock     = 0;
+  uint8_t fakeIfBlock = 0;
+
+
+  bool moreAvailable = true;
+  bool eventHandled  = false;
+
+  while (moreAvailable && !eventHandled) {
+    const bool searchNextOnBlock = !codeBlock && !match;
+    String     line              = Cache.rulesHelper.readLn(fileName, pos, moreAvailable, searchNextOnBlock);
+
+    // Parse the line and extract the action (if there is any)
+    String action;
+    {
+      START_TIMER
+      const bool matched_before_parse = match;
+      bool isOneLiner                 = false;
+      parseCompleteNonCommentLine(line, event, action, match, codeBlock,
+                                  isCommand, isOneLiner, condition, ifBranche, ifBlock,
+                                  fakeIfBlock, startOnMatched);
+
+      if ((matched_before_parse && !match) || isOneLiner) {
+        // We were processing a matching event and now crossed the "endon"
+        // Or just dealing with a oneliner.
+        // So we're done processing
+        eventHandled = true;
+        backgroundtasks();
+      }
+      STOP_TIMER(RULES_PARSE_LINE);
+    }
+
+    if (match) // rule matched for one action or a block of actions
+    {
+      START_TIMER
+        processMatchedRule(action, event,
+                           isCommand, condition,
+                           ifBranche, ifBlock, fakeIfBlock);
+      STOP_TIMER(RULES_PROCESS_MATCHED);
+    }
+  }
+
+  /*
+     if (f) {
+      f.close();
+     }
+   */
+
+  nestingLevel--;
+  #ifndef BUILD_NO_RAM_TRACKER
+  checkRAM(F("rulesProcessingFile2"));
+  #endif // ifndef BUILD_NO_RAM_TRACKER
+  backgroundtasks();
+  return eventHandled; // && nestingLevel == 0;
+}
+
+/********************************************************************************************\
+   Parse string commands
+ \*********************************************************************************************/
+static bool get_next_inner_bracket(const String& line, unsigned int& startIndex, int& closingIndex, char closingBracket)
+{
+  if (line.length() <= 1) {
+    // Not possible to have opening and closing bracket on a line this short.
+    return false;
+  }
+  char openingBracket = closingBracket;
+
+  switch (closingBracket)
+  {
+    case ']': openingBracket = '[';
+      break;
+    case '}': openingBracket = '{';
+      break;
+    case ')': openingBracket = '(';
+      break;
+    default:
+      // unknown bracket type
+      return false;
+  }
+
+  // Closing bracket should not be found on the first position.
+  closingIndex = line.indexOf(closingBracket, startIndex + 1);
+
+  if (closingIndex == -1) {
+    // not found
+    return false;
+  }
+
+  for (int i = (closingIndex - 1); (i >= static_cast<int>(startIndex)) && (i >= 0); --i) {
+    if (line[i] == openingBracket) {
+      startIndex = i;
+      return true;
+    }
+  }
+  return false;
+}
+
+const char bitwise_functions[] PROGMEM = "bitread|bitset|bitclear|bitwrite|xor|and|or";
+enum class bitwise_functions_e {
+  bitread,
+  bitset,
+  bitclear,
+  bitwrite,
+  xor_e, // protected keywords, thus appended _e
+  and_e,
+  or_e
+
+};
+
+static bool parse_bitwise_functions(const String& cmd_s_lower, const String& arg1, const String& arg2, const String& arg3, int64_t& result) {
+  #ifndef BUILD_NO_DEBUG
+
+  if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+    String log = F("Bitwise: {");
+    log += wrapIfContains(cmd_s_lower, ':', '\"');
+    log += ':';
+    log += wrapIfContains(arg1, ':', '\"');
+
+    if (arg2.length() > 0) {
+      log += ':';
+      log += wrapIfContains(arg2, ':', '\"');
+
+      if (arg3.length() > 0) {
+        log += ':';
+        log += wrapIfContains(arg3, ':', '\"');
+      }
+    }
+    log += '}';
+    addLogMove(LOG_LEVEL_DEBUG, log);
+  }
+  #endif // ifndef BUILD_NO_DEBUG
+
+  if (cmd_s_lower.length() < 2) {
+    return false;
+  }
+
+  int command_i = GetCommandCode(cmd_s_lower.c_str(), bitwise_functions);
+
+  if (command_i == -1) {
+    // No matching function found
+    return false;
+  }
+
+  if (cmd_s_lower.startsWith(F("bit"))) {
+    uint32_t bitnr = 0;
+    uint64_t iarg2 = 0;
+
+    if (!validUIntFromString(arg1, bitnr) || !validUInt64FromString(arg2, iarg2)) {
+      return false;
+    }
+
+    switch (static_cast<bitwise_functions_e>(command_i))
+    {
+      case bitwise_functions_e::bitread:
+        // Syntax like {bitread:0:123} to get a single decimal '1'
+        result = bitRead(iarg2, bitnr);
+        break;
+      case bitwise_functions_e::bitset:
+        // Syntax like {bitset:0:122} to set least significant bit of the given nr '122' to '1' => '123'
+        result = iarg2;
+        bitSetULL(result, bitnr);
+        break;
+      case bitwise_functions_e::bitclear:
+        // Syntax like {bitclear:0:123} to set least significant bit of the given nr '123' to '0' => '122'
+        result = iarg2;
+        bitClearULL(result, bitnr);
+        break;
+      case bitwise_functions_e::bitwrite:
+      {
+        uint32_t iarg3 = 0;
+
+        // Syntax like {bitwrite:0:122:1} to set least significant bit of the given nr '122' to '1' => '123'
+        if (validUIntFromString(arg3, iarg3)) {
+          const int bitvalue = (iarg3 & 1); // Only use the last bit of the given parameter
+          result = iarg2;
+          bitWriteULL(result, bitnr, bitvalue);
+        } else {
+          // Need 3 parameters, but 3rd one is not a valid uint
+          return false;
+        }
+        break;
+      }
+      default:
+        return false;
+    }
+
+    // all functions starting with "bit" are checked
+    return true;
+  }
+
+  uint64_t iarg1, iarg2 = 0;
+
+  if (!validUInt64FromString(arg1, iarg1) || !validUInt64FromString(arg2, iarg2)) {
+    return false;
+  }
+
+  switch (static_cast<bitwise_functions_e>(command_i))
+  {
+    case bitwise_functions_e::xor_e:
+      // Syntax like {xor:127:15} to XOR the binary values 1111111 and 1111 => 1110000
+      result = iarg1 ^ iarg2;
+      break;
+    case bitwise_functions_e::and_e:
+      // Syntax like {and:254:15} to AND the binary values 11111110 and 1111 => 1110
+      result = iarg1 & iarg2;
+      break;
+    case bitwise_functions_e::or_e:
+      // Syntax like {or:254:15} to OR the binary values 11111110 and 1111 => 11111111
+      result = iarg1 | iarg2;
+      break;
+    default:
+      return false;
+
+  }
+  return true;
+}
+
+static bool parse_math_functions(const String            & cmd_s_lower,
+                                 const String            & arg1,
+                                 const String            & arg2,
+                                 const String            & arg3,
+                                 ESPEASY_RULES_FLOAT_TYPE& result) {
+  ESPEASY_RULES_FLOAT_TYPE farg1;
+  float farg2, farg3 = 0.0f;
+
+  if (!cmd_s_lower.startsWith("crc") && !validDoubleFromString(arg1, farg1)) {
+    return false;
+  }
+
+  if (equals(cmd_s_lower, F("constrain"))) {
+    // Contrain a value X to be within range of A to B
+    // Syntax like {constrain:x:a:b} to constrain x in range a...b
+    if (validFloatFromString(arg2, farg2) && validFloatFromString(arg3, farg3)) {
+      if (farg2 > farg3) {
+        const float tmp = farg2;
+        farg2 = farg3;
+        farg3 = tmp;
+      }
+      result = constrain(farg1, farg2, farg3);
+    } else {
+      return false;
+    }
+  } else if (cmd_s_lower.startsWith("crc")) {
+    std::vector<uint8_t> argument = parseHexTextData(arg1, 1);
+    const String crctype          = cmd_s_lower.substring(3);
+
+    if (argument.size() > 0) {
+      if (equals(crctype, F("8"))) {
+        result = calc_CRC8(&argument[0], argument.size());
+
+        // } else if (equals(crctype, F("16"))) { // FIXME crc16 not supported until needed/used/tested
+        //   result = calc_CRC16((const char *)argument.data(), argument.size());
+      } else if (equals(crctype, F("32"))) {
+        result = calc_CRC32(&argument[0], argument.size());
+      } else {
+        return false;
+      }
+
+      if (!arg2.isEmpty() && validDoubleFromString(arg2, farg1)) { // Optional expected crc value
+        result = essentiallyEqual(result, farg1) ? 1.0 : 0.0;      // Return 1 if the calculated crc == expected crc
+      }
+    } else {
+      return false;
+    }
+  } else {
+    // No matching function found
+    return false;
+  }
+  return true;
+}
+
+const char string_commands[] PROGMEM = "substring|indexof|indexof_ci|equals|equals_ci|timetomin|timetosec|strtol|tobin|tohex|ord|urlencode"
+  #if FEATURE_STRING_VARIABLES
+                                       "|lookup"
+  # if FEATURE_EXTENDED_STRING_FUNCTIONS
+                                       "|unescape|escape"
+                                       "|parse"
+  # endif // if FEATURE_EXTENDED_STRING_FUNCTIONS
+  #endif // if FEATURE_STRING_VARIABLES
+  #if FEATURE_JSON_PARSE && FEATURE_EXTENDED_STRING_FUNCTIONS
+                                       "|json"
+  #endif // if FEATURE_JSON_PARSE && FEATURE_EXTENDED_STRING_FUNCTIONS
+;
+enum class string_commands_e {
+  substring,
+  indexof,
+  indexof_ci,
+  equals,
+  equals_ci,
+  timetomin,
+  timetosec,
+  strtol,
+  tobin,
+  tohex,
+  ord,
+  urlencode,
+  #if FEATURE_STRING_VARIABLES
+  lookup,
+  # if FEATURE_EXTENDED_STRING_FUNCTIONS
+  unescape,
+  escape,
+  parse,
+  # endif // if FEATURE_EXTENDED_STRING_FUNCTIONS
+  #endif // if FEATURE_STRING_VARIABLES
+  #if FEATURE_JSON_PARSE && FEATURE_EXTENDED_STRING_FUNCTIONS
+  json,
+  #endif // if FEATURE_JSON_PARSE && FEATURE_EXTENDED_STRING_FUNCTIONS
+
+};
+
+static void hideEscaped(String& line, bool& mustReplaceEscapedBracket, bool& mustReplaceEscapedCurlyBracket, bool& mustReplaceEscapedColon) {
+  String MaskEscapedBracket;
+
+  if (hasEscapedCharacter(line, '(') || hasEscapedCharacter(line, ')')) {
+    // replace the \( and \) with other characters to mask the escaped brackets so we can continue parsing.
+    // We have to unmask then after we're finished.
+    MaskEscapedBracket = static_cast<char>(0x11); // ASCII 0x11 = Device control 1
+    line.replace(F("\\("), MaskEscapedBracket);
+    MaskEscapedBracket = static_cast<char>(0x12); // ASCII 0x12 = Device control 2
+    line.replace(F("\\)"), MaskEscapedBracket);
+    mustReplaceEscapedBracket = true;
+  }
+
+  if (hasEscapedCharacter(line, '{') || hasEscapedCharacter(line, '}')) {
+    // replace the \{ and \} with other characters to mask the escaped curly brackets so we can continue parsing.
+    // We have to unmask then after we're finished.
+    MaskEscapedBracket = static_cast<char>(0x13); // ASCII 0x13 = Device control 3
+    line.replace(F("\\{"), MaskEscapedBracket);
+    MaskEscapedBracket = static_cast<char>(0x14); // ASCII 0x14 = Device control 4
+    line.replace(F("\\}"), MaskEscapedBracket);
+    mustReplaceEscapedCurlyBracket = true;
+  }
+
+  #if FEATURE_EXTENDED_STRING_FUNCTIONS
+
+  if (hasEscapedCharacter(line, ':')) {
+    // replace the \: with another character to mask the escaped colon so we can continue parsing.
+    // We have to unmask then after we're finished.
+    MaskEscapedBracket = static_cast<char>(0x15); // ASCII 0x15 = NAK
+    line.replace(F("\\:"), MaskEscapedBracket);
+    mustReplaceEscapedColon = true;
+  }
+  #endif // if FEATURE_EXTENDED_STRING_FUNCTIONS
+}
+
+static void hideMasked(String& line, bool mustReplaceMaskedChars) {
+  if (mustReplaceMaskedChars) {
+    line.replace('{', static_cast<char>(0x02));
+    line.replace('}', static_cast<char>(0x03));
+  }
+}
+
+static void restoreMaskedAndEscaped(String& line,
+                                    bool    mustReplaceMaskedChars,
+                                    bool    mustReplaceEscapedBracket,
+                                    bool    mustReplaceEscapedCurlyBracket,
+                                    bool    mustReplaceEscapedColon) {
+  String MaskEscapedBracket;
+
+  if (mustReplaceMaskedChars) {
+    // We now have to check if we did mask some parts and unmask them.
+    // Let's hope we don't mess up any Unicode here.
+    line.replace(static_cast<char>(0x02), '{');
+    line.replace(static_cast<char>(0x03), '}');
+  }
+
+  if (mustReplaceEscapedBracket) {
+    // We now have to check if we did mask some escaped bracket and unmask them.
+    // Let's hope we don't mess up any Unicode here.
+    MaskEscapedBracket = static_cast<char>(0x11); // ASCII 0x11 = Device control 1
+    line.replace(MaskEscapedBracket, F("\\("));
+    MaskEscapedBracket = static_cast<char>(0x12); // ASCII 0x12 = Device control 2
+    line.replace(MaskEscapedBracket, F("\\)"));
+  }
+
+  if (mustReplaceEscapedCurlyBracket) {
+    // We now have to check if we did mask some escaped curly bracket and unmask them.
+    // Let's hope we don't mess up any Unicode here.
+    MaskEscapedBracket = static_cast<char>(0x13); // ASCII 0x13 = Device control 3
+    line.replace(MaskEscapedBracket, F("\\{"));
+    MaskEscapedBracket = static_cast<char>(0x14); // ASCII 0x14 = Device control 4
+    line.replace(MaskEscapedBracket, F("\\}"));
+  }
+
+  #if FEATURE_EXTENDED_STRING_FUNCTIONS
+
+  if (mustReplaceEscapedColon) {
+    // We now have to check if we did mask some escaped colon and unmask them.
+    // Let's hope we don't mess up any Unicode here.
+    MaskEscapedBracket = static_cast<char>(0x15); // ASCII 0x15 = NAK
+    line.replace(MaskEscapedBracket, F("\\:"));
+  }
+  #endif // if FEATURE_EXTENDED_STRING_FUNCTIONS
+}
+
+void parse_string_commands(String& line) {
+  unsigned int startIndex = 0;
+  int closingIndex;
+
+  #if FEATURE_JSON_PARSE && FEATURE_EXTENDED_STRING_FUNCTIONS
+  DynamicJsonDocument*root       = nullptr;
+  uint16_t lastJsonMessageLength = 512;
+
+  // Cleanup lambda to deallocate resources
+  auto cleanupJSON = [&root]() {
+                       if (root != nullptr) {
+                         root->clear();
+                         delete root;
+                         root = nullptr;
+                       }
+                     };
+  #endif // if FEATURE_JSON_PARSE && FEATURE_EXTENDED_STRING_FUNCTIONS
+  bool mustReplaceMaskedChars         = false;
+  bool mustReplaceEscapedBracket      = false;
+  bool mustReplaceEscapedCurlyBracket = false;
+  bool mustReplaceEscapedColon        = false;
+
+  hideEscaped(line, mustReplaceEscapedBracket, mustReplaceEscapedCurlyBracket, mustReplaceEscapedColon);
+
+  while (get_next_inner_bracket(line, startIndex, closingIndex, '}')) {
+    // Command without opening and closing brackets.
+    const String fullCommand = line.substring(startIndex + 1, closingIndex);
+    const String cmd_s_lower = parseString(fullCommand, 1, ':');
+    const String arg1        = parseStringKeepCaseNoTrim(fullCommand, 2, ':');
+    const String arg2        = parseStringKeepCaseNoTrim(fullCommand, 3, ':');
+    const String arg3        = parseStringKeepCaseNoTrim(fullCommand, 4, ':');
+
+    if (cmd_s_lower.length() > 0) {
+      String   replacement; // maybe just replace with empty to avoid looping?
+      uint64_t iarg1, iarg2 = 0;
+      ESPEASY_RULES_FLOAT_TYPE fresult{};
+      int64_t iresult = 0;
+      int32_t startpos, endpos = -1;
+      const bool arg1valid = validIntFromString(arg1, startpos);
+      const bool arg2valid = validIntFromString(arg2, endpos);
+
+      if (parse_math_functions(cmd_s_lower, arg1, arg2, arg3, fresult)) {
+        const bool trimTrailingZeros = true;
+        #if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+        replacement = doubleToString(fresult, maxNrDecimals_fpType(fresult), trimTrailingZeros);
+        #else
+        replacement = floatToString(fresult, maxNrDecimals_fpType(fresult), trimTrailingZeros);
+        #endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+      } else if (parse_bitwise_functions(cmd_s_lower, arg1, arg2, arg3, iresult)) {
+        replacement = ull2String(iresult);
+      } else {
+
+        int command_i = GetCommandCode(cmd_s_lower.c_str(), string_commands);
+
+        if (command_i != -1) {
+          const string_commands_e command = static_cast<string_commands_e>(command_i);
+
+          //  addLog(LOG_LEVEL_INFO, strformat(F("parse_string_commands cmd: %s %s %s %s"),
+          // cmd_s_lower.c_str(), arg1.c_str(), arg2.c_str(), arg3.c_str()));
+
+          switch (command)
+          {
+            case string_commands_e::substring:
+              // substring arduino style (first char included, last char excluded)
+              // Syntax like 12345{substring:8:12:ANOTHER HELLO WORLD}67890
+
+              if (arg1valid) {
+                if (arg2valid) {
+                  replacement = arg3.substring(startpos, endpos);
+                } else {
+                  replacement = arg3.substring(startpos);
+                }
+              }
+              break;
+            #if FEATURE_STRING_VARIABLES
+            case string_commands_e::lookup:
+
+              if (arg1valid && arg2valid && (startpos > -1) && (endpos > -1)) {
+                replacement = arg3.substring(startpos * endpos, (startpos + 1) * endpos);
+              }
+              break;
+            # if FEATURE_EXTENDED_STRING_FUNCTIONS
+            case string_commands_e::unescape:
+            case string_commands_e::escape:
+              replacement = parseStringToEndKeepCaseNoTrim(fullCommand, 2, ':');
+
+              // Undo escape masks
+              restoreMaskedAndEscaped(replacement,
+                                      mustReplaceMaskedChars,
+                                      mustReplaceEscapedBracket,
+                                      mustReplaceEscapedCurlyBracket,
+                                      mustReplaceEscapedColon);
+
+              stripEscapeCharacters(replacement); // Always strip first to avoid double-escaping
+
+              if (string_commands_e::escape == command) {
+                addEscapeCharacters(replacement);
+              }
+
+              // Redo escape masks and masked {} characters
+              hideEscaped(replacement, mustReplaceEscapedBracket, mustReplaceEscapedCurlyBracket, mustReplaceEscapedColon);
+              hideMasked(replacement, mustReplaceMaskedChars);
+
+              break;
+            # endif // if FEATURE_EXTENDED_STRING_FUNCTIONS
+            #endif // if FEATURE_STRING_VARIABLES
+            case string_commands_e::indexof:
+            case string_commands_e::indexof_ci:
+              // indexOf arduino style (0-based position of first char returned, -1 if not found, case sensitive), 3rd argument is
+              // search-offset
+              // indexOf_ci : case-insensitive
+              // Syntax like {indexof:HELLO:"ANOTHER HELLO WORLD"} => 8, {indexof:hello:"ANOTHER HELLO WORLD"} => -1,
+              // {indexof_ci:Hello:"ANOTHER HELLO WORLD"} => 8
+              // or like {indexof_ci:hello:"ANOTHER HELLO WORLD":10} => -1
+
+              if (!arg1.isEmpty()
+                  && !arg2.isEmpty()) {
+                uint32_t offset = 0;
+                validUIntFromString(arg3, offset);
+
+                if (command == string_commands_e::indexof_ci) {
+                  String arg1copy(arg1);
+                  String arg2copy(arg2);
+                  arg1copy.toLowerCase();
+                  arg2copy.toLowerCase();
+                  replacement = arg2copy.indexOf(arg1copy, offset);
+                } else {
+                  replacement = arg2.indexOf(arg1, offset);
+                }
+              }
+              break;
+            case string_commands_e::equals:
+            case string_commands_e::equals_ci:
+              // equals: compare strings 1 = equal, 0 = unequal (case sensitive)
+              // equals_ci: case-insensitive compare
+              // Syntax like {equals:HELLO:HELLO} => 1, {equals:hello:HELLO} => 0, {equals_ci:hello:HELLO} => 1, {equals_ci:hello:BLA} => 0
+
+              if (!arg1.isEmpty()
+                  && !arg2.isEmpty()) {
+                if (command == string_commands_e::equals_ci) {
+                  replacement = arg2.equalsIgnoreCase(arg1);
+                } else {
+                  replacement = arg2.equals(arg1);
+                }
+              }
+              break;
+            case string_commands_e::timetomin:
+            case string_commands_e::timetosec:
+              // time to minutes, transform a substring hh:mm to minutes
+              // time to seconds, transform a substring hh:mm:ss to seconds
+              // syntax similar to substring
+
+              if (arg1valid
+                  && arg2valid) {
+                int timeSeconds = 0;
+                String timeString;
+
+                if (timeStringToSeconds(arg3.substring(startpos, endpos), timeSeconds, timeString)) {
+                  if (command == string_commands_e::timetosec) {
+                    replacement = timeSeconds;
+                  } else { // timetomin
+                    replacement = timeSeconds / 60;
+                  }
+                }
+              }
+              break;
+            case string_commands_e::strtol:
+
+              // string to long integer (from cstdlib)
+              // Syntax like 1234{strtol:16:38}7890
+              if (validUInt64FromString(arg1, iarg1)
+                  && validUInt64FromString(arg2, iarg2)) {
+                replacement = String(strtoul(arg2.c_str(), nullptr, iarg1));
+              }
+              break;
+            case string_commands_e::tobin:
+
+              // Convert to binary string
+              // Syntax like 1234{tobin:15}7890
+              if (validUInt64FromString(arg1, iarg1)) {
+                replacement = ull2String(iarg1, BIN);
+              }
+              break;
+            case string_commands_e::tohex:
+
+              // Convert to HEX string
+              // Syntax like 1234{tohex:15[,minHexDigits]}7890
+              if (validUInt64FromString(arg1, iarg1)) {
+                if (!validUInt64FromString(arg2, iarg2)) {
+                  iarg2 = 0;
+                }
+                replacement = formatToHex_no_prefix(iarg1, iarg2);
+              }
+              break;
+            case string_commands_e::ord:
+            {
+              // Give the ordinal/integer value of the first character of a string
+              // Syntax like let 1,{ord:B}
+              uint8_t uval = arg1.c_str()[0];
+              replacement = String(uval);
+              break;
+            }
+            case string_commands_e::urlencode:
+
+              // Convert to url-encoded string
+              // Syntax like {urlencode:"string to/encode"}
+              if (!arg1.isEmpty()) {
+                replacement = URLEncode(arg1);
+              }
+              break;
+            #if FEATURE_STRING_VARIABLES && FEATURE_EXTENDED_STRING_FUNCTIONS
+            case string_commands_e::parse:
+
+              // parse: a function to retrieve nth param (1-based), with optional separator, default: comma
+              // {parse:<param>:[<separator>]:<string-to-parse>}
+              if (arg1valid) {
+                String de_escaped = parseStringToEndKeepCaseNoTrim(fullCommand, 4, ':');
+                restoreMaskedAndEscaped(de_escaped,
+                                        mustReplaceMaskedChars,
+                                        mustReplaceEscapedBracket,
+                                        mustReplaceEscapedCurlyBracket,
+                                        mustReplaceEscapedColon);
+                stripEscapeCharacters(de_escaped);
+
+                replacement = parseStringKeepCase(de_escaped, startpos, arg2.isEmpty() ? ',' : arg2[0]);
+
+                addEscapeCharacters(replacement);
+                hideEscaped(replacement, mustReplaceEscapedBracket, mustReplaceEscapedCurlyBracket, mustReplaceEscapedColon);
+                hideMasked(replacement, mustReplaceMaskedChars); // re-apply
+              }
+              break;
+            #endif // if FEATURE_STRING_VARIABLES && FEATURE_EXTENDED_STRING_FUNCTIONS
+            #if FEATURE_JSON_PARSE && FEATURE_EXTENDED_STRING_FUNCTIONS
+            case string_commands_e::json:
+              // json: get a value from a (valid) JSON string
+              // {json:<attribute-to-retrieve>:[<asJson>]:<json-string>}
+              // attribute-to-retrieve can use: level.attr[n].subattr, multi-level supported, arrays[] are 0-based
+              // asJson: 1 (true), return a JSON compatible value, useful when retrieving a part of the input for passing on, default: 0
+              // (false)
+            {
+              String jsonInput = parseStringToEndKeepCase(fullCommand, 4, ':');
+
+              if (arg1.isEmpty() || jsonInput.isEmpty()) {
+                break;
+              }
+              restoreMaskedAndEscaped(jsonInput,
+                                      mustReplaceMaskedChars,
+                                      mustReplaceEscapedBracket,
+                                      mustReplaceEscapedCurlyBracket,
+                                      mustReplaceEscapedColon);
+              stripEscapeCharacters(jsonInput);
+              String arg1_ = arg1;
+              stripEscapeCharacters(arg1_);
+
+              if ((nullptr != root) && (jsonInput.length() * 2.5 > lastJsonMessageLength)) {
+                cleanupJSON();
+              }
+
+              // Resize lastJsonMessageLength if needed
+              if (jsonInput.length() * 2 > lastJsonMessageLength) {
+                lastJsonMessageLength = jsonInput.length() * 2;
+              }
+
+              // Allocate memory for root if needed
+              if (nullptr == root) {
+                // Try to allocate in PSRAM or 2nd heap if possible
+                constexpr unsigned size = sizeof(DynamicJsonDocument);
+                void *ptr               = special_calloc(1, size);
+
+                if (ptr) {
+                  root = new (ptr) DynamicJsonDocument(lastJsonMessageLength); // Dynamic allocation
+                }
+              }
+
+              if (nullptr != root) {
+                // if (loglevelActiveFor(LOG_LEVEL_INFO)) { // for development debugging
+                //   addLog(LOG_LEVEL_INFO, strformat(F("parse json: %s"), jsonInput.c_str()));
+                // }
+                // Parse the JSON
+                DeserializationError error = deserializeJson(*root, jsonInput);
+
+                if (!error) {
+                  // if (loglevelActiveFor(LOG_LEVEL_INFO)) { // for development debugging
+                  //   addLog(LOG_LEVEL_INFO, strformat(F("parse json for %s"), arg1.c_str()));
+                  // }
+                  replacement = getJsonValue(root, arg1_, arg2valid && 1 == endpos);
+                }
+              }
+              break;
+            }
+            #endif // if FEATURE_JSON_PARSE && FEATURE_EXTENDED_STRING_FUNCTIONS
+          }
+        }
+      }
+
+      if (replacement.isEmpty()) {
+        // part in braces is not a supported command.
+        // replace the {} with other characters to mask the braces so we can continue parsing.
+        // We have to unmask then after we're finished.
+        // See: https://github.com/letscontrolit/ESPEasy/issues/2932#issuecomment-596139096
+        replacement            = line.substring(startIndex, closingIndex + 1);
+        mustReplaceMaskedChars = true;
+        hideMasked(replacement, mustReplaceMaskedChars); // apply
+      }
+
+      // Replace the full command including opening and closing brackets.
+      line.replace(line.substring(startIndex, closingIndex + 1), replacement);
+
+      /*
+         if (replacement.length() > 0) {
+         addLog(LOG_LEVEL_INFO, strformat(F("parse_string_commands cmd: %s -> %s"), fullCommand.c_str(), replacement.c_str());
+         }
+       */
+    }
+  }
+
+  #if FEATURE_JSON_PARSE && FEATURE_EXTENDED_STRING_FUNCTIONS
+
+  if (nullptr != root) {
+    cleanupJSON();
+  }
+  #endif // if FEATURE_JSON_PARSE && FEATURE_EXTENDED_STRING_FUNCTIONS
+
+  restoreMaskedAndEscaped(line, mustReplaceMaskedChars, mustReplaceEscapedBracket, mustReplaceEscapedCurlyBracket, mustReplaceEscapedColon);
+}
+
+/********************************************************************************************\
+   Check if an event matches to a given rule
+ \*********************************************************************************************/
 
 /********************************************************************************************\
    Generate rule events based on task refresh
@@ -1552,7 +1629,7 @@ void createRuleEvents(struct EventStruct *event) {
   if (!validDeviceIndex(DeviceIndex)) { return; }
 
   const uint8_t valueCount = getValueCountForTask(event->TaskIndex);
-  String taskName = getTaskDeviceName(event->TaskIndex);
+  String taskName          = getTaskDeviceName(event->TaskIndex);
   #if FEATURE_STRING_VARIABLES
   String postfix;
   const String search = getDerivedValueSearchAndPostfix(taskName, postfix);
@@ -1563,10 +1640,11 @@ void createRuleEvents(struct EventStruct *event) {
   if (event->getSensorType() == Sensor_VType::SENSOR_TYPE_STRING) {
     size_t expectedSize = 2 + getTaskDeviceName(event->TaskIndex).length();
     expectedSize += Cache.getTaskDeviceValueName(event->TaskIndex, 0).length();
-   
+
     bool appendCompleteStringvalue = false;
 
     String eventString;
+
     if (reserve_special(eventString, expectedSize + event->String2.length())) {
       appendCompleteStringvalue = true;
     } else if (!reserve_special(eventString, expectedSize + 24)) {
@@ -1579,6 +1657,7 @@ void createRuleEvents(struct EventStruct *event) {
     eventString += Cache.getTaskDeviceValueName(event->TaskIndex, 0);
     eventString += '=';
     eventString += '`';
+
     if (appendCompleteStringvalue) {
       eventString += event->String2;
     } else {
@@ -1587,12 +1666,13 @@ void createRuleEvents(struct EventStruct *event) {
       eventString += event->String2.substring(event->String2.length() - 10);
     }
     eventString += '`';
-    eventQueue.addMove(std::move(eventString));    
+    eventQueue.addMove(std::move(eventString));
   } else if (Settings.CombineTaskValues_SingleEvent(event->TaskIndex)) {
     String eventvalues;
     reserve_special(eventvalues, 32); // Enough for most use cases, prevent lots of memory allocations.
 
     uint8_t varNr = 0;
+
     for (; varNr < valueCount; ++varNr) {
       if (varNr != 0) {
         eventvalues += ',';
@@ -1600,14 +1680,17 @@ void createRuleEvents(struct EventStruct *event) {
       eventvalues += formatUserVarNoCheck(event, varNr);
     }
     #if FEATURE_STRING_VARIABLES
+
     if (Settings.EventAndLogDerivedTaskValues(event->TaskIndex)) {
 
       auto it = customStringVar.begin();
+
       while (it != customStringVar.end()) {
         if (it->first.startsWith(search) && it->first.endsWith(postfix)) {
           if (!it->second.isEmpty()) {
             String value(it->second);
             value = parseTemplateAndCalculate(value);
+
             if (varNr != 0) {
               eventvalues += ',';
             }
@@ -1629,18 +1712,22 @@ void createRuleEvents(struct EventStruct *event) {
     }
   }
   #if FEATURE_STRING_VARIABLES
+
   if (!Settings.CombineTaskValues_SingleEvent(event->TaskIndex) // Send events of derived values for all sensorTypes when enabled
       && Settings.EventAndLogDerivedTaskValues(event->TaskIndex)) {
     taskName.toLowerCase();
 
     auto it = customStringVar.begin();
+
     while (it != customStringVar.end()) {
       if (it->first.startsWith(search) && it->first.endsWith(postfix)) {
-        String valueName = it->first.substring(search.length(), it->first.indexOf('-'));
+        String valueName    = it->first.substring(search.length(), it->first.indexOf('-'));
         const String vname2 = getDerivedValueName(taskName, valueName);
+
         if (!vname2.isEmpty()) {
           valueName = vname2;
         }
+
         if (!it->second.isEmpty()) {
           String value(it->second);
           value = parseTemplateAndCalculate(value);

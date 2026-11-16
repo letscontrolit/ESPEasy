@@ -57,22 +57,27 @@
 # define KV_SETID(S)
 #endif // ifndef LIMIT_BUILD_SIZE
 
-KeyValueStruct make_kv(const __FlashStringHelper *key, int val)
+static KeyValueStruct make_kv(const __FlashStringHelper *key, bool val)
 {
   return KeyValueStruct(key, val, KeyValueStruct::Format::Default);
 }
 
-KeyValueStruct make_kv(const __FlashStringHelper *key, uint32_t val)
+static KeyValueStruct make_kv(const __FlashStringHelper *key, int val)
 {
   return KeyValueStruct(key, val, KeyValueStruct::Format::Default);
 }
 
-KeyValueStruct make_kv(const __FlashStringHelper *key, uint64_t val)
+static KeyValueStruct make_kv(const __FlashStringHelper *key, uint32_t val)
 {
   return KeyValueStruct(key, val, KeyValueStruct::Format::Default);
 }
 
-KeyValueStruct make_kv(const __FlashStringHelper *key, const float & val,
+static KeyValueStruct make_kv(const __FlashStringHelper *key, uint64_t val)
+{
+  return KeyValueStruct(key, val, KeyValueStruct::Format::Default);
+}
+
+static KeyValueStruct make_kv(const __FlashStringHelper *key, const float & val,
                  uint8_t       nrDecimals)
 {
   KeyValueStruct kv(key, KeyValueStruct::Format::Default);
@@ -80,22 +85,22 @@ KeyValueStruct make_kv(const __FlashStringHelper *key, const float & val,
   return kv;
 }
 
-KeyValueStruct make_kv(const __FlashStringHelper *key, const __FlashStringHelper *val)
+static KeyValueStruct make_kv(const __FlashStringHelper *key, const __FlashStringHelper *val)
 {
   return KeyValueStruct(key, val, KeyValueStruct::Format::Default);
 }
 
-KeyValueStruct make_kv(const __FlashStringHelper *key, String &&val)
+static KeyValueStruct make_kv(const __FlashStringHelper *key, String &&val)
 {
   return KeyValueStruct(key, val, KeyValueStruct::Format::Default);
 }
 
-KeyValueStruct make_kv(const __FlashStringHelper *key, String &&val, KeyValueStruct::Format format)
+static KeyValueStruct make_kv(const __FlashStringHelper *key, String &&val, KeyValueStruct::Format format)
 {
   return KeyValueStruct(key, val, format);
 }
 
-KeyValueStruct make_kv(const __FlashStringHelper *key, const IPAddress& val, bool includeZone = false)
+static KeyValueStruct make_kv(const __FlashStringHelper *key, const IPAddress& val, bool includeZone = false)
 {
   ValueStruct v;
   v.setIPAddress(val, includeZone);

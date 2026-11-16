@@ -135,6 +135,73 @@ void handle_filelist_json() {
 #endif // WEBSERVER_NEW_UI
 
 #ifdef WEBSERVER_FILELIST
+
+static void handle_filelist_add_file(const String& filename, int filesize, int startIdx) {
+  html_TR_TD();
+
+  if (!isProtectedFileType(filename))
+  {
+    html_add_button_prefix();
+    addHtml(F("filelist?delete="));
+    addHtml(filename);
+
+    if (startIdx > 0)
+    {
+      addHtml(F("&start="));
+      addHtmlInt(startIdx);
+    }
+    addHtml(F("'>Del</a>"));
+  }
+  {
+    addHtml(F("<TD><a href=\""));
+    addHtml(filename);
+    addHtml('"', '>');
+    addHtml(filename);
+    addHtml(F("</a><TD>"));
+
+    if (filesize >= 0) {
+      addHtmlInt(filesize);
+    }
+  }
+}
+
+static void handle_filelist_buttons(int start_prev, int start_next, bool cacheFilesPresent, bool bakFilesPresent) {
+  html_end_table();
+  html_end_form();
+  html_BR();
+  addButton(F("/upload"), F("Upload"));
+
+  if (start_prev >= 0)
+  {
+    html_add_button_prefix();
+    addHtml(F("/filelist?start="));
+    addHtmlInt(start_prev);
+    addHtml(F("'>Previous</a>"));
+  }
+
+  if (start_next >= 0)
+  {
+    html_add_button_prefix();
+    addHtml(F("/filelist?start="));
+    addHtmlInt(start_next);
+    addHtml(F("'>Next</a>"));
+  }
+#if FEATURE_RTC_CACHE_STORAGE
+  if (cacheFilesPresent) {
+    html_add_button_prefix(F("red"), true);
+    addHtml(F("filelist?delcache=1'>Delete Cache Files</a>"));
+  }
+#endif
+#if FEATURE_DOWNLOAD
+  if (bakFilesPresent) {
+    html_add_button_prefix(F("red"), true);
+    addHtml(F("filelist?delbak=1'>Delete '_bak' Files</a>"));
+  }
+#endif
+  addHtml(F("<BR><BR>"));
+  sendTail_stdtemplate();
+}
+
 void handle_filelist() {
   #ifndef BUILD_NO_RAM_TRACKER
   checkRAM(F("handle_filelist"));
@@ -267,71 +334,7 @@ void handle_filelist() {
   handle_filelist_buttons(start_prev, start_next, cacheFilesPresent, bakFilesPresent);
 }
 
-void handle_filelist_add_file(const String& filename, int filesize, int startIdx) {
-  html_TR_TD();
 
-  if (!isProtectedFileType(filename))
-  {
-    html_add_button_prefix();
-    addHtml(F("filelist?delete="));
-    addHtml(filename);
-
-    if (startIdx > 0)
-    {
-      addHtml(F("&start="));
-      addHtmlInt(startIdx);
-    }
-    addHtml(F("'>Del</a>"));
-  }
-  {
-    addHtml(F("<TD><a href=\""));
-    addHtml(filename);
-    addHtml('"', '>');
-    addHtml(filename);
-    addHtml(F("</a><TD>"));
-
-    if (filesize >= 0) {
-      addHtmlInt(filesize);
-    }
-  }
-}
-
-void handle_filelist_buttons(int start_prev, int start_next, bool cacheFilesPresent, bool bakFilesPresent) {
-  html_end_table();
-  html_end_form();
-  html_BR();
-  addButton(F("/upload"), F("Upload"));
-
-  if (start_prev >= 0)
-  {
-    html_add_button_prefix();
-    addHtml(F("/filelist?start="));
-    addHtmlInt(start_prev);
-    addHtml(F("'>Previous</a>"));
-  }
-
-  if (start_next >= 0)
-  {
-    html_add_button_prefix();
-    addHtml(F("/filelist?start="));
-    addHtmlInt(start_next);
-    addHtml(F("'>Next</a>"));
-  }
-#if FEATURE_RTC_CACHE_STORAGE
-  if (cacheFilesPresent) {
-    html_add_button_prefix(F("red"), true);
-    addHtml(F("filelist?delcache=1'>Delete Cache Files</a>"));
-  }
-#endif
-#if FEATURE_DOWNLOAD
-  if (bakFilesPresent) {
-    html_add_button_prefix(F("red"), true);
-    addHtml(F("filelist?delbak=1'>Delete '_bak' Files</a>"));
-  }
-#endif
-  addHtml(F("<BR><BR>"));
-  sendTail_stdtemplate();
-}
 
 #endif // ifdef WEBSERVER_FILELIST
 

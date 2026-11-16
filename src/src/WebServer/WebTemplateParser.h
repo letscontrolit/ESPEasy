@@ -38,7 +38,6 @@ extern uint8_t navMenuIndex;
 
 bool isGpMenuSecondLevel(uint8_t index);
 const __FlashStringHelper* getGpMenuIcon(uint8_t index);
-const __FlashStringHelper* getGpMenuLabel(uint8_t index);
 
 class WebTemplateParser {
 public:

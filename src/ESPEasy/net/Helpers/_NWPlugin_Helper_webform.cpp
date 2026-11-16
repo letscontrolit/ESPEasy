@@ -13,7 +13,7 @@ namespace net {
 /*********************************************************************************************\
 * Functions to load and store network settings on the web page.
 \*********************************************************************************************/
-const __FlashStringHelper* toString(NetworkSettingsStruct::VarType parameterIdx, bool displayName)
+static const __FlashStringHelper* toString(NetworkSettingsStruct::VarType parameterIdx, bool displayName)
 {
   switch (parameterIdx)
   {
@@ -61,16 +61,16 @@ String getNetworkParameterName(networkDriverIndex_t           NetworkDriverIndex
   return name;
 }
 
-String getNetworkParameterInternalName(networkDriverIndex_t NetworkDriverIndex, NetworkSettingsStruct::VarType parameterIdx) {
+static String getNetworkParameterInternalName(networkDriverIndex_t NetworkDriverIndex, NetworkSettingsStruct::VarType parameterIdx) {
   bool isAlternative; // Dummy, not needed for internal name
   bool displayName = false;
 
   return getNetworkParameterName(NetworkDriverIndex, parameterIdx, displayName, isAlternative);
 }
 
-String getNetworkParameterDisplayName(networkDriverIndex_t           NetworkDriverIndex,
-                                      NetworkSettingsStruct::VarType parameterIdx,
-                                      bool                         & isAlternative) {
+static String getNetworkParameterDisplayName(networkDriverIndex_t           NetworkDriverIndex,
+                                             NetworkSettingsStruct::VarType parameterIdx,
+                                             bool                         & isAlternative) {
   bool displayName = true;
 
   return getNetworkParameterName(NetworkDriverIndex, parameterIdx, displayName, isAlternative);
@@ -91,21 +91,22 @@ void addNetworkEnabledForm(networkIndex_t networkindex) {
   addFormCheckBox(displayName, internalName, Settings.getNetworkEnabled(networkindex));
 }
 
-void addNetworkParameterForm(const NetworkSettingsStruct  & NetworkSettings,
+/*
+   void addNetworkParameterForm(const NetworkSettingsStruct  & NetworkSettings,
                              networkIndex_t                 networkindex,
                              NetworkSettingsStruct::VarType varType) {
-  networkDriverIndex_t NetworkDriverIndex = getNetworkDriverIndex_from_NetworkIndex(networkindex);
+   networkDriverIndex_t NetworkDriverIndex = getNetworkDriverIndex_from_NetworkIndex(networkindex);
 
-  if (!validNetworkDriverIndex(NetworkDriverIndex)) {
+   if (!validNetworkDriverIndex(NetworkDriverIndex)) {
     return;
-  }
+   }
 
-  bool isAlternativeDisplayName = false;
-  const String displayName      = getNetworkParameterDisplayName(NetworkDriverIndex, varType, isAlternativeDisplayName);
-  const String internalName     = getNetworkParameterInternalName(NetworkDriverIndex, varType);
+   bool isAlternativeDisplayName = false;
+   const String displayName      = getNetworkParameterDisplayName(NetworkDriverIndex, varType, isAlternativeDisplayName);
+   const String internalName     = getNetworkParameterInternalName(NetworkDriverIndex, varType);
 
-  switch (varType)
-  {
+   switch (varType)
+   {
     case NetworkSettingsStruct::NETWORK_IP:
     {
       addFormIPBox(displayName, internalName, NetworkSettings.IP);
@@ -119,33 +120,32 @@ void addNetworkParameterForm(const NetworkSettingsStruct  & NetworkSettings,
 
     case NetworkSettingsStruct::NETWORK_USER:
     {
-      /*
-            const size_t fieldMaxLength =
-              NetworkSettings.useExtendedCredentials() ? EXT_SECURITY_MAX_USER_LENGTH : sizeof(SecuritySettings.NetworkUser[0]) - 1;
-            addFormTextBox(displayName,
-                           internalName,
-                           getNetworkUser(networkindex, NetworkSettings, false),
-                           fieldMaxLength);
-       */
-      break;
+
+      //      const size_t fieldMaxLength =
+        //      NetworkSettings.useExtendedCredentials() ? EXT_SECURITY_MAX_USER_LENGTH : sizeof(SecuritySettings.NetworkUser[0]) - 1;
+          //  addFormTextBox(displayName,
+            //               internalName,
+              //             getNetworkUser(networkindex, NetworkSettings, false),
+                //           fieldMaxLength);
+            break;
     }
     case NetworkSettingsStruct::NETWORK_PASS:
     {
-      /*
-            const size_t fieldMaxLength =
-              NetworkSettings.useExtendedCredentials() ? EXT_SECURITY_MAX_PASS_LENGTH : sizeof(SecuritySettings.NetworkPassword[0]) - 1;
 
-            if (isAlternativeDisplayName) {
+      //      const size_t fieldMaxLength =
+      //        NetworkSettings.useExtendedCredentials() ? EXT_SECURITY_MAX_PASS_LENGTH : sizeof(SecuritySettings.NetworkPassword[0]) - 1;
+
+      //      if (isAlternativeDisplayName) {
               // It is not a regular password, thus use normal text field.
-              addFormTextBox(displayName, internalName,
-                             getNetworkPass(networkindex, NetworkSettings),
-                             fieldMaxLength);
-            } else {
-              addFormPasswordBox(displayName, internalName,
-                                 getNetworkPass(networkindex, NetworkSettings),
-                                 fieldMaxLength);
-            }
-       */
+      //        addFormTextBox(displayName, internalName,
+      //                       getNetworkPass(networkindex, NetworkSettings),
+      //                       fieldMaxLength);
+      //      } else {
+      //        addFormPasswordBox(displayName, internalName,
+      //                           getNetworkPass(networkindex, NetworkSettings),
+      //                           fieldMaxLength);
+      //      }
+
       break;
     }
 
@@ -157,9 +157,9 @@ void addNetworkParameterForm(const NetworkSettingsStruct  & NetworkSettings,
     case NetworkSettingsStruct::NETWORK_ENABLED:
       addFormCheckBox(displayName, internalName, Settings.getNetworkEnabled(networkindex));
       break;
-  }
-}
-
+   }
+   }
+ */
 void saveNetworkParameterForm(NetworkSettingsStruct        & NetworkSettings,
                               networkIndex_t                 networkindex,
                               NetworkSettingsStruct::VarType varType) {

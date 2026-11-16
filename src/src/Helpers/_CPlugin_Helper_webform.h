@@ -17,8 +17,6 @@ String getControllerParameterName(protocolIndex_t                   ProtocolInde
 
 String getControllerParameterInternalName(protocolIndex_t ProtocolIndex, ControllerSettingsStruct::VarType parameterIdx);
 
-String getControllerParameterDisplayName(protocolIndex_t ProtocolIndex, ControllerSettingsStruct::VarType parameterIdx, bool& isAlternative);
-
 void addControllerEnabledForm(controllerIndex_t controllerindex);
 
 void addControllerParameterForm(const ControllerSettingsStruct& ControllerSettings, controllerIndex_t controllerindex, ControllerSettingsStruct::VarType varType);

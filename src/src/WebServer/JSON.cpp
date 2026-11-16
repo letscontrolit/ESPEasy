@@ -27,8 +27,9 @@
 #include "../../_Plugin_Helper.h"
 #include "../../ESPEasy-Globals.h"
 
-void stream_comma_newline() { addHtml(',', '\n'); }
-
+# if (FEATURE_PLUGIN_STATS && FEATURE_CHART_JS) || defined(WEBSERVER_NEW_UI)
+static void stream_comma_newline() { addHtml(',', '\n'); }
+#endif
 
 // ********************************************************************************
 // Web Interface get CSV value from task
@@ -777,23 +778,24 @@ void handle_buildinfo() {
 /*********************************************************************************************\
    Streaming versions directly to TXBuffer
 \*********************************************************************************************/
-void stream_to_json_object_value(const __FlashStringHelper *object, const String& value) {
-  stream_to_json_object_value(String(object), value);
+static void stream_to_json_object_value(const String& object, int value) {
+  addHtml(wrap_String(object, '"', '"'));
+  addHtml(':');
+  addHtmlInt(value);
 }
 
-void stream_to_json_object_value(const String& object, const String& value) {
+static void stream_to_json_object_value(const String& object, const String& value) {
   addHtml(wrap_String(object, '"', '"'));
   addHtml(':');
   addHtml(to_json_value(value));
 }
 
-void stream_to_json_object_value(const __FlashStringHelper *object, int value) { stream_to_json_object_value(String(object), value); }
-
-void stream_to_json_object_value(const String& object, int value) {
-  addHtml(wrap_String(object, '"', '"'));
-  addHtml(':');
-  addHtmlInt(value);
+static void stream_to_json_object_value(const __FlashStringHelper *object, const String& value) {
+  stream_to_json_object_value(String(object), value);
 }
+
+static void stream_to_json_object_value(const __FlashStringHelper *object, int value) { stream_to_json_object_value(String(object), value); }
+
 
 #endif // if FEATURE_CHART_JS || defined(WEBSERVER_NEW_UI)
 

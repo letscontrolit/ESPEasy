@@ -31,6 +31,190 @@
 # endif
 
 
+
+static void handle_setup_scan_and_show(const String& ssid, const String& other, const String& password) {
+  int8_t scanCompleteStatus = ESPEasy::net::wifi::WiFi_AP_Candidates.scanComplete();
+  const bool needsRescan    =
+    (scanCompleteStatus == 0 || // No AP found
+     scanCompleteStatus == -2)  // Scan not triggered
+    && ESPEasy::net::wifi::WiFiScanAllowed();
+
+  if (needsRescan) {
+    WiFiMode_t cur_wifimode = WiFi.getMode();
+    ESPEasy::net::wifi::WifiScan(false);
+    scanCompleteStatus = ESPEasy::net::wifi::WiFi_AP_Candidates.scanComplete();
+    ESPEasy::net::wifi::setWifiMode(cur_wifimode);
+  }
+
+
+  if (scanCompleteStatus <= 0) {
+    addHtml(F("No Access Points found"));
+  }
+  else
+  {
+    html_table_class_multirow();
+    html_TR();
+    html_table_header(F("Pick"), 50);
+    html_table_header(F("Network info"));
+    html_table_header(F("RSSI"), 50);
+
+    for (auto it = ESPEasy::net::wifi::WiFi_AP_Candidates.scanned_begin(); it != ESPEasy::net::wifi::WiFi_AP_Candidates.scanned_end(); ++it)
+    {
+      html_TR_TD();
+      const String id = it->toString("");
+      addHtml(F("<label "));
+      addHtmlAttribute(F("class"), F("container2"));
+      addHtmlAttribute(F("for"),   id);
+      addHtml('>');
+
+      addHtml(F("<input type='radio' name='ssid' value='"));
+
+      if (it->bits.isHidden) {
+        addHtml(F("#Hidden#' disabled"));
+      } else {
+        String escapeBuffer = it->ssid;
+        htmlStrongEscape(escapeBuffer);
+        addHtml(escapeBuffer);
+        addHtml('\'');
+      }
+
+      addHtmlAttribute(F("id"), id);
+
+      {
+        if (it->bssid_match(RTC.lastBSSID)) {
+          if (!ESPEasy::net::wifi::WiFi_AP_Candidates.SettingsIndexMatchCustomCredentials(RTC.lastWiFiSettingsIndex)) {
+            addHtml(F(" checked "));
+          }
+        }
+      }
+
+      addHtml(F("><span class='dotmark'></span>"));
+      addHtml(F("</label>"));
+
+      html_TD();
+      addHtml(F("<label "));
+      addHtmlAttribute(F("for"), id);
+      addHtml('>');
+      addHtml(it->toString(F("<BR>")));
+      addHtml(F("</label>"));
+
+      html_TD();
+      addHtml(F("<label "));
+      addHtmlAttribute(F("for"), id);
+      addHtml('>');
+      getWiFi_RSSI_icon(it->rssi, 45);
+      addHtml(F("</label>"));
+    }
+    html_end_table();
+  }
+
+  html_BR();
+
+  addSubmitButton(F("Rescan"), F("performrescan"));
+
+  html_BR();
+
+  html_table_class_normal();
+  html_TR_TD();
+
+  addHtml(F("<label "));
+  addHtmlAttribute(F("class"), F("container2"));
+  addHtml('>');
+  addHtml(F("other SSID:"));
+  addHtml(F("<input "));
+  addHtmlAttribute(F("type"),  F("radio"));
+  addHtmlAttribute(F("name"),  F("ssid"));
+  addHtmlAttribute(F("id"),    F("other_ssid"));
+  addHtmlAttribute(F("value"), F("other"));
+  addHtml('>');
+  addHtml(F("<span class='dotmark'></span></label>"));
+
+  html_TD();
+
+  addHtml(F("<label "));
+  addHtmlAttribute(F("for"), F("other_ssid"));
+  addHtml('>');
+
+  addHtml(F("<input "));
+  addHtmlAttribute(F("class"), F("wide"));
+  addHtmlAttribute(F("type"),  F("text"));
+  addHtmlAttribute(F("name"),  F("other"));
+  addHtmlAttribute(F("value"), other);
+  addHtml('>');
+  addHtml(F("</label>"));
+
+
+  html_TR();
+
+  html_BR();
+  html_BR();
+
+  addFormSeparator(2);
+
+  html_BR();
+
+  addFormPasswordBox(F("Password"), F("pass"), password, 63);
+  addFormCheckBox(F("Allow Empty Password"), F("emptypass"), false);
+
+  /*
+     if (SecuritySettings.hasWiFiCredentials(SecurityStruct::WiFiCredentialsSlot::first)) {
+      addFormCheckBox(F("Clear Stored SSID1"), F("clearssid1"), false);
+      addFormNote(String(F("Current: ")) + getValue(LabelType::WIFI_STORED_SSID1));
+     }
+     if (SecuritySettings.hasWiFiCredentials(SecurityStruct::WiFiCredentialsSlot::second)) {
+      addFormCheckBox(F("Clear Stored SSID2"), F("clearssid2"), false);
+      addFormNote(String(F("Current: ")) + getValue(LabelType::WIFI_STORED_SSID2));
+     }
+   */
+
+  html_TR_TD();
+  html_TD();
+  html_BR();
+  addSubmitButton(F("Connect"), EMPTY_STRING);
+
+  html_end_table();
+}
+
+static bool handle_setup_connectingStage(uint8_t refreshCount) {
+  if (refreshCount > 0)
+  {
+    //      safe_strncpy(SecuritySettings.WifiSSID, "ssid", sizeof(SecuritySettings.WifiSSID));
+    //      SecuritySettings.WifiKey[0] = 0;
+    addButton(F("/setup"), F("Back to Setup"));
+    html_TR_TD();
+    html_BR();
+
+    //    WiFiEventData.wifiSetupConnect = false;
+    return false;
+  }
+  int wait = WIFI_RECONNECT_WAIT / 1000;
+
+  if (refreshCount != 0) {
+    wait = 3;
+  }
+  addHtml(F("Please wait for <h1 id='countdown'>20..</h1>"
+            "<script>"
+            "function timedRefresh(tp) {"
+            "var t=setInterval(function(){"
+            "if(tp>0){"
+            "tp-=1;"
+            "document.getElementById('countdown').innerHTML=tp+'..'+'<br/>';"
+            "}else{"
+            "clearInterval(t);"
+            "window.location.href=window.location.href;"
+            "};"
+            "},1000);"
+            "};"
+            "timedRefresh("));
+  addHtmlInt(wait);
+  addHtml(')', ';');
+  html_add_script_end();
+  addHtml(F("seconds while trying to connect"));
+  return true;
+}
+
+
+
 // ********************************************************************************
 // Web Interface Setup Wizard
 // ********************************************************************************
@@ -269,187 +453,6 @@ void handle_setup() {
   if (clearWiFiCredentials) {
     reboot(IntendedRebootReason_e::RestoreSettings);
   }
-}
-
-void handle_setup_scan_and_show(const String& ssid, const String& other, const String& password) {
-  int8_t scanCompleteStatus = ESPEasy::net::wifi::WiFi_AP_Candidates.scanComplete();
-  const bool needsRescan    =
-    (scanCompleteStatus == 0 || // No AP found
-     scanCompleteStatus == -2)  // Scan not triggered
-    && ESPEasy::net::wifi::WiFiScanAllowed();
-
-  if (needsRescan) {
-    WiFiMode_t cur_wifimode = WiFi.getMode();
-    ESPEasy::net::wifi::WifiScan(false);
-    scanCompleteStatus = ESPEasy::net::wifi::WiFi_AP_Candidates.scanComplete();
-    ESPEasy::net::wifi::setWifiMode(cur_wifimode);
-  }
-
-
-  if (scanCompleteStatus <= 0) {
-    addHtml(F("No Access Points found"));
-  }
-  else
-  {
-    html_table_class_multirow();
-    html_TR();
-    html_table_header(F("Pick"), 50);
-    html_table_header(F("Network info"));
-    html_table_header(F("RSSI"), 50);
-
-    for (auto it = ESPEasy::net::wifi::WiFi_AP_Candidates.scanned_begin(); it != ESPEasy::net::wifi::WiFi_AP_Candidates.scanned_end(); ++it)
-    {
-      html_TR_TD();
-      const String id = it->toString("");
-      addHtml(F("<label "));
-      addHtmlAttribute(F("class"), F("container2"));
-      addHtmlAttribute(F("for"),   id);
-      addHtml('>');
-
-      addHtml(F("<input type='radio' name='ssid' value='"));
-
-      if (it->bits.isHidden) {
-        addHtml(F("#Hidden#' disabled"));
-      } else {
-        String escapeBuffer = it->ssid;
-        htmlStrongEscape(escapeBuffer);
-        addHtml(escapeBuffer);
-        addHtml('\'');
-      }
-
-      addHtmlAttribute(F("id"), id);
-
-      {
-        if (it->bssid_match(RTC.lastBSSID)) {
-          if (!ESPEasy::net::wifi::WiFi_AP_Candidates.SettingsIndexMatchCustomCredentials(RTC.lastWiFiSettingsIndex)) {
-            addHtml(F(" checked "));
-          }
-        }
-      }
-
-      addHtml(F("><span class='dotmark'></span>"));
-      addHtml(F("</label>"));
-
-      html_TD();
-      addHtml(F("<label "));
-      addHtmlAttribute(F("for"), id);
-      addHtml('>');
-      addHtml(it->toString(F("<BR>")));
-      addHtml(F("</label>"));
-
-      html_TD();
-      addHtml(F("<label "));
-      addHtmlAttribute(F("for"), id);
-      addHtml('>');
-      getWiFi_RSSI_icon(it->rssi, 45);
-      addHtml(F("</label>"));
-    }
-    html_end_table();
-  }
-
-  html_BR();
-
-  addSubmitButton(F("Rescan"), F("performrescan"));
-
-  html_BR();
-
-  html_table_class_normal();
-  html_TR_TD();
-
-  addHtml(F("<label "));
-  addHtmlAttribute(F("class"), F("container2"));
-  addHtml('>');
-  addHtml(F("other SSID:"));
-  addHtml(F("<input "));
-  addHtmlAttribute(F("type"),  F("radio"));
-  addHtmlAttribute(F("name"),  F("ssid"));
-  addHtmlAttribute(F("id"),    F("other_ssid"));
-  addHtmlAttribute(F("value"), F("other"));
-  addHtml('>');
-  addHtml(F("<span class='dotmark'></span></label>"));
-
-  html_TD();
-
-  addHtml(F("<label "));
-  addHtmlAttribute(F("for"), F("other_ssid"));
-  addHtml('>');
-
-  addHtml(F("<input "));
-  addHtmlAttribute(F("class"), F("wide"));
-  addHtmlAttribute(F("type"),  F("text"));
-  addHtmlAttribute(F("name"),  F("other"));
-  addHtmlAttribute(F("value"), other);
-  addHtml('>');
-  addHtml(F("</label>"));
-
-
-  html_TR();
-
-  html_BR();
-  html_BR();
-
-  addFormSeparator(2);
-
-  html_BR();
-
-  addFormPasswordBox(F("Password"), F("pass"), password, 63);
-  addFormCheckBox(F("Allow Empty Password"), F("emptypass"), false);
-
-  /*
-     if (SecuritySettings.hasWiFiCredentials(SecurityStruct::WiFiCredentialsSlot::first)) {
-      addFormCheckBox(F("Clear Stored SSID1"), F("clearssid1"), false);
-      addFormNote(String(F("Current: ")) + getValue(LabelType::WIFI_STORED_SSID1));
-     }
-     if (SecuritySettings.hasWiFiCredentials(SecurityStruct::WiFiCredentialsSlot::second)) {
-      addFormCheckBox(F("Clear Stored SSID2"), F("clearssid2"), false);
-      addFormNote(String(F("Current: ")) + getValue(LabelType::WIFI_STORED_SSID2));
-     }
-   */
-
-  html_TR_TD();
-  html_TD();
-  html_BR();
-  addSubmitButton(F("Connect"), EMPTY_STRING);
-
-  html_end_table();
-}
-
-bool handle_setup_connectingStage(uint8_t refreshCount) {
-  if (refreshCount > 0)
-  {
-    //      safe_strncpy(SecuritySettings.WifiSSID, "ssid", sizeof(SecuritySettings.WifiSSID));
-    //      SecuritySettings.WifiKey[0] = 0;
-    addButton(F("/setup"), F("Back to Setup"));
-    html_TR_TD();
-    html_BR();
-
-    //    WiFiEventData.wifiSetupConnect = false;
-    return false;
-  }
-  int wait = WIFI_RECONNECT_WAIT / 1000;
-
-  if (refreshCount != 0) {
-    wait = 3;
-  }
-  addHtml(F("Please wait for <h1 id='countdown'>20..</h1>"
-            "<script>"
-            "function timedRefresh(tp) {"
-            "var t=setInterval(function(){"
-            "if(tp>0){"
-            "tp-=1;"
-            "document.getElementById('countdown').innerHTML=tp+'..'+'<br/>';"
-            "}else{"
-            "clearInterval(t);"
-            "window.location.href=window.location.href;"
-            "};"
-            "},1000);"
-            "};"
-            "timedRefresh("));
-  addHtmlInt(wait);
-  addHtml(')', ';');
-  html_add_script_end();
-  addHtml(F("seconds while trying to connect"));
-  return true;
 }
 
 #endif // ifdef WEBSERVER_SETUP

@@ -17,7 +17,7 @@ constexpr int logLevels[] =
 };
 
 // We can't have a globally declared flash string array on ESP8266, so need to wrap it in a function.
-const __FlashStringHelper* getLogLevelDisplayStringFromIndex(uint8_t index)
+static const __FlashStringHelper* getLogLevelDisplayStringFromIndex(uint8_t index)
 {
   const __FlashStringHelper *logLevelDisplayStrings[]
   {

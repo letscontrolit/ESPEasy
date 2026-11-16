@@ -29,12 +29,6 @@ void eventFromResponse(const String& host,
 # if FEATURE_JSON_EVENT
 
 /**
- * @brief Reads and processes keys from a json.keys file and navigates the JSON document.
- */
-void readAndProcessJsonKeys(DynamicJsonDocument*root,
-                            int                 numJson);
-
-/**
  * @brief Result of parsing a URI for JSON flag.
  */
 struct UriParseResult {

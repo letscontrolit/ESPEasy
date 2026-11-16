@@ -33,13 +33,10 @@ int                        Plugin_QueryVType_Lux(uint8_t value_nr);
 int                        Plugin_QueryVType_Temperature(uint8_t value_nr);
 int                        Plugin_QueryVType_Weight(uint8_t value_nr);
 
-String                     makeHomeAssistantCompliantName(const String& name);
-
 #  if FEATURE_MQTT_DEVICECLASS
 String                     MQTT_binary_deviceClassName(int devClassIndex);
 bool                       MQTT_binary_deviceClassTwoWay(int devClassIndex);
 bool                       MQTT_binary_deviceClassSwitch(int devClassIndex);
-int                        MQTT_binary_deviceClassIndex(const String& deviceClassName);
 #  endif // if FEATURE_MQTT_DEVICECLASS
 #  if FEATURE_MQTT_STATE_CLASS
 const __FlashStringHelper* MQTT_sensor_StateClass(uint8_t index,
@@ -68,54 +65,11 @@ struct DiscoveryItem {
 
 bool MQTT_SendAutoDiscovery(controllerIndex_t ControllerIndex,
                             cpluginID_t       CPluginID);
-bool MQTT_HomeAssistant_SendAutoDiscovery(controllerIndex_t         ControllerIndex,
-                                          ControllerSettingsStruct& ControllerSettings);
 bool MQTT_DiscoveryGetDeviceVType(taskIndex_t                 TaskIndex,
                                   std::vector<DiscoveryItem>& discoveryItems,
                                   int                         valueCount,
                                   String                    & deviceClass);
-String MQTT_TaskValueUniqueName(const String& taskName,
-                                const String& valueName);
-String MQTT_DiscoveryBuildValueTopic(const String            & topic,
-                                     struct EventStruct       *event,
-                                     uint8_t                   taskValueIndex,
-                                     const __FlashStringHelper*deviceClass,
-                                     const String            & uniqueId,
-                                     const String            & elementId,
-                                     const String            & valueName);
 
-bool MQTT_DiscoveryPublish(controllerIndex_t ControllerIndex,
-                           const String    & topic,
-                           const String    & discoveryMessage,
-                           taskIndex_t       x,
-                           uint8_t           v,
-                           bool              retained = false);
-
-bool MQTT_DiscoveryPublishWithStatusAndSet(uint8_t                   taskValue,
-                                           const String            & valueName,
-                                           controllerIndex_t         ControllerIndex,
-                                           ControllerSettingsStruct& ControllerSettings,
-                                           const __FlashStringHelper*componentClass,
-                                           const String            & deviceClass,
-                                           const String            & unitOfMeasure,
-                                           struct EventStruct       *event,
-                                           const String            & deviceElement,
-                                           const String            & stateClass,
-                                           bool                      success,
-                                           bool                      hasSet,
-                                           bool                      hasIcon,
-                                           const String            & elementName,
-                                           const String            & elementId,
-                                           bool                      sendTrigger = false);
-
-String MQTT_DiscoveryHelperGetValueName(taskIndex_t   taskIndex,
-                                        uint8_t       taskVarIndex,
-                                        DiscoveryItem discoveryItem);
-
-String MQTT_DiscoveryHelperGetValueUoM(taskIndex_t   taskIndex,
-                                       uint8_t       taskVarIndex,
-                                       DiscoveryItem discoveryItem,
-                                       const String& defaultUoM = EMPTY_STRING);
 
 # endif // if FEATURE_MQTT_DISCOVER
 #endif // if FEATURE_MQTT

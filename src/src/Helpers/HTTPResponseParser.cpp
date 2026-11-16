@@ -15,6 +15,192 @@
 
 #  include <ArduinoJson.h>
 
+/**
+ * @brief Reads and processes keys from a json.keys file and navigates the JSON document.
+ */
+static void readAndProcessJsonKeys(DynamicJsonDocument *root, int numJson) {
+#  if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+  int nr_decimals = ESPEASY_DOUBLE_NR_DECIMALS;
+#  else // ifdef FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+  int nr_decimals = ESPEASY_FLOAT_NR_DECIMALS;
+#  endif // ifdef FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
+
+  // Open the `json.keys` file
+#  ifdef ESP8266
+  const String fileName = F("json.keys");
+#  else // ifdef ESP8266
+  const String fileName = F("/json.keys");
+#  endif // ifdef ESP8266
+
+  if (!fileExists(fileName)) {
+    if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+      addLogMove(LOG_LEVEL_ERROR, strformat(F("%s does not exist!"), fileName.c_str()));
+    }
+    return;
+  }
+  File keyFile = ESPEASY_FS.open(fileName, "r");
+
+  int keyCount                   = 0;
+  int successfullyProcessedCount = 0; // Counter for successfully processed keys
+  String csvOutput;                   // Collect values as a CSV string
+
+  while (keyFile.available()) {
+    String key = keyFile.readStringUntil('\n');
+    key.trim(); // Remove extra spaces or newlines
+
+    if (key.isEmpty()) {
+      continue;
+    }
+    int keyNumber = 0;
+
+    // Extract the number prefix (before the first dot)
+    if (key.indexOf(':') != -1) {
+      keyNumber = key.substring(0, key.indexOf(':')).toInt();
+      key       = key.substring(key.indexOf(':') + 1);
+    }
+
+    // Only process keys that match the filterNumber (or process all if no match)
+    if ((numJson > 0) && (keyNumber != numJson)) {
+      continue; // Skip this key if it doesn't match the filter number
+    }
+    keyCount++;
+
+    if (keyCount > MAX_KEYS) {
+      if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
+        addLogMove(LOG_LEVEL_ERROR, strformat(F("Warning: More than %d keys in %s"), MAX_KEYS, fileName.c_str()));
+      }
+    }
+
+    #  if FEATURE_JSON_PARSE
+    const String val = getJsonValue(root, key, false); // Return arrays and objects as csv, _not_ JSON formatted
+
+    if (!val.isEmpty()) {
+      successfullyProcessedCount++;
+      csvOutput += val;
+      csvOutput += ',';
+    }
+    #  else // if FEATURE_JSON_PARSE
+    // Process the key and navigate the JSON
+    JsonVariant value = *root;
+    size_t start = 0, end;
+
+    while ((end = key.indexOf('.', start)) != (unsigned int)-1) {
+      String part = key.substring(start, end);
+      start = end + 1;
+
+      // Look for an array e.g., "result[0]" → object "result", index 0
+      int bracketStart = part.indexOf('[');
+
+      if (bracketStart != -1) {
+        String objectName = part.substring(0, bracketStart);
+        String indexStr   = part.substring(bracketStart + 1, part.indexOf(']', bracketStart));
+
+        if (objectName.length() > 0) {
+          value = value[objectName]; // Access the object
+        }
+
+        if (value.is<JsonArray>()) {
+          int index = indexStr.toInt();
+          value = value[index];
+        } else {
+          value = value[indexStr]; // fallback if not actually array
+        }
+      } else {
+        // Normal object access without array
+        value = value[part];
+      }
+
+      if (value.isNull()) {
+        break; // Key path is invalid
+      }
+    }
+
+    if (!value.isNull()) {
+      successfullyProcessedCount++;
+      String lastPart     = key.substring(start);
+      int    bracketStart = lastPart.indexOf('[');
+
+      if (bracketStart != -1) {
+        String objectName = lastPart.substring(0, bracketStart);
+        String indexStr   = lastPart.substring(bracketStart + 1, lastPart.indexOf(']', bracketStart));
+
+        if (objectName.length() > 0) {
+          value = value[objectName];
+        }
+
+        if (value.is<JsonArray>()) {
+          value = value[indexStr.toInt()];
+        } else {
+          value = value[indexStr];
+        }
+      } else {
+        value = value[lastPart];
+      }
+    }
+
+    // Append the value to the CSV string if it exists
+    if (!value.isNull()) {
+      if (value.is<int>()) {
+        csvOutput += String(value.as<int>());
+      } else if (value.is<float>()) {
+        csvOutput += doubleToString(value.as<double>(), nr_decimals, true);
+      } else if (value.is<const char *>()) {
+        csvOutput += String(value.as<const char *>());
+      } else if (value.is<JsonArray>()) {
+        // If the value is an array, iterate over its elements
+        JsonArray array        = value.as<JsonArray>();
+        size_t    arraySize    = array.size(); // Get the total number of elements in the array
+        size_t    currentIndex = 0;            // Track the current index
+
+        for (JsonVariant element : array) {
+          if (element.is<int>()) {
+            csvOutput += String(element.as<int>());
+          } else if (element.is<float>()) {
+            csvOutput += doubleToString(element.as<double>(), nr_decimals, true);
+          } else if (element.is<const char *>()) {
+            csvOutput += String(element.as<const char *>());
+          } else {
+            csvOutput += F("unknown");
+          }
+
+          // Add a comma unless it's the last element
+          currentIndex++;
+
+          if (currentIndex < arraySize) {
+            csvOutput += ',';
+          }
+        }
+      } else {
+        csvOutput += F("unknown");
+      }
+    } else {
+      csvOutput += F("null"); // Indicate missing value
+      csvOutput += val;
+      csvOutput += ',';
+    }
+    csvOutput += ',';
+    #  endif // if FEATURE_JSON_PARSE
+  }
+
+  keyFile.close();
+
+  if (!csvOutput.isEmpty()) {                   // If there is nothing to show don't create an event
+    if (csvOutput.charAt(csvOutput.length() - 1) == ',') {
+      // Check if the last character is a comma
+      csvOutput.remove(csvOutput.length() - 1); // Remove the last character
+    }
+
+    // Log the results
+    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+      addLog(LOG_LEVEL_INFO, strformat(F("Successfully processed %d out of %d keys"), successfullyProcessedCount, keyCount));
+    }
+    eventQueue.addMove(strformat(F("JsonReply%s%s=%s"),
+                                 numJson != 0 ? "#" : "",
+                                 toStringNoZero(numJson).c_str(),
+                                 csvOutput.c_str()));
+  }
+}
+
 # endif // if FEATURE_JSON_EVENT
 
 void eventFromResponse(const String& host, const int& httpCode, const String& uri, ESPEasy_HTTPClient& http, const int& parseJson) {
@@ -269,188 +455,7 @@ void eventFromResponse(const String& host, const int& httpCode, const String& ur
 // ------------------------------------------------------------------------------------------- JSONevent Key processing
    # if FEATURE_JSON_EVENT
 
-void readAndProcessJsonKeys(DynamicJsonDocument *root, int numJson) {
-#  if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
-  int nr_decimals = ESPEASY_DOUBLE_NR_DECIMALS;
-#  else // ifdef FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
-  int nr_decimals = ESPEASY_FLOAT_NR_DECIMALS;
-#  endif // ifdef FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
 
-  // Open the `json.keys` file
-#  ifdef ESP8266
-  const String fileName = F("json.keys");
-#  else // ifdef ESP8266
-  const String fileName = F("/json.keys");
-#  endif // ifdef ESP8266
-
-  if (!fileExists(fileName)) {
-    if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-      addLogMove(LOG_LEVEL_ERROR, strformat(F("%s does not exist!"), fileName.c_str()));
-    }
-    return;
-  }
-  File keyFile = ESPEASY_FS.open(fileName, "r");
-
-  int keyCount                   = 0;
-  int successfullyProcessedCount = 0; // Counter for successfully processed keys
-  String csvOutput;                   // Collect values as a CSV string
-
-  while (keyFile.available()) {
-    String key = keyFile.readStringUntil('\n');
-    key.trim(); // Remove extra spaces or newlines
-
-    if (key.isEmpty()) {
-      continue;
-    }
-    int keyNumber = 0;
-
-    // Extract the number prefix (before the first dot)
-    if (key.indexOf(':') != -1) {
-      keyNumber = key.substring(0, key.indexOf(':')).toInt();
-      key       = key.substring(key.indexOf(':') + 1);
-    }
-
-    // Only process keys that match the filterNumber (or process all if no match)
-    if ((numJson > 0) && (keyNumber != numJson)) {
-      continue; // Skip this key if it doesn't match the filter number
-    }
-    keyCount++;
-
-    if (keyCount > MAX_KEYS) {
-      if (loglevelActiveFor(LOG_LEVEL_ERROR)) {
-        addLogMove(LOG_LEVEL_ERROR, strformat(F("Warning: More than %d keys in %s"), MAX_KEYS, fileName.c_str()));
-      }
-    }
-
-    #  if FEATURE_JSON_PARSE
-    const String val = getJsonValue(root, key, false); // Return arrays and objects as csv, _not_ JSON formatted
-
-    if (!val.isEmpty()) {
-      successfullyProcessedCount++;
-      csvOutput += val;
-      csvOutput += ',';
-    }
-    #  else // if FEATURE_JSON_PARSE
-    // Process the key and navigate the JSON
-    JsonVariant value = *root;
-    size_t start = 0, end;
-
-    while ((end = key.indexOf('.', start)) != (unsigned int)-1) {
-      String part = key.substring(start, end);
-      start = end + 1;
-
-      // Look for an array e.g., "result[0]" → object "result", index 0
-      int bracketStart = part.indexOf('[');
-
-      if (bracketStart != -1) {
-        String objectName = part.substring(0, bracketStart);
-        String indexStr   = part.substring(bracketStart + 1, part.indexOf(']', bracketStart));
-
-        if (objectName.length() > 0) {
-          value = value[objectName]; // Access the object
-        }
-
-        if (value.is<JsonArray>()) {
-          int index = indexStr.toInt();
-          value = value[index];
-        } else {
-          value = value[indexStr]; // fallback if not actually array
-        }
-      } else {
-        // Normal object access without array
-        value = value[part];
-      }
-
-      if (value.isNull()) {
-        break; // Key path is invalid
-      }
-    }
-
-    if (!value.isNull()) {
-      successfullyProcessedCount++;
-      String lastPart     = key.substring(start);
-      int    bracketStart = lastPart.indexOf('[');
-
-      if (bracketStart != -1) {
-        String objectName = lastPart.substring(0, bracketStart);
-        String indexStr   = lastPart.substring(bracketStart + 1, lastPart.indexOf(']', bracketStart));
-
-        if (objectName.length() > 0) {
-          value = value[objectName];
-        }
-
-        if (value.is<JsonArray>()) {
-          value = value[indexStr.toInt()];
-        } else {
-          value = value[indexStr];
-        }
-      } else {
-        value = value[lastPart];
-      }
-    }
-
-    // Append the value to the CSV string if it exists
-    if (!value.isNull()) {
-      if (value.is<int>()) {
-        csvOutput += String(value.as<int>());
-      } else if (value.is<float>()) {
-        csvOutput += doubleToString(value.as<double>(), nr_decimals, true);
-      } else if (value.is<const char *>()) {
-        csvOutput += String(value.as<const char *>());
-      } else if (value.is<JsonArray>()) {
-        // If the value is an array, iterate over its elements
-        JsonArray array        = value.as<JsonArray>();
-        size_t    arraySize    = array.size(); // Get the total number of elements in the array
-        size_t    currentIndex = 0;            // Track the current index
-
-        for (JsonVariant element : array) {
-          if (element.is<int>()) {
-            csvOutput += String(element.as<int>());
-          } else if (element.is<float>()) {
-            csvOutput += doubleToString(element.as<double>(), nr_decimals, true);
-          } else if (element.is<const char *>()) {
-            csvOutput += String(element.as<const char *>());
-          } else {
-            csvOutput += F("unknown");
-          }
-
-          // Add a comma unless it's the last element
-          currentIndex++;
-
-          if (currentIndex < arraySize) {
-            csvOutput += ',';
-          }
-        }
-      } else {
-        csvOutput += F("unknown");
-      }
-    } else {
-      csvOutput += F("null"); // Indicate missing value
-      csvOutput += val;
-      csvOutput += ',';
-    }
-    csvOutput += ',';
-    #  endif // if FEATURE_JSON_PARSE
-  }
-
-  keyFile.close();
-
-  if (!csvOutput.isEmpty()) {                   // If there is nothing to show don't create an event
-    if (csvOutput.charAt(csvOutput.length() - 1) == ',') {
-      // Check if the last character is a comma
-      csvOutput.remove(csvOutput.length() - 1); // Remove the last character
-    }
-
-    // Log the results
-    if (loglevelActiveFor(LOG_LEVEL_INFO)) {
-      addLog(LOG_LEVEL_INFO, strformat(F("Successfully processed %d out of %d keys"), successfullyProcessedCount, keyCount));
-    }
-    eventQueue.addMove(strformat(F("JsonReply%s%s=%s"),
-                                 numJson != 0 ? "#" : "",
-                                 toStringNoZero(numJson).c_str(),
-                                 csvOutput.c_str()));
-  }
-}
 
 // ------------------------------------------------------------------------------------------- JSONevent Helper
 UriParseResult parseUriPath(const String& path) {

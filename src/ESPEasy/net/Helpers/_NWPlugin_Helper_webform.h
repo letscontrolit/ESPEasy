@@ -19,19 +19,15 @@ String getNetworkParameterName(networkDriverIndex_t           NetworkDriverIndex
                                bool                           displayName,
                                bool                         & isAlternative);
 
-String getNetworkParameterInternalName(networkDriverIndex_t           NetworkDriverIndex,
-                                       NetworkSettingsStruct::VarType parameterIdx);
 
-String getNetworkParameterDisplayName(networkDriverIndex_t           NetworkDriverIndex,
-                                      NetworkSettingsStruct::VarType parameterIdx,
-                                      bool                         & isAlternative);
 
 void addNetworkEnabledForm(networkIndex_t networkindex);
 
+/*
 void addNetworkParameterForm(const NetworkSettingsStruct  & NetworkSettings,
                              networkIndex_t                 networkindex,
                              NetworkSettingsStruct::VarType varType);
-
+*/
 void saveNetworkParameterForm(NetworkSettingsStruct        & NetworkSettings,
                               networkIndex_t                 networkindex,
                               NetworkSettingsStruct::VarType varType);

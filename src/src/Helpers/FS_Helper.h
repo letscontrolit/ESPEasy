@@ -4,8 +4,6 @@
 
 #include "../../ESPEasy_common.h"
 
-// Macro used to make file system operations a bit more readable.
-#define SPIFFS_CHECK(result, fname) if (!(result)) { return(FileError(__LINE__, fname)); }
 
 #ifdef USE_LITTLEFS
   #ifdef ESP32
