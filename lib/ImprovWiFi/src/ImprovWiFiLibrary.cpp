@@ -253,11 +253,7 @@ void ImprovWiFi::getAvailableWifiNetworks()
   {
     #ifdef ESP32
     const bool openWiFi = WiFi.encryptionType(id) == WIFI_AUTH_OPEN;
-//    auto rssi = std::to_string(static_cast<int>(WiFi.RSSI(id)));
-    std::stringstream stream;
-    stream << static_cast<int>(WiFi.RSSI(id));
-    std::string rssi = stream.str();
-
+    auto rssi = std::to_string(static_cast<int>(WiFi.RSSI(id)));
     #endif 
     #ifdef ESP8266
     const bool openWiFi = WiFi.encryptionType(id) == ENC_TYPE_NONE;
