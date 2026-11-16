@@ -95,6 +95,7 @@
 # define PLUGIN_VALUENAME1_092 "Value"
 
 # define P092_MQTT_DEVICECLASS PCONFIG(3) // binary_sensor device class, 0 = not set yet: 'running'
+# define P092_MQTT_DEVICECLASS_RUNNING 23 // Index of 'running' in mqtt_binary_deviceclass_names, fixed (stored in task settings)
 
 boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
 {
@@ -307,7 +308,7 @@ boolean Plugin_092(uint8_t function, struct EventStruct *event, String& string)
                                               F("devcls"),
                                               P092_MQTT_DEVICECLASS > 0
                                               ? P092_MQTT_DEVICECLASS
-                                              : MQTT_binary_deviceClassIndex(F("running")));
+                                              : P092_MQTT_DEVICECLASS_RUNNING);
       # endif // if FEATURE_MQTT_DISCOVER && FEATURE_MQTT_DEVICECLASS
 
       UserVar.setFloat(event->TaskIndex, 0, NAN);
