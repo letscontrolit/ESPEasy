@@ -2,6 +2,7 @@
 
 #if defined(ESP8266)
   # include <ESP8266WiFi.h>
+  # include <string>
 #endif
 #if defined(ESP32)
   # include <WiFi.h>
@@ -256,9 +257,11 @@ void ImprovWiFi::getAvailableWifiNetworks()
     #ifdef ESP8266
     const bool openWiFi = WiFi.encryptionType(id) == ENC_TYPE_NONE;
     #endif 
+    std::string rssi;
+    rssi += static_cast<int>(WiFi.RSSI(id));
     const std::vector<std::string> wifinetworks = {
       WiFi.SSID(id).c_str(),
-      std::to_string(static_cast<int>(WiFi.RSSI(id))),
+      rssi,
       (openWiFi ? "NO" : "YES")
     };
 
