@@ -442,6 +442,8 @@ Based on this data sheet `Sensirion Differential Pressure Datasheet SDP8xx <http
 
 .. note:: The checksum available from the sensor measurements is ignored!
 
+.. note:: 2026-11-16: Updated to use the new ``%c_fr2c%`` function to convert from 2's complement to signed value, as the previous method was quite hard to comprehend.
+
 The plugin should be configured with these settings:
 
 * **I2C Address (Hex)**: ``0x25`` (or ``0x26`` when the model number is SDP-8x1)
@@ -464,20 +466,18 @@ The plugin should be configured with these settings:
 
 * **I2C Commands 1**:
 
-``get.b.9;eval;let.tmp.0x{substring:8:12:%h%};if.{and:%v_tmp%:0x8000}.1;let.tmp.%v_tmp%-0x10000;calc.%v_tmp%/0x{substring:14:18:%h%};value.1;let.prs.0x{substring:2:6:%h%};if.{and:%v_prs%:0x8000}.1;let.prs.%v_prs%-0x10000;calc.%v_prs%/0x{substring:14:18:%h%};value.2``
+``get.b.9;eval;let.tmp.0x{substring:8:12:%h%};let.tmp.%c_fr2c%(%v_tmp%,16);calc.%v_tmp%/0x{substring:14:18:%h%};value.1;let.prs.0x{substring:2:6:%h%};let.prs.%c_fr2c%(%v_prs%,16);calc.%v_prs%/0x{substring:14:18:%h%};value.2``
 
 Command sequence explanation:
 
 * ``get.b.9``: Read 9 bytes from the sensor.
 * ``eval``: Load the value to be used.
 * ``let.tmp.0x{substring:8:12:%h%}``: Assign the raw temperature to variable ``tmp``.
-* ``if.{and:%v_tmp%:0x8000}.1``: Check if positive, if so, skip next 1 command.
-* ``let.tmp.%v_tmp%-0x10000``: Subtract 65536 to get the correct negative value.
+* ``let.tmp.%c_fr2c%(%v_tmp%,16)``: Convert from 2's complement value to get the correct (negative) value.
 * ``calc.%v_tmp%/0x{substring:14:18:%h%}``: Divide the raw temperature by the scale factor.
 * ``value.1``: Store the temperature in Value 1.
 * ``let.prs.0x{substring:2:6:%h%}``: Assign the raw pressure to variable ``prs``.
-* ``if.{and:%v_prs%:0x8000}.1``: Check if positive, if so, skip next 1 command.
-* ``let.prs.%v_prs%-0x10000``: Subtract 65536 to get the correct negative value.
+* ``let.prs.%c_fr2c%(%v_prs%,16)``: Convert from 2's complement value to get the correct (negative) value.
 * ``calc.%v_prs%/0x{substring:14:18:%h%}``: Divide the raw pressure by the scale factor.
 * ``value.2``: Store the pressure in Value 2.
 
@@ -488,7 +488,7 @@ Instead of having the sensor doing continuous measurements, and returning the av
 
 In this case, the **I2C Init Commands** and **I2C Exit Commands** fields must be made empty, and **I2C Commands 1** should be set to:
 
-``put.b.2.0x36.0x24;delay.50;get.b.9;eval;let.tmp.0x{substring:8:12:%h%};if.{and:%v_tmp%:0x8000}.1;let.tmp.%v_tmp%-0x10000;calc.%v_tmp%/0x{substring:14:18:%h%};value.1;let.prs.0x{substring:2:6:%h%};if.{and:%v_prs%:0x8000}.1;let.prs.%v_prs%-0x10000;calc.%v_prs%/0x{substring:14:18:%h%};value.2``
+``put.b.2.0x36.0x24;delay.50;get.b.9;eval;let.tmp.0x{substring:8:12:%h%};let.tmp.%c_fr2c%(%v_tmp%,16);calc.%v_tmp%/0x{substring:14:18:%h%};value.1;let.prs.0x{substring:2:6:%h%};let.prs.%c_fr2c%(%v_prs%,16);calc.%v_prs%/0x{substring:14:18:%h%};value.2``
 
 This command sequence is nearly the same as with the Continuous measurement, except there are a few commands added *before* the values are read.
 
