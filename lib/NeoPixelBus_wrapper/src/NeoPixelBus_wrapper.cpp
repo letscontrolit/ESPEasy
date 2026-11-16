@@ -1,5 +1,3 @@
-#ifndef _NEOPIXELBUS_WRAPPER_CPP
-#define _NEOPIXELBUS_WRAPPER_CPP
 #include "./NeoPixelBus_wrapper.h"
 
 NeoPixelBus_wrapper::NeoPixelBus_wrapper(uint16_t     _maxPixels,
@@ -27,6 +25,12 @@ NeoPixelBus_wrapper::NeoPixelBus_wrapper(uint16_t     _maxPixels,
     # ifdef ESP32
     neopixels_grb = new (std::nothrow) NEOPIXEL_LIB<NeoGrbFeature, METHOD>(_maxPixels, _gpioPin);
     # endif // ifdef ESP32
+  } else if (NEO_RGB == (_stripType & NEO_RGB)) { // NOT supported on ESP8266 for size reasons
+    # ifdef ESP32
+    neopixels_rgb = new (std::nothrow) NEOPIXEL_LIB<NeoRgbFeature, METHOD>(_maxPixels, _gpioPin);
+    # endif // ifdef ESP32
+  } else {
+    // Unsupported strip type...
   }
   #endif // ifndef NEOPIXEL_WRAPPER_USE_ADAFRUIT
 }
@@ -37,16 +41,26 @@ NeoPixelBus_wrapper::~NeoPixelBus_wrapper() {
   neopixels_grb = nullptr;
   delete neopixels_grbw;
   neopixels_grbw = nullptr;
+  # ifdef ESP32
+  delete neopixels_rgb;
+  neopixels_rgb = nullptr;
+  # endif // ifdef ESP32
   #endif // ifndef NEOPIXEL_WRAPPER_USE_ADAFRUIT
 }
 
 #ifndef NEOPIXEL_WRAPPER_USE_ADAFRUIT
+
 void NeoPixelBus_wrapper::begin() {
   if (nullptr != neopixels_grb) {
     neopixels_grb->Begin();
   } else
   if (nullptr != neopixels_grbw) {
     neopixels_grbw->Begin();
+  # ifdef ESP32
+  } else
+  if (nullptr != neopixels_rgb) {
+    neopixels_rgb->Begin();
+  # endif // ifdef ESP32
   }
 }
 
@@ -56,6 +70,11 @@ void NeoPixelBus_wrapper::show(void) {
   } else
   if (nullptr != neopixels_grbw) {
     neopixels_grbw->Show();
+  # ifdef ESP32
+  } else
+  if (nullptr != neopixels_rgb) {
+    neopixels_rgb->Show();
+  # endif // ifdef ESP32
   }
 }
 
@@ -65,6 +84,11 @@ void NeoPixelBus_wrapper::setBrightness(uint8_t b) {
   } else
   if (nullptr != neopixels_grbw) {
     neopixels_grbw->SetBrightness(b);
+  # ifdef ESP32
+  } else
+  if (nullptr != neopixels_rgb) {
+    neopixels_rgb->SetBrightness(b);
+  # endif // ifdef ESP32
   }
 }
 
@@ -77,6 +101,11 @@ void NeoPixelBus_wrapper::setPixelColor(uint16_t pxl,
   } else
   if (nullptr != neopixels_grbw) {
     neopixels_grbw->SetPixelColor(pxl, RgbwColor(r, g, b));
+  # ifdef ESP32
+  } else
+  if (nullptr != neopixels_rgb) {
+    neopixels_rgb->SetPixelColor(pxl, RgbColor(r, g, b));
+  # endif // ifdef ESP32
   }
 }
 
@@ -90,6 +119,11 @@ void NeoPixelBus_wrapper::setPixelColor(uint16_t pxl,
   } else
   if (nullptr != neopixels_grbw) {
     neopixels_grbw->SetPixelColor(pxl, RgbwColor(r, g, b, w));
+  # ifdef ESP32
+  } else
+  if (nullptr != neopixels_rgb) {
+    neopixels_rgb->SetPixelColor(pxl, RgbColor(r, g, b));
+  # endif // ifdef ESP32
   }
 }
 
@@ -100,6 +134,11 @@ void NeoPixelBus_wrapper::setPixelColor(uint16_t pxl,
   } else
   if (nullptr != neopixels_grbw) {
     neopixels_grbw->SetPixelColor(pxl, RgbwColor((c >> 16) & 0xFF, (c >> 8) & 0xFF, c & 0xFF, (c >> 24) & 0xFF));
+  # ifdef ESP32
+  } else
+  if (nullptr != neopixels_rgb) {
+    neopixels_rgb->SetPixelColor(pxl, RgbColor((c >> 16) & 0xFF, (c >> 8) & 0xFF, c & 0xFF));
+  # endif // ifdef ESP32
   }
 }
 
@@ -111,6 +150,12 @@ uint32_t NeoPixelBus_wrapper::getPixelColor(uint16_t n) {
   if (nullptr != neopixels_grbw) {
     const RgbwColor color = neopixels_grbw->GetPixelColor(n);
     return Color(color.R, color.G, color.B, color.W);
+  # ifdef ESP32
+  } else
+  if (nullptr != neopixels_rgb) {
+    const RgbColor color = neopixels_rgb->GetPixelColor(n);
+    return Color(color.R, color.G, color.B);
+  # endif // ifdef ESP32
   }
 
   return 0u; // Fall-through value...
@@ -120,12 +165,16 @@ void NeoPixelBus_wrapper::fill(uint32_t c,
                                uint16_t first,
                                uint16_t count) {
   if (nullptr != neopixels_grb) {
-    neopixels_grb->ClearTo(RgbColor((c >> 16) & 0xFF, (c >> 8) & 0xFF, c & 0xFF), first, first + count); // Unfold the Color(r,g,b,w) static
+    neopixels_grb->ClearTo(RgbColor((c >> 16) & 0xFF, (c >> 8) & 0xFF, c & 0xFF), first, first + count); // Unfold the Color(r,g,b,w)
   } else
   if (nullptr != neopixels_grbw) {
     neopixels_grbw->ClearTo(RgbwColor((c >> 16) & 0xFF, (c >> 8) & 0xFF, c & 0xFF, (c >> 24) & 0xFF), first, first + count);
+  # ifdef ESP32
+  } else
+  if (nullptr != neopixels_rgb) {
+    neopixels_rgb->ClearTo(RgbColor((c >> 16) & 0xFF, (c >> 8) & 0xFF, c & 0xFF), first, first + count); // Unfold the Color(r,g,b,w)
+  # endif // ifdef ESP32
   }
 }
 
 #endif // ifndef NEOPIXEL_WRAPPER_USE_ADAFRUIT
-#endif // ifndef _NEOPIXELBUS_WRAPPER_CPP

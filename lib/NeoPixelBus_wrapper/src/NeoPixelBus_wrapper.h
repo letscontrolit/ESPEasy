@@ -1,5 +1,4 @@
-#ifndef _HELPERS_NEOPIXELBUS_WRAPPER_H
-#define _HELPERS_NEOPIXELBUS_WRAPPER_H
+#pragma once
 
 #ifdef ESP8266
 # ifndef NEOPIXEL_WRAPPER_USE_ADAFRUIT
@@ -21,6 +20,7 @@
 
 // Some stuff from Adafruit_NeoPixel.h used in plugins
 # ifndef NEO_GRB
+#  define NEO_RGB ((0 << 6) | (0 << 4) | (1 << 2) | (2))  ///< Transmit as R,G,B
 #  define NEO_GRB ((1 << 6) | (1 << 4) | (0 << 2) | (2))  ///< Transmit as G,R,B
 #  define NEO_GRBW ((3 << 6) | (1 << 4) | (0 << 2) | (2)) ///< Transmit as G,R,B,W
 #  define NEO_KHZ800 0x0000                               ///< 800 KHz data transmission
@@ -65,6 +65,7 @@ public:
   void     setPixelColor(uint16_t pxl,
                          uint32_t c);
   uint32_t getPixelColor(uint16_t n);
+
   uint16_t numPixels(void) const {
     return numLEDs;
   }
@@ -84,8 +85,10 @@ private:
 
   NEOPIXEL_LIB<NeoGrbFeature, METHOD>  *neopixels_grb  = nullptr;
   NEOPIXEL_LIB<NeoGrbwFeature, METHOD> *neopixels_grbw = nullptr;
-  uint16_t                              numLEDs        = 0;
+  # ifdef ESP32
+  NEOPIXEL_LIB<NeoRgbFeature, METHOD> *neopixels_rgb = nullptr;
+  # endif // ifdef ESP32
+  uint16_t numLEDs = 0;
   #endif // ifndef NEOPIXEL_WRAPPER_USE_ADAFRUIT
-};
 
-#endif // ifndef _HELPERS_NEOPIXELBUS_WRAPPER_H
+};
