@@ -261,9 +261,15 @@ void ImprovWiFi::getAvailableWifiNetworks()
     #endif 
     #ifdef ESP8266
     const bool openWiFi = WiFi.encryptionType(id) == ENC_TYPE_NONE;
+
+    // std::to_string appears not to be available for the old GCC used for ESP8266
+    #ifdef OLD_GCC_NO_STD_TO_STRING
     std::stringstream stream;
     stream << static_cast<int>(WiFi.RSSI(id));
     std::string rssi = stream.str();
+    #else
+    auto rssi = std::to_string(static_cast<int>(WiFi.RSSI(id)));
+    #endif
     #endif 
     const std::vector<std::string> wifinetworks = {
       WiFi.SSID(id).c_str(),
