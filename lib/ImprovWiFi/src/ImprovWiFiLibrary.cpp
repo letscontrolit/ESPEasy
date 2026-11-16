@@ -2,12 +2,12 @@
 
 #if defined(ESP8266)
   # include <ESP8266WiFi.h>
-  # include <string>
 #endif
 #if defined(ESP32)
   # include <WiFi.h>
 #endif
-
+#include <string>
+#include <sstream>
 
 bool ImprovWiFi::handleSerial()
 {
@@ -253,12 +253,18 @@ void ImprovWiFi::getAvailableWifiNetworks()
   {
     #ifdef ESP32
     const bool openWiFi = WiFi.encryptionType(id) == WIFI_AUTH_OPEN;
+//    auto rssi = std::to_string(static_cast<int>(WiFi.RSSI(id)));
+    std::stringstream stream;
+    stream << static_cast<int>(WiFi.RSSI(id));
+    std::string rssi = stream.str();
+
     #endif 
     #ifdef ESP8266
     const bool openWiFi = WiFi.encryptionType(id) == ENC_TYPE_NONE;
+    std::stringstream stream;
+    stream << static_cast<int>(WiFi.RSSI(id));
+    std::string rssi = stream.str();
     #endif 
-    std::string rssi;
-    rssi += static_cast<int>(WiFi.RSSI(id));
     const std::vector<std::string> wifinetworks = {
       WiFi.SSID(id).c_str(),
       rssi,
