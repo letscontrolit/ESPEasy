@@ -8,6 +8,8 @@
 
 
 /** History:
+ * 2026-11-07 tonhuisman: Replace library for ST7796s 320x480 displays, use existing ST7796s_kbv as alternative initialization
+ *                        Add setting for inverted display colors (inverted display), similar to P095
  * 2025-08-29 tonhuisman: Fix GPIO pin display on Devices page, no default GPIO pins for ESP32
  * 2025-08-12 tonhuisman: Enable use of secondary SPI bus
  * 2025-06-11 tonhuisman: Add support for ST7789v3/ST7735 display with 170x320 resolution
@@ -164,7 +166,10 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
           ST77xx_type_toString(ST77xx_type_e::ST7789vw2_135x240),
           ST77xx_type_toString(ST77xx_type_e::ST7789vw3_135x240),
           # endif // if P116_EXTRA_ST7789
-          ST77xx_type_toString(ST77xx_type_e::ST7796s_320x480)
+          ST77xx_type_toString(ST77xx_type_e::ST7796s_320x480),
+          # if P116_EXTRA_ST7796
+          ST77xx_type_toString(ST77xx_type_e::ST7796s2_320x480),
+          # endif // if P116_EXTRA_ST7796
         };
         const int optionValues4[] = {
           static_cast<int>(ST77xx_type_e::ST7735s_128x128),
@@ -187,7 +192,10 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
           static_cast<int>(ST77xx_type_e::ST7789vw2_135x240),
           static_cast<int>(ST77xx_type_e::ST7789vw3_135x240),
           # endif // if P116_EXTRA_ST7789
-          static_cast<int>(ST77xx_type_e::ST7796s_320x480)
+          static_cast<int>(ST77xx_type_e::ST7796s_320x480),
+          # if P116_EXTRA_ST7796
+          static_cast<int>(ST77xx_type_e::ST7796s2_320x480),
+          # endif // if P116_EXTRA_ST7796
         };
         constexpr int optCount4 = NR_ELEMENTS(optionValues4);
         const FormSelectorOptions selector(optCount4, options4, optionValues4);
@@ -195,6 +203,8 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
                                  F("type"),
                                  P116_CONFIG_FLAG_GET_TYPE);
       }
+
+      addFormCheckBox(F("Invert display"), F("invdsp"), bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_INVERTED));
 
       addFormSubHeader(F("Layout"));
 
@@ -296,6 +306,7 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
       set4BitToUL(lSettings, P116_CONFIG_FLAG_CMD_TRIGGER, getFormItemInt(F("commandtrigger")));  // Bit 20..23 Command trigger
 
       bitWrite(lSettings, P116_CONFIG_FLAG_BACK_FILL, !isFormItemChecked(F("backfill")));         // Bit 28 Back fill text (inv)
+      bitWrite(lSettings, P116_CONFIG_FLAG_INVERTED,  isFormItemChecked(F("invdsp")));            // Bit 31 Invert display colors
       P116_CONFIG_FLAGS = lSettings;
 
       String   color   = webArg(F("foregroundcolor"));
@@ -355,7 +366,8 @@ boolean Plugin_116(uint8_t function, struct EventStruct *event, String& string)
                                                                                               P116_CONFIG_FLAG_GET_CMD_TRIGGER)),
                                                                P116_CONFIG_GET_COLOR_FOREGROUND,
                                                                P116_CONFIG_GET_COLOR_BACKGROUND,
-                                                               bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_BACK_FILL) == 0
+                                                               bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_BACK_FILL) == 0,
+                                                               bitRead(P116_CONFIG_FLAGS, P116_CONFIG_FLAG_INVERTED) == 0
                                                                # if ADAGFX_FONTS_INCLUDED
                                                                ,
                                                                P116_CONFIG_DEFAULT_FONT
