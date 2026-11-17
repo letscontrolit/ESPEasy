@@ -12,18 +12,23 @@ struct EventQueueStruct {
   EventQueueStruct() = default;
 
   void add(const String& event,
-           bool          deduplicate = false);
+           bool          deduplicate = false, 
+           bool          toFront = false);
 
   void add(const __FlashStringHelper *event,
-           bool                       deduplicate = false);
+           bool                       deduplicate = false, 
+           bool                       toFront = false);
 
-  void addDeDup(const String& event);
+  void addDeDup(String&& event, bool toFront = false);
 
-  void addDeDup(const __FlashStringHelper *event);
+  void addDeDup(const String& event, bool toFront = false);
+
+  void addDeDup(const __FlashStringHelper *event, bool toFront = false);
 
 
   void addMove(String&& event,
-               bool     deduplicate = false);
+               bool     deduplicate = false, 
+               bool     toFront = false);
 
   // Add event formatted as Taskname#varName=eventvalue
   void add(taskIndex_t   TaskIndex,

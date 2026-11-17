@@ -30,7 +30,7 @@ public:
     - STA-only, AP as fallback
     - STA+AP  (e.g. to allow others to use ESP as gateway, ESP32-only)
     - AP-only
-    
+
   */
   enum class ESPEasyWiFi_mode_e {
     Off,
@@ -57,6 +57,9 @@ public:
 private:
 
   void begin();
+
+  void loop_internal();
+
 
 public:
 
@@ -117,18 +120,18 @@ private:
   LongTermTimer _last_state_change;
   LongTermTimer _state_timeout;
   LongTermTimer _last_seen_connected;
+  LongTermTimer _last_TX_pwr_update;
 
   uint8_t _scan_channel{};
+  bool _scanCompleted{};
 
   //  LongTermTimer _AP_start_timestamp;
 
   uint32_t _connect_attempt = 0;
-  
+  bool _connectAttemptStarted{};
 
 
   //  uint32_t _nrReconnects = 0;
-
-  bool _callbackError = false;
 
   // Special modes for initial setup or re-configuration of a node via serial port/IMPROV
   //  bool _improvActive = false;
@@ -141,6 +144,8 @@ private:
   #else
   bool _disabledAtBoot = false;
   #endif
+
+  bool _inLoop = false;
 
   //  bool _passiveScan       = false;
   //  bool _includeHiddenSSID = false;

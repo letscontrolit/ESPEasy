@@ -18,7 +18,6 @@
 #  include "../Globals/NetworkState.h"
 #  include "../Globals/WiFi_AP_Candidates.h"
 
-
 namespace ESPEasy {
 namespace net {
 namespace wifi {
@@ -29,6 +28,49 @@ static WiFiDisconnectReason _wifi_disconnect_reason = WiFiDisconnectReason::WIFI
 static uint8_t _enc_type{};
 
 static bool _ESPEasyWiFi_STA_EventHandler_initialized{};
+
+namespace {
+
+enum class DeferredEventType : uint8_t {
+  Connected,
+  Disconnected,
+  GotIP,
+  AuthModeChanged
+};
+
+struct DeferredEvent {
+  DeferredEvent() = default;
+  DeferredEvent(DeferredEventType t, WiFiDisconnectReason reason, uint8_t mode)
+    : type(t), disconnectReason(reason), authMode(mode) {}
+  DeferredEventType     type{};
+  WiFiDisconnectReason  disconnectReason{ WiFiDisconnectReason::WIFI_DISCONNECT_REASON_UNSPECIFIED };
+  uint8_t               authMode{};
+};
+
+static constexpr uint8_t DEFERRED_EVENT_QUEUE_SIZE = 16;
+static DeferredEvent deferredEvents[DEFERRED_EVENT_QUEUE_SIZE]{};
+// WiFi callbacks are the single producer; processEvents() is the loop-task consumer.
+static ESPEASY_VOLATILE(uint8_t) deferredEventRead{};
+static ESPEASY_VOLATILE(uint8_t) deferredEventWrite{};
+static ESPEASY_VOLATILE(bool) deferredEventOverflow{};
+
+void queueEvent(DeferredEventType type,
+                WiFiDisconnectReason disconnectReason = WiFiDisconnectReason::WIFI_DISCONNECT_REASON_UNSPECIFIED,
+                uint8_t authMode = 0)
+{
+  const uint8_t write = deferredEventWrite;
+  const uint8_t nextWrite = (write + 1) % DEFERRED_EVENT_QUEUE_SIZE;
+
+  if (nextWrite == deferredEventRead) {
+    deferredEventOverflow = true;
+    return;
+  }
+
+  deferredEvents[write] = { type, disconnectReason, authMode };
+  deferredEventWrite = nextWrite;
+}
+
+} // namespace
 
 ESPEasyWiFi_STA_EventHandler::ESPEasyWiFi_STA_EventHandler(networkIndex_t networkIndex)
 {
@@ -59,6 +101,44 @@ bool ESPEasyWiFi_STA_EventHandler::initialized()                                
 
 NWPluginData_static_runtime* ESPEasyWiFi_STA_EventHandler::getNWPluginData_static_runtime() { return &stats_and_cache; }
 
+void ESPEasyWiFi_STA_EventHandler::processEvents()
+{
+  for (;;) {
+    const uint8_t read = deferredEventRead;
+
+    if (read == deferredEventWrite) { break; }
+
+    const DeferredEvent event = deferredEvents[read];
+    deferredEventRead = (read + 1) % DEFERRED_EVENT_QUEUE_SIZE;
+
+    switch (event.type)
+    {
+      case DeferredEventType::Connected:
+        stats_and_cache.mark_connected();
+        _enc_type = WiFi_AP_Candidates.getCurrent().enc_type;
+        break;
+      case DeferredEventType::Disconnected:
+        stats_and_cache.mark_disconnected();
+        stats_and_cache.mark_lost_IP(); // ESP8266 doesn't have a separate event for lost IP
+        _wifi_disconnect_reason = event.disconnectReason;
+        break;
+      case DeferredEventType::GotIP:
+        stats_and_cache.mark_got_IP();
+        break;
+      case DeferredEventType::AuthModeChanged:
+        _enc_type = event.authMode;
+        break;
+    }
+  }
+
+  static bool overflowLogged = false;
+
+  if (deferredEventOverflow && !overflowLogged) {
+    addLog(LOG_LEVEL_ERROR, F("WiFi event queue overflow"));
+    overflowLogged = true;
+  }
+}
+
 WiFiDisconnectReason         ESPEasyWiFi_STA_EventHandler::getLastDisconnectReason() const  { return _wifi_disconnect_reason; }
 
 uint8_t                      ESPEasyWiFi_STA_EventHandler::getAuthMode() const              { return _enc_type; }
@@ -73,27 +153,16 @@ const __FlashStringHelper *  ESPEasyWiFi_STA_EventHandler::getWiFi_encryptionTyp
 // Make sure not to call anything in these functions that result in delay() or yield()
 // ********************************************************************************
 void ESPEasyWiFi_STA_EventHandler::onConnected(const WiFiEventStationModeConnected& event) {
-  stats_and_cache.mark_connected();
-
-  _enc_type = WiFi_AP_Candidates.getCurrent().enc_type;
+  queueEvent(DeferredEventType::Connected);
 }
 
 void ESPEasyWiFi_STA_EventHandler::onDisconnect(const WiFiEventStationModeDisconnected& event) {
-  stats_and_cache.mark_disconnected();
-  stats_and_cache.mark_lost_IP(); // ESP8266 doesn't have a separate event for lost IP
-  _wifi_disconnect_reason = event.reason;
-
-  if (WiFi.status() == WL_CONNECTED) {
-    // See https://github.com/esp8266/Arduino/issues/5912
-    WiFi.persistent(false);
-    WiFi.disconnect(true);
-    delay(0);
-  }
+  queueEvent(DeferredEventType::Disconnected, event.reason);
 }
 
 void ESPEasyWiFi_STA_EventHandler::onGotIP(const WiFiEventStationModeGotIP& event)
 {
-  stats_and_cache.mark_got_IP();
+  queueEvent(DeferredEventType::GotIP);
 
   // WiFiEventData.markGotIP(event.ip, event.mask, event.gw);
 }
@@ -111,7 +180,9 @@ void ESPEasyWiFi_STA_EventHandler::onDisconnectedAPmode(const WiFiEventSoftAPMod
 }
 
 void ESPEasyWiFi_STA_EventHandler::onStationModeAuthModeChanged(const WiFiEventStationModeAuthModeChanged& event) {
-  _enc_type = event.newMode;
+  queueEvent(DeferredEventType::AuthModeChanged,
+             WiFiDisconnectReason::WIFI_DISCONNECT_REASON_UNSPECIFIED,
+             event.newMode);
 
   //  WiFiEventData.setAuthMode(event.newMode);
 }
