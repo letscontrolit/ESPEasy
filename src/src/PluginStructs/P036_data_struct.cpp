@@ -76,7 +76,9 @@ String P036_LineContent::saveDisplayLines(taskIndex_t taskIndex) {
         taskIndex,
         reinterpret_cast<uint8_t *>(tmp),
         sizeof(tDisplayLines_storage_full));
-      delete tmp;
+//      delete tmp;
+      tmp->~tDisplayLines_storage_full();
+      free(ptr);
       return error;
     }
   }

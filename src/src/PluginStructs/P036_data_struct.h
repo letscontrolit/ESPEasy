@@ -315,6 +315,7 @@ struct tDisplayLines_storage {
 };
 
 struct tDisplayLines_storage_full {
+  ~tDisplayLines_storage_full() = default;
   tDisplayLines_storage lines[P36_Nlines]{};
 };
 
