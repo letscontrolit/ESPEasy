@@ -20,6 +20,7 @@ The UVR61-3 three-circuit controllers has various thermostat, differential tempe
 * The DL bus runs at 12 volts.
 * The data frame consist of 34 bytes (excluding sync and CRC).
 * The data are transmitted @ 488Hz, therefore the transmission of one data set takes about 0.8 seconds.
+* The data frames are sent back-to-back, without a pause before the SYNC (observed on firmware up to v8.2). This is detected automatically, see the introduction.
 
 .. image:: P092_UVR61-3.png
 

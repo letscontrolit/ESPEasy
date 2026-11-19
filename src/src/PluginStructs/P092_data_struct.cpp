@@ -74,11 +74,38 @@ void DLBus::attachDLBusInterrupt(void)
 
 void DLBus::StartReceiving(void)
 {
+  ReceivingStart = millis();
   ISR_noInterrupts(); // make sure we don't get interrupted before we are ready
   ISR_PulseCount      = 0;
   ISR_Receiving       = (ISR_PtrChangeBitStream != nullptr);
   ISR_AllBitsReceived = false;
   ISR_interrupts(); // interrupts allowed now, next instruction WILL be executed
+}
+
+boolean DLBus::ReceivingTimedOut(void)
+{
+  // twice the time for ISR_PulseNumber double width pulses, plus 2 seconds to wait for the sync pause
+  const long timeout = static_cast<long>(ISR_PulseNumber) * ISR_MaxDoublePulseWidth / 500 + 2000;
+
+  if (timePassedSince(ReceivingStart) < timeout) {
+    return false;
+  }
+  ISR_noInterrupts();
+  const boolean noSyncPauseFound = !ISR_NoSyncPause && (ISR_PulseCount == 1); // pulses received, but never the sync pause
+  ISR_Receiving = false;
+  ISR_interrupts();
+
+  if (noSyncPauseFound) {
+    // the device sends its frames back-to-back, so record from any pulse from now on, Processing() finds the SYNC
+    ISR_NoSyncPause = true;
+# ifndef P092_LIMIT_BUILD_SIZE
+    AddToInfoLog(F("No pause between the data frames, receiving without sync pause"));
+# endif // ifndef P092_LIMIT_BUILD_SIZE
+  }
+  else {
+    AddToErrorLog(F("Error: Receiving timed out!"));
+  }
+  return true;
 }
 
 void IRAM_ATTR DLBus::ISR(void)
@@ -121,7 +148,7 @@ void IRAM_ATTR DLBus::ISR_PinChanged(void)
       val |= DLbus_FlagSingleWidth;                // single pulse width
     }
 
-    if (ISR_PulseCount < 2) {
+    if ((ISR_PulseCount < 2) && !ISR_NoSyncPause) {
       // check if sync is received
       if (val & DLbus_FlagLongerThanTwiceDoubleWidth) {
         // sync received
@@ -155,7 +182,7 @@ boolean DLBus::CheckTimings(void) {
 
   ISR_PulseCount = 0;
 
-  for (i = 0; i <= ISR_PulseNumber; ++i) {
+  for (i = 0; i < ISR_PulseNumber; ++i) {
     // store DLbus_ChangeBitStream into ByteStream
     rawval = *(ISR_PtrChangeBitStream + i);
 
@@ -187,7 +214,7 @@ boolean DLBus::CheckTimings(void) {
         WrongTimeCnt++;
 
         if (WrongTimeCnt >= 5) {
-          return false;
+          break; // too many wrong timings
         }
       }
     }
@@ -216,7 +243,7 @@ boolean DLBus::CheckTimings(void) {
       AddToInfoLog(log);
 
       for (i = 0; i < WrongTimeCnt; ++i) {
-        log  = i + 1;
+        log  = String(i + 1);
         log += F(": PulseCount:");
         log += WrongTimingArray[i][1];
         log += F(": BitCount:");
@@ -242,6 +269,11 @@ boolean DLBus::CheckTimings(void) {
     }
   }
 # endif // DLbus_DEBUG
+
+  if (WrongTimeCnt >= 5) {
+    AddToErrorLog(F("Error: Too many wrong timings!"));
+    return false;
+  }
   return true;
 }
 
@@ -285,24 +317,23 @@ boolean DLBus::Processing(void) {
       AddToErrorLog(F("Error: No data frame available!"));
       return false;
     }
-    uint16_t RequiredBitStreamLength = (ISR_PulseNumber - DLBus_ReserveBytes) / DLBus_BitChangeFactor;
+  }
 
-    if ((BitNumber - StartBit) < RequiredBitStreamLength) {
-      // no complete data frame available (difference between start_bit and received bits is < RequiredBitStreamLength)
-      AddToErrorLog(F("Start bit too close to end of stream!"));
+  if ((BitNumber - StartBit) < RequiredBits) {
+    // no complete data frame available (difference between start_bit and received bits is < RequiredBits)
+    AddToErrorLog(F("Start bit too close to end of stream!"));
 
 # ifndef P092_LIMIT_BUILD_SIZE
 
-      if (IsLogLevelInfo) {
-        AddToInfoLog(strformat(
-                       F("# Required bits: %d StartBit: %d / EndBit: %d"),
-                       RequiredBitStreamLength,
-                       StartBit,
-                       BitNumber));
-      }
-# endif // ifndef P092_LIMIT_BUILD_SIZE
-      return false;
+    if (IsLogLevelInfo) {
+      AddToInfoLog(strformat(
+                     F("# Required bits: %d StartBit: %d / EndBit: %d"),
+                     RequiredBits,
+                     StartBit,
+                     BitNumber));
     }
+# endif // ifndef P092_LIMIT_BUILD_SIZE
+    return false;
   }
 
 # ifndef P092_LIMIT_BUILD_SIZE
@@ -466,6 +497,25 @@ boolean DLBus::CheckCRC(uint8_t IdxCRC) {
 # define DLbus_RSM_STANDBY         0b11
 
 
+boolean P092_init           = false;
+P092_data_struct *P092_data = nullptr;
+
+// Number of P092_task_data_struct objects, i.e. of the P092 tasks using P092_data
+static uint8_t P092_task_data_count = 0;
+
+P092_task_data_struct::P092_task_data_struct() {
+  ++P092_task_data_count;
+}
+
+P092_task_data_struct::~P092_task_data_struct() {
+  if ((P092_task_data_count > 0) && (--P092_task_data_count == 0)) {
+    // the last P092 task stopped: release the DL-Bus receiver and its interrupt
+    delete P092_data;
+    P092_data = nullptr;
+    P092_init = false;
+  }
+}
+
 P092_data_struct::~P092_data_struct() {
   if (DLbus_Data != nullptr) {
     if (DLbus_Data->ISR_DLB_Pin != 0xFF) {
@@ -477,6 +527,14 @@ P092_data_struct::~P092_data_struct() {
 }
 
 bool P092_data_struct::init(int8_t pin1, int P092DeviceIndex, eP092pinmode P092pinmode) {
+  if (DLbus_Data != nullptr) {
+    // init again (pin changed): release the interrupt and the old receiver, so the new one becomes the ISR instance
+    if (DLbus_Data->IsISRset) {
+      detachInterrupt(digitalPinToInterrupt(DLbus_Data->ISR_DLB_Pin));
+    }
+    delete DLbus_Data;
+    DLbus_Data = nullptr;
+  }
   DLbus_Data = new (std::nothrow) DLBus;
 
   if (DLbus_Data == nullptr) {
@@ -639,9 +697,16 @@ void P092_data_struct::Plugin_092_StartReceiving(taskIndex_t taskindex) {
   DLbus_Data->ISR_Receiving   = false;
   DLbus_Data->DeviceBytes[0]  = P092_DataSettings.DeviceByte0;
   DLbus_Data->DeviceBytes[1]  = P092_DataSettings.DeviceByte1;
-  DLbus_Data->ISR_PulseNumber =
+  int PulseNumber =
     (((P092_DataSettings.DataBytes + DLbus_AdditionalRecBytes) * (DLbus_StartBits + 8 +  DLbus_StopBits) + DLBus_SyncBits) *
      DLBus_BitChangeFactor) + DLBus_ReserveBytes;
+
+  if (DLbus_Data->ISR_NoSyncPause) {
+    // receiving starts anywhere in a frame: record two frames to get a complete one after the SYNC
+    PulseNumber = std::min(2 * PulseNumber, DLbus_MaxDataBits);
+  }
+  DLbus_Data->ISR_PulseNumber         = PulseNumber;
+  DLbus_Data->RequiredBits            = P092_DataSettings.DataBytes * (DLbus_StartBits + 8 + DLbus_StopBits);
   DLbus_Data->ISR_MinPulseWidth       = P092_DataSettings.DLbus_MinPulseWidth;
   DLbus_Data->ISR_MaxPulseWidth       = P092_DataSettings.DLbus_MaxPulseWidth;
   DLbus_Data->ISR_MinDoublePulseWidth = P092_DataSettings.DLbus_MinDoublePulseWidth;
