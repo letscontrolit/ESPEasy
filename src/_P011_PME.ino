@@ -7,6 +7,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2026-11-19 tonhuisman: The 'status' command is captured before it reaches this plugin, _added_ 'extstatus' as an alternative.
  * 2025-05-15 tonhuisman: Optimize I2C function calls
  * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported for PME)
  * 2024-04-14 tonhuisman: Add support for Get Config Values, to obtain a port state/value without instantiating a task for each pin.
@@ -120,11 +121,12 @@ boolean Plugin_011(uint8_t function, struct EventStruct *event, String& string)
       if (P011_TYPE_SWITCH != P011_PORT_TYPE) { // Not for Switch type
         UserVar.setFloat(event->TaskIndex, 0, Plugin_011_Read(P011_PORT_TYPE, CONFIG_PORT));
 
-        #ifndef BUILD_NO_DEBUG
+        # ifndef BUILD_NO_DEBUG
+
         if (loglevelActiveFor(LOG_LEVEL_INFO)) {
           addLogMove(LOG_LEVEL_INFO, concat(F("PME  : PortValue: "), formatUserVarNoCheck(event, 0)));
         }
-        #endif // ifndef BUILD_NO_DEBUG
+        # endif // ifndef BUILD_NO_DEBUG
         success = true;
       }
       break;
@@ -140,11 +142,12 @@ boolean Plugin_011(uint8_t function, struct EventStruct *event, String& string)
           UserVar.setFloat(event->TaskIndex, 0, newValue);
           sendData(event);
 
-          #ifndef BUILD_NO_DEBUG
+          # ifndef BUILD_NO_DEBUG
+
           if (loglevelActiveFor(LOG_LEVEL_INFO)) {
             addLogMove(LOG_LEVEL_INFO, strformat(F("PME  : Switch state: %d"), newValue));
           }
-          #endif // ifndef BUILD_NO_DEBUG
+          # endif // ifndef BUILD_NO_DEBUG
           success = true;
         }
       }
@@ -242,7 +245,7 @@ boolean Plugin_011(uint8_t function, struct EventStruct *event, String& string)
         }
       }
       else
-      if (equals(command, F("status"))) {
+      if (equals(command, F("status")) || equals(command, F("extstatus"))) {
         if (equals(parseString(string, 2), F("ext")))
         {
           success = true;

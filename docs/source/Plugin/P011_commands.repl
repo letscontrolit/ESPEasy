@@ -45,7 +45,8 @@
         Switch the pin to either low or high level output, and after the duration (seconds!) has passed, return to the previous state.
         "
         "
-        ``status,ext,<pin>``
+        ``extstatus,ext,<pin>``
+        ``status,ext,<pin>`` (2026-11-19: deprecated)
 
         ``<pin>`` : The IO pin on the PME board, range 0..13 for Digital output, range 20..27 for the Analog pins A0..A7.
         ","
