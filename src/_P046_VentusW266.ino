@@ -80,6 +80,14 @@
 // thanks to Greg Cook and the team behind reveng.sourceforge.net.
 
 /** Changelog
+ * 2026-11-05 TheItschi:  Enable Interval setting (TimerOption), was taken from 'Sleep time' (default 0 = never read)
+ *                        Fix inverted 5 min interval check for rain rate and lightning strikes (were always 0)
+ *                        Fix lightning reference count init (-1 on unsigned), use first valid frame as reference
+ *                        Add raw lightning strike counter as value 2
+ *                        Fix ISR buffer overflow check writing 1 byte past ISR buffer
+ *                        Number of values, VType and default value names now depend on the selected function
+ *                        UV has a 2nd value (always 0), as a Domoticz UV device expects "UV;temp"
+ *                        Use the default interval for existing tasks that were saved with interval 0
  * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported)
  *                        Uncrustify source
  * 2023-07-24 tonhuisman: Fix compilation issues
@@ -95,9 +103,6 @@
 # define PLUGIN_046                       // Mandatory framework constants
 # define PLUGIN_ID_046               46
 # define PLUGIN_NAME_046             "Hardware - Ventus W266"
-# define PLUGIN_VALUENAME1_046       ""
-# define PLUGIN_VALUENAME2_046       ""
-# define PLUGIN_VALUENAME3_046       ""
 
 # define Plugin_046_MagicByte        0x7F // When we read this uint8_t on MOSI, switch to MISO
 # define Plugin_046_RAW_BUFFER_SIZE  24   // Payload is 23 bytes, added space for header
@@ -141,6 +146,32 @@ volatile int Plugin_046_strikesph = 0;
 void    Plugin_046_ISR_nSEL() IRAM_ATTR; // Interrupt routines
 void    Plugin_046_ISR_SCLK() IRAM_ATTR;
 
+// Number of values and VType depend on the selected plugin function (PCONFIG(0))
+uint8_t P046_getValueCount(int choice) {
+  switch (choice) {
+    case 0: // Main + Temp/Hygro
+    case 2: // Rain
+    case 3: // UV: 2nd value is always 0, a Domoticz UV device expects "UV;temp"
+    case 4: // Lightning strikes
+      return 2;
+    case 1: // Wind
+      return 3;
+  }
+  return 1;
+}
+
+Sensor_VType P046_getVType(int choice) {
+  switch (choice) {
+    case 0: return Sensor_VType::SENSOR_TYPE_TEMP_HUM;
+    case 1: return Sensor_VType::SENSOR_TYPE_WIND;
+    case 2: return Sensor_VType::SENSOR_TYPE_DUAL; // Rain rate + total, as expected by a Domoticz rain device
+    case 3: return Sensor_VType::SENSOR_TYPE_DUAL; // UV: a Domoticz UV device needs "UV;temp", value 2 stays 0
+  }
+
+  // Lightning strikes (4): SINGLE, so controllers only get the strike count, the raw counter (value 2) is for rules/display
+  return Sensor_VType::SENSOR_TYPE_SINGLE;
+}
+
 boolean Plugin_046(uint8_t function, struct EventStruct *event, String& string)
 {
   boolean success = false;
@@ -155,6 +186,7 @@ boolean Plugin_046(uint8_t function, struct EventStruct *event, String& string)
       dev.VType          = Sensor_VType::SENSOR_TYPE_DUAL; // New type, see ESPEasy.ino
       dev.FormulaOption  = true;
       dev.SendDataOption = true;
+      dev.TimerOption    = true;                           // Allow setting the task interval
       dev.ValueCount     = 3;
       break;
     }
@@ -204,8 +236,7 @@ boolean Plugin_046(uint8_t function, struct EventStruct *event, String& string)
         case (0):
         {
           addHtml(F("<TR><TD><B>Be sure you only have 1 main plugin!</B></TD>"));
-          addHtml(F("<TR><TD>Value 1: Temperature, 1 decimal<BR>Value 2: Humidity, 0 decimals"));
-          addHtml(F("<BR>Value 3: not used</TD>"));
+          addHtml(F("<TR><TD>Value 1: Temperature, 1 decimal<BR>Value 2: Humidity, 0 decimals</TD>"));
           break;
         }
         case (1):
@@ -216,44 +247,38 @@ boolean Plugin_046(uint8_t function, struct EventStruct *event, String& string)
         }
         case (2):
         {
-          addHtml(F("<TR><TD>Value 1: Rain in mm per hour<BR>Value 2: Total rain in mm"));
-          addHtml(F("<BR>Value 3: not used</TD>"));
+          addHtml(F("<TR><TD>Value 1: Rain in mm per hour<BR>Value 2: Total rain in mm</TD>"));
           break;
         }
         case (3):
         {
-          addHtml(F("<TR><TD>Value 1: UV, 1 decimal"));
-          addHtml(F("<BR>Values 2, 3</TD>"));
+          addHtml(F("<TR><TD>Value 1: UV, 1 decimal<BR>Value 2: always 0 (Domoticz UV device expects \"UV;temp\")</TD>"));
           break;
         }
         case (4):
         {
-          addHtml(F("<TR><TD>Value 1: Strikes this hour, 0 decimals"));
-          addHtml(F("<BR>Values 2, 3: not used</TD>"));
+          addHtml(F("<TR><TD>Value 1: Strikes per 5 min interval, 0 decimals"));
+          addHtml(F("<BR>Value 2: Raw strike counter</TD>"));
           break;
         }
         case (5):
         {
-          addHtml(F("<TR><TD>Value 1: Distance in km, 0 decimals"));
-          addHtml(F("<BR>Values 2, 3: not used</TD>"));
+          addHtml(F("<TR><TD>Value 1: Distance in km, 0 decimals</TD>"));
           break;
         }
         case (6):
         {
-          addHtml(F("<TR><TD>Value 1: Batterybyte, 0 decimals"));
-          addHtml(F("<BR>Values 2, 3: not used</TD>"));
+          addHtml(F("<TR><TD>Value 1: Batterybyte, 0 decimals</TD>"));
           break;
         }
         case (7):
         {
-          addHtml(F("<TR><TD>Value 1: Last rainbyte, 0 decimals"));
-          addHtml(F("<BR>Values 2, 3: not used</TD>"));
+          addHtml(F("<TR><TD>Value 1: Last rainbyte, 0 decimals</TD>"));
           break;
         }
         case (8):
         {
-          addHtml(F("<TR><TD>Value 1: Last lightningbyte, 0 decimals"));
-          addHtml(F("<BR>Values 2, 3: not used</TD>"));
+          addHtml(F("<TR><TD>Value 1: Last lightningbyte, 0 decimals</TD>"));
           break;
         }
       }
@@ -284,9 +309,36 @@ boolean Plugin_046(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_GET_DEVICEVALUENAMES:
     {
-      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[0], PSTR(PLUGIN_VALUENAME1_046));
-      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[1], PSTR(PLUGIN_VALUENAME2_046));
-      strcpy_P(ExtraTaskSettings.TaskDeviceValueNames[2], PSTR(PLUGIN_VALUENAME3_046));
+      // Default value names depend on the selected plugin function
+      const __FlashStringHelper *names[3] = { F("Value"), F(""), F("") };
+
+      switch (PCONFIG(0)) {
+        case 0: names[0] = F("Temperature"); names[1] = F("Humidity"); break;
+        case 1: names[0] = F("Direction");   names[1] = F("Average"); names[2] = F("Gust"); break;
+        case 2: names[0] = F("Rain");        names[1] = F("RainTotal"); break;
+        case 3: names[0] = F("UV");          names[1] = F("Unused"); break;
+        case 4: names[0] = F("Strikes");     names[1] = F("StrikeCount"); break;
+        case 5: names[0] = F("Distance");    break;
+      }
+
+      for (uint8_t i = 0; i < 3; ++i) {
+        ExtraTaskSettings.setTaskDeviceValueName(i, names[i]);
+      }
+      break;
+    }
+
+    case PLUGIN_GET_DEVICEVALUECOUNT:
+    {
+      event->Par1 = P046_getValueCount(PCONFIG(0));
+      success     = true;
+      break;
+    }
+
+    case PLUGIN_GET_DEVICEVTYPE:
+    {
+      event->sensorType = P046_getVType(PCONFIG(0));
+      event->idx        = -1;
+      success           = true;
       break;
     }
 
@@ -303,6 +355,12 @@ boolean Plugin_046(uint8_t function, struct EventStruct *event, String& string)
     {
       if (!P046_data) {
         P046_data = new (std::nothrow) P046_data_struct();
+      }
+
+      // Tasks saved before the interval was configurable can have interval 0 and would only be read once
+      // at boot, before the first frame arrived, leaving their values at 0 forever.
+      if (Settings.TaskDeviceTimer[event->TaskIndex] == 0) {
+        Settings.TaskDeviceTimer[event->TaskIndex] = (Settings.Delay > 0) ? Settings.Delay : 60;
       }
 
       uint8_t choice = PCONFIG(0);
@@ -327,7 +385,7 @@ boolean Plugin_046(uint8_t function, struct EventStruct *event, String& string)
             Plugin_046_lastrainctr              = 0;
             Plugin_046_lastraincount            = -1;
             Plugin_046_laststrikectr            = 0;
-            Plugin_046_laststrikecount          = -1;
+            Plugin_046_laststrikecount          = UINT_MAX;
             attachInterrupt(P046_data->Plugin_046_SCLKpin, Plugin_046_ISR_SCLK, RISING);
             attachInterrupt(P046_data->Plugin_046_nSELpin, Plugin_046_ISR_nSEL, CHANGE);
           }
@@ -449,7 +507,12 @@ boolean Plugin_046(uint8_t function, struct EventStruct *event, String& string)
 
             if (wdcounter < Plugin_046_lastrainctr) { Plugin_046_lastrainctr = wdcounter; }
 
-            if (Plugin_046_lastrainctr > (wdcounter + 10)) // 5 min interval
+            if (Plugin_046_lastraincount < 0) {             // first valid frame: take as reference
+              Plugin_046_lastraincount = rainnow;
+              Plugin_046_lastrainctr   = wdcounter;
+            }
+
+            if (wdcounter >= (Plugin_046_lastrainctr + 10)) // 5 min interval (10 x 30 s)
             {
               Plugin_046_lastrainctr = wdcounter;
 
@@ -473,24 +536,24 @@ boolean Plugin_046(uint8_t function, struct EventStruct *event, String& string)
           }
           case (4):
           {
-            // int strikes = 0;
-            unsigned int strikesnow = int((P046_data->Plugin_046_databuffer[21]) * 256 + P046_data->Plugin_046_databuffer[20]);
+            const unsigned int strikesnow = (P046_data->Plugin_046_databuffer[21] << 8) | P046_data->Plugin_046_databuffer[20];
+
+            if (Plugin_046_laststrikecount == UINT_MAX) {     // first valid frame: take as reference
+              Plugin_046_laststrikecount = strikesnow;
+              Plugin_046_laststrikectr   = wdcounter;
+            }
 
             if (wdcounter < Plugin_046_laststrikectr) { Plugin_046_laststrikectr = wdcounter; }
 
-            if (Plugin_046_laststrikectr > (wdcounter + 10)) // 5 min interval
+            if (wdcounter >= (Plugin_046_laststrikectr + 10)) // 5 min interval (10 x 30 s)
             {
               Plugin_046_laststrikectr = wdcounter;
-
-              if (strikesnow > Plugin_046_laststrikecount)
-              {
-                Plugin_046_strikesph       = strikesnow - Plugin_046_laststrikecount;
-                Plugin_046_laststrikecount = strikesnow;
-              } else {
-                Plugin_046_strikesph = 0;
-              }
+              Plugin_046_strikesph     = (strikesnow >= Plugin_046_laststrikecount)
+                                         ? (strikesnow - Plugin_046_laststrikecount) : 0; // counter reset -> 0
+              Plugin_046_laststrikecount = strikesnow;
             }
             UserVar.setFloat(event->TaskIndex, 0, Plugin_046_strikesph);
+            UserVar.setFloat(event->TaskIndex, 1, strikesnow); // raw strike counter
             break;
           }
           case (5):
@@ -572,7 +635,7 @@ void Plugin_046_ISR_SCLK() // Interrupt on SCLK rising
       P046_data->Plugin_046_ISR_Buffer[P046_data->Plugin_046_bytepointer] = P046_data->Plugin_046_receivedData;
       P046_data->Plugin_046_bytepointer++;           // TReady for the next uint8_t ...
 
-      if (P046_data->Plugin_046_bytepointer > Plugin_046_RAW_BUFFER_SIZE) {
+      if (P046_data->Plugin_046_bytepointer >= Plugin_046_RAW_BUFFER_SIZE) { // Was '>': wrote 1 byte past ISR_Buffer into databuffer[0]
         P046_data->Plugin_046_ReceiveActive = false; // We don't want a bufferoverflow, so abort
         P046_data->Plugin_046_MasterSlave   = false;
       }
