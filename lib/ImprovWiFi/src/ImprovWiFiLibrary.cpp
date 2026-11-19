@@ -2,12 +2,16 @@
 
 #if defined(ESP8266)
   # include <ESP8266WiFi.h>
+  # ifdef OLD_GCC_NO_STD_TO_STRING
+    # include <sstream>
+  # endif
 #endif
 #if defined(ESP32)
   # include <WiFi.h>
 #endif
 #include <string>
-#include <sstream>
+
+
 
 bool ImprovWiFi::handleSerial()
 {
@@ -70,7 +74,7 @@ bool ImprovWiFi::onCommandCallback(ImprovTypes::ImprovCommand cmd)
 
     case ImprovTypes::Command::WIFI_SETTINGS:
     {
-      if (cmd.ssid.empty())
+      if (cmd.ssid.isEmpty())
       {
         setError(ImprovTypes::Error::ERROR_EMPTY_SSID);
         break;
@@ -112,7 +116,7 @@ bool ImprovWiFi::onCommandCallback(ImprovTypes::ImprovCommand cmd)
 
     case ImprovTypes::Command::GET_DEVICE_INFO:
     {
-      const std::vector<std::string> infos = {
+      const std::vector<String> infos = {
         // Firmware name
         improvWiFiParams.firmwareName,
 
@@ -176,9 +180,9 @@ void ImprovWiFi::sendDeviceUrl(ImprovTypes::Command cmd)
 {
   // URL where user can finish onboarding or use device
   // Recommended to use website hosted by device
-  const std::string ipStr{WiFi.localIP().toString().c_str()};
+  const String ipStr{WiFi.localIP().toString()};
 
-  if (improvWiFiParams.deviceUrl.empty())
+  if (improvWiFiParams.deviceUrl.isEmpty())
   {
     improvWiFiParams.deviceUrl = "http://" + ipStr;
   }
@@ -253,25 +257,17 @@ void ImprovWiFi::getAvailableWifiNetworks()
   {
     #ifdef ESP32
     const bool openWiFi = WiFi.encryptionType(id) == WIFI_AUTH_OPEN;
-    auto rssi = std::to_string(static_cast<int>(WiFi.RSSI(id)));
+    String rssi(static_cast<int>(WiFi.RSSI(id)));
     #endif 
     #ifdef ESP8266
     const bool openWiFi = WiFi.encryptionType(id) == ENC_TYPE_NONE;
 
-    // std::to_string appears not to be available for the old GCC used for ESP8266
-    #ifdef OLD_GCC_NO_STD_TO_STRING
-    std::stringstream stream;
-    stream << static_cast<int>(WiFi.RSSI(id));
-    std::string rssi = stream.str();
-    #else
-    auto rssi = std::to_string(static_cast<int>(WiFi.RSSI(id)));
-    #endif
+    String rssi(static_cast<int>(WiFi.RSSI(id)));
     #endif 
-    const std::vector<std::string> wifinetworks = {
-      WiFi.SSID(id).c_str(),
-      rssi,
-      (openWiFi ? "NO" : "YES")
-    };
+    std::vector<String> wifinetworks;
+    wifinetworks.push_back(WiFi.SSID(id));
+    wifinetworks.push_back(rssi);
+    wifinetworks.push_back((openWiFi ? "NO" : "YES"));
 
     sendResponse(
       build_rpc_response(
@@ -283,22 +279,18 @@ void ImprovWiFi::getAvailableWifiNetworks()
   WiFi.scanDelete();
 
   // final response
-  sendResponse(
-    build_rpc_response(
+  {
+  std::vector<String> tmp{};
+  sendResponse(build_rpc_response(
       ImprovTypes::GET_WIFI_NETWORKS,
-      std::vector<std::string>{},
+      tmp,
       false));
+  }
 }
 
-inline void ImprovWiFi::replaceAll(std::string& str, const std::string& from, const std::string& to)
+inline void ImprovWiFi::replaceAll(String& str, const String& from, const String& to)
 {
-  size_t start_pos = 0;
-
-  while ((start_pos = str.find(from, start_pos)) != std::string::npos)
-  {
-    str.replace(start_pos, from.length(), to);
-    start_pos += to.length();
-  }
+  str.replace(from, to);
 }
 
 ImprovTypes::ParseState ImprovWiFi::parseImprovSerial(size_t position, uint8_t byte, const uint8_t *buffer)
@@ -397,8 +389,10 @@ ImprovTypes::ImprovCommand ImprovWiFi::parseImprovData(const uint8_t *data, size
       return improv_command;
     }
 
-    std::string ssid(data + ssid_start, data + ssid_end);
-    std::string password(data + pass_start, data + pass_end);
+    String ssid;
+    ssid.concat((const char *)data + ssid_start, ssid_end - ssid_start);
+    String password;
+    password.concat((const char *)data + pass_start, pass_end - pass_start);
 
     improv_command.command  = command;
     improv_command.ssid     = ssid;
@@ -460,7 +454,7 @@ uint8_t ImprovWiFi::computeChecksum(const uint8_t *data, size_t length)
   return checksum;
 }
 
-std::vector<uint8_t>ImprovWiFi::build_rpc_response(ImprovTypes::Command command, const std::vector<std::string>& datum, bool add_checksum)
+std::vector<uint8_t>ImprovWiFi::build_rpc_response(ImprovTypes::Command command, const std::vector<String>& datum, bool add_checksum)
 {
   std::vector<uint8_t> out;
   uint32_t length = 0;

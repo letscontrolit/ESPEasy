@@ -26,7 +26,7 @@ bool isProtectedFileType(const String& filename)
 
   if ((mPerc > -1) && fname.startsWith(mask.substring(0, mPerc))) {
     for (uint8_t n = 0; n < TASKS_MAX && !isTaskSpecificConfig; ++n) {
-      isTaskSpecificConfig |= (fname.equalsIgnoreCase(strformat(mask, n + 1)));
+      isTaskSpecificConfig |= (fname.equalsIgnoreCase(strformat(F(DAT_TASKS_CUSTOM_EXTENSION_FILEMASK), n + 1)));
     }
   }
   #endif // if FEATURE_EXTENDED_CUSTOM_SETTINGS

@@ -244,138 +244,7 @@ void free_string(String& str) {
 /********************************************************************************************\
    Format string using vsnprintf
  \*********************************************************************************************/
-static String do_strformat(const String& format, ...)
-{
-  String res;
 
-  res.reserve(format.length()); // Best guess right now.
-
-  va_list args;
-  va_start(args, format);       // variable args start after parameter 'format'
-
-  for (const char*p = format.c_str(); *p != '\0'; ++p)
-  {
-    const char c = *p;
-
-    switch (c)
-    {
-      case '%':
-
-        switch (*++p) // read format symbol
-        {
-          case 'i':
-          case 'd':
-            res += va_arg(args, int);
-            continue;
-          case 'u':
-            res += va_arg(args, unsigned int);
-            continue;
-          case 'f':
-            res += va_arg(args, double);
-            continue;
-          case 's':
-            res += va_arg(args, const char *);
-            continue;
-          case 'c':
-            res += static_cast<char>(va_arg(args, int));
-            continue;
-          case '%':
-            res += '%';
-            continue;
-
-            // default:
-            // Parse the numbers between '%' and 'f' or 's'
-            // Then do the correct formatting
-            // break;
-        }
-        break; // format error...
-      case '\n':
-        res += '\n';
-        continue;
-      case '\t':
-        res += '\t';
-        continue;
-
-        /* ...more cases... */
-    }
-    res += c;
-  }
-
-  va_end(args);
-
-  return res;
-}
-
-String strformat(const String& format, ...)
-{
-  String res;
-
-  res.reserve(format.length()); // Best guess right now.
-
-  va_list args;
-  va_start(args, format);       // variable args start after parameter 'format'
-
-  for (const char*p = format.c_str(); *p != '\0'; ++p)
-  {
-    const char c = *p;
-
-    switch (c)
-    {
-      case '%':
-
-        switch (*++p) // read format symbol
-        {
-          case 'i':
-          case 'd':
-            res += va_arg(args, int);
-            continue;
-          case 'u':
-            res += va_arg(args, unsigned int);
-            continue;
-          case 'f':
-            res += va_arg(args, double);
-            continue;
-          case 's':
-            res += va_arg(args, const char *);
-            continue;
-          case 'c':
-            res += static_cast<char>(va_arg(args, int));
-            continue;
-          case '%':
-            res += '%';
-            continue;
-
-            // default:
-            // Parse the numbers between '%' and 'f' or 's'
-            // Then do the correct formatting
-            // break;
-        }
-        break; // format error...
-      case '\n':
-        res += '\n';
-        continue;
-      case '\t':
-        res += '\t';
-        continue;
-
-        /* ...more cases... */
-    }
-    res += c;
-  }
-
-  va_end(args);
-
-  return res;
-
-  /*
-     va_list arg;
-
-     va_start(arg, format); // variable args start after parameter 'format'
-     String res = do_strformat(format, arg);
-     va_end(arg);
-     return res;
-   */
-}
 
 enum class ExpectedArgType {
   TypeUnknown,
@@ -422,11 +291,11 @@ static ExpectedArgType getExpectedArgType(const char& c)
   return ExpectedArgType::TypeUnknown;
 }
 
-static ExpectedArgType parseArgType(const String& format_str, int& pos, char& prefixChar, int& minLength, int& nrDecimals)
+static ExpectedArgType parseArgType(const String& format_str, unsigned int& pos, char& prefixChar, int& minLength, int& nrDecimals)
 {
   const auto format_str_length = format_str.length();
 
-  if ((pos < 0) || (pos >= format_str_length)) {                                            return ExpectedArgType::TypeUnknown; }
+  if (pos >= format_str_length) { return ExpectedArgType::TypeUnknown; }
 
   if (format_str[pos] != '%') { return ExpectedArgType::TypeLiteral; }
   ++pos;
@@ -501,14 +370,14 @@ String strformat(const __FlashStringHelper *format, ...)
 {
   String res;
   const String format_str(format);
-  const int    format_str_length = format_str.length();
+  const auto   format_str_length = format_str.length();
 
   res.reserve(format_str_length); // Best guess right now.
 
   va_list args;
   va_start(args, format);         // variable args start after parameter 'format'
 
-  for (int pos = 0; pos < format_str_length && pos >= 0; ++pos)
+  for (unsigned int pos = 0; pos < format_str_length && pos >= 0; ++pos)
   {
     char prefixChar('0');
     int  minLength{};
@@ -557,7 +426,7 @@ String strformat(const __FlashStringHelper *format, ...)
         String val_str(va_arg(args, unsigned int), base);
         prefixToMinimumLength(val_str, minLength, prefixChar);
 
-        if (argType == ExpectedArgType::TypeHex_upper) val_str.toUpperCase();
+        if (argType == ExpectedArgType::TypeHex_upper) { val_str.toUpperCase(); }
         res += val_str;
         continue;
       }
@@ -582,6 +451,9 @@ String strformat(const __FlashStringHelper *format, ...)
 
 
   /*
+  // FIXME TD-er: can't call a single function to process the variadic arguments from different call signatures.
+  // For example with flash string and String as format.
+  // Does not work, maybe try this later: https://stackoverflow.com/a/75157587/8708166
      va_list arg;
 
      va_start(arg, format); // variable args start after parameter 'format'

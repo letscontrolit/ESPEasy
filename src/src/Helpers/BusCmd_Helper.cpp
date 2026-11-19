@@ -1157,7 +1157,7 @@ String BusCmd_Helper_struct::replacePluginValues(const String& inVar) {
 
 bool BusCmd_Helper_struct::parseAndExecute(BusCmd_CommandSource_e source,
                                            const String         & line,
-                                           const String         & logFormat) {
+                                           const __FlashStringHelper * logFormat) {
   bool result = false;
 
   _commandSource = source;

@@ -57,8 +57,11 @@ struct ProvisioningStruct
 
 DEF_UP(ProvisioningStruct);
 
+#if defined(USE_SECOND_HEAP) || defined(ESP32)
 #define MakeProvisioningSettings(T) void * calloc_ptr = special_calloc(1,sizeof(ProvisioningStruct)); UP_ProvisioningStruct T(new (calloc_ptr)  ProvisioningStruct());
-
+#else
+#define MakeProvisioningSettings(T) UP_ProvisioningStruct T(new (std::nothrow)  ProvisioningStruct());
+#endif
 
 
 #endif // if FEATURE_CUSTOM_PROVISIONING

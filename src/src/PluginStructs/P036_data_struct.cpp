@@ -766,7 +766,8 @@ void P036_data_struct::RestoreLineContent(taskIndex_t taskIndex,
     else {
       *(&LineContent->DisplayLinesV1[LineNo - 1].Content) = TempContent->DisplayLinesV1[LineNo - 1].Content;
     }
-    delete TempContent;
+    TempContent->~P036_LineContent();
+    free(ptr);
   }
 }
 

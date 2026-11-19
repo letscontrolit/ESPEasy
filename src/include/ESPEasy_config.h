@@ -17,6 +17,7 @@
 
 #ifdef ESP8266
 #include "../include/esp8266_soc_caps.h"
+#include <stdlib.h>
 #endif
 
 #if defined(ESP32)
@@ -29,7 +30,26 @@
   #endif
 #endif
 
+
+#ifndef ISR_PREFIX
+  #if defined(ESP8266)
+	#ifndef CORE_POST_3_0_0
+      #define ISR_PREFIX ICACHE_RAM_ATTR
+	#else
+      #define ISR_PREFIX IRAM_ATTR
+	#endif
+  #elif defined(ESP32)
+    // TODO: should this also be IRAM_ATTR ??
+    #define ISR_PREFIX IRAM_ATTR
+  #else
+    #define ISR_PREFIX
+  #endif
+#endif
+
+
 #include <memory>
+#include <string>
+#include <new>
 
 #define ZERO_FILL(S)  memset((S), 0, sizeof(S))
 #define ZERO_TERMINATE(S)  S[sizeof(S) - 1] = 0
