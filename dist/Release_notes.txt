@@ -1,4 +1,305 @@
 -------------------------------------------------
+Changes in release mega-20261119 (since mega-20260720)
+-------------------------------------------------
+
+Release date: do 19 nov 2026 13:22:27 CET
+
+Adam Matthews (2):
+      [HttpClientLight] Time out reading a body when the server goes silent
+      [HttpClientLight] Widen the TCP timeout to 32 bits
+
+Aleksandr Zharov (8):
+      [P056] Fix ReadAverage() output params passed by value, always returning 0
+      [Rules] Fix endless loop on unknown {...} in rules on ESP8266
+      [Rules] Use the escape/mask helpers also without FEATURE_EXTENDED_STRING_FUNCTIONS
+      [Rules] Make the escape/mask helpers static
+      [P163] Fix double-free after failed RadSens initialization
+      [P163] Check sensor pointer before use
+      [P163] Drop the redundant initialized flag
+      [Settings] Fix clearTask() overwriting pins of other tasks
+
+BrainHunter (1):
+      Fixed P031_SHT1X.ino to set SendDataOption to true since it was missing This allows the device to be configured to send data as expected.
+
+Claude (3):
+      [NodeType] Return empty string again for unknown node types
+      [Dallas] Keep 1-Wire ISR functions in IRAM on ESP32
+      [Rules] Fix build with WEBSERVER_NEW_RULES
+
+Firat17aze (2):
+      Reject failed HDC10xx I2C reads
+      Only mark HDC10xx values invalid on read errors
+
+Gijs Noorlander (1):
+      [Serial] Fix failing build on minimal ESP8266 builds
+
+TD-er (105):
+      [P157] Fix minimal OTA builds by ignoring NoiascaHt16k33 lib
+      [Console] Split ESPEasy_console.cpp into dual/single/serial0-only
+      [ESPEasy Console] Simplify init of ESPEasy console + update IDF/Arduino
+      [Serial] Simplify ESPEasy console code + reduce resource usage
+      [ESPEasy console] reduce load when USB HWCDC is not connected
+      [Console] Prevent long delay when USB-HWCDC is plugged  but not used
+      [Docs] Add ESP32-S31 datasheet to docs
+      [Serial] Fix failing custom_IR_ESP8266_4M1M build
+      [ESPEasy p2p] Only update remote task with changes on the sender #5496
+      [PWM] Fix crashes on ESP32 when using PWM fade (#5344)
+      [TimingStats] Tweak code to reduce impact of timing stats
+      [I2C] Only change I2C settings (multiplexer/clock) for enabled tasks
+      [EEPROM/RTC] Add timing stats for read/write to EEPROM/RTC
+      [VL53L1X] Move includes to .cpp for linker to leave out unused code
+      [EEPROM/RTC] Add timing stats for read/write to EEPROM/RTC
+      [Bug] Fix partial webform load on disabled tasks (#5615)
+      [Debug] Add runtime bounds checks for PCONFIG_xxx macro parameters
+      [Debug] Change log level to error + reduce build size + uncrustify
+      [Debug] Add option to include filename:linenr on PCONFIG debug logs
+      [Debug] Simplify code for debugging PCONFIG_xx out-of-bounds in macros
+      [Debug] Clarify DEBUG_PCONFIG_RANGE_CHECK + make logs more clear
+      [Log] Fix crash processing log + improve ESPEasy scheduler
+      [Log] Use iterators to keep track of next to read per log subscriber
+      [Log] Fix half printed loglines + memory management + other cleanups
+      [Cleanup] Uncrustify files
+      Fix formating at P126 - Shift registers (74HC595)  (#5627)
+      Shorten taskValue formatting of shift registers (P126/P129) for <4 chips
+      [Cleanup] Make using P126/P129 more intuitive
+      [WebUI] Remove duplicate data from JSON when updating taskvalues
+      [Cleanup] Simplify removing chars/texts from strings
+      [JSON] Add HTML IDs to JSON for DevicesPage
+      [JSON] Merge formatting code DerivedTaskValues for web and JSON
+      [JSON] Generate all custom formatting same for Web as well as JSON
+      [JSON] Also update OLED display preview in JSON
+      [JSON] Quick work-around for P126/P129 Still needs work string detection
+      [Build] Fix build errors on ESP8266
+      [Build] Fix failing minimal build with WEBSERVER_JSON disabled
+      [JSON] Fix live updating of preformatted values + display preview
+      [WebUI] Add divs even for empty values, so they can be updated later
+      [WebUI] Cleanup code formatting task values
+      [ValueStruct] Fix issues formatting longer numbers + add parse Str
+      [ShiftRegister] Fix showing taskvaluename + formatting value
+      [ValueStruct] Fix formatting issues + add formatting options
+      Fix formatting issue on short strings + optimize parsing cmd arguments
+      [Cleanup] Add CommandArgParser to simplify processing commands
+      [P126] Implement simplified command arg parser for ShiftOut commands
+      [Build] Fix ESP8266 build issue
+      [P129] Use new CommandArgParser for P129 Shift Registers Input
+      [Command] Use new CommandArgParser for all commands to parse int args
+      [Cleanup] Speedup parsing empty command args
+      [Debug] Make CommandArgParser debug logs better readable
+      [Build] Reduce ESP8266 and ESP32-C6 DisplayB build size
+      [Build] Fix failing ESP8266 'normal' builds due to build size
+      [Build] Fix failing collection_B_ESP32_4M316k build
+      [Build] Reduce build size optimizing KeyValueStruct use
+      [ESP-IDF] Update to Arduino changes upto 28/08 and IDF 5.5.5
+      [Build] Reduce build size by reducing number possible concat functions
+      [mDNS] Enable mDNS for ESP32-MAX builds
+      [Build] Change 'unsigned long' to 'uint32_t'
+      [Build] Change 'long' to 'int32_t' and fix some signed/unsigned issues
+      [1Wire] Fix not always showing 1-wire sensor & correct saving sensor
+      [Build] Update to latest PioArduino to fix GH Actions builds
+      [Build] Call platformio command directly from GH Actions yaml file
+      [Build] Make sure to install pioarduino in build section YAML file
+      [Build] Use `matrix.env` instead of `matrix.variant`
+      [Build] Disable PVS-Studio as it has been removed from pioarduino 6.2.0
+      [Build] Fix build binaries path
+      [Build] Install pygit2 Python package.
+      [1Wire] Fix caching issue + multiple attempts scan sensors after save
+      [Time] Speedup getting first NTP time sync
+      [WiFi] Fix setting TX power on ESP32 when not exactly matching pwr value
+      [DNS] Fix hostByName returning negative values when lookup failed
+      [WiFi] Fix wrong sign check in set TX power (ESP32)
+      [Build] Reduce build size using static functions
+      [Build] Reduce build size by static only functions in .cpp files
+      [Build] Reduce build size using static functions in src/WebServer
+      [Build] Reduce build size by using static functions (src/WebServer) 2nd
+      [Build] Use static func. MQTT helper, NWPlugin Helper, NW import/export
+      [Rules] Calculation: operators get lost or are applied to the wrong operands  #5660
+      [KeyValueStruct] Keep bool type when collecting sysinfo
+      [HTTP] SendToHTTPS reboots ESP32 (#5661)
+      [Provisioning] downloadFile() fails to fetch via https (#5663)
+      [WiFi] Review 1. WiFiConnected() rate limit never engages (#5665)
+      [WiFi] Review 2. doSetWifiMode() loop guard is never released (#5665)
+      [WiFi] Review 3. AP fallback is not re-evaluated after a lost connection
+      [Events] Add network events to front of EventQueue
+      [WiFi] Minor WiFi fixes reset runtime flags
+      [WiFi] Fix scan per channel + reset timeout STA+AP scanning per channel
+      [ESP-IDF] Update to latest IDF/Arduino code + fix blocking HW serial
+      [WiFi] Fix not getting static IP (#5674)
+      [Network] Various fixes of suggestions made in #5665
+      [WiFi] Fix ESP8266 not connecting to WiFi
+      [ESP8266 WiFi] Implement Deferred WiFi event queue like for ESP32
+      [ESP8266 WiFi] Disconnect, not disable STA before connect WiFi to AP
+      [ESP8266] Fix failing build on ESP8266 core 274.
+      [WiFi] Fix start AP setup on ESP8266
+      [ESP32] Update ESP32-Arduino to include fix for HWCDC on ESP32S3
+      [Build] Fix warning of unused scanCount on BUILD_NO_DEBUG builds
+      [IMPROV] Fix showing RSSI on WiFi scan results in IMPROV
+      [Platform] Update to latest ESP32/Arduino & ESP-IDF 5.5
+      [IMPROV] Fix ESP8266 builds with IMPROV
+      [IMPROV] Fix reported RSSI using IMPROV for both ESP32 and ESP8266
+      [Build] Make ESP8266 builds fit
+      [Build] Fix build size for collection_D_ESP32_4M316k
+      [Webserver] Fix Webserver Digest Auth for ESP32 builds
+
+Ton Huisman (145):
+      [Storage] Add settings for External EEPROM
+      [Storage] Add settings for External EEPROM
+      [Storage] Implement initializing EEPROM and writing UserVars, several improvements
+      [Storage] Reduce writing to only when data changes, add FRAM to I2C scanner, code optimizations
+      [Storage] Add WriteEE,slot,value command and [ReadEE#slot] for retrieving values
+      [Storage] Add overview of all values in external EEPROM (new button on Tools page)
+      [Storage] Restore Task Values optionally on cold or warm boot, code improvements
+      [Storage] Show Task Values in EEPROM by using tasks=1 parameter for Eeprom Values page
+      [Storage] Add check for WriteProtected EEPROM and show on Hardware page
+      [Storage] Add command to re-check for WriteProtected EEPROM
+      [Storage] Improved initialization and format source
+      [Storage] [C016] Store Cache data in EEPROM
+      [Storage] Code improvements
+      [Storage] Move Settings attributes to next available bits
+      [Storage] Limit Rules values storage to max. 1024 slots
+      [Storage] Separate EEPROM and FRAM types in settings
+      [Storage] Add setting per Task Value for saving in EEPROM (enabled by default)
+      [Storage] Add [ReadEE#WP] to retrieve the Write Protected state of the EEPROM, 1 = write-protected
+      [Storage] Simplify EpromVarPage by only showing enabled tasks, and not show hex display for 0 values
+      [Storage] Move EEPROM code to ESPEasy::eeprom namespace, store and check EEPROM parameters
+      [Storage] Store and check real UserVar checksum, temp. enable some EEPROM logging at INFO level
+      [Storage] Fix compilation for builds without P146 or C016 included
+      [Storage] Revert choice of saving all Task Values: Only selected Task Values will be saved in EEPROM
+      [Storage] Remove unneeded UserVar checksum write
+      [Storage] Save only Enabled tasks values in EEPROM
+      [Storage] Add some missing round brackets
+      [Storage] Handle EEPROM saving in background, with optional save interval
+      [Storage] Fixes and improvements for Params check
+      [Storage] Reduce functionality to only support writeee command and readee variable retrieval
+      [P157] Add plugin for 14-segment displays (HT16K33)
+      [P157] Add support for fonts via P073, P057 update name, P165 fix build/feature flag issue
+      [Lib] Noiasca HT16K33 change fonts to have degree symbol instead of ^ like P073 fonts
+      [P157] Add documentation
+      [P157] Add 7digit command
+      [P157] Clean up source, remove unused right-align setting
+      [P157] Update documentation
+      [P157] Additional documentation
+      [P157] Address pin documentation
+      [P157] Correct BUILD info documentation
+      [P157] Add scroll always option, optional slashed zero, delay between scroll loops
+      [P157] Update documentation with new options
+      [P157] Don't restart scrolling when the content isn't changed (7dtext)
+      [P157] Don't restart scrolling when the content isn't changed (7dtext and 7dbin)
+      [P157] Add Circular scroll option
+      [P157] Update documentation with circular scroll options
+      [P016] Add Event on overflow setting
+      [P016] Fix typo in error log
+      [P016] Update documentation
+      [P020] Send events for Derived values
+      [P020] Apply uncrustify once more
+      [Serial] Allow multiple selectors on a single page for Modbus configuration
+      [Serial] Simplify API
+      [Serial] Implement enable/disable HWSerial in serial selector
+      [P129] Bugfix: Pre-read so initial read returns valid data
+      [Serial] Add definition for all-but-CDC serial ports
+      [DeviceStruct] Add setting for Allowed Serial Ports
+      [DeviceStruct] Apply SerialPortsAllowed to plugins
+      [P073] Correct wrong content shown on 74HC595 displays
+      [P073] Improve update speed for 74HC595 using DIREct-GPIO Fix 7dn and 7dt content for 74HC595 displays Also use DIRECT_GPIO for remaining GPIO functions of TM1637 and MAX7219
+      [P073] Fix initialization for GPIO pins, allow some more space for temperature values
+      [Bugfix] Taskname wasn't saved because cache was cleared unexpectedly
+      [P073] Restructure code per display in separate files
+      [Fix] Write _plugin_sets_overview.repl as utf-8 so it works again on Windows
+      [Rules] Add string functions unescape, escape, parse and json
+      [getJsonValue] Restore missing null return, update changelog, small code improvements
+      [Rules] Exclude new features for ESP8266 by default for build-size reasons
+      [Rules] Update Custom-sample.h
+      [P073] Refactor in separate structs (classes) for code deduplication
+      [P157] Add 7 segment displays with colon, make 7 seg. work correctly, other fixes
+      [P157] Update documentation screenshot
+      [Storage] Add support for WriteRTC.../[ReadRTC#...] storing values in RTC SRAM
+      [Storage] Fix merge error
+      [P020] Fix compiler warning
+      [Storage] Add FEATURE_ flags to Custom-sample.h
+      [Storage] Code reduction and other improvements
+      [Storage] RTC SRAM Show available slots on Advanced page
+      [Storage] Small form fixes
+      [Plugins] Disable some less-necessary logs to make ESP8266 builds fit again
+      [Storage] Add missing library.properties file for AT24CX (made up)
+      [Plugins] Disable some less-necessary logs to make ESP8266 builds fit better
+      [Storage] Use correct Settings accessor for external timesource
+      [MQTT] Discovery add optional Taskname to Group unique id
+      [MQTT] Discovery: remove unneeded parameter (smaller binary) and uncrustify source
+      [MQTT] Discovery: Update documentation
+      [Docs] P001: Include generic Data Acquisition docs
+      [Storage] Use best available data type, and max number of decimals, on EepromVar page
+      [Storage] Add support for PCF8583 RTC with 240 bytes SRAM
+      [Storage] Fix support for PCF8583 RTC
+      [Storage] Fix SRAM size for DS3232 RTC
+      [Build] Fix Minimal 1M builds without I2C included
+      Merge branch 'mega' of https://github.com/letscontrolit/ESPEasy into feature/Rules-add-unescape-escape-parse-json-functions
+      [Build] Fix Neopixel build-size by disabling Chart-JS feature
+      [Build] Fix MAX build issue by enabling Chart-JS feature partially
+      [Build] Fix build for Stats without ChartJS and other typos
+      [Storage] Fix issue with saving the EEPROM settings (manual merge-error)
+      [Storage] Add documentation for EEPROM and RTC SRAM and commands
+      [Build] Fix serial defines and streamline EEPROM settings
+      [Build] Exclude ChartJS feature from Display B build for size
+      [Storage] Build Eeprom/RTC overview page more smooth
+      [EEPROM] Replace library and improve timing
+      [RTC SRAM] Fix initialization error causing reboots at read
+      [P129] Fix: Read inputs during INIT, so first PLUGIN_READ produces actual values instead of 0
+      [Docs] Fix a few small typos
+      [P004] Fix: Show (most) configuration also when no GPIO configured
+      [Settings] Remove no longer used Fixed IP Octed setting
+      [Docs] Fix small typo in P157 docs
+      [Settings] Remove no longer used Fixed IP Octed setting
+      [Build] Correct default_envs names in platformio.ini
+      [Log] Keep (serial)port active even when no logging is being produced & fetched
+      [SysInfo] Show EEPROM info on System Info page when enabled
+      [Log] Refactor code
+      [Log] Code optimization
+      [Init] Log flash-size and used size during boot
+      [I2CScan] Avoid using PCONFIG() during I2CScan
+      [P037] Add variable processing for JSON attributes
+      [P037] Only available when String variables are included
+      [P037] Fine-tuning the parsing
+      [Init] Log optimizations
+      [Init] Log optimizations
+      [Tasks] Taskname prefix for commands not always working
+      [Commands] UdpPort argument processing fix
+      [Bugfix] MQTT AutoDiscovery should use HA-compliant SysName
+      [Docs] Updates and improvements Q4 2026
+      [Conversions] Add 2's complement conversions
+      Rework toTwosComplement function
+      [BusCmd_Helper] Fix the use of 2's complement values
+      [BusCmd_Helper] Fix LE conversions
+      [BusCmd_Helper] Fix LE conversions, make 16 and 64 bit conversions explicit
+      [P059] Fix bug when setting Value decimals to 0
+      [Variables] Fix for getting the task-controller enabled state
+      [Variables] Revert incorrect code improvement
+      [Conversions] Fix typo in toTwosComplement argument
+      [Adafruit_GFX] Add missing virtual destructor
+      [Docs] Add references for some missing *_commands.repl files
+      Revert "[Docs] Add references for some missing *_commands.repl files"
+      [Docs] Add references for some missing *_commands.repl files
+      [P017] I2C improvements
+      [P066] I2C improvements
+      [P116] Fix small typo
+      [P116] Replace driver for ST7796S, keep existing as alternative
+      [P095] Docs, add missing subcommand `inv`
+      [P116] Docs, update with new supported resolutions
+      [Devices] Don't show GPIO pin for CUSTOM0 plugins
+      [P145] Use correct newline for GPIO description
+      P180 Update SDP-810 example to use the new %c_fr2c% function
+
+Vaibhav Srivastava (1):
+      docs: fix the misspellings across docs/source
+
+dependabot[bot] (2):
+      Bump actions/setup-python from 6 to 7
+      Bump cryptography from 44.0.1 to 50.0.0
+
+suks.ae (2):
+      initial proposal
+      escape characters instead of angle brackets
+
+
+-------------------------------------------------
 Changes in release mega-20260720 (since mega-20260125)
 -------------------------------------------------
 
