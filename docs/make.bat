@@ -1,5 +1,7 @@
 @ECHO OFF
 
+set PYTHONUTF8=1
+
 pushd %~dp0
 
 REM Command file for Sphinx documentation
