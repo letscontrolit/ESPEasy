@@ -60,18 +60,24 @@ String centimeterToImperialLength(float cm) {
 }
 
 String millimeterToImperialLength(float mm) {
-  float inches = mm / 25.4f;
-  int   feet   = inches / 12.0f;
-
-  inches = inches - (feet * 12);
+  // Round to the 0.1 inch that is shown before splitting off the feet,
+  // so 11.98 inch is shown as 1'0.0" and not as 12.0"
+  long tenths = lroundf(mm / 2.54f);
   String result;
   result.reserve(10);
+
+  if (tenths < 0) {
+    result += '-';
+    tenths  = -tenths;
+  }
+  const long feet = tenths / 120;
+  tenths %= 120;
 
   if (feet != 0) {
     result += feet;
     result += '\'';
   }
-  result += toString(inches, 1);
+  result += toString(tenths / 10.0f, 1);
   result += '"';
   return result;
 }
