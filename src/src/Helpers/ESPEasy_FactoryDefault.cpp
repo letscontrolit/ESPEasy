@@ -87,6 +87,11 @@ void ResetFactory(bool formatFS)
     #if DEFAULT_PROVISIONING_FETCH_SECURITY
     ResetFactoryDefaultPreference.fetchSecurityDat(true);
     #endif
+    #if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE
+    #if DEFAULT_PROVISIONING_FETCH_DEV_SECURITY
+    ResetFactoryDefaultPreference.fetchDeviceSecurityDat(true);
+    #endif
+    #endif // if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE
     #if DEFAULT_PROVISIONING_FETCH_CONFIG
     ResetFactoryDefaultPreference.fetchConfigDat(true);
     #endif
@@ -184,6 +189,20 @@ void ResetFactory(bool formatFS)
       ProvisioningSettings->setPass(F(DEFAULT_PROVISIONING_PASS));
       ProvisioningSettings->setUrl(F(DEFAULT_PROVISIONING_URL));
       ProvisioningSettings->ResetFactoryDefaultPreference = ResetFactoryDefaultPreference.getPreference();
+      # if DEFAULT_PROVISIONING_ALLOW_FETCH_COMMAND
+      ProvisioningSettings->setFetchFileTypeAllowed(FileType::CONFIG_DAT,       0, DEFAULT_PROVISIONING_FETCH_CONFIG);
+      ProvisioningSettings->setFetchFileTypeAllowed(FileType::SECURITY_DAT,     0, DEFAULT_PROVISIONING_FETCH_SECURITY);
+      #if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE
+      ProvisioningSettings->setFetchFileTypeAllowed(FileType::DEV_SECURITY_DAT, 0, DEFAULT_PROVISIONING_FETCH_DEV_SECURITY);
+      #endif // if FEATURE_STORE_CREDENTIALS_SEPARATE_FILE
+      ProvisioningSettings->setFetchFileTypeAllowed(FileType::NOTIFICATION_DAT, 0, DEFAULT_PROVISIONING_FETCH_NOTIFICATIONS);
+      ProvisioningSettings->setFetchFileTypeAllowed(FileType::PROVISIONING_DAT, 0, DEFAULT_PROVISIONING_FETCH_PROVISIONING);
+      ProvisioningSettings->setFetchFileTypeAllowed(FileType::RULES_TXT,        0, DEFAULT_PROVISIONING_FETCH_RULES1);
+      ProvisioningSettings->setFetchFileTypeAllowed(FileType::RULES_TXT,        1, DEFAULT_PROVISIONING_FETCH_RULES2);
+      ProvisioningSettings->setFetchFileTypeAllowed(FileType::RULES_TXT,        2, DEFAULT_PROVISIONING_FETCH_RULES3);
+      ProvisioningSettings->setFetchFileTypeAllowed(FileType::RULES_TXT,        3, DEFAULT_PROVISIONING_FETCH_RULES4);
+      # endif // if DEFAULT_PROVISIONING_ALLOW_FETCH_COMMAND
+      ProvisioningSettings->allowedFlags.allowFetchFirmware = DEFAULT_PROVISIONING_FETCH_FIRMWARE;
       saveProvisioningSettings(*ProvisioningSettings);
     }
   }
