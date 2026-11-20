@@ -20,6 +20,8 @@
 # endif
 #endif // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
 
+#include <stdlib.h>
+
 #ifdef ESP32
 # define CONSOLE_INPUT_BUFFER_SIZE          1280
 #else
@@ -40,7 +42,7 @@
 EspEasy_Console_Port::EspEasy_Console_Port(LogDestination log_destination)
   : _serialWriteBuffer(log_destination)
 {
-  InputBuffer_Serial = (char *)calloc(1, CONSOLE_INPUT_BUFFER_SIZE);
+  InputBuffer_Serial.reserve(CONSOLE_INPUT_BUFFER_SIZE);
 }
 
 EspEasy_Console_Port::~EspEasy_Console_Port()
@@ -52,7 +54,6 @@ EspEasy_Console_Port::~EspEasy_Console_Port()
     _serial = nullptr;
   }
 #endif // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
-  free(InputBuffer_Serial);
 }
 
 EspEasy_Console_Port::operator bool() const
@@ -237,7 +238,7 @@ bool EspEasy_Console_Port::process_serialWriteBuffer()
   size_t nrLinesWritten = 0;
 
   PrintToString str;
-  str.reserve(CONSOLE_MAX_WRITE_CHUNKSIZE);
+  str.reserve(CONSOLE_MAX_WRITE_CHUNKSIZE + 1);
 
   size_t totalWritten = 0;
 
@@ -281,28 +282,22 @@ bool EspEasy_Console_Port::process_serialWriteBuffer()
 
 bool EspEasy_Console_Port::process_consoleInput(uint8_t SerialInByte)
 {
-  if (!InputBuffer_Serial) {
-    return false;
-  }
-
   if (SerialInByte >= 32)                                  // Any character from space and up
   {
-    if (SerialInByteCounter < CONSOLE_INPUT_BUFFER_SIZE) { // add char to string if it still fits
-      InputBuffer_Serial[SerialInByteCounter++] = SerialInByte;
+    if (InputBuffer_Serial.length() < CONSOLE_INPUT_BUFFER_SIZE) { // add char to string if it still fits
+      InputBuffer_Serial += (char)SerialInByte;
     }
   }
 
-  if ((SerialInByte == '\b') && (SerialInByteCounter > 0)) // Correct a typo using BackSpace
+  if ((SerialInByte == '\b') && (!InputBuffer_Serial.isEmpty())) // Correct a typo using BackSpace
   {
-    --SerialInByteCounter;
+    InputBuffer_Serial.substring(0, InputBuffer_Serial.length() - 1);
   } else
   if ((SerialInByte == '\r') || (SerialInByte == '\n'))
   {
     // Ignore empty command
-    if (SerialInByteCounter != 0) {
-      if (SerialInByteCounter < CONSOLE_INPUT_BUFFER_SIZE) {
-        InputBuffer_Serial[SerialInByteCounter] = 0; // serial data completed
-
+    if (!InputBuffer_Serial.isEmpty()) {
+      if (InputBuffer_Serial.length() < CONSOLE_INPUT_BUFFER_SIZE) {
         String cmd(InputBuffer_Serial);
 #if !FEATURE_COLORIZE_CONSOLE_LOGS
         Logging.consolePrintln(concat('>', cmd));
@@ -310,8 +305,7 @@ bool EspEasy_Console_Port::process_consoleInput(uint8_t SerialInByte)
 
         ExecuteCommand_all({ EventValueSource::Enum::VALUE_SOURCE_SERIAL, std::move(cmd) }, true);
       }
-      SerialInByteCounter   = 0;
-      InputBuffer_Serial[0] = 0; // serial data processed, clear buffer
+      InputBuffer_Serial.clear(); // serial data processed, clear buffer
       return true;
     }
   }

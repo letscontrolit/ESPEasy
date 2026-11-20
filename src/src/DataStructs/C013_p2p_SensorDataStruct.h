@@ -57,9 +57,11 @@ struct __attribute__((__packed__)) C013_SensorDataStruct
 
 #include "../Helpers/Memory.h"
 
-
+#if defined(USE_SECOND_HEAP) || defined(ESP32)
 #define MakeC013_SensorData(T) void * calloc_ptr = special_calloc(1,sizeof(C013_SensorDataStruct)); UP_C013_SensorDataStruct T(new (calloc_ptr)  C013_SensorDataStruct());
-
+#else
+#define MakeC013_SensorData(T)  UP_C013_SensorDataStruct T(new (std::nothrow)  C013_SensorDataStruct());
+#endif
 // Check to see if MakeC013_SensorData was successful
 #define AllocatedC013_SensorData(T) (T.get() != nullptr)
 

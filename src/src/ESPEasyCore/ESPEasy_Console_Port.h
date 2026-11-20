@@ -53,8 +53,7 @@ public:
 
 #endif // if FEATURE_DEFINE_SERIAL_CONSOLE_PORT
 
-  int                 SerialInByteCounter{};
-  char               *InputBuffer_Serial{};
+  String              InputBuffer_Serial;
   SerialWriteBuffer_t _serialWriteBuffer;
 
 #if FEATURE_DEFINE_SERIAL_CONSOLE_PORT

@@ -29,6 +29,11 @@
 #include "../Helpers/StringParser.h"
 #include "../Helpers/SystemVariables.h"
 
+
+// #ifdef ESP8266
+// #include <ext_printf.h> // Needed for "%.2f" like formats when using our own stripped Arduino
+// #endif
+
 // #include "../Helpers/_Plugin_SensorTypeHelper.h"
 
 // -V::569
@@ -240,74 +245,222 @@ void free_string(String& str) {
    Format string using vsnprintf
  \*********************************************************************************************/
 
-String strformat(const String& format, ...)
+
+enum class ExpectedArgType {
+  TypeUnknown,
+  TypeLiteral,
+  TypeChar,
+  TypeCharStr,
+  TypeInt,
+  TypeUnsigned,
+  TypeBin,
+  TypeHex_upper,
+  TypeHex_lower,
+  TypeDouble,
+  TypePointer,
+
+  Dot,
+  Minus,
+  Numerical
+
+};
+
+static ExpectedArgType getExpectedArgType(const char& c)
 {
-  String res;
+  switch (c)
   {
-    va_list arg;
-    va_start(arg, format); // variable args start after parameter 'format'
-    static char temp[64];
-    char*buffer = temp;
-    int  len    = vsnprintf_P(temp, sizeof(temp), format.c_str(), arg);
-    va_end(arg);
-
-    if (len > static_cast<int>(sizeof(temp) - 1)) {
-      buffer = new (std::nothrow) char[len + 1];
-
-      if (!buffer) {
-        return res;
-      }
-      va_start(arg, format);
-      vsnprintf_P(buffer, len + 1, format.c_str(), arg);
-      va_end(arg);
-    }
-
-    if (len > 64) {
-      reserve_special(res, len + 1);
-    }
-    res = buffer;
-
-    if (buffer != temp) {
-      delete[] buffer;
-    }
+    case '%': return ExpectedArgType::TypeLiteral;
+    case 'c': return ExpectedArgType::TypeChar;
+    case 's': return ExpectedArgType::TypeCharStr;
+    case 'i':
+    case 'd': return ExpectedArgType::TypeInt;
+    case 'u': return ExpectedArgType::TypeUnsigned;
+    case 'b': return ExpectedArgType::TypeBin;
+    case 'x': return ExpectedArgType::TypeHex_lower;
+    case 'X': return ExpectedArgType::TypeHex_upper;
+    case 'f': return ExpectedArgType::TypeDouble;
+    case 'p': return ExpectedArgType::TypePointer;
+    case '.': return ExpectedArgType::Dot;
+    case '-': return ExpectedArgType::Minus;
   }
 
-  return res;
+  if ((c >= '0') && (c <= '9')) {
+    return ExpectedArgType::Numerical;
+  }
+
+  return ExpectedArgType::TypeUnknown;
+}
+
+static ExpectedArgType parseArgType(const String& format_str, unsigned int& pos, char& prefixChar, int& minLength, int& nrDecimals)
+{
+  const auto format_str_length = format_str.length();
+
+  if (pos >= format_str_length) { return ExpectedArgType::TypeUnknown; }
+
+  if (format_str[pos] != '%') { return ExpectedArgType::TypeLiteral; }
+  ++pos;
+
+  if (pos >= format_str_length) { return ExpectedArgType::TypeUnknown; }
+
+  minLength  = 0;
+  nrDecimals = 0;
+  prefixChar = '0';
+  bool dotSeen   = false;
+  bool minusSeen = false;
+
+  bool done = false;
+
+  ExpectedArgType argType = ExpectedArgType::TypeUnknown;
+
+  while (pos < format_str_length && !done) {
+    const char c = format_str[pos];
+    argType = getExpectedArgType(c);
+
+    switch (argType)
+    {
+      case ExpectedArgType::Dot:
+
+        if (dotSeen) { return ExpectedArgType::TypeUnknown; }
+        dotSeen = true;
+
+        if (minusSeen) {
+          minLength *= -1;
+          minusSeen  = false;
+        }
+        break;
+      case ExpectedArgType::Minus:
+        minusSeen = true;
+        break;
+      case ExpectedArgType::Numerical:
+
+        if (dotSeen) { nrDecimals = nrDecimals * 10 + (c - '0'); }
+        else { minLength = minLength * 10 + (c - '0'); }
+        break;
+
+      default:
+
+        if (argType == ExpectedArgType::TypeDouble) {
+          if (!dotSeen) { nrDecimals = 2; }
+        }
+
+        if (argType == ExpectedArgType::TypeCharStr) { prefixChar = ' '; }
+        done = true;
+        break;
+    }
+
+    if (!done) { ++pos; }
+  }
+
+  if (done) {
+    if (minusSeen) {
+      if (dotSeen) {
+        if (nrDecimals > 0) { nrDecimals *= -1; }
+      } else {
+        if (minLength > 0) { minLength *= -1; }
+      }
+    }
+
+    return argType;
+  }
+
+  return ExpectedArgType::TypeUnknown;
 }
 
 String strformat(const __FlashStringHelper *format, ...)
 {
   String res;
+  const String format_str(format);
+  const auto   format_str_length = format_str.length();
+
+  res.reserve(format_str_length); // Best guess right now.
+
+  va_list args;
+  va_start(args, format);         // variable args start after parameter 'format'
+
+  for (unsigned int pos = 0; pos < format_str_length && pos >= 0; ++pos)
   {
-    va_list arg;
-    va_start(arg, format); // variable args start after parameter 'format'
-    static char temp[64];
-    char*buffer = temp;
-    int  len    = vsnprintf_P(temp, sizeof(temp), (PGM_P)format, arg);
-    va_end(arg);
+    char prefixChar('0');
+    int  minLength{};
+    int  nrDecimals{};
 
-    if (len > static_cast<int>(sizeof(temp) - 1)) {
-      buffer = new (std::nothrow) char[len + 1];
+    const auto argType = parseArgType(format_str, pos, prefixChar, minLength, nrDecimals);
 
-      if (!buffer) {
-        return res;
+    switch (argType)
+    {
+      case ExpectedArgType::TypeLiteral:
+      {
+        const char c = format_str[pos];
+
+        if (c != '\0') {
+          res += c;
+        }
+        continue;
       }
-      va_start(arg, format);
-      vsnprintf_P(buffer, len + 1, (PGM_P)format, arg);
-      va_end(arg);
-    }
+      case ExpectedArgType::TypeChar:
+        res += static_cast<char>(va_arg(args, int));
+        continue;
+      case ExpectedArgType::TypeCharStr:
+      {
+        String val_str(va_arg(args, const char *));
+        prefixToMinimumLength(val_str, minLength, prefixChar);
+        res += val_str;
+        continue;
+      }
+      case ExpectedArgType::TypeInt:
+      {
+        String val_str(va_arg(args, int));
+        prefixToMinimumLength(val_str, minLength, prefixChar);
+        res += val_str;
+        continue;
+      }
+      case ExpectedArgType::TypeUnsigned:
+      case ExpectedArgType::TypeBin:
+      case ExpectedArgType::TypeHex_lower:
+      case ExpectedArgType::TypeHex_upper:
+      {
+        const unsigned char base =
+          (argType == ExpectedArgType::TypeBin) ? BIN :
+          (argType == ExpectedArgType::TypeUnsigned) ? DEC :
+          HEX;
 
-    if (len > 64) {
-      reserve_special(res, len + 1);
-    }
-    res = buffer;
+        String val_str(va_arg(args, unsigned int), base);
+        prefixToMinimumLength(val_str, minLength, prefixChar);
 
-    if (buffer != temp) {
-      delete[] buffer;
+        if (argType == ExpectedArgType::TypeHex_upper) { val_str.toUpperCase(); }
+        res += val_str;
+        continue;
+      }
+      case ExpectedArgType::TypeDouble:
+      {
+        String val_str(doubleToString(va_arg(args, double), nrDecimals));
+
+        if (nrDecimals > 0) { minLength += (nrDecimals + 1); }
+        prefixToMinimumLength(val_str, minLength, prefixChar);
+        res += val_str;
+        continue;
+      }
+
+      default:
+        continue;
     }
   }
 
+  va_end(args);
+
   return res;
+
+
+  /*
+  // FIXME TD-er: can't call a single function to process the variadic arguments from different call signatures.
+  // For example with flash string and String as format.
+  // Does not work, maybe try this later: https://stackoverflow.com/a/75157587/8708166
+     va_list arg;
+
+     va_start(arg, format); // variable args start after parameter 'format'
+     String res = do_strformat(format, arg);
+     va_end(arg);
+     return res;
+   */
 }
 
 /********************************************************************************************\
@@ -1669,7 +1822,6 @@ static bool getConvertArgumentStr(const __FlashStringHelper *marker, const Strin
 }
 
 
-
 # define _MAX_STRFORMAT_ARGUMENTS 2 // Max. 2 numeric arguments for now to avoid strformat() from crashing when reading the 3rd argument
                                     // that's not there
 
@@ -1751,6 +1903,7 @@ static bool getConvertArgument(const __FlashStringHelper *marker, ConvertArgumen
 static bool getConvertArgument2(const __FlashStringHelper *marker, ConvertArgumentData& data) {
   return getConvertArgument2(marker, data.str, data.arg1, data.arg2, data.startIndex, data.endIndex);
 }
+
 #if FEATURE_STRING_VARIABLES
 
 static bool getConvertArgumentStr(const __FlashStringHelper *marker, ConvertArgumentData& data) {
@@ -1846,8 +1999,8 @@ void parseStandardConversions(String& s, bool useURLencode) {
   #else
   SMART_CONV(F("%c_random%"), floatToString(HwRandom_f(data.arg1, data.arg2), 3, true))
   #endif // if FEATURE_USE_DOUBLE_AS_ESPEASY_RULES_FLOAT_TYPE
-  SMART_CONV(F("%c_to2c%"), toString(toTwosComplement(static_cast<int32_t>(data.arg1), static_cast<uint8_t>(data.arg2)), 0))
-  SMART_CONV(F("%c_fr2c%"), toString(fromTwosComplement(static_cast<uint32_t>(data.arg1), static_cast<uint8_t>(data.arg2)), 0))
+  SMART_CONV(F("%c_to2c%"),   toString(toTwosComplement(static_cast<int32_t>(data.arg1), static_cast<uint8_t>(data.arg2)), 0))
+  SMART_CONV(F("%c_fr2c%"),   toString(fromTwosComplement(static_cast<uint32_t>(data.arg1), static_cast<uint8_t>(data.arg2)), 0))
   #undef SMART_CONV
 
   #if FEATURE_STRING_VARIABLES

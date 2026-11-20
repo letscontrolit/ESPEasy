@@ -227,7 +227,7 @@ struct BusCmd_Helper_struct {
 
   bool parseAndExecute(BusCmd_CommandSource_e source,
                        const String         & line,
-                       const String         & logFormat);
+                       const __FlashStringHelper * logFormat);
   bool processCommands(struct EventStruct *event);
 
   // Setters

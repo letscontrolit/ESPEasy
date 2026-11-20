@@ -383,8 +383,12 @@ UP_ControllerSettingsStruct doMakeControllerSettings()
   // Need to make sure every byte between the members is also zero
   // Otherwise the checksum will fail and settings will be saved too often.
   // Therefore we're using calloc instead of malloc.
+#if defined(USE_SECOND_HEAP) || defined(ESP32)
   void * calloc_ptr = special_calloc(1,sizeof(ControllerSettingsStruct)); 
   UP_ControllerSettingsStruct T(new (calloc_ptr)  ControllerSettingsStruct());
+#else
+  UP_ControllerSettingsStruct T(new (std::nothrow)  ControllerSettingsStruct());
+#endif
   if (T) T->reset();
   return T;
 }

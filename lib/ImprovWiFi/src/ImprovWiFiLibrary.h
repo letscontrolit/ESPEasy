@@ -56,9 +56,9 @@ private:
                                  size_t         length);
 
   void           getAvailableWifiNetworks();
-  inline void    replaceAll(std::string      & str,
-                            const std::string& from,
-                            const std::string& to);
+  inline void    replaceAll(String      & str,
+                            const String& from,
+                            const String& to);
 
   // improv SDK
   ImprovTypes::ParseState    parseImprovSerial(size_t         position,
@@ -70,7 +70,7 @@ private:
                                              size_t         length,
                                              bool           check_checksum = true);
   std::vector<uint8_t>       build_rpc_response(ImprovTypes::Command            command,
-                                                const std::vector<std::string>& datum,
+                                                const std::vector<String>& datum,
                                                 bool                            add_checksum);
 
 public:

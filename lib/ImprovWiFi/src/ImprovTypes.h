@@ -67,16 +67,16 @@ enum ImprovSerialType : uint8_t {
 
 struct ImprovCommand {
   Command     command{};
-  std::string ssid;
-  std::string password;
+  String ssid;
+  String password;
 };
 
 struct ImprovWiFiParamsStruct {
-  std::string firmwareName;
-  std::string firmwareVersion;
-  std::string deviceName;
-  std::string deviceUrl;
-  std::string chipVariant =
+  String firmwareName;
+  String firmwareVersion;
+  String deviceName;
+  String deviceUrl;
+  String chipVariant =
 #if CONFIG_IDF_TARGET_ESP32
     "ESP32"
 #elif defined(CONFIG_IDF_TARGET_ESP32S2)

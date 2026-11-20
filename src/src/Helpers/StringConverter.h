@@ -146,10 +146,8 @@ void free_string(String& str);
    See: https://cplusplus.com/reference/cstdio/printf/
  \*********************************************************************************************/
 
-String strformat(const String& format,
-                 ...);
-String strformat(const __FlashStringHelper *format,
-                 ...);
+//String strformat(const String& format, ...);
+String strformat(const __FlashStringHelper *format, ...);
 
 
 /********************************************************************************************\

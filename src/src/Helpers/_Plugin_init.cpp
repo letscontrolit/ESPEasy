@@ -2,6 +2,8 @@
 
 #include "../../ESPEasy_common.h"
 
+#include "../DataStructs/ESPEasy_EventStruct.h"
+
 #include "../Globals/Device.h"
 #include "../Globals/Settings.h"
 
