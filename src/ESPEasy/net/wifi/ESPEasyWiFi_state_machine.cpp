@@ -580,12 +580,12 @@ bool ESPEasyWiFi_t::connectSTA()
     doSetWiFiCountryPolicyManual();
   }
 # endif // ifdef ESP32
-  wifi_STA_data->mark_begin_establish_connection();
-
 # ifdef ESP8266
+  wifi_STA_data->mark_begin_establish_connection();
   doWiFiDisconnectBeforeConnect();
 # else
   doWiFiDisconnect();
+  wifi_STA_data->mark_begin_establish_connection();
 # endif
 
   _connectAttemptStarted = true;
