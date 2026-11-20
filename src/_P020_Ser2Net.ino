@@ -8,6 +8,7 @@
 
 /************
  * Changelog:
+ * 2026-11-20 tonhuisman: Show baud rate on devices overview page
  * 2026-07-11 tonhuisman: Send also Derived values when sending the event with received data, when enabled and available
  * 2025-03-26 tonhuisman: Add optional receiving (relaying) of UDP data to Serial. Uses the same port as configured for the (default) TCP
  *                        connection. Available on ESP32 only.
@@ -160,6 +161,10 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SHOW_CONFIG:
     {
       string += serialHelper_getSerialTypeLabel(event);
+      # ifndef LIMIT_BUILD_SIZE
+      string += F("<BR>Baud rate: ");
+      string += P020_GET_BAUDRATE;
+      # endif // ifndef LIMIT_BUILD_SIZE
       success = true;
       break;
     }
@@ -218,7 +223,7 @@ boolean Plugin_020(uint8_t function, struct EventStruct *event, String& string)
         P020_GET_PROTOCOL);
       # endif // if P020_USE_PROTOCOL
 
-      addFormNumericBox(F("Baud Rate"), F("pbaud"), P020_GET_BAUDRATE, 0);
+      addFormNumericBox(F("Baud rate"), F("pbaud"), P020_GET_BAUDRATE, 0);
       uint8_t serialConfChoice = serialHelper_convertOldSerialConfig(P020_SERIAL_CONFIG);
       serialHelper_serialconfig_webformLoad(event, serialConfChoice);
       {

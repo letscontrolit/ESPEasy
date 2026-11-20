@@ -11,6 +11,7 @@
 
 /**
  * Changelog:
+ * 2026-11-20 tonhuisman: Show baud rate on devices overview page
  * 2025-12-22 tonhuisman: Add support for receiving binary data, fixed length receive and sending events with hex data
  *                        Moved most #define variables to P087_data_struct.h
  * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported for Serial Proxy)
@@ -138,13 +139,17 @@ boolean Plugin_087(uint8_t function, struct EventStruct *event, String& string) 
     case PLUGIN_WEBFORM_SHOW_CONFIG:
     {
       string += serialHelper_getSerialTypeLabel(event);
+      # ifndef LIMIT_BUILD_SIZE
+      string += F("<BR>Baud rate: ");
+      string += P087_BAUDRATE;
+      # endif // ifndef LIMIT_BUILD_SIZE
       success = true;
       break;
     }
 
     case PLUGIN_WEBFORM_SHOW_SERIAL_PARAMS:
     {
-      addFormNumericBox(F("Baudrate"), P087_BAUDRATE_LABEL, P087_BAUDRATE, 300, 115200);
+      addFormNumericBox(F("Baud rate"), P087_BAUDRATE_LABEL, P087_BAUDRATE, 300, 115200);
       addUnit(F("baud"));
       const uint8_t serialConfChoice = serialHelper_convertOldSerialConfig(P087_SERIAL_CONFIG);
       serialHelper_serialconfig_webformLoad(event, serialConfChoice);

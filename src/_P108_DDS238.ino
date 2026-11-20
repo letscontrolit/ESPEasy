@@ -17,6 +17,7 @@
 //      with most code copied from plugin 085: _P085_AcuDC243.ino
 
 /** Changelog:
+ * 2026-11-20 tonhuisman: Show baud rate on devices overview page
  * 2025-01-17 tonhuisman: Implement support for MQTT AutoDiscovery (partially)
  * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported yet for DDS238)
  */
@@ -91,6 +92,10 @@ boolean Plugin_108(uint8_t function, struct EventStruct *event, String& string) 
     case PLUGIN_WEBFORM_SHOW_CONFIG:
     {
       string += serialHelper_getSerialTypeLabel(event);
+      # ifndef LIMIT_BUILD_SIZE
+      string += F("<BR>Baud rate: ");
+      string += p108_storageValueToBaudrate(P108_BAUDRATE);
+      # endif // ifndef LIMIT_BUILD_SIZE
       success = true;
       break;
     }
@@ -120,7 +125,7 @@ boolean Plugin_108(uint8_t function, struct EventStruct *event, String& string) 
         options_baudrate[i] = String(p108_storageValueToBaudrate(i));
       }
       const FormSelectorOptions selector(4, options_baudrate);
-      selector.addFormSelector(F("Baud Rate"), P108_BAUDRATE_LABEL, P108_BAUDRATE);
+      selector.addFormSelector(F("Baud rate"), P108_BAUDRATE_LABEL, P108_BAUDRATE);
       addUnit(F("baud"));
       addFormNumericBox(F("Modbus Address"), P108_DEV_ID_LABEL, P108_DEV_ID, 1, 247);
       break;
