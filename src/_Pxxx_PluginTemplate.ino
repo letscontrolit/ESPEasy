@@ -174,6 +174,10 @@ boolean Plugin_xxx(uint8_t function, struct EventStruct *event, String& string)
     {
       // Called to show non default pin assignment or addresses like for plugins using serial or 1-Wire
       string += serialHelper_getSerialTypeLabel(event);
+      # ifndef LIMIT_BUILD_SIZE
+      string += F("<BR>Baud rate: ");
+      string += Pxxx_BAUDRATE;
+      # endif // ifndef LIMIT_BUILD_SIZE
       success = true;
       break;
     }

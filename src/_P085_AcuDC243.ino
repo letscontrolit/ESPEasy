@@ -17,6 +17,7 @@
  */
 
 /** Changelog:
+ * 2026-11-20 tonhuisman: Show baud rate on devices overview page
  * 2025-01-12 tonhuisman: Implement support for MQTT AutoDiscovery (partially)
  * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported yet for AcuDC)
  */
@@ -83,6 +84,10 @@ boolean Plugin_085(uint8_t function, struct EventStruct *event, String& string) 
     case PLUGIN_WEBFORM_SHOW_CONFIG:
     {
       string += serialHelper_getSerialTypeLabel(event);
+      # ifndef LIMIT_BUILD_SIZE
+      string += F("<BR>Baud rate: ");
+      string += p085_storageValueToBaudrate(P085_BAUDRATE);
+      # endif // ifndef LIMIT_BUILD_SIZE
       success = true;
       break;
     }
@@ -112,7 +117,7 @@ boolean Plugin_085(uint8_t function, struct EventStruct *event, String& string) 
         options_baudrate[i] = String(p085_storageValueToBaudrate(i));
       }
       const FormSelectorOptions selector(6, options_baudrate);
-      selector.addFormSelector(F("Baud Rate"), P085_BAUDRATE_LABEL, P085_BAUDRATE);
+      selector.addFormSelector(F("Baud rate"), P085_BAUDRATE_LABEL, P085_BAUDRATE);
       addUnit(F("baud"));
       addFormNumericBox(F("Modbus Address"), P085_DEV_ID_LABEL, P085_DEV_ID, 1, 247);
       break;

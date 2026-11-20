@@ -6,6 +6,7 @@
 // #######################################################################################################
 
 /** Changelog:
+ * 2026-11-20 tonhuisman: Show baud rate on devices overview page
  * 2025-07-13 tonhuisman: Set defaults for Custom Value Type per task value
  * 2025-06-14 tonhuisman: Add support for Custom Value Type per task value
  * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported yet for VE.Direct)
@@ -123,6 +124,10 @@ boolean Plugin_176(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SHOW_CONFIG:
     {
       string += serialHelper_getSerialTypeLabel(event);
+      # ifndef LIMIT_BUILD_SIZE
+      string += F("<BR>Baud rate: ");
+      string += P176_SERIAL_BAUDRATE;
+      # endif // ifndef LIMIT_BUILD_SIZE
       success = true;
       break;
     }
@@ -146,7 +151,7 @@ boolean Plugin_176(uint8_t function, struct EventStruct *event, String& string)
 
     case PLUGIN_WEBFORM_LOAD:
     {
-      addFormNumericBox(F("Baud Rate"), F("pbaud"), P176_SERIAL_BAUDRATE, 0);
+      addFormNumericBox(F("Baud rate"), F("pbaud"), P176_SERIAL_BAUDRATE, 0);
       const uint8_t serialConfChoice = serialHelper_convertOldSerialConfig(P176_SERIAL_CONFIG);
       serialHelper_serialconfig_webformLoad(event, serialConfChoice);
 

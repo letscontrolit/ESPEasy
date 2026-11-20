@@ -13,6 +13,7 @@
  */
 
 /** Changelog:
+ * 2026-11-20 tonhuisman: Show baud rate on devices overview page
  * 2025-10-25 tonhuisman: Add custom Unit of Measure group per value to limit selection to useful options
  * 2025-08-02 repa6: Add partial support for TAC2100 meter
  * 2025-01-17 tonhuisman: Implement support for MQTT AutoDiscovery (partial)
@@ -121,6 +122,10 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
     case PLUGIN_WEBFORM_SHOW_CONFIG:
     {
       string += serialHelper_getSerialTypeLabel(event);
+      # ifndef LIMIT_BUILD_SIZE
+      string += F("<BR>Baud rate: ");
+      string += p078_storageValueToBaudrate(P078_BAUDRATE);
+      # endif // ifndef LIMIT_BUILD_SIZE
       success = true;
       break;
     }
@@ -159,7 +164,7 @@ boolean Plugin_078(uint8_t function, struct EventStruct *event, String& string)
         }
         constexpr size_t optionCount = NR_ELEMENTS(options_baudrate);
         const FormSelectorOptions selector(optionCount, options_baudrate);
-        selector.addFormSelector(F("Baud Rate"), P078_BAUDRATE_LABEL, P078_BAUDRATE);
+        selector.addFormSelector(F("Baud rate"), P078_BAUDRATE_LABEL, P078_BAUDRATE);
         addUnit(F("baud"));
       }
 
