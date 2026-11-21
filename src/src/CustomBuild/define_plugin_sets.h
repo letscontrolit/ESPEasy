@@ -1634,6 +1634,9 @@ To create/register a plugin, you have to :
     #if defined(SOC_DAC_SUPPORTED) && SOC_DAC_SUPPORTED // Only supported on ESP32 and ESP32-S2
       #define USES_P152 // ESP32 DAC
     #endif
+    #if !defined(USES_P180) && defined(ESP32)
+      #define USES_P180   // Generic - I2C Generic
+    #endif
 #endif
 
 
