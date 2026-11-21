@@ -585,6 +585,7 @@ bool ESPEasyWiFi_t::connectSTA()
   doWiFiDisconnectBeforeConnect();
 # else
   doWiFiDisconnect();
+  delay(50);
   wifi_STA_data->mark_begin_establish_connection();
 # endif
 
