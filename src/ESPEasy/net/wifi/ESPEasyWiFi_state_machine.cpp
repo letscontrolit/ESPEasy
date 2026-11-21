@@ -22,7 +22,11 @@ namespace ESPEasy {
 namespace net {
 namespace wifi {
 
+# ifdef ESP8266
+    # define WIFI_STATE_MACHINE_STA_CONNECTING_TIMEOUT   30000
+# else
     # define WIFI_STATE_MACHINE_STA_CONNECTING_TIMEOUT   10000
+# endif
     # define WIFI_STATE_MACHINE_STA_AP_SCANNING_TIMEOUT  10000
     # define WIFI_STATE_MACHINE_STA_SCANNING_TIMEOUT     10000
     # define WIFI_STATE_MACHINE_AP_ONLY_TIMEOUT          60000
@@ -580,12 +584,14 @@ bool ESPEasyWiFi_t::connectSTA()
     doSetWiFiCountryPolicyManual();
   }
 # endif // ifdef ESP32
-  wifi_STA_data->mark_begin_establish_connection();
-
 # ifdef ESP8266
   doWiFiDisconnectBeforeConnect();
+  delay(100);
+  wifi_STA_data->mark_begin_establish_connection();
 # else
   doWiFiDisconnect();
+  delay(100);
+  wifi_STA_data->mark_begin_establish_connection();
 # endif
 
   _connectAttemptStarted = true;
