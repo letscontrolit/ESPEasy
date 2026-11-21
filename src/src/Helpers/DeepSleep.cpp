@@ -78,8 +78,13 @@ bool readyForSleep()
   }
 
   if (!ESPEasy::net::NetworkConnected()) {
-    // Allow 12 seconds to establish connections
+    #ifdef ESP8266
+    // ESP8266 association and DHCP may need more than 12 seconds.
+    return timeOutReached(timerAwakeFromDeepSleep + 30000);
+    #else
+    // Allow 12 seconds to establish connections.
     return timeOutReached(timerAwakeFromDeepSleep + 12000);
+    #endif
   }
   return timeOutReached(timerAwakeFromDeepSleep + 1000 * Settings.deepSleep_wakeTime);
 }
