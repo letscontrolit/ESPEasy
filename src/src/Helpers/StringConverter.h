@@ -145,8 +145,9 @@ void free_string(String& str);
    Format string using vsnprintf
    See: https://cplusplus.com/reference/cstdio/printf/
  \*********************************************************************************************/
-
-//String strformat(const String& format, ...);
+#if FEATURE_STRING_VARIABLES
+String strformat(const String& format, ...);
+#endif
 String strformat(const __FlashStringHelper *format, ...);
 
 

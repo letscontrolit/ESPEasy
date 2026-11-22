@@ -365,6 +365,90 @@ static ExpectedArgType parseArgType(const String& format_str, unsigned int& pos,
 
   return ExpectedArgType::TypeUnknown;
 }
+#if FEATURE_STRING_VARIABLES
+String strformat(const String& format, ...)
+{
+  String res;
+  const auto   format_str_length = format.length();
+
+  res.reserve(format_str_length); // Best guess right now.
+
+  va_list args;
+  va_start(args, format);         // variable args start after parameter 'format'
+
+  for (unsigned int pos = 0; pos < format_str_length && pos >= 0; ++pos)
+  {
+    char prefixChar('0');
+    int  minLength{};
+    int  nrDecimals{};
+
+    const auto argType = parseArgType(format, pos, prefixChar, minLength, nrDecimals);
+
+    switch (argType)
+    {
+      case ExpectedArgType::TypeLiteral:
+      {
+        const char c = format[pos];
+
+        if (c != '\0') {
+          res += c;
+        }
+        continue;
+      }
+      case ExpectedArgType::TypeChar:
+        res += static_cast<char>(va_arg(args, int));
+        continue;
+      case ExpectedArgType::TypeCharStr:
+      {
+        String val_str(va_arg(args, const char *));
+        prefixToMinimumLength(val_str, minLength, prefixChar);
+        res += val_str;
+        continue;
+      }
+      case ExpectedArgType::TypeInt:
+      {
+        String val_str(va_arg(args, int));
+        prefixToMinimumLength(val_str, minLength, prefixChar);
+        res += val_str;
+        continue;
+      }
+      case ExpectedArgType::TypeUnsigned:
+      case ExpectedArgType::TypeBin:
+      case ExpectedArgType::TypeHex_lower:
+      case ExpectedArgType::TypeHex_upper:
+      {
+        const unsigned char base =
+          (argType == ExpectedArgType::TypeBin) ? BIN :
+          (argType == ExpectedArgType::TypeUnsigned) ? DEC :
+          HEX;
+
+        String val_str(va_arg(args, unsigned int), base);
+        prefixToMinimumLength(val_str, minLength, prefixChar);
+
+        if (argType == ExpectedArgType::TypeHex_upper) { val_str.toUpperCase(); }
+        res += val_str;
+        continue;
+      }
+      case ExpectedArgType::TypeDouble:
+      {
+        String val_str(doubleToString(va_arg(args, double), nrDecimals));
+
+        if (nrDecimals > 0) { minLength += (nrDecimals + 1); }
+        prefixToMinimumLength(val_str, minLength, prefixChar);
+        res += val_str;
+        continue;
+      }
+
+      default:
+        continue;
+    }
+  }
+
+  va_end(args);
+
+  return res;
+}
+#endif
 
 String strformat(const __FlashStringHelper *format, ...)
 {
