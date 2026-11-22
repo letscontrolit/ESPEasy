@@ -137,6 +137,36 @@ Indicators (recommended settings)
           :code:`100-(2000-%value%)/(2000-350)*100` as a formula. And instead of :code:`ppm` as value name you should use
           :code:`RCO2` (relative CO2) and 1 decimal.
 
+Modbus registers
+----------------
+
+The registers below were measured on a tSense Disp T RH RL through the 3.5mm service port (slave address
+``0xFE``, 9600 8N1). Addresses are the 0-based values sent on the wire (the plugin's ``IR4`` is address ``3``).
+They are useful with the ``senseair,readhr`` / ``senseair,writehr`` commands.
+
+.. csv-table::
+   :header: "Type", "Address", "Meaning"
+   :widths: 8, 8, 60
+
+   "Input", "0", "Error status bits (see Indicators above), 0 = no error."
+   "Input", "3", "Carbon dioxide, ppm."
+   "Input", "4", "Temperature x 100, in the unit the display is set to. With the display in Fahrenheit this reads Fahrenheit, not Celsius."
+   "Input", "5", "Relative humidity x 100."
+   "Input", "21 - 24", "Live level of output 1 - 4 (0 - 16383 = 0 - 100%). Output 4 is the relay."
+   "Input", "28", "Bit 8 (``0x100``) is set while the relay is on. On the tSense this register is not a firmware revision."
+   "Holding", "21 - 24", "Override for output 1 - 4. ``32767`` (``0x7FFF``) = no override. For the relay (24): ``0`` = off, ``16383`` (``0x3FFF``) = on. This is what ``senseair_setrelay`` writes."
+   "Holding", "32 - 35", "Low end of the range for output 1 - 4. For the relay (35) this is the release level in ppm."
+   "Holding", "40 - 43", "Span of the range for output 1 - 4. For the relay (43) the switch-on level is low + span."
+   "Holding", "62", "RS485 baud rate."
+   "Holding", "63", "RS485 address."
+
+Holding registers above 63 return an illegal-address exception. Input register 2 does not follow the relay.
+
+.. note::
+   The relay thresholds are stored as a low level plus a span: changing the relay **High** setting on the
+   touchscreen from 1500 to 1400 ppm changed only holding register 43 (300 to 200). To move the lower threshold
+   without moving the upper one, write both registers.
+
 Rules examples
 --------------
 
