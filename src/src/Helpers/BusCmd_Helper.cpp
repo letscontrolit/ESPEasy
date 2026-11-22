@@ -204,6 +204,15 @@ String BusCmd_Command_struct::toString() {
 
 # endif // ifndef LIMIT_BUILD_SIZE
 
+static void copy(BusCmd_Command_vector& to, const BusCmd_Command_vector& from)
+{
+  to.clear();
+  for (auto it = from.begin(); it != from.end(); ++it)
+  {
+    to.push_back(*it);
+  }
+}
+
 /**
  * Constructor BusCmd_Buffer
  */
@@ -224,10 +233,9 @@ BusCmd_Helper_struct::BusCmd_Helper_struct(IBusCmd_Handler*busCmd_Handler,
 /**
  *  Destructor BusCmd_Helper_struct
  */
-BusCmd_Helper_struct::~BusCmd_Helper_struct() {
-  _commandCache.clear();
-  _commands.clear();
-  _buffer.clear();
+BusCmd_Helper_struct::~BusCmd_Helper_struct()
+{
+  
 }
 
 const __FlashStringHelper * BusCmd_Helper_struct::cacheSuffix(BusCmd_CommandSource_e source) {
@@ -248,24 +256,25 @@ void BusCmd_Helper_struct::setBuffer(uint8_t       index,
                                      const String& name,
                                      const String& line) {
   if (_buffer.size() < index + 1u) {
-    _buffer.resize(max(index + 1, VARS_PER_TASK), BusCmd_Buffer(EMPTY_STRING, EMPTY_STRING));
+    _buffer.resize(max(index + 1, VARS_PER_TASK));
   }
-  _buffer[index] = BusCmd_Buffer(name, line);
+  _buffer[index].cacheName  = name;
+  _buffer[index].commandSet = line;
 }
 
 /*********************************************************************************************
  * Handle I2C-command processing, optionally stored to command cache
  * Format: <cmd>.<dataformat>[.<len>][.<register>][.<data>];...
  ********************************************************************************************/
-std::vector<BusCmd_Command_struct>BusCmd_Helper_struct::parseBusCmdCommands(const String& name,
+BusCmd_Command_vector BusCmd_Helper_struct::parseBusCmdCommands(const String& name,
                                                                             const String& line) {
   return parseBusCmdCommands(name, line, false);
 }
 
-std::vector<BusCmd_Command_struct>BusCmd_Helper_struct::parseBusCmdCommands(const String& name,
+BusCmd_Command_vector BusCmd_Helper_struct::parseBusCmdCommands(const String& name,
                                                                             const String& line,
                                                                             const bool    update) {
-  std::vector<BusCmd_Command_struct> commands;
+  BusCmd_Command_vector  commands;
 
   if ((nullptr == _iBusCmd_Handler) || !_iBusCmd_Handler->init()) { // Handler is required and initialized
     return commands;
@@ -279,7 +288,7 @@ std::vector<BusCmd_Command_struct>BusCmd_Helper_struct::parseBusCmdCommands(cons
                               );
 
   if (!key.isEmpty() && (_commandCache.count(key) == 1) && !update) {
-    commands = _commandCache.find(key)->second;
+    copy(commands, _commandCache.find(key)->second);
 # ifndef BUILD_NO_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_INFO) && _showLog && parseAndLogOK) {
@@ -536,7 +545,7 @@ std::vector<BusCmd_Command_struct>BusCmd_Helper_struct::parseBusCmdCommands(cons
         # endif // ifndef LIMIT_BUILD_SIZE
 
         if (!key.isEmpty()) {
-          _commandCache[key + keyPostfix] = commands;
+          copy(_commandCache[key + keyPostfix], commands);
 # ifndef BUILD_NO_DEBUG
 
           if (loglevelActiveFor(LOG_LEVEL_INFO) && _showLog) {
@@ -1155,9 +1164,9 @@ String BusCmd_Helper_struct::replacePluginValues(const String& inVar) {
   return result;
 }
 
-bool BusCmd_Helper_struct::parseAndExecute(BusCmd_CommandSource_e source,
-                                           const String         & line,
-                                           const __FlashStringHelper * logFormat) {
+bool BusCmd_Helper_struct::parseAndExecute(BusCmd_CommandSource_e     source,
+                                           const String             & line,
+                                           const __FlashStringHelper *logFormat) {
   bool result = false;
 
   _commandSource = source;
@@ -1223,7 +1232,7 @@ bool BusCmd_Helper_struct::plugin_read(struct EventStruct *event) {
 
 bool BusCmd_Helper_struct::processCommands(struct EventStruct *event) {
   bool result       = true;
-  BusCmd_Buffer buf = BusCmd_Buffer(EMPTY_STRING, EMPTY_STRING);
+  BusCmd_Buffer buf;
 
   if (BusCmd_CommandState_e::Idle == _commandState) {
     _commandState = BusCmd_CommandState_e::Processing;
@@ -1233,7 +1242,8 @@ bool BusCmd_Helper_struct::processCommands(struct EventStruct *event) {
     _valueIsSet   = false; // init
 
     // loadStrings(event);
-    buf = _buffer[_loop];
+    if (_buffer.size() > _loop)
+      buf = _buffer[_loop];
 
     if (!(buf.cacheName.isEmpty() && buf.commandSet.isEmpty())) {
       const String cacheName = buf.cacheName.isEmpty()
@@ -1249,7 +1259,8 @@ bool BusCmd_Helper_struct::processCommands(struct EventStruct *event) {
     _varIndex = _loop;
   }
 
-  while (BusCmd_CommandState_e::StartingDelay != _commandState && BusCmd_CommandState_e::ConditionalExit != _commandState &&
+  while (BusCmd_CommandState_e::StartingDelay != _commandState && 
+         BusCmd_CommandState_e::ConditionalExit != _commandState &&
          _loop < _loopMax) {
     if (!_commands.empty()) {
       result &= executeBusCmdCommands();
@@ -1286,12 +1297,12 @@ bool BusCmd_Helper_struct::processCommands(struct EventStruct *event) {
   return result;
 }
 
-void BusCmd_Helper_struct::setCommands(std::vector<BusCmd_Command_struct>commands,
-                                       taskVarIndex_t                    taskVarIndex,
-                                       uint8_t                           loopStart,
-                                       uint8_t                           loopMax,
-                                       BusCmd_CommandState_e             commandState) {
-  _commands     = commands;
+void BusCmd_Helper_struct::setCommands(const BusCmd_Command_vector & commands,
+                                       taskVarIndex_t                taskVarIndex,
+                                       uint8_t                       loopStart,
+                                       uint8_t                       loopMax,
+                                       BusCmd_CommandState_e         commandState) {
+  copy(_commands, commands);
   _varIndex     = taskVarIndex;
   _loop         = loopStart;
   _loopMax      = loopMax;
@@ -1315,7 +1326,7 @@ bool BusCmd_Helper_struct::plugin_get_config(struct EventStruct *event,
     return false;
   }
   bool success = false;
-  std::vector<BusCmd_Command_struct> cmds;
+  BusCmd_Command_vector  cmds;
   taskVarIndex_t taskVar = INVALID_TASKVAR_INDEX;
 
   _commandSource = BusCmd_CommandSource_e::PluginGetConfigVar;

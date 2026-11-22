@@ -2575,9 +2575,7 @@ To create/register a plugin, you have to :
   #endif
 
   #ifndef USES_P180
-  #ifdef ESP32
     #define USES_P180   // Generic - I2C Generic
-  #endif
   #endif
 
 #endif // ifdef PLUGIN_NEOPIXEL_COLLECTION
