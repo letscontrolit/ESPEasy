@@ -39,12 +39,12 @@ void ESPEasy_Scheduler::setGPIOTimer(
   if (GPIOType != GPIO_TYPE_INVALID) {
     // Par1 & Par2 & GPIOType form a unique key
     const GPIOTimerID timerID(GPIOType, pinnr, state);
-    const systemTimerStruct timer_data(
+    systemTimerStruct timer_data(
       recurringCount,
       repeatInterval,
       state,
       alternateInterval);
-    systemTimers[timerID.mixed_id] = timer_data;
+    systemTimers[timerID.mixed_id] = std::move(timer_data);
     setNewTimerAt(timerID, millis() + msecFromNow);
   }
 }

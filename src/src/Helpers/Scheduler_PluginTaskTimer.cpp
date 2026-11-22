@@ -34,7 +34,7 @@ void ESPEasy_Scheduler::setPluginTaskTimer(
   systemTimerStruct timer_data;
 
   timer_data.fromEvent(taskIndex, Par1, Par2, Par3, Par4, Par5);
-  systemTimers[timerID.mixed_id] = timer_data;
+  systemTimers[timerID.mixed_id] = std::move(timer_data);
   setNewTimerAt(timerID, millis() + msecFromNow);
 }
 
@@ -62,7 +62,7 @@ void ESPEasy_Scheduler::process_plugin_task_timer(SchedulerTimerID id) {
      log += id;
      addLog(LOG_LEVEL_INFO, log);
    */
-  systemTimers.erase(id.mixed_id);
+  systemTimers.erase(it);
 
   {
     String dummy;
