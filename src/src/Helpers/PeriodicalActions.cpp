@@ -254,6 +254,13 @@ void runOncePerSecond()
   # endif // ifdef ESP8266
   #endif // if FEATURE_MDNS
 
+  # if FEATURE_SSDP
+  if (Settings.UseSSDP) {
+    SSDP_update();
+  }
+  # endif // if FEATURE_SSDP
+
+
   #if FEATURE_INTERNAL_TEMPERATURE && defined(ESP32_CLASSIC)
   getInternalTemperature(); // Just read the value every second to hopefully get a valid next reading on original ESP32
   #endif // if FEATURE_INTERNAL_TEMPERATURE && defined(ESP32_CLASSIC)
@@ -324,15 +331,6 @@ void runEach30Seconds()
   // sending $stats to homie controller
   CPluginCall(CPlugin::Function::CPLUGIN_INTERVAL, 0);
 
-  #if defined(ESP8266)
-  # if FEATURE_SSDP
-
-  if (Settings.UseSSDP) {
-    SSDP_update();
-  }
-
-  # endif // if FEATURE_SSDP
-  #endif // if defined(ESP8266)
 #if FEATURE_ADC_VCC
 
   //  if (!WiFiEventData.wifiConnectInProgress) {

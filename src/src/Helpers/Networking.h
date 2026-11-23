@@ -106,8 +106,6 @@ void sendSysInfoUDP(uint8_t repeats);
 #endif //FEATURE_ESPEASY_P2P
 
 
-#if defined(ESP8266)
-
 # if FEATURE_SSDP
 
 /********************************************************************************************\
@@ -154,7 +152,6 @@ bool SSDP_begin();
 void SSDP_update();
 
 # endif // if FEATURE_SSDP
-#endif // if defined(ESP8266)
 
 
 // ********************************************************************************

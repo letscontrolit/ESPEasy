@@ -4698,5 +4698,15 @@ To create/register a plugin, you have to :
 # endif 
 #endif
 
+#ifdef ESP32
+// SSDP needs UdpContext, which isn't available for ESP32 (or I don't know what it is called there)
+// TODO TD-er: See https://github.com/gitpeut/esp32SSDP/tree/master
+// and https://github.com/esp8266/Arduino/issues/2283#issuecomment-299635604
+    #ifdef FEATURE_SSDP
+    #undef FEATURE_SSDP
+    #endif
+    #define FEATURE_SSDP  0
+#endif
+
 
 #endif // CUSTOMBUILD_DEFINE_PLUGIN_SETS_H
