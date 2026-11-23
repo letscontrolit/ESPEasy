@@ -2,6 +2,8 @@
 
 #ifdef USES_P092
 
+#include <GPIO_Direct_Access.h>
+
 //
 // DLBus reads and decodes the DL-Bus.
 // The DL-Bus is used in heating control units e.g. sold by Technische Alternative (www.ta.co.at).
@@ -92,14 +94,14 @@ void IRAM_ATTR DLBus::ISR(void)
 void IRAM_ATTR DLBus::ISR_PinChanged(void)
 {
   //  int32_t TimeDiff = usecPassedSince(ISR_TimeLastBitChange); // time difference to previous pulse in Âµs
-  uint32_t _now     = micros();
-  int32_t  TimeDiff = (int32_t)(_now - ISR_TimeLastBitChange);
+  const uint32_t _now     = micros();
+  const int32_t  TimeDiff = (int32_t)(_now - ISR_TimeLastBitChange);
 
   //  ISR_TimeLastBitChange = micros();                           // save last pin change time
   ISR_TimeLastBitChange = _now;             // save last pin change time
 
   if (ISR_Receiving) {
-    uint8_t val = digitalRead(ISR_DLB_Pin); // read state
+    uint8_t val = DIRECT_pinRead_ISR(ISR_DLB_Pin); // read state
 
     // check pulse width
     if (TimeDiff >= 2 * ISR_MinDoublePulseWidth) {
@@ -248,17 +250,23 @@ boolean DLBus::CheckTimings(void) {
 void DLBus::ProcessBit(uint8_t b) {
   // ignore first pulse
   ISR_PulseCount++;
+  // Always make a copy of volatile values first before processing
+  const uint16_t pulseCount = ISR_PulseCount;
 
-  if (ISR_PulseCount % 2) {
+  if (pulseCount & 1) {
     return;
   }
-  BitNumber = (ISR_PulseCount / 2);
+  BitNumber = (pulseCount >> 1);
+
+  const uint32_t streamOffset = BitNumber >> 3;
+  if (streamOffset >= NR_ELEMENTS(ByteStream)) return;
+  const uint8_t mask = 1 << (BitNumber & 0x07);
 
   if (b) {
-    ByteStream[BitNumber / 8] |= (1 << (BitNumber % 8));  // set bit
+    ByteStream[streamOffset] |= mask;  // set bit
   }
   else {
-    ByteStream[BitNumber / 8] &= ~(1 << (BitNumber % 8)); // clear bit
+    ByteStream[streamOffset] &= ~mask; // clear bit
   }
 }
 
@@ -285,7 +293,7 @@ boolean DLBus::Processing(void) {
       AddToErrorLog(F("Error: No data frame available!"));
       return false;
     }
-    uint16_t RequiredBitStreamLength = (ISR_PulseNumber - DLBus_ReserveBytes) / DLBus_BitChangeFactor;
+    const uint16_t RequiredBitStreamLength = (ISR_PulseNumber - DLBus_ReserveBytes) / DLBus_BitChangeFactor;
 
     if ((BitNumber - StartBit) < RequiredBitStreamLength) {
       // no complete data frame available (difference between start_bit and received bits is < RequiredBitStreamLength)
