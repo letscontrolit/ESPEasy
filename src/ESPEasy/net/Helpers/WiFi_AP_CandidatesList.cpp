@@ -225,6 +225,25 @@ bool WiFi_AP_CandidatesList::hasCandidates() const {
   return false;
 }
 
+bool WiFi_AP_CandidatesList::hasNextCandidate() const {
+  auto it = candidates.begin();
+
+  if (attemptsLeft == 0 && it != candidates.end()) {
+    if (it->bits.isHidden && !Settings.HiddenSSID_SlowConnectPerBSSID()) {
+      while (it != candidates.end() && it->bits.isHidden) {
+        ++it;
+      }
+    } else {
+      ++it;
+    }
+  }
+
+  for (; it != candidates.end(); ++it) {
+    if (it->usable()) { return true; }
+  }
+  return false;
+}
+
 void WiFi_AP_CandidatesList::markCurrentConnection(bool stable) {
   clearCache();
   attemptsLeft = WiFi_CONNECT_ATTEMPTS;
@@ -485,14 +504,9 @@ void WiFi_AP_CandidatesList::addFromRTC() {
   }
 
   if ((candidates.size() > 0) && candidates.front().ssid.equals(fromRTC.ssid)) {
-    // Front candidate was already from RTC.
-    // Keep scan metadata, but retain the BSSID and channel of the actual RTC connection.
-    const MAC_address lastBSSID = fromRTC.bssid;
-    const uint8_t     lastChannel = fromRTC.channel;
+    // Prefer the fresh scan's BSSID and channel over potentially stale RTC data.
     fromRTC = candidates.front();
     fromRTC.index   = RTC.lastWiFiSettingsIndex;
-    fromRTC.bssid   = lastBSSID;
-    fromRTC.channel = lastChannel;
     candidates.pop_front();
   }
 

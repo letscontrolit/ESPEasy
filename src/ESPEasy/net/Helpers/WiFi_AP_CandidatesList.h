@@ -51,6 +51,8 @@ struct WiFi_AP_CandidatesList {
 
   bool                     hasCandidates() const;
 
+  bool                     hasNextCandidate() const;
+
   bool                     hasScanned() const { return scanned.size() != 0; }
 
   // Make sure the current connection (from RTC) is set as first next candidate.
