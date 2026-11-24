@@ -755,7 +755,7 @@ void P104_data_struct::displayBarGraph(uint8_t                 zone,
         pixTop    = zstruct._lower - 1 + (((zstruct._upper + 1) - zstruct._lower) / it->max) * it->value;
         pixBottom = zstruct._lower - 1;
         zeroPoint = 0;
-      } else if (definitelyGreaterThan(it->min, 0.0)) {
+      } else if (definitelyGreaterThan(it->min, 0.0) || definitelyLessThan(it->max, 0.0)) {
         pixTop    = zstruct._lower - 1 + (((zstruct._upper + 1) - zstruct._lower) / (it->max - it->min)) * (it->value - it->min);
         pixBottom = zstruct._lower - 1;
         zeroPoint = 0;
