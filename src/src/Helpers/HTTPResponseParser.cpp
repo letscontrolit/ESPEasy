@@ -175,8 +175,6 @@ static void readAndProcessJsonKeys(DynamicJsonDocument *root, int numJson) {
       }
     } else {
       csvOutput += F("null"); // Indicate missing value
-      csvOutput += val;
-      csvOutput += ',';
     }
     csvOutput += ',';
     #  endif // if FEATURE_JSON_PARSE
