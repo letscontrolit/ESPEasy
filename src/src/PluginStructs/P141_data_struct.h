@@ -7,6 +7,20 @@
 # include <Adafruit_GFX.h>     // include Adafruit graphics library
 # include <Adafruit_PCD8544.h> // include Adafruit PCD8544 LCD library
 
+// Support for ST7567 LCDs, enabled by default on ESP32 only, to not increase the size of ESP8266 builds.
+// Can be enabled in a Custom build by adding: #define P141_FEATURE_ST7567 1
+# ifndef P141_FEATURE_ST7567
+#  if defined(ESP32) && !defined(LIMIT_BUILD_SIZE)
+#   define P141_FEATURE_ST7567  1
+#  else // if defined(ESP32) && !defined(LIMIT_BUILD_SIZE)
+#   define P141_FEATURE_ST7567  0
+#  endif // if defined(ESP32) && !defined(LIMIT_BUILD_SIZE)
+# endif // ifndef P141_FEATURE_ST7567
+
+# if P141_FEATURE_ST7567
+#  include "../PluginStructs/P141_ST7567.h" // ST7567 128x64 / 128x32 LCD driver
+# endif // if P141_FEATURE_ST7567
+
 # include "../Helpers/AdafruitGFX_helper.h" // Use Adafruit graphics helper object
 
 # ifndef P141_FEATURE_CURSOR_XY_VALUES
@@ -33,6 +47,7 @@
 # define P141_CONFIG_BACKLIGHT_PIN      PCONFIG(3)       // Backlight pin
 # define P141_CONFIG_BACKLIGHT_PERCENT  PCONFIG(4)       // Backlight percentage
 # define P141_CONFIG_DEFAULT_FONT       PCONFIG(5)       // Default font
+# define P141_CONFIG_CONTROLLER         PCONFIG(6)       // Display controller, see P141_Controller
 
 # define P141_CONFIG_FLAGS              PCONFIG_ULONG(0) // All flags
 # define P141_CONFIG_FLAG_NO_WAKE       0                // Flag: Don't wake display
@@ -46,6 +61,7 @@
 # define P141_CONFIG_FLAG_CMD_TRIGGER   20               // Flag-offset to store 4 bits for Command trigger, uses bits 20, 21, 22 and 23
 # define P141_CONFIG_FLAG_BACK_FILL     28               // Flag: Background fill when printing text
 # define P141_CONFIG_FLAG_INVERTED      29               // Flag: Invert display content
+# define P141_CONFIG_FLAG_BACKLIGHT_INV 30               // Flag: Backlight is active low
 
 // Getters
 # define P141_CONFIG_FLAG_GET_MODE          (get4BitFromUL(P141_CONFIG_FLAGS, P141_CONFIG_FLAG_MODE))
@@ -69,6 +85,16 @@
   #  define P141_LCD_RST -1
 # endif // ifdef ESP32
 
+enum class P141_Controller : uint8_t {
+  PCD8544 = 0u, // Nokia 5110, 84x48
+  ST7567  = 1u, // ST7567 128x64, f.e. OPEN-SMART 1.8" LCD
+  ST7567_32 = 2u, // ST7567 128x32
+};
+
+const __FlashStringHelper* toString(P141_Controller controller);
+uint16_t                   P141_getXpix(P141_Controller controller);
+uint16_t                   P141_getYpix(P141_Controller controller);
+
 enum class P141_CommandTrigger : uint8_t {
   pcd8544 = 0u,
   lcd     = 1u,
@@ -79,7 +105,8 @@ const __FlashStringHelper* toString(P141_CommandTrigger cmd);
 struct P141_data_struct : public PluginTaskData_base {
 public:
 
-  P141_data_struct(uint8_t             rotation,
+  P141_data_struct(P141_Controller     controller,
+                   uint8_t             rotation,
                    uint8_t             fontscaling,
                    AdaGFXTextPrintMode textmode,
                    int8_t              backlightPin,
@@ -123,15 +150,22 @@ private:
   void displayOnOff(bool state);
   void updateFontMetrics();
   void cleanup();
+  void lcdDisplay();
+  void lcdSetContrast(uint8_t contrastPercent);
   # if P141_FEATURE_CURSOR_XY_VALUES
   void updateValues(struct EventStruct *event);
   # endif // if P141_FEATURE_CURSOR_XY_VALUES
 
+  Adafruit_GFX       *_lcd      = nullptr; // Generic access to the active display
   Adafruit_PCD8544   *pcd8544   = nullptr;
+  # if P141_FEATURE_ST7567
+  P141_ST7567        *st7567    = nullptr;
+  # endif // if P141_FEATURE_ST7567
   AdafruitGFX_helper *gfxHelper = nullptr;
 
-  uint16_t _xpix         = 84; // Fixed size
-  uint16_t _ypix         = 48;
+  P141_Controller _controller;
+  uint16_t        _xpix;
+  uint16_t        _ypix;
   uint16_t _textcols     = 0;
   uint16_t _textrows     = 0;
   uint8_t  _fontwidth    = 6; // Default font characteristics
@@ -143,6 +177,7 @@ private:
   AdaGFXTextPrintMode _textmode;
   int8_t              _backlightPin;
   uint8_t             _backlightPercentage;
+  bool                _backlightInverted = false;
   uint8_t             _contrast;
   uint32_t            _displayTimer;
   uint32_t            _displayTimeout;
