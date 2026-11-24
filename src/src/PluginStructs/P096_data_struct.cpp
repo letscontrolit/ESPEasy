@@ -2,29 +2,36 @@
 
 #ifdef USES_P096
 
-#include "../Helpers/Hardware_SPI.h"
+# include "../Helpers/Hardware_SPI.h"
 
 /****************************************************************************
- * EPD_type_toString: Display-value for the device selected
+ * toString: Display-value for the EPD/eInk device selected
  ***************************************************************************/
-const __FlashStringHelper* EPD_type_toString(EPD_type_e device) {
-  switch (device) {
+const __FlashStringHelper* toString(EPD_type_e device) {
+  switch (device)
+  {
     case EPD_type_e::EPD_IL3897: return F("IL3897 (Lolin 250 x 122px)");
-    case EPD_type_e::EPD_UC8151D: return F("UC8151D (212 x 104px)");
+    case EPD_type_e::EPD_UC8151D: return F("UC8151D (white/black/red 212 x 104px)");
     case EPD_type_e::EPD_SSD1680: return F("SSD1680 (250 x 212px)");
     # if P096_USE_WAVESHARE_2IN7
     case EPD_type_e::EPD_WS2IN7: return F("Waveshare 2.7\" (264 x 176px)");
     # endif // if P096_USE_WAVESHARE_2IN7
-    case EPD_type_e::EPD_MAX: break;
+    # if P096_USE_WAVESHARE_1IN54B
+    case EPD_type_e::EPD_WS1IN54B: return F("Waveshare 1.54\" (200 x 200px)");
+    # endif // if P096_USE_WAVESHARE_1IN54B
+    # if P096_USE_MH_ET_LIVE_1IN54
+    case EPD_type_e::EPD_MHET1IN54: return F("MH-ET Live 1.54\" (white/black/red 200 x 200px)");
+    # endif // if P096_USE_MH_ET_LIVE_1IN54
   }
   return F("Unsupported type!");
 }
 
 /****************************************************************************
- * P096_CommandTrigger_toString: return the command string selected
+ * toString: return the command string selected
  ***************************************************************************/
-const __FlashStringHelper* P096_CommandTrigger_toString(P096_CommandTrigger cmd) {
-  switch (cmd) {
+const __FlashStringHelper* toString(P096_CommandTrigger cmd) {
+  switch (cmd)
+  {
     case P096_CommandTrigger::eInk: return F("eink");
     case P096_CommandTrigger::ePaper: return F("epaper");
     case P096_CommandTrigger::il3897: return F("il3897");
@@ -33,7 +40,12 @@ const __FlashStringHelper* P096_CommandTrigger_toString(P096_CommandTrigger cmd)
     # if P096_USE_WAVESHARE_2IN7
     case P096_CommandTrigger::ws2in7: return F("ws2in7");
     # endif // if P096_USE_WAVESHARE_2IN7
-    case P096_CommandTrigger::MAX: return F("None");
+    # if P096_USE_WAVESHARE_1IN54B
+    case P096_CommandTrigger::ws1in54b: return F("ws1in54");
+    # endif // if P096_USE_WAVESHARE_1IN54B
+    # if P096_USE_MH_ET_LIVE_1IN54
+    case P096_CommandTrigger::mhet1in54: return F("mhet1in54");
+    # endif // if P096_USE_MH_ET_LIVE_1IN54
     case P096_CommandTrigger::epd: break;
   }
   return F("epd"); // Default command trigger
@@ -43,7 +55,8 @@ const __FlashStringHelper* P096_CommandTrigger_toString(P096_CommandTrigger cmd)
  * EPD_type_toResolution: X and Y resolution for the selected type
  ***************************************************************************/
 void EPD_type_toResolution(EPD_type_e device, uint16_t& x, uint16_t& y) {
-  switch (device) {
+  switch (device)
+  {
     case EPD_type_e::EPD_IL3897:
     case EPD_type_e::EPD_SSD1680:
       x = 250;
@@ -59,8 +72,20 @@ void EPD_type_toResolution(EPD_type_e device, uint16_t& x, uint16_t& y) {
       y = 176;
       break;
     # endif // if P096_USE_WAVESHARE_2IN7
-    case EPD_type_e::EPD_MAX:
+    # if P096_USE_WAVESHARE_1IN54B
+    case EPD_type_e::EPD_WS1IN54B:
+      x = 200;
+      y = 200;
       break;
+    # endif // if P096_USE_WAVESHARE_1IN54B
+    # if P096_USE_MH_ET_LIVE_1IN54
+    case EPD_type_e::EPD_MHET1IN54:
+      x = 200;
+      y = 200;
+      break;
+    # endif // if P096_USE_MH_ET_LIVE_1IN54
+      // case EPD_type_e::EPD_MAX:
+      //   break;
   }
 }
 
@@ -123,16 +148,18 @@ bool P096_data_struct::plugin_init(struct EventStruct *event) {
   if (nullptr == eInkScreen) {
     # ifdef ESP32
     auto spi_ptr = getSPIBusForTask(event->TaskIndex);
+
     if (!spi_ptr) {
       addLog(LOG_LEVEL_ERROR, F("EPD  : No SPI configured"));
       return false;
     }
-    #endif
+    # endif // ifdef ESP32
 
 
     addLog(LOG_LEVEL_INFO, F("EPD  : Init start."));
 
-    switch (_display) {
+    switch (_display)
+    {
       case EPD_type_e::EPD_IL3897:
         eInkScreen = new (std::nothrow) LOLIN_IL3897(_xpix, _ypix, PIN(1), PIN(2), PIN(0), PIN(3)
                                                      # ifdef ESP32
@@ -163,13 +190,30 @@ bool P096_data_struct::plugin_init(struct EventStruct *event) {
                                                        ); // HSPI
         break;
       # endif // if P096_USE_WAVESHARE_2IN7
-      case EPD_type_e::EPD_MAX:
+      # if P096_USE_WAVESHARE_1IN54B
+      case EPD_type_e::EPD_WS1IN54B:
+        eInkScreen = new (std::nothrow) Waveshare_1in54b(_xpix, _ypix, PIN(1), PIN(2), PIN(0), PIN(3)
+                                                         #  ifdef ESP32
+                                                         , *spi_ptr
+                                                         #  endif // ifdef ESP32
+                                                         ); // HSPI
         break;
+      # endif // if P096_USE_WAVESHARE_1IN54B
+      # if P096_USE_MH_ET_LIVE_1IN54
+      case EPD_type_e::EPD_MHET1IN54:
+        eInkScreen = new (std::nothrow) MH_ET_Live_1in54(_xpix, _ypix, PIN(1), PIN(2), PIN(0), PIN(3)
+                                                         #  ifdef ESP32
+                                                         , *spi_ptr
+                                                         #  endif // ifdef ESP32
+                                                         ); // HSPI
+        break;
+      # endif // if P096_USE_MH_ET_LIVE_1IN54
     }
-    plugin_096_sequence_in_progress = false;
-    # ifdef P096_USE_ADA_GRAPHICS
+    _sequence_in_progress = false;
+  # ifdef P096_USE_ADA_GRAPHICS
 
     if (nullptr != eInkScreen) {
+      eInkScreen->begin(); // Start the device
       gfxHelper = new (std::nothrow) AdafruitGFX_helper(eInkScreen,
                                                         _commandTrigger,
                                                         _xpix,
@@ -180,12 +224,8 @@ bool P096_data_struct::plugin_init(struct EventStruct *event) {
                                                         _fgcolor,
                                                         _bgcolor,
                                                         true,
-                                                        _textBackFill
-                                                        #  if ADAGFX_FONTS_INCLUDED
-                                                        , P096_CONFIG_DEFAULT_FONT
-                                                        #  endif // if ADAGFX_FONTS_INCLUDED
-                                                        );
-      #  if P096_USE_EXTENDED_SETTINGS
+                                                        _textBackFill);
+    #  if P096_USE_EXTENDED_SETTINGS
 
       if (nullptr != gfxHelper) {
         gfxHelper->initialize();
@@ -193,18 +233,18 @@ bool P096_data_struct::plugin_init(struct EventStruct *event) {
         gfxHelper->setColumnRowMode(bitRead(P096_CONFIG_FLAGS, P096_CONFIG_FLAG_USE_COL_ROW));
         gfxHelper->setTxtfullCompensation(!bitRead(P096_CONFIG_FLAGS, P096_CONFIG_FLAG_COMPAT_P096) ? 0 : 1); // Inverted
       }
-      #  endif // if P096_USE_EXTENDED_SETTINGS
+    #  endif // if P096_USE_EXTENDED_SETTINGS
     }
     updateFontMetrics();
-    # endif // ifdef P096_USE_ADA_GRAPHICS
+  # endif // ifdef P096_USE_ADA_GRAPHICS
 
-    # ifndef BUILD_NO_DEBUG
+  # ifndef BUILD_NO_DEBUG
 
     if (loglevelActiveFor(LOG_LEVEL_INFO)) {
       String log;
       log.reserve(50);
-      log += F("EPD  : Init done, address: 0x");
-      log += String(reinterpret_cast<ulong>(eInkScreen), HEX);
+      log += F("EPD  : Init done, address: ");
+      log += formatToHex(reinterpret_cast<ulong>(eInkScreen));
       log += ' ';
 
       if (nullptr == eInkScreen) {
@@ -213,16 +253,18 @@ bool P096_data_struct::plugin_init(struct EventStruct *event) {
       log += F("valid, commands: ");
       log += _commandTrigger;
       log += F(", display: ");
-      log += EPD_type_toString(_display);
+      log += toString(_display);
       addLog(LOG_LEVEL_INFO, log);
+      #  ifndef LIMIT_BUILD_SIZE
       log.clear();
-      log += F("EPD  : Foreground: 0x");
-      log += String(_fgcolor, HEX);
-      log += F(", background: 0x");
-      log += String(_bgcolor, HEX);
+      log += F("EPD  : Foreground: ");
+      log += AdaGFXcolorToString(_fgcolor, static_cast<AdaGFXColorDepth>(P096_CONFIG_FLAG_GET_COLORDEPTH));
+      log += F(", background: ");
+      log += AdaGFXcolorToString(_bgcolor, static_cast<AdaGFXColorDepth>(P096_CONFIG_FLAG_GET_COLORDEPTH));
       addLogMove(LOG_LEVEL_INFO, log);
+      #  endif // ifndef LIMIT_BUILD_SIZE
     }
-    # endif // ifndef BUILD_NO_DEBUG
+  # endif // ifndef BUILD_NO_DEBUG
 
     if (nullptr != eInkScreen) {
       eInkScreen->begin(); // Start the device
@@ -241,13 +283,10 @@ bool P096_data_struct::plugin_init(struct EventStruct *event) {
           stringsHasContent = !strings[x].isEmpty();
         }
       }
+
+      success = true;
     }
-
-    success = true;
-  } else {
-    addLog(LOG_LEVEL_ERROR, F("EPD  : No init?"));
   }
-
   return success;
 }
 
@@ -269,9 +308,9 @@ void P096_data_struct::updateFontMetrics() {
  * plugin_exit: De-initialize before destruction
  ***************************************************************************/
 bool P096_data_struct::plugin_exit(struct EventStruct *event) {
-  #ifndef BUILD_NO_DEBUG
+  # ifndef BUILD_NO_DEBUG
   addLog(LOG_LEVEL_INFO, F("EPD  : Exit."));
-  #endif // ifndef BUILD_NO_DEBUG
+  # endif // ifndef BUILD_NO_DEBUG
 
   # if P096_USE_EXTENDED_SETTINGS
 
@@ -361,17 +400,18 @@ bool P096_data_struct::plugin_write(struct EventStruct *event, const String& str
     }
     else if (equals(arg1, F("deepsleep"))) {
       eInkScreen->deepSleep();
+      success = true;
     }
     else if (equals(arg1, F("seq_start"))) {
       String arg2 = parseString(string, 3);
 
       eInkScreen->clearBuffer();
       const uint16_t fillColor =
-        (arg2.isEmpty() ? static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_BLACK)
+        (arg2.isEmpty() ? static_cast<uint16_t>(AdaGFXMonoRedGreyscaleColors::ADAGFXEPD_WHITE)
         : AdaGFXparseColor(arg2, _colorDepth));
       eInkScreen->fillScreen(fillColor);
-      plugin_096_sequence_in_progress = true;
-      success                         = true;
+      _sequence_in_progress = true;
+      success               = true;
     }
     else if (equals(arg1, F("seq_end"))) {
       // # ifndef BUILD_NO_DEBUG
@@ -379,14 +419,9 @@ bool P096_data_struct::plugin_write(struct EventStruct *event, const String& str
       //             const unsigned statisticsTimerStart(micros());
       // # endif // ifndef BUILD_NO_DEBUG
       eInkScreen->display();
-
-      // # ifndef BUILD_NO_DEBUG
-      //             s.add(usecPassedSince(statisticsTimerStart));
-      //             tmpString += "<br/> Display timings = " + String(s.getAvg());
-      // # endif // ifndef BUILD_NO_DEBUG
       eInkScreen->clearBuffer();
-      plugin_096_sequence_in_progress = false;
-      success                         = true;
+      _sequence_in_progress = false;
+      success               = true;
     }
     else if (equals(arg1, F("inv"))) {
       const int nArg2 = event->Par2;
@@ -416,14 +451,10 @@ bool P096_data_struct::plugin_write(struct EventStruct *event, const String& str
                           (gfxHelper && gfxHelper->isAdaGFXTrigger(cmd)))) {
     success = true;
 
-    // if (!bitRead(P096_CONFIG_FLAGS, P096_CONFIG_FLAG_NO_WAKE)) { // Wake display?
-    //   displayOnOff(true, P096_CONFIG_BACKLIGHT_PIN, P096_CONFIG_BACKLIGHT_PERCENT, P096_CONFIG_DISPLAY_TIMEOUT);
-    // }
-
     if (nullptr != gfxHelper) {
       String tmp = string;
 
-      if (!plugin_096_sequence_in_progress) {
+      if (!_sequence_in_progress) {
         eInkScreen->clearBuffer();
         eInkScreen->fillScreen(EPD_WHITE);
       }
@@ -431,10 +462,8 @@ bool P096_data_struct::plugin_write(struct EventStruct *event, const String& str
       // Hand it over after replacing variables
       success = gfxHelper->processCommand(AdaGFXparseTemplate(tmp, _textcols, gfxHelper));
 
-      if (success && !plugin_096_sequence_in_progress) {
+      if (success && !_sequence_in_progress) {
         eInkScreen->display();
-
-        // eInkScreen->clearBuffer();
       }
 
       updateFontMetrics(); // Font or color may have changed

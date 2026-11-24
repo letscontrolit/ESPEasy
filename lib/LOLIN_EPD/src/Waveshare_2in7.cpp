@@ -270,15 +270,9 @@ void Waveshare_2in7::drawPixel(int16_t x, int16_t y, uint16_t color) {
   // make our buffer happy
   x = (x == 0 ? 1 : x);
 
-  // uint16_t addr = (x * height() + y) / 8;
   uint16_t addr = (x + _height_8bit * y) / 8;
 
-  //   if (color == EPD_RED) {
-  //     pBuf = red_buf + addr;
-  //   } else {
   pBuf = bw_buf + addr;
-
-  //   }
 
   // x is which column
   switch (color) {
