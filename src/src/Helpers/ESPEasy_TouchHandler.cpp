@@ -8,27 +8,25 @@ tTouchObjects::tTouchObjects() :
   flags(0u),
   SurfaceAreas(0u),
   TouchTimers(0u),
-#ifdef ESP32
-  top_left({0u, 0u}),
-  width_height({0u, 0u}),
-#endif
+  # ifdef ESP32
+  top_left({ 0u, 0u }),
+  width_height({ 0u, 0u }),
+  # endif // ifdef ESP32
   TouchStates(0u)
   # if TOUCH_FEATURE_EXTENDED_TOUCH
-  , groupFlags           (0u)
-  , colorOn              (0u)
-  , colorOff             (0u)
-  , colorCaption         (0u)
-  , colorBorder          (0u)
-  , colorDisabled        (0u)
-  , colorDisabledCaption (0u)
+  , groupFlags(0u)
+  , colorOn(0u)
+  , colorOff(0u)
+  , colorCaption(0u)
+  , colorBorder(0u)
+  , colorDisabled(0u)
+  , colorDisabledCaption(0u)
   # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
-  {
-    objectName.clear();
-    captionOn.clear();
-    captionOff.clear();
-  }
-
-
+{
+  objectName.clear();
+  captionOn.clear();
+  captionOff.clear();
+}
 
 /****************************************************************************
  * toString: Display-value for the touch action
@@ -91,7 +89,97 @@ void ESPEasy_TouchHandler::loadTouchObjects(struct EventStruct *event) {
   # ifdef TOUCH_DEBUG
   addLog(LOG_LEVEL_INFO, F("TOUCH DEBUG loadTouchObjects"));
   # endif // TOUCH_DEBUG
-  LoadCustomTaskSettings(event->TaskIndex, settingsArray, TOUCH_ARRAY_SIZE, 0);
+  # if defined(USES_P099) && P099_ENABLE_OLD_CONFIG && defined(ESP32)
+  bool loadStandardConfig = true;
+
+  // Check if old format P099 data is stored, and convert if needed
+  const pluginID_t taskPlugin = getPluginID_from_TaskIndex(event->TaskIndex);
+
+  if (pluginID_t(99) == taskPlugin) {
+    if (P099_CONFIG_VERSION == 1) {
+      addLog(LOG_LEVEL_INFO, F("TOUCH: Converting P099 settings from previous format"));
+
+      // Load, convert settings and set loadStandardConfig = false
+      loadStandardConfig = false;
+      tP099_StoredSettings_struct StoredSettings;
+      LoadCustomTaskSettings(event->TaskIndex, reinterpret_cast<uint8_t *>(&StoredSettings), sizeof(StoredSettings));
+
+      String config;
+      config.reserve(40);
+      uint32_t lSettings{};
+
+      set3BitToUL(lSettings, TOUCH_FLAGS_SEND_XY, get3BitFromUL(P099_CONFIG_FLAGS, P099_FLAGS_SEND_XY));
+      bitWrite(lSettings, TOUCH_FLAGS_ROTATION_FLIPPED, bitRead(P099_CONFIG_FLAGS, P099_FLAGS_ROTATION_FLIPPED));
+
+      config += bitRead(P099_CONFIG_FLAGS, P099_FLAGS_USE_CALIBRATION); // First value should not be empty
+      config += TOUCH_SETTINGS_SEPARATOR;
+      config += toStringNoZero(bitRead(P099_CONFIG_FLAGS, P099_FLAGS_LOG_CALIBRATION) ? 1 : 0);
+      config += TOUCH_SETTINGS_SEPARATOR;
+      config += toStringNoZero(StoredSettings.Calibration.top_left.x);
+      config += TOUCH_SETTINGS_SEPARATOR;
+      config += toStringNoZero(StoredSettings.Calibration.top_left.y);
+      config += TOUCH_SETTINGS_SEPARATOR;
+      config += toStringNoZero(StoredSettings.Calibration.bottom_right.x);
+      config += TOUCH_SETTINGS_SEPARATOR;
+      config += toStringNoZero(StoredSettings.Calibration.bottom_right.y);
+      config += TOUCH_SETTINGS_SEPARATOR;
+      config += toStringNoZero(P099_CONFIG_DEBOUNCE_MS);
+      config += TOUCH_SETTINGS_SEPARATOR;
+      config += ull2String(lSettings);
+
+      // 'Store' in new format
+      settingsArray[TOUCH_CALIBRATION_START] = config;
+      uint8_t obj = TOUCH_OBJECT_INDEX_START;
+
+      for (uint8_t s = 0; s < P099_CONFIG_OBJECTCOUNT; ++s) {
+        config.clear();
+        config += StoredSettings.TouchObjects[s].objectname; // Name
+        config.trim();                                       // Remove leading/trailing whitespace from name
+
+        if (!config.isEmpty()) {                             // Empty name => skip entry
+          const bool numStart = isdigit(config[0]);          // Numeric start?
+          bool enabled        = true;
+
+          if (!ExtraTaskSettings.checkInvalidCharInNames(config.c_str()) ||
+              numStart) { // Check for invalid characters in objectname
+            enabled = false;
+          }
+
+          if (config[0] == '_') { // Disabled-marker for P099: prefixed with _
+            enabled = false;
+          }
+          config += TOUCH_SETTINGS_SEPARATOR;
+
+          // Convert flags
+          uint32_t flags{};
+          bitWrite(flags, TOUCH_OBJECT_FLAG_ENABLED, enabled);                               // Enabled
+          bitWrite(flags, TOUCH_OBJECT_FLAG_INVERTED,
+                   bitRead(StoredSettings.TouchObjects[s].flags, P099_FLAGS_INVERT_BUTTON)); // Inverted
+          bitWrite(flags, TOUCH_OBJECT_FLAG_BUTTON,
+                   bitRead(StoredSettings.TouchObjects[s].flags, P099_FLAGS_ON_OFF_BUTTON)); // On/Off button
+
+          config += ull2String(flags);                                                       // Flags
+          config += TOUCH_SETTINGS_SEPARATOR;
+          config += toStringNoZero(StoredSettings.TouchObjects[s].top_left.x);               // Top x
+          config += TOUCH_SETTINGS_SEPARATOR;
+          config += toStringNoZero(StoredSettings.TouchObjects[s].top_left.y);               // Top y
+          config += TOUCH_SETTINGS_SEPARATOR;
+          config += toStringNoZero(StoredSettings.TouchObjects[s].bottom_right.x);           // Bottom x
+          config += TOUCH_SETTINGS_SEPARATOR;
+          config += toStringNoZero(StoredSettings.TouchObjects[s].bottom_right.y);           // Bottom y
+          // Store in new format
+          settingsArray[obj] = config;
+          ++obj;
+        }
+      }
+    }
+  }
+
+  if (loadStandardConfig) // false when settings are loaded from old P099 config
+  # endif // if defined(USES_P099) && P099_ENABLE_OLD_CONFIG && defined(ESP32)
+  {
+    LoadCustomTaskSettings(event->TaskIndex, settingsArray, TOUCH_ARRAY_SIZE, 0);
+  }
 
   lastObjectIndex = TOUCH_OBJECT_INDEX_START - 1; // START must be > 0!!!
 
@@ -180,19 +268,19 @@ void ESPEasy_TouchHandler::loadTouchObjects(struct EventStruct *event) {
     for (uint8_t i = TOUCH_OBJECT_INDEX_START; i <= lastObjectIndex; ++i) {
       if (!settingsArray[i].isEmpty()) {
         tTouchObjects touchObject{};
-        touchObject.flags          = parseStringToInt(settingsArray[i], TOUCH_OBJECT_FLAGS, TOUCH_SETTINGS_SEPARATOR);
-        String objectName     = parseStringKeepCase(settingsArray[i], TOUCH_OBJECT_NAME, TOUCH_SETTINGS_SEPARATOR);
+        touchObject.flags = parseStringToInt(settingsArray[i], TOUCH_OBJECT_FLAGS, TOUCH_SETTINGS_SEPARATOR);
+        String objectName = parseStringKeepCase(settingsArray[i], TOUCH_OBJECT_NAME, TOUCH_SETTINGS_SEPARATOR);
         touchObject.objectName     = objectName;
         touchObject.top_left.x     = parseStringToInt(settingsArray[i], TOUCH_OBJECT_COORD_TOP_X, TOUCH_SETTINGS_SEPARATOR);
         touchObject.top_left.y     = parseStringToInt(settingsArray[i], TOUCH_OBJECT_COORD_TOP_Y, TOUCH_SETTINGS_SEPARATOR);
         touchObject.width_height.x = parseStringToInt(settingsArray[i], TOUCH_OBJECT_COORD_WIDTH, TOUCH_SETTINGS_SEPARATOR);
         touchObject.width_height.y = parseStringToInt(settingsArray[i], TOUCH_OBJECT_COORD_HEIGHT, TOUCH_SETTINGS_SEPARATOR);
         # if TOUCH_FEATURE_EXTENDED_TOUCH
-        touchObject.colorOn              = parseStringToInt(settingsArray[i], TOUCH_OBJECT_COLOR_ON, TOUCH_SETTINGS_SEPARATOR);
-        touchObject.colorOff             = parseStringToInt(settingsArray[i], TOUCH_OBJECT_COLOR_OFF, TOUCH_SETTINGS_SEPARATOR);
-        touchObject.colorCaption         = parseStringToInt(settingsArray[i], TOUCH_OBJECT_COLOR_CAPTION, TOUCH_SETTINGS_SEPARATOR);
-        String captionOn            = parseStringKeepCase(settingsArray[i], TOUCH_OBJECT_CAPTION_ON, TOUCH_SETTINGS_SEPARATOR);
-        String captionOff           = parseStringKeepCase(settingsArray[i], TOUCH_OBJECT_CAPTION_OFF, TOUCH_SETTINGS_SEPARATOR);
+        touchObject.colorOn      = parseStringToInt(settingsArray[i], TOUCH_OBJECT_COLOR_ON, TOUCH_SETTINGS_SEPARATOR);
+        touchObject.colorOff     = parseStringToInt(settingsArray[i], TOUCH_OBJECT_COLOR_OFF, TOUCH_SETTINGS_SEPARATOR);
+        touchObject.colorCaption = parseStringToInt(settingsArray[i], TOUCH_OBJECT_COLOR_CAPTION, TOUCH_SETTINGS_SEPARATOR);
+        String captionOn  = parseStringKeepCase(settingsArray[i], TOUCH_OBJECT_CAPTION_ON, TOUCH_SETTINGS_SEPARATOR);
+        String captionOff = parseStringKeepCase(settingsArray[i], TOUCH_OBJECT_CAPTION_OFF, TOUCH_SETTINGS_SEPARATOR);
         touchObject.captionOn            = captionOn;
         touchObject.captionOff           = captionOff;
         touchObject.colorBorder          = parseStringToInt(settingsArray[i], TOUCH_OBJECT_COLOR_BORDER, TOUCH_SETTINGS_SEPARATOR);
@@ -1764,7 +1852,7 @@ bool ESPEasy_TouchHandler::plugin_fifty_per_second(struct EventStruct *event,
           if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
             addLog(LOG_LEVEL_DEBUG,
                    strformat(F("Touch Swiped, direction: %s, dx: %d, dy: %d"),
-                             String(toString(swipe)).c_str(), delta_x, delta_y));
+                             FsP(toString(swipe)), delta_x, delta_y));
           }
           #  endif // ifdef TOUCH_DEBUG
         }
@@ -1846,9 +1934,12 @@ bool ESPEasy_TouchHandler::plugin_fifty_per_second(struct EventStruct *event,
 
               # if TOUCH_FEATURE_EXTENDED_TOUCH && TOUCH_FEATURE_SWIPE
               #  ifdef TOUCH_DEBUG
-              addLogMove(LOG_LEVEL_INFO,
-                         strformat(F("Swiped/touched, object: %s:%s"), _lastObjectName.c_str(),
-                                   String(toString(swipe)).c_str()));
+
+              if (loglevelActiveFor(LOG_LEVEL_INFO)) {
+                addLog(LOG_LEVEL_INFO,
+                       strformat(F("Swiped/touched, object: %s:%s"), _lastObjectName.c_str(),
+                                 FsP(toString(swipe))));
+              }
               #  endif // ifdef TOUCH_DEBUG
 
               if (swipe != Swipe_action_e::None) {
@@ -1915,6 +2006,41 @@ void ESPEasy_TouchHandler::releaseTouch(struct EventStruct *event) {
   _stillTouching = false;
 }
 
+const char touchHandler_commands[] PROGMEM =
+  "enable|disable|"
+  "on|off|"
+  "toggle|set|"
+  # if TOUCH_FEATURE_EXTENDED_TOUCH
+  #  if TOUCH_FEATURE_SWIPE
+  "swipe|"
+  #  endif // if TOUCH_FEATURE_SWIPE
+  "setgrp|nextgrp|prevgrp|"
+  "nextpage|prevpage|"
+  "updatebutton|"
+  # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
+;
+
+enum class touchHandler_commands_e : int8_t {
+  undefined = -1,
+  enable    = 0,
+  disable   = 1,
+  on        = 2,
+  off       = 3,
+  toggle    = 4,
+  set       = 5,
+  # if TOUCH_FEATURE_EXTENDED_TOUCH
+  #  if TOUCH_FEATURE_SWIPE
+  swipe = 6,
+  #  endif // if TOUCH_FEATURE_SWIPE
+  setgrp       = 7,
+  nextgrp      = 8,
+  prevgrp      = 9,
+  nextpage     = 10,
+  prevpage     = 11,
+  updatebutton = 12,
+  # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
+};
+
 /**
  * Parse and execute the plugin commands
  */
@@ -1939,135 +2065,206 @@ bool ESPEasy_TouchHandler::plugin_write(struct EventStruct *event,
     }
     # endif // ifdef TOUCH_DEBUG
 
-    if (equals(subcommand, F("enable"))) { // touch,enable,<objectName>[,...] : Enable disabled objectname(s)
-      arguments = parseString(string, arg);
+    const int subcommand_i = GetCommandCode(subcommand.c_str(), touchHandler_commands);
 
-      while (!arguments.isEmpty()) {
-        success  |= setTouchObjectState(event, arguments, true);
-        arguments = parseString(string, ++arg);
-      }
-    } else if (equals(subcommand, F("disable"))) { // touch,disable,<objectName>[,...] : Disable enabled objectname(s)
-      arguments = parseString(string, arg);
+    if (subcommand_i < 0) { return false; } // Fail fast
 
-      while (!arguments.isEmpty()) {
-        success  |= setTouchObjectState(event, arguments, false);
-        arguments = parseString(string, ++arg);
-      }
-    } else if (equals(subcommand, F("on"))) { // touch,on,<buttonObjectName>[,...] : Switch TouchButton(s) on
-      arguments = parseString(string, arg);
+    const touchHandler_commands_e subcmd = static_cast<touchHandler_commands_e>(subcommand_i);
 
-      while (!arguments.isEmpty()) {
-        success  |= setTouchButtonOnOff(event, arguments, true);
-        arguments = parseString(string, ++arg);
-      }
-    } else if (equals(subcommand, F("off"))) { // touch,off,<buttonObjectName>[,...] : Switch TouchButton(s) off
-      arguments = parseString(string, arg);
+    switch (subcmd) {
+      case touchHandler_commands_e::enable: // touch,enable,<objectName>[,...] : Enable disabled objectname(s)
+        arguments = parseString(string, arg);
 
-      while (!arguments.isEmpty()) {
-        success  |= setTouchButtonOnOff(event, arguments, false);
-        arguments = parseString(string, ++arg);
-      }
-    } else if (equals(subcommand, F("toggle"))) { // touch,toggle,<buttonObjectName>[,...] : Switch TouchButton(s) to the other state
-      arguments = parseString(string, arg);
-
-      while (!arguments.isEmpty()) {
-        const int16_t state = getTouchObjectValue(event, arguments);
-
-        if (state > -1) {
-          success |= setTouchButtonOnOff(event, arguments, state == 0);
+        while (!arguments.isEmpty()) {
+          success  |= setTouchObjectState(event, arguments, true);
+          arguments = parseString(string, ++arg);
         }
-        arguments = parseString(string, ++arg);
-      }
-    } else if (equals(subcommand, F("set"))) { // touch,set,<objectName>,<value> : Set TouchObject value
-      arguments = parseString(string, arg);
-      success   = setTouchObjectValue(event, arguments, event->Par3);
-    # if TOUCH_FEATURE_EXTENDED_TOUCH
-    #  if TOUCH_FEATURE_EXTENDED_TOUCH && TOUCH_FEATURE_SWIPE
-    } else if (equals(subcommand, F("swipe"))) {        // touch,swipe,<swipeValue> : Switch button group via swipe value
-      success = handleButtonSwipe(event, event->Par2);
-    #  endif // if TOUCH_FEATURE_EXTENDED_TOUCH && TOUCH_FEATURE_SWIPE
-    } else if (equals(subcommand, F("setgrp"))) {       // touch,setgrp,<group> : Activate button group
-      success = setButtonGroup(event, event->Par2);
-    } else if (equals(subcommand, F("nextgrp"))) {      // touch,nextgrp : next group and Activate
-      success = nextButtonGroup(event);
-    } else if (equals(subcommand, F("prevgrp"))) {      // touch,prevgrp : previous group and Activate
-      success = prevButtonGroup(event);
-    } else if (equals(subcommand, F("nextpage"))) {     // touch,nextpage : next page and Activate
-      success = nextButtonPage(event);
-    } else if (equals(subcommand, F("prevpage"))) {     // touch,prevpage : previous page and Activate
-      success = prevButtonPage(event);
-    } else if (equals(subcommand, F("updatebutton"))) { // touch,updatebutton,<buttonnr>[,<group>[,<mode>]] : Update a button
-      arguments = parseString(string, 3);
+        break;
+      case touchHandler_commands_e::disable: // touch,disable,<objectName>[,...] : Disable enabled objectname(s)
+        arguments = parseString(string, arg);
 
-      // Check for a valid button name or number, returns a 0-based index
-      const int8_t index = getTouchObjectIndex(event, arguments, true);
-
-      if (index > -1) {
-        const bool hasPar3 = !parseString(string, 4).isEmpty();
-        const bool hasPar4 = !parseString(string, 5).isEmpty();
-
-        if (hasPar4) {
-          success = displayButton(event, index, event->Par3, event->Par4);
-        } else if (hasPar3) {
-          success = displayButton(event, index, event->Par3);
-        } else {
-          success = displayButton(event, index); // Use default argument values
+        while (!arguments.isEmpty()) {
+          success  |= setTouchObjectState(event, arguments, false);
+          arguments = parseString(string, ++arg);
         }
+        break;
+      case touchHandler_commands_e::on: // touch,on,<buttonObjectName>[,...] : Switch TouchButton(s) on
+        arguments = parseString(string, arg);
+
+        while (!arguments.isEmpty()) {
+          success  |= setTouchButtonOnOff(event, arguments, true);
+          arguments = parseString(string, ++arg);
+        }
+        break;
+      case touchHandler_commands_e::off: // touch,off,<buttonObjectName>[,...] : Switch TouchButton(s) off
+        arguments = parseString(string, arg);
+
+        while (!arguments.isEmpty()) {
+          success  |= setTouchButtonOnOff(event, arguments, false);
+          arguments = parseString(string, ++arg);
+        }
+        break;
+      case touchHandler_commands_e::toggle: // touch,toggle,<buttonObjectName>[,...] : Switch TouchButton(s) to the other state
+        arguments = parseString(string, arg);
+
+        while (!arguments.isEmpty()) {
+          const int16_t state = getTouchObjectValue(event, arguments);
+
+          if (state > -1) {
+            success |= setTouchButtonOnOff(event, arguments, state == 0);
+          }
+          arguments = parseString(string, ++arg);
+        }
+        break;
+      case touchHandler_commands_e::set: // touch,set,<objectName>,<value> : Set TouchObject value
+        arguments = parseString(string, arg);
+        success   = setTouchObjectValue(event, arguments, event->Par3);
+        break;
+      # if TOUCH_FEATURE_EXTENDED_TOUCH
+      #  if TOUCH_FEATURE_EXTENDED_TOUCH && TOUCH_FEATURE_SWIPE
+      case touchHandler_commands_e::swipe: // touch,swipe,<swipeValue> : Switch button group via swipe value
+        success = handleButtonSwipe(event, event->Par2);
+        break;
+      #  endif // if TOUCH_FEATURE_EXTENDED_TOUCH && TOUCH_FEATURE_SWIPE
+      case touchHandler_commands_e::setgrp:       // touch,setgrp,<group> : Activate button group
+        success = setButtonGroup(event, event->Par2);
+        break;
+      case touchHandler_commands_e::nextgrp:      // touch,nextgrp : next group and Activate
+        success = nextButtonGroup(event);
+        break;
+      case touchHandler_commands_e::prevgrp:      // touch,prevgrp : previous group and Activate
+        success = prevButtonGroup(event);
+        break;
+      case touchHandler_commands_e::nextpage:     // touch,nextpage : next page and Activate
+        success = nextButtonPage(event);
+        break;
+      case touchHandler_commands_e::prevpage:     // touch,prevpage : previous page and Activate
+        success = prevButtonPage(event);
+        break;
+      case touchHandler_commands_e::updatebutton: // touch,updatebutton,<buttonnr>[,<group>[,<mode>]] : Update a button
+      {
+        arguments = parseString(string, 3);
+
+        // Check for a valid button name or number, returns a 0-based index
+        const int8_t index = getTouchObjectIndex(event, arguments, true);
+
+        if (index > -1) {
+          const bool hasPar3 = !parseString(string, 4).isEmpty();
+          const bool hasPar4 = !parseString(string, 5).isEmpty();
+
+          if (hasPar4) {
+            success = displayButton(event, index, event->Par3, event->Par4);
+          } else if (hasPar3) {
+            success = displayButton(event, index, event->Par3);
+          } else {
+            success = displayButton(event, index); // Use default argument values
+          }
+        }
+        break;
       }
-    # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
+      # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
+      case touchHandler_commands_e::undefined:
+        break;
     }
   }
   return success;
 }
+
+const char touchHandler_getconfig[] PROGMEM =
+  "buttongroup|"
+  "enabled|state|"
+  # if TOUCH_FEATURE_EXTENDED_TOUCH
+  "hasgroup|pagemode|"
+  #  if TOUCH_FEATURE_SWIPE
+  "swipedir|"
+  #  endif // if TOUCH_FEATURE_SWIPE
+  # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
+;
+
+enum class touchHandler_getconfig_e : int8_t {
+  undefined   = -1,
+  buttongroup = 0,
+  enabled     = 1,
+  state       = 2,
+  # if TOUCH_FEATURE_EXTENDED_TOUCH
+  hasgroup = 3,
+  pagemode = 4,
+  #  if TOUCH_FEATURE_SWIPE
+  swipedir = 5,
+  #  endif // if TOUCH_FEATURE_SWIPE
+  # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
+};
 
 /**
  * Handle getting config values from plugin/handler
  */
 bool ESPEasy_TouchHandler::plugin_get_config_value(struct EventStruct *event,
                                                    String            & string) {
-  bool success         = false;
-  const String command = parseString(string, 1);
+  bool success           = false;
+  const String command   = parseString(string, 1);
+  const int    command_i = GetCommandCode(command.c_str(), touchHandler_getconfig);
 
-  if (equals(command, F("buttongroup"))) {
-    string  = getButtonGroup();
-    success = true;
-  # if TOUCH_FEATURE_EXTENDED_TOUCH
-  } else if (equals(command, F("hasgroup"))) {
-    int32_t group; // We'll be ignoring group 0 if there are multiple button groups
+  if (command_i < 0) { return false; } // Fail fast
 
-    if (validIntFromString(parseString(string, 2), group)) {
-      string  = validButtonGroup(group, true) ? 1 : 0;
+  const touchHandler_getconfig_e cmd = static_cast<touchHandler_getconfig_e>(command_i);
+
+  switch (cmd) {
+    case touchHandler_getconfig_e::buttongroup:
+      string  = getButtonGroup();
       success = true;
-    } else {
-      string = '0'; // invalid number = false
-    }
-  # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
-  } else if (equals(command, F("enabled"))) {
-    const int8_t enabled = getTouchObjectState(event, parseStringKeepCase(string, 2));
+      break;
+    # if TOUCH_FEATURE_EXTENDED_TOUCH
+    case touchHandler_getconfig_e::hasgroup:
+    {
+      int32_t group; // We'll be ignoring group 0 if there are multiple button groups
 
-    if (enabled > -1) {
-      string  = enabled;
+      if (validIntFromString(parseString(string, 2), group)) {
+        string  = validButtonGroup(group, true) ? 1 : 0;
+        success = true;
+      } else {
+        string = '0'; // invalid number = false
+      }
+      break;
+    }
+    # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
+    case touchHandler_getconfig_e::enabled:
+    {
+      const int8_t enabled = getTouchObjectState(event, parseStringKeepCase(string, 2));
+
+      if (enabled > -1) {
+        string  = enabled;
+        success = true;
+      }
+      break;
+    }
+    case touchHandler_getconfig_e::state:
+    {
+      const int16_t state = getTouchObjectValue(event, parseStringKeepCase(string, 2));
+
+      string  = state;
       success = true;
+      break;
     }
-  } else if (equals(command, F("state"))) {
-    const int16_t state = getTouchObjectValue(event, parseStringKeepCase(string, 2));
-
-    string  = state;
-    success = true;
-  # if TOUCH_FEATURE_EXTENDED_TOUCH
-  } else if (equals(command, F("pagemode"))) {
-    string  = bitRead(Touch_Settings.flags, TOUCH_FLAGS_PGUP_BELOW_MENU);
-    success = true;
-  #  if TOUCH_FEATURE_SWIPE
-  } else if (equals(command, F("swipedir"))) {
-    int32_t state;
-
-    if (validIntFromString(parseString(string, 2), state)) {
-      string  = toString(static_cast<Swipe_action_e>(state));
+    # if TOUCH_FEATURE_EXTENDED_TOUCH
+    case touchHandler_getconfig_e::pagemode:
+      string  = bitRead(Touch_Settings.flags, TOUCH_FLAGS_PGUP_BELOW_MENU);
       success = true;
+      break;
+    #  if TOUCH_FEATURE_SWIPE
+    case touchHandler_getconfig_e::swipedir:
+    {
+      int32_t state;
+
+      if (validIntFromString(parseString(string, 2), state)) {
+        string  = toString(static_cast<Swipe_action_e>(state));
+        success = true;
+      }
+      break;
     }
-  #  endif // if TOUCH_FEATURE_SWIPE
-  # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
+    #  endif // if TOUCH_FEATURE_SWIPE
+    # endif // if TOUCH_FEATURE_EXTENDED_TOUCH
+    case touchHandler_getconfig_e::undefined:
+      break;
   }
   return success;
 }
