@@ -37,7 +37,11 @@ struct NotificationSettingsStruct
 
 DEF_UP(NotificationSettingsStruct);
 
+#if defined(USE_SECOND_HEAP) || defined(ESP32)
 #define MakeNotificationSettings(T) void * calloc_ptr = special_calloc(1,sizeof(NotificationSettingsStruct)); UP_NotificationSettingsStruct T(new (calloc_ptr)  NotificationSettingsStruct());
+#else
+#define MakeNotificationSettings(T) UP_NotificationSettingsStruct T(new (std::nothrow)  NotificationSettingsStruct());
+#endif
 
 // Check to see if MakeNotificationSettings was successful
 #define AllocatedNotificationSettings() (NotificationSettings.get() != nullptr)

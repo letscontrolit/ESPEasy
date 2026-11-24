@@ -76,7 +76,9 @@ String P036_LineContent::saveDisplayLines(taskIndex_t taskIndex) {
         taskIndex,
         reinterpret_cast<uint8_t *>(tmp),
         sizeof(tDisplayLines_storage_full));
-      delete tmp;
+//      delete tmp;
+      tmp->~tDisplayLines_storage_full();
+      free(ptr);
       return error;
     }
   }
@@ -764,7 +766,8 @@ void P036_data_struct::RestoreLineContent(taskIndex_t taskIndex,
     else {
       *(&LineContent->DisplayLinesV1[LineNo - 1].Content) = TempContent->DisplayLinesV1[LineNo - 1].Content;
     }
-    delete TempContent;
+    TempContent->~P036_LineContent();
+    free(ptr);
   }
 }
 

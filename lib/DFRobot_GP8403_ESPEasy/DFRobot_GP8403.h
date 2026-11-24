@@ -11,8 +11,7 @@
  * 2024-01-21 tonhuisman: Make Sine wave, Triangle wave and Square wave functions optional, for size and timing issues
  *                        Make store() feature optional, as that is absolutely NOT I2C friendly or compatible
  */
-#ifndef _DFROBOT_GP8403_H_
-#define _DFROBOT_GP8403_H
+#pragma once
 
 #include "Arduino.h"
 #include "Wire.h"
@@ -142,5 +141,3 @@ private:
 };
 
 
-
-#endif

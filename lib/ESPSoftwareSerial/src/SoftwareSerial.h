@@ -195,7 +195,7 @@ public:
     bool overflow();
 
     int available() override;
-#if defined(ESP8266)
+#if defined(ESP8266) && defined(CORE_POST_3_0_0)
     int availableForWrite() override {
 #else
     int availableForWrite() {
@@ -224,7 +224,7 @@ public:
     }
     /// The read(buffer, size) functions are non-blocking, the same as readBytes but without timeout
     int read(uint8_t* buffer, size_t size)
-#if defined(ESP8266)
+#if defined(ESP8266) && defined(CORE_POST_3_0_0)
         override
 #endif
         ;

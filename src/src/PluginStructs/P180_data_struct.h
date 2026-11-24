@@ -60,18 +60,20 @@ struct P180_data_struct : public PluginTaskData_base {
 
 private:
 
-  BusCmd_Helper_struct*busCmd_Helper = nullptr;
+  bool hasBusCmd() const { return busCmd_Helper.get() != nullptr; }
+
+  UP_BusCmd_Helper_struct busCmd_Helper;
 
   void loadStrings(struct EventStruct *event);
 
-  int16_t     _enPin;
-  int16_t     _rstPin;
-  taskIndex_t _taskIndex     = INVALID_TASK_INDEX;
+  const int16_t     _enPin;
+  const int16_t     _rstPin;
+  const taskIndex_t _taskIndex;
+  bool        _showLog{};
   bool        _initialized   = false;
   bool        _stringsLoaded = false;
-  bool        _showLog       = false;
 
-  String _strings[P180_CUSTOM_BUFFER_SIZE];
+  String _strings[P180_CUSTOM_BUFFER_SIZE]{};
 };
 
 #endif // ifdef USES_P180

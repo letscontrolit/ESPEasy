@@ -10,7 +10,7 @@
 \*********************************************************************************************/
 struct systemTimerStruct
 {
-  systemTimerStruct() {}
+  systemTimerStruct() = default;
 
 private:
 

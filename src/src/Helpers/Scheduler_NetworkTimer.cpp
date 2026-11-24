@@ -53,7 +53,7 @@ void ESPEasy_Scheduler::setNetworkTimer(uint32_t                msecFromNow,
     systemTimerStruct timer_data;
 
     timer_data.fromEvent(networkIndex, Par1, Par2, Par3, Par4, Par5);
-    systemTimers[timerID.mixed_id] = timer_data;
+    systemTimers[timerID.mixed_id] = std::move(timer_data);
     setNewTimerAt(timerID, millis() + msecFromNow);
   }
 
@@ -72,7 +72,7 @@ void ESPEasy_Scheduler::process_network_timer(SchedulerTimerID id)
 
   // TD-er: Not sure if we have to keep original source for notifications.
   TempEvent.Source = EventValueSource::Enum::VALUE_SOURCE_SYSTEM;
-  systemTimers.erase(id.mixed_id);
+  systemTimers.erase(it);
 
   {
     String dummy;

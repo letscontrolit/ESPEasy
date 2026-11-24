@@ -387,14 +387,14 @@ static void WebServerInit()
   #endif    // if defined(ESP8266)
 
   #if defined(ESP8266)
-
   web_server.enableCORS(true);
+  #endif  // if defined(ESP8266)
 
   # if FEATURE_SSDP
 
   if (Settings.UseSSDP)
   {
-    web_server.on(F("/ssdp.xml"), HTTP_GET, []() {
+    web_server.on(F("/description.xml"), HTTP_GET, []() {
       #  ifdef MUSTFIX_CLIENT_TIMEOUT_IN_SECONDS
 
       // See: https://github.com/espressif/arduino-esp32/pull/6676
@@ -410,7 +410,6 @@ static void WebServerInit()
     SSDP_begin();
   }
   # endif // if FEATURE_SSDP
-  #endif  // if defined(ESP8266)
 }
 
 void setWebserverRunning(bool state) {

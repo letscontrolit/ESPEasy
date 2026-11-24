@@ -14,6 +14,14 @@
 // # define P082_USE_U_BLOX_SPECIFIC // TD-er: Disabled for now, as it is not working reliable/predictable
 # endif // ifndef BUILD_NO_DEBUG
 
+#ifndef P082_FEATURE_PPS
+#ifdef LIMIT_BUILD_SIZE
+#define P082_FEATURE_PPS 0
+#else
+#define P082_FEATURE_PPS 1
+#endif
+#endif
+
 # define P082_TIMESTAMP_AGE       1000
 # define P082_DEFAULT_FIX_TIMEOUT 2500 // TTL of fix status in ms since last update
 
@@ -229,7 +237,9 @@ private:
   bool        writeToGPS(const uint8_t *data,
                          size_t         size);
 
+#if P082_FEATURE_PPS
   static void pps_interrupt(P082_data_struct *self);
+#endif
 
 public:
 
@@ -260,7 +270,7 @@ public:
   OversamplingHelper<uint64_t, uint64_t>_oversampling_gps_time_offset_usec;
 
   P082_software_pps _softwarePPS;
-
+#if P082_FEATURE_PPS
   // When using PPS pin, we're only interested in the moment during a second when it triggers.
   // So we keep only track of the micros() % 1000000 so we have some offset from the system micros counter.
   // This will also be used to keep track of when the first sentence is received as the GPS will send those out in a burst at the start of a
@@ -268,6 +278,7 @@ public:
   ESPEASY_VOLATILE(uint64_t) _pps_time_micros = 0;
 
   int8_t _ppsPin = -1;
+#endif
 };
 
 #endif // ifdef USES_P082

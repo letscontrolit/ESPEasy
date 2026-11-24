@@ -991,6 +991,8 @@ public:
    * \return pointer to the start of the font table in PROGMEM.
    */
   fontType_t *getFont(void) { return(_fontData); };
+
+  static fontType_t *getSysFont();
 #endif // USE_LOCAL_FONT
   /** @} */
 

@@ -554,26 +554,26 @@ void sendSysInfoUDP(uint8_t repeats)
 
 #endif // FEATURE_ESPEASY_P2P
 
-#if defined(ESP8266)
-
 # if FEATURE_SSDP
 
 /********************************************************************************************\
    Respond to HTTP XML requests for SSDP information
  \*********************************************************************************************/
+static String getSSDP_UUID()
+{
+  const uint32_t  chipId = ESP.getChipId();
+  return strformat(F("38323636-4558-4dda-9188-cda0e6%02x%02x%02x"),
+            (uint16_t)((chipId >> 16) & 0xff),
+            (uint16_t)((chipId >>  8) & 0xff),
+            (uint16_t)chipId        & 0xff);
+}
+
 void SSDP_schema() {
   if (!NetworkConnected(10)) {
     return;
   }
 
   const IPAddress ip     = ESPEasy::net::NetworkLocalIP();
-  const uint32_t  chipId = ESP.getChipId();
-  char uuid[64];
-
-  sprintf_P(uuid, PSTR("38323636-4558-4dda-9188-cda0e6%02x%02x%02x"),
-            (uint16_t)((chipId >> 16) & 0xff),
-            (uint16_t)((chipId >>  8) & 0xff),
-            (uint16_t)chipId        & 0xff);
 
   web_server.client().print(F(
                               "HTTP/1.1 200 OK\r\n"
@@ -592,7 +592,8 @@ void SSDP_schema() {
   web_server.client().print(formatIP(ip));
   web_server.client().print(F(":80/</URLBase>"
                               "<device>"
-                              "<deviceType>urn:schemas-upnp-org:device:BinaryLight:1</deviceType>"
+                              "<pnpx:X_deviceCategory xmlns:pnpx=\"http://schemas.microsoft.com/windows/pnpx/2005/11\">NetworkInfrastructure.Gateway</pnpx:X_deviceCategory>"
+                              "<deviceType>urn:schemas-upnp-org:device:Basic:1</deviceType>"
                               "<friendlyName>"));
   web_server.client().print(Settings.getName());
   web_server.client().print(F("</friendlyName>"
@@ -608,7 +609,7 @@ void SSDP_schema() {
                               "<manufacturer>http://www.letscontrolit.com</manufacturer>"
                               "<manufacturerURL>http://www.letscontrolit.com</manufacturerURL>"
                               "<UDN>uuid:"));
-  web_server.client().print(String(uuid));
+  web_server.client().print(getSSDP_UUID());
   web_server.client().print(F("</UDN></device>"
                               "</root>\r\n"
                               "\r\n"));
@@ -618,22 +619,22 @@ void SSDP_schema() {
    Global SSDP stuff
  \*********************************************************************************************/
 
-UdpContext *_server;
+UdpContext *_server=nullptr;
 
-IPAddress _respondToAddr;
-uint16_t  _respondToPort;
+IPAddress _respondToAddr{};
+uint16_t  _respondToPort{};
 
-bool _pending;
-unsigned short _delay;
-uint32_t  _process_time;
-uint32_t  _notify_time;
+bool _pending{};
+unsigned short _delay{};
+uint32_t  _process_time{};
+uint32_t  _notify_time{};
 
 #  define SSDP_INTERVAL     1200
 #  define SSDP_PORT         1900
 #  define SSDP_METHOD_SIZE  10
 #  define SSDP_URI_SIZE     2
 #  define SSDP_BUFFER_SIZE  64
-#  define SSDP_MULTICAST_TTL 2
+#  define SSDP_MULTICAST_TTL 3
 
 static const IPAddress SSDP_MULTICAST_ADDR(239, 255, 255, 250);
 
@@ -645,6 +646,8 @@ bool SSDP_begin() {
 
   if (_server != nullptr) {
     _server->unref();
+
+    delete _server;
 
     // FIXME TD-er: Shouldn't this also call delete _server ?
 
@@ -712,58 +715,39 @@ bool SSDP_begin() {
    Send SSDP messages (notify & responses)
  \*********************************************************************************************/
 static void SSDP_send(uint8_t method) {
-  uint32_t ip = ESPEasy::net::NetworkLocalIP();
-
-  // FIXME TD-er: Why create String objects of these flashstrings?
-  String _ssdp_response_template = F(
-    "HTTP/1.1 200 OK\r\n"
-    "EXT:\r\n"
-    "ST: upnp:rootdevice\r\n");
-
-  String _ssdp_notify_template = F(
-    "NOTIFY * HTTP/1.1\r\n"
-    "HOST: 239.255.255.250:1900\r\n"
-    "NT: upnp:rootdevice\r\n"
-    "NTS: ssdp:alive\r\n");
-
-  String _ssdp_packet_template = F(
-    "%s"                                           // _ssdp_response_template / _ssdp_notify_template
-    "CACHE-CONTROL: max-age=%u\r\n"                // SSDP_INTERVAL
-    "SERVER: Arduino/1.0 UPNP/1.1 ESPEasy/%u\r\n"  // _modelNumber
-    "USN: uuid:%s\r\n"                             // _uuid
-    "LOCATION: http://%u.%u.%u.%u:80/ssdp.xml\r\n" // NetworkLocalIP(),
-    "\r\n");
+  if (_server == nullptr) return;
   {
-    char uuid[64]   = { 0 };
-    uint32_t chipId = ESP.getChipId();
-    sprintf_P(uuid, PSTR("38323636-4558-4dda-9188-cda0e6%02x%02x%02x"),
-              (uint16_t)((chipId >> 16) & 0xff),
-              (uint16_t)((chipId >>  8) & 0xff),
-              (uint16_t)chipId        & 0xff);
+    const __FlashStringHelper *_ssdp_response_template = F(
+      "HTTP/1.1 200 OK\r\n"
+      "EXT:\r\n"
+      "ST: upnp:rootdevice\r\n");
 
-    char *buffer = nullptr;
-    # ifdef USE_SECOND_HEAP
-    {
-      HeapSelectIram ephemeral;
-      buffer = new (std::nothrow) char[1460]();
-    }
-    # endif // ifdef USE_SECOND_HEAP
-    if (buffer == nullptr) {
-      buffer = new (std::nothrow) char[1460]();
-    }
+    const __FlashStringHelper *_ssdp_notify_template = F(
+      "NOTIFY * HTTP/1.1\r\n"
+      "HOST: 239.255.255.250:1900\r\n"
+      "NT: upnp:rootdevice\r\n"
+      "NTS: ssdp:alive\r\n");
 
-    if (buffer == nullptr) { return; }
-    int len = snprintf(buffer, 1460,
-                       _ssdp_packet_template.c_str(),
-                       (method == 0) ? _ssdp_response_template.c_str() : _ssdp_notify_template.c_str(),
-                       SSDP_INTERVAL,
-                       Settings.Build,
-                       uuid,
-                       IPADDR2STR(&ip)
-                       );
+    const __FlashStringHelper *_ssdp_packet_template = F(
+      "CACHE-CONTROL: max-age=%u\r\n"                // SSDP_INTERVAL
+      "SERVER: Arduino/1.0 UPNP/1.1 ESPEasy/%u\r\n"  // _modelNumber
+      "USN: uuid:%s\r\n"                             // _uuid
+      "LOCATION: http://%u.%u.%u.%u:%u/description.xml\r\n" // NetworkLocalIP(), port
+      "\r\n");
 
-    _server->append(buffer, len);
-    delete[] buffer;
+    uint32_t ip      = ESPEasy::net::NetworkLocalIP();
+    const String res = concat(
+      (method == 0) ? _ssdp_response_template : _ssdp_notify_template,
+      strformat(
+        _ssdp_packet_template,
+        SSDP_INTERVAL,
+        Settings.Build,
+        getSSDP_UUID().c_str(),
+        IPADDR2STR(&ip),
+        Settings.WebserverPort
+        ));
+
+    _server->append(res.c_str(), res.length());
   }
 
   ip_addr_t remoteAddr;
@@ -784,6 +768,7 @@ static void SSDP_send(uint8_t method) {
    SSDP message processing
  \*********************************************************************************************/
 void SSDP_update() {
+  if (_server == nullptr) return;
   if (!_pending && _server->next()) {
     ssdp_method_t method = NONE;
 
@@ -939,7 +924,6 @@ void SSDP_update() {
 }
 
 # endif // if FEATURE_SSDP
-#endif  // if defined(ESP8266)
 
 // ********************************************************************************
 // Return subnet range of active network interface.

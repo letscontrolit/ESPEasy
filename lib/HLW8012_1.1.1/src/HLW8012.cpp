@@ -239,7 +239,7 @@ void HLW8012::setResistors(float current, float voltage_upstream, float voltage_
         _calculateDefaultMultipliers();
     }
 }
-
+/*
 unsigned long IRAM_ATTR HLW8012::filter(unsigned long oldvalue, unsigned long newvalue) {
     if (oldvalue == 0) {
         return newvalue;
@@ -249,7 +249,7 @@ unsigned long IRAM_ATTR HLW8012::filter(unsigned long oldvalue, unsigned long ne
     oldvalue >>= 2;
     return oldvalue;
 }
-
+*/
 
 void IRAM_ATTR HLW8012::cf_interrupt() {
   	++_cf_pulse_count_total;

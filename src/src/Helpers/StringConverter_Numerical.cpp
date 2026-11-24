@@ -421,8 +421,10 @@ String formatToHex(uint32_t value, unsigned int minimal_hex_digits) {
 }
 
 String formatToHex_no_prefix(uint32_t value, unsigned int minimal_hex_digits) {
-  const String fmt = strformat(F("%%0%dX"), minimal_hex_digits);
-  return strformat(fmt, value);
+//  const String fmt = strformat(F("%%0%dX"), minimal_hex_digits);
+  String res = strformat(F("%X"), value);
+  prefixToMinimumLength(res, minimal_hex_digits, '0');
+  return res;
 }
 
 String formatHumanReadable(uint64_t value,

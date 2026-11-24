@@ -50,7 +50,7 @@ public:
 
   };
 
-  BusCmd_Command_e() = default;
+  BusCmd_Command_e(): value(Cmds::NOP) {}
   constexpr BusCmd_Command_e(Cmds aCmd): value(aCmd) {}
 
   constexpr BusCmd_Command_e(uint8_t uCmd): value(static_cast<Cmds>(uCmd)) {}
@@ -183,20 +183,24 @@ struct BusCmd_Command_struct {
 
   };
 
-  std::vector<uint8_t> data_b;
-  std::vector<uint16_t>data_w;
-  String               calculation;
-  String               variable;
+  BUS_CMD_BYTE_DATA data_b{};
+  BUS_CMD_WIDE_DATA data_w{};
+  String            calculation;
+  String            variable;
 
 };
 
+typedef std::vector<BusCmd_Command_struct> BusCmd_Command_vector;
+
 struct BusCmd_Buffer {
+  BusCmd_Buffer() = default;
   BusCmd_Buffer(const String& name,
                 const String& line);
   String cacheName;
   String commandSet;
 
 };
+typedef std::vector<BusCmd_Buffer> BusCmd_Buffer_vector;
 
 struct BusCmd_Helper_struct {
   BusCmd_Helper_struct() = delete;
@@ -217,27 +221,27 @@ struct BusCmd_Helper_struct {
                          String            & string);
   # endif // ifndef LIMIT_BUILD_SIZE
 
-  std::vector<BusCmd_Command_struct>parseBusCmdCommands(const String& name,
+  BusCmd_Command_vector parseBusCmdCommands(const String& name,
                                                         const String& line);
-  std::vector<BusCmd_Command_struct>parseBusCmdCommands(const String& name,
+  BusCmd_Command_vector parseBusCmdCommands(const String& name,
                                                         const String& line,
                                                         const bool    update);
 
   bool executeBusCmdCommands();
 
-  bool parseAndExecute(BusCmd_CommandSource_e source,
-                       const String         & line,
-                       const String         & logFormat);
+  bool parseAndExecute(BusCmd_CommandSource_e     source,
+                       const String             & line,
+                       const __FlashStringHelper *logFormat);
   bool processCommands(struct EventStruct *event);
 
   // Setters
   void setLog(bool showLog) { _showLog = showLog; }
 
-  void setCommands(std::vector<BusCmd_Command_struct>commands,
-                   taskVarIndex_t                    taskVarIndex,
-                   uint8_t                           loopStart,
-                   uint8_t                           loopMax,
-                   BusCmd_CommandState_e             commandState);
+  void setCommands(const BusCmd_Command_vector & commands,
+                   taskVarIndex_t                            taskVarIndex,
+                   uint8_t                                   loopStart,
+                   uint8_t                                   loopMax,
+                   BusCmd_CommandState_e                     commandState);
 
   void setBuffer(uint8_t       index,
                  const String& name,
@@ -260,14 +264,14 @@ private:
 
   String replacePluginValues(const String& inVar);
 
-  IBusCmd_Handler*_iBusCmd_Handler = nullptr;
+  UP_IBusCmd_Handler _iBusCmd_Handler;
 
   ESPEASY_RULES_FLOAT_TYPE _value{};
 
   taskVarIndex_t _varIndex = INVALID_TASKVAR_INDEX;
-  taskIndex_t    _taskIndex;
-  int16_t        _enPin;
-  int16_t        _rstPin;
+  taskIndex_t    _taskIndex = INVALID_TASK_INDEX;
+  int16_t        _enPin = -1;
+  int16_t        _rstPin= -1;
   bool           _valueIsSet = false;
   bool           _evalIsSet  = false;
   bool           _showLog    = false;
@@ -281,15 +285,17 @@ private:
   uint16_t               _lastReg{};
   uint8_t                _loop{};
   uint8_t                _loopMax = VARS_PER_TASK;
-  uint8_t                _loopLimit;
+  uint8_t                _loopLimit{};
 
-  std::map<String, std::vector<BusCmd_Command_struct> >_commandCache;
-  std::vector<BusCmd_Command_struct>                   _commands;
-  std::vector<BusCmd_Command_struct>::iterator         _evalCommand;
-  std::vector<BusCmd_Command_struct>::iterator         _it;
-  std::vector<BusCmd_Buffer>                           _buffer;
+  std::map<String, BusCmd_Command_vector> _commandCache;
+  BusCmd_Command_vector            _commands;
+  BusCmd_Command_vector::iterator  _evalCommand{};
+  BusCmd_Command_vector::iterator  _it{};
+  BusCmd_Buffer_vector             _buffer;
 
 };
+
+DEF_UP(BusCmd_Helper_struct);
 
 #endif // if FEATURE_BUS_COMMAND
 #endif // ifndef _HELPERS_BUSCMD_HELPER_H

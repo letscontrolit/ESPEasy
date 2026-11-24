@@ -30,9 +30,9 @@ bool ESPEasy_Scheduler::setRulesTimer(uint32_t msecFromNow, unsigned int timerIn
 
   const RulesTimerID timerID(timerIndex);
 
-  const systemTimerStruct timer_data(recurringCount, msecFromNow, timerIndex);
+  systemTimerStruct timer_data(recurringCount, msecFromNow, timerIndex);
 
-  systemTimers[timerID.mixed_id] = timer_data;
+  systemTimers[timerID.mixed_id] = std::move(timer_data);
   setNewTimerAt(timerID, millis() + (startImmediately ? 10 : msecFromNow));
   return true;
 }
@@ -63,7 +63,7 @@ void ESPEasy_Scheduler::process_rules_timer(SchedulerTimerID id, uint32_t lastti
     setNewTimerAt(id, newTimer);
     it->second.markNextRecurring();
   } else {
-    systemTimers.erase(id.mixed_id);
+    systemTimers.erase(it);
   }
 
   if (loopCount > 0) {

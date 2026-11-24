@@ -316,12 +316,10 @@ To create/register a plugin, you have to :
   #define  PLUGIN_BUILD_COLLECTION   // add collection
 #endif
 
-#ifdef PLUGIN_BUILD_COLLECTION
-  #if !defined(PLUGIN_BUILD_COLLECTION_B) && !defined(PLUGIN_BUILD_COLLECTION_C) && !defined(PLUGIN_BUILD_COLLECTION_D) && !defined(PLUGIN_BUILD_COLLECTION_E) && !defined(PLUGIN_BUILD_COLLECTION_F) && !defined(PLUGIN_BUILD_COLLECTION_G) && !defined(PLUGIN_BUILD_COLLECTION_H)
-    #define PLUGIN_DESCR  "Collection_A"
-    #define PLUGIN_SET_COLLECTION_A
-  #endif
+#ifdef PLUGIN_BUILD_COLLECTION_A
+  #define PLUGIN_DESCR  "Collection_A"
   #define PLUGIN_SET_COLLECTION
+  #define PLUGIN_SET_COLLECTION_A
   #define CONTROLLER_SET_COLLECTION
   #define NOTIFIER_SET_COLLECTION
   #define PLUGIN_BUILD_NORMAL     // add stable
@@ -1767,7 +1765,9 @@ To create/register a plugin, you have to :
     //#define USES_P095  // TFT ILI9341
     //#define USES_P096  // eInk   (Needs lib_deps = Adafruit GFX Library, LOLIN_EPD )
     #define USES_P097   // Touch (ESP32)
-    #define USES_P098   // PWM motor  (relies on iRAM, cannot be combined with all other plugins)
+    #ifdef ESP32
+        #define USES_P098   // PWM motor  (relies on iRAM, cannot be combined with all other plugins)
+    #endif
     //#define USES_P099   // XPT2046 Touchscreen
     #define USES_P105   // AHT10/20/21
     #define USES_P134   // A02YYUW
@@ -1792,7 +1792,7 @@ To create/register a plugin, you have to :
     #define USES_P085   // AcuDC24x
     #define USES_P087   // Serial Proxy
 
-    #define USES_P091	// SerSwitch
+    #define USES_P091   // SerSwitch
     #define USES_P092   // DL-Bus
 
     #define USES_P111   // RC522 RFID reader
@@ -4696,6 +4696,16 @@ To create/register a plugin, you have to :
 # else
 #  define DEBUG_PCONFIG_RANGE_CHECK 0
 # endif 
+#endif
+
+#ifdef ESP32
+// SSDP needs UdpContext, which isn't available for ESP32 (or I don't know what it is called there)
+// TODO TD-er: See https://github.com/gitpeut/esp32SSDP/tree/master
+// and https://github.com/esp8266/Arduino/issues/2283#issuecomment-299635604
+    #ifdef FEATURE_SSDP
+    #undef FEATURE_SSDP
+    #endif
+    #define FEATURE_SSDP  0
 #endif
 
 

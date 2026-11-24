@@ -105,7 +105,7 @@ bool doSetAPinternal(bool enable)
     if (!WiFi.softAPConfig(apIP, apIP, subnet, dhcp_lease_start, dns)) {
       #ifndef LIMIT_BUILD_SIZE
       addLog(LOG_LEVEL_ERROR, strformat(
-               ("WIFI : [AP] softAPConfig failed! IP: %s, GW: %s, SN: %s DNS: %s"),
+               F("WIFI : [AP] softAPConfig failed! IP: %s, GW: %s, SN: %s DNS: %s"),
                apIP.toString().c_str(),
                apIP.toString().c_str(),
                subnet.toString().c_str(),
@@ -125,7 +125,7 @@ bool doSetAPinternal(bool enable)
     if (!WiFi.softAPConfig(apIP, apIP, subnet)) {
 #  ifndef BUILD_NO_DEBUG
       addLog(LOG_LEVEL_ERROR, strformat(
-               ("WIFI : [AP] softAPConfig failed! IP: %s, GW: %s, SN: %s"),
+               F("WIFI : [AP] softAPConfig failed! IP: %s, GW: %s, SN: %s"),
                apIP.toString().c_str(),
                apIP.toString().c_str(),
                subnet.toString().c_str())

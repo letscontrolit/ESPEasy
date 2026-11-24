@@ -26,7 +26,7 @@ void ESPEasy_Scheduler::setPluginTimer(uint32_t msecFromNow, pluginID_t pluginID
 
   // PLUGIN_DEVICETIMER_IN does not address a task, so don't set TaskIndex
   timer_data.fromEvent(INVALID_TASK_INDEX, Par1, Par2, Par3, Par4, Par5);
-  systemTimers[timerID.mixed_id] = timer_data;
+  systemTimers[timerID.mixed_id] = std::move(timer_data);
   setNewTimerAt(timerID, millis() + msecFromNow);
 }
 
@@ -62,7 +62,7 @@ void ESPEasy_Scheduler::process_plugin_timer(SchedulerTimerID id) {
      log += id;
      addLog(LOG_LEVEL_INFO, log);
    */
-  systemTimers.erase(id.mixed_id);
+  systemTimers.erase(it);
 
   if (validDeviceIndex(deviceIndex)) {
     String dummy;

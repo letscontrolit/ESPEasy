@@ -192,10 +192,11 @@ P082_data_struct::P082_data_struct() : gps(nullptr), easySerial(nullptr) {
 }
 
 P082_data_struct::~P082_data_struct() {
+#if P082_FEATURE_PPS
   if (validGpio(_ppsPin)) {
     detachInterrupt(digitalPinToInterrupt(_ppsPin));
   }
-
+#endif
   if (gps != nullptr) {
     delete gps;
     gps = nullptr;
@@ -252,6 +253,7 @@ bool P082_data_struct::init(
     wakeUp();
   }
 
+#if P082_FEATURE_PPS
   _ppsPin = pps_pin;
 
   if (validGpio(_ppsPin)) {
@@ -264,6 +266,9 @@ bool P082_data_struct::init(
   } else {
     _softwarePPS.setBaudrate(easySerial->getBaudRate());
   }
+#else
+  _softwarePPS.setBaudrate(easySerial->getBaudRate());
+#endif
 
   return isInitialized();
 }
@@ -455,9 +460,11 @@ bool P082_data_struct::getDateTime(
   const uint32_t reported_date = gps->date.value();
 
   // FIXME TD-er: Must the offset in centisecond be added when pps_sync active?
+#if P082_FEATURE_PPS
   if (!validGpio(_ppsPin)) {
     centiseconds = gps->time.centisecond();
   }
+#endif
 
   updated    = reported_time != _last_time;
   _last_time = reported_time;
@@ -489,12 +496,14 @@ bool P082_data_struct::tryUpdateSystemTime() {
       const uint64_t cur_micros = getMicros64();
 
       uint32_t second_frac_in_usec{};
-
+#if P082_FEATURE_PPS
       if (validGpio(_ppsPin) && (_pps_time_micros > 0ll)) {
         // Rely on timestamp from PPS pin,
         // even when this might have been updated quite long ago
         second_frac_in_usec = _pps_time_micros % 1000000ll;
-      } else if (_softwarePPS.getPPS(second_frac_in_usec)) {
+      } else 
+#endif
+      if (_softwarePPS.getPPS(second_frac_in_usec)) {
         // we got some estimate based on the timestamp of receiving the first sentence.
       } else {
         // Determine the system micros at the time the GPS time was committed
@@ -535,6 +544,7 @@ bool P082_data_struct::tryUpdateSystemTime() {
           timeSource_t timeSource = timeSource_t::GPS_time_source_no_fix;
 
           if (hasFix(P082_TIMESTAMP_AGE)) {
+#if P082_FEATURE_PPS            
             // Using PPS sync should be extremely stable without any significant time wander.
             // When we only can rely on keeping track of the timestamp at the start of a sentence, the fluctuation is significant.
             if (usecPassedSince_volatile(_pps_time_micros) < 1000000ll) {
@@ -542,6 +552,9 @@ bool P082_data_struct::tryUpdateSystemTime() {
             } else {
               timeSource = timeSource_t::GPS_time_source;
             }
+#else
+            timeSource = timeSource_t::GPS_time_source;
+#endif
           }
 
           if (node_time.setExternalTimeSource(
@@ -663,7 +676,9 @@ bool P082_data_struct::writeToGPS(const uint8_t *data, size_t size) {
   return false;
 }
 
-void ICACHE_RAM_ATTR P082_data_struct::pps_interrupt(P082_data_struct *self) { self->_pps_time_micros = getMicros64(); }
+#if P082_FEATURE_PPS
+void ISR_PREFIX P082_data_struct::pps_interrupt(P082_data_struct *self) { self->_pps_time_micros = getMicros64(); }
+#endif
 
 # if FEATURE_PLUGIN_STATS
 

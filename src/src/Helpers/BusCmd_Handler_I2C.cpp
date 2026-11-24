@@ -1,6 +1,9 @@
 #include "../Helpers/BusCmd_Handler_I2C.h"
 
 #if FEATURE_BUS_COMMAND
+
+# include <Wire.h>
+
 /**
  * Constructor BusCmd_Handler_I2C
  */
@@ -51,8 +54,8 @@ uint32_t BusCmd_Handler_I2C::read32uREG(uint16_t reg,
   return I2C_read32_reg(_i2cAddress, reg, &_ok);
 }
 
-std::vector<uint8_t>BusCmd_Handler_I2C::read8uB(uint32_t size) {
-  std::vector<uint8_t> data_b;
+BUS_CMD_BYTE_DATA BusCmd_Handler_I2C::read8uB(uint32_t size) {
+  BUS_CMD_BYTE_DATA  data_b;
 
   #ifdef ESP32
 
@@ -81,8 +84,8 @@ std::vector<uint8_t>BusCmd_Handler_I2C::read8uB(uint32_t size) {
   return data_b;
 }
 
-std::vector<uint16_t>BusCmd_Handler_I2C::read16uW(uint32_t size) {
-  std::vector<uint16_t> data_w;
+BUS_CMD_WIDE_DATA BusCmd_Handler_I2C::read16uW(uint32_t size) {
+  BUS_CMD_WIDE_DATA  data_w;
 
   #ifdef ESP32
 
@@ -111,10 +114,10 @@ std::vector<uint16_t>BusCmd_Handler_I2C::read16uW(uint32_t size) {
   return data_w;
 }
 
-std::vector<uint8_t>BusCmd_Handler_I2C::read8uBREG(uint16_t reg,
+BUS_CMD_BYTE_DATA BusCmd_Handler_I2C::read8uBREG(uint16_t reg,
                                                    uint32_t size,
                                                    bool     wideReg) {
-  std::vector<uint8_t> data_b;
+  BUS_CMD_BYTE_DATA  data_b;
 
   #ifdef ESP32
 
@@ -143,10 +146,10 @@ std::vector<uint8_t>BusCmd_Handler_I2C::read8uBREG(uint16_t reg,
   return data_b;
 }
 
-std::vector<uint16_t>BusCmd_Handler_I2C::read16uWREG(uint16_t reg,
+BUS_CMD_WIDE_DATA BusCmd_Handler_I2C::read16uWREG(uint16_t reg,
                                                      uint32_t size,
                                                      bool     wideReg) {
-  std::vector<uint16_t> data_w;
+  BUS_CMD_WIDE_DATA  data_w;
 
   #ifdef ESP32
 
@@ -308,7 +311,7 @@ bool BusCmd_Handler_I2C::write32uREG(uint16_t reg,
   return I2C_write32_reg(_i2cAddress, reg, data);
 }
 
-uint32_t BusCmd_Handler_I2C::write8uB(std::vector<uint8_t>data) {
+uint32_t BusCmd_Handler_I2C::write8uB(const BUS_CMD_BYTE_DATA &data) {
   const size_t size = data.size();
 
   #ifdef ESP32
@@ -336,7 +339,7 @@ uint32_t BusCmd_Handler_I2C::write8uB(std::vector<uint8_t>data) {
   return _wire->endTransmission() == 0;
 }
 
-uint32_t BusCmd_Handler_I2C::write16uW(std::vector<uint16_t>data) {
+uint32_t BusCmd_Handler_I2C::write16uW(const BUS_CMD_WIDE_DATA &data) {
   const size_t size = data.size();
 
   #ifdef ESP32
@@ -366,7 +369,7 @@ uint32_t BusCmd_Handler_I2C::write16uW(std::vector<uint16_t>data) {
 }
 
 uint32_t BusCmd_Handler_I2C::write8uBREG(uint16_t            reg,
-                                         std::vector<uint8_t>data,
+                                         const BUS_CMD_BYTE_DATA &data,
                                          bool                wideReg) {
   const size_t size = data.size();
 
@@ -397,7 +400,7 @@ uint32_t BusCmd_Handler_I2C::write8uBREG(uint16_t            reg,
 }
 
 uint32_t BusCmd_Handler_I2C::write16uWREG(uint16_t             reg,
-                                          std::vector<uint16_t>data,
+                                          const BUS_CMD_WIDE_DATA &data,
                                           bool                 wideReg) {
   const size_t size = data.size();
 

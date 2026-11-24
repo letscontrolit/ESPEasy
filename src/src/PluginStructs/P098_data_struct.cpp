@@ -432,7 +432,7 @@ bool P098_data_struct::check_encoder_timeout(const P098_GPIO_config & gpio_confi
   return true;
 }
 
-void ICACHE_RAM_ATTR P098_data_struct::process_limit_switch(
+void ISR_PREFIX P098_data_struct::process_limit_switch(
   const P098_GPIO_config          & gpio_config,
   volatile P098_limit_switch_state& switch_state,
   int                               position)
@@ -481,17 +481,17 @@ void ICACHE_RAM_ATTR P098_data_struct::process_limit_switch(
   ISR_interrupts(); // enable interrupts again.
 }
 
-void ICACHE_RAM_ATTR P098_data_struct::ISRlimitA(P098_data_struct *self)
+void ISR_PREFIX P098_data_struct::ISRlimitA(P098_data_struct *self)
 {
   process_limit_switch(self->_config.limitA, self->limitA, self->position);
 }
 
-void ICACHE_RAM_ATTR P098_data_struct::ISRlimitB(P098_data_struct *self)
+void ISR_PREFIX P098_data_struct::ISRlimitB(P098_data_struct *self)
 {
   process_limit_switch(self->_config.limitB, self->limitB, self->position);
 }
 
-void ICACHE_RAM_ATTR P098_data_struct::ISRencoder(P098_data_struct *self)
+void ISR_PREFIX P098_data_struct::ISRencoder(P098_data_struct *self)
 {
   ISR_noInterrupts();
 
