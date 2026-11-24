@@ -22,7 +22,11 @@ namespace ESPEasy {
 namespace net {
 namespace wifi {
 
+# ifdef ESP8266
+    # define WIFI_STATE_MACHINE_STA_CONNECTING_TIMEOUT   30000
+# else
     # define WIFI_STATE_MACHINE_STA_CONNECTING_TIMEOUT   10000
+# endif
     # define WIFI_STATE_MACHINE_STA_AP_SCANNING_TIMEOUT  10000
     # define WIFI_STATE_MACHINE_STA_SCANNING_TIMEOUT     10000
     # define WIFI_STATE_MACHINE_AP_ONLY_TIMEOUT          60000
@@ -129,17 +133,13 @@ void ESPEasyWiFi_t::loop_internal()
         // - Scan
         //
         // Do we have candidate to connect to ?
-        if (WiFi_AP_Candidates.hasCandidates()) {
+        if (WiFi_AP_Candidates.hasNextCandidate()) {
           setState(WiFi_STA_State_e::STA_Connecting, WIFI_STATE_MACHINE_STA_CONNECTING_TIMEOUT);
           break;
         }
 
         // No known candidates, so need to scan first.
         if (WifiIsAP(WiFi.getMode())) {
-#ifdef ESP8266
-          setState(WiFi_STA_State_e::STA_AP_Scanning, WIFI_STATE_MACHINE_STA_AP_SCANNING_TIMEOUT);
-          break;
-#else
           if (WiFi.softAPgetStationNum()) {
             // TODO TD-er: Must check if any client is connected.
             // If not, then we can disable AP mode and switch to WiFi_STA_State_e::STA_Scanning
@@ -149,7 +149,6 @@ void ESPEasyWiFi_t::loop_internal()
             setAP(false);
             // TODO TD-er: Must also turn back on when we're done scanning?
           }
-#endif
         }
         setState(WiFi_STA_State_e::STA_Scanning, WIFI_STATE_MACHINE_STA_SCANNING_TIMEOUT);
       }
@@ -164,7 +163,10 @@ void ESPEasyWiFi_t::loop_internal()
       // Check if scanning is finished
       // When scanning per channel, call for scanning next channel
       if (scanCompleteStatus >= 0) {
-        const int scanResultCount = WiFi.scanComplete();
+        # ifndef BUILD_NO_DEBUG
+        const int scanResultCount =
+        #endif // ifndef BUILD_NO_DEBUG
+        WiFi.scanComplete();
         WiFi_AP_Candidates.load_knownCredentials();
         WiFi_AP_Candidates.process_WiFiscan();
 # ifndef BUILD_NO_DEBUG
@@ -580,12 +582,15 @@ bool ESPEasyWiFi_t::connectSTA()
     doSetWiFiCountryPolicyManual();
   }
 # endif // ifdef ESP32
-  wifi_STA_data->mark_begin_establish_connection();
-
 # ifdef ESP8266
   doWiFiDisconnectBeforeConnect();
+  delay(100);
+  wifi_STA_data->mark_begin_establish_connection();
 # else
   doWiFiDisconnect();
+  delay(100);
+  if (!doSetSTA(true)) { return false; }
+  wifi_STA_data->mark_begin_establish_connection();
 # endif
 
   _connectAttemptStarted = true;

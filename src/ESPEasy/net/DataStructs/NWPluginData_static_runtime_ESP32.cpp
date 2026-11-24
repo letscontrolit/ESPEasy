@@ -100,7 +100,7 @@ void NWPluginData_static_runtime::mark_start()
   if (Settings.getAppendNetworkAdapterNameToHostname(_networkIndex)) {
     const String hostname = strformat(
       F("%s-%s"),
-      NetworkCreateRFCCompliantHostname().c_str(), 
+      NetworkCreateRFCCompliantHostname().c_str(),
       _eventInterfaceName.c_str());
 
     _netif->setHostname(hostname.c_str());
@@ -228,11 +228,26 @@ void NWPluginData_static_runtime::mark_begin_establish_connection()
   // the STA_START event to apply the IP settings.
   if (!_isAP && _netif) {
     if (_useStaticIP) {
+      # ifndef BUILD_NO_DEBUG
+      const bool configOk =
+      # endif // ifndef BUILD_NO_DEBUG
       _netif->config(
         _ip,
         _gateway,
         _sn,
         _dns);
+      # ifndef BUILD_NO_DEBUG
+
+      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+        addLog(LOG_LEVEL_DEBUG, strformat(
+                 F("%s : Static IP config %s, status=0x%08x, local IP=%s, requested=%s"),
+                 _eventInterfaceName.c_str(),
+                 FsP(configOk ? F("ok") : F("failed")),
+                 static_cast<uint32_t>(_netif->getStatusBits()),
+                 _netif->localIP().toString().c_str(),
+                 _ip.toString().c_str()));
+      }
+      # endif // ifndef BUILD_NO_DEBUG
     } else {
       _netif->config((uint32_t)0, (uint32_t)0, (uint32_t)0);
     }
@@ -300,11 +315,7 @@ void NWPluginData_static_runtime::log_disconnected()
   }
 }
 
-
-void NWPluginData_static_runtime::mark_connect_failed()
-{
-  networkConnectionFailed = true;
-}
+void NWPluginData_static_runtime::mark_connect_failed() { networkConnectionFailed = true; }
 
 
 } // namespace net
