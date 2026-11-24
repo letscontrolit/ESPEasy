@@ -51,6 +51,14 @@
 
 # define P131_CONFIG_FLAG_B_BRIGHTNESS      0        // Brightness, 8 bits
 # define P131_CONFIG_FLAG_B_MAXBRIGHT       8        // Maximum Brightness, 8 bits
+# define P131_CONFIG_FLAGS_B_VERSION        16       // Settings version, 2 bits
+# define P131_CONFIG_FLAGS_B_STRIP_TYPE     18       // Strip-type, 3 bits
+# define P131_CONFIG_FLAGS_B_reserved       21       // Reserved, 11 bits
+
+# define P131_CONFIG_CURRENT_VERSION        1        // First version since 0/ no version. 2 bits reserved
+
+# define P131_CONFIG_FLAGS_GET_VERSION      (get2BitFromUL(P131_CONFIG_FLAGS_B, P131_CONFIG_FLAGS_B_VERSION))
+# define P131_CONFIG_FLAG_B_GET_STRIP_TYPE  (get3BitFromUL(P131_CONFIG_FLAGS_B, P131_CONFIG_FLAGS_B_STRIP_TYPE))
 
 # define P131_CONFIG_FLAGS_GET_MATRIX_TYPE  (get8BitFromUL(P131_CONFIG_FLAGS, P131_FLAGS_MATRIX_TYPE))
 # define P131_CONFIG_FLAG_GET_ROTATION      (get4BitFromUL(P131_CONFIG_FLAGS, P131_CONFIG_FLAG_ROTATION))
@@ -75,9 +83,11 @@
 enum class P131_CommandTrigger : uint8_t {
   neomatrix = 0u,
   neo       = 1u,
+
 };
 
 const __FlashStringHelper* P131_CommandTrigger_toString(P131_CommandTrigger cmd);
+neoPixelType               P131_ledTypeFromStripType(uint8_t stripType);
 
 struct P131_content_struct {
   int16_t length      = 0;  // Intermediate storage for current length
@@ -90,6 +100,7 @@ struct P131_content_struct {
   bool    active      = false;
   bool    rightScroll = false;
   bool    startBlank  = false;
+
 };
 
 struct P131_data_struct : public PluginTaskData_base {
@@ -126,9 +137,7 @@ public:
   # endif // if ADAGFX_ENABLE_GET_CONFIG_VALUE
   bool plugin_ten_per_second(struct EventStruct *event);
 
-  bool isInitialized() {
-    return matrix != nullptr;
-  }
+  bool isInitialized() { return matrix != nullptr; }
 
 private:
 
@@ -183,6 +192,7 @@ private:
   # ifdef P131_SHOW_SPLASH
   uint8_t _splashCounter = P131_SPLASH_DURATION;
   # endif // ifdef P131_SHOW_SPLASH
+
 };
 #endif // ifdef USES_P131
 #endif // ifndef PLUGINSTRUCTS_P131_DATA_STRUCT_H
