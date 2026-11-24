@@ -23,6 +23,7 @@
 # include <ESPEasySerialPort.h>
 # include <PPP.h>
 # include <NetworkManager.h>
+# include <atomic>
 
 # define NW_PLUGIN_ID  5
 # define NW_PLUGIN_INTERFACE   PPP
@@ -32,6 +33,21 @@ namespace net {
 namespace ppp {
 
 static NWPluginData_static_runtime stats_and_cache(&NW_PLUGIN_INTERFACE, F("PPP"));
+static std::atomic<int8_t> pendingNAPTState{ -1 };
+static bool pppNAPTEnabled{};
+
+static void processPendingNAPTState()
+{
+  const int8_t pendingState = pendingNAPTState.exchange(-1);
+
+  if ((pendingState >= 0) && (pppNAPTEnabled != (pendingState != 0))) {
+    pppNAPTEnabled = pendingState != 0;
+
+    if (WiFi.AP.enableNAPT(pppNAPTEnabled) && pppNAPTEnabled) {
+      addLog(LOG_LEVEL_INFO, F("WiFi.AP.enableNAPT"));
+    }
+  }
+}
 
 
 // Keys as used in the Key-value-store
@@ -140,6 +156,8 @@ NW005_data_struct_PPP_modem::~NW005_data_struct_PPP_modem() {
     Network.removeEvent(nw_event_id);
   }
   nw_event_id = 0;
+  pendingNAPTState.store(0);
+  processPendingNAPTState();
   stats_and_cache.processEvent_and_clear();
 }
 
@@ -1111,7 +1129,11 @@ bool NW005_data_struct_PPP_modem::record_stats()
 
 # endif // if FEATURE_NETWORK_STATS
 
-NWPluginData_static_runtime * NW005_data_struct_PPP_modem::getNWPluginData_static_runtime() { return &stats_and_cache; }
+NWPluginData_static_runtime * NW005_data_struct_PPP_modem::getNWPluginData_static_runtime()
+{
+  processPendingNAPTState();
+  return &stats_and_cache;
+}
 
 bool                          NW005_data_struct_PPP_modem::getStaticIPAddress(IPAddressType addressType, IPAddress& ip) const
 {
@@ -1120,39 +1142,35 @@ bool                          NW005_data_struct_PPP_modem::getStaticIPAddress(IP
 }
 
 void NW005_data_struct_PPP_modem::onEvent(arduino_event_id_t event, arduino_event_info_t info) {
-  // TODO TD-er: Must store flags from events in static (or global) object to act on it later.
   switch (event)
   {
     case ARDUINO_EVENT_PPP_START:
-      stats_and_cache.mark_start();
+      stats_and_cache.queueEvent(NWPluginData_static_runtime::DeferredEventType::Started);
       break;
     case ARDUINO_EVENT_PPP_STOP:
-      stats_and_cache.mark_stop();
+      stats_and_cache.queueEvent(NWPluginData_static_runtime::DeferredEventType::Stopped);
       break;
     case ARDUINO_EVENT_PPP_CONNECTED:
-      stats_and_cache.mark_connected();
+      stats_and_cache.queueEvent(NWPluginData_static_runtime::DeferredEventType::Connected);
       break;
     case ARDUINO_EVENT_PPP_DISCONNECTED:
-      stats_and_cache.mark_disconnected();
-      WiFi.AP.enableNAPT(false);
+      stats_and_cache.queueEvent(NWPluginData_static_runtime::DeferredEventType::Disconnected);
+      pendingNAPTState.store(0);
       break;
     case ARDUINO_EVENT_PPP_GOT_IP:
-      stats_and_cache.mark_got_IP();
+      stats_and_cache.queueEvent(NWPluginData_static_runtime::DeferredEventType::GotIP);
 
       //      NW_PLUGIN_INTERFACE.setDefault();
-
-      if (WiFi.AP.enableNAPT(true)) {
-        addLog(LOG_LEVEL_INFO, F("WiFi.AP.enableNAPT"));
-      }
+      pendingNAPTState.store(1);
       break;
 # if FEATURE_USE_IPV6
     case ARDUINO_EVENT_PPP_GOT_IP6:
-      stats_and_cache.mark_got_IPv6(&info.got_ip6);
+      stats_and_cache.queueEvent(NWPluginData_static_runtime::DeferredEventType::GotIPv6, &info.got_ip6);
       break;
 # endif // if FEATURE_USE_IPV6
     case ARDUINO_EVENT_PPP_LOST_IP:
-      stats_and_cache.mark_lost_IP();
-      WiFi.AP.enableNAPT(false);
+      stats_and_cache.queueEvent(NWPluginData_static_runtime::DeferredEventType::LostIP);
+      pendingNAPTState.store(0);
       break;
 
     default: break;

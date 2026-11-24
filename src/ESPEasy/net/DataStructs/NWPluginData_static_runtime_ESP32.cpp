@@ -92,23 +92,9 @@ bool NWPluginData_static_runtime::hasIPv6() const
 void NWPluginData_static_runtime::mark_start()
 {
   //  if (!_startStopStats.setOn()) { return; }
-  _startStopStats.setOn();
 
   if (!_netif) { return; }
-
-  // AP IP and DHCP server are configured via softAPConfig().
-  // Calling config(0,0,0) on the AP netif enables DHCP client and breaks AP DHCP.
-  if (!_isAP) {
-    if (_useStaticIP) {
-      _netif->config(
-        _ip,
-        _gateway,
-        _sn,
-        _dns);
-    } else {
-      _netif->config((uint32_t)0, (uint32_t)0, (uint32_t)0);
-    }
-  }
+  _startStopStats.setOn();
 
   // FIXME TD-er: Should we always create a hostname with "-WiFi" or "-eth" etc.? Or add a setting for this?
   if (Settings.getAppendNetworkAdapterNameToHostname(_networkIndex)) {
@@ -237,6 +223,20 @@ void NWPluginData_static_runtime::mark_begin_establish_connection()
   _establishConnectStats.forceSet(true);
   _connectedStats.setOff();
   _operationalStats.setOff();
+
+  // Configure the STA immediately before connecting, rather than relying on
+  // the STA_START event to apply the IP settings.
+  if (!_isAP && _netif) {
+    if (_useStaticIP) {
+      _netif->config(
+        _ip,
+        _gateway,
+        _sn,
+        _dns);
+    } else {
+      _netif->config((uint32_t)0, (uint32_t)0, (uint32_t)0);
+    }
+  }
 # if FEATURE_USE_IPV6
 
   if (_netif) {
