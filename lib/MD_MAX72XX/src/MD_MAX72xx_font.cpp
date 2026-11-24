@@ -155,7 +155,7 @@ bool MD_MAX72XX::setFont(fontType_t *f)
 {
   if (f != _fontData) // we actually have a change to process
   {
-    _fontData = (f == nullptr ? _sysfont : f);
+    _fontData = (f == nullptr ? getSysFont() : f);
     loadFontInfo();
   }
 
@@ -218,7 +218,7 @@ uint8_t MD_MAX72XX::setChar(uint16_t col, uint16_t c)
   return(size);
 }
 // Standard font - variable spacing
-MD_MAX72XX::fontType_t PROGMEM _sysfont[] =
+static const uint8_t _sysfont[] PROGMEM =
 {
 #if USE_NEW_FONT
   'F', 2, 0, 0, 0, 255, 8,
@@ -740,6 +740,12 @@ MD_MAX72XX::fontType_t PROGMEM _sysfont[] =
   5, 0xff, 0xff, 0xff, 0xff, 0xff,  // 255 - 'Full Block'
 #endif
 };
+
+MD_MAX72XX::fontType_t* MD_MAX72XX::getSysFont()
+{
+  return (MD_MAX72XX::fontType_t *)_sysfont;
+}
+
 
 #endif //USE_LOCAL_FONT
 
