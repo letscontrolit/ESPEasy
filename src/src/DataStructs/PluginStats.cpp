@@ -432,7 +432,7 @@ bool PluginStats::plugin_get_config_value_base(struct EventStruct *event, String
         // [taskname#valuename.size] Number of samples in memory
         value   = getNrSamples();
         success = true;
-      } else if (matchedCommand(command, F("sample"), nrSamples)) {
+      } else if (matchedCommand(command, F("sample"), nrSamples) || matchedCommand(command, F("smp"), nrSamples)) {
         success = nrSamples != 0;
 
         if (nrSamples == INT_MIN) {

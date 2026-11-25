@@ -104,8 +104,8 @@ For example using just like normal task value data:
 * ``[bme#temp.minX]`` Refer to the minimum recorded sample in the last X samples (or less if there are less samples available)
 * ``[bme#temp.minp]`` (min-peak) See ``[bme#temp.maxp]``.
 * ``[bme#temp.size]`` Return the number of samples in memory.
-* ``[bme#temp.sample]`` Return the number of samples in memory. (Doc. reflects the actual code!)
-* ``[bme#temp.sampleN]`` Access the N-th last sample in memory, negative value accesses N-th value from the *oldest* available sample.
+* ``[bme#temp.sample]`` Return the number of samples in memory. (Doc. reflects the actual code!) (``sample`` can be shortened to ``smp``)
+* ``[bme#temp.sampleN]`` Access the N-th last sample in memory, negative value accesses N-th value from the *oldest* available sample. (``sampleN`` can be shortened to ``smpN``)
 
 
 Commands on "Stats" data:
