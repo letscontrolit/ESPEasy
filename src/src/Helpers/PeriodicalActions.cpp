@@ -63,15 +63,16 @@ void run50TimesPerSecond() {
     static const NetworkInterface *lastDefaultInterface = nullptr;
     NetworkInterface *currentDefaultInterface           = Network.getDefaultInterface();
 
+    const bool connectFailed = networkConnectionFailed;
+
     if (nonDefaultNetworkInterface_gotIP ||
-        networkConnectionFailed ||
+        connectFailed ||
         (lastDefaultInterface != currentDefaultInterface)) {
       nonDefaultNetworkInterface_gotIP = false;
+      networkConnectionFailed          = false;
 
-      // TODO TD-er: Must do something else here on failed connect?
-      networkConnectionFailed = false;
-
-      if (lastDefaultInterface != currentDefaultInterface) {
+      if ((lastDefaultInterface != currentDefaultInterface) ||
+          (connectFailed && (currentDefaultInterface == nullptr))) {
         ESPEasy::net::NWPluginCall(NWPlugin::Function::NWPLUGIN_PRIORITY_ROUTE_CHANGED, 0, dummy);
       }
       lastDefaultInterface = currentDefaultInterface;

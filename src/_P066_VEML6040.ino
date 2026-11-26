@@ -12,6 +12,7 @@
 // Application Note: www.vishay.com/doc?84331
 
 /** Changelog:
+ * 2026-10-25 tonhuisman: Use standard I2C library functions where possible
  * 2025-06-14 tonhuisman: Add support for Custom Value Type per task value
  * 2025-01-12 tonhuisman: Add support for MQTT AutoDiscovery (not supported yet for RGBW sensors)
  */
@@ -226,25 +227,16 @@ boolean Plugin_066(uint8_t function, struct EventStruct *event, String& string)
 
 void VEML6040_setControlReg(uint8_t data)
 {
-  Wire.beginTransmission(VEML6040_ADDR);
-  Wire.write(0);    // command 0=control register
-  Wire.write(data); // lsb
-  Wire.write(0);    // msb
-  Wire.endTransmission();
+  I2C_write16_LE_reg(VEML6040_ADDR, 0x00, data);
 }
 
 float VEML6040_GetValue(uint8_t reg)
 {
-  Wire.beginTransmission(VEML6040_ADDR);
-  Wire.write(reg);
-  Wire.endTransmission(false);
-  Wire.requestFrom((uint8_t)VEML6040_ADDR, (uint8_t)0x2);
+  bool is_ok{};
+  const uint16_t value = I2C_read16_LE_reg(VEML6040_ADDR, reg, &is_ok);
 
-  if (Wire.available() == 2)
-  {
-    const uint16_t lsb = Wire.read();
-    const uint16_t msb = Wire.read();
-    return static_cast<float>((msb << 8) | lsb);
+  if (is_ok) {
+    return static_cast<float>(value);
   }
   return -1.0f;
 }

@@ -55,7 +55,11 @@ struct WiFi_AP_CandidatesList {
 
   // Make sure the current connection (from RTC) is set as first next candidate.
   // This will force a reconnect to the current AP if connection is lost.
-  void                             markCurrentConnectionStable();
+  void                             markCurrentConnection(bool stable);
+
+  void                             markCurrentConnectionFailed();
+
+  void                             clearLastWiFi();
 
   bool                             addedKnownCandidate() const { return _addedKnownCandidate; }
 

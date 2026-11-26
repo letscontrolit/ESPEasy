@@ -13,6 +13,7 @@
 #  include <esp_wifi_ap_get_sta_list.h>
 #  include <NetworkEvents.h>
 #  include <NetworkManager.h>
+#  include <atomic>
 # endif // ifdef ESP32
 
 # define NW_PLUGIN_ID  2
@@ -34,18 +35,20 @@ static NWPluginData_static_runtime stats_and_cache(true, "AP"); // Cannot use fl
 static bool nw002_initialized{};
 # ifdef ESP32
 static bool nw002_enable_NAPT{};
+static bool nw002_napt_active{};
+static std::atomic<bool> nw002_napt_update_pending{};
+static std::atomic<bool> nw002_probe_log_pending{};
 
 static bool NW002_update_NAPT() {
-  if (nw002_initialized) {
-    NW_PLUGIN_INTERFACE.enableNAPT(false);
+  const bool shouldEnable = nw002_initialized &&
+                            nw002_enable_NAPT &&
+                            NW_PLUGIN_INTERFACE.stationCount() != 0;
 
-    if (nw002_enable_NAPT && NW_PLUGIN_INTERFACE.stationCount()) {
-      NW_PLUGIN_INTERFACE.enableNAPT(true);
-      return true;
-    }
+  if (shouldEnable != nw002_napt_active) {
+    NW_PLUGIN_INTERFACE.enableNAPT(shouldEnable);
+    nw002_napt_active = shouldEnable;
   }
-
-  return false;
+  return shouldEnable;
 }
 
 # endif // ifdef ESP32
@@ -72,6 +75,9 @@ NW002_data_struct_WiFi_AP::~NW002_data_struct_WiFi_AP()
   nw002_initialized = false;
 # ifdef ESP32
   nw002_enable_NAPT = false;
+  nw002_napt_active = false;
+  nw002_napt_update_pending.store(false);
+  nw002_probe_log_pending.store(false);
 
   if (nw_event_id != 0) {
     Network.removeEvent(nw_event_id);
@@ -130,6 +136,7 @@ bool NW002_data_struct_WiFi_AP::exit(EventStruct *event)
   ESPEasy::net::wifi::setAPinternal(false);
 # ifdef ESP32
   NW_PLUGIN_INTERFACE.enableNAPT(false);
+  nw002_napt_active = false;
   NW_PLUGIN_INTERFACE.end();
 # endif // ifdef ESP32
 # ifdef ESP8266
@@ -144,6 +151,17 @@ bool NW002_data_struct_WiFi_AP::exit(EventStruct *event)
 NWPluginData_static_runtime * NW002_data_struct_WiFi_AP::getNWPluginData_static_runtime()
 {
   if (nw002_initialized) {
+# ifdef ESP32
+    if (nw002_napt_update_pending.exchange(false)) {
+      NW002_update_NAPT();
+    }
+#  ifndef BUILD_NO_DEBUG
+    if (nw002_probe_log_pending.exchange(false) &&
+        loglevelActiveFor(LOG_LEVEL_DEBUG)) {
+      addLog(LOG_LEVEL_DEBUG, F("AP_PROBEREQRECVED"));
+    }
+#  endif // ifndef BUILD_NO_DEBUG
+# endif // ifdef ESP32
     return &stats_and_cache;
   }
   return nullptr;
@@ -266,64 +284,39 @@ void NW002_data_struct_WiFi_AP::onEvent(arduino_event_id_t   event,
   switch (event)
   {
     case ARDUINO_EVENT_WIFI_AP_START:
-      stats_and_cache.mark_start();
-
-      if (NW_PLUGIN_INTERFACE.hasIP()) {
-        stats_and_cache.mark_got_IP();
-      }
+      stats_and_cache.queueEvent(NWPluginData_static_runtime::DeferredEventType::APStarted);
       break;
     case ARDUINO_EVENT_WIFI_AP_STOP:
-      stats_and_cache.mark_stop();
+      stats_and_cache.queueEvent(NWPluginData_static_runtime::DeferredEventType::Stopped);
       break;
     case ARDUINO_EVENT_WIFI_AP_STACONNECTED:
-      stats_and_cache.mark_connected();
-      NW002_update_NAPT();
+      stats_and_cache.queueEvent(NWPluginData_static_runtime::DeferredEventType::Connected);
+      nw002_napt_update_pending.store(true);
 #  ifndef BUILD_NO_DEBUG
-
-      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-        addLog(LOG_LEVEL_DEBUG, F("AP_STACONNECTED"));
-      }
+      stats_and_cache.queueEvent(NWPluginData_static_runtime::DeferredEventType::APStationConnectedLog);
 #  endif // ifndef BUILD_NO_DEBUG
       break;
     case ARDUINO_EVENT_WIFI_AP_STADISCONNECTED:
-
-      if (!ESPEasy::net::wifi::wifiAPmodeActivelyUsed()) {
-        stats_and_cache.mark_disconnected();
-      }
-      NW002_update_NAPT();
+      stats_and_cache.queueEvent(NWPluginData_static_runtime::DeferredEventType::APStationDisconnected);
+      nw002_napt_update_pending.store(true);
 #  ifndef BUILD_NO_DEBUG
-
-      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-        addLog(LOG_LEVEL_DEBUG, F("AP_STADISCONNECTED"));
-      }
+      stats_and_cache.queueEvent(NWPluginData_static_runtime::DeferredEventType::APStationDisconnectedLog);
 #  endif // ifndef BUILD_NO_DEBUG
       break;
     case ARDUINO_EVENT_WIFI_AP_STAIPASSIGNED:
 #  ifndef BUILD_NO_DEBUG
-
-      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-        addLog(LOG_LEVEL_DEBUG, F("AP_STAIPASSIGNED"));
-      }
+      stats_and_cache.queueEvent(NWPluginData_static_runtime::DeferredEventType::APStationIPAssignedLog);
 #  endif // ifndef BUILD_NO_DEBUG
-
-      if (!stats_and_cache.hasIP() && NW_PLUGIN_INTERFACE.hasIP()) {
-        stats_and_cache.mark_got_IP();
-      }
+      stats_and_cache.queueEvent(NWPluginData_static_runtime::DeferredEventType::APStationIPAssigned);
       break;
     case ARDUINO_EVENT_WIFI_AP_PROBEREQRECVED:
 #  ifndef BUILD_NO_DEBUG
-
-      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-        addLog(LOG_LEVEL_DEBUG, F("AP_PROBEREQRECVED"));
-      }
+      nw002_probe_log_pending.store(true);
 #  endif // ifndef BUILD_NO_DEBUG
       break;
     case ARDUINO_EVENT_WIFI_AP_GOT_IP6:
 #  ifndef BUILD_NO_DEBUG
-
-      if (loglevelActiveFor(LOG_LEVEL_DEBUG)) {
-        addLog(LOG_LEVEL_DEBUG, F("AP_GOT_IP6"));
-      }
+      stats_and_cache.queueEvent(NWPluginData_static_runtime::DeferredEventType::APGotIPv6Log);
 #  endif // ifndef BUILD_NO_DEBUG
       break;
 

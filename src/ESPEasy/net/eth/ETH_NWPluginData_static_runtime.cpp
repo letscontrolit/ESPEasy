@@ -32,67 +32,6 @@ struct ETH_stats_and_cache_t {
     _stats_and_cache.processEvent_and_clear();
   }
 
-  void mark_start(esp_eth_handle_t handle)
-  {
-    if (_eth.handle() == handle) {
-      _stats_and_cache.mark_start();
-
-      //      _eth.enableIPv6(_stats_and_cache._enableIPv6);
-    }
-  }
-
-  void mark_stop(esp_eth_handle_t handle)
-  {
-    if (_eth.handle() == handle) {
-      _stats_and_cache.mark_stop();
-    }
-  }
-
-  void mark_got_IP(ip_event_got_ip_t *event)
-  {
-    if (event && (_eth.netif() == event->esp_netif))
-    {
-      _stats_and_cache.mark_got_IP();
-    }
-  }
-
-# if FEATURE_USE_IPV6
-
-  void mark_got_IPv6(ip_event_got_ip6_t *event)
-  {
-    if (event && (_eth.netif() == event->esp_netif))
-    {
-      _stats_and_cache.mark_got_IPv6(event);
-    }
-  }
-
-# endif // if FEATURE_USE_IPV6
-
-  void mark_lost_IP(ip_event_got_ip_t *event)
-  {
-    if (event && (_eth.netif() == event->esp_netif)) {
-      _stats_and_cache.mark_lost_IP();
-    }
-  }
-
-  void mark_connected(esp_eth_handle_t handle)
-  {
-    if (_eth.handle() == handle) {
-      # if FEATURE_USE_IPV6
-      _eth.enableIPv6(_stats_and_cache._enableIPv6);
-# endif
-
-      _stats_and_cache.mark_connected();
-    }
-  }
-
-  void mark_disconnected(esp_eth_handle_t handle)
-  {
-    if (_eth.handle() == handle) {
-      _stats_and_cache.mark_disconnected();
-    }
-  }
-
   const networkIndex_t _networkIndex;
 
   const uint8_t               _eth_index;
@@ -186,27 +125,49 @@ void ETH_NWPluginData_static_runtime::onEvent(
       switch (event)
       {
         case ARDUINO_EVENT_ETH_START:
-          ETH_stats_and_cache[i]->mark_start(info.eth_started);
+          if (ETH_stats_and_cache[i]->_eth.handle() == info.eth_started) {
+            ETH_stats_and_cache[i]->_stats_and_cache.queueEvent(
+              NWPluginData_static_runtime::DeferredEventType::Started);
+          }
           break;
         case ARDUINO_EVENT_ETH_STOP:
-          ETH_stats_and_cache[i]->mark_stop(info.eth_stopped);
+          if (ETH_stats_and_cache[i]->_eth.handle() == info.eth_stopped) {
+            ETH_stats_and_cache[i]->_stats_and_cache.queueEvent(
+              NWPluginData_static_runtime::DeferredEventType::Stopped);
+          }
           break;
         case ARDUINO_EVENT_ETH_CONNECTED:
-          ETH_stats_and_cache[i]->mark_connected(info.eth_connected);
+          if (ETH_stats_and_cache[i]->_eth.handle() == info.eth_connected) {
+            ETH_stats_and_cache[i]->_stats_and_cache.queueEvent(
+              NWPluginData_static_runtime::DeferredEventType::Connected);
+          }
           break;
         case ARDUINO_EVENT_ETH_DISCONNECTED:
-          ETH_stats_and_cache[i]->mark_disconnected(info.eth_disconnected);
+          if (ETH_stats_and_cache[i]->_eth.handle() == info.eth_disconnected) {
+            ETH_stats_and_cache[i]->_stats_and_cache.queueEvent(
+              NWPluginData_static_runtime::DeferredEventType::Disconnected);
+          }
           break;
         case ARDUINO_EVENT_ETH_GOT_IP:
-          ETH_stats_and_cache[i]->mark_got_IP(&info.got_ip);
+          if (info.got_ip.esp_netif == ETH_stats_and_cache[i]->_eth.netif()) {
+            ETH_stats_and_cache[i]->_stats_and_cache.queueEvent(
+              NWPluginData_static_runtime::DeferredEventType::GotIP);
+          }
           break;
 # if FEATURE_USE_IPV6
         case ARDUINO_EVENT_ETH_GOT_IP6:
-          ETH_stats_and_cache[i]->mark_got_IPv6(&info.got_ip6);
+          if (info.got_ip6.esp_netif == ETH_stats_and_cache[i]->_eth.netif()) {
+            ETH_stats_and_cache[i]->_stats_and_cache.queueEvent(
+              NWPluginData_static_runtime::DeferredEventType::GotIPv6,
+              &info.got_ip6);
+          }
           break;
 # endif // if FEATURE_USE_IPV6
         case ARDUINO_EVENT_ETH_LOST_IP:
-          ETH_stats_and_cache[i]->mark_lost_IP(&info.lost_ip);
+          if (info.lost_ip.esp_netif == ETH_stats_and_cache[i]->_eth.netif()) {
+            ETH_stats_and_cache[i]->_stats_and_cache.queueEvent(
+              NWPluginData_static_runtime::DeferredEventType::LostIP);
+          }
           break;
 
         default:

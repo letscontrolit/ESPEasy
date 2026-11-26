@@ -101,7 +101,7 @@ void WiFi_AP_CandidatesList::clearCache() {
 
 void WiFi_AP_CandidatesList::force_reload() {
   clearCache();
-  RTC.clearLastWiFi(); // Invalidate the RTC WiFi data.
+  clearLastWiFi();
   candidates.clear();
   load_knownCredentials();
 }
@@ -158,8 +158,26 @@ bool WiFi_AP_CandidatesList::getNext(bool scanAllowed) {
     return false;
   }
 
+  if (attemptsLeft == 0) {
+    if (candidates.front().bits.isHidden && !Settings.HiddenSSID_SlowConnectPerBSSID()) {
+      // We tried to connect to hidden SSIDs in 1 run, so pop all hidden candidates.
+      for (auto cand_it = candidates.begin(); cand_it != candidates.end() && cand_it->bits.isHidden;) {
+        cand_it = candidates.erase(cand_it);
+      }
+    } else {
+      candidates.pop_front();
+    }
+
+    known_it     = known.begin();
+    attemptsLeft = WiFi_CONNECT_ATTEMPTS;
+
+    if (candidates.empty()) {
+      return false;
+    }
+  }
+
   currentCandidate = candidates.front();
-  bool mustPop = true;
+  bool mustPop     = true;
 
   if (currentCandidate.bits.isHidden) {
     // Iterate over the known credentials to try them all
@@ -176,23 +194,7 @@ bool WiFi_AP_CandidatesList::getNext(bool scanAllowed) {
   }
 
   if (mustPop) {
-    if (attemptsLeft == 0) {
-      if (currentCandidate.bits.isHidden && !Settings.HiddenSSID_SlowConnectPerBSSID()) {
-        // We tried to connect to hidden SSIDs in 1 run, so pop all hidden candidates.
-        for (auto cand_it = candidates.begin(); cand_it != candidates.end() && cand_it->bits.isHidden;) {
-          cand_it = candidates.erase(cand_it);
-        }
-      } else {
-        if (!candidates.empty()) {
-          candidates.pop_front();
-        }
-      }
-
-      known_it     = known.begin();
-      attemptsLeft = WiFi_CONNECT_ATTEMPTS;
-    } else {
-      markAttempt();
-    }
+    markAttempt();
   }
   return currentCandidate.usable();
 }
@@ -217,12 +219,15 @@ bool WiFi_AP_CandidatesList::hasCandidateCredentials() {
 }
 
 bool WiFi_AP_CandidatesList::hasCandidates() const {
-//  return !candidates.empty();
-  return getBestCandidate().usable();
+  for (auto it = candidates.begin(); it != candidates.end(); ++it) {
+    if (it->usable()) { return true; }
+  }
+  return false;
 }
 
-void WiFi_AP_CandidatesList::markCurrentConnectionStable() {
+void WiFi_AP_CandidatesList::markCurrentConnection(bool stable) {
   clearCache();
+  attemptsLeft = WiFi_CONNECT_ATTEMPTS;
 
   if (currentCandidate.enc_type == 0) {
     bool matchfound = false;
@@ -238,24 +243,54 @@ void WiFi_AP_CandidatesList::markCurrentConnectionStable() {
   }
 
   if (currentCandidate.usable()) {
+    const uint8_t *connectedBSSID = WiFi.BSSID();
+
+    if (connectedBSSID != nullptr) {
+      currentCandidate.bssid.set(connectedBSSID);
+    }
+    const uint8_t connectedChannel = WiFi.channel();
+
+    if (connectedChannel != 0) {
+      currentCandidate.channel = connectedChannel;
+    }
+    currentCandidate.rssi = WiFi.RSSI();
+
     // Store in RTC
     RTC.lastWiFiChannel = currentCandidate.channel;
     currentCandidate.bssid.get(RTC.lastBSSID);
     RTC.lastWiFiSettingsIndex = currentCandidate.index;
 # ifdef ESP32
 
-    if (Settings.UseLastWiFiFromRTC()) {
-      WiFi_AP_Candidates_NVS::currentConnection_to_NVS(currentCandidate);
-    }
-    else {
-      WiFi_AP_Candidates_NVS::clear_from_NVS();
+    if (stable) {
+      if (Settings.UseLastWiFiFromRTC()) {
+        WiFi_AP_Candidates_NVS::currentConnection_to_NVS(currentCandidate);
+      } else {
+        WiFi_AP_Candidates_NVS::clear_from_NVS();
+      }
     }
 # endif // ifdef ESP32
   }
 
-  candidates.clear();
+  if (stable) {
+    candidates.clear();
+  }
   _addedKnownCandidate = false;
   addFromRTC(); // Store the current one from RTC as the first candidate for a reconnect.
+}
+
+void WiFi_AP_CandidatesList::markCurrentConnectionFailed() {
+  if (RTC.lastWiFi_set() &&
+      currentCandidate.index == RTC.lastWiFiSettingsIndex &&
+      currentCandidate.bssid_match(RTC.lastBSSID)) {
+    clearLastWiFi();
+  }
+}
+
+void WiFi_AP_CandidatesList::clearLastWiFi() {
+  RTC.clearLastWiFi();
+# ifdef ESP32
+  WiFi_AP_Candidates_NVS::clear_from_NVS();
+# endif // ifdef ESP32
 }
 
 int8_t WiFi_AP_CandidatesList::scanComplete() const {
@@ -419,9 +454,9 @@ void WiFi_AP_CandidatesList::addFromRTC() {
     WiFi_AP_Candidate fromNVS;
 
     if (WiFi_AP_Candidates_NVS::loadCandidate_from_NVS(fromNVS)) {
-      RTC.lastWiFiChannel = currentCandidate.channel;
-      currentCandidate.bssid.get(RTC.lastBSSID);
-      RTC.lastWiFiSettingsIndex = currentCandidate.index;
+      RTC.lastWiFiChannel = fromNVS.channel;
+      fromNVS.bssid.get(RTC.lastBSSID);
+      RTC.lastWiFiSettingsIndex = fromNVS.index;
     } else {
       return;
     }
@@ -451,9 +486,13 @@ void WiFi_AP_CandidatesList::addFromRTC() {
 
   if ((candidates.size() > 0) && candidates.front().ssid.equals(fromRTC.ssid)) {
     // Front candidate was already from RTC.
-    // Copy all flags, before removing it from list
+    // Keep scan metadata, but retain the BSSID and channel of the actual RTC connection.
+    const MAC_address lastBSSID = fromRTC.bssid;
+    const uint8_t     lastChannel = fromRTC.channel;
     fromRTC = candidates.front();
-    fromRTC.index = RTC.lastWiFiSettingsIndex;
+    fromRTC.index   = RTC.lastWiFiSettingsIndex;
+    fromRTC.bssid   = lastBSSID;
+    fromRTC.channel = lastChannel;
     candidates.pop_front();
   }
 

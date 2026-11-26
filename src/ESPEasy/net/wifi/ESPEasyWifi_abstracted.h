@@ -30,6 +30,10 @@ bool WiFi_pre_STA_setup();
 
 void doWiFiDisconnect();
 
+# ifdef ESP8266
+void doWiFiDisconnectBeforeConnect();
+# endif // ifdef ESP8266
+
 // ********************************************************************************
 // Manage Wifi Modes
 // ********************************************************************************

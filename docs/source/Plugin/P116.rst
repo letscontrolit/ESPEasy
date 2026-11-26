@@ -159,6 +159,9 @@ Available options:
 * *ST7789 135 x 240px (alt2)*: Alternative initialization sequence 2.
 * *ST7789 135 x 240px (alt3)*: Alternative initialization sequence 3.
 * *ST7796 320 x 480px*: Allows 32 or 48 lines of text in the smallest font scaling setting.
+* *ST7796 320 x 480px (alt1)*: Uses an alternative initialization sequence, that may be needed for some displays.
+
+* **Invert display**: When checked will Invert display colors, as some displays have foreground and background colors swapped, this option is applied at plugin initialization.
 
 Layout
 ^^^^^^^^
