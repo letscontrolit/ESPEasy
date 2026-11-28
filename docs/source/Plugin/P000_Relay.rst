@@ -247,10 +247,10 @@ To suppress the voltage peak when switching off the coil a free-wheeling diode i
 Well, there is another way to switch the relay. In the above example we used a NPN transistor or a N-channel FET. A PNP transistor or P-Channel FET can be used too.
 Some board manufacturers do this and now we run into problems promptly. The relays usually need some higher voltage then the ESP, 5V or 12 V in most cases.
 The PNP transistor in the example is connected to +5V. It will switch the relay to "on" if the voltage at the input is at least 0.7V below the Vcc of 5V.
-The ESP delivers a maximum of 3.3V if the GPIO is "high", around 0.5V if it is "low". Both voltages are far below the 5V-0.7V = 4.3V threshhold of the relay board.
+The ESP delivers a maximum of 3.3V if the GPIO is "high", around 0.5V if it is "low". Both voltages are far below the 5V-0.7V = 4.3V threshold of the relay board.
 The relay is permanently on, no matter what your ESP says. We can get this to work in a simple way with a 5V relay board. A standard diode has a loss of around 0.7V.
 We can use this to get a higher output level from the ESP. We simply use two diodes in the connection between relay board and ESP. This raises the voltage from the
-ESP up to 3.3v + 1.4V = 4.7V. This is above the threshhold of 4.3V. If the board uses a FET it might be necessary to use three diodes. That usually will work.
+ESP up to 3.3v + 1.4V = 4.7V. This is above the threshold of 4.3V. If the board uses a FET it might be necessary to use three diodes. That usually will work.
 On top: This circuit switches the relay off if the GPIO is "high", this leading to irritations sometimes.
 The picture shows the basic circuit with a PNP transistor, and the " 2 Diodes " solution:
 
